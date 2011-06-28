@@ -1,12 +1,12 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client SDK", "game\client\client_scratch-2005.vcproj", "{09603CC0-928D-4939-83E5-C255291B9466}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client SDK", "game\client\client_scratch-2005.vcxproj", "{09603CC0-928D-4939-83E5-C255291B9466}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server SDK", "game\server\server_scratch-2005.vcproj", "{E8C0FE86-D8E1-4B44-8F76-F2A9A21E9C4F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server SDK", "game\server\server_scratch-2005.vcxproj", "{E8C0FE86-D8E1-4B44-8F76-F2A9A21E9C4F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vgui_controls", "vgui2\vgui_controls\vgui_controls-2005.vcproj", "{BF3EDBF5-ED65-4567-B348-504C1310A1BB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vgui_controls", "vgui2\vgui_controls\vgui_controls-2005.vcxproj", "{BF3EDBF5-ED65-4567-B348-504C1310A1BB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tier1", "tier1\tier1-2005.vcproj", "{E1DA8DB8-FB4C-4B14-91A6-98BCED6B9720}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tier1", "tier1\tier1-2005.vcxproj", "{E1DA8DB8-FB4C-4B14-91A6-98BCED6B9720}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

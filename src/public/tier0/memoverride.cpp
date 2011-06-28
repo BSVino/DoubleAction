@@ -721,16 +721,6 @@ int __cdecl _CrtDbgReport( int nRptType, const char * szFile,
 
 #if _MSC_VER >= 1400
 
-#if defined( _DEBUG )
- 
-// wrapper which passes no debug info; not available in debug
-void __cdecl _invalid_parameter_noinfo(void)
-{
-    Assert(0);
-}
-
-#endif /* defined( _DEBUG ) */
-
 #if defined( _DEBUG ) || defined( USE_MEM_DEBUG )
 
 int __cdecl __crtMessageWindowW( int nRptType, const wchar_t * szFile, const wchar_t * szLine,
