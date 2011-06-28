@@ -99,6 +99,10 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_iSlideActivity = ACT_MP_STAND_TO_SLIDE;
 	m_bSlideTransition = false;
 	m_bSlideTransitionFirstFrame = false;
+
+	m_iRollActivity = ACT_MP_STAND_TO_ROLL;
+	m_bRollTransition = false;
+	m_bRollTransitionFirstFrame = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,6 +117,9 @@ void CSDKPlayerAnimState::ClearAnimationState( void )
 
 	m_bSlideTransition = false;
 	m_bSlideTransitionFirstFrame = false;
+
+	m_bRollTransition = false;
+	m_bRollTransitionFirstFrame = false;
 
 	BaseClass::ClearAnimationState();
 }
@@ -246,6 +253,11 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_PRIMARYFIRE );
 			}
 			else
+			if ( m_pSDKPlayer->m_Shared.IsRolling() )
+			{
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_PRIMARYFIRE );
+			}
+			else
 			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
@@ -281,6 +293,11 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_SECONDARYFIRE );
+			}
+			else
+			if ( m_pSDKPlayer->m_Shared.IsRolling() )
+			{
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_SECONDARYFIRE );
 			}
 			else
 			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
@@ -333,6 +350,11 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_SLIDE );
+			}
+			else
+			if ( m_pSDKPlayer->m_Shared.IsRolling() )
+			{
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_ROLL );
 			}
 			else
 			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
@@ -432,6 +454,16 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			m_bSlideTransition = true;
 			m_bSlideTransitionFirstFrame = true;
 			m_iSlideActivity = ACT_MP_STAND_TO_SLIDE;
+			RestartMainSequence();
+			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
+		}
+		break;
+
+	case PLAYERANIMEVENT_STAND_TO_ROLL:
+		{
+			m_bRollTransition = true;
+			m_bRollTransitionFirstFrame = true;
+			m_iRollActivity = ACT_MP_STAND_TO_ROLL;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
 		}
@@ -590,6 +622,29 @@ bool CSDKPlayerAnimState::HandleSlideTransition( Activity &idealActivity )
 	return m_bSlideTransition;
 }
 
+bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
+{
+	if (!m_pSDKPlayer->m_Shared.IsRolling())
+		m_bRollTransition = false;
+
+	if ( m_bRollTransition )
+	{
+		if (m_bRollTransitionFirstFrame)
+		{
+			m_bRollTransitionFirstFrame = false;
+			RestartMainSequence();	// Reset the animation.
+		}
+
+		//Tony; check the cycle, and then stop overriding
+		if ( GetBasePlayer()->GetCycle() >= 0.99 )
+			m_bRollTransition = false;
+		else
+			idealActivity = m_iRollActivity;
+	}
+
+	return m_bRollTransition;
+}
+
 #if defined ( SDK_USE_SPRINTING )
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -693,6 +748,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 		HandleProneTransition( idealActivity ) ||
 		HandleProne( idealActivity ) ||
 #endif
+		HandleRollTransition( idealActivity ) ||
 		HandleSlideTransition( idealActivity ) ||
 		HandleSliding( idealActivity ) ||
 		HandleDucking( idealActivity ) || 

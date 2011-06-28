@@ -75,6 +75,13 @@ public:
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 
+	bool	IsRolling() const;
+	bool	CanRoll() const;
+	void	StartRolling();
+	void	EndRoll();
+	float	GetRollTime() const { return m_flRollTime; };
+	Vector	GetRollDirection() const { return m_vecRollDirection; };
+
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
 
@@ -112,6 +119,10 @@ private:
 	CNetworkVar( Vector, m_vecSlideDirection );
 	CNetworkVar( float, m_flSlideTime );
 
+	CNetworkVar( bool, m_bRolling );
+	CNetworkVar( Vector, m_vecRollDirection );
+	CNetworkVar( float, m_flRollTime );
+
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
@@ -135,6 +146,7 @@ public:
 	float m_flSprintSpeed;
 	float m_flProneSpeed;
 	float m_flSlideSpeed;
+	float m_flRollSpeed;
 
 private:
 

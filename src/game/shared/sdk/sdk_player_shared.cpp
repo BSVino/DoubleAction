@@ -322,6 +322,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 #endif
 
 	m_bSliding = false;
+	m_bRolling = false;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -429,6 +430,9 @@ bool CSDKPlayerShared::CanSlide() const
 	if (IsSliding())
 		return false;
 
+	if (IsRolling())
+		return false;
+
 	if (IsDucking())
 		return false;
 
@@ -445,7 +449,7 @@ void CSDKPlayerShared::StartSliding()
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoProne" );
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
 
 	m_bSliding = true;
 
@@ -461,6 +465,59 @@ void CSDKPlayerShared::EndSlide()
 {
 	m_bSliding = false;
 	m_flSlideTime = 0;
+}
+
+bool CSDKPlayerShared::IsRolling() const
+{
+	return m_bRolling;
+}
+
+bool CSDKPlayerShared::CanRoll() const
+{
+	if (m_pOuter->GetLocalVelocity().Length() < 10)
+		return false;
+
+	if (IsProne())
+		return false;
+
+	if (IsSliding())
+		return false;
+
+	if (IsRolling())
+		return false;
+
+	if (IsDucking())
+		return false;
+
+	if (!CanChangePosition())
+		return false;
+
+	return true;
+}
+
+void CSDKPlayerShared::StartRolling()
+{
+	if (!CanRoll())
+		return;
+
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoRoll" );
+
+	m_bRolling = true;
+
+	ForceUnzoom();
+
+	m_vecRollDirection = m_pOuter->GetAbsVelocity();
+	m_vecRollDirection.GetForModify().NormalizeInPlace();
+
+	m_flRollTime = gpGlobals->curtime;
+}
+
+void CSDKPlayerShared::EndRoll()
+{
+	m_bRolling = false;
+	m_flRollTime = 0;
 }
 
 #if defined ( SDK_USE_SPRINTING )
@@ -610,6 +667,7 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
 	m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
 	m_Shared.m_flSlideSpeed = SDK_DEFAULT_PLAYER_SLIDESPEED;
+	m_Shared.m_flRollSpeed = SDK_DEFAULT_PLAYER_ROLLSPEED;
 	// Set the absolute max to sprint speed
 	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
 	return;

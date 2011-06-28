@@ -56,6 +56,8 @@ public:
 	bool	HandleSliding( Activity &idealActivity );
 	bool	HandleSlideTransition( Activity &idealActivity );
 
+	bool	HandleRollTransition( Activity &idealActivity );
+
 #if defined ( SDK_USE_SPRINTING )
 	bool	HandleSprinting( Activity &idealActivity );
 #endif
@@ -78,6 +80,10 @@ private:
 	Activity	m_iSlideActivity;
 	bool		m_bSlideTransition;
 	bool		m_bSlideTransitionFirstFrame;
+
+	Activity	m_iRollActivity;
+	bool		m_bRollTransition;
+	bool		m_bRollTransitionFirstFrame;
 
 	float		m_flHoldDeployedPoseUntilTime;
 };
