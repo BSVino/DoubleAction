@@ -818,6 +818,15 @@ bool CSDKGameMovement::CheckJumpButton( void )
 #if defined ( SDK_USE_PRONE )
 bool CSDKGameMovement::CanUnprone()
 {
+	if (m_pSDKPlayer->m_Shared.IsGoingProne())
+		return false;
+
+	if (m_pSDKPlayer->m_Shared.IsGettingUpFromProne())
+		return false;
+
+	if (!m_pSDKPlayer->m_Shared.IsProne())
+		return false;
+
 	int i;
 	trace_t trace;
 	Vector newOrigin;
@@ -1124,40 +1133,45 @@ void CSDKGameMovement::Duck( void )
 		return;
 	}
 
-	if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.m_flNextProneCheck )
+	if ( m_pSDKPlayer->m_Shared.CanChangePosition() )
 	{
-		if ( buttonsPressed & IN_ALT1 && m_pSDKPlayer->m_Shared.CanChangePosition() )
+		bool bGoProne = !!(buttonsPressed & IN_ALT1);
+		if (m_pSDKPlayer->GetAbsVelocity().Length() > 0.1f)
+			bGoProne = false;
+		if (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT))
+			bGoProne = false;
+
+		bool bGetUp = !!(mv->m_nButtons & (IN_ALT1|IN_JUMP));
+
+		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false &&
+			m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false )
 		{
-			if( m_pSDKPlayer->m_Shared.IsProne() == false &&
-				m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false )
-			{
-				m_pSDKPlayer->m_Shared.StartGoingProne();
+			m_pSDKPlayer->m_Shared.StartGoingProne();
 
-				//Tony; here is where you'd want to do an animation for first person to give the effect of going prone.
-				if ( m_pSDKPlayer->m_Shared.IsDucking() )
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_CROUCH_TO_PRONE );
-				else
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_PRONE );
+			//Tony; here is where you'd want to do an animation for first person to give the effect of going prone.
+			if ( m_pSDKPlayer->m_Shared.IsDucking() )
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_CROUCH_TO_PRONE );
+			else
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_PRONE );
 
-			}
-			else if ( CanUnprone() )
-			{
-				m_pSDKPlayer->m_Shared.SetProne( false );
-				m_pSDKPlayer->m_Shared.StandUpFromProne();
+			return;
+		}
+		else if ( bGetUp && CanUnprone() )
+		{
+			m_pSDKPlayer->m_Shared.SetProne( false );
+			m_pSDKPlayer->m_Shared.StandUpFromProne();
 
-				//
-				//Tony; here is where you'd want to do an animation for first person to give the effect of getting up from prone.
-				//
+			//
+			//Tony; here is where you'd want to do an animation for first person to give the effect of getting up from prone.
+			//
 
-				m_pSDKPlayer->m_bUnProneToDuck = ( mv->m_nButtons & IN_DUCK ) > 0;
+			m_pSDKPlayer->m_bUnProneToDuck = ( mv->m_nButtons & IN_DUCK ) > 0;
 
-				if ( m_pSDKPlayer->m_bUnProneToDuck )
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
-				else
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
-			}
-			
-			m_pSDKPlayer->m_Shared.m_flNextProneCheck = gpGlobals->curtime + 1.0f;
+			if ( m_pSDKPlayer->m_bUnProneToDuck )
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
+			else
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
+
 			return;
 		}
 	}
