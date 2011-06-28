@@ -121,6 +121,8 @@ public:
 	virtual CStudioHdr *OnNewModel( void );
 	void InitializePoseParams( void );
 
+	virtual void				OverrideView( CViewSetup *pSetup );
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )

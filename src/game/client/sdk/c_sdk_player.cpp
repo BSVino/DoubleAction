@@ -21,6 +21,7 @@
 #include "obstacle_pushaway.h"
 #include "bone_setup.h"
 #include "cl_animevent.h"
+#include "input.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -1197,4 +1198,28 @@ void C_SDKPlayer::UpdateSoundEvents()
 			m_SoundEvents.Remove( i );
 		}
 	}
+}
+
+static ConVar cam_right("cam_right", "10", FCVAR_ARCHIVE);
+static ConVar cam_up("cam_up", "10", FCVAR_ARCHIVE);
+
+void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
+{
+	if (input->CAM_IsThirdPerson())
+	{
+		Vector vecOffset;
+		::input->CAM_GetCameraOffset( vecOffset );
+
+		QAngle angCamera;
+		angCamera[ PITCH ] = vecOffset[ PITCH ];
+		angCamera[ YAW ] = vecOffset[ YAW ];
+		angCamera[ ROLL ] = 0;
+
+		Vector camForward, camRight, camUp;
+		AngleVectors( angCamera, &camForward, &camRight, &camUp );
+
+		pSetup->origin = pSetup->origin + camRight*cam_right.GetFloat() + camUp*cam_up.GetFloat();
+	}
+
+	BaseClass::OverrideView(pSetup);
 }

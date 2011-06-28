@@ -32,6 +32,7 @@
 #include "weapon_sdkbase.h"
 #include "c_sdk_player.h"
 #include "c_weapon__stubs.h"		//Tony; add stubs
+#include "sdk_in_main.h"
 
 class CHudChat;
 
@@ -96,6 +97,8 @@ void CSDKModeManager::LevelInit( const char *newmap )
 		cl_detail_avoid_force.SetValue( "0.4" );
 		cl_detail_avoid_recover_speed.SetValue( "0.25" );
 	}
+
+	AB_Input_LevelInit();
 }
 
 void CSDKModeManager::LevelShutdown( void )
