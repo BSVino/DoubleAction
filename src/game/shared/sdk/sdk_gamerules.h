@@ -79,12 +79,20 @@ public:
 		m_vProneHullMax = vProneHullMax;
 		m_vProneView = vProneView;
 #endif 
+
+		m_vSlideHullMin = vDuckHullMin;
+		m_vSlideHullMax = vDuckHullMax;
+		m_vSlideView = vDuckView;
 	}
 #if defined ( SDK_USE_PRONE )
 	Vector m_vProneHullMin;
 	Vector m_vProneHullMax;	
 	Vector m_vProneView;
 #endif
+
+	Vector m_vSlideHullMin;
+	Vector m_vSlideHullMax;	
+	Vector m_vSlideView;
 };
 
 class CSDKGameRules : public CTeamplayRules

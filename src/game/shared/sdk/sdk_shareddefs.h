@@ -102,6 +102,10 @@ enum sdkteams_e
 
 #endif // SDK_USE_SPRINTING
 
+	#define VEC_SLIDE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMin
+	#define VEC_SLIDE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMax
+	#define VEC_SLIDE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vSlideView
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 	#define SDK_NUM_PLAYERCLASSES 3		//Tony; our template sample has 3 player classes.
 	#define SDK_PLAYERCLASS_IMAGE_LENGTH 64
@@ -134,6 +138,7 @@ extern const char *pszTeamNames[];
 #define SDK_DEFAULT_PLAYER_RUNSPEED			220
 #define SDK_DEFAULT_PLAYER_SPRINTSPEED		330
 #define SDK_DEFAULT_PLAYER_PRONESPEED		50
+#define SDK_DEFAULT_PLAYER_SLIDESPEED		280
 
 //--------------------------------------------------------------------------------------------------------
 //

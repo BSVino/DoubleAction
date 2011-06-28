@@ -239,19 +239,6 @@ bool CSDKPlayer::CanAttack( void )
 		return false;
 #endif  //SDK_SHOOT_WHILE_JUMPING
 
-#if defined ( SDK_USE_PRONE )
-	// cannot attack while prone moving.
-	if ( m_Shared.IsProne() && GetAbsVelocity().LengthSqr() > 1 )
-	{
-		return false;
-	}
-
-	if( m_Shared.IsGoingProne() || m_Shared.IsGettingUpFromProne() )
-	{
-		return false;
-	}
-#endif // SDK_USE_PRONE
-
 	return true;
 }
 
@@ -333,6 +320,8 @@ CSDKPlayerShared::CSDKPlayerShared()
 #if defined ( SDK_USE_PLAYERCLASSES )
 	SetDesiredPlayerClass( PLAYERCLASS_UNDEFINED );
 #endif
+
+	m_bSliding = false;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -411,7 +400,7 @@ void CSDKPlayerShared::StandUpFromProne( void )
 	m_flGoProneTime = 0.0f;	//reset 
 }
 
-bool CSDKPlayerShared::CanChangePosition( void )
+bool CSDKPlayerShared::CanChangePosition( void ) const
 {
 	if ( IsGettingUpFromProne() )
 		return false;
@@ -423,6 +412,56 @@ bool CSDKPlayerShared::CanChangePosition( void )
 }
 
 #endif
+
+bool CSDKPlayerShared::IsSliding() const
+{
+	return m_bSliding;
+}
+
+bool CSDKPlayerShared::CanSlide() const
+{
+	if (m_pOuter->GetLocalVelocity().Length() < 10)
+		return false;
+
+	if (IsProne())
+		return false;
+
+	if (IsSliding())
+		return false;
+
+	if (IsDucking())
+		return false;
+
+	if (!CanChangePosition())
+		return false;
+
+	return true;
+}
+
+void CSDKPlayerShared::StartSliding()
+{
+	if (!CanSlide())
+		return;
+
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoProne" );
+
+	m_bSliding = true;
+
+	ForceUnzoom();
+
+	m_vecSlideDirection = m_pOuter->GetAbsVelocity();
+	m_vecSlideDirection.GetForModify().NormalizeInPlace();
+
+	m_flSlideTime = gpGlobals->curtime;
+}
+
+void CSDKPlayerShared::EndSlide()
+{
+	m_bSliding = false;
+	m_flSlideTime = 0;
+}
 
 #if defined ( SDK_USE_SPRINTING )
 void CSDKPlayerShared::SetSprinting( bool bSprinting )
@@ -570,6 +609,7 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
 	m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
 	m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
+	m_Shared.m_flSlideSpeed = SDK_DEFAULT_PLAYER_SLIDESPEED;
 	// Set the absolute max to sprint speed
 	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
 	return;

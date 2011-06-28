@@ -65,8 +65,15 @@ public:
 	bool	IsGettingUpFromProne() const;	
 	bool	IsGoingProne() const;
 	void	SetProne( bool bProne, bool bNoAnimation = false );
-	bool	CanChangePosition( void );
+	bool	CanChangePosition( void ) const;
 #endif
+
+	bool	IsSliding() const;
+	bool	CanSlide() const;
+	void	StartSliding();
+	void	EndSlide();
+	float	GetSlideTime() const { return m_flSlideTime; };
+	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -96,11 +103,14 @@ private:
 	CNetworkVar( int, m_iDesiredPlayerClass );
 #endif
 
-
 #if defined ( SDK_USE_SPRINTING )
 	CNetworkVar( bool, m_bIsSprinting );
 	bool m_bGaveSprintPenalty;
 #endif
+
+	CNetworkVar( bool, m_bSliding );
+	CNetworkVar( Vector, m_vecSlideDirection );
+	CNetworkVar( float, m_flSlideTime );
 
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	CNetworkVar( float, m_flStamina );
@@ -124,6 +134,7 @@ public:
 	float m_flRunSpeed;
 	float m_flSprintSpeed;
 	float m_flProneSpeed;
+	float m_flSlideSpeed;
 
 private:
 

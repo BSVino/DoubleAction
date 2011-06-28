@@ -102,6 +102,9 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined( SDK_USE_SPRINTING )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
 #endif
+	RecvPropBool( RECVINFO( m_bSliding ) ),
+	RecvPropVector( RECVINFO(m_vecSlideDirection) ),
+	RecvPropTime( RECVINFO(m_flSlideTime) ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -150,6 +153,9 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 #if defined( SDK_USE_SPRINTING )
 	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
+	DEFINE_PRED_FIELD( m_bSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_vecSlideDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )

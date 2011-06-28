@@ -53,6 +53,9 @@ public:
 	bool	HandleProneTransition( Activity &idealActivity );
 #endif
 
+	bool	HandleSliding( Activity &idealActivity );
+	bool	HandleSlideTransition( Activity &idealActivity );
+
 #if defined ( SDK_USE_SPRINTING )
 	bool	HandleSprinting( Activity &idealActivity );
 #endif
@@ -71,6 +74,10 @@ private:
 	bool		m_bProneTransition;
 	bool		m_bProneTransitionFirstFrame;
 #endif
+
+	Activity	m_iSlideActivity;
+	bool		m_bSlideTransition;
+	bool		m_bSlideTransitionFirstFrame;
 
 	float		m_flHoldDeployedPoseUntilTime;
 };

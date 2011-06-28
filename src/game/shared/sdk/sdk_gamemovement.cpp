@@ -63,6 +63,8 @@ public:
 	bool CanUnprone();
 #endif // SDK_USE_PRONE
 
+	void SetSlideEyeOffset( float flFraction );
+
 	virtual const Vector&	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector&	GetPlayerMaxs( void ) const; // uses local player
 
@@ -80,6 +82,7 @@ public:
 	CSDKPlayer *m_pSDKPlayer;
 };
 
+#define SLIDE_TIME 1.5f
 
 // Expose our interface.
 static CSDKGameMovement g_GameMovement;
@@ -110,6 +113,9 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	}
 	else	//not prone - standing or crouching and possibly moving
 #endif // SDK_USE_PRONE
+	if ( m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->GetGroundEntity() )
+		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+	else
 	{
 		float stamina = 100.0f;
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
@@ -382,6 +388,9 @@ void CSDKGameMovement::WalkMove( void )
 	Vector vecWishDirection( ( ( vecForward.x * flForwardMove ) + ( vecRight.x * flSideMove ) ),
 		( ( vecForward.y * flForwardMove ) + ( vecRight.y * flSideMove ) ), 
 		0.0f );
+
+	if (m_pSDKPlayer->m_Shared.IsSliding())
+		vecWishDirection = m_pSDKPlayer->m_Shared.GetSlideDirection() * mv->m_flMaxSpeed;
 
 	// Calculate the speed and direction of movement, then clamp the speed.
 	float flWishSpeed = VectorNormalize( vecWishDirection );
@@ -1042,6 +1051,36 @@ void CSDKGameMovement::FinishProne( void )
 }
 #endif // SDK_USE_PRONE
 
+void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
+{
+	if (flFraction < 0.5f)
+	{
+		Vector vecStandViewOffset = GetPlayerViewOffset( false );
+		Vector vecSlideViewOffset = VEC_SLIDE_VIEW;
+
+		Vector temp = player->GetViewOffset();
+		flFraction = RemapVal( flFraction, 0, 0.5f, 0, 1 );
+
+		temp.z = RemapVal( Bias(flFraction, 0.8f), 0.0f, 1.0f, vecStandViewOffset.z, vecSlideViewOffset.z );
+
+		player->SetViewOffset( temp );
+	}
+	else
+	{
+		Vector vecSlideViewOffset = VEC_SLIDE_VIEW;
+		Vector vecEndViewOffset = GetPlayerViewOffset( false );
+		if (mv->m_nButtons & IN_ALT1)
+			vecEndViewOffset = VEC_PRONE_VIEW;
+
+		Vector temp = player->GetViewOffset();
+		flFraction = RemapVal( flFraction, 0.5f, 1.0f, 0, 1 );
+
+		temp.z = RemapVal( Bias(flFraction, 0.2f), 0.0f, 1.0f, vecSlideViewOffset.z, vecEndViewOffset.z );
+
+		player->SetViewOffset( temp );
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: See if duck button is pressed and do the appropriate things
 //-----------------------------------------------------------------------------
@@ -1132,16 +1171,49 @@ void CSDKGameMovement::Duck( void )
 		//don't deal with ducking while we're proning
 		return;
 	}
+	else if( m_pSDKPlayer->m_Shared.IsSliding() )
+	{
+		if (!m_pSDKPlayer->GetGroundEntity())
+		{
+			m_pSDKPlayer->m_Shared.EndSlide();
+			SetSlideEyeOffset( 0.0 );
+		}
+		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetSlideTime() + SLIDE_TIME )
+		{
+			m_pSDKPlayer->m_Shared.EndSlide();
+
+			SetSlideEyeOffset( 0.0 );
+
+			if (mv->m_nButtons & IN_ALT1)
+			{
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset( 1.0 );
+			}
+		}
+		else
+		{
+			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime()) / SLIDE_TIME;
+			SetSlideEyeOffset( fraction );
+		}
+	}
 
 	if ( m_pSDKPlayer->m_Shared.CanChangePosition() )
 	{
-		bool bGoProne = !!(buttonsPressed & IN_ALT1);
+		bool bStunt = !!(buttonsPressed & IN_ALT1);
+
+		bool bGoProne = bStunt;
 		if (m_pSDKPlayer->GetAbsVelocity().Length() > 0.1f)
 			bGoProne = false;
 		if (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT))
 			bGoProne = false;
 
-		bool bGetUp = !!(mv->m_nButtons & (IN_ALT1|IN_JUMP));
+		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
+
+		bool bSlide = bStunt;
+		if (m_pSDKPlayer->GetAbsVelocity().Length() < 10.0f)
+			bSlide = false;
+		if (!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)))
+			bSlide = false;
 
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false &&
 			m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false )
@@ -1173,6 +1245,14 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
 
 			return;
+		}
+		else if( bSlide && m_pSDKPlayer->m_Shared.CanSlide() )
+		{
+			m_pSDKPlayer->m_Shared.StartSliding();
+
+			SetSlideEyeOffset( 0.0 );
+
+			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
 		}
 	}
 
@@ -1343,6 +1423,8 @@ const Vector& CSDKGameMovement::GetPlayerMins( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
 			return VEC_PRONE_HULL_MIN;
 #endif // SDK_USE_PRONE
+		else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+			return VEC_SLIDE_HULL_MIN;
 		else
 			return VEC_HULL_MIN;
 	}
@@ -1371,6 +1453,8 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
             return VEC_PRONE_HULL_MAX;
 #endif // SDK_USE_PRONE
+		else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+			return VEC_SLIDE_HULL_MAX;
 		else
 			return VEC_HULL_MAX;
 	}
