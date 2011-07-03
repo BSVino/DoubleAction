@@ -17,7 +17,7 @@
 //
 // Will your mod be team based?
 // define SDK_USE_TEAMS
-#define SDK_USE_TEAMS
+//#define SDK_USE_TEAMS
 
 //
 // Do you use player classes?
