@@ -250,12 +250,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 #endif //SDK_USE_PRONE
 			if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_PRIMARYFIRE );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_PRIMARYFIRE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
 			}
 			else
 			if ( m_pSDKPlayer->m_Shared.IsRolling() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_PRIMARYFIRE );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_PRIMARYFIRE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
 			}
 			else
 			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
@@ -292,12 +294,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 #endif //SDK_USE_PRONE
 			if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_SECONDARYFIRE );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_SECONDARYFIRE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
 			}
 			else
 			if ( m_pSDKPlayer->m_Shared.IsRolling() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_SECONDARYFIRE );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_SECONDARYFIRE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
 			}
 			else
 			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
@@ -349,12 +353,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 #endif //SDK_USE_PRONE
 			if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_SLIDE );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_SLIDE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
 			}
 			else
 			if ( m_pSDKPlayer->m_Shared.IsRolling() )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_ROLL );
+//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_ROLL );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
 			}
 			else
 			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
@@ -591,7 +597,8 @@ bool CSDKPlayerAnimState::HandleSliding( Activity &idealActivity )
 {
 	if ( m_pSDKPlayer->m_Shared.IsSliding() )
 	{
-		idealActivity = ACT_MP_SLIDE;		
+		idealActivity = ACT_MP_CROUCHWALK;		
+//		idealActivity = ACT_MP_SLIDE;		
 
 		return true;
 	}
@@ -616,7 +623,8 @@ bool CSDKPlayerAnimState::HandleSlideTransition( Activity &idealActivity )
 		if ( GetBasePlayer()->GetCycle() >= 0.99 )
 			m_bSlideTransition = false;
 		else
-			idealActivity = m_iSlideActivity;
+			idealActivity = ACT_MP_CROUCHWALK;		
+//			idealActivity = m_iSlideActivity;
 	}
 
 	return m_bSlideTransition;
@@ -639,7 +647,8 @@ bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
 		if ( GetBasePlayer()->GetCycle() >= 0.99 )
 			m_bRollTransition = false;
 		else
-			idealActivity = m_iRollActivity;
+			idealActivity = ACT_MP_CROUCHWALK;		
+//			idealActivity = m_iRollActivity;
 	}
 
 	return m_bRollTransition;

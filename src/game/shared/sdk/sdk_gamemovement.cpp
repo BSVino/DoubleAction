@@ -1249,7 +1249,10 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndDive();
 
 			if (m_pSDKPlayer->m_Shared.CanRoll())
+			{
 				m_pSDKPlayer->m_Shared.StartRolling();
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
+			}
 			else
 				m_pSDKPlayer->m_Shared.SetProne(true, false);
 		}
