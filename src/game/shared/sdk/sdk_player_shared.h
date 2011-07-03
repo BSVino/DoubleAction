@@ -82,6 +82,12 @@ public:
 	float	GetRollTime() const { return m_flRollTime; };
 	Vector	GetRollDirection() const { return m_vecRollDirection; };
 
+	bool	IsDiving() const;
+	bool	CanDive() const;
+	Vector	StartDiving();
+	void	EndDive();
+	Vector	GetDiveDirection() const { return m_vecDiveDirection; };
+
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
 
@@ -122,6 +128,10 @@ private:
 	CNetworkVar( bool, m_bRolling );
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
+
+	CNetworkVar( bool, m_bDiving );
+	CNetworkVar( Vector, m_vecDiveDirection );
+	float m_flViewTilt;
 
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	CNetworkVar( float, m_flStamina );

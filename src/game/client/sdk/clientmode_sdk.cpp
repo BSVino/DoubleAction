@@ -183,3 +183,36 @@ bool ClientModeSDKNormal::CanRecordDemo( char *errorMsg, int length ) const
 
 	return true;
 }
+
+void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
+{
+	QAngle camAngles;
+
+	// Let the player override the view.
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if(!pPlayer)
+		return;
+
+	pPlayer->OverrideView( pSetup );
+
+	if( ::input->CAM_IsThirdPerson() )
+	{
+		Vector cam_ofs;
+
+		::input->CAM_GetCameraOffset( cam_ofs );
+
+		camAngles[ PITCH ] = cam_ofs[ PITCH ];
+		camAngles[ YAW ] = cam_ofs[ YAW ];
+		camAngles[ ROLL ] = 0;
+
+		Vector camForward, camRight, camUp;
+		AngleVectors( camAngles, &camForward, &camRight, &camUp );
+
+		VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
+
+		// Override angles from third person camera
+		float flRoll = pSetup->angles.z;
+		pSetup->angles = camAngles;
+		pSetup->angles.z = flRoll;
+	}
+}

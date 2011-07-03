@@ -29,6 +29,7 @@
 
 ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_speed( "sdk_dive_speed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 extern bool g_bMovementOptimizations;
 
@@ -43,6 +44,7 @@ public:
 	void SetPlayerSpeed( void );
 	virtual void ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMove );
 	virtual bool CanAccelerate();
+	virtual void AirAccelerate( Vector& wishdir, float wishspeed, float accel );
 	virtual bool CheckJumpButton( void );
 	virtual void ReduceTimers( void );
 	virtual void WalkMove( void );
@@ -83,7 +85,7 @@ public:
 	CSDKPlayer *m_pSDKPlayer;
 };
 
-#define ROLL_TIME 1.5f
+#define ROLL_TIME 1.0f
 #define SLIDE_TIME 8.0f
 
 // Expose our interface.
@@ -119,6 +121,8 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed * RemapValClamped( gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime(), 0, SLIDE_TIME, 1, 0 );
 	else if ( m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->GetGroundEntity() )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
+	else if ( m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity() )
+		mv->m_flClientMaxSpeed = sdk_dive_speed.GetFloat();
 	else
 	{
 		float stamina = 100.0f;
@@ -351,6 +355,13 @@ bool CSDKGameMovement::CanAccelerate()
 	}
 }
 
+void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float accel )
+{
+	if (m_pSDKPlayer->m_Shared.IsDiving())
+		return;
+
+	BaseClass::AirAccelerate(wishdir, wishspeed, accel);
+}
 
 void CSDKGameMovement::WalkMove( void )
 {
@@ -729,6 +740,9 @@ bool CSDKGameMovement::CheckJumpButton( void )
 		return false;
 	}
 #endif
+
+	if (m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
+		return false;
 
 	// See if we are waterjumping.  If so, decrement count and return.
 	float flWaterJumpTime = player->GetWaterJumpTime();
@@ -1228,6 +1242,18 @@ void CSDKGameMovement::Duck( void )
 			SetRollEyeOffset( fraction );
 		}
 	}
+	else if( m_pSDKPlayer->m_Shared.IsDiving() )
+	{
+		if (m_pSDKPlayer->GetGroundEntity())
+		{
+			m_pSDKPlayer->m_Shared.EndDive();
+
+			if (m_pSDKPlayer->m_Shared.CanRoll())
+				m_pSDKPlayer->m_Shared.StartRolling();
+			else
+				m_pSDKPlayer->m_Shared.SetProne(true, false);
+		}
+	}
 
 	if ( m_pSDKPlayer->m_Shared.CanChangePosition() )
 	{
@@ -1243,13 +1269,17 @@ void CSDKGameMovement::Duck( void )
 
 		bool bSlide = false;
 		bool bRoll = false;
+		bool bDive = false;
 
 		if (bStunt)
 		{
-			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT));
+			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
+				m_pSDKPlayer->GetGroundEntity();
 
 			bRoll = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
 				(mv->m_nButtons & IN_DUCK);
+
+			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && !m_pSDKPlayer->GetGroundEntity();
 		}
 
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false &&
@@ -1307,6 +1337,12 @@ void CSDKGameMovement::Duck( void )
 
 			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
 		}
+		else if( bDive && m_pSDKPlayer->m_Shared.CanDive() )
+		{
+			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
+
+			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
+		}
 	}
 
 	if ( m_pSDKPlayer->m_Shared.IsProne() &&
@@ -1342,6 +1378,16 @@ void CSDKGameMovement::Duck( void )
 		return;
 	}
 #endif // SDK_USE_PRONE
+
+	if (m_pSDKPlayer->m_Shared.IsRolling())
+		return;
+
+	if (m_pSDKPlayer->m_Shared.IsDiving())
+		return;
+
+	if (m_pSDKPlayer->m_Shared.IsSliding())
+		return;
+
 	HandleDuckingSpeedCrop();
 
 	if ( !( player->GetFlags() & FL_DUCKING ) && ( player->m_Local.m_bDucked ) )

@@ -36,6 +36,8 @@ public:
 
 	virtual bool	CanRecordDemo( char *errorMsg, int length ) const;
 
+	virtual void	OverrideView( CViewSetup *pSetup );
+
 private:
 	
 	//	void	UpdateSpectatorMode( void );

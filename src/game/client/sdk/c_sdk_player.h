@@ -31,6 +31,7 @@ public:
 	static C_SDKPlayer* GetLocalSDKPlayer();
 
 	virtual const QAngle& GetRenderAngles();
+	virtual const Vector& GetRenderOrigin();
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
@@ -93,6 +94,8 @@ public:
 	void SetSprinting( bool bIsSprinting );
 	bool IsSprinting( void );
 #endif
+
+	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	CSDKPlayerShared m_Shared;
 

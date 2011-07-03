@@ -36,6 +36,7 @@
 	#include "sdk_player.h"
 	#include "sdk_team.h"
 #endif
+
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
 void DispatchEffect( const char *pName, const CEffectData &data );
@@ -198,6 +199,8 @@ void CSDKPlayer::SharedSpawn()
 	// when we spawn
 
 	m_Shared.SetJumping( false );
+
+	m_Shared.m_flViewTilt = 0;
 
 	//Tony; todo; fix
 
@@ -436,6 +439,9 @@ bool CSDKPlayerShared::CanSlide() const
 	if (IsDucking())
 		return false;
 
+	if (IsDiving())
+		return false;
+
 	if (!CanChangePosition())
 		return false;
 
@@ -489,6 +495,9 @@ bool CSDKPlayerShared::CanRoll() const
 	if (IsDucking())
 		return false;
 
+	if (IsDiving())
+		return false;
+
 	if (!CanChangePosition())
 		return false;
 
@@ -518,6 +527,67 @@ void CSDKPlayerShared::EndRoll()
 {
 	m_bRolling = false;
 	m_flRollTime = 0;
+}
+
+bool CSDKPlayerShared::IsDiving() const
+{
+	return m_bDiving;
+}
+
+bool CSDKPlayerShared::CanDive() const
+{
+	if (m_pOuter->GetLocalVelocity().Length() < 10)
+		return false;
+
+	if (IsProne())
+		return false;
+
+	if (IsSliding())
+		return false;
+
+	if (IsRolling())
+		return false;
+
+	if (IsDucking())
+		return false;
+
+	if (IsDiving())
+		return false;
+
+	if (!CanChangePosition())
+		return false;
+
+	return true;
+}
+
+ConVar  sdk_dive_height( "sdk_dive_height", "250", FCVAR_REPLICATED | FCVAR_CHEAT );
+
+Vector CSDKPlayerShared::StartDiving()
+{
+	if (!CanDive())
+		return m_pOuter->GetAbsVelocity();
+
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoDive" );
+
+	m_bDiving = true;
+
+	ForceUnzoom();
+
+	m_vecDiveDirection = m_pOuter->GetAbsVelocity();
+	m_vecDiveDirection.GetForModify().z = 0;
+	m_vecDiveDirection.GetForModify().NormalizeInPlace();
+
+	m_pOuter->SetGroundEntity(NULL);
+
+	ConVarRef sdk_dive_speed("sdk_dive_speed");
+	return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
+}
+
+void CSDKPlayerShared::EndDive()
+{
+	m_bDiving = false;
 }
 
 #if defined ( SDK_USE_SPRINTING )
@@ -727,3 +797,10 @@ bool CSDKPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
 
+void CSDKPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force )
+{
+	if (m_Shared.IsRolling() || m_Shared.IsSliding() || m_Shared.IsDucking() || m_Shared.IsProne())
+		return;
+
+	BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
+}

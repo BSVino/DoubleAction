@@ -108,6 +108,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bRolling ) ),
 	RecvPropVector( RECVINFO(m_vecRollDirection) ),
 	RecvPropTime( RECVINFO(m_flRollTime) ),
+	RecvPropBool( RECVINFO( m_bDiving ) ),
+	RecvPropVector( RECVINFO(m_vecDiveDirection) ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -162,6 +164,9 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bRolling, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRollDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flRollTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bDiving, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_vecDiveDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flViewTilt, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
@@ -575,6 +580,14 @@ const QAngle &C_SDKPlayer::EyeAngles()
 }
 const QAngle& C_SDKPlayer::GetRenderAngles()
 {
+	if (m_Shared.IsDiving())
+	{
+		static QAngle angResult;
+		VectorAngles(GetAbsVelocity(), angResult);
+		angResult.x += 90;
+		return angResult;
+	}
+
 	if ( IsRagdoll() )
 	{
 		return vec3_angle;
@@ -585,6 +598,18 @@ const QAngle& C_SDKPlayer::GetRenderAngles()
 	}
 }
 
+const Vector& C_SDKPlayer::GetRenderOrigin( void )
+{
+	if (m_Shared.IsDiving())
+	{
+		static Vector vecResult;
+		vecResult = BaseClass::GetRenderOrigin();
+		vecResult.z += 40;
+		return vecResult;
+	}
+
+	return BaseClass::GetRenderOrigin();
+}
 
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
@@ -1234,4 +1259,26 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	}
 
 	BaseClass::OverrideView(pSetup);
+
+	float flTiltGoal;
+	if (m_Shared.IsDiving())
+		flTiltGoal = 1;
+	else
+		flTiltGoal = 0;
+
+	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10);
+
+	if (m_Shared.m_flViewTilt > 0)
+	{
+		Vector vecViewDirection;
+		AngleVectors(pSetup->angles, &vecViewDirection);
+		vecViewDirection.z = 0;
+		vecViewDirection.NormalizeInPlace();
+
+		Vector vecRight = Vector(0, 0, 1).Cross(m_Shared.GetDiveDirection());
+
+		float flDot = vecViewDirection.Dot(vecRight);
+
+		pSetup->angles.z += flDot * m_Shared.m_flViewTilt * 5;
+	}
 }

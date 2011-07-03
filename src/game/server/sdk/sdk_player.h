@@ -75,6 +75,8 @@ public:
 	virtual int		SpawnArmorValue( void ) const { return m_iSpawnArmorValue; }
 	virtual void	SetSpawnArmorValue( int i ) { m_iSpawnArmorValue = i; }
 
+	virtual void	PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
+
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 

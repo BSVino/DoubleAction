@@ -70,7 +70,7 @@
 
 
 
-#define SDK_GAME_DESCRIPTION	"SDK Template mod v1"
+#define SDK_GAME_DESCRIPTION	"Action Boogaloo"
 
 //================================================================================
 // Most elements below here are specific to the options above.

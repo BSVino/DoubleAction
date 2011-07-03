@@ -111,6 +111,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bRolling ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),
+	SendPropBool( SENDINFO( m_bDiving ) ),
+	SendPropVector( SENDINFO(m_vecDiveDirection) ),
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
