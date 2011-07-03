@@ -54,10 +54,9 @@ const char *pszTeamNames[] =
 {
 	"#SDK_Team_Unassigned",
 	"#SDK_Team_Spectator",
-#if defined ( SDK_USE_TEAMS )
 	"#SDK_Team_Blue",
 	"#SDK_Team_Red",
-#endif
+	"#SDK_Team_Deathmatch",
 };
 
 //Tony; We need to precache all possible player models that we're going to use

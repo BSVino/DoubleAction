@@ -88,6 +88,16 @@ public:
 };
 #endif // SDK_USE_TEAMS
 
+class C_SDKTeam_Deathmatch : public C_SDKTeam
+{
+	DECLARE_CLASS( C_SDKTeam_Deathmatch, C_SDKTeam );
+public:
+	DECLARE_CLIENTCLASS();
+
+				     C_SDKTeam_Deathmatch();
+	 virtual		~C_SDKTeam_Deathmatch() {}
+};
+
 extern C_SDKTeam *GetGlobalSDKTeam( int iIndex );
 
 #endif // C_SDK_TEAM_H

@@ -200,3 +200,22 @@ END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( sdk_team_unassigned, CSDKTeam_Unassigned );
 
+
+class CSDKTeam_Deathmatch : public CSDKTeam
+{
+	DECLARE_CLASS( CSDKTeam_Deathmatch, CSDKTeam );
+	DECLARE_SERVERCLASS();
+
+	virtual void Init( const char *pName, int iNumber )
+	{
+		BaseClass::Init( pName, iNumber );
+	}
+
+	virtual const char *GetTeamName( void ) { return "#Teamname_Deathmatch"; }
+};
+
+IMPLEMENT_SERVERCLASS_ST(CSDKTeam_Deathmatch, DT_SDKTeam_Deathmatch)
+END_SEND_TABLE()
+
+LINK_ENTITY_TO_CLASS( sdk_team_deathmatch, CSDKTeam_Deathmatch );
+

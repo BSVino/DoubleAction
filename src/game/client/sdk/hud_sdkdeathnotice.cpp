@@ -175,6 +175,9 @@ Color SDKHudDeathNotice::GetTeamColor( int iTeamNumber )
 	case TEAM_UNASSIGNED:		
 		return Color( 255, 255, 255, 255 );
 		break;
+	case SDK_TEAM_DEATHMATCH:		
+		return Color( 255, 255, 255, 255 );
+		break;
 	default:
 		AssertOnce( false );	// invalid team
 		return Color( 255, 255, 255, 255 );

@@ -86,7 +86,7 @@ public:
 };
 
 #define ROLL_TIME 1.0f
-#define SLIDE_TIME 8.0f
+#define SLIDE_TIME 6.0f
 
 // Expose our interface.
 static CSDKGameMovement g_GameMovement;
@@ -488,6 +488,15 @@ void CSDKGameMovement::WalkMove( void )
 		// NOTE YWB 7/5/07: Don't do this here, our version of CategorizePosition encompasses this test
 		// StayOnGround();
 
+		return;
+	}
+
+	if (m_pSDKPlayer->m_Shared.IsSliding())
+	{
+		// We hit something. Stop sliding immediately.
+		mv->m_vecVelocity = Vector(0,0,0);
+		m_pSDKPlayer->m_Shared.EndSlide();
+		SetSlideEyeOffset(0);
 		return;
 	}
 
@@ -1211,6 +1220,11 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndSlide();
 			SetSlideEyeOffset( 0.0 );
 		}
+		else if (m_pSDKPlayer->GetLocalVelocity().Length() < 10)
+		{
+			m_pSDKPlayer->m_Shared.EndSlide();
+			SetSlideEyeOffset( 0.0 );
+		}
 		else
 		{
 			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime());
@@ -1254,7 +1268,12 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
 			}
 			else
-				m_pSDKPlayer->m_Shared.SetProne(true, false);
+			{
+				m_pSDKPlayer->m_Shared.SetProne(false, false);
+				m_pSDKPlayer->m_Shared.StandUpFromProne();
+				m_pSDKPlayer->m_bUnProneToDuck = false;
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
+			}
 		}
 	}
 
@@ -1285,8 +1304,8 @@ void CSDKGameMovement::Duck( void )
 			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && !m_pSDKPlayer->GetGroundEntity();
 		}
 
-		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false &&
-			m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false )
+		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false && m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false &&
+			!m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsRolling() )
 		{
 			m_pSDKPlayer->m_Shared.StartGoingProne();
 

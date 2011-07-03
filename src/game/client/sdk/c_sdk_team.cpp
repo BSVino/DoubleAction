@@ -192,3 +192,10 @@ C_SDKTeam_Red::C_SDKTeam_Red()
 #endif
 }
 #endif // SDK_USE_TEAMS
+
+IMPLEMENT_CLIENTCLASS_DT(C_SDKTeam_Deathmatch, DT_SDKTeam_Deathmatch, CSDKTeam_Deathmatch)
+END_RECV_TABLE()
+
+C_SDKTeam_Deathmatch::C_SDKTeam_Deathmatch()
+{
+}

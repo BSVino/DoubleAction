@@ -82,7 +82,7 @@ public:
 
 		m_vSlideHullMin = vDuckHullMin;
 		m_vSlideHullMax = vDuckHullMax;
-		m_vSlideView = vDuckView;
+		m_vSlideView = Vector( 0, 0, 20 );
 	}
 #if defined ( SDK_USE_PRONE )
 	Vector m_vProneHullMin;

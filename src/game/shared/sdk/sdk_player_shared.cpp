@@ -201,6 +201,10 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
+	m_Shared.m_bDiving = false;
+	m_Shared.m_bRolling = false;
+	m_Shared.m_bSliding = false;
+	m_Shared.m_bProne = false;
 
 	//Tony; todo; fix
 
@@ -560,7 +564,7 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "250", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_height( "sdk_dive_height", "300", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 Vector CSDKPlayerShared::StartDiving()
 {

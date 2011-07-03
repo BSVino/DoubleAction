@@ -76,15 +76,12 @@
 // Most elements below here are specific to the options above.
 //================================================================================
 
-#if defined ( SDK_USE_TEAMS )
-
 enum sdkteams_e
 	{
 		SDK_TEAM_BLUE = LAST_SHARED_TEAM+1,
 		SDK_TEAM_RED,
+		SDK_TEAM_DEATHMATCH,
 	};
-
-#endif // SDK_USE_TEAMS
 
 #if defined ( SDK_USE_PRONE )
 

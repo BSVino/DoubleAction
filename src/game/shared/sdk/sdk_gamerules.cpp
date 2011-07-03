@@ -205,6 +205,7 @@ static const char *s_PreserveEnts[] =
 	"sdk_team_unassigned",
 	"sdk_team_blue",
 	"sdk_team_red",
+	"sdk_team_deathmatch",
 	"sdk_player_manager",
 	"env_soundscape",
 	"env_soundscape_proxy",
@@ -886,7 +887,12 @@ void CSDKGameRules::InitTeams( void )
 	Assert( pRed );
 	pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
 	g_Teams.AddToTail( pRed );
-#endif 
+#else
+	CTeam *pDeathmatch = static_cast<CTeam*>(CreateEntityByName( "sdk_team_deathmatch" ));
+	Assert( pDeathmatch );
+	pDeathmatch->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
+	g_Teams.AddToTail( pDeathmatch );
+#endif
 }
 
 /* create some proxy entities that we use for transmitting data */

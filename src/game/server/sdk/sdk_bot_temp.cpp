@@ -112,8 +112,9 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 	pPlayer->Spawn();
 
 	CCommand args;
-	args.Tokenize( "jointeam 0" );
+	args.Tokenize( "jointeam 2" );
 	pPlayer->ClientCommand( args );
+
 	args.Tokenize( "joinclass -2" );
 	pPlayer->ClientCommand( args );
 
