@@ -297,6 +297,22 @@ void CSDKPlayer::PostThink()
     m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 }
 
+bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
+{
+	// can always hear the console unless we're ignoring all chat
+	if ( !pPlayer )
+		return m_iIgnoreGlobalChat != CHAT_IGNORE_ALL;
+
+	// check if we're ignoring all chat
+	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_ALL )
+		return false;
+
+	// check if we're ignoring all but teammates
+	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_TEAM && g_pGameRules->PlayerRelationship( this, pPlayer ) != GR_TEAMMATE )
+		return false;
+
+	return true;
+}
 
 void CSDKPlayer::Precache()
 {

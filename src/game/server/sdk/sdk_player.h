@@ -60,6 +60,8 @@ public:
 	// Animstate handles this.
 	void SetAnimation( PLAYER_ANIM playerAnim ) { return; }
 
+	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
+
 	virtual void Precache();
 	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
