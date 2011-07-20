@@ -108,6 +108,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bSliding ) ),
 	SendPropVector( SENDINFO(m_vecSlideDirection) ),
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
+	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
 	SendPropBool( SENDINFO( m_bRolling ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),

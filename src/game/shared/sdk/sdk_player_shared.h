@@ -70,8 +70,10 @@ public:
 
 	bool	IsSliding() const;
 	bool	CanSlide() const;
+	bool	IsGettingUpFromSlide() const;	
 	void	StartSliding();
 	void	EndSlide();
+	void	StandUpFromSlide();
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 
@@ -146,6 +148,9 @@ public:
 	CNetworkVar( float, m_flGoProneTime );
 	CNetworkVar( bool, m_bForceProneChange );
 #endif
+
+	CNetworkVar( float, m_flUnSlideTime );
+	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 
 	bool m_bJumping;
 

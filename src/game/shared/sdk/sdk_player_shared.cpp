@@ -421,6 +421,11 @@ bool CSDKPlayerShared::CanChangePosition( void ) const
 
 #endif
 
+bool CSDKPlayerShared::IsGettingUpFromSlide() const
+{
+	return ( m_flUnSlideTime > 0 );
+}
+
 bool CSDKPlayerShared::IsSliding() const
 {
 	return m_bSliding;
@@ -475,6 +480,17 @@ void CSDKPlayerShared::EndSlide()
 {
 	m_bSliding = false;
 	m_flSlideTime = 0;
+}
+
+void CSDKPlayerShared::StandUpFromSlide( void )
+{	
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
+
+	m_flUnSlideTime = gpGlobals->curtime + TIME_TO_UNSLIDE;
+
+	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
 
 bool CSDKPlayerShared::IsRolling() const

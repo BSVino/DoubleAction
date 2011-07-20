@@ -99,6 +99,7 @@ enum sdkteams_e
 
 #endif // SDK_USE_SPRINTING
 
+	#define TIME_TO_UNSLIDE	0.2f
 	#define VEC_SLIDE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMin
 	#define VEC_SLIDE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMax
 	#define VEC_SLIDE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vSlideView

@@ -65,7 +65,10 @@ public:
 	bool CanUnprone();
 #endif // SDK_USE_PRONE
 
+	void FinishUnSlide( void );
+
 	void SetSlideEyeOffset( float flFraction );
+	void SetUnSlideEyeOffset( float flFraction );
 	void SetRollEyeOffset( float flFraction );
 
 	virtual const Vector&	GetPlayerMins( void ) const; // uses local player
@@ -117,7 +120,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	}
 	else	//not prone - standing or crouching and possibly moving
 #endif // SDK_USE_PRONE
-	if ( m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->GetGroundEntity() )
+	if ( (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()) && m_pSDKPlayer->GetGroundEntity() )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed * RemapValClamped( gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime(), 0, SLIDE_TIME, 1, 0 );
 	else if ( m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->GetGroundEntity() )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
@@ -404,7 +407,7 @@ void CSDKGameMovement::WalkMove( void )
 		( ( vecForward.y * flForwardMove ) + ( vecRight.y * flSideMove ) ), 
 		0.0f );
 
-	if (m_pSDKPlayer->m_Shared.IsSliding())
+	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		vecWishDirection = m_pSDKPlayer->m_Shared.GetSlideDirection() * mv->m_flMaxSpeed;
 
 	else if (m_pSDKPlayer->m_Shared.IsRolling())
@@ -491,12 +494,12 @@ void CSDKGameMovement::WalkMove( void )
 		return;
 	}
 
-	if (m_pSDKPlayer->m_Shared.IsSliding())
+	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 	{
 		// We hit something. Stop sliding immediately.
 		mv->m_vecVelocity = Vector(0,0,0);
-		m_pSDKPlayer->m_Shared.EndSlide();
-		SetSlideEyeOffset(0);
+		m_pSDKPlayer->m_Shared.StandUpFromSlide();
+		SetUnSlideEyeOffset(0);
 		return;
 	}
 
@@ -750,7 +753,7 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	}
 #endif
 
-	if (m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
+	if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
 		return false;
 
 	// See if we are waterjumping.  If so, decrement count and return.
@@ -1081,6 +1084,20 @@ void CSDKGameMovement::FinishProne( void )
 }
 #endif // SDK_USE_PRONE
 
+void CSDKGameMovement::FinishUnSlide( void )
+{
+	m_pSDKPlayer->m_Shared.m_flUnSlideTime = 0.0f;
+	
+	SetUnSlideEyeOffset( 1.0 );
+
+	Vector vHullMin = GetPlayerMins( player->m_Local.m_bDucked );
+	Vector vHullMax = GetPlayerMaxs( player->m_Local.m_bDucked );
+
+	m_pSDKPlayer->m_Shared.EndSlide();
+
+	CategorizePosition();
+}
+
 void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
 {
 	Vector vecStandViewOffset = GetPlayerViewOffset( false );
@@ -1089,6 +1106,18 @@ void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
 	Vector temp = player->GetViewOffset();
 
 	temp.z = RemapValClamped( Bias(flFraction, 0.8f), 0.0f, 1.0f, vecStandViewOffset.z, vecSlideViewOffset.z );
+
+	player->SetViewOffset( temp );
+}
+
+void CSDKGameMovement::SetUnSlideEyeOffset( float flFraction )
+{
+	Vector vecStartViewOffset = m_pSDKPlayer->m_Shared.m_vecUnSlideEyeStartOffset;
+	Vector vecEndViewOffset = GetPlayerViewOffset( false );
+
+	Vector temp = player->GetViewOffset();
+
+	temp.z = SimpleSplineRemapVal( flFraction, 0.0, 1.0, vecStartViewOffset.z, vecEndViewOffset.z );
 
 	player->SetViewOffset( temp );
 }
@@ -1213,6 +1242,23 @@ void CSDKGameMovement::Duck( void )
 		//don't deal with ducking while we're proning
 		return;
 	}
+	if( m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() == true )
+	{
+		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - gpGlobals->curtime;
+
+		if( slidetime < 0 )
+			FinishUnSlide();
+		else
+		{
+			// Calc parametric time
+			float fraction = slidetime / TIME_TO_UNSLIDE;
+			SetUnSlideEyeOffset( 1-fraction );
+
+		}
+
+		//don't deal with ducking while we're sliding
+		return;
+	}
 	else if( m_pSDKPlayer->m_Shared.IsSliding() )
 	{
 		if (!m_pSDKPlayer->GetGroundEntity())
@@ -1220,10 +1266,10 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndSlide();
 			SetSlideEyeOffset( 0.0 );
 		}
-		else if (m_pSDKPlayer->GetLocalVelocity().Length() < 10)
+		else if (m_pSDKPlayer->GetLocalVelocity().Length() < 10 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
-			m_pSDKPlayer->m_Shared.EndSlide();
-			SetSlideEyeOffset( 0.0 );
+			m_pSDKPlayer->m_Shared.StandUpFromSlide();
+			SetUnSlideEyeOffset( 0.0 );
 		}
 		else
 		{
@@ -1337,9 +1383,9 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding())
 		{
-			m_pSDKPlayer->m_Shared.EndSlide();
+			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 
-			SetSlideEyeOffset( 0.0 );
+			SetUnSlideEyeOffset( 0.0 );
 
 			return;
 		}
