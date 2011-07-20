@@ -361,9 +361,11 @@ bool CSDKPlayerShared::IsGoingProne() const
 {
 	return ( m_flGoProneTime > 0 );
 }
+
 void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 {
 	m_bProne = bProne;
+	m_bProneSliding = false;
 
 	if ( bNoAnimation )
 	{
@@ -379,6 +381,7 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 		ForceUnzoom();
 	}
 }
+
 void CSDKPlayerShared::StartGoingProne( void )
 {
 	// make the prone sound
@@ -433,7 +436,7 @@ bool CSDKPlayerShared::IsSliding() const
 
 bool CSDKPlayerShared::CanSlide() const
 {
-	if (m_pOuter->GetLocalVelocity().Length() < 10)
+	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
 		return false;
 
 	if (IsProne())
@@ -500,7 +503,7 @@ bool CSDKPlayerShared::IsRolling() const
 
 bool CSDKPlayerShared::CanRoll() const
 {
-	if (m_pOuter->GetLocalVelocity().Length() < 10)
+	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
 		return false;
 
 	if (IsProne())
@@ -556,7 +559,7 @@ bool CSDKPlayerShared::IsDiving() const
 
 bool CSDKPlayerShared::CanDive() const
 {
-	if (m_pOuter->GetLocalVelocity().Length() < 10)
+	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
 		return false;
 
 	if (IsProne())

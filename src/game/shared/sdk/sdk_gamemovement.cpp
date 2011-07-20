@@ -116,7 +116,10 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	// This check is now simplified, just use CanChangePosition because it checks the two things we need to check anyway.
 	if ( m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.CanChangePosition() && m_pSDKPlayer->GetGroundEntity() != NULL )
 	{
-			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flProneSpeed;		//Base prone speed 
+		if (m_pSDKPlayer->m_Shared.m_bProneSliding)
+			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+		else
+			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flProneSpeed;
 	}
 	else	//not prone - standing or crouching and possibly moving
 #endif // SDK_USE_PRONE
@@ -610,6 +613,9 @@ void CSDKGameMovement::CategorizePosition( void )
 		}
 		SetGroundEntity( &trace );
 	}
+
+	if (m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
+		player->m_surfaceFriction *= 0.1f;
 }
 
 inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, 
@@ -1190,6 +1196,12 @@ void CSDKGameMovement::Duck( void )
 	static int iState = 0;
 
 #if defined ( SDK_USE_PRONE )
+	if (m_pSDKPlayer->m_Shared.IsProne())
+	{
+		if (mv->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT))
+			m_pSDKPlayer->m_Shared.m_bProneSliding = false;
+	}
+
 	// Prone / UnProne - we don't duck if this is happening
 	if( m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == true )
 	{
@@ -1308,7 +1320,13 @@ void CSDKGameMovement::Duck( void )
 		{
 			m_pSDKPlayer->m_Shared.EndDive();
 
-			if (m_pSDKPlayer->m_Shared.CanRoll())
+			if (mv->m_nButtons & IN_ALT1)
+			{
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset( 1.0 );
+				m_pSDKPlayer->m_Shared.m_bProneSliding = true;
+			}
+			else if (m_pSDKPlayer->m_Shared.CanRoll())
 			{
 				m_pSDKPlayer->m_Shared.StartRolling();
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
