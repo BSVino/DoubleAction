@@ -124,7 +124,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	else	//not prone - standing or crouching and possibly moving
 #endif // SDK_USE_PRONE
 	if ( (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()) && m_pSDKPlayer->GetGroundEntity() )
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed * RemapValClamped( gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime(), 0, SLIDE_TIME, 1, 0 );
+		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 	else if ( m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->GetGroundEntity() )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
 	else if ( m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity() )
@@ -411,7 +411,7 @@ void CSDKGameMovement::WalkMove( void )
 		0.0f );
 
 	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
-		vecWishDirection = m_pSDKPlayer->m_Shared.GetSlideDirection() * mv->m_flMaxSpeed;
+		vecWishDirection = Vector(0,0,0);
 
 	else if (m_pSDKPlayer->m_Shared.IsRolling())
 		vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
@@ -494,15 +494,6 @@ void CSDKGameMovement::WalkMove( void )
 		// NOTE YWB 7/5/07: Don't do this here, our version of CategorizePosition encompasses this test
 		// StayOnGround();
 
-		return;
-	}
-
-	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
-	{
-		// We hit something. Stop sliding immediately.
-		mv->m_vecVelocity = Vector(0,0,0);
-		m_pSDKPlayer->m_Shared.StandUpFromSlide();
-		SetUnSlideEyeOffset(0);
 		return;
 	}
 
@@ -614,7 +605,7 @@ void CSDKGameMovement::CategorizePosition( void )
 		SetGroundEntity( &trace );
 	}
 
-	if (m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
+	if (m_pSDKPlayer->m_Shared.IsSliding() || m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
 		player->m_surfaceFriction *= 0.1f;
 }
 
@@ -1278,7 +1269,7 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndSlide();
 			SetSlideEyeOffset( 0.0 );
 		}
-		else if (m_pSDKPlayer->GetLocalVelocity().Length() < 10 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
+		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 			SetUnSlideEyeOffset( 0.0 );
@@ -1418,6 +1409,11 @@ void CSDKGameMovement::Duck( void )
 		else if( bSlide && m_pSDKPlayer->m_Shared.CanSlide() )
 		{
 			m_pSDKPlayer->m_Shared.StartSliding();
+
+			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+			mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+			player->m_surfaceFriction = 0.1f;
 
 			SetSlideEyeOffset( 0.0 );
 
