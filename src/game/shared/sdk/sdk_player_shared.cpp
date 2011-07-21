@@ -580,7 +580,8 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "300", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 Vector CSDKPlayerShared::StartDiving()
 {
@@ -601,12 +602,15 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->SetGroundEntity(NULL);
 
+	m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+
 	ConVarRef sdk_dive_speed("sdk_dive_speed");
 	return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
 }
 
 void CSDKPlayerShared::EndDive()
 {
+	m_pOuter->SetGravity(1);
 	m_bDiving = false;
 }
 

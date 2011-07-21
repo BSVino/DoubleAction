@@ -29,7 +29,7 @@
 
 ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar  sdk_dive_speed( "sdk_dive_speed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_speed( "sdk_dive_speed", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 extern bool g_bMovementOptimizations;
 
