@@ -477,6 +477,7 @@ void CSDKPlayerShared::StartSliding()
 	m_vecSlideDirection.GetForModify().NormalizeInPlace();
 
 	m_flSlideTime = gpGlobals->curtime;
+	m_flUnSlideTime = 0;
 }
 
 void CSDKPlayerShared::EndSlide()
