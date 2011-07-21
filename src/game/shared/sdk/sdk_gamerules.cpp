@@ -577,6 +577,27 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		}
 	}
 
+	CSDKPlayer* pSDKPlayer = ToSDKPlayer(pPlayer);
+	for (int i = 0; i < gpGlobals->maxClients; i++)
+	{
+		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
+		if (!pOtherPlayer)
+			continue;
+
+		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
+			continue;
+
+		if ((pPlayer->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
+			continue;
+
+		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
+
+		trace_t tr;
+		UTIL_TraceLine( pSDKPlayer->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE, pPlayer, COLLISION_GROUP_NONE, &tr );
+		if (tr.m_pEnt == pOtherPlayer)
+			return false;
+	}
+
 	Vector mins = GetViewVectors()->m_vHullMin;
 	Vector maxs = GetViewVectors()->m_vHullMax;
 
