@@ -98,6 +98,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bProne ) ),
 	RecvPropTime( RECVINFO( m_flGoProneTime ) ),
 	RecvPropTime( RECVINFO( m_flUnProneTime ) ),
+	RecvPropBool( RECVINFO( m_bProneSliding ) ),
 #endif
 #if defined( SDK_USE_SPRINTING )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
@@ -106,6 +107,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropVector( RECVINFO(m_vecSlideDirection) ),
 	RecvPropTime( RECVINFO(m_flSlideTime) ),
 	RecvPropTime( RECVINFO( m_flUnSlideTime ) ),
+	RecvPropVector( RECVINFO(m_vecUnSlideEyeStartOffset) ),
 	RecvPropBool( RECVINFO( m_bRolling ) ),
 	RecvPropVector( RECVINFO(m_vecRollDirection) ),
 	RecvPropTime( RECVINFO(m_flRollTime) ),
@@ -155,6 +157,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bProne, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flGoProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bProneSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 #if defined( SDK_USE_SPRINTING )
 	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -163,6 +166,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_vecSlideDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_vecUnSlideEyeStartOffset, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bRolling, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRollDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flRollTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
@@ -696,7 +700,6 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 {
 	ResetToneMapping(1.0);
 #if defined ( SDK_USE_PRONE )
-	m_Shared.m_bForceProneChange = true;
 	m_bUnProneToDuck = false;
 #endif
 

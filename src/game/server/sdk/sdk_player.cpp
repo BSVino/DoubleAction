@@ -101,6 +101,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bProne ) ),
 	SendPropTime( SENDINFO( m_flGoProneTime ) ),
 	SendPropTime( SENDINFO( m_flUnProneTime ) ),
+	SendPropBool( SENDINFO( m_bProneSliding ) ),
 #endif
 #if defined ( SDK_USE_SPRINTING )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
@@ -109,6 +110,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropVector( SENDINFO(m_vecSlideDirection) ),
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
 	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
+	SendPropVector( SENDINFO(m_vecUnSlideEyeStartOffset) ),
 	SendPropBool( SENDINFO( m_bRolling ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),

@@ -318,7 +318,6 @@ CSDKPlayerShared::CSDKPlayerShared()
 {
 #if defined( SDK_USE_PRONE )
 	m_bProne = false;
-	m_bForceProneChange = false;
 	m_flNextProneCheck = 0;
 	m_flUnProneTime = 0;
 	m_flGoProneTime = 0;
@@ -371,9 +370,6 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 	{
 		m_flGoProneTime = 0;
 		m_flUnProneTime = 0;
-
-		// cancel the view animation!
-		m_bForceProneChange = true;
 	}
 
 	if ( !bProne /*&& IsSniperZoomed()*/ )	// forceunzoom for going prone is in StartGoingProne
