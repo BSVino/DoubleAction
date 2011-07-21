@@ -1600,6 +1600,8 @@ const Vector& CSDKGameMovement::GetPlayerMins( void ) const
 	{
 		if ( player->m_Local.m_bDucked )
 			return VEC_DUCK_HULL_MIN;
+		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
+			return VEC_DIVE_HULL_MIN;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
 			return VEC_PRONE_HULL_MIN;
@@ -1632,6 +1634,8 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 	{
 		if ( player->m_Local.m_bDucked )
 			return VEC_DUCK_HULL_MAX;
+		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
+			return VEC_DIVE_HULL_MAX;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
             return VEC_PRONE_HULL_MAX;

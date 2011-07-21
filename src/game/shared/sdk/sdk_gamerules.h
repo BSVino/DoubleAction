@@ -56,6 +56,8 @@ public:
 		Vector vDuckView,
 		Vector vObsHullMin,
 		Vector vObsHullMax,
+		Vector vDiveHullMin,
+		Vector vDiveHullMax,
 		Vector vDeadViewHeight
 #if defined ( SDK_USE_PRONE )
 		,Vector vProneHullMin,
@@ -83,6 +85,9 @@ public:
 		m_vSlideHullMin = vDuckHullMin;
 		m_vSlideHullMax = vDuckHullMax;
 		m_vSlideView = Vector( 0, 0, 20 );
+
+		m_vDiveHullMin = vDiveHullMin;
+		m_vDiveHullMax = vDiveHullMax;
 	}
 #if defined ( SDK_USE_PRONE )
 	Vector m_vProneHullMin;
@@ -93,6 +98,9 @@ public:
 	Vector m_vSlideHullMin;
 	Vector m_vSlideHullMax;	
 	Vector m_vSlideView;
+
+	Vector m_vDiveHullMin;
+	Vector m_vDiveHullMax;	
 };
 
 class CSDKGameRules : public CTeamplayRules

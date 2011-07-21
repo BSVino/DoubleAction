@@ -104,6 +104,9 @@ enum sdkteams_e
 	#define VEC_SLIDE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMax
 	#define VEC_SLIDE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vSlideView
 
+	#define VEC_DIVE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vDiveHullMin
+	#define VEC_DIVE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vDiveHullMax
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 	#define SDK_NUM_PLAYERCLASSES 3		//Tony; our template sample has 3 player classes.
 	#define SDK_PLAYERCLASS_IMAGE_LENGTH 64
