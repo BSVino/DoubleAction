@@ -88,7 +88,7 @@ public:
 	CSDKPlayer *m_pSDKPlayer;
 };
 
-#define ROLL_TIME 1.0f
+#define ROLL_TIME 0.85f
 #define SLIDE_TIME 6.0f
 
 // Expose our interface.

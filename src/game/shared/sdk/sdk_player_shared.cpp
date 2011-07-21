@@ -515,9 +515,6 @@ bool CSDKPlayerShared::CanRoll() const
 	if (IsRolling())
 		return false;
 
-	if (IsDucking())
-		return false;
-
 	if (IsDiving())
 		return false;
 
