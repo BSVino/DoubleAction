@@ -201,6 +201,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
+	m_Shared.m_flLastDuckPress = -1;
 	m_Shared.m_bDiving = false;
 	m_Shared.m_bRolling = false;
 	m_Shared.m_bSliding = false;
@@ -491,6 +492,14 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	m_flUnSlideTime = gpGlobals->curtime + TIME_TO_UNSLIDE;
 
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
+}
+
+void CSDKPlayerShared::SetDuckPress(bool bReset)
+{
+	if (bReset)
+		m_flLastDuckPress = -1;
+	else
+		m_flLastDuckPress = gpGlobals->curtime;
 }
 
 bool CSDKPlayerShared::IsRolling() const

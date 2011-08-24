@@ -77,6 +77,8 @@ public:
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 
+	void	SetDuckPress(bool bReset = false);
+	float	GetLastDuckPress() const { return m_flLastDuckPress; };
 	bool	IsRolling() const;
 	bool	CanRoll() const;
 	void	StartRolling();
@@ -127,6 +129,7 @@ private:
 	CNetworkVar( Vector, m_vecSlideDirection );
 	CNetworkVar( float, m_flSlideTime );
 
+	CNetworkVar( float, m_flLastDuckPress );
 	CNetworkVar( bool, m_bRolling );
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );

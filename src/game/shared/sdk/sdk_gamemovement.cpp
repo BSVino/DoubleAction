@@ -1348,15 +1348,29 @@ void CSDKGameMovement::Duck( void )
 		bool bRoll = false;
 		bool bDive = false;
 
+		if (buttonsPressed & (IN_DUCK))
+		{
+			if (m_pSDKPlayer->m_Shared.GetLastDuckPress() < 0)
+				m_pSDKPlayer->m_Shared.SetDuckPress();
+			else
+			{
+				float flTime = gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetLastDuckPress();
+				if (flTime < 0.2f)
+				{
+					bRoll = true;
+					m_pSDKPlayer->m_Shared.SetDuckPress(true);
+				}
+				else
+					m_pSDKPlayer->m_Shared.SetDuckPress();
+			}
+		}
+
 		if (bStunt)
 		{
 			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				m_pSDKPlayer->GetGroundEntity();
+				m_pSDKPlayer->GetGroundEntity() && (mv->m_nButtons & IN_DUCK);
 
-			bRoll = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				(mv->m_nButtons & IN_DUCK);
-
-			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && !m_pSDKPlayer->GetGroundEntity();
+			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
 
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false && m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false &&
