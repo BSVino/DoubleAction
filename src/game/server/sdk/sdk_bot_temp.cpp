@@ -30,7 +30,7 @@ ConVar bot_flipout( "bot_flipout", "0", 0, "When on, all bots fire their guns." 
 ConVar bot_changeclass( "bot_changeclass", "0", 0, "Force all bots to change to the specified class." );
 static ConVar bot_mimic( "bot_mimic", "0", 0, "Bot uses usercmd of player by index." );
 static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw." );
-ConVar bot_frozen( "bot_frozen", "0", 0, "Don't do anything." );
+ConVar bot_frozen( "bot_frozen", "1", 0, "Don't do anything." );
 
 ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
@@ -42,6 +42,9 @@ static int g_CurBotNumber = 1;
 // This is our bot class.
 class CSDKBot : public CSDKPlayer
 {
+public:
+	virtual bool	IsBot() const { return true; }
+
 public:
 	bool			m_bBackwards;
 
@@ -112,10 +115,8 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 	pPlayer->Spawn();
 
 	CCommand args;
-	args.Tokenize( "jointeam 2" );
-	pPlayer->ClientCommand( args );
 
-	args.Tokenize( "joinclass -2" );
+	args.Tokenize( "joingame" );
 	pPlayer->ClientCommand( args );
 
 	g_CurBotNumber++;
