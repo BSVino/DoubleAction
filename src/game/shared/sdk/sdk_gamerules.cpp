@@ -593,7 +593,7 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
 
 		trace_t tr;
-		UTIL_TraceLine( pSDKPlayer->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE, pPlayer, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( pSDKPlayer->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
 		if (tr.m_pEnt == pOtherPlayer)
 			return false;
 	}
@@ -1309,6 +1309,9 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 {
+	if (pPlayer == pTarget)
+		return GR_TEAMMATE;
+
 #ifndef CLIENT_DLL
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
