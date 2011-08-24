@@ -1359,9 +1359,6 @@
     <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_crowbar.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
