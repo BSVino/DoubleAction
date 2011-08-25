@@ -85,7 +85,7 @@ enum sdkteams_e
 
 #if defined ( SDK_USE_PRONE )
 
-	#define TIME_TO_PRONE	1.9f
+	#define TIME_TO_PRONE	1.0f
 	#define VEC_PRONE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vProneHullMin
 	#define VEC_PRONE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vProneHullMax
 	#define VEC_PRONE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vProneView
