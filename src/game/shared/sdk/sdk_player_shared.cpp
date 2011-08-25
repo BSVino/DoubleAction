@@ -19,6 +19,7 @@
 #include "engine/ivdebugoverlay.h"
 #include "obstacle_pushaway.h"
 #include "props_shared.h"
+#include "ammodef.h"
 
 #include "decals.h"
 #include "util_shared.h"
@@ -109,7 +110,10 @@ void CSDKPlayer::FireBullet(
 		// damage get weaker of distance
 		fCurrentDamage *= pow ( 0.85f, (flCurrentDistance / 500));
 
-		int iDamageType = DMG_BULLET | DMG_NEVERGIB;
+		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
+
+		if (iDamageType & DMG_BUCKSHOT)
+			fCurrentDamage *= RemapValClamped(flCurrentDistance, 500, 1000, 1.0f, 0.2f);
 
 		if( bDoEffects )
 		{
