@@ -599,6 +599,15 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 			return false;
 	}
 
+	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "weapon_grenade" );
+	while (pGrenade)
+	{
+		CBaseEntity *pGrenade = gEntList.FindEntityByClassname( pGrenade, "weapon_grenade" );
+
+		if ((pPlayer->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
+			return false;
+	}
+
 	Vector mins = GetViewVectors()->m_vHullMin;
 	Vector maxs = GetViewVectors()->m_vHullMax;
 
