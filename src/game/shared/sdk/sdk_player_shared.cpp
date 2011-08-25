@@ -530,7 +530,7 @@ bool CSDKPlayerShared::CanRoll() const
 	return true;
 }
 
-void CSDKPlayerShared::StartRolling()
+void CSDKPlayerShared::StartRolling(bool bFromDive)
 {
 	if (!CanRoll())
 		return;
@@ -540,6 +540,7 @@ void CSDKPlayerShared::StartRolling()
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoRoll" );
 
 	m_bRolling = true;
+	m_bRollingFromDive = bFromDive;
 
 	ForceUnzoom();
 

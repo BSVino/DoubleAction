@@ -142,6 +142,7 @@ static CSDKViewVectors g_SDKViewVectors(
 													
 	Vector(-12, -12, 0  ),		//VEC_DIVE_HULL_MIN
 	Vector( 12,  12, 24 ),		//VEC_DIVE_HULL_MAX
+	Vector( 0, 0, 10 ),			//VEC_DIVE_VIEW
 
 	Vector( 0, 0, 14 )			//VEC_DEAD_VIEWHEIGHT
 #if defined ( SDK_USE_PRONE )			

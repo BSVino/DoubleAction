@@ -80,8 +80,9 @@ public:
 	void	SetDuckPress(bool bReset = false);
 	float	GetLastDuckPress() const { return m_flLastDuckPress; };
 	bool	IsRolling() const;
+	bool	IsRollingFromDive() const { return m_bRollingFromDive; };
 	bool	CanRoll() const;
-	void	StartRolling();
+	void	StartRolling(bool bFromDive = false);
 	void	EndRoll();
 	float	GetRollTime() const { return m_flRollTime; };
 	Vector	GetRollDirection() const { return m_vecRollDirection; };
@@ -131,6 +132,7 @@ private:
 
 	CNetworkVar( float, m_flLastDuckPress );
 	CNetworkVar( bool, m_bRolling );
+	CNetworkVar( bool, m_bRollingFromDive );
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
 
