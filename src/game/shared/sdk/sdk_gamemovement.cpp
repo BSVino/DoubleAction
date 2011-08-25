@@ -414,7 +414,10 @@ void CSDKGameMovement::WalkMove( void )
 		vecWishDirection = Vector(0,0,0);
 
 	else if (m_pSDKPlayer->m_Shared.IsRolling())
+	{
 		vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
+		vecWishDirection.z = 0;
+	}
 
 	// Calculate the speed and direction of movement, then clamp the speed.
 	float flWishSpeed = VectorNormalize( vecWishDirection );
