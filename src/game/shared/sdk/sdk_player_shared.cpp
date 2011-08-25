@@ -202,6 +202,8 @@ void CSDKPlayer::SharedSpawn()
 	// Reset the animation state or we will animate to standing
 	// when we spawn
 
+	SetGravity(1);
+
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
