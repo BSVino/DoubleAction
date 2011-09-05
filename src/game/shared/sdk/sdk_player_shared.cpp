@@ -19,6 +19,7 @@
 #include "engine/ivdebugoverlay.h"
 #include "obstacle_pushaway.h"
 #include "props_shared.h"
+#include "ammodef.h"
 
 #include "decals.h"
 #include "util_shared.h"
@@ -109,7 +110,10 @@ void CSDKPlayer::FireBullet(
 		// damage get weaker of distance
 		fCurrentDamage *= pow ( 0.85f, (flCurrentDistance / 500));
 
-		int iDamageType = DMG_BULLET | DMG_NEVERGIB;
+		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
+
+		if (iDamageType & DMG_BUCKSHOT)
+			fCurrentDamage *= RemapValClamped(flCurrentDistance, 500, 1000, 1.0f, 0.2f);
 
 		if( bDoEffects )
 		{
@@ -198,9 +202,12 @@ void CSDKPlayer::SharedSpawn()
 	// Reset the animation state or we will animate to standing
 	// when we spawn
 
+	SetGravity(1);
+
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
+	m_Shared.m_flLastDuckPress = -1;
 	m_Shared.m_bDiving = false;
 	m_Shared.m_bRolling = false;
 	m_Shared.m_bSliding = false;
@@ -493,6 +500,14 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
 
+void CSDKPlayerShared::SetDuckPress(bool bReset)
+{
+	if (bReset)
+		m_flLastDuckPress = -1;
+	else
+		m_flLastDuckPress = gpGlobals->curtime;
+}
+
 bool CSDKPlayerShared::IsRolling() const
 {
 	return m_bRolling;
@@ -521,7 +536,7 @@ bool CSDKPlayerShared::CanRoll() const
 	return true;
 }
 
-void CSDKPlayerShared::StartRolling()
+void CSDKPlayerShared::StartRolling(bool bFromDive)
 {
 	if (!CanRoll())
 		return;
@@ -531,6 +546,7 @@ void CSDKPlayerShared::StartRolling()
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoRoll" );
 
 	m_bRolling = true;
+	m_bRollingFromDive = bFromDive;
 
 	ForceUnzoom();
 

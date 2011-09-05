@@ -29,7 +29,7 @@
 
 ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar  sdk_dive_speed( "sdk_dive_speed", "350", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT );
 
 extern bool g_bMovementOptimizations;
 
@@ -77,7 +77,7 @@ public:
 	// IGameMovement interface
 	virtual const Vector&	GetPlayerMins( bool ducked ) const { return BaseClass::GetPlayerMins(ducked); }
 	virtual const Vector&	GetPlayerMaxs( bool ducked ) const { return BaseClass::GetPlayerMaxs(ducked); }
-	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const { return BaseClass::GetPlayerViewOffset(ducked); }
+	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const;
 
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );
 
@@ -414,7 +414,10 @@ void CSDKGameMovement::WalkMove( void )
 		vecWishDirection = Vector(0,0,0);
 
 	else if (m_pSDKPlayer->m_Shared.IsRolling())
+	{
 		vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
+		vecWishDirection.z = 0;
+	}
 
 	// Calculate the speed and direction of movement, then clamp the speed.
 	float flWishSpeed = VectorNormalize( vecWishDirection );
@@ -1123,13 +1126,16 @@ void CSDKGameMovement::SetRollEyeOffset( float flFraction )
 {
 	if (flFraction < 0.5f)
 	{
-		Vector vecStandViewOffset = GetPlayerViewOffset( false );
+		Vector vecStartViewOffset = GetPlayerViewOffset( false );
+		if (m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->m_Shared.IsRollingFromDive())
+			vecStartViewOffset = VEC_DIVE_VIEW;
+
 		Vector vecSlideViewOffset = VEC_SLIDE_VIEW;
 
 		Vector temp = player->GetViewOffset();
 		flFraction = RemapVal( flFraction, 0, 0.5f, 0, 1 );
 
-		temp.z = RemapVal( Bias(flFraction, 0.8f), 0.0f, 1.0f, vecStandViewOffset.z, vecSlideViewOffset.z );
+		temp.z = RemapVal( Bias(flFraction, 0.8f), 0.0f, 1.0f, vecStartViewOffset.z, vecSlideViewOffset.z );
 
 		player->SetViewOffset( temp );
 	}
@@ -1310,6 +1316,7 @@ void CSDKGameMovement::Duck( void )
 		if (m_pSDKPlayer->GetGroundEntity())
 		{
 			m_pSDKPlayer->m_Shared.EndDive();
+			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
 			if (mv->m_nButtons & IN_ALT1)
 			{
@@ -1319,7 +1326,8 @@ void CSDKGameMovement::Duck( void )
 			}
 			else if (m_pSDKPlayer->m_Shared.CanRoll())
 			{
-				m_pSDKPlayer->m_Shared.StartRolling();
+				m_pSDKPlayer->m_Shared.StartRolling(true);
+				SetRollEyeOffset( 0.0 );
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
 			}
 			else
@@ -1348,15 +1356,29 @@ void CSDKGameMovement::Duck( void )
 		bool bRoll = false;
 		bool bDive = false;
 
+		if (buttonsPressed & (IN_DUCK))
+		{
+			if (m_pSDKPlayer->m_Shared.GetLastDuckPress() < 0)
+				m_pSDKPlayer->m_Shared.SetDuckPress();
+			else
+			{
+				float flTime = gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetLastDuckPress();
+				if (flTime < 0.2f)
+				{
+					bRoll = true;
+					m_pSDKPlayer->m_Shared.SetDuckPress(true);
+				}
+				else
+					m_pSDKPlayer->m_Shared.SetDuckPress();
+			}
+		}
+
 		if (bStunt)
 		{
 			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				m_pSDKPlayer->GetGroundEntity();
+				m_pSDKPlayer->GetGroundEntity() && (mv->m_nButtons & IN_DUCK);
 
-			bRoll = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				(mv->m_nButtons & IN_DUCK);
-
-			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && !m_pSDKPlayer->GetGroundEntity();
+			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
 
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false && m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false &&
@@ -1423,7 +1445,12 @@ void CSDKGameMovement::Duck( void )
 		{
 			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
 
-			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
+			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
+			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
+			mv->SetAbsOrigin( mv->GetAbsOrigin() + Vector(0, 0, flHullHeightNormal-flHullHeightDive) );
+			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
+
+			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_DIVE );
 		}
 	}
 
@@ -1649,3 +1676,10 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 	}
 }
 
+const Vector& CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
+{
+	if (m_pSDKPlayer->m_Shared.IsDiving())
+		return VEC_DIVE_VIEW;
+
+	return BaseClass::GetPlayerViewOffset(ducked);
+}

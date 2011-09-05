@@ -111,7 +111,9 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
 	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
 	SendPropVector( SENDINFO(m_vecUnSlideEyeStartOffset) ),
+	SendPropTime( SENDINFO( m_flLastDuckPress ) ),
 	SendPropBool( SENDINFO( m_bRolling ) ),
+	SendPropBool( SENDINFO( m_bRollingFromDive ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),
 	SendPropBool( SENDINFO( m_bDiving ) ),
@@ -336,15 +338,14 @@ void CSDKPlayer::GiveDefaultItems()
 #if !defined ( SDK_USE_PLAYERCLASSES )
 	if ( State_Get() == STATE_ACTIVE )
 	{
-		CBasePlayer::GiveAmmo( 30,	"pistol");
-		CBasePlayer::GiveAmmo( 30,	"mp5");
-		CBasePlayer::GiveAmmo( 12,	"shotgun");
-		CBasePlayer::GiveAmmo( 5,	"grenades" );
+		CBasePlayer::GiveAmmo( 120,	"pistol");
+		CBasePlayer::GiveAmmo( 120,	"mp5");
+		CBasePlayer::GiveAmmo( 48,	"shotgun");
+		CBasePlayer::GiveAmmo( 3,	"grenades" );
 
 		GiveNamedItem( "weapon_pistol" );
 		GiveNamedItem( "weapon_mp5" );
 		GiveNamedItem( "weapon_shotgun" );
-		GiveNamedItem( "weapon_crowbar" );
 		GiveNamedItem( "weapon_grenade" );
 	}
 #endif

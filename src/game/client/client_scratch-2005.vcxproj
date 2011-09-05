@@ -798,7 +798,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     <ClCompile Include="..\shared\sdk\sdk_weapon_melee.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_crowbar.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_pistol.cpp" />

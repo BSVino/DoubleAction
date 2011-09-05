@@ -336,6 +336,12 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
+		// Temporary code to shorten reload times for testing.
+		MDLCACHE_CRITICAL_SECTION();
+		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration()/2;
+		if (GetPlayerOwner())
+			GetPlayerOwner()->SetNextAttack( flSequenceEndTime );
+		m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;
 
 		SendReloadEvents();
 

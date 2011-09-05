@@ -85,7 +85,7 @@ enum sdkteams_e
 
 #if defined ( SDK_USE_PRONE )
 
-	#define TIME_TO_PRONE	1.9f
+	#define TIME_TO_PRONE	1.0f
 	#define VEC_PRONE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vProneHullMin
 	#define VEC_PRONE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vProneHullMax
 	#define VEC_PRONE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vProneView
@@ -102,10 +102,11 @@ enum sdkteams_e
 	#define TIME_TO_UNSLIDE	0.2f
 	#define VEC_SLIDE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMin
 	#define VEC_SLIDE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vSlideHullMax
-	#define VEC_SLIDE_VIEW SDKGameRules()->GetSDKViewVectors()->m_vSlideView
+	#define VEC_SLIDE_VIEW		SDKGameRules()->GetSDKViewVectors()->m_vSlideView
 
 	#define VEC_DIVE_HULL_MIN	SDKGameRules()->GetSDKViewVectors()->m_vDiveHullMin
 	#define VEC_DIVE_HULL_MAX	SDKGameRules()->GetSDKViewVectors()->m_vDiveHullMax
+	#define VEC_DIVE_VIEW		SDKGameRules()->GetSDKViewVectors()->m_vDiveView
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	#define SDK_NUM_PLAYERCLASSES 3		//Tony; our template sample has 3 player classes.
@@ -136,11 +137,11 @@ extern const char *pszPossiblePlayerModels[];
 extern const char *pszTeamNames[];
 
 //Tony; these defines handle the default speeds for all of these - all are listed regardless of which option is enabled.
-#define SDK_DEFAULT_PLAYER_RUNSPEED			160
+#define SDK_DEFAULT_PLAYER_RUNSPEED			190
 #define SDK_DEFAULT_PLAYER_SPRINTSPEED		330
-#define SDK_DEFAULT_PLAYER_PRONESPEED		40
-#define SDK_DEFAULT_PLAYER_SLIDESPEED		250
-#define SDK_DEFAULT_PLAYER_ROLLSPEED		120
+#define SDK_DEFAULT_PLAYER_PRONESPEED		45
+#define SDK_DEFAULT_PLAYER_SLIDESPEED		265
+#define SDK_DEFAULT_PLAYER_ROLLSPEED		140
 
 //--------------------------------------------------------------------------------------------------------
 //
