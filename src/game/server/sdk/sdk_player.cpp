@@ -320,6 +320,13 @@ bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 
 void CSDKPlayer::Precache()
 {
+	PrecacheScriptSound( "Player.GoRoll" );
+	PrecacheScriptSound( "Player.GoDive" );
+	PrecacheScriptSound( "Player.DiveLand" );
+	PrecacheScriptSound( "Player.GoProne" );
+	PrecacheScriptSound( "Player.UnProne" );
+	PrecacheScriptSound( "Player.GoSlide" );
+	PrecacheScriptSound( "Player.UnSlide" );
 
 	//Tony; go through our list of player models that we may be using and cache them
 	int i = 0;

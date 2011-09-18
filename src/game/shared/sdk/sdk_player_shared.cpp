@@ -554,10 +554,6 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 	if (!CanRoll())
 		return;
 
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoRoll" );
-
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;
 
