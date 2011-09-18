@@ -404,6 +404,7 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 
+	m_bRemove = true;
 }
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
 {
@@ -1693,4 +1694,58 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 		return false;
 
 	return BaseClass::WantsLagCompensationOnEntity( pPlayer, pCmd, pEntityTransmitBits );
+}
+
+void CSDKPlayer::RemoveOtherWeapons( SDKWeaponID eWeapon )
+{
+	if (!m_bRemove)
+		return;
+
+	m_bRemove = false;
+	if (eWeapon == SDK_WEAPON_MP5)
+	{
+		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+	}
+	else if (eWeapon == SDK_WEAPON_SHOTGUN)
+	{
+		RemoveWeapon(SDK_WEAPON_MP5);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+	}
+	else if (eWeapon == SDK_WEAPON_GRENADE)
+	{
+		RemoveWeapon(SDK_WEAPON_MP5);
+		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+	}
+	else if (eWeapon == SDK_WEAPON_PISTOL)
+	{
+		RemoveWeapon(SDK_WEAPON_MP5);
+		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+	}
+}
+
+void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
+{
+	if (eWeapon == SDK_WEAPON_GRENADE)
+	{
+		RemoveAmmo( 1, "grenades" );
+		return;
+	}
+
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
+		if ( pWeapon )
+		{
+			if (pWeapon->GetWeaponID() == eWeapon)
+			{
+				Weapon_Detach(pWeapon);
+				return;
+			}
+		}
+	}
 }
