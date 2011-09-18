@@ -76,6 +76,7 @@ public:
 	void	StandUpFromSlide();
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
+	float	GetSlideFriction() const;
 
 	void	SetDuckPress(bool bReset = false);
 	float	GetLastDuckPress() const { return m_flLastDuckPress; };

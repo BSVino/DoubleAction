@@ -609,7 +609,7 @@ void CSDKGameMovement::CategorizePosition( void )
 	}
 
 	if (m_pSDKPlayer->m_Shared.IsSliding() || m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
-		player->m_surfaceFriction *= 0.1f;
+		player->m_surfaceFriction *= m_pSDKPlayer->m_Shared.GetSlideFriction();
 }
 
 inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, 
@@ -1435,7 +1435,7 @@ void CSDKGameMovement::Duck( void )
 			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 			mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-			player->m_surfaceFriction = 0.1f;
+			player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
 			SetSlideEyeOffset( 0.0 );
 
