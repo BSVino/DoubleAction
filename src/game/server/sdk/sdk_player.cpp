@@ -1751,6 +1751,7 @@ void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
 			if (pWeapon->GetWeaponID() == eWeapon)
 			{
 				Weapon_Detach(pWeapon);
+				pWeapon->Delete();
 				return;
 			}
 		}
