@@ -500,7 +500,7 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
 
-ConVar sdk_slidetime("sdk_slidetime", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+ConVar sdk_slidetime("sdk_slidetime", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 float CSDKPlayerShared::GetSlideFriction() const
 {
@@ -602,8 +602,8 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 Vector CSDKPlayerShared::StartDiving()
 {

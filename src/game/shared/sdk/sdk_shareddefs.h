@@ -129,7 +129,7 @@ enum sdkteams_e
 
 #endif // SDK_USE_PLAYERCLASSES
 
-#define SDK_PLAYER_MODEL "models/player/blue_player.mdl"
+#define SDK_PLAYER_MODEL "models/player/playermale.mdl"
 
 //Tony; We need to precache all possible player models that we're going to use
 extern const char *pszPossiblePlayerModels[];

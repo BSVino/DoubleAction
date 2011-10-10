@@ -96,11 +96,11 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bProneTransitionFirstFrame = false;
 #endif
 
-	m_iSlideActivity = ACT_MP_STAND_TO_SLIDE;
+	m_iSlideActivity = ACT_DAB_SLIDESTART;
 	m_bSlideTransition = false;
 	m_bSlideTransitionFirstFrame = false;
 
-	m_iRollActivity = ACT_MP_STAND_TO_ROLL;
+	m_iRollActivity = ACT_DAB_ROLL;
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
 }
@@ -241,33 +241,18 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_ATTACK_PRIMARY:
 		{
 			// Weapon primary fire.
-#if defined ( SDK_USE_PRONE )
 			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_PRIMARYFIRE );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
+			else if ( m_pSDKPlayer->m_Shared.IsRolling() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_ROLL );
+			else if ( m_pSDKPlayer->m_Shared.IsDiving() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_DIVE );
+			else if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_CROUCH );
 			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->m_Shared.IsSliding() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_PRIMARYFIRE );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
-			}
-			else
-			if ( m_pSDKPlayer->m_Shared.IsRolling() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_PRIMARYFIRE );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
-			}
-			else
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_PRIMARYFIRE );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK );
 
 			iGestureActivity = ACT_VM_PRIMARYATTACK;
 			break;
@@ -285,33 +270,18 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_ATTACK_SECONDARY:
 		{
 			// Weapon secondary fire.
-#if defined ( SDK_USE_PRONE )
 			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_SECONDARYFIRE );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
+			else if ( m_pSDKPlayer->m_Shared.IsRolling() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_ROLL );
+			else if ( m_pSDKPlayer->m_Shared.IsDiving() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_DIVE );
+			else if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_CROUCH );
 			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->m_Shared.IsSliding() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_SLIDE_SECONDARYFIRE );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
-			}
-			else
-			if ( m_pSDKPlayer->m_Shared.IsRolling() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_ROLL_SECONDARYFIRE );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
-			}
-			else
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_SECONDARYFIRE );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK );
 
 			iGestureActivity = ACT_VM_PRIMARYATTACK;
 			break;
@@ -344,75 +314,41 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD:
 		{
 			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
 			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_SLIDE );
+			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_CROUCH );
 			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->m_Shared.IsSliding() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_SLIDE );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
-			}
-			else
-			if ( m_pSDKPlayer->m_Shared.IsRolling() )
-			{
-//				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_ROLL );
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
-			}
-			else
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND );
-			}
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD );
+
 			iGestureActivity = ACT_VM_RELOAD; //Make view reload if it isn't already
 			break;
 		}
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
 			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_LOOP );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
+			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_LOOP );
-			}
 			else
-			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
-			}
+
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
 		}
 	case PLAYERANIMEVENT_RELOAD_END:
 		{
 			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
 			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_END );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
+			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_END );
-			}
 			else
-			{
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
-			}
+
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
 		}
@@ -459,7 +395,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bSlideTransition = true;
 			m_bSlideTransitionFirstFrame = true;
-			m_iSlideActivity = ACT_MP_STAND_TO_SLIDE;
+			m_iSlideActivity = ACT_DAB_SLIDESTART;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
 		}
@@ -469,7 +405,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bRollTransition = true;
 			m_bRollTransitionFirstFrame = true;
-			m_iRollActivity = ACT_MP_STAND_TO_ROLL;
+			m_iRollActivity = ACT_DAB_ROLL;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
 		}
@@ -517,7 +453,16 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 {
-	return BaseClass::HandleMoving( idealActivity );
+	// In TF we run all the time now.
+	float flSpeed = GetOuterXYSpeed();
+
+	if ( flSpeed > MOVING_MINIMUM_SPEED )
+	{
+		// Always assume a run.
+		idealActivity = ACT_DAB_RUN_IDLE;
+	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -530,17 +475,13 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-		{
-			idealActivity = ACT_MP_CROUCH_IDLE;		
-		}
+			idealActivity = ACT_DAB_CROUCH_IDLE;		
 		else
-		{
-			idealActivity = ACT_MP_CROUCHWALK;		
-		}
+			idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
 
 		return true;
 	}
-	
+
 	return false;
 }
 #if defined ( SDK_USE_PRONE )
@@ -554,13 +495,9 @@ bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 	if ( m_pSDKPlayer->m_Shared.IsProne() )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-		{
-			idealActivity = ACT_MP_PRONE_IDLE;		
-		}
+			idealActivity = ACT_DAB_PRONECHEST_IDLE;		
 		else
-		{
-			idealActivity = ACT_MP_PRONE_CRAWL;		
-		}
+			idealActivity = ACT_DAB_CRAWL_IDLE;		
 
 		return true;
 	}
@@ -597,8 +534,7 @@ bool CSDKPlayerAnimState::HandleSliding( Activity &idealActivity )
 {
 	if ( m_pSDKPlayer->m_Shared.IsSliding() )
 	{
-		idealActivity = ACT_MP_CROUCHWALK;		
-//		idealActivity = ACT_MP_SLIDE;		
+		idealActivity = ACT_DAB_SLIDE;		
 
 		return true;
 	}
@@ -623,8 +559,7 @@ bool CSDKPlayerAnimState::HandleSlideTransition( Activity &idealActivity )
 		if ( GetBasePlayer()->GetCycle() >= 0.99 )
 			m_bSlideTransition = false;
 		else
-			idealActivity = ACT_MP_CROUCHWALK;		
-//			idealActivity = m_iSlideActivity;
+			idealActivity = m_iSlideActivity;
 	}
 
 	return m_bSlideTransition;
@@ -647,8 +582,7 @@ bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
 		if ( GetBasePlayer()->GetCycle() >= 0.99 )
 			m_bRollTransition = false;
 		else
-			idealActivity = ACT_MP_CROUCHWALK;		
-//			idealActivity = m_iRollActivity;
+			idealActivity = m_iRollActivity;
 	}
 
 	return m_bRollTransition;
@@ -681,8 +615,6 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 
 	if ( m_bJumping )
 	{
-		static bool bNewJump = false; //Tony; the sample dod player models that I'm using don't have the jump anims split up like tf2.
-
 		if ( m_bFirstJumpFrame )
 		{
 			m_bFirstJumpFrame = false;
@@ -704,31 +636,17 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 				m_bJumping = false;
 				RestartMainSequence();
 
-				if ( bNewJump )
-				{
-					RestartGesture( GESTURE_SLOT_JUMP, ACT_MP_JUMP_LAND );					
-				}
+				RestartGesture( GESTURE_SLOT_JUMP, ACT_DAB_JUMP_LAND );					
 			}
 		}
 
 		// if we're still jumping
 		if ( m_bJumping )
 		{
-			if ( bNewJump )
-			{
-				if ( gpGlobals->curtime - m_flJumpStartTime > 0.5 )
-				{
-					idealActivity = ACT_MP_JUMP_FLOAT;
-				}
-				else
-				{
-					idealActivity = ACT_MP_JUMP_START;
-				}
-			}
+			if ( gpGlobals->curtime - m_flJumpStartTime > 0.5 )
+				idealActivity = ACT_DAB_JUMP_FLOAT;
 			else
-			{
-				idealActivity = ACT_MP_JUMP;
-			}
+				idealActivity = ACT_DAB_JUMP_START;
 		}
 	}	
 
@@ -749,7 +667,7 @@ extern ConVar anim_showmainactivity;
 
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
-	Activity idealActivity = ACT_MP_STAND_IDLE;
+	Activity idealActivity = ACT_DAB_STAND_IDLE;
 
 	if ( HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
