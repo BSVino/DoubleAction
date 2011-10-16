@@ -336,6 +336,13 @@ void CSDKPlayer::Precache()
 		i++;
 	}	
 
+	PrecacheParticleSystem( "impact_concrete" );
+	PrecacheParticleSystem( "impact_dirt" );
+	PrecacheParticleSystem( "impact_metal" );
+	PrecacheParticleSystem( "impact_glass" );
+	PrecacheParticleSystem( "impact_tile" );
+	PrecacheParticleSystem( "impact_wood" );
+
 	BaseClass::Precache();
 }
 
