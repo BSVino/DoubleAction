@@ -96,6 +96,9 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bProneTransitionFirstFrame = false;
 #endif
 
+	m_bDiveStart = false;
+	m_bDiveStartFirstFrame = false;
+
 	m_iSlideActivity = ACT_DAB_SLIDESTART;
 	m_bSlideTransition = false;
 	m_bSlideTransitionFirstFrame = false;
@@ -114,6 +117,9 @@ void CSDKPlayerAnimState::ClearAnimationState( void )
 	m_bProneTransition = false;
 	m_bProneTransitionFirstFrame = false;
 #endif
+
+	m_bDiveStart = false;
+	m_bDiveStartFirstFrame = false;
 
 	m_bSlideTransition = false;
 	m_bSlideTransitionFirstFrame = false;
@@ -178,6 +184,8 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 		// Pose parameter - what direction are the player's legs running in.
 		ComputePoseParam_MoveYaw( pStudioHdr );
 
+		ComputePoseParam_StuntYaw( pStudioHdr );
+
 		// Pose parameter - Torso aiming (up/down).
 		ComputePoseParam_AimPitch( pStudioHdr );
 
@@ -192,6 +200,42 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 	}
 #endif
 }
+
+bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
+{
+	// Check to see if this has already been done.
+	if ( m_bPoseParameterInit )
+		return true;
+
+	// Save off the pose parameter indices.
+	if ( !pStudioHdr )
+		return false;
+
+	m_iStuntYawPose = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "stunt_yaw" );
+	if (m_iStuntYawPose < 0)
+		return false;
+
+	// Look for the movement blenders.
+	m_PoseParameterData.m_iMoveX = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "move_x" );
+	m_PoseParameterData.m_iMoveY = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "move_y" );
+	if ( ( m_PoseParameterData.m_iMoveX < 0 ) || ( m_PoseParameterData.m_iMoveY < 0 ) )
+		return false;
+
+	// Look for the aim pitch blender.
+	m_PoseParameterData.m_iAimPitch = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "body_pitch" );
+	if ( m_PoseParameterData.m_iAimPitch < 0 )
+		return false;
+
+	// Look for aim yaw blender.
+	m_PoseParameterData.m_iAimYaw = GetBasePlayer()->LookupPoseParameter( pStudioHdr, "body_yaw" );
+	if ( m_PoseParameterData.m_iAimYaw < 0 )
+		return false;
+
+	m_bPoseParameterInit = true;
+
+	return true;
+}
+
 extern ConVar mp_slammoveyaw;
 float SnapYawTo( float flValue );
 void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
@@ -224,10 +268,23 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 
 	// Set the 9-way blend movement pose parameters.
 	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, vecCurrentMoveYaw.x );
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, -vecCurrentMoveYaw.y ); //Tony; flip it
+	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, vecCurrentMoveYaw.y );
 
 	m_DebugAnimData.m_vecMoveYaw = vecCurrentMoveYaw;
 }
+
+void CSDKPlayerAnimState::ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr )
+{
+	// Get the view yaw.
+	float flAngle = AngleNormalize( m_flEyeYaw );
+
+	// Calc side to side turning - the view vs. movement yaw.
+	float flYaw = flAngle - m_PoseParameterData.m_flEstimateYaw;
+	flYaw = AngleNormalize( flYaw );
+
+	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_iStuntYawPose, flYaw );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : event - 
@@ -391,6 +448,16 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		break;
 #endif
 
+	case PLAYERANIMEVENT_DIVE:
+		{
+			m_bDiveStart = true;
+			m_bDiveStartFirstFrame = true;
+			m_iDiveActivity = ACT_DAB_DIVE;
+			RestartMainSequence();
+			iGestureActivity = ACT_VM_IDLE;
+		}
+		break;
+
 	case PLAYERANIMEVENT_STAND_TO_SLIDE:
 		{
 			m_bSlideTransition = true;
@@ -529,6 +596,36 @@ bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
 	return m_bProneTransition;
 }
 #endif // SDK_USE_PRONE
+
+bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
+{
+	if (!m_pSDKPlayer->m_Shared.IsDiving())
+		m_bDiveStart = false;
+
+	if ( m_bDiveStart )
+	{
+		if (m_bDiveStartFirstFrame)
+		{
+			m_bDiveStartFirstFrame = false;
+			RestartMainSequence();	// Reset the animation.
+		}
+
+		//Tony; check the cycle, and then stop overriding
+		if ( GetBasePlayer()->GetCycle() >= 0.99 )
+			m_bDiveStart = false;
+		else
+			idealActivity = m_iDiveActivity;
+	}
+
+	if ( !m_bDiveStart && m_pSDKPlayer->m_Shared.IsDiving() )
+	{
+		idealActivity = ACT_DAB_DIVEFALL;		
+
+		return true;
+	}
+	
+	return m_bDiveStart;
+}
 
 bool CSDKPlayerAnimState::HandleSliding( Activity &idealActivity )
 {
@@ -669,7 +766,9 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 {
 	Activity idealActivity = ACT_DAB_STAND_IDLE;
 
-	if ( HandleJumping( idealActivity ) || 
+	if (
+		HandleDiving( idealActivity ) ||
+		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
 		//Tony; handle these before ducking !!
 		HandleProneTransition( idealActivity ) ||
@@ -707,3 +806,4 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	return idealActivity;
 }
+

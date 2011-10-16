@@ -1465,8 +1465,6 @@ void CSDKGameMovement::Duck( void )
 			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
 			mv->SetAbsOrigin( mv->GetAbsOrigin() + Vector(0, 0, flHullHeightNormal-flHullHeightDive) );
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
-
-			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_DIVE );
 		}
 	}
 

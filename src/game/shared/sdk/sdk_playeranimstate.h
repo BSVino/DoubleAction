@@ -40,6 +40,7 @@ public:
 	virtual void ClearAnimationState();
 	virtual Activity TranslateActivity( Activity actDesired );
 	virtual void Update( float eyeYaw, float eyePitch );
+	bool	SetupPoseParameters( CStudioHdr *pStudioHdr );
 
 	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
@@ -53,6 +54,8 @@ public:
 	bool	HandleProneTransition( Activity &idealActivity );
 #endif
 
+	bool	HandleDiving( Activity &idealActivity );
+
 	bool	HandleSliding( Activity &idealActivity );
 	bool	HandleSlideTransition( Activity &idealActivity );
 
@@ -64,6 +67,8 @@ public:
 
 	//Tony; overriding because the SDK Player models pose parameter is flipped the opposite direction
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
+
+	virtual void		ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr );
 
 	virtual Activity CalcMainActivity();	
 
@@ -77,6 +82,10 @@ private:
 	bool		m_bProneTransitionFirstFrame;
 #endif
 
+	Activity	m_iDiveActivity;
+	bool		m_bDiveStart;
+	bool		m_bDiveStartFirstFrame;
+
 	Activity	m_iSlideActivity;
 	bool		m_bSlideTransition;
 	bool		m_bSlideTransitionFirstFrame;
@@ -86,6 +95,8 @@ private:
 	bool		m_bRollTransitionFirstFrame;
 
 	float		m_flHoldDeployedPoseUntilTime;
+
+	int			m_iStuntYawPose;
 };
 
 CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );

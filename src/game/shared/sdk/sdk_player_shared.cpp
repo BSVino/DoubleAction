@@ -622,6 +622,10 @@ Vector CSDKPlayerShared::StartDiving()
 	m_vecDiveDirection.GetForModify().z = 0;
 	m_vecDiveDirection.GetForModify().NormalizeInPlace();
 
+	// We need to turn off interp since the dive changes our origin abruptly.
+	m_pOuter->AddEffects( EF_NOINTERP );
+	m_pOuter->DoAnimationEvent(PLAYERANIMEVENT_DIVE);
+
 	m_pOuter->SetGroundEntity(NULL);
 
 	m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
@@ -634,6 +638,7 @@ void CSDKPlayerShared::EndDive()
 {
 	m_pOuter->SetGravity(1);
 	m_bDiving = false;
+	m_pOuter->RemoveEffects( EF_NOINTERP );
 }
 
 #if defined ( SDK_USE_SPRINTING )

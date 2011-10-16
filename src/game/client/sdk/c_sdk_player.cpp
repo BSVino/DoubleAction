@@ -591,14 +591,6 @@ const QAngle &C_SDKPlayer::EyeAngles()
 }
 const QAngle& C_SDKPlayer::GetRenderAngles()
 {
-	if (m_Shared.IsDiving())
-	{
-		static QAngle angResult;
-		VectorAngles(GetAbsVelocity(), angResult);
-		angResult.x += 90;
-		return angResult;
-	}
-
 	if ( IsRagdoll() )
 	{
 		return vec3_angle;
@@ -611,14 +603,6 @@ const QAngle& C_SDKPlayer::GetRenderAngles()
 
 const Vector& C_SDKPlayer::GetRenderOrigin( void )
 {
-	if (m_Shared.IsDiving())
-	{
-		static Vector vecResult;
-		vecResult = BaseClass::GetRenderOrigin();
-		vecResult.z += 40;
-		return vecResult;
-	}
-
 	return BaseClass::GetRenderOrigin();
 }
 
