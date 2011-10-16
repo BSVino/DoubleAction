@@ -586,8 +586,14 @@ bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
 			RestartMainSequence();	// Reset the animation.
 		}
 
+		// Next four lines are because the animations aren't done yet. They could be removed once the transition animations are in.
+		if (m_pSDKPlayer->m_Shared.IsProne())
+			m_bProneTransition = false;
+		else if (m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsProne())
+			m_bProneTransition = false;
+
 		//Tony; check the cycle, and then stop overriding
-		if ( GetBasePlayer()->GetCycle() >= 0.99 )
+		else if ( GetBasePlayer()->GetCycle() >= 0.99 )
 			m_bProneTransition = false;
 		else
 			idealActivity = m_iProneActivity;
