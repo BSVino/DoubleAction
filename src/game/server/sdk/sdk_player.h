@@ -148,6 +148,24 @@ public:
 
 	virtual bool	ModeWantsSpectatorGUI( int iMode ) { return ( iMode != OBS_MODE_DEATHCAM && iMode != OBS_MODE_FREEZECAM ); }
 
+	// Universal Meter
+	int GetActionPoints() { return m_iActionPoints; }
+	void AddActionPoints(int points=1) { m_iActionPoints = (m_iActionPoints+points > 100) ? 100 : m_iActionPoints+points; }
+	void SetActionPoints(int points=0) { m_iActionPoints = (points > 100) ? 100 : m_iActionPoints; }
+	bool UseActionPoints()
+	{
+		bool success = false;
+
+		if(m_iActionPoints >= 25)
+		{
+			m_iActionPoints -= 25;
+
+			success = true;
+		}
+
+		return success;
+	}
+
 private:
 	bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
 
@@ -182,6 +200,9 @@ private:
 	// Each state has a well-defined set of parameters that go with it (ie: observer is movetype_noclip, non-solid,
 	// invisible, etc).
 	CNetworkVar( SDKPlayerState, m_iPlayerState );
+
+	// Universal Meter
+	CNetworkVar(int, m_iActionPoints);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
