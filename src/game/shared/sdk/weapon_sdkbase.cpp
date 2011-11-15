@@ -195,6 +195,12 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+
+
+#ifdef GAME_DLL
+	// Remove this once the actual buying is in.
+	GetPlayerOwner()->RemoveOtherWeapons(GetWeaponID());
+#endif
 }
 
 void CWeaponSDKBase::SecondaryAttack()

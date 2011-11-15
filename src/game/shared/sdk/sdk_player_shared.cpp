@@ -500,6 +500,19 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
 
+ConVar sdk_slidetime("sdk_slidetime", "1", FCVAR_REPLICATED | FCVAR_CHEAT);
+
+float CSDKPlayerShared::GetSlideFriction() const
+{
+	if (!m_bSliding)
+		return 1;
+
+	if (gpGlobals->curtime - m_flSlideTime < sdk_slidetime.GetFloat())
+		return 0.1f;
+
+	return RemapValClamped(gpGlobals->curtime, m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f);
+}
+
 void CSDKPlayerShared::SetDuckPress(bool bReset)
 {
 	if (bReset)
@@ -540,10 +553,6 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 {
 	if (!CanRoll())
 		return;
-
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoRoll" );
 
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;

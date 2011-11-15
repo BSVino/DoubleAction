@@ -99,6 +99,11 @@ public:
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void SDKPushawayThink(void);
 
+	// Remove this shit once an actual buy menu is in.
+	virtual void	RemoveOtherWeapons( SDKWeaponID eWeapon );
+	virtual void	RemoveWeapon( SDKWeaponID eWeapon );
+	bool			m_bRemove;
+
 // In shared code.
 public:
 	void FireBullet( 
