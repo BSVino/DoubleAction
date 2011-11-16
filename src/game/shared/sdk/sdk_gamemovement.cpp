@@ -415,7 +415,10 @@ void CSDKGameMovement::WalkMove( void )
 
 	else if (m_pSDKPlayer->m_Shared.IsRolling())
 	{
-		vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
+		if (vecWishDirection.LengthSqr() > 0)
+			vecWishDirection = (m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed + vecWishDirection)/2;
+		else
+			vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
 		vecWishDirection.z = 0;
 	}
 
