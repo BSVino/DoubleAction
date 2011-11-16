@@ -171,6 +171,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
+	SendPropInt( SENDINFO( m_iActionPoints ) ),
+
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -419,6 +421,9 @@ void CSDKPlayer::Spawn()
 	pl.deadflag = false;
 
 	m_bRemove = true;
+
+	// Matt; Reset Action Points
+	this->SetActionPoints(0);
 }
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
 {
@@ -626,7 +631,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
 
-	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/) )
+	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
 		if ( bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
 		{
@@ -778,15 +783,32 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	ThrowActiveWeapon();
 
+	CBaseEntity* pAttacker = info.GetAttacker();
+
 	// show killer in death cam mode
 	// chopped down version of SetObserverTarget without the team check
-	if( info.GetAttacker() && info.GetAttacker()->IsPlayer() )
+	if( pAttacker && pAttacker->IsPlayer() )
 	{
 		// set new target
-		m_hObserverTarget.Set( info.GetAttacker() ); 
+		m_hObserverTarget.Set( pAttacker ); 
 
 		// reset fov to default
 		SetFOV( this, 0 );
+
+		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
+		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
+
+		// Matt; Adding Action Points for the kill.
+		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
+		{
+			// Matt; Give 25 AP for a stunt kill.
+			pAttackerSDK->AddActionPoints(25);
+		}
+		else
+		{
+			// Matt; Give 5 AP for a regular kill.
+			pAttackerSDK->AddActionPoints(5);
+		}
 	}
 	else
 		m_hObserverTarget.Set( NULL );

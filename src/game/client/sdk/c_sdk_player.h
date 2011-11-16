@@ -77,6 +77,8 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
+	int GetActionPoints() { return m_iActionPoints; }
+
 	virtual void SharedSpawn();
 	
 	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
@@ -165,6 +167,8 @@ private:
 	C_SDKPlayer( const C_SDKPlayer & );
 
 	int m_ArmorValue;
+
+	int m_iActionPoints;
 
 	class CSDKSoundEvent
 	{
