@@ -148,6 +148,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
 	RecvPropInt( RECVINFO( m_flActionPoints ) ),
+	RecvPropTime( RECVINFO(m_flActionAbilityStart) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -185,6 +186,8 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( m_Shared, CSDKPlayerShared ),
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flActionPoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flActionAbilityStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );

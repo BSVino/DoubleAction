@@ -94,16 +94,27 @@ void CHudStyleBar::OnThink()
 	m_flStyle = flStyle;
 }
 
+inline float Oscillate(float flTime, float flLength)
+{
+	return fabs(RemapVal(fmod(flTime, flLength), 0, flLength, -1, 1));
+}
+
 void CHudStyleBar::Paint()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if ( !pPlayer )
 		return;
 
+	Color clrBar;
 	if (m_flStyle > 25)
-		surface()->DrawSetColor( gHUD.m_clrCaution );
+		clrBar = gHUD.m_clrCaution;
 	else
-		surface()->DrawSetColor( gHUD.m_clrNormal );
+		clrBar = gHUD.m_clrNormal;
+
+	if (pPlayer->IsActionAbilityActive())
+		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
+
+	surface()->DrawSetColor( clrBar );
 
 	float flPercent = m_flStyle / 100.0f;
 	int iWidth, iHeight;

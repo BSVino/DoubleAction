@@ -78,6 +78,7 @@ public:
 	int GetShotsFired() { return m_iShotsFired; }
 
 	float GetActionPoints() { return m_flActionPoints; }
+	bool IsActionAbilityActive() { return m_flActionAbilityStart > 0; }
 
 	virtual void SharedSpawn();
 	
@@ -169,6 +170,7 @@ private:
 	int m_ArmorValue;
 
 	float m_flActionPoints;
+	float m_flActionAbilityStart;
 
 	class CSDKSoundEvent
 	{

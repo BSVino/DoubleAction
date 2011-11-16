@@ -172,6 +172,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
 	SendPropInt( SENDINFO( m_flActionPoints ) ),
+	SendPropTime( SENDINFO( m_flActionAbilityStart ) ),
 
 END_SEND_TABLE()
 
@@ -292,6 +293,12 @@ void CSDKPlayer::PreThink(void)
 void CSDKPlayer::PostThink()
 {
 	BaseClass::PostThink();
+
+	if (m_flActionAbilityStart > 0)
+	{
+		if (gpGlobals->curtime > m_flActionAbilityStart + 10)
+			m_flActionAbilityStart = -1;
+	}
 
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
@@ -422,9 +429,10 @@ void CSDKPlayer::Spawn()
 
 	m_bRemove = true;
 
-	// Matt; Reset Action Points
-	this->SetActionPoints(0);
+	SetActionPoints(0);
+	m_flActionAbilityStart = -1;
 }
+
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
 {
 	// Find the next spawn spot.
@@ -1800,3 +1808,47 @@ void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
 		}
 	}
 }
+
+void CSDKPlayer::AddActionPoints(float points)
+{
+	if (IsActionAbilityActive())
+		return;
+
+	m_flActionPoints = (m_flActionPoints+points > 100) ? 100 : m_flActionPoints+points;
+}
+
+bool CSDKPlayer::UseActionPoints (void)
+{
+	bool success = false;
+
+	if(m_flActionPoints >= 25)
+	{
+		m_flActionPoints -= 25;
+
+		success = true;
+	}
+
+	return success;
+}
+
+void CSDKPlayer::ActivateMeter()
+{
+	if (m_flActionAbilityStart > 0)
+		return;
+
+	if (!UseActionPoints())
+		return;
+
+	m_flActionAbilityStart = gpGlobals->curtime;
+}
+
+void CC_ActivateMeter_f (void)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+	if ( !pPlayer )
+		return;
+
+	pPlayer->ActivateMeter();
+}
+
+static ConCommand activatemeter("activatemeter", CC_ActivateMeter_f, "Activate the style meter." );

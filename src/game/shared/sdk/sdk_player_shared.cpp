@@ -57,6 +57,9 @@ void CSDKPlayer::FireBullet(
 	float fCurrentDamage = iDamage;   // damage of the bullet at it's current trajectory
 	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
 
+	if (IsActionAbilityActive())
+		fCurrentDamage *= 1.5f;
+
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
 

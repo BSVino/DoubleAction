@@ -150,21 +150,12 @@ public:
 
 	// Universal Meter
 	float GetActionPoints() { return m_flActionPoints; }
-	void AddActionPoints(float points=1) { m_flActionPoints = (m_flActionPoints+points > 100) ? 100 : m_flActionPoints+points; }
+	void AddActionPoints(float points=1);
 	void SetActionPoints(float points=0) { m_flActionPoints = (points > 100) ? 100 : m_flActionPoints; }
-	bool UseActionPoints()
-	{
-		bool success = false;
+	bool UseActionPoints();
+	bool IsActionAbilityActive() { return m_flActionAbilityStart > 0; }
 
-		if(m_flActionPoints >= 25)
-		{
-			m_flActionPoints -= 25;
-
-			success = true;
-		}
-
-		return success;
-	}
+	void ActivateMeter();
 
 private:
 	bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
@@ -203,6 +194,7 @@ private:
 
 	// Universal Meter
 	CNetworkVar(float, m_flActionPoints);
+	CNetworkVar(float, m_flActionAbilityStart);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
