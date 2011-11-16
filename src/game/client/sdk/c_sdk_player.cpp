@@ -147,7 +147,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
-	RecvPropInt( RECVINFO( m_iActionPoints ) ),
+	RecvPropInt( RECVINFO( m_flActionPoints ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //

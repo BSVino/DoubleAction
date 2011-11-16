@@ -171,7 +171,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
-	SendPropInt( SENDINFO( m_iActionPoints ) ),
+	SendPropInt( SENDINFO( m_flActionPoints ) ),
 
 END_SEND_TABLE()
 
@@ -776,6 +776,20 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		gameeventmanager->FireEvent( event );
 	}
 	
+	CBaseEntity* pAttacker = info.GetAttacker();
+
+	if( pAttacker && pAttacker->IsPlayer() )
+	{
+		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
+		CSDKPlayerShared* pAttackerSDKShared = &pAttackerSDK->m_Shared;
+
+		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
+			// Damaging a dude while stunting enough to kill him gives a full bar.
+			pAttackerSDK->AddActionPoints(25.0f/4.0f);
+		else
+			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f);
+	}
+
 	return 1;
 }
 
