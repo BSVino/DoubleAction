@@ -32,6 +32,8 @@ public:
 	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_PISTOL; }
 	virtual int GetFireMode() const { return FM_SEMIAUTOMATIC; }
 
+	virtual float GetWeaponSpread() { return 0.03f; }
+
 private:
 
 	CWeaponPistol( const CWeaponPistol & );
