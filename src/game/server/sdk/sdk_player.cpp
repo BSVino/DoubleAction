@@ -297,7 +297,12 @@ void CSDKPlayer::PostThink()
 	if (m_flActionAbilityStart > 0)
 	{
 		if (gpGlobals->curtime > m_flActionAbilityStart + 10)
+		{
 			m_flActionAbilityStart = -1;
+
+			CSingleUserRecipientFilter filter( this );
+			EmitSound(filter, entindex(), "HudMeter.End");
+		}
 	}
 
 	QAngle angles = GetLocalAngles();
@@ -336,6 +341,12 @@ void CSDKPlayer::Precache()
 	PrecacheScriptSound( "Player.UnProne" );
 	PrecacheScriptSound( "Player.GoSlide" );
 	PrecacheScriptSound( "Player.UnSlide" );
+
+	PrecacheScriptSound( "HudMeter.Activate" );
+	PrecacheScriptSound( "HudMeter.End" );
+	PrecacheScriptSound( "HudMeter.FillLarge" );
+	PrecacheScriptSound( "HudMeter.FillSmall" );
+	PrecacheScriptSound( "HudMeter.FillStylish" );
 
 	//Tony; go through our list of player models that we may be using and cache them
 	int i = 0;
@@ -429,7 +440,6 @@ void CSDKPlayer::Spawn()
 
 	m_bRemove = true;
 
-	SetActionPoints(0);
 	m_flActionAbilityStart = -1;
 }
 
@@ -793,9 +803,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
-			pAttackerSDK->AddActionPoints(25.0f/4.0f);
+			pAttackerSDK->AddActionPoints(25.0f/4.0f, STYLE_POINT_LARGE);
 		else
-			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f);
+			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
 	}
 
 	return 1;
@@ -820,17 +830,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
-		// Matt; Adding Action Points for the kill.
 		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
-		{
-			// Matt; Give 25 AP for a stunt kill.
-			pAttackerSDK->AddActionPoints(25);
-		}
+			pAttackerSDK->AddActionPoints(25, STYLE_POINT_STYLISH);
 		else
-		{
-			// Matt; Give 5 AP for a regular kill.
-			pAttackerSDK->AddActionPoints(5);
-		}
+			pAttackerSDK->AddActionPoints(5, STYLE_POINT_LARGE);
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -846,7 +849,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
+	SetActionPoints(m_flActionPoints - 25);
 }
+
 void CSDKPlayer::ThrowActiveWeapon( void )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
@@ -1809,12 +1814,37 @@ void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
 	}
 }
 
-void CSDKPlayer::AddActionPoints(float points)
+void CSDKPlayer::AddActionPoints(float points, style_point_t eStyle)
 {
 	if (IsActionAbilityActive())
 		return;
 
 	m_flActionPoints = (m_flActionPoints+points > 100) ? 100 : m_flActionPoints+points;
+
+	CSingleUserRecipientFilter filter( this );
+	if (eStyle == STYLE_POINT_SMALL)
+		EmitSound(filter, entindex(), "HudMeter.FillSmall");
+	else if (eStyle == STYLE_POINT_LARGE)
+		EmitSound(filter, entindex(), "HudMeter.FillLarge");
+	else if (eStyle == STYLE_POINT_STYLISH)
+		EmitSound(filter, entindex(), "HudMeter.FillStylish");
+}
+
+void CSDKPlayer::SetActionPoints(float flPoints)
+{
+	if (flPoints < 0)
+	{
+		m_flActionPoints = 0;
+		return;
+	}
+
+	if (flPoints > 100)
+	{
+		m_flActionPoints = 100;
+		return;
+	}
+
+	m_flActionPoints = flPoints;
 }
 
 bool CSDKPlayer::UseActionPoints (void)
@@ -1840,6 +1870,9 @@ void CSDKPlayer::ActivateMeter()
 		return;
 
 	m_flActionAbilityStart = gpGlobals->curtime;
+
+	CSingleUserRecipientFilter filter( this );
+	EmitSound(filter, entindex(), "HudMeter.Activate");
 }
 
 void CC_ActivateMeter_f (void)

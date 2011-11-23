@@ -14,6 +14,13 @@
 #include "sdk_playeranimstate.h"
 #include "sdk_player_shared.h"
 
+typedef enum
+{
+	STYLE_POINT_SMALL,
+	STYLE_POINT_LARGE,
+	STYLE_POINT_STYLISH,
+} style_point_t;
+
 // Function table for each player state.
 class CSDKPlayerStateInfo
 {
@@ -150,8 +157,8 @@ public:
 
 	// Universal Meter
 	float GetActionPoints() { return m_flActionPoints; }
-	void AddActionPoints(float points=1);
-	void SetActionPoints(float points=0) { m_flActionPoints = (points > 100) ? 100 : m_flActionPoints; }
+	void AddActionPoints(float points, style_point_t eStyle);
+	void SetActionPoints(float points);
 	bool UseActionPoints();
 	bool IsActionAbilityActive() { return m_flActionAbilityStart > 0; }
 
