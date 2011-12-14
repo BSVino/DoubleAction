@@ -33,8 +33,7 @@ public:
 						C_SDKRootPanel( vgui::VPANEL parent );
 	virtual				~C_SDKRootPanel( void );
 
-	// Draw Panel effects here
-	virtual void		PostChildPaint();
+	virtual void		PaintBackground();
 
 	// Clear list of Panel Effects
 	virtual void		LevelInit( void );
@@ -46,7 +45,7 @@ public:
 private:
 
 	// Render all panel effects
-	void		RenderPanelEffects( void );
+	void		RenderLetterboxing( void );
 
 	// List of current panel effects
 	CUtlVector< CPanelEffect *> m_Effects;

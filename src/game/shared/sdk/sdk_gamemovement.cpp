@@ -142,16 +142,15 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		else
 		{
 			float flMaxSpeed;	
-#if defined ( SDK_USE_SPRINTING )
-			if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
+			if ( m_pSDKPlayer->m_Shared.IsAimedIn() )
 			{
-				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSprintSpeed;	//sprinting
+				if (m_pSDKPlayer->GetActiveSDKWeapon() && m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
+					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flAimInSpeed;
+				else
+					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 			}
 			else
-#endif // SDK_USE_SPRINTING
-			{
-				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;	//jogging
-			}
+				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 
 			mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
 		}
@@ -371,27 +370,12 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 
 void CSDKGameMovement::WalkMove( void )
 {
-
-#if defined ( SDK_USE_SPRINTING )
-	float flSpeedCheck = m_pSDKPlayer->GetAbsVelocity().Length2D();
-
 	bool bSprintButtonPressed = ( mv->m_nButtons & IN_SPEED ) > 0;
 
-	if( bSprintButtonPressed && 
-		( mv->m_nButtons & IN_FORWARD ) &&
-#if defined ( SDK_USE_PRONE )
-		!m_pSDKPlayer->m_Shared.IsProne() && 
-#endif
-		!m_pSDKPlayer->m_Shared.IsDucking() &&
-		flSpeedCheck > 80 )
-	{
-		m_pSDKPlayer->SetSprinting( true );
-	}
+	if( bSprintButtonPressed )
+		m_pSDKPlayer->m_Shared.SetAimIn( true );
 	else
-	{
-		m_pSDKPlayer->SetSprinting( false );
-	}
-#endif // SDK_USE_SPRINTING
+		m_pSDKPlayer->m_Shared.SetAimIn( false );
 
 	// Get the movement angles.
 	Vector vecForward, vecRight, vecUp;

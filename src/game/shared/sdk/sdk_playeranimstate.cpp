@@ -96,6 +96,8 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bProneTransitionFirstFrame = false;
 #endif
 
+	m_bFacingForward = true;
+
 	m_bDiveStart = false;
 	m_bDiveStartFirstFrame = false;
 
@@ -117,6 +119,8 @@ void CSDKPlayerAnimState::ClearAnimationState( void )
 	m_bProneTransition = false;
 	m_bProneTransitionFirstFrame = false;
 #endif
+
+	m_bFacingForward = true;
 
 	m_bDiveStart = false;
 	m_bDiveStartFirstFrame = false;
@@ -236,6 +240,99 @@ bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 	return true;
 }
 
+void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
+{
+	// Get the movement velocity.
+	Vector vecVelocity;
+	GetOuterAbsVelocity( vecVelocity );
+
+	// Check to see if we are moving.
+	bool bMoving = ( vecVelocity.Length() > 1.0f ) ? true : false;
+
+	// If we are moving or are prone and undeployed.
+	if ( bMoving || m_bForceAimYaw )
+	{
+		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
+		{
+			// The feet match the eye direction when moving - the move yaw takes care of the rest.
+			m_flGoalFeetYaw = m_flEyeYaw;
+		}
+		else
+		{
+			QAngle angDir;
+			VectorAngles(vecVelocity, angDir);
+
+			if (m_bFacingForward)
+			{
+				m_flGoalFeetYaw = angDir[YAW];
+			}
+			else
+			{
+				m_flGoalFeetYaw = AngleNormalize(angDir[YAW] + 180);
+			}
+		}
+	}
+	// Else if we are not moving.
+	else
+	{
+		// Initialize the feet.
+		if ( m_PoseParameterData.m_flLastAimTurnTime <= 0.0f )
+		{
+			m_flGoalFeetYaw	= m_flEyeYaw;
+			m_flCurrentFeetYaw = m_flEyeYaw;
+			m_PoseParameterData.m_flLastAimTurnTime = gpGlobals->curtime;
+		}
+		// Make sure the feet yaw isn't too far out of sync with the eye yaw.
+		// TODO: Do something better here!
+		else
+		{
+			float flYawDelta = AngleNormalize(  m_flGoalFeetYaw - m_flEyeYaw );
+
+			if ( fabs( flYawDelta ) > 75.0f )
+			{
+				float flSide = ( flYawDelta > 0.0f ) ? -1.0f : 1.0f;
+				m_flGoalFeetYaw += ( 75.0f * flSide );
+			}
+		}
+	}
+
+	// Fix up the feet yaw.
+	m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
+	if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
+	{
+		if ( m_bForceAimYaw )
+		{
+			m_flCurrentFeetYaw = m_flGoalFeetYaw;
+		}
+		else
+		{
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
+			m_flLastAimTurnTime = gpGlobals->curtime;
+		}
+	}
+
+	// Rotate the body into position.
+	m_angRender[YAW] = m_flCurrentFeetYaw;
+
+	// Find the aim(torso) yaw base on the eye and feet yaws.
+	float flAimYaw = m_flEyeYaw - m_flCurrentFeetYaw;
+	flAimYaw = AngleNormalize( flAimYaw );
+
+	// Set the aim yaw and save.
+	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, -flAimYaw );
+	m_DebugAnimData.m_flAimYaw	= flAimYaw;
+
+	// Turn off a force aim yaw - either we have already updated or we don't need to.
+	m_bForceAimYaw = false;
+
+#ifndef CLIENT_DLL
+	QAngle angle = GetBasePlayer()->GetAbsAngles();
+	angle[YAW] = m_flCurrentFeetYaw;
+
+	GetBasePlayer()->SetAbsAngles( angle );
+#endif
+}
+
 extern ConVar mp_slammoveyaw;
 float SnapYawTo( float flValue );
 void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
@@ -258,12 +355,16 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 	Vector2D vecCurrentMoveYaw( 0.0f, 0.0f );
 	if ( bIsMoving )
 	{
-		if ( mp_slammoveyaw.GetBool() )
+		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
 		{
-			flYaw = SnapYawTo( flYaw );
+			vecCurrentMoveYaw.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
+			vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
 		}
-		vecCurrentMoveYaw.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
-		vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
+		else
+		{
+			vecCurrentMoveYaw.x = cos( DEG2RAD( m_PoseParameterData.m_flEstimateYaw ) ) * flPlaybackRate;
+			vecCurrentMoveYaw.y = -sin( DEG2RAD( m_PoseParameterData.m_flEstimateYaw ) ) * flPlaybackRate;
+		}
 	}
 
 	// Set the 9-way blend movement pose parameters.
@@ -283,6 +384,60 @@ void CSDKPlayerAnimState::ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr )
 	flYaw = AngleNormalize( flYaw );
 
 	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_iStuntYawPose, flYaw );
+}
+
+void CSDKPlayerAnimState::EstimateYaw( void )
+{
+	// Get the frame time.
+	float flDeltaTime = gpGlobals->frametime;
+	if ( flDeltaTime == 0.0f )
+		return;
+
+	// Get the player's velocity and angles.
+	Vector vecEstVelocity;
+	GetOuterAbsVelocity( vecEstVelocity );
+	QAngle angles = GetBasePlayer()->GetLocalAngles();
+
+	// If we are not moving, sync up the feet and eyes slowly.
+	if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
+	{
+		float flYawDelta = angles[YAW] - m_PoseParameterData.m_flEstimateYaw;
+		flYawDelta = AngleNormalize( flYawDelta );
+
+		if ( flDeltaTime < 0.25f )
+		{
+			flYawDelta *= ( flDeltaTime * 4.0f );
+		}
+		else
+		{
+			flYawDelta *= flDeltaTime;
+		}
+
+		m_PoseParameterData.m_flEstimateYaw += flYawDelta;
+		m_PoseParameterData.m_flEstimateYaw = AngleNormalize( m_PoseParameterData.m_flEstimateYaw );
+	}
+	else if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
+	{
+		m_PoseParameterData.m_flEstimateYaw = ( atan2( vecEstVelocity.y, vecEstVelocity.x ) * 180.0f / M_PI );
+		m_PoseParameterData.m_flEstimateYaw = clamp( m_PoseParameterData.m_flEstimateYaw, -180.0f, 180.0f );
+	}
+	else
+	{
+		QAngle angDir;
+		VectorAngles(vecEstVelocity, angDir);
+
+		if (fabs(AngleNormalize(angDir[YAW] - m_flEyeYaw)) <= 90)
+			m_bFacingForward = true;
+		else if (fabs(AngleNormalize(angDir[YAW] - m_flEyeYaw)) >= 91)
+			m_bFacingForward = false;
+
+		float flYawDelta = AngleNormalize(m_flGoalFeetYaw - m_flCurrentFeetYaw);
+
+		if (m_bFacingForward)
+			m_PoseParameterData.m_flEstimateYaw = flYawDelta;
+		else
+			m_PoseParameterData.m_flEstimateYaw = 180-flYawDelta;
+	}
 }
 
 //-----------------------------------------------------------------------------

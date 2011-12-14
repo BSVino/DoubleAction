@@ -215,6 +215,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bRolling = false;
 	m_Shared.m_bSliding = false;
 	m_Shared.m_bProne = false;
+	m_Shared.m_bAimedIn = false;
 
 	//Tony; todo; fix
 
@@ -691,6 +692,16 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 	}
 }
 
+bool CSDKPlayerShared::IsAimedIn() const
+{
+	return m_bAimedIn;
+}
+
+void CSDKPlayerShared::SetAimIn(bool bAimIn)
+{
+	m_bAimedIn = bAimIn;
+}
+
 void CSDKPlayerShared::ForceUnzoom( void )
 {
 //	CWeaponSDKBase *pWeapon = GetActiveSDKWeapon();
@@ -786,41 +797,15 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 
 void CSDKPlayer::InitSpeeds()
 {
-#if !defined ( SDK_USE_PLAYERCLASSES )
 	m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
 	m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
 	m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
 	m_Shared.m_flSlideSpeed = SDK_DEFAULT_PLAYER_SLIDESPEED;
 	m_Shared.m_flRollSpeed = SDK_DEFAULT_PLAYER_ROLLSPEED;
+	m_Shared.m_flAimInSpeed = 100;
+
 	// Set the absolute max to sprint speed
 	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
-	return;
-#endif
-#if defined ( SDK_USE_PLAYERCLASSES )
-		int playerclass = m_Shared.PlayerClass();
-
-		//Tony; error checkings.
-		if ( playerclass == PLAYERCLASS_UNDEFINED )
-		{
-			m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
-			m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
-			m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
-		}
-		else
-		{
-			CSDKTeam *pTeam = GetGlobalSDKTeam( GetTeamNumber() );
-			const CSDKPlayerClassInfo &pClassInfo = pTeam->GetPlayerClassInfo( playerclass );
-
-			Assert( pClassInfo.m_iTeam == GetTeamNumber() );
-
-			m_Shared.m_flRunSpeed = pClassInfo.m_flRunSpeed;
-			m_Shared.m_flSprintSpeed = pClassInfo.m_flSprintSpeed;
-			m_Shared.m_flProneSpeed = pClassInfo.m_flProneSpeed;
-		}
-
-		// Set the absolute max to sprint speed
-		SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
-#endif // SDK_USE_PLAYERCLASSES
 }
 
 //-----------------------------------------------------------------------------

@@ -94,6 +94,10 @@ public:
 #endif
 
 	virtual bool CanWeaponBeDropped() const {	return true; }
+
+	virtual bool HasAimInSpeedPenalty();
+	virtual bool HasAimInFireRateBonus();
+
 private:
 
 	CNetworkVar(float, m_flDecreaseShotsFired);

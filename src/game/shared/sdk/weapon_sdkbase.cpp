@@ -193,7 +193,11 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	//Tony; update our weapon idle time
 	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	float flFireRate = GetFireRate();
+	if (pPlayer->m_Shared.IsAimedIn() && HasAimInFireRateBonus())
+		flFireRate /= 2;
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + flFireRate;
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
 
 
@@ -205,6 +209,16 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 void CWeaponSDKBase::SecondaryAttack()
 {
+}
+
+bool CWeaponSDKBase::HasAimInSpeedPenalty()
+{
+	return GetSDKWpnData().m_bAimInSpeedPenalty;
+}
+
+bool CWeaponSDKBase::HasAimInFireRateBonus()
+{
+	return GetSDKWpnData().m_bAimInFireRateBonus;
 }
 
 //Tony; added so we can have base functionality without implementing it into every weapon.

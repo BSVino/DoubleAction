@@ -34,6 +34,9 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	Q_strncpy( m_szAnimExtension, pAnimEx, sizeof( m_szAnimExtension ) );
 
 	m_flWeaponFOV	= pKeyValuesData->GetFloat( "fov", 74.0f );
+
+	m_bAimInSpeedPenalty	= !!pKeyValuesData->GetInt( "AimInSpeedPenalty", 0 );
+	m_bAimInFireRateBonus	= !!pKeyValuesData->GetInt( "AimInFireRateBonus", 0 );
 }
 
 

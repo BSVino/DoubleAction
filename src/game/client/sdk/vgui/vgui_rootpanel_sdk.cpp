@@ -9,12 +9,15 @@
 #include "ienginevgui.h"
 #include "vgui_rootpanel_sdk.h"
 #include "vgui/ivgui.h"
+#include <vgui/ISurface.h>
+#include "c_sdk_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 C_SDKRootPanel *g_pRootPanel = NULL;
 
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Global functions.
@@ -45,10 +48,7 @@ C_SDKRootPanel::C_SDKRootPanel( vgui::VPANEL parent )
 	SetParent( parent );
 	SetPaintEnabled( false );
 	SetPaintBorderEnabled( false );
-	SetPaintBackgroundEnabled( false );
-
-	// This panel does post child painting
-	SetPostChildPaintEnabled( true );
+	SetPaintBackgroundEnabled( true );
 
 	// Make it screen sized
 	SetBounds( 0, 0, ScreenWidth(), ScreenHeight() );
@@ -67,20 +67,34 @@ C_SDKRootPanel::~C_SDKRootPanel( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_SDKRootPanel::PostChildPaint()
+void C_SDKRootPanel::PaintBackground()
 {
-	BaseClass::PostChildPaint();
-
-	// Draw all panel effects
-	RenderPanelEffects();
+	BaseClass::PaintBackground();
+	
+	RenderLetterboxing();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: For each panel effect, check if it wants to draw and draw it on
 //  this panel/surface if so
 //-----------------------------------------------------------------------------
-void C_SDKRootPanel::RenderPanelEffects( void )
+void C_SDKRootPanel::RenderLetterboxing( void )
 {
+	C_SDKPlayer* pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
+	if (pPlayer && pPlayer->m_Shared.GetAimIn() > 0)
+	{
+		int iWidth = ScreenWidth();
+		int iHeight = ScreenHeight();
+
+		int i169Height = iWidth*9/16;
+		if (i169Height >= iHeight - 50)
+			i169Height = iHeight - 50;
+		int iBarHeight = ((iHeight - i169Height)/2)*pPlayer->m_Shared.GetAimIn();
+
+		surface()->DrawSetColor(Color(0, 0, 0, 255*pPlayer->m_Shared.GetAimIn()));
+		surface()->DrawFilledRect( 0, 0, ScreenWidth(), iBarHeight );
+		surface()->DrawFilledRect( 0, ScreenHeight()-iBarHeight, ScreenWidth(), ScreenHeight() );
+	}
 }
 
 //-----------------------------------------------------------------------------

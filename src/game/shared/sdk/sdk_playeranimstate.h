@@ -65,10 +65,11 @@ public:
 	bool	HandleSprinting( Activity &idealActivity );
 #endif
 
-	//Tony; overriding because the SDK Player models pose parameter is flipped the opposite direction
+	virtual void		ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
-
 	virtual void		ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr );
+
+	virtual void		EstimateYaw( void );
 
 	virtual Activity CalcMainActivity();	
 
@@ -81,6 +82,8 @@ private:
 	bool		m_bProneTransition;
 	bool		m_bProneTransitionFirstFrame;
 #endif
+
+	bool		m_bFacingForward;
 
 	Activity	m_iDiveActivity;
 	bool		m_bDiveStart;

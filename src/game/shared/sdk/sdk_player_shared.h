@@ -97,6 +97,10 @@ public:
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
 
+	bool	IsAimedIn() const;
+	void	SetAimIn(bool bAimIn);
+	float	GetAimIn() const { return m_flAimIn; }
+
 	void	ForceUnzoom( void );
 
 #ifdef SDK_USE_SPRINTING
@@ -141,6 +145,9 @@ private:
 	CNetworkVar( Vector, m_vecDiveDirection );
 	float m_flViewTilt;
 
+	CNetworkVar( bool, m_bAimedIn );
+	float m_flAimIn;
+
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
@@ -168,6 +175,7 @@ public:
 	float m_flProneSpeed;
 	float m_flSlideSpeed;
 	float m_flRollSpeed;
+	float m_flAimInSpeed;
 
 private:
 
