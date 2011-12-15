@@ -67,8 +67,15 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
+	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
+
+#ifdef CLIENT_DLL
+	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );
+#endif
+
 	//Tony; default weapon spread, pretty accurate - accuracy systems would need to modify this
 	virtual float GetWeaponSpread() { return 0.01f; }
+	virtual bool WeaponSpreadFixed() const { return false; }
 
 	//Tony; by default, all weapons are automatic.
 	//If you add code to switch firemodes, this function would need to be overridden to return the correct current mode.
@@ -95,8 +102,11 @@ public:
 
 	virtual bool CanWeaponBeDropped() const {	return true; }
 
+	virtual float GetViewPunchMultiplier();
+	virtual float GetRecoil();
 	virtual bool HasAimInSpeedPenalty();
 	virtual bool HasAimInFireRateBonus();
+	virtual bool HasAimInRecoilBonus();
 
 private:
 

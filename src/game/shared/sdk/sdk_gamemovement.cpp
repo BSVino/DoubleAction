@@ -145,7 +145,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 			if ( m_pSDKPlayer->m_Shared.IsAimedIn() )
 			{
 				if (m_pSDKPlayer->GetActiveSDKWeapon() && m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
-					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flAimInSpeed;
+					flMaxSpeed = RemapVal(m_pSDKPlayer->m_Shared.GetAimIn(), 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
 				else
 					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 			}
@@ -667,6 +667,14 @@ bool CSDKGameMovement::ResolveStanding( void )
 void CSDKGameMovement::ReduceTimers( void )
 {
 	Vector vecPlayerVelocity = m_pSDKPlayer->GetAbsVelocity();
+
+	float flAimGoal;
+	if (m_pSDKPlayer->m_Shared.IsAimedIn())
+		flAimGoal = 1;
+	else
+		flAimGoal = 0;
+
+	m_pSDKPlayer->m_Shared.SetAimIn(Approach(flAimGoal, m_pSDKPlayer->m_Shared.GetAimIn(), gpGlobals->frametime*3));
 
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	float flStamina = m_pSDKPlayer->m_Shared.GetStamina();

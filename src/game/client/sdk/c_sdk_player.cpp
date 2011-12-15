@@ -183,6 +183,8 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flViewTilt, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_bAimedIn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flAimIn, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
@@ -1284,14 +1286,6 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 
 		pSetup->angles.z += flDot * m_Shared.m_flViewTilt * 5;
 	}
-
-	float flFOVGoal;
-	if (m_Shared.IsAimedIn())
-		flFOVGoal = 1;
-	else
-		flFOVGoal = 0;
-
-	m_Shared.m_flAimIn = Approach(flFOVGoal, m_Shared.m_flAimIn, gpGlobals->frametime*3);
 
 	pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
 }

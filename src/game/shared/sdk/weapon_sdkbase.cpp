@@ -176,6 +176,9 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	float flSpread = GetWeaponSpread();
 
+	if (pPlayer->m_Shared.IsAimedIn() && !WeaponSpreadFixed())
+		flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+
 	FX_FireBullets(
 		pPlayer->entindex(),
 		pPlayer->Weapon_ShootPosition(),
@@ -186,7 +189,6 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		flSpread
 		);
 
-
 	//Add our view kick in
 	AddViewKick();
 
@@ -195,7 +197,8 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	float flFireRate = GetFireRate();
 	if (pPlayer->m_Shared.IsAimedIn() && HasAimInFireRateBonus())
-		flFireRate /= 2;
+		// We lerp from .8 instead of 1 to be a bit more forgiving when the player first taps the aim button.
+		flFireRate *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 0.8f, 0.7f);
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + flFireRate;
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
@@ -211,6 +214,52 @@ void CWeaponSDKBase::SecondaryAttack()
 {
 }
 
+void CWeaponSDKBase::AddViewKick()
+{
+	CSDKPlayer *pPlayer = GetPlayerOwner();
+
+	if ( pPlayer )
+	{
+		// Update punch angles.
+		QAngle angle = pPlayer->GetPunchAngle();
+
+		angle.x -= SharedRandomInt( "PunchAngle", 4, 6 );
+
+		float flRecoilBonus = 1;
+		if (GetPlayerOwner()->m_Shared.IsAimedIn())
+		{
+			if (HasAimInRecoilBonus())
+				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+			else
+				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+		}
+
+		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );
+		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
+	}
+}
+
+#ifdef CLIENT_DLL
+void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
+{
+	BaseClass::CreateMove(flInputSampleTime, pCmd, vecOldViewAngles);
+
+	Vector vecRecoil = GetPlayerOwner()->m_Shared.GetRecoil(flInputSampleTime);
+	pCmd->viewangles[PITCH] -= vecRecoil.y;
+	pCmd->viewangles[YAW] += vecRecoil.x;
+}
+#endif
+
+float CWeaponSDKBase::GetViewPunchMultiplier()
+{
+	return GetSDKWpnData().m_flViewPunchMultiplier;
+}
+
+float CWeaponSDKBase::GetRecoil()
+{
+	return GetSDKWpnData().m_flRecoil;
+}
+
 bool CWeaponSDKBase::HasAimInSpeedPenalty()
 {
 	return GetSDKWpnData().m_bAimInSpeedPenalty;
@@ -219,6 +268,11 @@ bool CWeaponSDKBase::HasAimInSpeedPenalty()
 bool CWeaponSDKBase::HasAimInFireRateBonus()
 {
 	return GetSDKWpnData().m_bAimInFireRateBonus;
+}
+
+bool CWeaponSDKBase::HasAimInRecoilBonus()
+{
+	return GetSDKWpnData().m_bAimInRecoilBonus;
 }
 
 //Tony; added so we can have base functionality without implementing it into every weapon.

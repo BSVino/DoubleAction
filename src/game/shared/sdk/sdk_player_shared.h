@@ -100,6 +100,10 @@ public:
 	bool	IsAimedIn() const;
 	void	SetAimIn(bool bAimIn);
 	float	GetAimIn() const { return m_flAimIn; }
+	void	SetAimIn(float flAimIn) { m_flAimIn = flAimIn; }
+
+	Vector	GetRecoil(float flFrameTime);
+	void	SetRecoil(float flRecoil);
 
 	void	ForceUnzoom( void );
 
@@ -147,6 +151,9 @@ private:
 
 	CNetworkVar( bool, m_bAimedIn );
 	float m_flAimIn;
+
+	Vector	m_vecRecoilDirection;
+	float	m_flRecoilAccumulator;
 
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	CNetworkVar( float, m_flStamina );

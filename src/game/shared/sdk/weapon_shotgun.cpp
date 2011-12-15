@@ -38,7 +38,7 @@ public:
 
 	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_SHOTGUN; }
 	virtual float GetWeaponSpread() { return 0.04362f; }
-
+	virtual bool WeaponSpreadFixed() const { return true; }
 
 private:
 
@@ -90,30 +90,11 @@ void CWeaponShotgun::PrimaryAttack()
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.15;
 		return;
 	}
-	bool doPunch = true;
-	if ( m_iClip1 <= 0 )
-		doPunch = false;
 
 	BaseClass::PrimaryAttack();
 
-	if ( doPunch )
-	{
+	if ( m_iClip1 > 0 )
 		m_iInSpecialReload = 0;
-
-		// Update punch angles.
-		QAngle angle = pPlayer->GetPunchAngle();
-
-		if ( pPlayer->GetFlags() & FL_ONGROUND )
-		{
-			angle.x -= SharedRandomInt( "ShotgunPunchAngleGround", 4, 6 );
-		}
-		else
-		{
-			angle.x -= SharedRandomInt( "ShotgunPunchAngleAir", 8, 11 );
-		}
-
-		pPlayer->SetPunchAngle( angle );
-	}
 }
 
 

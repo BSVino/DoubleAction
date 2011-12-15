@@ -694,12 +694,36 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 bool CSDKPlayerShared::IsAimedIn() const
 {
+	if (IsDiving() || IsRolling())
+		return false;
+
 	return m_bAimedIn;
 }
 
 void CSDKPlayerShared::SetAimIn(bool bAimIn)
 {
 	m_bAimedIn = bAimIn;
+}
+
+ConVar dab_recoildecay("dab_recoildecay", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
+{
+	if (m_flRecoilAccumulator <= 0)
+		return Vector(0, 0, 0);
+
+	float flRecoil = m_flRecoilAccumulator*flFrameTime;
+	m_flRecoilAccumulator = Approach(0, m_flRecoilAccumulator, flFrameTime * dab_recoildecay.GetFloat());
+	return m_vecRecoilDirection * flRecoil;
+}
+
+ConVar dab_recoilmultiplier("dab_recoilmultiplier", "2", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayerShared::SetRecoil(float flRecoil)
+{
+	m_flRecoilAccumulator = flRecoil * dab_recoilmultiplier.GetFloat();
+	m_vecRecoilDirection.y = 1;
+	m_vecRecoilDirection.x = SharedRandomFloat( "Recoil", -0.5f, 0.5f );
 }
 
 void CSDKPlayerShared::ForceUnzoom( void )

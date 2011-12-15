@@ -36,8 +36,11 @@ public:
 
 	float m_flWeaponFOV;		//Tony; added weapon fov, SDK uses models from a couple different games, so FOV is different.
 
+	float	m_flViewPunchMultiplier;
+	float	m_flRecoil;
 	bool	m_bAimInSpeedPenalty;
 	bool	m_bAimInFireRateBonus;
+	bool	m_bAimInRecoilBonus;
 };
 
 
