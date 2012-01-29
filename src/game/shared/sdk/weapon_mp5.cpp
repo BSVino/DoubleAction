@@ -31,7 +31,7 @@ public:
 
 	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_MP5; }
 
-	virtual float GetWeaponSpread() { return 0.08f; }
+	virtual float GetWeaponSpread() { return 0.04f; }
 
 private:
 
