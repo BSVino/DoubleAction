@@ -577,7 +577,7 @@ void CSDKPlayerShared::EndRoll()
 
 bool CSDKPlayerShared::IsDiving() const
 {
-	return m_bDiving;
+	return m_bDiving && m_pOuter->IsAlive();
 }
 
 bool CSDKPlayerShared::CanDive() const
