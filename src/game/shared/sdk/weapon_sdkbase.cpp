@@ -181,7 +181,8 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		if (GetSDKWpnData().m_bAimInSpreadBonus)
 			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
 		else
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+			// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 	}
 
 	FX_FireBullets(
@@ -236,7 +237,8 @@ void CWeaponSDKBase::AddViewKick()
 			if (HasAimInRecoilBonus())
 				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
 			else
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+				// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
+				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 		}
 
 		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );

@@ -31,6 +31,8 @@ public:
 
 	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_FAL; }
 
+	virtual bool FullAimIn() { return true; }
+
 private:
 
 	CWeaponFAL( const CWeaponFAL & );

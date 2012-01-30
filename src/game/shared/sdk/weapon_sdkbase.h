@@ -108,6 +108,8 @@ public:
 	virtual bool HasAimInFireRateBonus();
 	virtual bool HasAimInRecoilBonus();
 
+	virtual bool FullAimIn() { return false; }
+
 private:
 
 	CNetworkVar(float, m_flDecreaseShotsFired);

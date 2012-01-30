@@ -144,8 +144,10 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 			float flMaxSpeed;	
 			if ( m_pSDKPlayer->m_Shared.IsAimedIn() )
 			{
+				// Consider 50% fully aimed in for speed purposes.
+
 				if (m_pSDKPlayer->GetActiveSDKWeapon() && m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
-					flMaxSpeed = RemapVal(m_pSDKPlayer->m_Shared.GetAimIn(), 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
+					flMaxSpeed = RemapValClamped(m_pSDKPlayer->m_Shared.GetAimIn()*2, 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
 				else
 					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 			}
@@ -668,13 +670,34 @@ void CSDKGameMovement::ReduceTimers( void )
 {
 	Vector vecPlayerVelocity = m_pSDKPlayer->GetAbsVelocity();
 
+	float flFastAimInSpeed = gpGlobals->frametime*1.5f;
+	float flSlowAimInSpeed = gpGlobals->frametime/3;
+	float flAimInSpeed;
+
 	float flAimGoal;
 	if (m_pSDKPlayer->m_Shared.IsAimedIn())
-		flAimGoal = 1;
+	{
+		if (m_pSDKPlayer->m_Shared.GetAimIn() < 0.5f)
+		{
+			flAimInSpeed = flFastAimInSpeed;
+			flAimGoal = 0.5f;
+		}
+		else
+		{
+			if (m_pSDKPlayer->GetActiveSDKWeapon() && m_pSDKPlayer->GetActiveSDKWeapon()->FullAimIn())
+				flAimGoal = 1;
+			else
+				flAimGoal = 0.5f;
+			flAimInSpeed = flSlowAimInSpeed;
+		}
+	}
 	else
+	{
 		flAimGoal = 0;
+		flAimInSpeed = gpGlobals->frametime*3;
+	}
 
-	m_pSDKPlayer->m_Shared.SetAimIn(Approach(flAimGoal, m_pSDKPlayer->m_Shared.GetAimIn(), gpGlobals->frametime*3));
+	m_pSDKPlayer->m_Shared.SetAimIn(Approach(flAimGoal, m_pSDKPlayer->m_Shared.GetAimIn(), flAimInSpeed));
 
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	float flStamina = m_pSDKPlayer->m_Shared.GetStamina();

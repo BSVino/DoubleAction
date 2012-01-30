@@ -83,15 +83,20 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 	C_SDKPlayer* pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
 	if (pPlayer && pPlayer->m_Shared.GetAimIn() > 0)
 	{
+		// Consider 50% fully letterboxed 
+		float flRealAimIn = pPlayer->m_Shared.GetAimIn()*2;
+		if (flRealAimIn > 1)
+			flRealAimIn = 1;
+
 		int iWidth = ScreenWidth();
 		int iHeight = ScreenHeight();
 
 		int i169Height = iWidth*9/16;
 		if (i169Height >= iHeight - 50)
 			i169Height = iHeight - 50;
-		int iBarHeight = ((iHeight - i169Height)/2)*pPlayer->m_Shared.GetAimIn();
+		int iBarHeight = ((iHeight - i169Height)/2)*flRealAimIn;
 
-		surface()->DrawSetColor(Color(0, 0, 0, 255*pPlayer->m_Shared.GetAimIn()));
+		surface()->DrawSetColor(Color(0, 0, 0, 255*flRealAimIn));
 		surface()->DrawFilledRect( 0, 0, ScreenWidth(), iBarHeight );
 		surface()->DrawFilledRect( 0, ScreenHeight()-iBarHeight, ScreenWidth(), ScreenHeight() );
 	}

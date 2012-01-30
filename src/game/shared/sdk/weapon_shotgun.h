@@ -40,6 +40,7 @@ public:
 	virtual void WeaponIdle();
 
 	virtual bool WeaponSpreadFixed() const { return true; }
+	virtual bool FullAimIn() { return true; }
 
 private:
 
