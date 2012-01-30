@@ -12,6 +12,7 @@
 #include "apparent_velocity_helper.h"
 #include "utldict.h"
 
+#include "sdk_shareddefs.h"
 #include "sdk_playeranimstate.h"
 #include "base_playeranimstate.h"
 #include "datacache/imdlcache.h"

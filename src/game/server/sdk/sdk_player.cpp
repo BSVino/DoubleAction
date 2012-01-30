@@ -373,14 +373,16 @@ void CSDKPlayer::GiveDefaultItems()
 #if !defined ( SDK_USE_PLAYERCLASSES )
 	if ( State_Get() == STATE_ACTIVE )
 	{
-		CBasePlayer::GiveAmmo( 120,	"pistol");
-		CBasePlayer::GiveAmmo( 120,	"mp5");
-		CBasePlayer::GiveAmmo( 48,	"shotgun");
+		CBasePlayer::GiveAmmo( 40,	"45acp");
+		CBasePlayer::GiveAmmo( 120,	"9x19mm");
+		CBasePlayer::GiveAmmo( 120,	"762x51mm");
+		CBasePlayer::GiveAmmo( 40,	"buckshot");
 		CBasePlayer::GiveAmmo( 3,	"grenades" );
 
-		GiveNamedItem( "weapon_pistol" );
-		GiveNamedItem( "weapon_mp5" );
-		GiveNamedItem( "weapon_shotgun" );
+		GiveNamedItem( "weapon_m1911" );
+		GiveNamedItem( "weapon_mp5k" );
+		GiveNamedItem( "weapon_m3" );
+		GiveNamedItem( "weapon_fal" );
 		GiveNamedItem( "weapon_grenade" );
 	}
 #endif
@@ -1766,29 +1768,41 @@ void CSDKPlayer::RemoveOtherWeapons( SDKWeaponID eWeapon )
 		return;
 
 	m_bRemove = false;
-	if (eWeapon == SDK_WEAPON_MP5)
+	if (eWeapon == SDK_WEAPON_MP5K)
 	{
-		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+		RemoveWeapon(SDK_WEAPON_M3);
+		RemoveWeapon(SDK_WEAPON_FAL);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 	}
-	else if (eWeapon == SDK_WEAPON_SHOTGUN)
+	else if (eWeapon == SDK_WEAPON_M3)
 	{
-		RemoveWeapon(SDK_WEAPON_MP5);
+		RemoveWeapon(SDK_WEAPON_MP5K);
+		RemoveWeapon(SDK_WEAPON_FAL);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 		RemoveWeapon(SDK_WEAPON_GRENADE);
 	}
 	else if (eWeapon == SDK_WEAPON_GRENADE)
 	{
-		RemoveWeapon(SDK_WEAPON_MP5);
-		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+		RemoveWeapon(SDK_WEAPON_MP5K);
+		RemoveWeapon(SDK_WEAPON_M3);
+		RemoveWeapon(SDK_WEAPON_FAL);
 	}
-	else if (eWeapon == SDK_WEAPON_PISTOL)
+	else if (eWeapon == SDK_WEAPON_M1911)
 	{
-		RemoveWeapon(SDK_WEAPON_MP5);
-		RemoveWeapon(SDK_WEAPON_SHOTGUN);
+		RemoveWeapon(SDK_WEAPON_MP5K);
+		RemoveWeapon(SDK_WEAPON_M3);
+		RemoveWeapon(SDK_WEAPON_FAL);
+	}
+	else if (eWeapon == SDK_WEAPON_FAL)
+	{
+		RemoveWeapon(SDK_WEAPON_MP5K);
+		RemoveWeapon(SDK_WEAPON_M3);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
+		RemoveWeapon(SDK_WEAPON_GRENADE);
 	}
 }
 

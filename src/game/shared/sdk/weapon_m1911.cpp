@@ -9,7 +9,7 @@
 
 #if defined( CLIENT_DLL )
 
-	#define CWeaponPistol C_WeaponPistol
+	#define CWeaponM1911 C_WeaponM1911
 	#include "c_sdk_player.h"
 
 #else
@@ -19,45 +19,43 @@
 #endif
 
 
-class CWeaponPistol : public CWeaponSDKBase
+class CWeaponM1911 : public CWeaponSDKBase
 {
 public:
-	DECLARE_CLASS( CWeaponPistol, CWeaponSDKBase );
+	DECLARE_CLASS( CWeaponM1911, CWeaponSDKBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
 	
-	CWeaponPistol();
+	CWeaponM1911();
 
-	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_PISTOL; }
+	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_M1911; }
 	virtual int GetFireMode() const { return FM_SEMIAUTOMATIC; }
-
-	virtual float GetWeaponSpread() { return 0.02f; }
 
 private:
 
-	CWeaponPistol( const CWeaponPistol & );
+	CWeaponM1911( const CWeaponM1911 & );
 };
 
-IMPLEMENT_NETWORKCLASS_ALIASED( WeaponPistol, DT_WeaponPistol )
+IMPLEMENT_NETWORKCLASS_ALIASED( WeaponM1911, DT_WeaponM1911 )
 
-BEGIN_NETWORK_TABLE( CWeaponPistol, DT_WeaponPistol )
+BEGIN_NETWORK_TABLE( CWeaponM1911, DT_WeaponM1911 )
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA( CWeaponPistol )
+BEGIN_PREDICTION_DATA( CWeaponM1911 )
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS( weapon_pistol, CWeaponPistol );
-PRECACHE_WEAPON_REGISTER( weapon_pistol );
+LINK_ENTITY_TO_CLASS( weapon_m1911, CWeaponM1911 );
+PRECACHE_WEAPON_REGISTER( weapon_m1911 );
 
 
 
-CWeaponPistol::CWeaponPistol()
+CWeaponM1911::CWeaponM1911()
 {
 }
 
 //Tony; todo; add ACT_MP_PRONE* activities, so we have them.
-acttable_t CWeaponPistol::m_acttable[] = 
+acttable_t CWeaponM1911::m_acttable[] = 
 {
 	{ ACT_DAB_STAND_IDLE,				ACT_DAB_STAND_IDLE_M1911,				false },
 	{ ACT_DAB_WALK_IDLE,				ACT_DAB_WALK_IDLE_M1911,				false },
@@ -87,5 +85,5 @@ acttable_t CWeaponPistol::m_acttable[] =
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_M1911,					false },
 };
 
-IMPLEMENT_ACTTABLE( CWeaponPistol );
+IMPLEMENT_ACTTABLE( CWeaponM1911 );
 

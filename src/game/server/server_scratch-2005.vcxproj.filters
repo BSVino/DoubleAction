@@ -1350,16 +1350,7 @@
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_mp5.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_pistol.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp">
@@ -1400,6 +1391,21 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_m3.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_m1911.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2923,6 +2929,9 @@
     </ClInclude>
     <ClInclude Include="toolframework_server.h">
       <Filter>Tools Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\weapon_shotgun.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

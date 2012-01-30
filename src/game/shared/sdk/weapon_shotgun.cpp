@@ -5,49 +5,8 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "weapon_sdkbase.h"
+#include "weapon_shotgun.h"
 #include "sdk_fx_shared.h"
-
-
-#if defined( CLIENT_DLL )
-
-	#define CWeaponShotgun C_WeaponShotgun
-	#include "c_sdk_player.h"
-
-#else
-
-	#include "sdk_player.h"
-	#include "te_firebullets.h"
-
-#endif
-
-
-class CWeaponShotgun : public CWeaponSDKBase
-{
-public:
-	DECLARE_CLASS( CWeaponShotgun, CWeaponSDKBase );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
-
-	CWeaponShotgun();
-
-	virtual void PrimaryAttack();
-	virtual bool Reload();
-	virtual void WeaponIdle();
-
-	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_SHOTGUN; }
-	virtual float GetWeaponSpread() { return 0.04362f; }
-	virtual bool WeaponSpreadFixed() const { return true; }
-
-private:
-
-	CWeaponShotgun( const CWeaponShotgun & );
-
-	float m_flPumpTime;
-	CNetworkVar( int, m_iInSpecialReload );
-
-};
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponShotgun, DT_WeaponShotgun )
 
@@ -191,35 +150,3 @@ void CWeaponShotgun::WeaponIdle()
 		}
 	}
 }
-
-acttable_t CWeaponShotgun::m_acttable[] = 
-{
-	{ ACT_DAB_STAND_IDLE,				ACT_DAB_STAND_IDLE_M3,					false },
-	{ ACT_DAB_WALK_IDLE,				ACT_DAB_WALK_IDLE_M3,					false },
-	{ ACT_DAB_RUN_IDLE,					ACT_DAB_RUN_IDLE_M3,					false },
-	{ ACT_DAB_CROUCH_IDLE,				ACT_DAB_CROUCH_IDLE_M3,					false },
-	{ ACT_DAB_CROUCHWALK_IDLE,			ACT_DAB_CROUCHWALK_IDLE_M3,				false },
-	{ ACT_DAB_PRONECHEST_IDLE,			ACT_DAB_PRONECHEST_IDLE_M3,				false },
-	{ ACT_DAB_PRONEBACK_IDLE,			ACT_DAB_PRONEBACK_IDLE_M3,				false },
-	{ ACT_DAB_CRAWL_IDLE,				ACT_DAB_CRAWL_IDLE_M3,					false },
-	{ ACT_DAB_PRIMARYATTACK,			ACT_DAB_PRIMARYATTACK_M3,				false },
-	{ ACT_DAB_PRIMARYATTACK_CROUCH,		ACT_DAB_PRIMARYATTACK_CROUCH_M3,		false },
-	{ ACT_DAB_PRIMARYATTACK_PRONE,		ACT_DAB_PRIMARYATTACK_PRONE_M3,			false },
-	{ ACT_DAB_PRIMARYATTACK_SLIDE,		ACT_DAB_PRIMARYATTACK_SLIDE_M3,			false },
-	{ ACT_DAB_PRIMARYATTACK_DIVE,		ACT_DAB_PRIMARYATTACK_DIVE_M3,			false },
-	{ ACT_DAB_PRIMARYATTACK_ROLL,		ACT_DAB_PRIMARYATTACK_ROLL_M3,			false },
-	{ ACT_DAB_RELOAD,					ACT_DAB_RELOAD_M3,						false },
-	{ ACT_DAB_RELOAD_CROUCH,			ACT_DAB_RELOAD_CROUCH_M3,				false },
-	{ ACT_DAB_RELOAD_PRONE,				ACT_DAB_RELOAD_PRONE_M3,				false },
-	{ ACT_DAB_RELOAD_SLIDE,				ACT_DAB_RELOAD_SLIDE_M3,				false },
-	{ ACT_DAB_JUMP_START,				ACT_DAB_JUMP_START_M3,					false },
-	{ ACT_DAB_JUMP_FLOAT,				ACT_DAB_JUMP_FLOAT_M3,					false },
-	{ ACT_DAB_JUMP_LAND,				ACT_DAB_JUMP_LAND_M3,					false },
-	{ ACT_DAB_DIVE,						ACT_DAB_DIVE_M3,						false },
-	{ ACT_DAB_DIVEFALL,					ACT_DAB_DIVEFALL_M3,					false },
-	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_M3,						false },
-	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_M3,					false },
-	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_M3,						false },
-};
-
-IMPLEMENT_ACTTABLE( CWeaponShotgun );

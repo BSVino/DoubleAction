@@ -1249,18 +1249,12 @@ CAmmoDef* GetAmmoDef()
 	{
 		bInitted = true;
 
-		for (int i=WEAPON_NONE+1;i<WEAPON_MAX;i++)
-		{
-			//Tony; ignore grenades, shotgun and the crowbar, grenades and shotgun are handled seperately because of their damage type not being DMG_BULLET.
-			if (i == SDK_WEAPON_GRENADE || i == SDK_WEAPON_CROWBAR || i == SDK_WEAPON_SHOTGUN)
-				continue;
+		def.AddAmmoType( "9x19mm", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
+		def.AddAmmoType( "762x51mm", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
+		def.AddAmmoType( "45acp", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 50/*max carry*/, 1, 0 );
 
-			def.AddAmmoType( WeaponIDToAlias(i), DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
-		}
-
-		// def.AddAmmoType( BULLET_PLAYER_50AE,		DMG_BULLET, TRACER_LINE, 0, 0, "ammo_50AE_max",		2400, 0, 10, 14 );
-		def.AddAmmoType( "shotgun", DMG_BUCKSHOT, TRACER_NONE, 0, 0,	200/*max carry*/, 1, 0 );
-		def.AddAmmoType( "grenades", DMG_BLAST, TRACER_NONE, 0, 0,	4/*max carry*/, 1, 0 );
+		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE, 0, 0,	50/*max carry*/, 1, 0 );
+		def.AddAmmoType( "grenades", DMG_BLAST, TRACER_NONE, 0, 0,	5/*max carry*/, 1, 0 );
 
 		//Tony; added for the sdk_jeep
 		def.AddAmmoType( "JeepAmmo",	DMG_SHOCK,					TRACER_NONE,			"sdk_jeep_weapon_damage",		"sdk_jeep_weapon_damage", "sdk_jeep_max_rounds", BULLET_IMPULSE(650, 8000), 0 );

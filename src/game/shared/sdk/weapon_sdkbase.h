@@ -10,6 +10,7 @@
 #pragma once
 #endif
 
+#include "sdk_shareddefs.h"
 #include "sdk_playeranimstate.h"
 #include "sdk_weapon_parse.h"
 
@@ -73,8 +74,7 @@ public:
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );
 #endif
 
-	//Tony; default weapon spread, pretty accurate - accuracy systems would need to modify this
-	virtual float GetWeaponSpread() { return 0.01f; }
+	virtual float GetWeaponSpread();
 	virtual bool WeaponSpreadFixed() const { return false; }
 
 	//Tony; by default, all weapons are automatic.

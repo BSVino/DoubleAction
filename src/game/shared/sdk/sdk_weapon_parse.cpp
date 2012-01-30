@@ -37,8 +37,10 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 
 	m_flViewPunchMultiplier	= pKeyValuesData->GetFloat( "ViewPunchMultiplier", 1 );
 	m_flRecoil				= pKeyValuesData->GetFloat( "Recoil", 10 );
+	m_flSpread				= pKeyValuesData->GetFloat( "Spread", 0.01f );
 	m_bAimInSpeedPenalty	= !!pKeyValuesData->GetInt( "AimInSpeedPenalty", 0 );
 	m_bAimInFireRateBonus	= !!pKeyValuesData->GetInt( "AimInFireRateBonus", 0 );
 	m_bAimInRecoilBonus		= !!pKeyValuesData->GetInt( "AimInRecoilBonus", 0 );
+	m_bAimInSpreadBonus		= !!pKeyValuesData->GetInt( "AimInSpreadBonus", 0 );
 }
 

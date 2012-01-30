@@ -12,6 +12,7 @@
 
 
 #include "basegrenade_shared.h"
+#include "sdk_shareddefs.h"
 
 
 #ifdef CLIENT_DLL

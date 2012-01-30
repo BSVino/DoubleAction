@@ -11,6 +11,7 @@
 #endif
 
 
+#include "sdk_shareddefs.h"
 #include "sdk_playeranimstate.h"
 #include "c_baseplayer.h"
 #include "baseparticleentity.h"

@@ -9,7 +9,7 @@
 
 #if defined( CLIENT_DLL )
 
-	#define CWeaponMP5 C_WeaponMP5
+	#define CWeaponMP5K C_WeaponMP5K
 	#include "c_sdk_player.h"
 
 #else
@@ -19,44 +19,42 @@
 #endif
 
 
-class CWeaponMP5 : public CWeaponSDKBase
+class CWeaponMP5K : public CWeaponSDKBase
 {
 public:
-	DECLARE_CLASS( CWeaponMP5, CWeaponSDKBase );
+	DECLARE_CLASS( CWeaponMP5K, CWeaponSDKBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
 	
-	CWeaponMP5();
+	CWeaponMP5K();
 
-	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_MP5; }
-
-	virtual float GetWeaponSpread() { return 0.04f; }
+	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_MP5K; }
 
 private:
 
-	CWeaponMP5( const CWeaponMP5 & );
+	CWeaponMP5K( const CWeaponMP5K & );
 };
 
-IMPLEMENT_NETWORKCLASS_ALIASED( WeaponMP5, DT_WeaponMP5 )
+IMPLEMENT_NETWORKCLASS_ALIASED( WeaponMP5K, DT_WeaponMP5K )
 
-BEGIN_NETWORK_TABLE( CWeaponMP5, DT_WeaponMP5 )
+BEGIN_NETWORK_TABLE( CWeaponMP5K, DT_WeaponMP5K )
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA( CWeaponMP5 )
+BEGIN_PREDICTION_DATA( CWeaponMP5K )
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS( weapon_mp5, CWeaponMP5 );
-PRECACHE_WEAPON_REGISTER( weapon_mp5 );
+LINK_ENTITY_TO_CLASS( weapon_mp5k, CWeaponMP5K );
+PRECACHE_WEAPON_REGISTER( weapon_mp5k );
 
 
 
-CWeaponMP5::CWeaponMP5()
+CWeaponMP5K::CWeaponMP5K()
 {
 }
 
 //Tony; todo; add ACT_MP_PRONE* activities, so we have them.
-acttable_t CWeaponMP5::m_acttable[] = 
+acttable_t CWeaponMP5K::m_acttable[] = 
 {
 	{ ACT_DAB_STAND_IDLE,				ACT_DAB_STAND_IDLE_MP5K,				false },
 	{ ACT_DAB_WALK_IDLE,				ACT_DAB_WALK_IDLE_MP5K,					false },
@@ -86,5 +84,5 @@ acttable_t CWeaponMP5::m_acttable[] =
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_MP5K,						false },
 };
 
-IMPLEMENT_ACTTABLE( CWeaponMP5 );
+IMPLEMENT_ACTTABLE( CWeaponMP5K );
 

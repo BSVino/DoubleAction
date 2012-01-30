@@ -216,6 +216,11 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "c:\steam\steama
     <ClCompile Include="..\shared\achievementmgr.cpp" />
     <ClCompile Include="..\shared\achievements_hlx.cpp" />
     <ClCompile Include="..\shared\activitylist.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_m3.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="ai_activity.cpp" />
     <ClCompile Include="ai_baseactor.cpp" />
     <ClCompile Include="ai_basehumanoid.cpp" />
@@ -786,10 +791,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "c:\steam\steama
     <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_mp5.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_pistol.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp" />
     <ClCompile Include="sdk\sdk_team.cpp" />
     <ClCompile Include="sdk\sdk_player.cpp" />
@@ -809,6 +811,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "c:\steam\steama
     <ClInclude Include="..\shared\achievementmgr.h" />
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
+    <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="ai_baseactor.h" />
     <ClInclude Include="ai_basehumanoid.h" />
     <ClInclude Include="ai_basenpc.h" />

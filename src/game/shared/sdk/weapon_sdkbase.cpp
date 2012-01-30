@@ -177,7 +177,12 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	float flSpread = GetWeaponSpread();
 
 	if (pPlayer->m_Shared.IsAimedIn() && !WeaponSpreadFixed())
-		flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+	{
+		if (GetSDKWpnData().m_bAimInSpreadBonus)
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+		else
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+	}
 
 	FX_FireBullets(
 		pPlayer->entindex(),
@@ -237,6 +242,11 @@ void CWeaponSDKBase::AddViewKick()
 		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );
 		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
 	}
+}
+
+float CWeaponSDKBase::GetWeaponSpread()
+{
+	return GetSDKWpnData().m_flSpread;
 }
 
 #ifdef CLIENT_DLL

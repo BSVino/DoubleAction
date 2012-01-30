@@ -836,8 +836,4 @@ enum tprbGameInfo_e
 #define TPRB_STATE_ROUNDRESET			(1<<6)
 #define TPRB_STATE_WAITINGREADYSTART	(1<<7)
 
-//Tony; including sdk_shareddefs.h because I use it in a _lot_ of places that needs to be seen before many other things.
-#ifdef SDK_DLL
-#include "sdk_shareddefs.h"
-#endif
 #endif // SHAREDDEFS_H

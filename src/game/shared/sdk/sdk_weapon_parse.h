@@ -38,9 +38,11 @@ public:
 
 	float	m_flViewPunchMultiplier;
 	float	m_flRecoil;
+	float	m_flSpread;
 	bool	m_bAimInSpeedPenalty;
 	bool	m_bAimInFireRateBonus;
 	bool	m_bAimInRecoilBonus;
+	bool	m_bAimInSpreadBonus;
 };
 
 

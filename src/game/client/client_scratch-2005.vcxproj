@@ -216,6 +216,11 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_m3.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="achievement_notification_panel.cpp" />
     <ClCompile Include="..\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\shared\achievementmgr.cpp" />
@@ -800,10 +805,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_mp5.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_pistol.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="sdk\c_sdk_team.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp" />
     <ClCompile Include="sdk\c_sdk_player.cpp" />
@@ -819,6 +821,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     <ClCompile Include="toolframework_client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="achievement_notification_panel.h" />
     <ClInclude Include="..\shared\achievement_saverestore.h" />
     <ClInclude Include="..\shared\achievementmgr.h" />
