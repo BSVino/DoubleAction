@@ -121,7 +121,9 @@ void CSDKHudArmor::OnThink( void )
 	m_iArmor = newArmor;
 
 	//Tony; moved down to fix localization crash at load, update the label name and armor value when it changes.
-	SetLabelText(g_pVGuiLocalize->Find("#SDK_HudArmor"));
+	wchar_t* pszArmor = g_pVGuiLocalize->Find("#DAB_HudArmor");
+	if (pszArmor)
+		SetLabelText(pszArmor);
 	SetDisplayValue(m_iArmor);
 }
 
