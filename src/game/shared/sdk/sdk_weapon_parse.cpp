@@ -44,3 +44,23 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_bAimInSpreadBonus		= !!pKeyValuesData->GetInt( "AimInSpreadBonus", 0 );
 }
 
+CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)
+{
+	const char* pszAlias = WeaponIDToAlias( eWeapon );
+
+	Assert(pszAlias);
+	if (!pszAlias)
+		return nullptr;
+
+	char szName[128];
+	Q_snprintf( szName, sizeof( szName ), "weapon_%s", pszAlias );
+
+	WEAPON_FILE_INFO_HANDLE hWeaponFile = LookupWeaponInfoSlot( szName );
+	if (hWeaponFile == GetInvalidWeaponInfoHandle())
+	{
+		Assert(hWeaponFile != GetInvalidWeaponInfoHandle());
+		return nullptr;
+	}
+
+	return static_cast< CSDKWeaponInfo* >( GetFileWeaponInfoFromHandle( hWeaponFile ) );
+}

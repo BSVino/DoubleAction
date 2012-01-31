@@ -123,6 +123,10 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
+BEGIN_SEND_TABLE_NOBASE( CArmament, DT_Loadout )
+	SendPropInt(SENDINFO(m_iCount)),
+END_SEND_TABLE()
+
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 	// send a hi-res origin to the local player for use in prediction
@@ -132,6 +136,9 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
+
+	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
+	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -367,26 +374,38 @@ void CSDKPlayer::Precache()
 	BaseClass::Precache();
 }
 
-//Tony; this is where default items go when not using playerclasses!
 void CSDKPlayer::GiveDefaultItems()
 {
-#if !defined ( SDK_USE_PLAYERCLASSES )
+	char szName[128];
+
 	if ( State_Get() == STATE_ACTIVE )
 	{
-		CBasePlayer::GiveAmmo( 40,	"45acp");
-		CBasePlayer::GiveAmmo( 120,	"9x19mm");
-		CBasePlayer::GiveAmmo( 120,	"762x51mm");
-		CBasePlayer::GiveAmmo( 40,	"buckshot");
-		CBasePlayer::GiveAmmo( 3,	"grenades" );
+		for (int i = 0; i < MAX_LOADOUT; i++)
+		{
+			for (int j = 0; j < m_aLoadout[i].m_iCount; j++)
+			{
+				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
+				GiveNamedItem( szName );
 
-		GiveNamedItem( "weapon_m1911" );
-		GiveNamedItem( "weapon_mp5k" );
-		GiveNamedItem( "weapon_m3" );
-		GiveNamedItem( "weapon_fal" );
-		GiveNamedItem( "weapon_grenade" );
+				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+				if (pInfo)
+				{
+					if (FStrEq(pInfo->szAmmo1, "45acp"))
+						CBasePlayer::GiveAmmo( 40, "45acp");
+					else if (FStrEq(pInfo->szAmmo1, "9x19mm"))
+						CBasePlayer::GiveAmmo( 120, "9x19mm");
+					else if (FStrEq(pInfo->szAmmo1, "762x51mm"))
+						CBasePlayer::GiveAmmo( 120, "762x51mm");
+					else if (FStrEq(pInfo->szAmmo1, "buckshot"))
+						CBasePlayer::GiveAmmo( 40, "buckshot");
+					else if (!FStrEq(pInfo->szAmmo1, "grenades"))
+						AssertMsg(false, "Loadout weapon has unknown ammo type");
+				}
+			}
+		}
 	}
-#endif
 }
+
 #define SDK_PUSHAWAY_THINK_CONTEXT	"SDKPushawayThink"
 void CSDKPlayer::SDKPushawayThink(void)
 {
@@ -617,13 +636,16 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 	BaseClass::CommitSuicide( bExplode, bForce );
 }
+
 void CSDKPlayer::InitialSpawn( void )
 {
 	BaseClass::InitialSpawn();
 
 	State_Enter( STATE_WELCOME );
 
+	ClearLoadout();
 }
+
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
 	//Tony; disable prediction filtering, and call the baseclass.
@@ -1096,7 +1118,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			State_Transition( STATE_PICKINGCLASS );
 //Tony; not using teams or classes, go straight to active.
 #else
-			State_Transition( STATE_ACTIVE );
+			State_Transition( STATE_BUYINGWEAPONS );
 #endif
 		}
 		
@@ -1117,16 +1139,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if ( FStrEq( pcmd, "menuopen" ) )
 	{
-#if defined ( SDK_USE_PLAYERCLASSES )
-		SetClassMenuOpen( true );
-#endif
+		SetBuyMenuOpen( true );
 		return true;
 	}
 	else if ( FStrEq( pcmd, "menuclosed" ) )
 	{
-#if defined ( SDK_USE_PLAYERCLASSES )
-		SetClassMenuOpen( false );
-#endif
+		SetBuyMenuOpen( false );
+
+		if ( State_Get() == STATE_BUYINGWEAPONS || IsDead() )
+			State_Transition( STATE_ACTIVE );
+
 		return true;
 	}
 	else if ( FStrEq( pcmd, "droptest" ) )
@@ -1346,6 +1368,65 @@ bool CSDKPlayer::IsClassMenuOpen( void )
 }
 #endif // SDK_USE_PLAYERCLASSES
 
+void CSDKPlayer::SetBuyMenuOpen( bool bOpen )
+{
+	m_bIsBuyMenuOpen = bOpen;
+}
+
+bool CSDKPlayer::IsBuyMenuOpen( void )
+{
+	return m_bIsBuyMenuOpen;
+}
+
+void CSDKPlayer::ShowBuyMenu()
+{
+	ShowViewPortPanel( PANEL_BUY );
+}
+
+void CSDKPlayer::ClearLoadout()
+{
+	for (int i = 0; i < MAX_LOADOUT; i++)
+		m_aLoadout.GetForModify(i).m_iCount.Set(0);
+
+	CountLoadoutWeight();
+}
+
+void CSDKPlayer::AddToLoadout(SDKWeaponID eWeapon)
+{
+	if (!CanAddToLoadout(eWeapon))
+		return;
+
+	m_aLoadout.GetForModify(eWeapon).m_iCount++;
+
+	CountLoadoutWeight();
+}
+
+void CSDKPlayer::RemoveFromLoadout(SDKWeaponID eWeapon)
+{
+	if (m_aLoadout[eWeapon].m_iCount <= 0)
+		return;
+
+	m_aLoadout.GetForModify(eWeapon).m_iCount--;
+
+	CountLoadoutWeight();
+}
+
+void CSDKPlayer::CountLoadoutWeight()
+{
+	m_iLoadoutWeight = 0;
+
+	// Skip WEAPON_NONE, start at 1
+	for (int i = 1; i < MAX_LOADOUT; i++)
+	{
+		CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+
+		if (!pWeaponInfo)
+			continue;
+
+		m_iLoadoutWeight += pWeaponInfo->iWeight * m_aLoadout[i].m_iCount;
+	}
+}
+
 #if defined ( SDK_USE_PRONE )
 //-----------------------------------------------------------------------------
 // Purpose: Initialize prone at spawn.
@@ -1435,6 +1516,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 #if defined ( SDK_USE_PLAYERCLASSES )
 		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_Enter_PICKINGCLASS, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
 #endif
+		{ STATE_BUYINGWEAPONS,	"STATE_BUYINGWEAPONS",	&CSDKPlayer::State_Enter_BUYINGWEAPONS, NULL, &CSDKPlayer::State_PreThink_WELCOME },
 		{ STATE_DEATH_ANIM,		"STATE_DEATH_ANIM",		&CSDKPlayer::State_Enter_DEATH_ANIM,	NULL, &CSDKPlayer::State_PreThink_DEATH_ANIM },
 		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	NULL, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
 	};
@@ -1614,6 +1696,10 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsClassMenuOpen())
 			return;
 #endif
+
+		if (IsBuyMenuOpen())
+			return;
+
 		State_Transition( STATE_ACTIVE );
 	}
 }
@@ -1711,6 +1797,12 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 }
 #endif // SDK_USE_TEAMS
 
+void CSDKPlayer::State_Enter_BUYINGWEAPONS()
+{
+	ShowBuyMenu();
+	PhysObjectSleep();
+}
+
 void CSDKPlayer::State_Enter_ACTIVE()
 {
 	SetMoveType( MOVETYPE_WALK );
@@ -1760,50 +1852,6 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 		return false;
 
 	return BaseClass::WantsLagCompensationOnEntity( pPlayer, pCmd, pEntityTransmitBits );
-}
-
-void CSDKPlayer::RemoveOtherWeapons( SDKWeaponID eWeapon )
-{
-	if (!m_bRemove)
-		return;
-
-	m_bRemove = false;
-	if (eWeapon == SDK_WEAPON_MP5K)
-	{
-		RemoveWeapon(SDK_WEAPON_M3);
-		RemoveWeapon(SDK_WEAPON_FAL);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-	}
-	else if (eWeapon == SDK_WEAPON_M3)
-	{
-		RemoveWeapon(SDK_WEAPON_MP5K);
-		RemoveWeapon(SDK_WEAPON_FAL);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-	}
-	else if (eWeapon == SDK_WEAPON_GRENADE)
-	{
-		RemoveWeapon(SDK_WEAPON_MP5K);
-		RemoveWeapon(SDK_WEAPON_M3);
-		RemoveWeapon(SDK_WEAPON_FAL);
-	}
-	else if (eWeapon == SDK_WEAPON_M1911)
-	{
-		RemoveWeapon(SDK_WEAPON_MP5K);
-		RemoveWeapon(SDK_WEAPON_M3);
-		RemoveWeapon(SDK_WEAPON_FAL);
-	}
-	else if (eWeapon == SDK_WEAPON_FAL)
-	{
-		RemoveWeapon(SDK_WEAPON_MP5K);
-		RemoveWeapon(SDK_WEAPON_M3);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-		RemoveWeapon(SDK_WEAPON_GRENADE);
-	}
 }
 
 void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
@@ -1900,3 +1948,38 @@ void CC_ActivateMeter_f (void)
 }
 
 static ConCommand activatemeter("activatemeter", CC_ActivateMeter_f, "Activate the style meter." );
+
+void CC_Buy(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	if (args.ArgC() == 1)
+	{
+		pPlayer->ShowBuyMenu();
+		return;
+	}
+
+	if (Q_strncmp(args[1], "clear", 5) == 0)
+	{
+		pPlayer->ClearLoadout();
+		return;
+	}
+
+	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
+	{
+		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));
+		return;
+	}
+
+	SDKWeaponID eWeapon = AliasToWeaponID(args[1]);
+	if (eWeapon)
+	{
+		pPlayer->AddToLoadout(eWeapon);
+		return;
+	}
+}
+
+static ConCommand buy("buy", CC_Buy, "Buy things.", FCVAR_GAMEDLL);

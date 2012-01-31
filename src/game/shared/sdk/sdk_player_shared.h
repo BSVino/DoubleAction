@@ -189,7 +189,16 @@ private:
 	OuterClass *m_pOuter;
 };			   
 
+class CArmament
+{
+	DECLARE_EMBEDDED_NETWORKVAR()
+	DECLARE_CLASS_NOBASE( CArmament );
 
+public:
+	CNetworkVar(int,				m_iCount);
+};
 
+#define MAX_LOADOUT WEAPON_MAX
+#define MAX_LOADOUT_WEIGHT 30
 
 #endif //SDK_PLAYER_SHARED_H

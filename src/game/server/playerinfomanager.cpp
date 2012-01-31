@@ -62,7 +62,7 @@ const char *CPlayerInfoManager::WeaponIdToAlias(int weaponId)
 #if defined( TF_DLL )
 	return WeaponIdToAlias(weaponId);
 #elif defined ( CSTRIKE_DLL ) || defined ( DOD_DLL ) || defined ( SDK_DLL ) 	
-	return WeaponIDToAlias(weaponId);
+	return WeaponIDToAlias((SDKWeaponID)weaponId);
 #endif
 	return "MOD_DIDNT_IMPLEMENT_ME";
 }

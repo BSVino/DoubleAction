@@ -147,17 +147,18 @@ extern const char *pszTeamNames[];
 //
 // Weapon IDs for all SDK Game weapons
 //
+// Put this in order of importance in a loadout. Lower values will become primaries in the buy menu.
 typedef enum
 {
 	WEAPON_NONE = 0,
 
 	SDK_WEAPON_NONE = WEAPON_NONE,
-	SDK_WEAPON_MP5K,
-	SDK_WEAPON_M3,
-	SDK_WEAPON_GRENADE,
-	SDK_WEAPON_M1911,
-	SDK_WEAPON_CROWBAR,
 	SDK_WEAPON_FAL,
+	SDK_WEAPON_M3,
+	SDK_WEAPON_MP5K,
+	SDK_WEAPON_M1911,
+	SDK_WEAPON_CROWBAR,		// This can eventually become a knife
+	SDK_WEAPON_GRENADE,
 
 	WEAPON_MAX,		// number of weapons weapon index
 } SDKWeaponID;
@@ -170,8 +171,8 @@ typedef enum
 
 } SDK_Weapon_Firemodes;
 
-const char *WeaponIDToAlias( int id );
-int AliasToWeaponID( const char *alias );
+const char *WeaponIDToAlias( SDKWeaponID id );
+SDKWeaponID AliasToWeaponID( const char *alias );
 
 
 // The various states the player can be in during the join game process.
@@ -197,6 +198,8 @@ enum SDKPlayerState
 	STATE_PICKINGCLASS,			// Choosing class.
 #endif
 	
+	STATE_BUYINGWEAPONS,		// Buying weapons.
+
 	STATE_DEATH_ANIM,			// Playing death anim, waiting for that to finish.
 	STATE_OBSERVER_MODE,		// Noclipping around, watching players, etc.
 

@@ -117,6 +117,12 @@ public:
 	bool CanShowClassMenu();
 #endif // SDK_USE_PLAYERCLASSES
 
+	bool CanShowBuyMenu();
+
+	bool CanAddToLoadout(SDKWeaponID eWeapon);
+	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+	int GetLoadoutWeight() { return m_iLoadoutWeight; }
+
 	void LocalPlayerRespawn( void );
 
 	//Tony; update lookat, if our model has moving eyes setup, they need to be updated.
@@ -181,6 +187,8 @@ private:
 	};
 	CUtlLinkedList<CSDKSoundEvent,int> m_SoundEvents;
 
+	CArmament		m_aLoadout[MAX_LOADOUT];
+	int				m_iLoadoutWeight;
 };
 
 

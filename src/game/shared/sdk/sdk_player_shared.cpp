@@ -867,3 +867,22 @@ void CSDKPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, floa
 
 	BaseClass::PlayStepSound(vecOrigin, psurface, fvol, force);
 }
+
+bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
+{
+	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
+
+	if (pWeaponInfo->iWeight + m_iLoadoutWeight > MAX_LOADOUT_WEIGHT)
+		return false;
+
+	// When multiple weapon support goes in just erase this.
+	if (m_aLoadout[eWeapon].m_iCount)
+		return false;
+
+	return true;
+}
+
+int CSDKPlayer::GetLoadoutWeaponCount(SDKWeaponID eWeapon)
+{
+	return m_aLoadout[eWeapon].m_iCount;
+}

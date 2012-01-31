@@ -13,7 +13,7 @@
 
 #include "weapon_parse.h"
 #include "networkvar.h"
-
+#include "sdk_shareddefs.h"
 
 //--------------------------------------------------------------------------------------------------------
 class CSDKWeaponInfo : public FileWeaponInfo_t
@@ -43,6 +43,8 @@ public:
 	bool	m_bAimInFireRateBonus;
 	bool	m_bAimInRecoilBonus;
 	bool	m_bAimInSpreadBonus;
+
+	static CSDKWeaponInfo* GetWeaponInfo(SDKWeaponID eWeapon);
 };
 
 

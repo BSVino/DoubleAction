@@ -1422,6 +1422,9 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\vgui\dab_buymenu.cpp">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3205,6 +3208,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h">
       <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\vgui\dab_buymenu.h">
+      <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

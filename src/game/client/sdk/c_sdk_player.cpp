@@ -22,6 +22,7 @@
 #include "bone_setup.h"
 #include "cl_animevent.h"
 #include "input.h"
+#include <baseviewport.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -119,6 +120,12 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
+void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
+
+BEGIN_RECV_TABLE_NOBASE(CArmament, DT_Loadout)
+	RecvPropInt(RECVINFO(m_iCount), 0, RecvProxy_Loadout),
+END_RECV_TABLE()
+
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
@@ -126,6 +133,9 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 //	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 	RecvPropInt( RECVINFO( m_ArmorValue ) ),
+
+	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
+	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -803,6 +813,9 @@ bool C_SDKPlayer::ShouldDraw( void )
 		return false;
 #endif
 
+	if ( State_Get() == STATE_BUYINGWEAPONS )
+		return false;
+
 	if( IsLocalPlayer() && IsRagdoll() )
 		return true;
 
@@ -864,6 +877,12 @@ bool C_SDKPlayer::CanShowTeamMenu( void )
 	return true;
 }
 #endif
+
+bool C_SDKPlayer::CanShowBuyMenu( void )
+{
+	return ( GetTeamNumber() != TEAM_SPECTATOR );
+}
+
 void C_SDKPlayer::ClientThink()
 {
 	UpdateSoundEvents();
@@ -1247,7 +1266,7 @@ static ConVar dab_aimin_fov_delta("dab_aimin_fov_delta", "10", FCVAR_ARCHIVE);
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
-	if (input->CAM_IsThirdPerson())
+	if (::input->CAM_IsThirdPerson())
 	{
 		Vector vecOffset;
 		::input->CAM_GetCameraOffset( vecOffset );
@@ -1288,4 +1307,11 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	}
 
 	pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
+}
+
+void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
+
+	gViewPortInterface->FindPanelByName(PANEL_BUY)->Update();
 }

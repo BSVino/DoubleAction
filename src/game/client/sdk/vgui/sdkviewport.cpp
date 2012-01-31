@@ -45,6 +45,7 @@
 #if defined ( SDK_USE_TEAMS )
 #include "sdk_teammenu.h"
 #endif
+#include "dab_buymenu.h"
 
 #if defined ( SDK_USE_TEAMS )
 CON_COMMAND_F( changeteam, "Choose a new team", FCVAR_SERVER_CAN_EXECUTE|FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -85,7 +86,6 @@ CON_COMMAND_F( changeclass, "Choose a new class", FCVAR_SERVER_CAN_EXECUTE|FCVAR
 	}
 }
 #endif // SDK_USE_PLAYERCLASSES
-
 
 CON_COMMAND_F( spec_help, "Show spectator help screen", FCVAR_CLIENTCMD_CAN_EXECUTE)
 {
@@ -182,6 +182,10 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 		newpanel = new CSDKTeamMenu( this );
 	}
 #endif
+	else if ( Q_strcmp( PANEL_BUY, szPanelName) == 0 )
+	{
+		newpanel = new CDABBuyMenu( this );
+	}
 	else
 	{
 		// create a generic base panel, don't add twice
@@ -204,6 +208,7 @@ void SDKViewport::CreateDefaultPanels( void )
 #if defined ( SDK_USE_TEAMS )
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );
 #endif
+	AddNewPanel( CreatePanelByName( PANEL_BUY ), "PANEL_BUY" );
 	BaseClass::CreateDefaultPanels();
 }
 

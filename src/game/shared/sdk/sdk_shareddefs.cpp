@@ -76,12 +76,12 @@ const char *pszPossiblePlayerModels[] =
 static const char * s_WeaponAliasInfo[] = 
 {
 	"none",		// WEAPON_NONE
-	"mp5k",		// SDK_WEAPON_MP5
+	"fal",		// SDK_WEAPON_FAL
 	"m3",		// SDK_WEAPON_SHOTGUN
-	"grenade",	// SDK_WEAPON_GRENADE
+	"mp5k",		// SDK_WEAPON_MP5
 	"m1911",	// SDK_WEAPON_PISTOL
 	"crowbar",	// SDK_WEAPON_CROWBAR
-	"fal",		// SDK_WEAPON_FAL
+	"grenade",	// SDK_WEAPON_GRENADE
 	NULL,		// WEAPON_NONE
 };
 
@@ -89,13 +89,13 @@ static const char * s_WeaponAliasInfo[] =
 //
 // Given an alias, return the associated weapon ID
 //
-int AliasToWeaponID( const char *alias )
+SDKWeaponID AliasToWeaponID( const char *alias )
 {
 	if (alias)
 	{
 		for( int i=0; s_WeaponAliasInfo[i] != NULL; ++i )
 			if (!Q_stricmp( s_WeaponAliasInfo[i], alias ))
-				return i;
+				return (SDKWeaponID)i;
 	}
 
 	return WEAPON_NONE;
@@ -105,7 +105,7 @@ int AliasToWeaponID( const char *alias )
 //
 // Given a weapon ID, return its alias
 //
-const char *WeaponIDToAlias( int id )
+const char *WeaponIDToAlias( SDKWeaponID id )
 {
 	if ( (id >= WEAPON_MAX) || (id < 0) )
 		return NULL;

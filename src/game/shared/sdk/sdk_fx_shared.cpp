@@ -123,25 +123,13 @@ void FX_FireBullets(
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( iPlayerIndex) );
 #endif
 
-	const char * weaponAlias =	WeaponIDToAlias( iWeaponID );
-
-	if ( !weaponAlias )
+	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)iWeaponID);
+	if ( !pWeaponInfo )
 	{
 		DevMsg("FX_FireBullets: weapon alias for ID %i not found\n", iWeaponID );
+		Assert(pWeaponInfo);
 		return;
 	}
-
-	char wpnName[128];
-	Q_snprintf( wpnName, sizeof( wpnName ), "weapon_%s", weaponAlias );
-	WEAPON_FILE_INFO_HANDLE	hWpnInfo = LookupWeaponInfoSlot( wpnName );
-
-	if ( hWpnInfo == GetInvalidWeaponInfoHandle() )
-	{
-		DevMsg("FX_FireBullets: LookupWeaponInfoSlot failed for weapon %s\n", wpnName );
-		return;
-	}
-
-	CSDKWeaponInfo *pWeaponInfo = static_cast< CSDKWeaponInfo* >( GetFileWeaponInfoFromHandle( hWpnInfo ) );
 
 #ifdef CLIENT_DLL
 	// Do the firing animation event.

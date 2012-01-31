@@ -96,6 +96,18 @@ public:
 	void SetClassMenuOpen( bool bIsOpen );
 	bool IsClassMenuOpen( void );
 #endif
+
+	void SetBuyMenuOpen( bool bIsOpen );
+	bool IsBuyMenuOpen( void );
+	void ShowBuyMenu();
+
+	void ClearLoadout();
+	bool CanAddToLoadout(SDKWeaponID eWeapon);
+	void AddToLoadout(SDKWeaponID eWeapon);
+	void RemoveFromLoadout(SDKWeaponID eWeapon);
+	void CountLoadoutWeight();
+	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
@@ -107,7 +119,6 @@ public:
 	void SDKPushawayThink(void);
 
 	// Remove this shit once an actual buy menu is in.
-	virtual void	RemoveOtherWeapons( SDKWeaponID eWeapon );
 	virtual void	RemoveWeapon( SDKWeaponID eWeapon );
 	bool			m_bRemove;
 
@@ -178,6 +189,9 @@ private:
 	void State_Enter_PICKINGTEAM();
 	void State_Enter_PICKINGCLASS();
 
+	void State_Enter_BUYINGWEAPONS();
+	void State_PreThink_BUYINGWEAPONS();
+
 public: //Tony; I had this private but I need it public for initial spawns.
 	void MoveToNextIntroCamera();
 private:
@@ -214,6 +228,8 @@ private:
 	void ShowClassSelectMenu();
 	bool m_bIsClassMenuOpen;
 #endif
+
+	bool m_bIsBuyMenuOpen;
 
 #if defined ( SDK_USE_PRONE )
 	void InitProne( void );
@@ -268,6 +284,8 @@ public:
 	bool m_bUnProneToDuck;		//Tony; GAMEMOVEMENT USED VARIABLE
 #endif // SDK_USE_PRONE
 
+	CNetworkArray( CArmament, m_aLoadout, MAX_LOADOUT );
+	CNetworkVar( int, m_iLoadoutWeight );
 };
 
 
