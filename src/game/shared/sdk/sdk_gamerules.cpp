@@ -1282,25 +1282,25 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	if ( bTeamOnly )
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
-			pszFormat = "SDK_Chat_Spec";
+			pszFormat = "DAB_Chat_Spec";
 		else
 		{
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "SDK_Chat_Team_Dead";
+				pszFormat = "DAB_Chat_Team_Dead";
 			else
-				pszFormat = "SDK_Chat_Team";
+				pszFormat = "DAB_Chat_Team";
 		}
 	}
 	else
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
-			pszFormat = "SDK_Chat_AllSpec";
+			pszFormat = "DAB_Chat_AllSpec";
 		else
 		{
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "SDK_Chat_All_Dead";
+				pszFormat = "DAB_Chat_All_Dead";
 			else
-				pszFormat = "SDK_Chat_All";
+				pszFormat = "DAB_Chat_All";
 		}
 	}
 
