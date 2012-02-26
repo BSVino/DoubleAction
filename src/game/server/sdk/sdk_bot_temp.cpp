@@ -116,7 +116,7 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 
 	CCommand args;
 
-	args.Tokenize( "joingame" );
+	args.Tokenize( "menuclosed" );
 	pPlayer->ClientCommand( args );
 
 	g_CurBotNumber++;
