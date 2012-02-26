@@ -460,8 +460,6 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 
-	m_bRemove = true;
-
 	m_flActionAbilityStart = -1;
 }
 
@@ -1854,27 +1852,59 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 	return BaseClass::WantsLagCompensationOnEntity( pPlayer, pCmd, pEntityTransmitBits );
 }
 
-void CSDKPlayer::RemoveWeapon( SDKWeaponID eWeapon )
+// Don't automatically pick weapons up just because the player touched them. You clepto.
+bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
-	if (eWeapon == SDK_WEAPON_GRENADE)
-	{
-		RemoveAmmo( 1, "grenades" );
-		return;
-	}
+	return false;
+}
 
-	for (int i = 0; i < MAX_WEAPONS; i++)
+CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
+{
+	CBaseEntity* pEnt;
+	if ((pEnt = BaseClass::GiveNamedItem(pszName, iSubType)) != nullptr)
 	{
-		CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
-		if ( pWeapon )
+		CBaseCombatWeapon* pWeapon;
+		if ((pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pEnt )) != nullptr)
 		{
-			if (pWeapon->GetWeaponID() == eWeapon)
+			// GiveNamedItem uses BumpWeapon to give players weapons but BumpWeapon is overridden
+			// not to pick up weapons when the player touches them, so we have to do it here
+			// instead.
+
+			// If I already have it just take the ammo
+			if (Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType())) 
 			{
-				Weapon_Detach(pWeapon);
-				pWeapon->Delete();
-				return;
+				if( Weapon_EquipAmmoOnly( pWeapon ) )
+				{
+					// Only remove me if I have no ammo left
+					if ( pWeapon->HasPrimaryAmmo() )
+						return pEnt;
+
+					UTIL_Remove( pWeapon );
+					return nullptr;
+				}
+				else
+					return pEnt;
+			}
+			// -------------------------
+			// Otherwise take the weapon
+			// -------------------------
+			else 
+			{
+				pWeapon->CheckRespawn();
+
+				pWeapon->AddSolidFlags( FSOLID_NOT_SOLID );
+				pWeapon->AddEffects( EF_NODRAW );
+
+				Weapon_Equip( pWeapon );
+				if ( IsInAVehicle() )
+					pWeapon->Holster();
+
+				return pWeapon;
 			}
 		}
 	}
+
+	return pEnt;
 }
 
 void CSDKPlayer::AddActionPoints(float points, style_point_t eStyle)

@@ -118,9 +118,8 @@ public:
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void SDKPushawayThink(void);
 
-	// Remove this shit once an actual buy menu is in.
-	virtual void	RemoveWeapon( SDKWeaponID eWeapon );
-	bool			m_bRemove;
+	virtual CBaseEntity*	GiveNamedItem( const char *szName, int iSubType = 0 );
+	virtual bool			BumpWeapon( CBaseCombatWeapon *pWeapon );
 
 // In shared code.
 public:
