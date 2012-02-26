@@ -1260,7 +1260,7 @@ void C_SDKPlayer::UpdateSoundEvents()
 	}
 }
 
-static ConVar cam_right("cam_right", "10", FCVAR_ARCHIVE);
+static ConVar cam_right("cam_right", "15", FCVAR_ARCHIVE);
 static ConVar cam_up("cam_up", "10", FCVAR_ARCHIVE);
 static ConVar dab_aimin_fov_delta("dab_aimin_fov_delta", "10", FCVAR_ARCHIVE);
 
