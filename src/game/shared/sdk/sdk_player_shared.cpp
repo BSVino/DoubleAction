@@ -116,7 +116,7 @@ void CSDKPlayer::FireBullet(
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
 
 		if (iDamageType & DMG_BUCKSHOT)
-			fCurrentDamage *= RemapValClamped(flCurrentDistance, 500, 1000, 1.0f, 0.2f);
+			fCurrentDamage *= RemapValClamped(flCurrentDistance, 500, 800, 1.0f, 0.15f);
 
 		if( bDoEffects )
 		{
