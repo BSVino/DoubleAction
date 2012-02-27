@@ -241,8 +241,77 @@ bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 	return true;
 }
 
+void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
+{
+	if (m_pSDKPlayer->m_Shared.IsSliding())
+	{
+		QAngle angSlide;
+		VectorAngles(m_pSDKPlayer->m_Shared.GetSlideDirection(), angSlide);
+		m_angRender[YAW] = angSlide.y;
+
+		Vector vecForward;
+		m_pSDKPlayer->GetVectors(&vecForward, nullptr, nullptr);
+
+		float flAimPitch = DotProduct(m_pSDKPlayer->m_Shared.GetSlideDirection(), vecForward) * 90;
+
+		// Set the aim yaw and save.
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, -flAimPitch );
+		m_DebugAnimData.m_flAimPitch = flAimPitch;
+
+		return;
+	}
+
+	BaseClass::ComputePoseParam_AimPitch(pStudioHdr);
+}
+
 void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 {
+	if (m_pSDKPlayer->m_Shared.IsSliding())
+	{
+		Vector vecVelocity;
+		GetOuterAbsVelocity( vecVelocity );
+
+		QAngle angDir;
+		VectorAngles(vecVelocity, angDir);
+
+		if (m_bFacingForward)
+			m_flGoalFeetYaw = angDir[YAW];
+		else
+			m_flGoalFeetYaw = AngleNormalize(angDir[YAW] + 180);
+
+		m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
+		if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
+		{
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
+			m_flLastAimTurnTime = gpGlobals->curtime;
+		}
+
+		QAngle angSlide;
+		VectorAngles(m_pSDKPlayer->m_Shared.GetSlideDirection(), angSlide);
+		m_angRender[YAW] = angSlide.y;
+
+		Vector vecRight;
+		m_pSDKPlayer->GetVectors(nullptr, &vecRight, nullptr);
+
+		float flAimYaw = DotProduct(-vecRight, m_pSDKPlayer->m_Shared.GetSlideDirection()) * 90;
+
+		// Set the aim yaw and save.
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, flAimYaw );
+		m_DebugAnimData.m_flAimYaw	= flAimYaw;
+
+		// Turn off a force aim yaw - either we have already updated or we don't need to.
+		m_bForceAimYaw = false;
+
+#ifndef CLIENT_DLL
+		QAngle angle = GetBasePlayer()->GetAbsAngles();
+		angle[YAW] = m_flCurrentFeetYaw;
+
+		GetBasePlayer()->SetAbsAngles( angle );
+#endif
+
+		return;
+	}
+
 	// Get the movement velocity.
 	Vector vecVelocity;
 	GetOuterAbsVelocity( vecVelocity );

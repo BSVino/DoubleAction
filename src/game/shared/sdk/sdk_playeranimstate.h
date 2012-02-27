@@ -65,6 +65,7 @@ public:
 	bool	HandleSprinting( Activity &idealActivity );
 #endif
 
+	virtual void		ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr );
