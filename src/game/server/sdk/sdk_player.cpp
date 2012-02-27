@@ -836,6 +836,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	StopSound( "Player.GoSlide" );
+
 	ThrowActiveWeapon();
 
 	CBaseEntity* pAttacker = info.GetAttacker();
