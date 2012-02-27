@@ -297,6 +297,7 @@ void CSDKPlayer::PreThink(void)
 	BaseClass::PreThink();
 }
 
+ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does the style meter remain active after activation?" );
 
 void CSDKPlayer::PostThink()
 {
@@ -304,7 +305,7 @@ void CSDKPlayer::PostThink()
 
 	if (m_flActionAbilityStart > 0)
 	{
-		if (gpGlobals->curtime > m_flActionAbilityStart + 10)
+		if (gpGlobals->curtime > m_flActionAbilityStart + dab_stylemetertime.GetFloat())
 		{
 			m_flActionAbilityStart = -1;
 
@@ -834,6 +835,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return 1;
 }
 
+ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
+
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	StopSound( "Player.GoSlide" );
@@ -874,7 +877,16 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
-	SetActionPoints(m_flActionPoints - 25);
+	if (IsActionAbilityActive())
+	{
+		// If the player died while the style meter was active, refund the unused portion.
+		float flUnused = 1-((gpGlobals->curtime - m_flActionAbilityStart)/dab_stylemetertime.GetFloat());
+		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
+		SetActionPoints(m_flActionPoints + flRefund);
+	}
+
+	// Losing a whole activation can be rough, let's be a bit more forgiving.
+	SetActionPoints(m_flActionPoints - dab_stylemeteractivationcost.GetFloat()/2);
 }
 
 void CSDKPlayer::ThrowActiveWeapon( void )
@@ -1946,9 +1958,9 @@ bool CSDKPlayer::UseActionPoints (void)
 {
 	bool success = false;
 
-	if(m_flActionPoints >= 25)
+	if(m_flActionPoints >= dab_stylemeteractivationcost.GetFloat())
 	{
-		m_flActionPoints -= 25;
+		m_flActionPoints -= dab_stylemeteractivationcost.GetFloat();
 
 		success = true;
 	}
