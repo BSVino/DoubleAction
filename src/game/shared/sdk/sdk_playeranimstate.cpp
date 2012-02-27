@@ -252,10 +252,10 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 		Vector vecForward;
 		m_pSDKPlayer->GetVectors(&vecForward, nullptr, nullptr);
 
-		float flAimPitch = DotProduct(m_pSDKPlayer->m_Shared.GetSlideDirection(), vecForward) * 90;
+		float flAimPitch = DotProduct(Vector(0, 0, 1), vecForward) * 90;
 
 		// Set the aim yaw and save.
-		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, -flAimPitch );
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
 		m_DebugAnimData.m_flAimPitch = flAimPitch;
 
 		return;
@@ -290,10 +290,12 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		VectorAngles(m_pSDKPlayer->m_Shared.GetSlideDirection(), angSlide);
 		m_angRender[YAW] = angSlide.y;
 
-		Vector vecRight;
-		m_pSDKPlayer->GetVectors(nullptr, &vecRight, nullptr);
+		// Get the view yaw.
+		float flAngle = AngleNormalize( m_flEyeYaw );
 
-		float flAimYaw = DotProduct(-vecRight, m_pSDKPlayer->m_Shared.GetSlideDirection()) * 90;
+		// Calc side to side turning - the view vs. movement yaw.
+		float flAimYaw = angSlide.y - flAngle;
+		flAimYaw = AngleNormalize( flAimYaw );
 
 		// Set the aim yaw and save.
 		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, flAimYaw );
