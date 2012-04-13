@@ -1108,10 +1108,10 @@ void CSDKGameMovement::FinishUnSlide( void )
 	
 	SetUnSlideEyeOffset( 1.0 );
 
-	Vector vHullMin = GetPlayerMins( player->m_Local.m_bDucked );
-	Vector vHullMax = GetPlayerMaxs( player->m_Local.m_bDucked );
-
-	m_pSDKPlayer->m_Shared.EndSlide();
+	if (CanUnprone())
+		m_pSDKPlayer->m_Shared.EndSlide();
+	else
+		m_pSDKPlayer->m_Shared.SetProne(true, true);
 
 	CategorizePosition();
 }
@@ -1313,15 +1313,20 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
 		{
-			m_pSDKPlayer->m_Shared.EndRoll();
-
-			SetRollEyeOffset( 0.0 );
-
-			if (mv->m_nButtons & IN_ALT1)
+			if (CanUnprone())
 			{
-				m_pSDKPlayer->m_Shared.SetProne(true, true);
-				SetProneEyeOffset( 1.0 );
+				m_pSDKPlayer->m_Shared.EndRoll();
+
+				SetRollEyeOffset( 0.0 );
+
+				if (mv->m_nButtons & IN_ALT1)
+				{
+					m_pSDKPlayer->m_Shared.SetProne(true, true);
+					SetProneEyeOffset( 1.0 );
+				}
 			}
+			else
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
 		}
 		else
 		{
@@ -1442,7 +1447,7 @@ void CSDKGameMovement::Duck( void )
 
 			return;
 		}
-		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding())
+		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() && CanUnprone())
 		{
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 
