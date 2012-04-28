@@ -157,6 +157,7 @@ typedef enum
 	SDK_WEAPON_M3,
 	SDK_WEAPON_MP5K,
 	SDK_WEAPON_M1911,
+	SDK_WEAPON_P99,
 	SDK_WEAPON_CROWBAR,		// This can eventually become a knife
 	SDK_WEAPON_GRENADE,
 

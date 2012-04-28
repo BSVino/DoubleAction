@@ -79,7 +79,8 @@ static const char * s_WeaponAliasInfo[] =
 	"fal",		// SDK_WEAPON_FAL
 	"m3",		// SDK_WEAPON_SHOTGUN
 	"mp5k",		// SDK_WEAPON_MP5
-	"m1911",	// SDK_WEAPON_PISTOL
+	"m1911",	// SDK_WEAPON_M1911
+	"p99",		// SDK_WEAPON_P99
 	"crowbar",	// SDK_WEAPON_CROWBAR
 	"grenade",	// SDK_WEAPON_GRENADE
 	NULL,		// WEAPON_NONE
