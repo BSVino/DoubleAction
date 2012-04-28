@@ -705,7 +705,7 @@ void CSDKPlayerShared::SetAimIn(bool bAimIn)
 	m_bAimedIn = bAimIn;
 }
 
-ConVar dab_recoildecay("dab_recoildecay", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar dab_recoildecay("dab_recoildecay", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
 {
@@ -717,7 +717,7 @@ Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
 	return m_vecRecoilDirection * flRecoil;
 }
 
-ConVar dab_recoilmultiplier("dab_recoilmultiplier", "2", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar dab_recoilmultiplier("dab_recoilmultiplier", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayerShared::SetRecoil(float flRecoil)
 {
