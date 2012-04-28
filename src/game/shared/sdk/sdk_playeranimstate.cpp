@@ -383,6 +383,9 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 	}
 
+	if (m_pSDKPlayer->m_Shared.IsDiving())
+		m_flCurrentFeetYaw = m_flGoalFeetYaw;
+
 	// Rotate the body into position.
 	m_angRender[YAW] = m_flCurrentFeetYaw;
 
