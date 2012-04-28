@@ -884,9 +884,6 @@ bool CSDKGameMovement::CanUnprone()
 	if (m_pSDKPlayer->m_Shared.IsGettingUpFromProne())
 		return false;
 
-	if (!m_pSDKPlayer->m_Shared.IsProne())
-		return false;
-
 	int i;
 	trace_t trace;
 	Vector newOrigin;
@@ -1429,7 +1426,7 @@ void CSDKGameMovement::Duck( void )
 
 			return;
 		}
-		else if ( bGetUp && CanUnprone() )
+		else if ( bGetUp && m_pSDKPlayer->m_Shared.IsProne() && CanUnprone() )
 		{
 			m_pSDKPlayer->m_Shared.SetProne( false );
 			m_pSDKPlayer->m_Shared.StandUpFromProne();
