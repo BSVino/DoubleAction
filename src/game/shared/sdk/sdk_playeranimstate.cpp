@@ -688,6 +688,16 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		}
 		break;
 
+	case PLAYERANIMEVENT_DIVE_TO_ROLL:
+		{
+			m_bRollTransition = true;
+			m_bRollTransitionFirstFrame = true;
+			m_iRollActivity = ACT_DAB_DIVEROLL;
+			RestartMainSequence();
+			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
+		}
+		break;
+
 	case PLAYERANIMEVENT_STAND_TO_SLIDE:
 		{
 			m_bSlideTransition = true;

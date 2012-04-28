@@ -1352,7 +1352,7 @@ void CSDKGameMovement::Duck( void )
 			{
 				m_pSDKPlayer->m_Shared.StartRolling(true);
 				SetRollEyeOffset( 0.0 );
-				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_DIVE_TO_ROLL );
 
 				CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
 				filter.UsePredictionRules();
