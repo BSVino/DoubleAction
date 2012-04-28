@@ -32,16 +32,19 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSDKBase, DT_WeaponSDKBase )
 BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 #ifdef CLIENT_DLL
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
+  	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
 	SendPropFloat( SENDINFO( m_flDecreaseShotsFired ) ),
+	SendPropFloat( SENDINFO( m_flAccuracyDecay ) ),
 #endif
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponSDKBase )
 	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 #endif
 
@@ -75,6 +78,8 @@ CWeaponSDKBase::CWeaponSDKBase()
 	SetPredictionEligible( true );
 
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
+
+	m_flAccuracyDecay = 0;
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -129,6 +134,10 @@ void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &c
 	}
 }
 #endif
+
+ConVar dab_fulldecay( "dab_fulldecay", "0.5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The maximum accuracy decay." );
+ConVar dab_coldaccuracymultiplier( "dab_coldaccuracymultiplier", "0.25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The accuracy of a cold barrel as a multiplier of the original accuracy." );
+ConVar dab_decayrate( "dab_decayrate", "2", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "A multiplier for the accuracy decay rate of weapons as they fire." );
 
 //Tony; added as a default primary attack if it doesn't get overridden, ie: by CSDKWeaponMelee
 void CWeaponSDKBase::PrimaryAttack( void )
@@ -185,6 +194,9 @@ void CWeaponSDKBase::PrimaryAttack( void )
 			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 	}
 
+	if (!WeaponSpreadFixed())
+		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
+
 	FX_FireBullets(
 		pPlayer->entindex(),
 		pPlayer->Weapon_ShootPosition(),
@@ -205,6 +217,15 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (pPlayer->m_Shared.IsAimedIn() && HasAimInFireRateBonus())
 		// We lerp from .8 instead of 1 to be a bit more forgiving when the player first taps the aim button.
 		flFireRate *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 0.8f, 0.7f);
+
+	if (m_flAccuracyDecay < 0)
+		m_flAccuracyDecay = 0;
+
+	// Weapons that fire quickly should decay slower.
+	m_flAccuracyDecay += (flFireRate * dab_decayrate.GetFloat());
+
+	if (m_flAccuracyDecay > dab_fulldecay.GetFloat())
+		m_flAccuracyDecay = dab_fulldecay.GetFloat();
 
 	m_flNextPrimaryAttack = gpGlobals->curtime + flFireRate;
 	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
@@ -281,6 +302,8 @@ bool CWeaponSDKBase::HasAimInRecoilBonus()
 	return GetSDKWpnData().m_bAimInRecoilBonus;
 }
 
+ConVar dab_decaymultiplier( "dab_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
+
 //Tony; added so we can have base functionality without implementing it into every weapon.
 void CWeaponSDKBase::ItemPostFrame( void )
 {
@@ -294,6 +317,12 @@ void CWeaponSDKBase::ItemPostFrame( void )
 
 	if ( UsesClipsForAmmo1() )
 		CheckReload();
+
+	// A multiplier of 1 means that for every second of firing the player needs to wait one second to get back to full accuracy.
+	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat());
+
+	if (m_flAccuracyDecay < 0)
+		m_flAccuracyDecay = 0;
 
 	bool bFired = false;
 

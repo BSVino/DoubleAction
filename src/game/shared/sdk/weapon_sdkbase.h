@@ -115,6 +115,8 @@ private:
 	CNetworkVar(float, m_flDecreaseShotsFired);
 
 	CWeaponSDKBase( const CWeaponSDKBase & );
+
+	CNetworkVar(float, m_flAccuracyDecay);
 };
 
 
