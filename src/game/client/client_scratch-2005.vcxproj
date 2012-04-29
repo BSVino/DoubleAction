@@ -222,6 +222,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="achievement_notification_panel.cpp" />
     <ClCompile Include="..\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\shared\achievementmgr.cpp" />

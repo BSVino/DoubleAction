@@ -391,16 +391,8 @@ void CSDKPlayer::GiveDefaultItems()
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 				if (pInfo)
 				{
-					if (FStrEq(pInfo->szAmmo1, "45acp"))
-						CBasePlayer::GiveAmmo( 40, "45acp");
-					else if (FStrEq(pInfo->szAmmo1, "9x19mm"))
-						CBasePlayer::GiveAmmo( 120, "9x19mm");
-					else if (FStrEq(pInfo->szAmmo1, "762x51mm"))
-						CBasePlayer::GiveAmmo( 120, "762x51mm");
-					else if (FStrEq(pInfo->szAmmo1, "buckshot"))
-						CBasePlayer::GiveAmmo( 40, "buckshot");
-					else if (!FStrEq(pInfo->szAmmo1, "grenades"))
-						AssertMsg(false, "Loadout weapon has unknown ammo type");
+					if (!FStrEq(pInfo->szAmmo1, "grenades"))
+						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 				}
 			}
 		}

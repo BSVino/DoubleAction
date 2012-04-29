@@ -222,6 +222,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "c:\steam\steama
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="ai_activity.cpp" />
     <ClCompile Include="ai_baseactor.cpp" />
     <ClCompile Include="ai_basehumanoid.cpp" />

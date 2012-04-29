@@ -1251,7 +1251,7 @@ CAmmoDef* GetAmmoDef()
 
 		def.AddAmmoType( "9x19mm", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
 		def.AddAmmoType( "762x51mm", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
-		def.AddAmmoType( "45acp", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 50/*max carry*/, 1, 0 );
+		def.AddAmmoType( "45acp", DMG_BULLET, TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, 1, 0 );
 
 		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE, 0, 0,	50/*max carry*/, 1, 0 );
 		def.AddAmmoType( "grenades", DMG_BLAST, TRACER_NONE, 0, 0,	5/*max carry*/, 1, 0 );
