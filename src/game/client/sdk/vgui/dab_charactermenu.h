@@ -5,8 +5,7 @@
 // $NoKeywords: $
 //=================================================================================//
 
-#ifndef SDK_BUYMENU_H
-#define SDK_BUYMENU_H
+#pragma once
 
 #include <classmenu.h>
 #include <vgui_controls/EditablePanel.h>
@@ -14,13 +13,13 @@
 #include "iconpanel.h"
 #include <vgui_controls/CheckButton.h>
 
-class CDABWeaponInfoPanel : public vgui::EditablePanel
+class CDABCharacterInfoPanel : public vgui::EditablePanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CDABWeaponInfoPanel, vgui::EditablePanel );
+	DECLARE_CLASS_SIMPLE( CDABCharacterInfoPanel, vgui::EditablePanel );
 
 public:
-	CDABWeaponInfoPanel( vgui::Panel *parent, const char *panelName ) : vgui::EditablePanel( parent, panelName )
+	CDABCharacterInfoPanel( vgui::Panel *parent, const char *panelName ) : vgui::EditablePanel( parent, panelName )
 	{
 	}
 
@@ -28,16 +27,19 @@ public:
 	virtual vgui::Panel *CreateControlByName( const char *controlName );
 };
 
-class CWeaponButton : public vgui::Button
+class CCharacterButton : public vgui::Button
 {
 private:
-	DECLARE_CLASS_SIMPLE( CWeaponButton, vgui::Button );
+	DECLARE_CLASS_SIMPLE( CCharacterButton, vgui::Button );
 	
 public:
-	CWeaponButton(vgui::Panel *parent, const char *panelName, CDABWeaponInfoPanel *pPanel ) :
-					Button( parent, panelName, "WeaponButton")
+	CCharacterButton(vgui::Panel *parent, const char *panelName, CDABCharacterInfoPanel *pPanel ) :
+					Button( parent, panelName, "CharacterButton")
 	{
-		m_pPanel = new CDABWeaponInfoPanel( parent, NULL );
+		m_pszWeaponModel = nullptr;
+		m_pszSequence = nullptr;
+
+		m_pPanel = new CDABCharacterInfoPanel( parent, NULL );
 		m_pPanel->SetVisible( false );
 
 		// copy size&pos from template panel
@@ -55,18 +57,18 @@ public:
 		m_bUpdateDefaultButtons = false;
 	}
 
+	virtual ~CCharacterButton()
+	{
+		if (m_pszWeaponModel)
+			delete [] m_pszWeaponModel;
+		if (m_pszSequence)
+			delete [] m_pszSequence;
+	}
+
 	virtual void SetPreserveArmedButtons( bool bPreserve ){ m_bPreserveArmedButtons = bPreserve; }
 	virtual void SetUpdateDefaultButtons( bool bUpdate ){ m_bUpdateDefaultButtons = bUpdate; }
 
-	virtual void ShowPage()
-	{
-		if( m_pPanel )
-		{
-			m_pPanel->SetVisible( true );
-			m_pPanel->MoveToFront();
-			g_lastPanel = m_pPanel;
-		}
-	}
+	virtual void ShowPage();
 	
 	virtual void HidePage()
 	{
@@ -76,17 +78,17 @@ public:
 		}
 	}
 
-	const char *GetWeaponPage( const char *className )
+	const char *GetCharacterPage( const char *className )
 	{
 		static char classPanel[ _MAX_PATH ];
-		Q_snprintf( classPanel, sizeof( classPanel ), "resource/weapons/%s.res", className);
+		Q_snprintf( classPanel, sizeof( classPanel ), "resource/characters/%s.res", className);
 
 		if ( g_pFullFileSystem->FileExists( classPanel, IsX360() ? "MOD" : "GAME" ) )
 		{
 		}
-		else if (g_pFullFileSystem->FileExists( "resource/weapons/weapon_default.res", IsX360() ? "MOD" : "GAME" ) )
+		else if (g_pFullFileSystem->FileExists( "resource/characters/default.res", IsX360() ? "MOD" : "GAME" ) )
 		{
-			Q_snprintf ( classPanel, sizeof( classPanel ), "resource/weapons/weapon_default.res" );
+			Q_snprintf ( classPanel, sizeof( classPanel ), "resource/characters/default.res" );
 		}
 		else
 		{
@@ -98,19 +100,12 @@ public:
 
 	void RefreshClassPage( void )
 	{
-		m_pPanel->LoadControlSettings( GetWeaponPage( GetName() ) );
+		m_pPanel->LoadControlSettings( GetCharacterPage( GetName() ) );
 	}
 
-	virtual void ApplySettings( KeyValues *resourceData ) 
-	{
-		BaseClass::ApplySettings( resourceData );
+	virtual void ApplySettings( KeyValues *resourceData );
 
-		// name, position etc of button is set, now load matching
-		// resource file for associated info panel:
-		m_pPanel->LoadControlSettings( GetWeaponPage( GetName() ) );
-	}		
-
-	CDABWeaponInfoPanel *GetInfoPanel( void ) { return m_pPanel; }
+	CDABCharacterInfoPanel *GetInfoPanel( void ) { return m_pPanel; }
 
 	virtual void OnCursorExited()
 	{
@@ -171,22 +166,26 @@ public:
 	}
 
 private:
+	char*		m_pszSequence;
+	char*		m_pszWeaponModel;
+	float		m_flBodyYaw;
+	float		m_flBodyPitch;
 
-	CDABWeaponInfoPanel *m_pPanel;
+	CDABCharacterInfoPanel *m_pPanel;
 	bool m_bPreserveArmedButtons;
 	bool m_bUpdateDefaultButtons;
 };
 
-class CDABBuyMenu : public vgui::Frame, public IViewPortPanel
+class CDABCharacterMenu : public vgui::Frame, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CDABBuyMenu, vgui::Frame );
+	DECLARE_CLASS_SIMPLE( CDABCharacterMenu, vgui::Frame );
 
 public:
-	CDABBuyMenu(IViewPort *pViewPort);
-	virtual ~CDABBuyMenu();
+	CDABCharacterMenu(IViewPort *pViewPort);
+	virtual ~CDABCharacterMenu();
 
-	virtual const char *GetName( void ) { return PANEL_BUY; }
+	virtual const char *GetName( void ) { return PANEL_CLASS; }
 
 	virtual void Reset();
 	virtual void Update( void );
@@ -205,23 +204,27 @@ public:
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
+	void SetCharacterPreview( const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch );
+
 	MESSAGE_FUNC_CHARPTR( OnShowPage, "ShowPage", page );
 
-	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
-
-	void SetCharacterPreview(const char* pszCharacter);
+//	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
 
 private:
 	IViewPort	*m_pViewPort;
 	vgui::EditablePanel *m_pPanel;
 
-	CDABWeaponInfoPanel *m_pWeaponInfoPanel;
-	CWeaponButton *m_pInitialButton;
-	CheckButton *m_pSuicideOption;
+	CDABCharacterInfoPanel *m_pCharacterInfoPanel;
+	CCharacterButton *m_pInitialButton;
+//	CheckButton *m_pSuicideOption;
 
-	ButtonCode_t m_iBuyMenuKey;
+	ButtonCode_t m_iCharacterMenuKey;
 
 	const char*	m_pszCharacterPreview;
+	const char*	m_pszCharacterSequence;
+	const char*	m_pszCharacterWeaponModel;
+	float		m_flBodyYaw;
+	float		m_flBodyPitch;
 
 protected:
 	// vgui overrides for rounded corner background
@@ -234,5 +237,3 @@ private:
 	Color					 m_bgColor;
 	Color					 m_borderColor;
 };
-
-#endif //SDK_BUYMENU_H

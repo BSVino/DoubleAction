@@ -46,6 +46,7 @@
 #include "sdk_teammenu.h"
 #endif
 #include "dab_buymenu.h"
+#include "dab_charactermenu.h"
 
 #if defined ( SDK_USE_TEAMS )
 CON_COMMAND_F( changeteam, "Choose a new team", FCVAR_SERVER_CAN_EXECUTE|FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -186,6 +187,10 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CDABBuyMenu( this );
 	}
+	else if ( Q_strcmp( PANEL_CLASS, szPanelName) == 0 )
+	{
+		newpanel = new CDABCharacterMenu( this );
+	}
 	else
 	{
 		// create a generic base panel, don't add twice
@@ -209,6 +214,7 @@ void SDKViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );
 #endif
 	AddNewPanel( CreatePanelByName( PANEL_BUY ), "PANEL_BUY" );
+	AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );
 	BaseClass::CreateDefaultPanels();
 }
 

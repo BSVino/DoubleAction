@@ -97,6 +97,10 @@ public:
 	bool IsClassMenuOpen( void );
 #endif
 
+	void SetCharacterMenuOpen( bool bIsOpen );
+	bool IsCharacterMenuOpen( void );
+	void ShowCharacterMenu();
+
 	void SetBuyMenuOpen( bool bIsOpen );
 	bool IsBuyMenuOpen( void );
 	void ShowBuyMenu();
@@ -175,6 +179,8 @@ public:
 
 	void ActivateMeter();
 
+	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
+
 private:
 	bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
 
@@ -189,8 +195,9 @@ private:
 	void State_Enter_PICKINGTEAM();
 	void State_Enter_PICKINGCLASS();
 
+	void State_Enter_PICKINGCHARACTER();
+
 	void State_Enter_BUYINGWEAPONS();
-	void State_PreThink_BUYINGWEAPONS();
 
 public: //Tony; I had this private but I need it public for initial spawns.
 	void MoveToNextIntroCamera();
@@ -228,6 +235,9 @@ private:
 	void ShowClassSelectMenu();
 	bool m_bIsClassMenuOpen;
 #endif
+
+	bool m_bIsCharacterMenuOpen;
+	const char* m_pszCharacter;
 
 	bool m_bIsBuyMenuOpen;
 

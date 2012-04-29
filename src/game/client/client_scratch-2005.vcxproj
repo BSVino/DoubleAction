@@ -606,6 +606,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_stylebar.cpp" />
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
+    <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -842,6 +843,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "c:\steam\steama
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
     <ClInclude Include="sdk\sdk_in_main.h" />
     <ClInclude Include="sdk\vgui\dab_buymenu.h" />
+    <ClInclude Include="sdk\vgui\dab_charactermenu.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />

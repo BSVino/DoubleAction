@@ -199,7 +199,8 @@ enum SDKPlayerState
 #if defined ( SDK_USE_PLAYERCLASSES )
 	STATE_PICKINGCLASS,			// Choosing class.
 #endif
-	
+
+	STATE_PICKINGCHARACTER,		// Choosing player model character.
 	STATE_BUYINGWEAPONS,		// Buying weapons.
 
 	STATE_DEATH_ANIM,			// Playing death anim, waiting for that to finish.

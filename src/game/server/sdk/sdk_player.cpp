@@ -249,6 +249,7 @@ CSDKPlayer::CSDKPlayer()
 
 	m_pCurStateInfo = NULL;	// no state yet
 
+	m_pszCharacter = nullptr;
 }
 
 
@@ -409,7 +410,10 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
-	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
+	if (m_pszCharacter)
+		SetModel( m_pszCharacter );
+	else
+		SetModel( SDK_PLAYER_MODEL );
 	
 	SetBloodColor( BLOOD_COLOR_RED );
 	
@@ -1122,7 +1126,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			State_Transition( STATE_PICKINGCLASS );
 //Tony; not using teams or classes, go straight to active.
 #else
-			State_Transition( STATE_BUYINGWEAPONS );
+			State_Transition( STATE_PICKINGCHARACTER );
 #endif
 		}
 		
@@ -1152,6 +1156,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		if ( State_Get() == STATE_BUYINGWEAPONS || IsDead() )
 			State_Transition( STATE_ACTIVE );
+
+		return true;
+	}
+	else if ( FStrEq( pcmd, "charmenuopen" ) )
+	{
+		SetCharacterMenuOpen( true );
+		return true;
+	}
+	else if ( FStrEq( pcmd, "charmenuclosed" ) )
+	{
+		SetCharacterMenuOpen( false );
+
+		if ( State_Get() == STATE_PICKINGCHARACTER || IsDead() )
+			State_Transition( STATE_BUYINGWEAPONS );
 
 		return true;
 	}
@@ -1372,6 +1390,21 @@ bool CSDKPlayer::IsClassMenuOpen( void )
 }
 #endif // SDK_USE_PLAYERCLASSES
 
+void CSDKPlayer::SetCharacterMenuOpen( bool bOpen )
+{
+	m_bIsCharacterMenuOpen = bOpen;
+}
+
+bool CSDKPlayer::IsCharacterMenuOpen( void )
+{
+	return m_bIsCharacterMenuOpen;
+}
+
+void CSDKPlayer::ShowCharacterMenu()
+{
+	ShowViewPortPanel( PANEL_CLASS );
+}
+
 void CSDKPlayer::SetBuyMenuOpen( bool bOpen )
 {
 	m_bIsBuyMenuOpen = bOpen;
@@ -1520,6 +1553,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 #if defined ( SDK_USE_PLAYERCLASSES )
 		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_Enter_PICKINGCLASS, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
 #endif
+		{ STATE_PICKINGCHARACTER, "STATE_PICKINGCHARACTER",	&CSDKPlayer::State_Enter_PICKINGCHARACTER, NULL, &CSDKPlayer::State_PreThink_WELCOME },
 		{ STATE_BUYINGWEAPONS,	"STATE_BUYINGWEAPONS",	&CSDKPlayer::State_Enter_BUYINGWEAPONS, NULL, &CSDKPlayer::State_PreThink_WELCOME },
 		{ STATE_DEATH_ANIM,		"STATE_DEATH_ANIM",		&CSDKPlayer::State_Enter_DEATH_ANIM,	NULL, &CSDKPlayer::State_PreThink_DEATH_ANIM },
 		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	NULL, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
@@ -1701,6 +1735,9 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 			return;
 #endif
 
+		if (IsCharacterMenuOpen())
+			return;
+
 		if (IsBuyMenuOpen())
 			return;
 
@@ -1800,6 +1837,12 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 
 }
 #endif // SDK_USE_TEAMS
+
+void CSDKPlayer::State_Enter_PICKINGCHARACTER()
+{
+	ShowCharacterMenu();
+	PhysObjectSleep();
+}
 
 void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 {
@@ -1984,6 +2027,46 @@ void CC_ActivateMeter_f (void)
 }
 
 static ConCommand activatemeter("activatemeter", CC_ActivateMeter_f, "Activate the style meter." );
+
+void CC_Character(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	if (args.ArgC() == 1)
+	{
+		pPlayer->ShowCharacterMenu();
+		return;
+	}
+
+	if (args.ArgC() == 2)
+	{
+		int i;
+		for (i = 0; ; i++)
+		{
+			if (pszPossiblePlayerModels[i] == nullptr)
+				break;
+
+			if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", args[1]), pszPossiblePlayerModels[i]))
+			{
+				pPlayer->SetCharacter(pszPossiblePlayerModels[i]);
+				return;
+			}
+		}
+
+		if (FStrEq(args[1], "random"))
+		{
+			pPlayer->SetCharacter(pszPossiblePlayerModels[RandomInt(0, i-1)]);
+			return;
+		}
+
+		Error("Couldn't find that player model.\n");
+	}
+}
+
+static ConCommand character("character", CC_Character, "Choose a character.", FCVAR_GAMEDLL);
 
 void CC_Buy(const CCommand& args)
 {
