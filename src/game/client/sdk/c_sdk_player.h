@@ -66,6 +66,7 @@ public:
 		Vector vecSrc, 
 		const QAngle &shootAngles, 
 		float vecSpread, 
+		SDKWeaponID eWeaponID,
 		int iDamage, 
 		int iBulletType,
 		CBaseEntity *pevAttacker,

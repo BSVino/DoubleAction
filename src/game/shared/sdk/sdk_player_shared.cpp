@@ -46,6 +46,7 @@ void CSDKPlayer::FireBullet(
 						   Vector vecSrc,	// shooting postion
 						   const QAngle &shootAngles,  //shooting angle
 						   float vecSpread, // spread vector
+						   SDKWeaponID eWeaponID,	// weapon that fired this shot
 						   int iDamage, // base damage
 						   int iBulletType, // ammo type
 						   CBaseEntity *pevAttacker, // shooter
@@ -107,16 +108,50 @@ void CSDKPlayer::FireBullet(
 #endif
 	}
 
+		weapontype_t eWeaponType = WT_NONE;
+
+		CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeaponID);
+		Assert(pWeaponInfo);
+		if (pWeaponInfo)
+			eWeaponType = pWeaponInfo->m_eWeaponType;
+
 		//calculate the damage based on the distance the bullet travelled.
 		flCurrentDistance += tr.fraction * flMaxRange;
 
-		// damage get weaker of distance
-		fCurrentDamage *= pow ( 0.85f, (flCurrentDistance / 500));
+		// First 500 units, no decrease in damage.
+		flCurrentDistance -= 500;
+		if (flCurrentDistance < 0)
+			flCurrentDistance = 0;
+
+		float flDistanceMultiplier;
+
+		// Power formula works like so:
+		// pow( x, distance/y )
+		// The damage will be at 1 when the distance is 0 units, and at
+		// x% when the distance is y units, with a gradual decay approaching zero
+		switch (eWeaponType)
+		{
+		case WT_RIFLE:
+			flDistanceMultiplier = pow ( 0.75f, (flCurrentDistance / 3000));
+			break;
+
+		case WT_SHOTGUN:
+			flDistanceMultiplier = pow ( 0.25f, (flCurrentDistance / 500));
+			break;
+
+		case WT_SMG:
+			flDistanceMultiplier = pow ( 0.50f, (flCurrentDistance / 500));
+			break;
+
+		case WT_PISTOL:
+		default:
+			flDistanceMultiplier = pow ( 0.55f, (flCurrentDistance / 1500));
+			break;
+		}
+
+		fCurrentDamage *= flDistanceMultiplier;
 
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
-
-		if (iDamageType & DMG_BUCKSHOT)
-			fCurrentDamage *= RemapValClamped(flCurrentDistance, 500, 800, 1.0f, 0.15f);
 
 		if( bDoEffects )
 		{

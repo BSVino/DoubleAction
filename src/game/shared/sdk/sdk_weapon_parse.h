@@ -15,6 +15,14 @@
 #include "networkvar.h"
 #include "sdk_shareddefs.h"
 
+typedef enum {
+	WT_NONE = 0,
+	WT_RIFLE,
+	WT_SHOTGUN,
+	WT_SMG,
+	WT_PISTOL,
+} weapontype_t;
+
 //--------------------------------------------------------------------------------------------------------
 class CSDKWeaponInfo : public FileWeaponInfo_t
 {
@@ -43,6 +51,8 @@ public:
 	bool	m_bAimInFireRateBonus;
 	bool	m_bAimInRecoilBonus;
 	bool	m_bAimInSpreadBonus;
+
+	weapontype_t	m_eWeaponType;
 
 	static CSDKWeaponInfo* GetWeaponInfo(SDKWeaponID eWeapon);
 };

@@ -108,6 +108,8 @@ public:
 	virtual bool HasAimInFireRateBonus();
 	virtual bool HasAimInRecoilBonus();
 
+	virtual weapontype_t GetWeaponType() const;
+
 	virtual bool FullAimIn() { return false; }
 
 private:

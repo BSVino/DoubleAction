@@ -193,6 +193,7 @@ void FX_FireBullets(
 			vOrigin,
 			vAngles,
 			flSpread,
+			(SDKWeaponID)iWeaponID,
 			iDamage,
 			iAmmoType,
 			pPlayer,

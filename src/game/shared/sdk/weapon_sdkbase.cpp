@@ -302,6 +302,11 @@ bool CWeaponSDKBase::HasAimInRecoilBonus()
 	return GetSDKWpnData().m_bAimInRecoilBonus;
 }
 
+weapontype_t CWeaponSDKBase::GetWeaponType() const
+{
+	return GetSDKWpnData().m_eWeaponType;
+}
+
 ConVar dab_decaymultiplier( "dab_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
 
 //Tony; added so we can have base functionality without implementing it into every weapon.

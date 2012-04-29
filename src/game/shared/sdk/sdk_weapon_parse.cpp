@@ -42,6 +42,18 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_bAimInFireRateBonus	= !!pKeyValuesData->GetInt( "AimInFireRateBonus", 0 );
 	m_bAimInRecoilBonus		= !!pKeyValuesData->GetInt( "AimInRecoilBonus", 0 );
 	m_bAimInSpreadBonus		= !!pKeyValuesData->GetInt( "AimInSpreadBonus", 0 );
+
+	const char* pszWeaponType = pKeyValuesData->GetString("WeaponType", "none");
+	if (FStrEq(pszWeaponType, "rifle"))
+		m_eWeaponType = WT_RIFLE;
+	else if (FStrEq(pszWeaponType, "shotgun"))
+		m_eWeaponType = WT_SHOTGUN;
+	else if (FStrEq(pszWeaponType, "smg"))
+		m_eWeaponType = WT_SMG;
+	else if (FStrEq(pszWeaponType, "pistol"))
+		m_eWeaponType = WT_PISTOL;
+	else
+		m_eWeaponType = WT_NONE;
 }
 
 CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)
