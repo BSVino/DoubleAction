@@ -578,7 +578,6 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		}
 	}
 
-	CSDKPlayer* pSDKPlayer = ToSDKPlayer(pPlayer);
 	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
@@ -588,13 +587,13 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
 			continue;
 
-		if ((pPlayer->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
+		if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
 			continue;
 
 		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
 
 		trace_t tr;
-		UTIL_TraceLine( pSDKPlayer->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
 		if (tr.m_pEnt == pOtherPlayer)
 			return false;
 	}
@@ -602,7 +601,7 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "weapon_grenade" );
 	while (pGrenade)
 	{
-		if ((pPlayer->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
+		if ((pSpot->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
 			return false;
 
 		pGrenade = gEntList.FindEntityByClassname( pGrenade, "weapon_grenade" );
