@@ -397,6 +397,18 @@ void CSDKPlayer::GiveDefaultItems()
 				}
 			}
 		}
+
+		for (int i = 0; i < WeaponCount(); i++)
+		{
+			if (!GetWeapon(i))
+				continue;
+
+			if (GetWeapon(i) == GetActiveWeapon())
+				continue;
+
+			Weapon_SetLast(GetWeapon(i));
+			break;
+		}
 	}
 }
 
