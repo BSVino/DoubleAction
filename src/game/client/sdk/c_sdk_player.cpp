@@ -345,6 +345,12 @@ void C_SDKRagdoll::CreateRagdoll()
 	// then we can make ourselves start out exactly where the player is.
 	C_SDKPlayer *pPlayer = dynamic_cast< C_SDKPlayer* >( m_hPlayer.Get() );
 
+	if (!pPlayer)
+	{
+		Release();
+		return;
+	}
+
 	if ( pPlayer && !pPlayer->IsDormant() )
 	{
 		// move my current model instance to the ragdoll's so decals are preserved.
