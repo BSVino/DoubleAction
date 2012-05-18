@@ -836,6 +836,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
 			pAttackerSDK->AddActionPoints(25.0f/4.0f, STYLE_POINT_LARGE);
+		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
+			// Damaging a stunting dude gives me more bar than usual.
+			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
 		else
 			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
 	}
@@ -868,6 +871,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
 			pAttackerSDK->AddActionPoints(25, STYLE_POINT_STYLISH);
+		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
+			// Damaging a stunting dude gives me more bar than usual.
+			pAttackerSDK->AddActionPoints(5*1.5f, STYLE_POINT_LARGE);
 		else
 			pAttackerSDK->AddActionPoints(5, STYLE_POINT_LARGE);
 	}
@@ -1972,6 +1978,9 @@ void CSDKPlayer::AddActionPoints(float points, style_point_t eStyle)
 {
 	if (IsActionAbilityActive())
 		return;
+
+	if (m_Shared.IsAimedIn())
+		points /= 2;
 
 	m_flActionPoints = (m_flActionPoints+points > 100) ? 100 : m_flActionPoints+points;
 
