@@ -2023,6 +2023,9 @@ void CSDKPlayer::ActivateMeter()
 	if (!UseActionPoints())
 		return;
 
+	if (!IsAlive())
+		return;
+
 	m_flActionAbilityStart = gpGlobals->curtime;
 
 	CSingleUserRecipientFilter filter( this );
