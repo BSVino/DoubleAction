@@ -140,7 +140,7 @@ void CSDKPlayer::FireBullet(
 			break;
 
 		case WT_SMG:
-			flDistanceMultiplier = pow ( 0.50f, (flCurrentDistance / 500));
+			flDistanceMultiplier = pow ( 0.50f, (flCurrentDistance / 1000));
 			break;
 
 		case WT_PISTOL:
