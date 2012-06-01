@@ -56,11 +56,10 @@
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>Copying to c:\steam\steamapps\SourceMods\dab\bin\</Message>
-      <Command>if exist "c:\steam\steamapps\SourceMods\dab\bin\server.dll" attrib -r "c:\steam\steamapps\SourceMods\dab\bin\server.dll"
-if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "c:\steam\steamapps\SourceMods\dab\bin\server.dll"
-</Command>
-      <Outputs>c:\steam\steamapps\SourceMods\dab\bin\server.dll;%(Outputs)</Outputs>
+      <Message>Copying to $(SteamPath)\steamapps\SourceMods\dab\bin\</Message>
+      <Command>if exist "$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll" attrib -r "$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll"
+if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SteamPath)\steamapps\SourceMods\dab\bin"</Command>
+      <Outputs>$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll;%(Outputs)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
@@ -134,13 +133,13 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "c:\steam\steama
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>Copying to c:\steam\steamapps\SourceMods\dab\bin\</Message>
-      <Command>if exist "c:\steam\steamapps\SourceMods\dab\bin\server.dll" attrib -r "c:\steam\steamapps\SourceMods\dab\bin\server.dll"
-if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "c:\steam\steamapps\SourceMods\dab\bin\server.dll"
-if exist c:\steam\steamapps\SourceMods\dab\bin\server.pdb attrib -r "c:\steam\steamapps\SourceMods\dab\bin\server.pdb"
-if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "c:\steam\steamapps\SourceMods\dab\bin"
+      <Message>Copying to $(SteamPath)\steamapps\SourceMods\dab\bin\</Message>
+      <Command>if exist "$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll" attrib -r "$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll"
+if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll"
+if exist "$(SteamPath)\steamapps\SourceMods\dab\bin\server.pdb attrib -r "$(SteamPath)\steamapps\SourceMods\dab\bin\server.pdb"
+if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "$(SteamPath)\steamapps\SourceMods\dab\bin"
 </Command>
-      <Outputs>c:\steam\steamapps\SourceMods\dab\bin\server.dll;c:\steam\steamapps\SourceMods\dab\bin\server.pdb;%(Outputs)</Outputs>
+      <Outputs>$(SteamPath)\steamapps\SourceMods\dab\bin\server.dll;$(SteamPath)\steamapps\SourceMods\dab\bin\server.pdb;%(Outputs)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
