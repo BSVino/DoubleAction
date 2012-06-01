@@ -1,0 +1,67 @@
+DOUBLE ACTION: BOOGALOO
+-----------------------
+
+Was created by
+
+The Double Action Community Team
+
+
+Want to contribute? You can! Visit the Double Action forums for more information:
+http://forums.lunarworkshop.com/viewforum.php?f=16
+
+
+CONCEPT ART
+floater
+Matt Bell
+
+
+PROGRAMMING
+Jorge "Vino" Rodriguez
+Minimum
+
+
+MAPS
+Wish
+Jahhur
+Dimentei
+Kalen
+
+
+ANIMATIONS
+Thin Red Paste
+
+
+SOUND
+Dan
+
+
+PARTICLES
+jahhur
+
+
+P99
+Model: Afterburner
+Skin: NCFurious
+Silencer Model: Afterburner
+Silencer Skin: The_Tub
+Sounds: KingFriday and Vunsunta
+Animations: SureShot and Sober
+Compiles: kannoe
+
+
+VECTOR
+Model: ReapFreak, RedRogueXIII, SilentAssassin12, Kimono
+Sounds: Vunsunta, xLongWayHome
+
+
+Designed by Jorge "Vino" Rodriguez, with input from the community
+
+
+Special thanks:
+All of the playtesters
+Bryan Taylor
+Valve
+
+
+
+Don't see your name here? Send me an email and I'll fix it: jorge@lunarworkshop.com

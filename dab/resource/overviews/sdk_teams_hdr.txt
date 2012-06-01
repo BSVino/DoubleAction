@@ -1,0 +1,11 @@
+// HLTV overview description file for sdk_teams_hdr.bsp
+
+"sdk_teams_hdr"
+{
+	"material"	"overviews/sdk_teams_hdr"	// texture file
+	"pos_x"		"4272"	// X coordinate,
+	"pos_y"		"6864"	// Y coordinate,
+	"scale"		"1.0" 	// and used scale used when taking the screenshot
+	"rotate"	"0"	// map was rotated by 90 degress in image editor
+
+}

@@ -1,0 +1,33 @@
+"GameInfo"
+{
+	// This is what shows up in the 'Third Party Games' area of the Steam games list.
+	game						"Double Action: Boogaloo"
+	title	"Double Action: Boogaloo"
+	title2	"IN DEVELOPMENT - WORK IN PROGRESS"
+	type 						multiplayer_only
+//	type 						singleplayer_only
+
+	hidden_maps
+	{
+		// Hide maps from the start server dialog
+		"test_speakers"		1
+		"test_hardware"		1
+	}
+	FileSystem
+	{
+		SteamAppId				218		// GCF for Source SDK Base 2007
+		ToolsAppId				211		// Tools will load this (ie: source SDK caches) to get things like materials\debug, materials\editor, etc.
+
+		//Orange box sdk allows an extra appid to be defined here to mount additional content. 240 is CounterStrike: Source
+		//AdditionalContentId			240
+
+		SearchPaths
+		{
+			Game	|gameinfo_path|.
+
+			Game	|all_source_engine_paths|ep2
+			Game	|all_source_engine_paths|episodic	// Ep2 also uses some Ep1 content
+			Game	|all_source_engine_paths|hl2
+		}
+	}
+}

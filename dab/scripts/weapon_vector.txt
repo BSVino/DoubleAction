@@ -1,0 +1,92 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"14"		// damage per bullet
+	"Bullets"				"1"			// bullets per shoot
+	"CycleTime"				"0.06"		// time between shoots
+	// DPS: 233
+	// TTHK: 214ms
+
+	"BuiltRightHanded"		"0"
+	
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#SDK_Weapon_Vector"
+	"viewmodel"				"models/weapons/v_smg_p90.mdl"
+	"playermodel"			"models/weapons/vector.mdl"
+	"PlayerAnimationExtension"	"mp5k"
+	
+	"bucket"				"1"
+	"bucket_position"		"0"
+
+	"clip_size"				"30"
+	"NumClips"				"6"
+
+	"ViewPunchMultiplier"	"0.6"
+	"Recoil"				"4"
+	"Spread"				"0.07"
+
+	"WeaponType"			"smg"
+
+	"primary_ammo"			"45acp"
+	"secondary_ammo"		"None"
+
+	"weight"				"15"
+	"item_flags"			"0"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		//"reload"			"Default.Reload"
+		//"empty"			"Default.ClipEmpty_Rifle"
+		"single_shot"		"Weapon_MP5K.Single"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"a"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"a"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"r"
+		}
+		"crosshair"
+		{
+				"file"		"sprites/crosshairs"
+				"x"		"0"
+				"y"		"48"
+				"width"		"24"
+				"height"	"24"
+		}
+		"autoaim"
+		{
+				"file"		"sprites/crosshairs"
+				"x"			"0"
+				"y"			"48"
+				"width"		"24"
+				"height"	"24"
+		}
+	}
+	ModelBounds
+	{
+		Viewmodel
+		{
+			Mins	"-10 -4 -13"
+			Maxs	"21 9 -1"
+		}
+		World
+		{
+			Mins	"-10 -7 -6"
+			Maxs	"22 8 9"
+		}
+	}
+}

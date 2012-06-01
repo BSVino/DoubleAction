@@ -1,0 +1,4 @@
+particles_manifest
+{
+	"file"		"particles/impact_fx.pcf"
+}

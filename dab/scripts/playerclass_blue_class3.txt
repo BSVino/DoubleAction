@@ -1,0 +1,32 @@
+PlayerClassDatafile
+{
+	// FilePLayerClassInfo_t members
+	"printname"			"#class_blue_class3"	
+	"playermodel"			"models/player/blue_player.mdl"
+	"selectcmd"			"cls_blue_class3"
+
+	// CSDKPlayerClassInfo members
+
+	// What team has this class, for verification
+	"team"				"BLUE"
+
+	// Weapon Info
+	"primaryweapon"		"mp5"
+	"secondaryweapon"	"shotgun"
+	"meleeweapon"		"crowbar"
+
+	"grenadetype"		"grenade"
+	"numgrens"		"4"
+
+	"limitcvar"		"mp_limit_blue_class3"
+
+	"classimage"		"cls_blue_class3_active"
+	"classimagebg"		"cls_blue_class3_active_bg"
+
+	"armor"			"150"
+
+	// Movement
+	"RunSpeed"		"200"
+	"SprintSpeed"		"280"
+	"ProneSpeed"		"50"
+}
