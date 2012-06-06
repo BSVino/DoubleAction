@@ -90,7 +90,7 @@
     </PreLinkEvent>
     <Lib>
       <UseUnicodeResponseFiles>false</UseUnicodeResponseFiles>
-      <OutputFile>..\..\lib\public\vgui_controls.lib</OutputFile>
+      <OutputFile>$(OutDir)vgui_controls.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Xdcmake>
@@ -100,6 +100,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)vgui_controls.bsc</OutputFile>
     </Bscmake>
+    <CustomBuildStep>
+      <Command>if exists "$(TargetDir)"vgui_controls.lib copy "$(TargetDir)"vgui_controls.lib "$(TargetDir)..\..\lib\public"</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>

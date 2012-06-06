@@ -91,7 +91,7 @@
     <Lib>
       <UseUnicodeResponseFiles>false</UseUnicodeResponseFiles>
       <AdditionalDependencies>Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\lib\public\tier1.lib</OutputFile>
+      <OutputFile>$(OutDir)tier1.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Xdcmake>
@@ -101,6 +101,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)tier1.bsc</OutputFile>
     </Bscmake>
+    <CustomBuildStep>
+      <Command>if exists "$(TargetDir)"tier1.lib copy "$(TargetDir)"tier1.lib "$(TargetDir)..\..\lib\public"</Command>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
