@@ -167,10 +167,13 @@ public:
 	CNetworkVar( float, m_flUnProneTime );
 	CNetworkVar( float, m_flGoProneTime );
 	CNetworkVar( bool, m_bProneSliding );
+	CNetworkVar( bool, m_bIsTryingUnprone );
 #endif
 
+	CNetworkVar( bool, m_bCanRollInto );
 	CNetworkVar( float, m_flUnSlideTime );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
+	CNetworkVar( bool, m_bIsTryingUnduck );
 
 	bool m_bJumping;
 
