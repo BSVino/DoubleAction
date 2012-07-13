@@ -293,6 +293,19 @@ void CSDKPlayer::PreThink(void)
 			TakeHealth(dab_regenamount.GetInt(), 0);
 	}
 
+	if (m_Shared.IsDiving())
+	{
+		trace_t	tr;
+		UTIL_TraceHull(GetAbsOrigin(), GetAbsOrigin()+GetAbsVelocity(), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+		if (tr.fraction < 1.0f)
+		{
+			CBaseEntity* pHit = tr.m_pEnt;
+			if (FStrEq(pHit->GetClassname(), "func_breakable"))
+				pHit->TakeDamage(CTakeDamageInfo(this, this, 50, DMG_CRUSH));
+		}
+	}
+
 	State_PreThink();
 
 	// Riding a vehicle?
