@@ -251,6 +251,8 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bSliding = false;
 	m_Shared.m_bProne = false;
 	m_Shared.m_bAimedIn = false;
+	m_Shared.m_bIsTryingUnprone = false;
+	m_Shared.m_bIsTryingUnduck = false;
 
 	//Tony; todo; fix
 
@@ -320,7 +322,7 @@ const Vector CSDKPlayer::GetPlayerMins( void ) const
 		else if ( m_Shared.IsSliding() )
 			return VEC_SLIDE_HULL_MIN;
 		else if ( m_Shared.IsRolling() )
-			return VEC_SLIDE_HULL_MIN;
+			return VEC_DUCK_HULL_MIN;
 		else
 			return VEC_HULL_MIN;
 	}
@@ -350,7 +352,7 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 		else if ( m_Shared.IsSliding() )
 			return VEC_SLIDE_HULL_MAX;
 		else if ( m_Shared.IsRolling() )
-			return VEC_SLIDE_HULL_MAX;
+			return VEC_DUCK_HULL_MAX;
 		else
 			return VEC_HULL_MAX;
 	}
@@ -593,6 +595,7 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 	if (!CanRoll())
 		return;
 
+	m_bCanRollInto = true;
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;
 

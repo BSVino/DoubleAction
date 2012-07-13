@@ -17,6 +17,7 @@
 #include "GameStats.h"
 #include "obstacle_pushaway.h"
 #include "in_buttons.h"
+#include "vprof.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -116,6 +117,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bRollingFromDive ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),
+	SendPropBool( SENDINFO( m_bCanRollInto ) ),
 	SendPropBool( SENDINFO( m_bDiving ) ),
 	SendPropVector( SENDINFO(m_vecDiveDirection) ),
 	SendPropBool( SENDINFO( m_bAimedIn ) ),
@@ -315,6 +317,24 @@ ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOP
 void CSDKPlayer::PostThink()
 {
 	BaseClass::PostThink();
+
+	if ( !g_fGameOver && !IsPlayerLockedInPlace() )
+	{
+		if ( IsAlive() )
+		{
+			// set correct collision bounds (may have changed in player movement code)
+			VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-Bounds" );
+			if ( m_Shared.IsRolling() )
+				SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+			else if ( m_Shared.IsDiving() )
+				SetCollisionBounds( VEC_DIVE_HULL_MIN, VEC_DIVE_HULL_MAX );
+			else if ( m_Shared.IsSliding() )
+				SetCollisionBounds( VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX );
+			else if ( m_Shared.IsProne() )
+				SetCollisionBounds( VEC_PRONE_HULL_MIN, VEC_PRONE_HULL_MAX );
+			VPROF_SCOPE_END();
+		}
+	}
 
 	if (m_flActionAbilityStart > 0)
 	{

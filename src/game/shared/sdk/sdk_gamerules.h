@@ -83,8 +83,8 @@ public:
 		m_vProneView = vProneView;
 #endif 
 
-		m_vSlideHullMin = vDuckHullMin;
-		m_vSlideHullMax = vDuckHullMax;
+		m_vSlideHullMin = vProneHullMin;
+		m_vSlideHullMax = vProneHullMax;
 		m_vSlideView = Vector( 0, 0, 20 );
 
 		m_vDiveHullMin = vDiveHullMin;
