@@ -51,8 +51,10 @@ public:
 	virtual void CheckParameters( void );
 	virtual void CheckFalling( void );
 	virtual void CategorizePosition( void );
+	virtual void FixPlayerDiveStuck( bool upward );
 
 	// Ducking
+	virtual bool CanUnduck( void );
 	virtual void Duck( void );
 	virtual void FinishUnDuck( void );
 	virtual void FinishDuck( void );
@@ -88,7 +90,8 @@ public:
 	CSDKPlayer *m_pSDKPlayer;
 };
 
-#define ROLL_TIME 0.85f
+#define ROLL_TIME 0.65f
+#define ROLLFINISH_TIME 0.2f
 #define SLIDE_TIME 6.0f
 
 // Expose our interface.
@@ -875,6 +878,45 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	return true;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: See if we can get up from a crouching or rolling state
+//-----------------------------------------------------------------------------
+bool CSDKGameMovement::CanUnduck()
+{
+	int i;
+	trace_t trace;
+	Vector newOrigin;
+
+	VectorCopy( mv->GetAbsOrigin(), newOrigin );
+
+	if ( player->GetGroundEntity() != NULL )
+	{
+		for ( i = 0; i < 3; i++ )
+		{
+			newOrigin[i] += ( VEC_DUCK_HULL_MIN[i] - VEC_HULL_MIN[i] );
+		}
+	}
+	else
+	{
+		// If in air and letting go of crouch, make sure we can offset origin to make
+		//  up for uncrouching
+		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
+		Vector hullSizeCrouch = VEC_DUCK_HULL_MAX - VEC_DUCK_HULL_MIN;
+		Vector viewDelta = ( hullSizeNormal - hullSizeCrouch );
+		viewDelta.Negate();
+		VectorAdd( newOrigin, viewDelta, newOrigin );
+	}
+	
+	//temporarily set player bounds to represent a standing position
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = true;
+	TracePlayerBBox( mv->GetAbsOrigin(), newOrigin, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = false;
+	if ( trace.startsolid || ( trace.fraction != 1.0f ) )
+		return false;	
+
+	return true;
+}
+
 #if defined ( SDK_USE_PRONE )
 bool CSDKGameMovement::CanUnprone()
 {
@@ -922,20 +964,14 @@ bool CSDKGameMovement::CanUnprone()
 
 		VectorAdd( newOrigin, viewDelta, newOrigin );
 	}
-
-	bool saveprone = m_pSDKPlayer->m_Shared.IsProne();
-	bool saveducked = player->m_Local.m_bDucked;
-
-	// pretend we're not prone
-	m_pSDKPlayer->m_Shared.SetProne( false );
-	if ( mv->m_nButtons & IN_DUCK )
-		player->m_Local.m_bDucked = true;
+	
+	//temporarily set player bounds to represent a crouching position
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnprone = true;
 
 	TracePlayerBBox( mv->GetAbsOrigin(), newOrigin, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
 
 	// revert to reality
-	m_pSDKPlayer->m_Shared.SetProne( saveprone );
-	player->m_Local.m_bDucked = saveducked;
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnprone = false;
 
 	if ( trace.startsolid || ( trace.fraction != 1.0f ) )
 		return false;	
@@ -1105,10 +1141,19 @@ void CSDKGameMovement::FinishUnSlide( void )
 	
 	SetUnSlideEyeOffset( 1.0 );
 
-	if (CanUnprone())
+	if (CanUnduck())
 		m_pSDKPlayer->m_Shared.EndSlide();
+	else if (CanUnprone())
+	{
+		m_pSDKPlayer->m_Shared.EndSlide();
+		FinishDuck();
+	}
 	else
+	{
 		m_pSDKPlayer->m_Shared.SetProne(true, true);
+		m_pSDKPlayer->m_Shared.EndSlide();
+		SetProneEyeOffset( 1.0 );
+	}
 
 	CategorizePosition();
 }
@@ -1168,6 +1213,37 @@ void CSDKGameMovement::SetRollEyeOffset( float flFraction )
 
 		player->SetViewOffset( temp );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Determine if diving caused player to get stuck in world
+// Input  : direction to escape to (up is probably good!)
+//-----------------------------------------------------------------------------
+void CSDKGameMovement::FixPlayerDiveStuck( bool upward )
+{
+	EntityHandle_t hitent;
+	int i;
+	Vector test;
+	trace_t dummy;
+
+	int direction = upward ? 1 : 0;
+
+	hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, dummy );
+	if (hitent == INVALID_ENTITY_HANDLE )
+		return;
+	
+	VectorCopy( mv->GetAbsOrigin(), test );	
+	for ( i = 0; i < 36; i++ )
+	{
+		Vector org = mv->GetAbsOrigin();
+		org.z += direction;
+		mv->SetAbsOrigin( org );
+		hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, dummy );
+		if (hitent == INVALID_ENTITY_HANDLE )
+			return;
+	}
+
+	mv->SetAbsOrigin( test ); // Failed
 }
 
 //-----------------------------------------------------------------------------
@@ -1308,26 +1384,45 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
 		}
+		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+		{
+			m_pSDKPlayer->m_Shared.EndRoll();
+			SetRollEyeOffset( 0.0 );
+		}
+		// before we begin to stand up from the roll, let's make sure we don't want to go prone instead
 		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
 		{
-			if (CanUnprone())
+			// force transition to duck if there won't be room to stand
+			if ( !CanUnduck() )
 			{
-				m_pSDKPlayer->m_Shared.EndRoll();
-
 				SetRollEyeOffset( 0.0 );
+				m_pSDKPlayer->m_Shared.EndRoll();
+				FinishDuck();
+			}
 
-				if (mv->m_nButtons & IN_ALT1)
+			// if we want to transition to prone or duck, attempt to do so now
+			if ( m_pSDKPlayer->m_Shared.m_bCanRollInto )
+			{
+				if ( mv->m_nButtons & IN_ALT1 )
 				{
+					m_pSDKPlayer->m_Shared.EndRoll();
+					SetRollEyeOffset( 0.0 );
 					m_pSDKPlayer->m_Shared.SetProne(true, true);
 					SetProneEyeOffset( 1.0 );
 				}
+				else if ( mv->m_nButtons & IN_DUCK )
+				{
+					m_pSDKPlayer->m_Shared.EndRoll();
+					SetRollEyeOffset( 0.0 );
+					FinishDuck();
+				}
+				// no longer give the option to roll into another position
+				m_pSDKPlayer->m_Shared.m_bCanRollInto = false;
 			}
-			else
-				m_pSDKPlayer->m_Shared.SetProne(true, true);
 		}
 		else
 		{
-			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetRollTime()) / ROLL_TIME;
+			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetRollTime()) / (ROLL_TIME + ROLLFINISH_TIME);
 			SetRollEyeOffset( fraction );
 		}
 	}
@@ -1338,7 +1433,8 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndDive();
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
-			if (mv->m_nButtons & IN_ALT1)
+			// if we're pressing the stunt button or don't have room to roll, land prone
+			if ( mv->m_nButtons & IN_ALT1 || !CanUnprone() )
 			{
 				m_pSDKPlayer->m_Shared.SetProne(true, true);
 				SetProneEyeOffset( 1.0 );
@@ -1370,6 +1466,8 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.DiveLand" );
 			}
 		}
+		//hey guys are we stuck
+		FixPlayerDiveStuck( true );
 	}
 
 	if ( m_pSDKPlayer->m_Shared.CanChangePosition() )
@@ -1435,10 +1533,13 @@ void CSDKGameMovement::Duck( void )
 			//Tony; here is where you'd want to do an animation for first person to give the effect of getting up from prone.
 			//
 
-			m_pSDKPlayer->m_bUnProneToDuck = ( mv->m_nButtons & IN_DUCK ) > 0;
+			m_pSDKPlayer->m_bUnProneToDuck = !CanUnduck() || (( mv->m_nButtons & IN_DUCK ) > 0);
 
 			if ( m_pSDKPlayer->m_bUnProneToDuck )
+			{
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
+				FinishDuck();
+			}
 			else
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
 
@@ -1657,6 +1758,11 @@ const Vector& CSDKGameMovement::GetPlayerMins( void ) const
 	{
 		return VEC_OBS_HULL_MIN;	
 	}
+	// see if we're attempting a collision test
+	else if ( m_pSDKPlayer->m_Shared.m_bIsTryingUnduck )
+		return VEC_HULL_MIN;
+	else if ( m_pSDKPlayer->m_Shared.m_bIsTryingUnprone )
+		return VEC_DUCK_HULL_MIN;
 	else
 	{
 		if ( player->m_Local.m_bDucked )
@@ -1670,7 +1776,7 @@ const Vector& CSDKGameMovement::GetPlayerMins( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			return VEC_SLIDE_HULL_MIN;
 		else if ( m_pSDKPlayer->m_Shared.IsRolling() )
-			return VEC_SLIDE_HULL_MIN;
+			return VEC_DUCK_HULL_MIN;
 		else
 			return VEC_HULL_MIN;
 	}
@@ -1691,6 +1797,11 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 	{
 		return VEC_OBS_HULL_MAX;	
 	}
+	// see if we're attempting a collision test
+	else if ( m_pSDKPlayer->m_Shared.m_bIsTryingUnduck )
+		return VEC_HULL_MAX;
+	else if ( m_pSDKPlayer->m_Shared.m_bIsTryingUnprone )
+		return VEC_DUCK_HULL_MAX;
 	else
 	{
 		if ( player->m_Local.m_bDucked )
@@ -1704,7 +1815,7 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 			return VEC_SLIDE_HULL_MAX;
 		else if ( m_pSDKPlayer->m_Shared.IsRolling() )
-			return VEC_SLIDE_HULL_MAX;
+			return VEC_DUCK_HULL_MAX;
 		else
 			return VEC_HULL_MAX;
 	}
