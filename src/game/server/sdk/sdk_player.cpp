@@ -250,6 +250,8 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 
 	m_pszCharacter = nullptr;
+
+	m_flNextRegen = 0;
 }
 
 
@@ -277,8 +279,18 @@ void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExit
 	// Teleport( &newPos, &newAng, &vec3_origin );
 }
 
+ConVar dab_regenamount( "dab_regenamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+
 void CSDKPlayer::PreThink(void)
 {
+	if (IsAlive() && gpGlobals->curtime > m_flNextRegen)
+	{
+		m_flNextRegen = gpGlobals->curtime + 1;
+
+		if (GetHealth() < 50)
+			TakeHealth(dab_regenamount.GetInt(), 0);
+	}
+
 	State_PreThink();
 
 	// Riding a vehicle?
@@ -842,6 +854,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		else
 			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
 	}
+
+	m_flNextRegen = gpGlobals->curtime + 10;
 
 	return 1;
 }

@@ -296,6 +296,8 @@ public:
 
 	CNetworkArray( CArmament, m_aLoadout, MAX_LOADOUT );
 	CNetworkVar( int, m_iLoadoutWeight );
+
+	float		m_flNextRegen;
 };
 
 
