@@ -140,14 +140,14 @@ static CSDKViewVectors g_SDKViewVectors(
 	Vector(-10, -10, -10 ),		//VEC_OBS_HULL_MIN
 	Vector( 10,  10,  10 ),		//VEC_OBS_HULL_MAX
 													
-	Vector(-16, -32, 0  ),		//VEC_DIVE_HULL_MIN
-	Vector( 16,  32, 24 ),		//VEC_DIVE_HULL_MAX
+	Vector(-16, -16, 0  ),		//VEC_DIVE_HULL_MIN
+	Vector( 16,  16, 24 ),		//VEC_DIVE_HULL_MAX
 	Vector( 0, 0, 10 ),			//VEC_DIVE_VIEW
 
 	Vector( 0, 0, 14 )			//VEC_DEAD_VIEWHEIGHT
 #if defined ( SDK_USE_PRONE )			
-	,Vector(-16, -32, 0 ),		//VEC_PRONE_HULL_MIN
-	Vector( 16,  32, 24 ),		//VEC_PRONE_HULL_MAX
+	,Vector(-16, -16, 0 ),		//VEC_PRONE_HULL_MIN
+	Vector( 16,  16, 24 ),		//VEC_PRONE_HULL_MAX
 	Vector( 0,	0, 10 )			//VEC_PRONE_VIEW
 #endif
 );
