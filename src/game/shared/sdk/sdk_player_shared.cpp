@@ -77,36 +77,39 @@ void CSDKPlayer::FireBullet(
 	float flMaxRange = 8000;
 
 	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
+	CBaseEntity* pIgnore = this;
 
-	trace_t tr; // main enter bullet trace
-
-	UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
-
-	if ( tr.fraction == 1.0f )
-		return; // we didn't hit anything, stop tracing shoot
-
-	if ( sv_showimpacts.GetBool() )
+	for (size_t i = 0; i < 5; i++)
 	{
+		trace_t tr; // main enter bullet trace
+
+		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pIgnore, COLLISION_GROUP_NONE, &tr );
+
+		if ( tr.fraction == 1.0f )
+			return; // we didn't hit anything, stop tracing shoot
+
+		if ( sv_showimpacts.GetBool() )
+		{
 #ifdef CLIENT_DLL
-		// draw red client impact markers
-		debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
+			// draw red client impact markers
+			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
 
-		if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-		{
-			C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
-			player->DrawClientHitboxes( 4, true );
-		}
+			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
+			{
+				C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
+				player->DrawClientHitboxes( 4, true );
+			}
 #else
-		// draw blue server impact markers
-		NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
+			// draw blue server impact markers
+			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
 
-		if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-		{
-			CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
-			player->DrawServerHitboxes( 4, true );
-		}
+			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
+			{
+				CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
+				player->DrawServerHitboxes( 4, true );
+			}
 #endif
-	}
+		}
 
 		weapontype_t eWeaponType = WT_NONE;
 
@@ -148,8 +151,6 @@ void CSDKPlayer::FireBullet(
 			flDistanceMultiplier = pow ( 0.55f, (flCurrentDistance / 1500));
 			break;
 		}
-
-		fCurrentDamage *= flDistanceMultiplier;
 
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
 
@@ -209,9 +210,11 @@ void CSDKPlayer::FireBullet(
 		// add damage to entity that we hit
 
 #ifdef GAME_DLL
+		float flBulletDamage = fCurrentDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
+
 		ClearMultiDamage();
 
-		CTakeDamageInfo info( pevAttacker, pevAttacker, fCurrentDamage, iDamageType );
+		CTakeDamageInfo info( pevAttacker, pevAttacker, flBulletDamage, iDamageType );
 		CalculateBulletDamageForce( &info, iBulletType, vecDir, tr.endpos );
 		tr.m_pEnt->DispatchTraceAttack( info, vecDir, &tr );
 
@@ -219,7 +222,44 @@ void CSDKPlayer::FireBullet(
 
 		ApplyMultiDamage();
 #endif
+
+		pIgnore = tr.m_pEnt;
+
+		float flPenetrationDistance;
+		switch (eWeaponType)
+		{
+		case WT_RIFLE:
+			flPenetrationDistance = 20;
+			break;
+
+		case WT_SHOTGUN:
+			flPenetrationDistance = 2;
+			break;
+
+		case WT_SMG:
+			flPenetrationDistance = 10;
+			break;
+
+		case WT_PISTOL:
+		default:
+			flPenetrationDistance = 10;
+			break;
+		}
+
+		Vector vecBackwards = tr.endpos + vecDir * flPenetrationDistance;
+		if (tr.m_pEnt->IsBSPModel())
+			UTIL_TraceLine( vecBackwards, tr.endpos, CONTENTS_SOLID|CONTENTS_MOVEABLE, NULL, COLLISION_GROUP_NONE, &tr );
+		else
+			UTIL_TraceLine( vecBackwards, tr.endpos, CONTENTS_HITBOX, NULL, COLLISION_GROUP_NONE, &tr );
+
+		if (tr.startsolid)
+			break;
+
+		// Set up the next trace.
+		vecSrc = tr.endpos + vecDir;	// One unit in the direction of fire so that we firmly embed ourselves in whatever solid was hit.
+	}
 }
+
 bool CSDKPlayer::CanMove( void ) const
 {
 	bool bValidMoveState = (State_Get() == STATE_ACTIVE || State_Get() == STATE_OBSERVER_MODE);
