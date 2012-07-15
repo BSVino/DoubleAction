@@ -161,6 +161,7 @@ typedef enum
 	SDK_WEAPON_P99,
 	SDK_WEAPON_CROWBAR,		// This can eventually become a knife
 	SDK_WEAPON_GRENADE,
+	SDK_WEAPON_BRAWL,
 
 	WEAPON_MAX,		// number of weapons weapon index
 } SDKWeaponID;

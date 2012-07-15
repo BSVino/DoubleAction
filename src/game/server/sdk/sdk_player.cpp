@@ -140,6 +140,9 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
 
+	SendPropTime		( SENDINFO( m_flFreezeUntil ) ),
+	SendPropFloat		( SENDINFO( m_flFreezeAmount ) ),
+
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
@@ -253,6 +256,9 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 
 	m_pszCharacter = nullptr;
+
+	m_flFreezeUntil = .1;
+	m_flFreezeAmount = 0;
 
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
@@ -446,6 +452,8 @@ void CSDKPlayer::GiveDefaultItems()
 
 	if ( State_Get() == STATE_ACTIVE )
 	{
+		GiveNamedItem( "weapon_brawl" );
+
 		for (int i = 0; i < MAX_LOADOUT; i++)
 		{
 			for (int j = 0; j < m_aLoadout[i].m_iCount; j++)
@@ -906,6 +914,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
 			pAttackerSDK->AddStylePoints(25.0f/4.0f, STYLE_POINT_LARGE);
+		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+			pAttackerSDK->AddStylePoints(25.0f/4.0f/2.0f, STYLE_POINT_LARGE);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
 			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
@@ -943,6 +953,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
 			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
+		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+			pAttackerSDK->AddStylePoints(25.0f/2.0f, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
 			pAttackerSDK->AddStylePoints(5*1.5f, STYLE_POINT_LARGE);

@@ -157,6 +157,9 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
+	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
+	virtual bool	PlayerFrozen();
+
 #if defined ( SDK_USE_SPRINTING )
 	void SetSprinting( bool bIsSprinting );
 #endif // SDK_USE_SPRINTING
@@ -308,6 +311,9 @@ public:
 
 	CNetworkArray( CArmament, m_aLoadout, MAX_LOADOUT );
 	CNetworkVar( int, m_iLoadoutWeight );
+
+	CNetworkVar( float, m_flFreezeUntil );
+	CNetworkVar( float, m_flFreezeAmount );
 
 	float		m_flNextRegen;
 	float		m_flNextHealthDecay;

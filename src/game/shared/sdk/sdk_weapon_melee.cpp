@@ -130,7 +130,7 @@ void CWeaponSDKMelee::SecondaryAttack()
 //------------------------------------------------------------------------------
 // Purpose: Implement impact function
 //------------------------------------------------------------------------------
-void CWeaponSDKMelee::Hit( trace_t &traceHit, Activity nHitActivity )
+void CWeaponSDKMelee::Hit( trace_t &traceHit, bool bSecondary )
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 	
@@ -147,7 +147,14 @@ void CWeaponSDKMelee::Hit( trace_t &traceHit, Activity nHitActivity )
 		VectorNormalize( hitDirection );
 
 #ifndef CLIENT_DLL
-		CTakeDamageInfo info( GetOwner(), GetOwner(), GetDamageForActivity( nHitActivity ), DMG_CLUB );
+		float flDamage = GetDamage( bSecondary );
+		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			flDamage *= 1.5f;
+
+		if (!pPlayer->GetGroundEntity())
+			flDamage *= 1.2f;
+
+		CTakeDamageInfo info( GetOwner(), GetOwner(), flDamage, DMG_CLUB );
 
 		if( pPlayer && pHitEntity->IsNPC() )
 		{
@@ -281,7 +288,7 @@ void CWeaponSDKMelee::ImpactEffect( trace_t &traceHit )
 // Purpose : Starts the swing of the weapon and determines the animation
 // Input   : bIsSecondary - is this a secondary attack?
 //------------------------------------------------------------------------------
-void CWeaponSDKMelee::Swing( int bIsSecondary )
+void CWeaponSDKMelee::Swing( bool bIsSecondary )
 {
 	trace_t traceHit;
 
@@ -301,7 +308,7 @@ void CWeaponSDKMelee::Swing( int bIsSecondary )
 
 #ifndef CLIENT_DLL
 	// Like bullets, melee traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetDamageForActivity( nHitActivity ), DMG_CLUB );
+	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetDamage( bIsSecondary ), DMG_CLUB );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
 #endif
 
@@ -333,8 +340,6 @@ void CWeaponSDKMelee::Swing( int bIsSecondary )
 		}
 	}
 
-	WeaponSound( SINGLE );
-
 	// -------------------------
 	//	Miss
 	// -------------------------
@@ -347,10 +352,12 @@ void CWeaponSDKMelee::Swing( int bIsSecondary )
 		
 		// See if we happened to hit water
 		ImpactWater( swingStart, testEnd );
+
+		WeaponSound( MELEE_MISS );
 	}
 	else
 	{
-		Hit( traceHit, nHitActivity );
+		Hit( traceHit, bIsSecondary );
 	}
 
 	// Send the anim
@@ -358,8 +365,16 @@ void CWeaponSDKMelee::Swing( int bIsSecondary )
 
 	pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
-	//Setup our next attack times
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
-}
+	AddViewKick();
 
+	float flFireRate = GetFireRate();
+	if (bIsSecondary)
+		flFireRate = GetSecondaryFireRate();
+
+	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		flFireRate *= 0.7f;
+
+	//Setup our next attack times
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flFireRate;
+	pOwner->FreezePlayer(0.3f, flFireRate*3/2);
+}

@@ -79,6 +79,9 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
+	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
+	virtual bool	PlayerFrozen();
+
 	float GetStylePoints() { return m_flStylePoints; }
 	bool IsStyleSkillActive() const;
 
@@ -148,6 +151,9 @@ public: // Public Variables
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
+
+	CNetworkVar( float, m_flFreezeUntil );
+	CNetworkVar( float, m_flFreezeAmount );
 
 	EHANDLE	m_hRagdoll;
 

@@ -83,6 +83,7 @@ static const char * s_WeaponAliasInfo[] =
 	"p99",		// SDK_WEAPON_P99
 	"crowbar",	// SDK_WEAPON_CROWBAR
 	"grenade",	// SDK_WEAPON_GRENADE
+	"brawl",	// SDK_WEAPON_BRAWL
 	NULL,		// WEAPON_NONE
 };
 

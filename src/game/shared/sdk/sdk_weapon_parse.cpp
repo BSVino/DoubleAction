@@ -25,8 +25,10 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
 	m_iDamage			= pKeyValuesData->GetInt( "Damage", 42 ); // Douglas Adams 1952 - 2001
+	m_iSecondaryDamage	= pKeyValuesData->GetInt( "SecondaryDamage", 35 );
 	m_iBullets			= pKeyValuesData->GetInt( "Bullets", 1 );
 	m_flCycleTime		= pKeyValuesData->GetFloat( "CycleTime", 0.15 );
+	m_flSecondaryCycleTime	= pKeyValuesData->GetFloat( "SecondaryCycleTime", 0.35 );
 	
 	m_iDefaultAmmoClips = pKeyValuesData->GetInt( "NumClips", 2 );
 

@@ -407,6 +407,28 @@ bool CSDKPlayer::IsStyleSkillActive() const
 	return m_flStyleSkillStart > 0;
 }
 
+void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
+{
+	m_flFreezeAmount = flAmount;
+
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, 0.5, 1);
+
+	if (flAmount == 1.0f)
+		m_flFreezeUntil = gpGlobals->curtime;
+	else if (flTime < 0)
+		m_flFreezeUntil = 0;
+	else
+		m_flFreezeUntil = gpGlobals->curtime + flTime;
+}
+
+bool CSDKPlayer::PlayerFrozen()
+{
+	// m_flFreezeUntil == 0 means to freeze for an indefinite amount of time.
+	// Otherwise it means freeze until curtime >= m_flFreezeUntil.
+	return (m_flFreezeUntil == 0) || (gpGlobals->curtime < m_flFreezeUntil);
+}
+
 // --------------------------------------------------------------------------------------------------- //
 // CSDKPlayerShared implementation.
 // --------------------------------------------------------------------------------------------------- //

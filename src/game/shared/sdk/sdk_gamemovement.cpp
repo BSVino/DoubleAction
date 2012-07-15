@@ -48,6 +48,7 @@ public:
 	virtual bool CheckJumpButton( void );
 	virtual void ReduceTimers( void );
 	virtual void WalkMove( void );
+	virtual void PlayerMove( void );
 	virtual void CheckParameters( void );
 	virtual void CheckFalling( void );
 	virtual void CategorizePosition( void );
@@ -158,6 +159,9 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 
 			mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
+
+			if (m_pSDKPlayer->PlayerFrozen())
+				mv->m_flClientMaxSpeed *= m_pSDKPlayer->m_flFreezeAmount;
 		}
 	}
 
@@ -508,6 +512,19 @@ void CSDKGameMovement::WalkMove( void )
 	// Try and keep the player on the ground.
 	// NOTE YWB 7/5/07: Don't do this here, our version of CategorizePosition encompasses this test
 	// StayOnGround();
+}
+
+void CSDKGameMovement::PlayerMove( void )
+{
+	if (m_pSDKPlayer->PlayerFrozen())
+	{
+		mv->m_flForwardMove *= m_pSDKPlayer->m_flFreezeAmount;
+		mv->m_flSideMove *= m_pSDKPlayer->m_flFreezeAmount;
+		mv->m_flUpMove *= m_pSDKPlayer->m_flFreezeAmount;
+		mv->m_nImpulseCommand = 0;
+	}
+
+	BaseClass::PlayerMove();
 }
 
 extern void TracePlayerBBoxForGround( const Vector& start, const Vector& end, const Vector& minsSrc,

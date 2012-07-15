@@ -82,6 +82,7 @@ public:
 	virtual int GetFireMode() const { return FM_AUTOMATIC; }
 
 	virtual float GetFireRate( void ) { return GetSDKWpnData().m_flCycleTime; };
+	virtual float GetSecondaryFireRate( void ) { return GetSDKWpnData().m_flSecondaryCycleTime; };
 
 	//Tony; by default, burst fire weapons use a max of 3 shots (3 - 1)
 	//weapons with more, ie: a 5 round burst, can override and determine which firemode it's in.

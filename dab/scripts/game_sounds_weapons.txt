@@ -2,6 +2,28 @@
 // MP5
 // --------------------------
 
+"Weapon_Brawl.PunchMiss"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"			"95,125"
+
+	"wave"			")weapons/mp5k/single.wav"
+}
+
+"Weapon_Brawl.PunchHit"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"			"95,125"
+
+	"wave"			")weapons/mp5k/clipout.wav"
+}
+
 "Weapon_MP5K.Single"
 {
 	"channel"		"CHAN_WEAPON"

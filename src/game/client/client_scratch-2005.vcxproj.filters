@@ -1437,6 +1437,9 @@
     <ClCompile Include="sdk\vgui\dab_skillmenu.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

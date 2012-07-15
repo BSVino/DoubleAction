@@ -1413,6 +1413,9 @@
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
