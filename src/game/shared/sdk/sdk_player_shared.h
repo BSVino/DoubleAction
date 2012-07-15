@@ -187,6 +187,8 @@ public:
 	float m_flRollSpeed;
 	float m_flAimInSpeed;
 
+	CNetworkVar( int, m_iStyleSkill );
+
 private:
 
 	OuterClass *m_pOuter;

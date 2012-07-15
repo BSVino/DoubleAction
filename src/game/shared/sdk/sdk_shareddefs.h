@@ -176,6 +176,20 @@ typedef enum
 const char *WeaponIDToAlias( SDKWeaponID id );
 SDKWeaponID AliasToWeaponID( const char *alias );
 
+typedef enum
+{
+	SKILL_NONE = 0,
+
+	SKILL_ADRENALINE,
+	SKILL_SECONDWIND,
+	SKILL_SLOWMO,
+	SKILL_MARKSMAN,
+
+	SKILL_MAX,		// number of weapons weapon index
+} SkillID;
+
+const char *SkillIDToAlias( SkillID id );
+SkillID AliasToSkillID( const char *alias );
 
 // The various states the player can be in during the join game process.
 enum SDKPlayerState
@@ -202,6 +216,7 @@ enum SDKPlayerState
 
 	STATE_PICKINGCHARACTER,		// Choosing player model character.
 	STATE_BUYINGWEAPONS,		// Buying weapons.
+	STATE_PICKINGSKILL,			// Choosing special skill.
 
 	STATE_DEATH_ANIM,			// Playing death anim, waiting for that to finish.
 	STATE_OBSERVER_MODE,		// Noclipping around, watching players, etc.

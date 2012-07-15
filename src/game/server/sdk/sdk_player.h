@@ -75,6 +75,9 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+
+	virtual int		TakeHealth( float flHealth, int bitsDamageType );
+	virtual int		GetMaxHealth()  const;
 	
 	CWeaponSDKBase* GetActiveSDKWeapon() const;
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
@@ -111,6 +114,12 @@ public:
 	void RemoveFromLoadout(SDKWeaponID eWeapon);
 	void CountLoadoutWeight();
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+
+	void SetSkillMenuOpen( bool bIsOpen );
+	bool IsSkillMenuOpen( void );
+	void ShowSkillMenu();
+
+	void SetStyleSkill(SkillID eSkill);
 
 	void PhysObjectSleep();
 	void PhysObjectWake();
@@ -171,11 +180,11 @@ public:
 	virtual bool	ModeWantsSpectatorGUI( int iMode ) { return ( iMode != OBS_MODE_DEATHCAM && iMode != OBS_MODE_FREEZECAM ); }
 
 	// Universal Meter
-	float GetActionPoints() { return m_flActionPoints; }
-	void AddActionPoints(float points, style_point_t eStyle);
-	void SetActionPoints(float points);
-	bool UseActionPoints();
-	bool IsActionAbilityActive() { return m_flActionAbilityStart > 0; }
+	float GetStylePoints() { return m_flStylePoints; }
+	void AddStylePoints(float points, style_point_t eStyle);
+	void SetStylePoints(float points);
+	bool UseStylePoints();
+	bool IsStyleSkillActive() const;
 
 	void ActivateMeter();
 
@@ -199,6 +208,8 @@ private:
 
 	void State_Enter_BUYINGWEAPONS();
 
+	void State_Enter_PICKINGSKILL();
+
 public: //Tony; I had this private but I need it public for initial spawns.
 	void MoveToNextIntroCamera();
 private:
@@ -221,8 +232,8 @@ private:
 	CNetworkVar( SDKPlayerState, m_iPlayerState );
 
 	// Universal Meter
-	CNetworkVar(float, m_flActionPoints);
-	CNetworkVar(float, m_flActionAbilityStart);
+	CNetworkVar(float, m_flStylePoints);
+	CNetworkVar(float, m_flStyleSkillStart);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
@@ -240,6 +251,7 @@ private:
 	const char* m_pszCharacter;
 
 	bool m_bIsBuyMenuOpen;
+	bool m_bIsSkillMenuOpen;
 
 #if defined ( SDK_USE_PRONE )
 	void InitProne( void );
@@ -298,6 +310,8 @@ public:
 	CNetworkVar( int, m_iLoadoutWeight );
 
 	float		m_flNextRegen;
+	float		m_flNextHealthDecay;
+	float		m_flNextSecondWindRegen;
 };
 
 

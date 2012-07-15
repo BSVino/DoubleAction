@@ -114,4 +114,32 @@ const char *WeaponIDToAlias( SDKWeaponID id )
 	return s_WeaponAliasInfo[id];
 }
 
+static const char * s_SkillAliasInfo[] = 
+{
+	"none",			// SKILL_NONE
+	"adrenaline",	// SKILL_ADRENALINE
+	"secondwind",	// SKILL_SECONDWIND
+	"slowmo",		// SKILL_SLOWMO
+	"marksman",		// SKILL_MARKSMAN
+	NULL,
+};
 
+SkillID AliasToSkillID( const char *alias )
+{
+	if (alias)
+	{
+		for( int i=0; s_SkillAliasInfo[i] != NULL; ++i )
+			if (!Q_stricmp( s_SkillAliasInfo[i], alias ))
+				return (SkillID)i;
+	}
+
+	return SKILL_NONE;
+}
+
+const char *SkillIDToAlias( SkillID id )
+{
+	if ( (id >= SKILL_MAX) || (id < 0) )
+		return NULL;
+
+	return s_SkillAliasInfo[id];
+}

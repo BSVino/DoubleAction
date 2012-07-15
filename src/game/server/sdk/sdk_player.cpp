@@ -121,6 +121,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bDiving ) ),
 	SendPropVector( SENDINFO(m_vecDiveDirection) ),
 	SendPropBool( SENDINFO( m_bAimedIn ) ),
+	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -181,8 +182,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
-	SendPropInt( SENDINFO( m_flActionPoints ) ),
-	SendPropTime( SENDINFO( m_flActionAbilityStart ) ),
+	SendPropInt( SENDINFO( m_flStylePoints ) ),
+	SendPropTime( SENDINFO( m_flStyleSkillStart ) ),
 
 END_SEND_TABLE()
 
@@ -254,6 +255,8 @@ CSDKPlayer::CSDKPlayer()
 	m_pszCharacter = nullptr;
 
 	m_flNextRegen = 0;
+	m_flNextHealthDecay = 0;
+	m_flNextSecondWindRegen = 0;
 }
 
 
@@ -282,15 +285,31 @@ void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExit
 }
 
 ConVar dab_regenamount( "dab_regenamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
+ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
 void CSDKPlayer::PreThink(void)
 {
+	if (IsAlive() && !IsStyleSkillActive() && gpGlobals->curtime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
+	{
+		m_iHealth -= dab_decayamount.GetFloat();
+
+		m_flNextHealthDecay = gpGlobals->curtime + 2;
+	}
+
+	if (IsAlive() && IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND && gpGlobals->curtime > m_flNextSecondWindRegen)
+	{
+		TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+
+		m_flNextSecondWindRegen = gpGlobals->curtime + 1;
+	}
+
 	if (IsAlive() && gpGlobals->curtime > m_flNextRegen)
 	{
 		m_flNextRegen = gpGlobals->curtime + 1;
 
-		if (GetHealth() < 50)
-			TakeHealth(dab_regenamount.GetInt(), 0);
+		if (GetHealth() < GetMaxHealth()/2)
+			TakeHealth(dab_regenamount.GetFloat(), 0);
 	}
 
 	if (m_Shared.IsDiving())
@@ -349,11 +368,11 @@ void CSDKPlayer::PostThink()
 		}
 	}
 
-	if (m_flActionAbilityStart > 0)
+	if (m_flStyleSkillStart > 0)
 	{
-		if (gpGlobals->curtime > m_flActionAbilityStart + dab_stylemetertime.GetFloat())
+		if (gpGlobals->curtime > m_flStyleSkillStart + dab_stylemetertime.GetFloat())
 		{
-			m_flActionAbilityStart = -1;
+			m_flStyleSkillStart = -1;
 
 			CSingleUserRecipientFilter filter( this );
 			EmitSound(filter, entindex(), "HudMeter.End");
@@ -514,7 +533,7 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 
-	m_flActionAbilityStart = -1;
+	m_flStyleSkillStart = -1;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -726,6 +745,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
 
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+		flDamage *= 0.4f;
+
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		flDamage *= 0.7f;
+
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
 		if ( bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
@@ -880,12 +905,12 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
-			pAttackerSDK->AddActionPoints(25.0f/4.0f, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(25.0f/4.0f, STYLE_POINT_LARGE);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
 		else
-			pAttackerSDK->AddActionPoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
 	}
 
 	m_flNextRegen = gpGlobals->curtime + 10;
@@ -917,12 +942,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
 		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
-			pAttackerSDK->AddActionPoints(25, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddActionPoints(5*1.5f, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(5*1.5f, STYLE_POINT_LARGE);
 		else
-			pAttackerSDK->AddActionPoints(5, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(5, STYLE_POINT_LARGE);
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -938,16 +963,56 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
-	if (IsActionAbilityActive())
+	if (IsStyleSkillActive())
 	{
 		// If the player died while the style meter was active, refund the unused portion.
-		float flUnused = 1-((gpGlobals->curtime - m_flActionAbilityStart)/dab_stylemetertime.GetFloat());
+		float flUnused = 1-((gpGlobals->curtime - m_flStyleSkillStart)/dab_stylemetertime.GetFloat());
 		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
-		SetActionPoints(m_flActionPoints + flRefund);
+		SetStylePoints(m_flStylePoints + flRefund);
 	}
 
 	// Losing a whole activation can be rough, let's be a bit more forgiving.
-	SetActionPoints(m_flActionPoints - dab_stylemeteractivationcost.GetFloat()/2);
+	SetStylePoints(m_flStylePoints - dab_stylemeteractivationcost.GetFloat()/2);
+}
+
+int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
+{
+	if ( !edict() || m_takedamage < DAMAGE_YES )
+		return 0;
+
+	int iMax = GetMaxHealth();
+
+	float flMultiplier = 1.5f;
+
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
+
+// heal
+	if ( m_iHealth >= iMax*flMultiplier )
+		return 0;
+
+	const int oldHealth = m_iHealth;
+
+	m_iHealth += flHealth;
+
+	if (m_iHealth > iMax*flMultiplier)
+		m_iHealth = iMax;
+
+	return m_iHealth - oldHealth;
+
+	// Don't call parent class, we override with special behavior
+}
+
+ConVar dab_secondwind_health_bonus( "dab_secondwind_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+
+int CSDKPlayer::GetMaxHealth() const
+{
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+	{
+		return BaseClass::GetMaxHealth() + dab_secondwind_health_bonus.GetInt();
+	}
+
+	return BaseClass::GetMaxHealth();
 }
 
 void CSDKPlayer::ThrowActiveWeapon( void )
@@ -1220,7 +1285,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		SetBuyMenuOpen( false );
 
 		if ( State_Get() == STATE_BUYINGWEAPONS || IsDead() )
-			State_Transition( STATE_ACTIVE );
+			State_Transition( STATE_PICKINGSKILL );
 
 		return true;
 	}
@@ -1235,6 +1300,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		if ( State_Get() == STATE_PICKINGCHARACTER || IsDead() )
 			State_Transition( STATE_BUYINGWEAPONS );
+
+		return true;
+	}
+	else if ( FStrEq( pcmd, "skillmenuopen" ) )
+	{
+		SetSkillMenuOpen( true );
+		return true;
+	}
+	else if ( FStrEq( pcmd, "skillmenuclosed" ) )
+	{
+		SetSkillMenuOpen( false );
+
+		if ( State_Get() == STATE_PICKINGSKILL || IsDead() )
+			State_Transition( STATE_ACTIVE );
 
 		return true;
 	}
@@ -1529,6 +1608,27 @@ void CSDKPlayer::CountLoadoutWeight()
 	}
 }
 
+void CSDKPlayer::SetSkillMenuOpen( bool bOpen )
+{
+	m_bIsSkillMenuOpen = bOpen;
+}
+
+bool CSDKPlayer::IsSkillMenuOpen( void )
+{
+	return m_bIsCharacterMenuOpen;
+}
+
+void CSDKPlayer::ShowSkillMenu()
+{
+	ShowViewPortPanel( PANEL_BUY_EQUIP_CT );
+}
+
+void CSDKPlayer::SetStyleSkill(SkillID eSkill)
+{
+	m_Shared.m_iStyleSkill = eSkill;
+	SetStylePoints(0);
+}
+
 #if defined ( SDK_USE_PRONE )
 //-----------------------------------------------------------------------------
 // Purpose: Initialize prone at spawn.
@@ -1620,6 +1720,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 #endif
 		{ STATE_PICKINGCHARACTER, "STATE_PICKINGCHARACTER",	&CSDKPlayer::State_Enter_PICKINGCHARACTER, NULL, &CSDKPlayer::State_PreThink_WELCOME },
 		{ STATE_BUYINGWEAPONS,	"STATE_BUYINGWEAPONS",	&CSDKPlayer::State_Enter_BUYINGWEAPONS, NULL, &CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_PICKINGSKILL,   "STATE_PICKINGSKILL",	&CSDKPlayer::State_Enter_PICKINGSKILL, NULL, &CSDKPlayer::State_PreThink_WELCOME },
 		{ STATE_DEATH_ANIM,		"STATE_DEATH_ANIM",		&CSDKPlayer::State_Enter_DEATH_ANIM,	NULL, &CSDKPlayer::State_PreThink_DEATH_ANIM },
 		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	NULL, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
 	};
@@ -1806,6 +1907,9 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsBuyMenuOpen())
 			return;
 
+		if (IsSkillMenuOpen())
+			return;
+
 		State_Transition( STATE_ACTIVE );
 	}
 }
@@ -1915,6 +2019,12 @@ void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 	PhysObjectSleep();
 }
 
+void CSDKPlayer::State_Enter_PICKINGSKILL()
+{
+	ShowSkillMenu();
+	PhysObjectSleep();
+}
+
 void CSDKPlayer::State_Enter_ACTIVE()
 {
 	SetMoveType( MOVETYPE_WALK );
@@ -2021,15 +2131,15 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 	return pEnt;
 }
 
-void CSDKPlayer::AddActionPoints(float points, style_point_t eStyle)
+void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 {
-	if (IsActionAbilityActive())
+	if (IsStyleSkillActive())
 		return;
 
 	if (m_Shared.IsAimedIn())
 		points /= 2;
 
-	m_flActionPoints = (m_flActionPoints+points > 100) ? 100 : m_flActionPoints+points;
+	m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
 
 	CSingleUserRecipientFilter filter( this );
 	if (eStyle == STYLE_POINT_SMALL)
@@ -2040,52 +2150,80 @@ void CSDKPlayer::AddActionPoints(float points, style_point_t eStyle)
 		EmitSound(filter, entindex(), "HudMeter.FillStylish");
 }
 
-void CSDKPlayer::SetActionPoints(float flPoints)
+void CSDKPlayer::SetStylePoints(float flPoints)
 {
 	if (flPoints < 0)
 	{
-		m_flActionPoints = 0;
+		m_flStylePoints = 0;
 		return;
 	}
 
 	if (flPoints > 100)
 	{
-		m_flActionPoints = 100;
+		m_flStylePoints = 100;
 		return;
 	}
 
-	m_flActionPoints = flPoints;
+	m_flStylePoints = flPoints;
 }
 
-bool CSDKPlayer::UseActionPoints (void)
+bool CSDKPlayer::UseStylePoints (void)
 {
-	bool success = false;
-
-	if(m_flActionPoints >= dab_stylemeteractivationcost.GetFloat())
+	if (m_flStylePoints >= dab_stylemeteractivationcost.GetFloat())
 	{
-		m_flActionPoints -= dab_stylemeteractivationcost.GetFloat();
+		m_flStylePoints -= dab_stylemeteractivationcost.GetFloat();
 
-		success = true;
+		return true;
 	}
 
-	return success;
+	return false;
 }
 
 void CSDKPlayer::ActivateMeter()
 {
-	if (m_flActionAbilityStart > 0)
+	if (m_flStyleSkillStart > 0)
 		return;
 
-	if (!UseActionPoints())
+	if (!UseStylePoints())
 		return;
 
 	if (!IsAlive())
 		return;
 
-	m_flActionAbilityStart = gpGlobals->curtime;
+	m_flStyleSkillStart = gpGlobals->curtime;
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
+
+	// Take 50 health.
+	TakeHealth(50, 0);
+
+	// If we're still less than max health, take up to make health.
+	if (GetHealth() < GetMaxHealth())
+		TakeHealth(GetMaxHealth() - GetHealth(), 0);
+
+	// Refill ammo
+	if (m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+	{
+		for (int i = 0; i < WeaponCount(); i++)
+		{
+			CBaseCombatWeapon* pWeapon = GetWeapon(i);
+			if (!pWeapon)
+				continue;
+
+			CWeaponSDKBase* pSDKWeapon = static_cast<CWeaponSDKBase*>(pWeapon);
+			CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)pSDKWeapon->GetWeaponID());
+
+			if (pInfo)
+			{
+				if (!FStrEq(pInfo->szAmmo1, "grenades"))
+					CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
+			}
+		}
+
+		GiveNamedItem( "weapon_grenade" );
+		CBasePlayer::GiveAmmo( 10, "grenades");
+	}
 }
 
 void CC_ActivateMeter_f (void)
@@ -2173,3 +2311,21 @@ void CC_Buy(const CCommand& args)
 }
 
 static ConCommand buy("buy", CC_Buy, "Buy things.", FCVAR_GAMEDLL);
+
+void CC_Skill(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	if (args.ArgC() == 1)
+	{
+		pPlayer->ShowSkillMenu();
+		return;
+	}
+
+	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
+}
+
+static ConCommand skill("setskill", CC_Skill, "Open the skill menu.", FCVAR_GAMEDLL);

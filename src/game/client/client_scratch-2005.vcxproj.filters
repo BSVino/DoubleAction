@@ -1434,6 +1434,9 @@
     <ClCompile Include="sdk\vgui\dab_charactermenu.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\vgui\dab_skillmenu.cpp">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3222,6 +3225,9 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\dab_charactermenu.h">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\vgui\dab_skillmenu.h">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
   </ItemGroup>

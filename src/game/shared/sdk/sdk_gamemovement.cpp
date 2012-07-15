@@ -194,6 +194,9 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		}
 	}	
 #endif // SDK_USE_PRONE
+
+	if (m_pSDKPlayer->IsStyleSkillActive() && m_pSDKPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		mv->m_flClientMaxSpeed *= 1.3f;
 }
 
 ConVar cl_show_speed( "cl_show_speed", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "spam console with local player speed" );

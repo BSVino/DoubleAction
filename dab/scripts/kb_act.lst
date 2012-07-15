@@ -39,6 +39,7 @@
 "blank"		"=========================="
 "buy"		"#DAB_Open_Buy"
 "character"	"#DAB_Open_Character"
+"setskill"	"#DAB_Open_Skill"
 "cam_thirdperson_toggle"	"#DAB_Toggle_Third_Person_Camera"
 "+showscores"	"#Valve_Display_Scores"
 "+use"		"#Valve_Use_Items"

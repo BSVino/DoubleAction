@@ -58,8 +58,8 @@ void CSDKPlayer::FireBullet(
 	float fCurrentDamage = iDamage;   // damage of the bullet at it's current trajectory
 	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
 
-	if (IsActionAbilityActive())
-		fCurrentDamage *= 1.4f;
+	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		fCurrentDamage *= 1.3f;
 
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
@@ -398,6 +398,14 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 	}
 }
 
+ConVar dab_styletime( "dab_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
+bool CSDKPlayer::IsStyleSkillActive() const
+{
+	if (dab_styletime.GetBool())
+		return true;
+
+	return m_flStyleSkillStart > 0;
+}
 
 // --------------------------------------------------------------------------------------------------- //
 // CSDKPlayerShared implementation.
@@ -588,10 +596,14 @@ float CSDKPlayerShared::GetSlideFriction() const
 	if (!m_bSliding)
 		return 1;
 
-	if (gpGlobals->curtime - m_flSlideTime < sdk_slidetime.GetFloat())
-		return 0.1f;
+	float flMultiplier = 1;
+	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		flMultiplier = 5;
 
-	return RemapValClamped(gpGlobals->curtime, m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f);
+	if (gpGlobals->curtime - m_flSlideTime < sdk_slidetime.GetFloat())
+		return 0.1f/flMultiplier;
+
+	return RemapValClamped(gpGlobals->curtime, m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f)/flMultiplier;
 }
 
 void CSDKPlayerShared::SetDuckPress(bool bReset)
@@ -687,6 +699,10 @@ bool CSDKPlayerShared::CanDive() const
 ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
+ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "430", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+
 Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
@@ -710,10 +726,19 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->SetGroundEntity(NULL);
 
-	m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+	{
+		m_pOuter->SetGravity(sdk_dive_gravity_adrenaline.GetFloat());
 
-	ConVarRef sdk_dive_speed("sdk_dive_speed");
-	return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
+		return m_vecDiveDirection.Get() * sdk_dive_speed_adrenaline.GetFloat() + Vector(0, 0, sdk_dive_height_adrenaline.GetFloat());
+	}
+	else
+	{
+		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+
+		ConVarRef sdk_dive_speed("sdk_dive_speed");
+		return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
+	}
 }
 
 void CSDKPlayerShared::EndDive()

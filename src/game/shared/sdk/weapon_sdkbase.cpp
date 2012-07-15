@@ -175,11 +175,18 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
-	// Make sure we don't fire more than the amount in the clip
-	if ( UsesClipsForAmmo1() )
-		m_iClip1 --;
+	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+	{
+		// Marksmen don't consume ammo while their skill is active.
+	}
 	else
-		pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
+	{
+		// Make sure we don't fire more than the amount in the clip
+		if ( UsesClipsForAmmo1() )
+			m_iClip1 --;
+		else
+			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
+	}
 
 	pPlayer->IncreaseShotsFired();
 
@@ -193,6 +200,9 @@ void CWeaponSDKBase::PrimaryAttack( void )
 			// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
 			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 	}
+
+	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		flSpread *= 0.5f;
 
 	if (!WeaponSpreadFixed())
 		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
@@ -255,6 +265,9 @@ void CWeaponSDKBase::AddViewKick()
 				// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
 				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 		}
+
+		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+			flRecoilBonus *= 0.5f;
 
 		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );
 		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
@@ -450,9 +463,13 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
-		// Temporary code to shorten reload times for testing.
+		float flSpeedMultiplier = 0.5f; // Temporary code to shorten reload times for testing, should be 1
+		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			flSpeedMultiplier *= 0.7f;
+
+		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
+
 		MDLCACHE_CRITICAL_SECTION();
-		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration()/2;
 		if (GetPlayerOwner())
 			GetPlayerOwner()->SetNextAttack( flSequenceEndTime );
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;

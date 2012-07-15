@@ -118,6 +118,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bDiving ) ),
 	RecvPropVector( RECVINFO(m_vecDiveDirection) ),
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
+	RecvPropInt( RECVINFO( m_iStyleSkill ) ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -159,8 +160,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
-	RecvPropInt( RECVINFO( m_flActionPoints ) ),
-	RecvPropTime( RECVINFO(m_flActionAbilityStart) ),
+	RecvPropInt( RECVINFO( m_flStylePoints ) ),
+	RecvPropTime( RECVINFO(m_flStyleSkillStart) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -197,14 +198,15 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flAimIn, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( m_Shared, CSDKPlayerShared ),
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
-	DEFINE_PRED_FIELD( m_flActionPoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
-	DEFINE_PRED_FIELD( m_flActionAbilityStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flStyleSkillStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -824,6 +826,9 @@ bool C_SDKPlayer::ShouldDraw( void )
 	if ( State_Get() == STATE_BUYINGWEAPONS )
 		return false;
 
+	if ( State_Get() == STATE_PICKINGSKILL )
+		return false;
+
 	if( IsLocalPlayer() && IsRagdoll() )
 		return true;
 
@@ -887,6 +892,11 @@ bool C_SDKPlayer::CanShowTeamMenu( void )
 #endif
 
 bool C_SDKPlayer::CanShowBuyMenu( void )
+{
+	return ( GetTeamNumber() != TEAM_SPECTATOR );
+}
+
+bool C_SDKPlayer::CanShowSkillMenu( void )
 {
 	return ( GetTeamNumber() != TEAM_SPECTATOR );
 }

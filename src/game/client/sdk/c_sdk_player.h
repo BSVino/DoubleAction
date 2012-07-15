@@ -79,8 +79,8 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
-	float GetActionPoints() { return m_flActionPoints; }
-	bool IsActionAbilityActive() { return m_flActionAbilityStart > 0; }
+	float GetStylePoints() { return m_flStylePoints; }
+	bool IsStyleSkillActive() const;
 
 	virtual void SharedSpawn();
 	
@@ -119,6 +119,7 @@ public:
 #endif // SDK_USE_PLAYERCLASSES
 
 	bool CanShowBuyMenu();
+	bool CanShowSkillMenu();
 
 	bool CanAddToLoadout(SDKWeaponID eWeapon);
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
@@ -177,8 +178,8 @@ private:
 
 	int m_ArmorValue;
 
-	float m_flActionPoints;
-	float m_flActionAbilityStart;
+	float m_flStylePoints;
+	float m_flStyleSkillStart;
 
 	class CSDKSoundEvent
 	{

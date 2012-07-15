@@ -86,7 +86,7 @@ void CHudStyleBar::OnThink()
 	if ( !pPlayer )
 		return;
 
-	float flStyle = pPlayer->GetActionPoints();
+	float flStyle = pPlayer->GetStylePoints();
 
 	if ( flStyle == m_flStyle )
 		return;
@@ -111,7 +111,7 @@ void CHudStyleBar::Paint()
 	else
 		clrBar = gHUD.m_clrNormal;
 
-	if (pPlayer->IsActionAbilityActive())
+	if (pPlayer->IsStyleSkillActive())
 		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
 
 	surface()->DrawSetColor( clrBar );
