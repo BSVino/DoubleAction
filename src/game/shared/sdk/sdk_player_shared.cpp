@@ -1000,9 +1000,11 @@ bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 	if (pWeaponInfo->iWeight + m_iLoadoutWeight > MAX_LOADOUT_WEIGHT)
 		return false;
 
-	// When multiple weapon support goes in just erase this.
-	if (m_aLoadout[eWeapon].m_iCount)
-		return false;
+	if (pWeaponInfo->iMaxClip1 > 0)
+	{
+		if (m_aLoadout[eWeapon].m_iCount)
+			return false;
+	}
 
 	return true;
 }

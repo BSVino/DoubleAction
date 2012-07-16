@@ -456,7 +456,7 @@ void CSDKPlayer::GiveDefaultItems()
 
 		for (int i = 0; i < MAX_LOADOUT; i++)
 		{
-			for (int j = 0; j < m_aLoadout[i].m_iCount; j++)
+			if (m_aLoadout[i].m_iCount)
 			{
 				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
 				GiveNamedItem( szName );
@@ -466,6 +466,8 @@ void CSDKPlayer::GiveDefaultItems()
 				{
 					if (!FStrEq(pInfo->szAmmo1, "grenades"))
 						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
+					else
+						CBasePlayer::GiveAmmo( m_aLoadout[i].m_iCount-1, "grenades");
 				}
 			}
 		}

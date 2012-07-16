@@ -269,7 +269,7 @@ void CDABBuyMenu::Update()
 	SDKWeaponID eFirst = WEAPON_NONE;
 	for (int i = 0; i < MAX_LOADOUT; i++)
 	{
-		if (pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i))
+		for (int j = 0; j < pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i); j++)
 		{
 			CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 			if (!pWeaponInfo)
