@@ -57,6 +57,9 @@ public:
 	virtual Activity	GetReloadActivity( void ) { return ACT_VM_RELOAD; }
 	virtual Activity	GetHolsterActivity( void ) { return ACT_VM_HOLSTER; }
 
+	void					Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	int						ObjectCaps( void ) { return (BaseClass::ObjectCaps() | (FCAP_IMPULSE_USE|FCAP_USE_IN_RADIUS)); };
+
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
 	virtual bool			Deploy();

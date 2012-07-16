@@ -82,6 +82,9 @@ public:
 	CWeaponSDKBase* GetActiveSDKWeapon() const;
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
 
+	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
+	virtual void ThrowActiveWeapon( void );
+
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
 	virtual int		SpawnArmorValue( void ) const { return m_iSpawnArmorValue; }
@@ -285,8 +288,6 @@ private:
 	// Last usercmd we shot a bullet on.
 	int m_iLastWeaponFireUsercmd;
 
-	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
-	virtual void ThrowActiveWeapon( void );
 	virtual void SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  );
 	virtual void SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
 	// When the player joins, it cycles their view between trigger_camera entities.

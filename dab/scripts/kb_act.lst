@@ -28,6 +28,7 @@
 "invnext"	"#Valve_Next_Weapon"
 "invprev"	"#Valve_Previous_Weapon"
 "lastinv"	"#Valve_Last_Weapon_Used"
+"drop"		"#DAB_Drop_Weapon"
 "blank"		"=========================="
 "blank"		"#Valve_Communication_Title"
 "blank"		"=========================="

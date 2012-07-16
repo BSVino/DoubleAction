@@ -1088,12 +1088,12 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 void CSDKPlayer::SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir )
 {
 	VMatrix zRot;
-	MatrixBuildRotateZ( zRot, random->RandomFloat( -60.0f, 60.0f ) );
+	MatrixBuildRotateZ( zRot, random->RandomFloat( -30.0f, 30.0f ) );
 
 	Vector vecThrow;
 	Vector3DMultiply( zRot, vecForward, *pVecThrowDir );
 
-	pVecThrowDir->z = random->RandomFloat( -0.5f, 0.5f );
+	pVecThrowDir->z = random->RandomFloat( 0.0f, 0.5f );
 	VectorNormalize( *pVecThrowDir );
 }
 
@@ -2341,3 +2341,15 @@ void CC_Skill(const CCommand& args)
 }
 
 static ConCommand skill("setskill", CC_Skill, "Open the skill menu.", FCVAR_GAMEDLL);
+
+void CC_Drop(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->ThrowActiveWeapon();
+}
+
+static ConCommand drop("drop", CC_Drop, "Drop the weapon the player currently holds.", FCVAR_GAMEDLL);

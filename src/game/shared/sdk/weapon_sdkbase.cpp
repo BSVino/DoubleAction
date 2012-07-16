@@ -446,6 +446,88 @@ void CWeaponSDKBase::ItemPostFrame( void )
 	}
 }
 
+extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
+
+void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+#ifdef GAME_DLL
+	CSDKPlayer *pPlayer = ToSDKPlayer( pActivator );
+	
+	if ( !pPlayer )
+		return;
+
+	// Can I have this weapon type?
+	if ( !pPlayer->IsAllowedToPickupWeapons() )
+		return;
+
+	if ( GetOwner() || !pPlayer->Weapon_CanUse( this ) || !g_pGameRules->CanHavePlayerItem( pPlayer, this ) )
+		return;
+
+	// Don't let the player touch the item unless unobstructed
+	if ( !UTIL_ItemCanBeTouchedByPlayer( this, pPlayer ) )
+		return;
+
+	int iWeaponsWeight = 0;
+	for (int i = 0; i < pPlayer->WeaponCount(); i++)
+	{
+		if (!pPlayer->GetWeapon(i))
+			continue;
+
+		iWeaponsWeight += static_cast<CWeaponSDKBase*>(pPlayer->GetWeapon(i))->GetWeight();
+	}
+
+	if (GetWeight() + iWeaponsWeight > MAX_LOADOUT_WEIGHT)
+		return;
+
+	// ----------------------------------------
+	// If I already have it just take the ammo
+	// ----------------------------------------
+	if (pPlayer->Weapon_OwnsThisType( GetClassname(), GetSubType())) 
+	{
+		if ( pPlayer->Weapon_EquipAmmoOnly( this ) )
+		{
+			// Only remove me if I have no ammo left
+			if ( HasPrimaryAmmo() )
+				return;
+
+			UTIL_Remove( this );
+			OnPickedUp( pPlayer );
+			return;
+		}
+		else
+			return;
+	}
+	// -------------------------
+	// Otherwise take the weapon
+	// -------------------------
+	else 
+	{
+		CheckRespawn();
+
+		AddSolidFlags( FSOLID_NOT_SOLID );
+		AddEffects( EF_NODRAW );
+
+		pPlayer->Weapon_Equip( this );
+		if ( pPlayer->IsInAVehicle() )
+		{
+			Holster(nullptr);
+		}
+		else
+		{
+			// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
+			if ( UsesClipsForAmmo1() )
+			{
+				m_iClip1 = GetMaxClip1();
+			}
+
+			pPlayer->Weapon_Switch( this );
+		}
+
+		OnPickedUp( pPlayer );
+	}
+#endif
+}
+
 void CWeaponSDKBase::WeaponIdle( void )
 {
 	//Idle again if we've finished
@@ -455,6 +537,7 @@ void CWeaponSDKBase::WeaponIdle( void )
 		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 	}
 }
+
 bool CWeaponSDKBase::Reload( void )
 {
 	bool fRet;
