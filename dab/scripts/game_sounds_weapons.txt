@@ -126,7 +126,9 @@
 	"CompatibilityAttenuation"	"1.0"
 	"pitch"		"95,125"
 
-	"wave"			")weapons/fal/single.wav"
+	"wave"			")weapons/fal/FAL_single_1.wav"
+	
+	"wave"			")weapons/fal/FAL_single_2.wav"
 }
 
 "Default.PullPin_Grenade"
@@ -221,7 +223,7 @@
 	"CompatibilityAttenuation"	"1.0"
 	"pitch"		"PITCH_NORM"
 
-	"wave"			")weapons/m3/single.wav"
+	"wave"			")weapons/m3/m3-1.wav"
 }
 
 "Weapon_M3.Insertshell"
@@ -241,7 +243,7 @@
 	"CompatibilityAttenuation"	"1.0"
 	"pitch"		"PITCH_NORM"
 
-	"wave"			"weapons/m3/pump.wav"
+	"wave"			"weapons/m3/m3_pump.wav"
 }
 // *******
 // BULLETS
@@ -375,4 +377,33 @@
 	"wave"		"weapons/grenade/tick1.wav"
 }
 
+// --------------------------
+// KRISS
+// --------------------------
 
+"Weapon_Kriss.Single"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+	
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"95,125"
+
+	"wave"			")weapons/kriss/KRISS_single_1.wav"
+	"wave"			")weapons/kriss/KRISS_single_2.wav"
+}
+// --------------------------
+// P99
+// --------------------------
+
+"Weapon_P99.Single"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+	
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"95,125"
+
+	"wave"			")weapons/p99/P99_single_1.wav"
+	"wave"			")weapons/p99/P99_single_2.wav"
+}
