@@ -154,6 +154,9 @@ void CSDKPlayer::FireBullet(
 
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
 
+		if (i == 0)
+			iDamageType |= DMG_DIRECT;
+
 		if( bDoEffects )
 		{
 			// See if the bullet ended up underwater + started out of the water

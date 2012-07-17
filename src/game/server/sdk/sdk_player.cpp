@@ -921,6 +921,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
 			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
+		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
+			// Damaging a dude through a wall with a firearm.
+			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*2.0f, STYLE_POINT_SMALL);
 		else
 			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
 	}
@@ -957,6 +960,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
 		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
 			pAttackerSDK->AddStylePoints(25.0f/2.0f, STYLE_POINT_STYLISH);
+		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
+			// Damaging a dude through a wall with a firearm.
+			pAttackerSDK->AddStylePoints(5*2.0f, STYLE_POINT_SMALL);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
 			pAttackerSDK->AddStylePoints(5*1.5f, STYLE_POINT_LARGE);
