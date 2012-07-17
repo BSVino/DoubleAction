@@ -19,6 +19,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_SDK_PlayerResource, DT_SDKPlayerResource, CSDKPlayerR
 #if defined ( SDK_USE_PLAYERCLASSES )
 	RecvPropArray3( RECVINFO_ARRAY(m_iPlayerClass), RecvPropInt( RECVINFO(m_iPlayerClass[0]))),
 #endif
+	RecvPropArray3( RECVINFO_ARRAY( m_iMaxHealth ), RecvPropInt( RECVINFO( m_iMaxHealth[0] ) ) ),
 END_RECV_TABLE()
 
 
@@ -53,6 +54,14 @@ int C_SDK_PlayerResource::GetPlayerClass( int iIndex )
 }
 
 #endif // SDK_USE_PLAYERCLASSES
+
+int C_SDK_PlayerResource::GetMaxHealth( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 1;
+
+	return m_iMaxHealth[iIndex];
+}
 
 
 

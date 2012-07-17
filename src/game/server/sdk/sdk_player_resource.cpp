@@ -18,6 +18,7 @@ IMPLEMENT_SERVERCLASS_ST(CSDKPlayerResource, DT_SDKPlayerResource)
 #if defined ( SDK_USE_PLAYERCLASSES )
 	SendPropArray3( SENDINFO_ARRAY3(m_iPlayerClass), SendPropInt( SENDINFO_ARRAY(m_iPlayerClass), 4 ) ),
 #endif
+	SendPropArray3( SENDINFO_ARRAY3( m_iMaxHealth ), SendPropInt( SENDINFO_ARRAY( m_iMaxHealth ), 11, SPROP_UNSIGNED ) ),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CSDKPlayerResource )
@@ -49,6 +50,7 @@ void CSDKPlayerResource::UpdatePlayerData( void )
 #if defined ( SDK_USE_PLAYERCLASSES )
 			m_iPlayerClass.Set( i, pPlayer->m_Shared.PlayerClass() );
 #endif
+			m_iMaxHealth.Set( i, pPlayer->GetMaxHealth() );
 		}
 	}
 
@@ -64,6 +66,7 @@ void CSDKPlayerResource::Spawn( void )
 #if defined ( SDK_USE_PLAYERCLASSES )
 		m_iPlayerClass.Set( i, PLAYERCLASS_UNDEFINED );
 #endif
+		m_iMaxHealth.Set( i, 1 );
 	}
 
 	BaseClass::Spawn();

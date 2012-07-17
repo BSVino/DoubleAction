@@ -24,6 +24,9 @@
 
 #include <vgui/ILocalize.h>
 
+#include "c_sdk_player.h"
+#include "c_sdk_player_resource.h"
+
 using namespace vgui;
 
 #include "hudelement.h"
@@ -51,12 +54,19 @@ public:
 	virtual void OnThink();
 			void MsgFunc_Damage( bf_read &msg );
 
+	virtual void Paint();
+	virtual void PaintBackground() {};
+
 private:
 	// old variables
 	int		m_iHealth;
 	
 	int		m_bitsDamage;
-};	
+
+	CHudTexture	*m_pBackground;
+	CHudTexture	*m_pFill;
+	CHudTexture	*m_pSplat;
+};
 
 DECLARE_HUDELEMENT( CHudHealth );
 DECLARE_HUD_MESSAGE( CHudHealth, Damage );
@@ -74,6 +84,10 @@ CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName )
 //-----------------------------------------------------------------------------
 void CHudHealth::Init()
 {
+	m_pBackground = gHUD.GetIcon("health_background");
+	m_pFill = gHUD.GetIcon("health_fill");
+	m_pSplat = gHUD.GetIcon("health_splat");
+
 	HOOK_HUD_MESSAGE( CHudHealth, Damage );
 	Reset();
 }
@@ -165,6 +179,78 @@ void CHudHealth::MsgFunc_Damage( bf_read &msg )
 		{
 			// start the animation
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
+		}
+	}
+}
+
+void CHudHealth::Paint()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return;
+
+	if (!pPlayer->IsAlive())
+		return;
+
+	if (!m_pBackground)
+		m_pBackground = gHUD.GetIcon("health_background");
+	if (!m_pFill)
+		m_pFill = gHUD.GetIcon("health_fill");
+	if (!m_pSplat)
+		m_pSplat = gHUD.GetIcon("health_splat");
+
+//	if (pPlayer->IsStyleSkillActive())
+//		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
+
+	int iElementBuffer = 12;	// The entire element gets a stencil crop, so leave some buffer room on the outsides so that the blood splatters can overflow.
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+	iWidth -= iElementBuffer*2;
+	iHeight -= iElementBuffer*2;
+
+	int	iFillWidth = m_pFill->Width();
+	int	iFillHeight = m_pFill->Height();
+
+	C_SDK_PlayerResource *pSDKPR = SDKGameResources();
+	int iMaxHealth = pSDKPR->GetMaxHealth(pPlayer->entindex());
+
+	int iSectionsPerRow = 4;
+	float flBars = (float)m_iHealth*iSectionsPerRow/100;
+	int iSections = max(flBars + (fmod(flBars, 1) == 0?0:1), iSectionsPerRow);
+
+	int iBuffer = 5;
+	int iSectionWidth = (iWidth - iBuffer*(iSectionsPerRow-1))/iSectionsPerRow;
+
+	for (int i = 0; i < iSections; i++)
+	{
+		int iXOffset = 0;
+		int iYOffset = 0;
+
+		if (i < iSectionsPerRow)
+		{
+			iXOffset = iElementBuffer;
+			iYOffset = iHeight/2 + iElementBuffer;
+		}
+		else
+		{
+			iXOffset = -iSectionsPerRow*(iSectionWidth+iBuffer) + iElementBuffer;
+			iYOffset = iElementBuffer;
+		}
+
+		if (m_iHealth > i*100/iSectionsPerRow)
+		{
+			if (m_pBackground)
+				m_pBackground->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, iSectionWidth, iHeight/2, Color(255, 255, 255, 255) );
+			if (m_pFill)
+			{
+				float flFillWidth = RemapValClamped(m_iHealth, i*100/iSectionsPerRow, (i+1)*100/iSectionsPerRow, 0, 1);
+				m_pFill->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
+			}
+		}
+		else if (m_pSplat)
+		{
+			if (m_iHealth < iMaxHealth)
+				m_pSplat->DrawSelf( 0 + i*(iSectionWidth+iBuffer), iHeight/2, iSectionWidth + iElementBuffer*2, iHeight/2 + iElementBuffer*2, Color(255, 255, 255, 255) );
 		}
 	}
 }

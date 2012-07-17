@@ -105,6 +105,9 @@ void CHudStyleBar::Paint()
 	if ( !pPlayer )
 		return;
 
+	if (!pPlayer->IsAlive())
+		return;
+
 	Color clrBar;
 	if (m_flStyle > 25)
 		clrBar = gHUD.m_clrCaution;

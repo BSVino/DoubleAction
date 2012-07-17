@@ -26,11 +26,15 @@ public:
 	int GetPlayerClass( int iIndex );
 #endif
 	
+	int GetMaxHealth( int iIndex );
+
 protected:
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	int		m_iPlayerClass[MAX_PLAYERS+1];
 #endif
+
+	int		m_iMaxHealth[MAX_PLAYERS+1];
 };
 C_SDK_PlayerResource * SDKGameResources( void );
 

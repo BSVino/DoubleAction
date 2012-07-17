@@ -150,5 +150,32 @@
 				"width"		"48"
 				"height"	"128"
 		}
+
+		"health_background"
+		{
+				"file"		"HUD/health"
+				"x"			"0"
+				"y"			"0"
+				"width"		"64"
+				"height"	"38"
+		}
+
+		"health_fill"
+		{
+				"file"		"HUD/health"
+				"x"			"64"
+				"y"			"0"
+				"width"		"64"
+				"height"	"38"
+		}
+
+		"health_splat"
+		{
+				"file"		"HUD/health"
+				"x"			"0"
+				"y"			"38"
+				"width"		"82"
+				"height"	"69"
+		}
 	}	
 }

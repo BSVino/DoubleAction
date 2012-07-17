@@ -16,14 +16,12 @@
 	{
 		"fieldName"		"HudHealth"
 		"xpos"	"16"
-		"ypos"	"432"
-		"wide"	"102"
-		"tall"  "36"
+		"ypos"	"404"
+		"wide"	"200"
+		"tall"  "60"
 		"visible" "1"
 		"enabled" "1"
 
-		"PaintBackgroundType"	"2"
-		
 		"text_xpos" "8"
 		"text_ypos" "20"
 		"digit_xpos" "50"

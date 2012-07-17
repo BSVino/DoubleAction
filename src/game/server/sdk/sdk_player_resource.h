@@ -29,6 +29,8 @@ protected:
 #if defined ( SDK_USE_PLAYERCLASSES )
 	CNetworkArray( int, m_iPlayerClass, MAX_PLAYERS+1 );
 #endif
+
+	CNetworkArray( int, m_iMaxHealth, MAX_PLAYERS+1 );
 };
 
 #endif // SDK_PLAYER_RESOURCE_H
