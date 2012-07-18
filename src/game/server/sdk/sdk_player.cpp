@@ -255,7 +255,7 @@ CSDKPlayer::CSDKPlayer()
 
 	m_pCurStateInfo = NULL;	// no state yet
 
-	m_pszCharacter = nullptr;
+	m_pszCharacter = NULL;
 
 	m_flFreezeUntil = .1;
 	m_flFreezeAmount = 0;
@@ -2105,10 +2105,10 @@ bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 {
 	CBaseEntity* pEnt;
-	if ((pEnt = BaseClass::GiveNamedItem(pszName, iSubType)) != nullptr)
+	if ((pEnt = BaseClass::GiveNamedItem(pszName, iSubType)) != NULL)
 	{
 		CBaseCombatWeapon* pWeapon;
-		if ((pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pEnt )) != nullptr)
+		if ((pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pEnt )) != NULL)
 		{
 			// GiveNamedItem uses BumpWeapon to give players weapons but BumpWeapon is overridden
 			// not to pick up weapons when the player touches them, so we have to do it here
@@ -2124,7 +2124,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 						return pEnt;
 
 					UTIL_Remove( pWeapon );
-					return nullptr;
+					return NULL;
 				}
 				else
 					return pEnt;
@@ -2275,7 +2275,7 @@ void CC_Character(const CCommand& args)
 		int i;
 		for (i = 0; ; i++)
 		{
-			if (pszPossiblePlayerModels[i] == nullptr)
+			if (pszPossiblePlayerModels[i] == NULL)
 				break;
 
 			if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", args[1]), pszPossiblePlayerModels[i]))

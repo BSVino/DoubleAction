@@ -13,17 +13,14 @@
 #include "stdafx.h"
 #include "utlvector.h"
 #include "utlsymbol.h"
-#ifdef _WIN32
-#include "msxml2.h"
-#elif _LINUX
-#include "xercesc/dom/DOMDocument.hpp"
-#define IXMLDOMDocument DOMDocument
-#define IXMLDOMElement DOMElement
-XERCES_CPP_NAMESPACE_USE
 
-#else
-#error "Unsupported Platform"
+#ifdef _LINUX
+#include "dirent.h"
+#include <sys/stat.h>
+#define _stat stat
 #endif
+
+#include "tinyxml/tinyxml.h"
 
 //-----------------------------------------------------------------------------
 // Purpose:  constructor
@@ -98,15 +95,13 @@ public:
 	int FindConfiguration( CUtlSymbol name );
 
 private:
-	bool ExtractFiles( IXMLDOMDocument *pDoc );
-	bool ExtractConfigurations( IXMLDOMDocument *pDoc );
-	bool ExtractProjectName( IXMLDOMDocument *pDoc );
-	bool ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & config );
-	bool IterateFileConfigurations( IXMLDOMElement *pFile, CUtlSymbol fileName );
+	bool ExtractFiles( TiXmlHandle &hDoc );
+	bool ExtractConfigurations( TiXmlHandle &hDoc );
+	bool ExtractProjectName( TiXmlHandle &hDoc );
+	bool ExtractIncludes( TiXmlHandle &hDoc, CConfiguration & config );
+	void RecursivelyAddFiles( TiXmlElement * pFilter, TiXmlHandle & hDoc );
 
 	// helper funcs
-	CUtlSymbol GetXMLNodeName( IXMLDOMElement *p );
-	CUtlSymbol GetXMLAttribValue( IXMLDOMElement *p, const char *attribName );
 	CConfiguration::FileType_e GetFileType( const char *fileName );
 	void FindFileCaseInsensitive( char *file, int fileNameSize );
 
@@ -115,6 +110,9 @@ private:
 	CUtlSymbol m_Name;
 	CUtlSymbol m_BaseDir;
 	bool m_bProjectLoaded;
+
+	// VC2010 Update
+	bool m_bIs2010;
 };
 
 #endif // VCPROJCONVERT_H

@@ -4,9 +4,20 @@
 //
 // $NoKeywords: $
 //=============================================================================//
-#ifdef _LINUX
-#include <ctime> // needed by xercesc
-#endif
+
+// --------------------------------
+// This is an adaption of the original VCPROJ2MAKE from Valve to support
+// Visual Studio 2010's new project file format. In doing this, I also
+// threw out the ridiculously overkilled use of the COM XML Parser for Win32
+// and Xerces for Linux. In its place, TinyXML, which requires absolutely
+// no external libraries.
+//
+// TinyXML 2.6.0
+// http://www.grinninglizard.com/tinyxml/
+//
+// Killermonkey <killermonkey01@gmail.com>
+// ----------------------------------
+
 
 #include "stdafx.h"
 #include "tier0/platform.h"
@@ -14,71 +25,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <comutil.h> // _variant_t
-#include <atlbase.h> // CComPtr
-#elif _LINUX
-#include <unistd.h>
-#include <dirent.h> // scandir()
-#define _stat stat
-
-
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/util/XMLString.hpp>
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/parsers/XercesDOMParser.hpp>
-
-#include "valve_minmax_off.h"
-#if defined(XERCES_NEW_IOSTREAMS)
-#include <iostream>
-#else
-#include <iostream.h>
-#endif
-
-#include "valve_minmax_on.h"
-
-#define IXMLDOMNode DOMNode
-#define IXMLDOMNodeList DOMNodeList
-
-#define _alloca alloca
-
-XERCES_CPP_NAMESPACE_USE
-
-class XStr
-{
-public :
-    XStr(const char* const toTranscode)
-    {
-        // Call the private transcoding method
-        fUnicodeForm = XMLString::transcode(toTranscode);
-    }
-
-    ~XStr()
-    {
-        XMLString::release(&fUnicodeForm);
-    }
-
-
-    // -----------------------------------------------------------------------
-    //  Getter methods
-    // -----------------------------------------------------------------------
-    const XMLCh* unicodeForm() const
-    {
-        return fUnicodeForm;
-    }
-
-private :
-    XMLCh*   fUnicodeForm;
-};
-
-#define  _bstr_t(str) XStr(str).unicodeForm()
-
-
-#else
-#error "Unsupported platform"
-#endif
 
 #include "vcprojconvert.h"
 #include "utlvector.h"
@@ -88,19 +34,8 @@ private :
 //-----------------------------------------------------------------------------
 CVCProjConvert::CVCProjConvert()
 {
-#ifdef _WIN32
-	::CoInitialize(NULL); 
-#elif _LINUX
-	try {
-            XMLPlatformUtils::Initialize();
-        }
-        catch (const XMLException& toCatch) {
-            char* message = XMLString::transcode(toCatch.getMessage());
-            Error( "Error during initialization! : %s\n", message);
-            XMLString::release(&message);
-        }
-#endif
 	m_bProjectLoaded = false;
+	m_bIs2010 = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -108,11 +43,7 @@ CVCProjConvert::CVCProjConvert()
 //-----------------------------------------------------------------------------
 CVCProjConvert::~CVCProjConvert()
 {
-#ifdef _WIN32
-	::CoUninitialize(); 
-#elif _LINUX
-	// nothing to shutdown
-#endif
+
 }
 
 //-----------------------------------------------------------------------------
@@ -120,67 +51,26 @@ CVCProjConvert::~CVCProjConvert()
 //-----------------------------------------------------------------------------
 bool CVCProjConvert::LoadProject( const char *project )
 {
-#ifdef _WIN32
-	HRESULT hr;
-	IXMLDOMDocument *pXMLDoc=NULL;
-
-	hr = ::CoCreateInstance(CLSID_DOMDocument, 
-							NULL, 
-							CLSCTX_INPROC_SERVER, 
-							IID_IXMLDOMDocument, 
-							(void**)&pXMLDoc);
-
-	if (FAILED(hr))
-	{
-		Msg ("Cannot instantiate msxml2.dll\n");
-		Msg ("Please download the MSXML run-time (url below)\n");
-		Msg ("http://msdn.microsoft.com/downloads/default.asp?url=/downloads/sample.asp?url=/msdn-files/027/001/766/msdncompositedoc.xml\n");
+	TiXmlDocument doc( project );
+	if ( !doc.LoadFile() )
 		return false;
-	}
 
-	VARIANT_BOOL vtbool;
-	_variant_t bstrProject(project);
+	// VC2010 Update
+	if ( Q_strstr( project, ".vcxproj" ) )
+		m_bIs2010 = true;
 
-	pXMLDoc->put_async( VARIANT_BOOL(FALSE) );
-	hr = pXMLDoc->load(bstrProject,&vtbool);
-	if (FAILED(hr) || vtbool==VARIANT_FALSE)
-	{
-		Msg ("Could not open %s.\n", bstrProject);
-		pXMLDoc->Release();
+	TiXmlNode *pStart;
+	if ( m_bIs2010 )
+		pStart = doc.FirstChild("Project");
+	else
+		pStart = doc.FirstChild("VisualStudioProject");
+
+	if ( !pStart )
 		return false;
-	} 
-#elif _LINUX
-	XercesDOMParser* parser = new XercesDOMParser();
-        parser->setValidationScheme(XercesDOMParser::Val_Always);    // optional.
-        parser->setDoNamespaces(true);    // optional
 
-        ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
-        parser->setErrorHandler(errHandler);
+	TiXmlHandle docHandle(pStart);
 
-        try {
-            parser->parse(project);
-        }
-        catch (const XMLException& toCatch) {
-            char* message = XMLString::transcode(toCatch.getMessage());
-            Error( "Exception message is: %s\n", message );    
-            XMLString::release(&message);
-            return;
-        }
-        catch (const DOMException& toCatch) {
-            char* message = XMLString::transcode(toCatch.msg);
-            Error( "Exception message is: %s\n", message );    
-            XMLString::release(&message);
-            return;
-        }
-        catch (...) {
-            Error( "Unexpected Exception \n" );
-            return;
-        }
-	
-	DOMDocument *pXMLDoc = parser->getDocument();
-#endif
-
-	ExtractProjectName( pXMLDoc );
+	ExtractProjectName( docHandle );
 	if ( !m_Name.IsValid() )
 	{
 		Msg( "Failed to extract project name\n" );
@@ -191,21 +81,14 @@ bool CVCProjConvert::LoadProject( const char *project )
 	Q_StripTrailingSlash( baseDir );
 	m_BaseDir = baseDir;
 
-	ExtractConfigurations( pXMLDoc );
+	ExtractConfigurations( docHandle );
 	if ( m_Configurations.Count() == 0 )
 	{
 		Msg( "Failed to find any configurations to load\n" );
 		return false;
 	}
 
-	ExtractFiles( pXMLDoc );
-
-#ifdef _WIN32
-	pXMLDoc->Release();
-#elif _LINUX
-	delete pXMLDoc;
-	delete errHandler;
-#endif
+	ExtractFiles( docHandle );
 
 	m_bProjectLoaded = true;
 	return true;
@@ -243,67 +126,6 @@ int CVCProjConvert::FindConfiguration( CUtlSymbol name )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: extracts the value of the xml attrib "attribName"
-//-----------------------------------------------------------------------------
-CUtlSymbol CVCProjConvert::GetXMLAttribValue( IXMLDOMElement *p, const char *attribName )
-{
-	if (!p) 
-	{
-		return CUtlSymbol();
-	}
-
-#ifdef _WIN32
-	VARIANT vtValue;
-	p->getAttribute( _bstr_t(attribName), &vtValue);
-	if ( vtValue.vt == VT_NULL )
-	{
-		return CUtlSymbol(); // element not found
-	}
-
-	Assert( vtValue.vt == VT_BSTR );
-	CUtlSymbol name( static_cast<char *>( _bstr_t( vtValue.bstrVal ) ) );
-	::SysFreeString(vtValue.bstrVal);
-#elif _LINUX
-	const XMLCh *xAttrib = XMLString::transcode( attribName );
-	const XMLCh *value = p->getAttribute( xAttrib );
-	if ( value == NULL )
-	{
-		return CUtlSymbol(); // element not found
-        }
-	char *transValue = XMLString::transcode(value);
-	CUtlSymbol name( transValue );
-	XMLString::release( &xAttrib );
-	XMLString::release( &transValue );
-#endif
-	return name;
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: returns the name of this node
-//-----------------------------------------------------------------------------
-CUtlSymbol CVCProjConvert::GetXMLNodeName( IXMLDOMElement *p )
-{
-	CUtlSymbol name;
-	if (!p) 
-	{
-		return name;
-	}
-
-#ifdef _WIN32
-	BSTR bstrName;
-	p->get_nodeName( &bstrName );
-	_bstr_t bstr(bstrName);
-	name = static_cast<char *>(bstr);
-	return name;
-#elif _LINUX
-	Assert( 0 );
-	Error( "Function CVCProjConvert::GetXMLNodeName not implemented\n" );
-	return name;
-#endif
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: returns the config object at this index
 //-----------------------------------------------------------------------------
 CVCProjConvert::CConfiguration & CVCProjConvert::GetConfiguration( int i )
@@ -316,400 +138,411 @@ CVCProjConvert::CConfiguration & CVCProjConvert::GetConfiguration( int i )
 //-----------------------------------------------------------------------------
 // Purpose: extracts the project name from the loaded vcproj
 //-----------------------------------------------------------------------------
-bool CVCProjConvert::ExtractProjectName( IXMLDOMDocument *pDoc )
+bool CVCProjConvert::ExtractProjectName( TiXmlHandle &hDoc )
 {
-#ifdef _WIN32
-	CComPtr<IXMLDOMNodeList> pProj;
-	pDoc->getElementsByTagName( _bstr_t("VisualStudioProject"), &pProj);
-	if (pProj)
+	if ( m_bIs2010 )
 	{
-		long len = 0;
-		pProj->get_length(&len);
-		Assert( len == 1 );
-		if ( len == 1 )
+		TiXmlElement *pProp = hDoc.FirstChild("PropertyGroup").ToElement();
+		for ( pProp; pProp; pProp = pProp->NextSiblingElement() )
 		{
-			CComPtr<IXMLDOMNode> pNode;
-			pProj->get_item( 0, &pNode );
-			if (pNode)
+			TiXmlNode *pName = pProp->FirstChild("ProjectName");
+			if ( pName )
 			{
-				CComQIPtr<IXMLDOMElement> pElem( pNode );
-				m_Name = GetXMLAttribValue( pElem, "Name");
+				m_Name = pName->ToElement()->GetText();
+				return true;
 			}
 		}
 	}
-#elif _LINUX
-	DOMNodeList *nodes = pDoc->getElementsByTagName( _bstr_t("VisualStudioProject") );
-	if ( nodes )
+	else
 	{
-		int len = nodes->getLength();
-		if ( len == 1 )
-		{
-			DOMNode *node = nodes->item(0);
-			if ( node )
-			{
-				m_Name = GetXMLAttribValue( node, "Name" );
-			}
-		}
+		m_Name = hDoc.Element()->Attribute("Name");
+		return true;
 	}
-#endif
-	return true;
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: extracts the list of configuration names from the vcproj
 //-----------------------------------------------------------------------------
-bool CVCProjConvert::ExtractConfigurations( IXMLDOMDocument *pDoc )
+bool CVCProjConvert::ExtractConfigurations( TiXmlHandle &hDoc )
 {
 	m_Configurations.RemoveAll();
 
-	if (!pDoc)
+	if ( m_bIs2010 )
 	{
-		return false;
+		TiXmlElement *pItemGroup = hDoc.FirstChild( "ItemGroup" ).ToElement();
+		for ( pItemGroup; pItemGroup; pItemGroup = pItemGroup->NextSiblingElement() )
+		{
+			const char *label = pItemGroup->Attribute("Label");
+
+			if ( label && !Q_stricmp( label, "ProjectConfigurations" ) )
+			{
+				TiXmlNode *pConfig = pItemGroup->FirstChild("ProjectConfiguration");
+				for ( pConfig; pConfig; pConfig = pConfig->NextSiblingElement() )
+				{
+					int newIndex = m_Configurations.AddToTail();
+					CConfiguration & config = m_Configurations[newIndex];
+					config.SetName( pConfig->ToElement()->Attribute("Include") );
+					ExtractIncludes( hDoc, config );
+				}
+
+				return true;
+			}
+		}
+	}
+	else
+	{
+		TiXmlElement *pConfig = hDoc.FirstChild("Configurations").FirstChild("Configuration").ToElement();
+		for ( pConfig; pConfig; pConfig = pConfig->NextSiblingElement() )
+		{
+			int newIndex = m_Configurations.AddToTail();
+			CConfiguration & config = m_Configurations[newIndex];
+			config.SetName( pConfig->Attribute("Name") );
+			TiXmlHandle hConfig( pConfig );
+			ExtractIncludes( hConfig, config );
+		}
+
+		return true;
 	}
 
-#ifdef _WIN32
-	CComPtr<IXMLDOMNodeList> pConfigs;
-	pDoc->getElementsByTagName( _bstr_t("Configuration"), &pConfigs);
-    if (pConfigs)
-	{
-		long len = 0;
-		pConfigs->get_length(&len);
-		for ( int i=0; i<len; i++ )
-		{
-			CComPtr<IXMLDOMNode> pNode;
-			pConfigs->get_item( i, &pNode );
-			if (pNode)
-			{
-				CComQIPtr<IXMLDOMElement> pElem( pNode );
-				CUtlSymbol configName = GetXMLAttribValue( pElem, "Name" );
-				if ( configName.IsValid() )
-				{
-					int newIndex = m_Configurations.AddToTail();
-					CConfiguration & config = m_Configurations[newIndex];
-					config.SetName( configName );
-					ExtractIncludes( pElem, config );
-				}
-			}
-		}
-	}
-#elif _LINUX
-	 DOMNodeList *nodes = pDoc->getElementsByTagName( _bstr_t("Configuration"));
-    	if ( nodes )
-	{
-		int len = nodes->getLength();
-		for ( int i=0; i<len; i++ )
-		{
-			DOMNode *node = nodes->item(i);
-			if (node)
-			{
-				CUtlSymbol configName = GetXMLAttribValue( node, "Name" );
-				if ( configName.IsValid() )
-				{
-					int newIndex = m_Configurations.AddToTail();
-					CConfiguration & config = m_Configurations[newIndex];
-					config.SetName( configName );
-					ExtractIncludes( node, config );
-				}
-			}
-		}
-	}
-#endif
-	return true;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: extracts the list of defines and includes used for this config
 //-----------------------------------------------------------------------------
-bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & config )
+bool CVCProjConvert::ExtractIncludes( TiXmlHandle &hDoc, CConfiguration & config )
 {
 	config.ResetDefines();
 	config.ResetIncludes();
-	
-	if (!pDoc)
-	{
-		return false;
-	}
 
-#ifdef _WIN32
-	CComPtr<IXMLDOMNodeList> pTools;
-	pDoc->getElementsByTagName( _bstr_t("Tool"), &pTools);
-	if (pTools)
+	if ( m_bIs2010 )
 	{
-		long len = 0;
-		pTools->get_length(&len);
-		for ( int i=0; i<len; i++ )
+		TiXmlElement *pDefGroup = hDoc.FirstChild("ItemDefinitionGroup").ToElement();
+		for ( pDefGroup; pDefGroup; pDefGroup = pDefGroup->NextSiblingElement() )
 		{
-			CComPtr<IXMLDOMNode> pNode;
-			pTools->get_item( i, &pNode );
-			if (pNode)
-			{
-				CComQIPtr<IXMLDOMElement> pElem( pNode );
-				CUtlSymbol toolName = GetXMLAttribValue( pElem, "Name" );
-				if ( toolName == "VCCLCompilerTool" )
-				{
-					CUtlSymbol defines = GetXMLAttribValue( pElem, "PreprocessorDefinitions" );
-					char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
-					Assert( str );
-					Q_strcpy( str, defines.String() );
-					// now tokenize the string on the ";" char
-					char *delim = strchr( str, ';' );
-					char *curpos = str;
-					while ( delim )
-					{
-						*delim = 0;
-						delim++;
-						if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
-							 Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS")) // don't add WIN32 defines
-						{
-							config.AddDefine( curpos );
-						}
-						curpos = delim;
-						delim = strchr( delim, ';' );
-					}
-					if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
-						 Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS")) // don't add WIN32 defines
-					{
-						config.AddDefine( curpos );
-					}
-
-					CUtlSymbol includes = GetXMLAttribValue( pElem, "AdditionalIncludeDirectories" );
-					char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
-					Assert( str2 );
-					Q_strcpy( str2, includes.String() );
-					// now tokenize the string on the ";" char
-					delim = strchr( str2, ',' );
-					curpos = str2;
-					while ( delim )
-					{
-						*delim = 0;
-						delim++;
-						config.AddInclude( curpos );
-						curpos = delim;
-						delim = strchr( delim, ',' );
-					}
-					config.AddInclude( curpos );
-				}
-			}
+			const char *cond = pDefGroup->Attribute("Condition");
+			if ( cond && Q_stristr( cond, config.GetName().String() ) )
+				break;
 		}
-	}
-#elif _LINUX
-	DOMNodeList *nodes= pDoc->getElementsByTagName( _bstr_t("Tool"));
-	if (nodes)
-	{
-		int len = nodes->getLength();
-		for ( int i=0; i<len; i++ )
+
+		if ( !pDefGroup )
+			return false;
+
+		TiXmlNode *pCompile = pDefGroup->FirstChild("ClCompile");
+		for ( pCompile; pCompile; pCompile = pCompile->ToElement()->NextSiblingElement() )
 		{
-			DOMNode *node = nodes->item(i);
-			if (node)
+			TiXmlNode *pPrePro = pCompile->FirstChild("PreprocessorDefinitions");
+			TiXmlNode *pAddInc = pCompile->FirstChild("AdditionalIncludeDirectories");
+			if ( pPrePro && pAddInc )
 			{
-				CUtlSymbol toolName = GetXMLAttribValue( node, "Name" );
-				if ( toolName == "VCCLCompilerTool" )
+				CUtlSymbol defines = pPrePro->ToElement()->GetText();
+				char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
+				Q_strcpy( str, defines.String() );
+				// Expanded tokenize with , or ; both are accepted by VS
+				char *delim = NULL;
+				char *try1 = strchr( str, ';' );
+				char *try2 = strchr( str, ',' );
+				char *curpos = str;
+				while ( try1 || try2 )
 				{
-					CUtlSymbol defines = GetXMLAttribValue( node, "PreprocessorDefinitions" );
-					char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
-					Assert( str );
-					Q_strcpy( str, defines.String() );
-					// now tokenize the string on the ";" char
-					char *delim = strchr( str, ';' );
-					char *curpos = str;
-					while ( delim )
-					{
-						*delim = 0;
-						delim++;
-						if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
-							 Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS")) // don't add WIN32 defines
-						{
-							config.AddDefine( curpos );
-						}
-						curpos = delim;
-						delim = strchr( delim, ';' );
-					}
+					delim = ( (try1 && !try2) || (try1 && try2 && try1 < try2) ) ? try1 : try2;
+					*delim = 0;
+					delim++;
 					if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
-						 Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS")) // don't add WIN32 defines
+							Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS") &&
+							curpos[0] != '%' ) // don't add WIN32 defines
 					{
 						config.AddDefine( curpos );
 					}
+					curpos = delim;
+					try1 = strchr( delim, ';' );
+					try2 = strchr( delim, ',' );
+				}
+				if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
+						Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS") &&
+						curpos[0] != '%' ) // don't add WIN32 defines
+				{
+					config.AddDefine( curpos );
+				}		
 
-					CUtlSymbol includes = GetXMLAttribValue( node, "AdditionalIncludeDirectories" );
-					char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
-					Assert( str2 );
-					Q_strcpy( str2, includes.String() );
-					// now tokenize the string on the ";" char
-					char token = ',';
-					delim = strchr( str2, token );
-					if ( !delim )
+				CUtlSymbol includes = pAddInc->ToElement()->GetText();
+				char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
+				Assert( str2 );
+				Q_strcpy( str2, includes.String() );
+				// Expanded tokenize with , or ; both are accepted by VS
+				delim = NULL;
+				try1 = strchr( str2, ';' );
+				try2 = strchr( str2, ',' );
+				curpos = str2;
+				while ( try1 || try2 )
+				{
+					delim = ( (try1 && !try2) || (try1 && try2 && try1 < try2) ) ? try1 : try2;
+					*delim = 0;
+					delim++;
+					if ( curpos[0] != '%' )
 					{
-						token = ';';
-						delim = strchr( str2, token );
-					}
-					curpos = str2;
-					while ( delim )
-					{
-						*delim = 0;
-						delim++;
 						Q_FixSlashes( curpos );
 						char fullPath[ MAX_PATH ];
 						Q_snprintf( fullPath, sizeof(fullPath), "%s/%s", m_BaseDir.String(), curpos );
 						Q_StripTrailingSlash( fullPath );
 						config.AddInclude( fullPath );
-						curpos = delim;
-						delim = strchr( delim, token );
 					}
+
+					curpos = delim;
+					try1 = strchr( delim, ';' );
+					try2 = strchr( delim, ',' );
+				}
+
+				if ( curpos[0] != '%' )
+				{
 					Q_FixSlashes( curpos );
-					Q_strlower( curpos );
 					char fullPath[ MAX_PATH ];
 					Q_snprintf( fullPath, sizeof(fullPath), "%s/%s", m_BaseDir.String(), curpos );
 					Q_StripTrailingSlash( fullPath );
 					config.AddInclude( fullPath );
 				}
+
+				return true;
 			}
 		}
 	}
+	else
+	{
+		// We are passed a handle to the current config to make things easy
+		TiXmlElement *pTool = hDoc.FirstChild("Tool").ToElement();
+		for ( pTool; pTool; pTool = pTool->NextSiblingElement() )
+		{
+			if ( !Q_stricmp( pTool->Attribute("Name"), "VCCLCompilerTool" ) )
+			{
+				CUtlSymbol defines = pTool->Attribute("PreprocessorDefinitions");
+				char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
+				Q_strcpy( str, defines.String() );
+				// Expanded tokenize with , or ; both are accepted by VS
+				char *delim = NULL;
+				char *try1 = strchr( str, ';' );
+				char *try2 = strchr( str, ',' );
+				char *curpos = str;
+				while ( try1 || try2 )
+				{
+					delim = ( (try1 && !try2) || (try1 && try2 && try1 < try2) ) ? try1 : try2;
+					*delim = 0;
+					delim++;
+					if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
+							Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS") ) // don't add WIN32 defines
+					{
+						config.AddDefine( curpos );
+					}
 
-#endif
+					curpos = delim;
+					try1 = strchr( delim, ';' );
+					try2 = strchr( delim, ',' );
+				}
+				if ( Q_stricmp( curpos, "WIN32" ) && Q_stricmp( curpos, "_WIN32" )  &&  
+						Q_stricmp( curpos, "_WINDOWS") && Q_stricmp( curpos, "WINDOWS") ) // don't add WIN32 defines
+				{
+					config.AddDefine( curpos );
+				}		
+
+				CUtlSymbol includes = pTool->Attribute("AdditionalIncludeDirectories");
+				char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
+				Assert( str2 );
+				Q_strcpy( str2, includes.String() );
+				// Expanded tokenize with , or ; both are accepted by VS
+				delim = NULL;
+				try1 = strchr( str2, ';' );
+				try2 = strchr( str2, ',' );
+				curpos = str2;
+				while ( try1 || try2 )
+				{
+					delim = ( (try1 && !try2) || (try1 && try2 && try1 < try2) ) ? try1 : try2;
+					*delim = 0;
+					delim++;
+					Q_FixSlashes( curpos );
+					char fullPath[ MAX_PATH ];
+					Q_snprintf( fullPath, sizeof(fullPath), "%s/%s", m_BaseDir.String(), curpos );
+					Q_StripTrailingSlash( fullPath );
+					config.AddInclude( fullPath );
+
+					curpos = delim;
+					try1 = strchr( delim, ';' );
+					try2 = strchr( delim, ',' );
+				}
+
+				Q_FixSlashes( curpos );
+				char fullPath[ MAX_PATH ];
+				Q_snprintf( fullPath, sizeof(fullPath), "%s/%s", m_BaseDir.String(), curpos );
+				Q_StripTrailingSlash( fullPath );
+				config.AddInclude( fullPath );
+				return true;
+			}
+		} // End Tool loop
+	} // End m_bIs2010
+
 	return true;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: walks a particular files config entry and removes an files not valid for this config
-//-----------------------------------------------------------------------------
-bool CVCProjConvert::IterateFileConfigurations( IXMLDOMElement *pFile, CUtlSymbol fileName )
+void CVCProjConvert::RecursivelyAddFiles( TiXmlElement * pFilter, TiXmlHandle & hDoc )
 {
-#ifdef _WIN32
-	CComPtr<IXMLDOMNodeList> pConfigs;
-	pFile->getElementsByTagName( _bstr_t("FileConfiguration"), &pConfigs);
-    if (pConfigs)
+	for ( pFilter; pFilter; pFilter = pFilter->NextSiblingElement() )
 	{
-		long len = 0;
-		pConfigs->get_length(&len);
-		for ( int i=0; i<len; i++ )
+		TiXmlNode * pChildFilter = pFilter->FirstChild("Filter");
+
+		if ( pChildFilter )
 		{
-			CComPtr<IXMLDOMNode> pNode;
-			pConfigs->get_item( i, &pNode);
-			if (pNode)
+			RecursivelyAddFiles(pChildFilter->ToElement(), hDoc);
+		}
+
+		TiXmlNode *pFile = pFilter->FirstChild("File");
+		for ( pFile; pFile; pFile = pFile->NextSibling() )
+		{
+			CUtlSymbol fileName = pFile->ToElement()->Attribute("RelativePath");
+			if ( fileName.IsValid() )
 			{
-				CComQIPtr<IXMLDOMElement> pElem( pNode );
-				CUtlSymbol configName = GetXMLAttribValue( pElem, "Name");
-				CUtlSymbol excluded = GetXMLAttribValue( pElem ,"ExcludedFromBuild");
-				if ( configName.IsValid() && excluded.IsValid() )
+				char fixedFileName[ MAX_PATH ];
+				Q_strncpy( fixedFileName, fileName.String(), sizeof(fixedFileName) );
+				printf( fixedFileName );
+				printf( "\n" );
+				if ( fixedFileName[0] == '.' && fixedFileName[1] == '\\' )
 				{
-					int index = FindConfiguration( configName );
-					if ( index > 0 && excluded == "TRUE" )
-					{
-						m_Configurations[index].RemoveFile( fileName );
-					}
+					Q_memmove( fixedFileName, fixedFileName+2, sizeof(fixedFileName)-2 );
+				}
+
+				Q_FixSlashes( fixedFileName );
+				FindFileCaseInsensitive( fixedFileName, sizeof(fixedFileName) );
+
+				TiXmlNode *pExclude = pFile->FirstChild("FileConfiguration");
+				const char *pExcluded = pExclude ? pExclude->ToElement()->Attribute("ExcludedFromBuild") : NULL;
+				CConfiguration::FileType_e type = GetFileType( fileName.String() );
+				CConfiguration::CFileEntry fileEntry( fixedFileName, type );
+				for ( int i = 0; i < m_Configurations.Count(); i++ ) // add the file to all configs
+				{
+					CConfiguration & config = m_Configurations[i];
+					// Don't add this file if it is excluded from this config's build
+					if ( pExclude && pExcluded && Q_stristr(pExclude->ToElement()->Attribute("Name"), config.GetName().String()) && Q_stricmp(pExcluded, "true") )
+						continue;
+
+					config.InsertFile( fileEntry );
 				}
 			}
-
-		}//for
-	}//if
-#elif _LINUX
-	DOMNodeList *nodes = pFile->getElementsByTagName( _bstr_t("FileConfiguration"));
-	if (nodes)
-	{
-		int len = nodes->getLength();
-		for ( int i=0; i<len; i++ )
-		{
-			DOMNode *node = nodes->item(i);
-			if (node)
-			{
-				CUtlSymbol configName = GetXMLAttribValue( node, "Name");
-				CUtlSymbol excluded = GetXMLAttribValue( node ,"ExcludedFromBuild");
-				if ( configName.IsValid() && excluded.IsValid() )
-				{
-					int index = FindConfiguration( configName );
-					if ( index >= 0 && excluded == "TRUE" )
-					{
-						m_Configurations[index].RemoveFile( fileName );
-					}
-				}
-			}
-
-		}//for
-	}//if
-#endif
-
-	return true;
+		} // file for
+	} //filter for
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: walks the file elements in the vcproj and inserts them into configs
 //-----------------------------------------------------------------------------
-bool CVCProjConvert::ExtractFiles( IXMLDOMDocument *pDoc  )
+bool CVCProjConvert::ExtractFiles( TiXmlHandle &hDoc  )
 {
-	if (!pDoc)
-	{
-		return false;
-	}
 	Assert( m_Configurations.Count() ); // some configs must be loaded first
 
-#ifdef _WIN32
-	CComPtr<IXMLDOMNodeList> pFiles;
-	pDoc->getElementsByTagName( _bstr_t("File"), &pFiles);
-	if (pFiles)
+	if ( m_bIs2010 )
 	{
-		long len = 0;
-		pFiles->get_length(&len);
-		for ( int i=0; i<len; i++ )
-		{
-			CComPtr<IXMLDOMNode> pNode;
-			pFiles->get_item( i, &pNode);
-			if (pNode)
-			{
-				CComQIPtr<IXMLDOMElement> pElem( pNode );
-				CUtlSymbol fileName = GetXMLAttribValue(pElem,"RelativePath");
-				if ( fileName.IsValid() )
-				{
-					CConfiguration::FileType_e type = GetFileType( fileName.String() );
-					CConfiguration::CFileEntry fileEntry( fileName.String(), type );
-					for ( int i = 0; i < m_Configurations.Count(); i++ ) // add the file to all configs
-					{
-						CConfiguration & config = m_Configurations[i];
-						config.InsertFile( fileEntry );
-					}
-					IterateFileConfigurations( pElem, fileName ); // now remove the excluded ones
-				}
-			}
-		}//for
-	}
-#elif _LINUX
-	DOMNodeList *nodes = pDoc->getElementsByTagName( _bstr_t("File") );
-	if (nodes)
-	{
-		int len = nodes->getLength();
-		for ( int i=0; i<len; i++ )
-		{
-			DOMNode *node = nodes->item(i);
-			if (node)
-			{
-				CUtlSymbol fileName = GetXMLAttribValue(node,"RelativePath");
-				if ( fileName.IsValid() )
-				{
-					char fixedFileName[ MAX_PATH ];
-					Q_strncpy( fixedFileName, fileName.String(), sizeof(fixedFileName) );
-					if ( fixedFileName[0] == '.' && fixedFileName[1] == '\\' )
-					{
-						Q_memmove( fixedFileName, fixedFileName+2, sizeof(fixedFileName)-2 );
-					}
+		// *.vcxproj
+		// <ItemGroup>
+		//   <ClCompile Include="RelPath" />
+		// </ItemGroup>
+		// <ItemGroup>
+		//   <ClInclude Include="RelPath" />
+		// </ItemGroup>
 
-					Q_FixSlashes( fixedFileName );
-					FindFileCaseInsensitive( fixedFileName, sizeof(fixedFileName) );
-					CConfiguration::FileType_e type = GetFileType( fileName.String() );
-					CConfiguration::CFileEntry fileEntry( fixedFileName, type );
-					for ( int i = 0; i < m_Configurations.Count(); i++ ) // add the file to all configs
-					{
-						CConfiguration & config = m_Configurations[i];
-						config.InsertFile( fileEntry );
-					}
-					IterateFileConfigurations( node, fixedFileName ); // now remove the excluded ones
+		// Get ClCompile files
+		TiXmlElement *pDefGroup = hDoc.FirstChild("ItemGroup").ToElement();
+		for ( pDefGroup; pDefGroup; pDefGroup = pDefGroup->NextSiblingElement() )
+		{
+			if ( pDefGroup->FirstChild("ClCompile") && pDefGroup->FirstChild("ClCompile")->ToElement()->Attribute("Include") )
+				break;
+		}
+
+		if ( !pDefGroup )
+			return false;
+
+		TiXmlNode *pFile = pDefGroup->FirstChild( "ClCompile" );
+		for ( pFile; pFile; pFile = pFile->NextSibling() )
+		{
+			CUtlSymbol fileName = pFile->ToElement()->Attribute("Include");
+			if ( fileName.IsValid() )
+			{
+				char fixedFileName[ MAX_PATH ];
+				Q_strncpy( fixedFileName, fileName.String(), sizeof(fixedFileName) );
+				if ( fixedFileName[0] == '.' && fixedFileName[1] == '\\' )
+				{
+					Q_memmove( fixedFileName, fixedFileName+2, sizeof(fixedFileName)-2 );
+				}
+
+				Q_FixSlashes( fixedFileName );
+				FindFileCaseInsensitive( fixedFileName, sizeof(fixedFileName) );
+
+				TiXmlNode *pExclude = pFile->FirstChild("ExcludedFromBuild");
+				CConfiguration::FileType_e type = GetFileType( fileName.String() );
+				CConfiguration::CFileEntry fileEntry( fixedFileName, type );
+				for ( int i = 0; i < m_Configurations.Count(); i++ ) // add the file to all configs
+				{
+					CConfiguration & config = m_Configurations[i];
+					// Don't add this file if it is excluded from this config's build
+					if ( pExclude && Q_stricmp( pExclude->ToElement()->GetText(), "true" ) && Q_stristr( pExclude->ToElement()->Attribute("Condition"), config.GetName().String() ) )
+						continue;
+
+					config.InsertFile( fileEntry );
 				}
 			}
-		}//for
+		}
+
+
+		// Get ClInclude files
+		pDefGroup = hDoc.FirstChild("ItemGroup").ToElement();
+		for ( pDefGroup; pDefGroup; pDefGroup = pDefGroup->NextSiblingElement() )
+		{
+			if ( pDefGroup->FirstChild("ClInclude") && pDefGroup->FirstChild("ClInclude")->ToElement()->Attribute("Include") )
+				break;
+		}
+
+		if ( !pDefGroup )
+			return false;
+
+		pFile = pDefGroup->FirstChild( "ClInclude" );
+		for ( pFile; pFile; pFile = pFile->NextSibling() )
+		{
+			CUtlSymbol fileName = pFile->ToElement()->Attribute("Include");
+			if ( fileName.IsValid() )
+			{
+				char fixedFileName[ MAX_PATH ];
+				Q_strncpy( fixedFileName, fileName.String(), sizeof(fixedFileName) );
+				if ( fixedFileName[0] == '.' && fixedFileName[1] == '\\' )
+				{
+					Q_memmove( fixedFileName, fixedFileName+2, sizeof(fixedFileName)-2 );
+				}
+
+				Q_FixSlashes( fixedFileName );
+				FindFileCaseInsensitive( fixedFileName, sizeof(fixedFileName) );
+
+				TiXmlNode *pExclude = pFile->FirstChild("ExcludedFromBuild");
+				CConfiguration::FileType_e type = GetFileType( fileName.String() );
+				CConfiguration::CFileEntry fileEntry( fixedFileName, type );
+				for ( int i = 0; i < m_Configurations.Count(); i++ ) // add the file to all configs
+				{
+					CConfiguration & config = m_Configurations[i];
+					// Don't add this file if it is excluded from this config's build
+					if ( pExclude && Q_stricmp( pExclude->ToElement()->GetText(), "true" ) && Q_stristr( pExclude->ToElement()->Attribute("Condition"), config.GetName().String() ) )
+						continue;
+
+					config.InsertFile( fileEntry );
+				}
+			}
+		}
 	}
-#endif
+	else
+	{
+		TiXmlElement *pFilter = hDoc.FirstChild("Files").FirstChild("Filter").ToElement();
+
+		RecursivelyAddFiles( pFilter, hDoc );
+	}
+
 	return true;
 }
+
+
 
 #ifdef _LINUX
 static char fileName[MAX_PATH];

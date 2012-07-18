@@ -510,7 +510,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		pPlayer->Weapon_Equip( this );
 		if ( pPlayer->IsInAVehicle() )
 		{
-			Holster(nullptr);
+			Holster(NULL);
 		}
 		else
 		{

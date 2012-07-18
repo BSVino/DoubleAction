@@ -250,7 +250,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 		m_angRender[YAW] = angSlide.y;
 
 		Vector vecForward;
-		m_pSDKPlayer->GetVectors(&vecForward, nullptr, nullptr);
+		m_pSDKPlayer->GetVectors(&vecForward, NULL, NULL);
 
 		float flAimPitch = DotProduct(Vector(0, 0, 1), vecForward) * 90;
 

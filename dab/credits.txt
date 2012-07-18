@@ -62,7 +62,7 @@ Special thanks:
 All of the playtesters
 Bryan Taylor
 Valve
-
-
+Jon "Killer Monkey" White, for vprojtomake2010
+Lord_Jeremy, Riet and others for graciously hosting testing servers
 
 Don't see your name here? Send me an email and I'll fix it: jorge@lunarworkshop.com

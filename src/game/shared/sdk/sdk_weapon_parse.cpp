@@ -64,7 +64,7 @@ CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)
 
 	Assert(pszAlias);
 	if (!pszAlias)
-		return nullptr;
+		return NULL;
 
 	char szName[128];
 	Q_snprintf( szName, sizeof( szName ), "weapon_%s", pszAlias );
@@ -73,7 +73,7 @@ CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)
 	if (hWeaponFile == GetInvalidWeaponInfoHandle())
 	{
 		Assert(hWeaponFile != GetInvalidWeaponInfoHandle());
-		return nullptr;
+		return NULL;
 	}
 
 	return static_cast< CSDKWeaponInfo* >( GetFileWeaponInfoFromHandle( hWeaponFile ) );

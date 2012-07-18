@@ -1,2 +1,8 @@
 
 /src/enc_temp_folder
+/src/utils/vprojtomake/bin/*.dll
+/src/linux_sdk/*.so
+/src/linux_sdk/vcpm
+/src/linux_sdk/obj
+/src/linux_sdk/files.vdf
+/src/linux_sdk/Makefile.Server*

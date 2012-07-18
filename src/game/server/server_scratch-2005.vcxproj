@@ -67,7 +67,7 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "%SourceSDK%\..\
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;fopen=dont_use_fopen;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;SDK_DLL;VERSION_SAFE_STEAM_API_INTERFACES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
@@ -149,7 +149,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;fopen=dont_use_fopen;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;SDK_DLL;VERSION_SAFE_STEAM_API_INTERFACES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
@@ -805,7 +805,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="sdk\sdk_playermove.cpp" />
     <ClCompile Include="sdk\sdk_bot_temp.cpp" />
-    <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp" />
+    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="playerinfomanager.cpp" />
     <ClCompile Include="entity_tools_server.cpp" />
     <ClCompile Include="toolframework_server.cpp" />
@@ -1108,7 +1108,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h" />
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h" />
     <ClInclude Include="sdk\sdk_bot_temp.h" />
-    <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h" />
+    <ClInclude Include="..\shared\Multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\shared\ammodef.h" />
     <ClInclude Include="..\shared\base_playeranimstate.h" />

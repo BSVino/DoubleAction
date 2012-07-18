@@ -71,7 +71,7 @@ IBaseFileSystem *g_pFileSystem = &g_MyFS;
 //-----------------------------------------------------------------------------
 void printusage( void )
 {
-	Msg( "usage:  vcprojtomake <vcproj filename> \n" );
+	Msg( "usage:  vcprojtomake <vcproj filename|vcxproj filename (VS2010)> \n" );
 }
 
 //-----------------------------------------------------------------------------
@@ -111,6 +111,8 @@ int main( int argc, char* argv[] )
 	SpewOutputFunc( SpewFunc );
 
 	Msg( "Valve Software - vcprojtomake.exe (%s)\n", __DATE__ );
+	Msg( "Modified for VS2010 Support by Killer Monkey\n" );
+	Msg( "<killermonkey01@gmail.com>\n" );
 	CommandLine()->CreateCmdLine( argc, argv );
 
 	if ( CommandLine()->ParmCount() < 2)

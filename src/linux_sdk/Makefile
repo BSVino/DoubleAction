@@ -11,9 +11,9 @@
 NAME=server
 
 # the location of the vcproj that builds the mod
-MOD_PROJ=../game/server/server_hl2mp-2005.vcproj
+MOD_PROJ=../game/server/server_scratch-2005.vcxproj
 # the name of the mod configuration (typically <proj name>_<build type><build target>)
-MOD_CONFIG=ServerHL2MP_ReleaseWin32
+MOD_CONFIG=ServerSDK_ReleaseWin32
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 # this should point to your orange box subfolder of where you have srcds installed.
@@ -21,13 +21,13 @@ GAME_DIR=~/srcds/orangebox
 
 # the path to your mods directory
 # set this so that 'make install' or 'make installrelease' will copy your binary over automatically.
-MOD_DIR=$(GAME_DIR)/SampleMod
+MOD_DIR=$(GAME_DIR)/dab
 
 # compiler options (gcc 3.4.1 will work - 4.2.2 recommended)
-CC=/usr/local/bin/gcc
-CPLUS=/usr/local/bin/g++
-CLINK=/usr/local/bin/gcc
-CPP_LIB="/usr/local/lib/libstdc++.a /usr/local/lib/gcc/i686-pc-linux-gnu/4.2.2/libgcc_eh.a"
+CC=gcc-4.2
+CPLUS=g++-4.2
+CLINK=gcc-4.2
+CPP_LIB="/usr/lib/gcc/x86_64-linux-gnu/4.2/32/libstdc++.a /usr/lib/gcc/x86_64-linux-gnu/4.2/32/libgcc_eh.a"
 
 # GCC 4.2.2 optimization flags, if you're using anything below, don't use these!
 OPTFLAGS=-O1 -fomit-frame-pointer -ffast-math -fforce-addr -funroll-loops -fthread-jumps -fcrossjumping -foptimize-sibling-calls -fcse-follow-jumps -fcse-skip-blocks -fgcse -fgcse-lm -fexpensive-optimizations -frerun-cse-after-loop -fcaller-saves -fpeephole2 -fschedule-insns2 -fsched-interblock -fsched-spec -fregmove -fstrict-overflow -fdelete-null-pointer-checks -freorder-blocks -freorder-functions -falign-functions -falign-jumps -falign-loops -falign-labels -ftree-vrp -ftree-pre -finline-functions -funswitch-loops -fgcse-after-reload
@@ -53,7 +53,7 @@ LIBFILES= \
 
 # link flags for your mod, make sure to include any special libraries here
 #NOTE: YES we want to include the lib files 2 times. We've run into problems with the 1-pass linker not bringing in symbols it should.
-LDFLAGS="-lm -ldl $(LIBFILES) $(LIBFILES)"
+LDFLAGS="-m32 -lm -ldl $(LIBFILES) $(LIBFILES)"
 
 # XERCES 2.6.0 or above ( http://xml.apache.org/xerces-c/ ) is used by the vcproj to makefile converter
 # it must be installed before being able to run this makefile
@@ -77,7 +77,7 @@ SOURCE_DIR=..
 
 # the CPU target for the build, must be i486 for now
 ARCH=i486
-ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx -msse -pipe
+ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx -msse -pipe -m32
 
 # -fpermissive is so gcc 3.4.x doesn't complain about some template stuff
 BASE_CFLAGS=-DVPROF_LEVEL=1 -DSWDS -D_LINUX -DLINUX -DNDEBUG -fpermissive -Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_strnicmp=strncasecmp -Dstrnicmp=strncasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -D_alloca=alloca -Dstrcmpi=strcasecmp
