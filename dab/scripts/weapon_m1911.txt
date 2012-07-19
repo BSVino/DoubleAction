@@ -15,8 +15,8 @@ WeaponData
 	"playermodel"			"models/weapons/m1911.mdl"
 	"PlayerAnimationExtension"	"mp5"
 	
-	"bucket"				"0"
-	"bucket_position"		"2"
+	"bucket"				"1"
+	"bucket_position"		"1"
 
 	"clip_size"				"7"
 	"NumClips"				"6"

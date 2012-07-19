@@ -15,8 +15,8 @@ WeaponData
 	"playermodel"			"models/weapons/m3.mdl"
 	"PlayerAnimationExtension"	"m3s90"
 	
-	"bucket"				"2"
-	"bucket_position"		"0"
+	"bucket"				"3"
+	"bucket_position"		"1"
 
 	"clip_size"				"8"
 	"NumClips"				"6"

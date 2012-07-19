@@ -15,7 +15,7 @@ WeaponData
 	"playermodel"			"models/weapons/mp5k.mdl"
 	"PlayerAnimationExtension"	"mp5k"
 	
-	"bucket"				"1"
+	"bucket"				"2"
 	"bucket_position"		"1"
 
 	"clip_size"				"30"
