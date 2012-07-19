@@ -1,11 +1,9 @@
 WeaponData
 {
 	// Weapon characteristics:
-	"Damage"				"14"		// damage per bullet
+	"Damage"				"16"		// damage per bullet
 	"Bullets"				"1"			// bullets per shoot
 	"CycleTime"				"0.06"		// time between shoots
-	// DPS: 233
-	// TTHK: 214ms
 
 	"BuiltRightHanded"		"0"
 	

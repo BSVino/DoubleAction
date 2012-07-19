@@ -4,8 +4,6 @@ WeaponData
 	"Damage"				"12"
 	"Bullets"				"9"
 	"CycleTime"				"0.85"
-	// DPS: 127
-	// TTHK: 394ms
 
 	"BuiltRightHanded"		"0"
 	

@@ -1,11 +1,9 @@
 WeaponData
 {
 	// Weapon characteristics:
-	"Damage"				"30"		// damage per bullet
+	"Damage"				"35"		// damage per bullet
 	"Bullets"				"1"		// bullets per shoot
-	"CycleTime"				"0.225"		// time between shoots
-	// DPS: 133
-	// TTHK: 375ms
+	"CycleTime"				"0.2"		// time between shoots
 
 	"BuiltRightHanded"		"0"
 	
@@ -22,7 +20,7 @@ WeaponData
 	"NumClips"				"6"
 
 	"ViewPunchMultiplier"	"0.15"
-	"Recoil"				"15"
+	"Recoil"				"12"
 	"Spread"				"0.02"
 	
 	"WeaponType"			"pistol"
