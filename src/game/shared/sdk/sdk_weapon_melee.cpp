@@ -149,7 +149,7 @@ void CWeaponSDKMelee::Hit( trace_t &traceHit, bool bSecondary )
 #ifndef CLIENT_DLL
 		float flDamage = GetDamage( bSecondary );
 		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			flDamage *= 1.5f;
+			flDamage *= 2.0f;
 
 		if (pPlayer->m_Shared.IsDiving())
 			flDamage *= 1.5f;

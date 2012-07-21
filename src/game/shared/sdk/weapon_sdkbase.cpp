@@ -549,7 +549,7 @@ bool CWeaponSDKBase::Reload( void )
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			flSpeedMultiplier *= 0.7f;
+			flSpeedMultiplier *= 0.6f;
 
 		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
 
@@ -610,7 +610,24 @@ bool CWeaponSDKBase::Deploy( )
 	if (GetPlayerOwner())
 		GetPlayerOwner()->ClearShotsFired();
 
-	return DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDeployActivity(), (char*)GetAnimPrefix() );
+	bool bDeploy = DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDeployActivity(), (char*)GetAnimPrefix() );
+
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+
+	float flSpeedMultiplier = 1;
+
+	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		flSpeedMultiplier *= 0.6f;
+
+	if (pOwner)
+	{
+		CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+
+		if (vm)
+			vm->SetPlaybackRate( 1/flSpeedMultiplier );
+	}
+
+	return bDeploy;
 }
 
 //-----------------------------------------------------------------------------
