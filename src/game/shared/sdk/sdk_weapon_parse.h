@@ -42,7 +42,7 @@ public:
 	int		m_iBullets;
 	float	m_flCycleTime;
 	float	m_flSecondaryCycleTime;
-
+	float	m_flReloadTimeMultiplier;
 
 	float m_flWeaponFOV;		//Tony; added weapon fov, SDK uses models from a couple different games, so FOV is different.
 

@@ -546,11 +546,21 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
-		float flSpeedMultiplier = 0.5f; // Temporary code to shorten reload times for testing, should be 1
+		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
+
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 			flSpeedMultiplier *= 0.7f;
 
 		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
+
+		CBasePlayer* pOwner = ToBasePlayer(GetOwner());
+		if (pOwner)
+		{
+			CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+
+			if (vm)
+				vm->SetPlaybackRate( 1/flSpeedMultiplier );
+		}
 
 		MDLCACHE_CRITICAL_SECTION();
 		if (GetPlayerOwner())

@@ -29,7 +29,8 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_iBullets			= pKeyValuesData->GetInt( "Bullets", 1 );
 	m_flCycleTime		= pKeyValuesData->GetFloat( "CycleTime", 0.15 );
 	m_flSecondaryCycleTime	= pKeyValuesData->GetFloat( "SecondaryCycleTime", 0.35 );
-	
+	m_flReloadTimeMultiplier = pKeyValuesData->GetFloat( "ReloadTimeMultiplier", 1 );
+
 	m_iDefaultAmmoClips = pKeyValuesData->GetInt( "NumClips", 2 );
 
 	const char *pAnimEx = pKeyValuesData->GetString( "PlayerAnimationExtension", "mp5" );

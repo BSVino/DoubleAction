@@ -68,17 +68,26 @@ bool CWeaponShotgun::Reload()
 	if (m_flNextPrimaryAttack > gpGlobals->curtime)
 		return true;
 		
+	CBaseViewModel *vm = pPlayer->GetViewModel( m_nViewModelIndex );
+	float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
+
 	// check to see if we're ready to reload
 	if (m_iInSpecialReload == 0)
 	{
 		pPlayer->SetAnimation( PLAYER_RELOAD );
 
+		float flStartTime = 0.5f * flSpeedMultiplier;
+
 		SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
 		m_iInSpecialReload = 1;
-		pPlayer->m_flNextAttack = gpGlobals->curtime + 0.5;
-		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
-		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5;
-		SetWeaponIdleTime( gpGlobals->curtime + 0.5 );
+		pPlayer->m_flNextAttack = gpGlobals->curtime + flStartTime;
+		m_flNextPrimaryAttack = gpGlobals->curtime + flStartTime;
+		m_flNextSecondaryAttack = gpGlobals->curtime + flStartTime;
+		SetWeaponIdleTime( gpGlobals->curtime + flStartTime );
+
+		if (vm)
+			vm->SetPlaybackRate( 1/flSpeedMultiplier );
+
 		return true;
 	}
 	else if (m_iInSpecialReload == 1)
@@ -88,8 +97,13 @@ bool CWeaponShotgun::Reload()
 		// was waiting for gun to move to side
 		m_iInSpecialReload = 2;
 
+		float flReloadTime = 0.45 * flSpeedMultiplier;
+
 		SendWeaponAnim( ACT_VM_RELOAD );
-		SetWeaponIdleTime( gpGlobals->curtime + 0.45 );
+		SetWeaponIdleTime( gpGlobals->curtime + flReloadTime );
+
+		if (vm)
+			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 	}
 	else if ( m_iInSpecialReload == 2 ) // Sanity, make sure it's actually in the right state.
 	{

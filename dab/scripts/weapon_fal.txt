@@ -4,6 +4,7 @@ WeaponData
 	"Damage"				"18"		// damage per bullet
 	"Bullets"				"1"			// bullets per shoot
 	"CycleTime"				"0.092"		// time between shoots
+	"ReloadTimeMultiplier"	"1.0"
 
 	"BuiltRightHanded"		"0"
 	
