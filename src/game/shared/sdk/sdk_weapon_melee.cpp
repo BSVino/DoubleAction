@@ -384,5 +384,5 @@ void CWeaponSDKMelee::Swing( bool bIsSecondary )
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flFireRate;
-	pOwner->FreezePlayer(0.3f, flFireRate*3/2);
+	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
 }
