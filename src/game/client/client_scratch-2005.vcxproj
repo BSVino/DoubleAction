@@ -796,7 +796,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp" />
     <ClCompile Include="sdk\hud_sdkdeathnotice.cpp" />
     <ClCompile Include="sdk\sdk_hud_ammo.cpp" />
-    <ClCompile Include="sdk\sdk_hud_armor.cpp" />
     <ClCompile Include="sdk\sdk_hud_chat.cpp" />
     <ClCompile Include="sdk\sdk_hud_damage.cpp" />
     <ClCompile Include="sdk\sdk_hud_health.cpp" />
