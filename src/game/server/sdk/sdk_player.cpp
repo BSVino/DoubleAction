@@ -481,6 +481,12 @@ void CSDKPlayer::GiveDefaultItems()
 			if (GetWeapon(i) == GetActiveWeapon())
 				continue;
 
+			if (!dynamic_cast<CWeaponSDKBase*>(GetWeapon(i)))
+				continue;
+
+			if (static_cast<CWeaponSDKBase*>(GetWeapon(i))->GetWeaponID() == SDK_WEAPON_BRAWL)
+				continue;
+
 			Weapon_SetLast(GetWeapon(i));
 			break;
 		}
