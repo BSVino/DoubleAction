@@ -150,7 +150,7 @@ private:
 	float m_flViewTilt;
 
 	CNetworkVar( bool, m_bAimedIn );
-	float m_flAimIn;
+	CNetworkVar( float, m_flAimIn );
 
 	Vector	m_vecRecoilDirection;
 	float	m_flRecoilAccumulator;
