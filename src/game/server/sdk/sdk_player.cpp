@@ -1001,7 +1001,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// Losing a whole activation can be rough, let's be a bit more forgiving.
-	SetStylePoints(m_flStylePoints - dab_stylemeteractivationcost.GetFloat()/2);
+	// Going down with one bar drops you to half bar, but going down with full bar loses you two bars.
+	// This way, running around with your bar full you run a high risk.
+	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, 25, 100, dab_stylemeteractivationcost.GetFloat()/2, dab_stylemeteractivationcost.GetFloat()*2));
 }
 
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
