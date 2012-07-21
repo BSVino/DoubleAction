@@ -762,11 +762,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
-		flDamage *= 0.4f;
-
 	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flDamage *= 0.7f;
+		flDamage *= 0.6f;
 
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
