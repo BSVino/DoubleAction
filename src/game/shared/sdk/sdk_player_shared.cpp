@@ -407,6 +407,9 @@ bool CSDKPlayer::IsStyleSkillActive() const
 	if (dab_styletime.GetBool())
 		return true;
 
+	if (m_flStylePoints >= 100)
+		return true;
+
 	return m_flStyleSkillStart > 0;
 }
 
