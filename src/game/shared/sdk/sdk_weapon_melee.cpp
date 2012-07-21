@@ -151,7 +151,9 @@ void CWeaponSDKMelee::Hit( trace_t &traceHit, bool bSecondary )
 		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 			flDamage *= 1.5f;
 
-		if (!pPlayer->GetGroundEntity())
+		if (pPlayer->m_Shared.IsDiving())
+			flDamage *= 1.5f;
+		else if (!pPlayer->GetGroundEntity())
 			flDamage *= 1.2f;
 
 		CTakeDamageInfo info( GetOwner(), GetOwner(), flDamage, DMG_CLUB );
@@ -295,6 +297,12 @@ void CWeaponSDKMelee::Swing( bool bIsSecondary )
 	// Try a ray
 	CSDKPlayer *pOwner = ToSDKPlayer( GetOwner() );
 	if ( !pOwner )
+		return;
+
+	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsSliding() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
+		return;
+
+	if (bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
