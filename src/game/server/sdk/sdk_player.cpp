@@ -291,32 +291,38 @@ void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExit
 	// Teleport( &newPos, &newAng, &vec3_origin );
 }
 
-ConVar dab_regenamount( "dab_regenamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar dab_regenamount( "dab_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
 void CSDKPlayer::PreThink(void)
 {
-	if (IsAlive() && !IsStyleSkillActive() && gpGlobals->curtime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
+	if (IsAlive())
 	{
-		m_iHealth -= dab_decayamount.GetFloat();
+		if (!IsStyleSkillActive() && gpGlobals->curtime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
+		{
+			m_iHealth -= dab_decayamount.GetFloat();
 
-		m_flNextHealthDecay = gpGlobals->curtime + 2;
-	}
+			m_flNextHealthDecay = gpGlobals->curtime + 2;
+		}
 
-	if (IsAlive() && IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND && gpGlobals->curtime > m_flNextSecondWindRegen)
-	{
-		TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+		if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+		{
+			if (gpGlobals->curtime > m_flNextSecondWindRegen)
+			{
+				TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
 
-		m_flNextSecondWindRegen = gpGlobals->curtime + 1;
-	}
+				m_flNextSecondWindRegen = gpGlobals->curtime + 1;
+			}
 
-	if (IsAlive() && gpGlobals->curtime > m_flNextRegen)
-	{
-		m_flNextRegen = gpGlobals->curtime + 1;
+		}
+		else if (gpGlobals->curtime > m_flNextRegen)
+		{
+			m_flNextRegen = gpGlobals->curtime + 1;
 
-		if (GetHealth() < GetMaxHealth()/2)
-			TakeHealth(dab_regenamount.GetFloat(), 0);
+			if (GetHealth() < GetMaxHealth()/2)
+				TakeHealth(min(dab_regenamount.GetFloat(), GetMaxHealth()/2 - GetHealth()), 0);
+		}
 	}
 
 	if (m_Shared.IsDiving())
