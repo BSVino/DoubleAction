@@ -36,6 +36,10 @@ public:
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
+	virtual int DrawModel( int flags );
+
+	virtual bool	IsOverridingViewmodel( void );
+	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 

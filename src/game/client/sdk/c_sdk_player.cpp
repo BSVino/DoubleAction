@@ -23,6 +23,8 @@
 #include "cl_animevent.h"
 #include "input.h"
 #include <baseviewport.h>
+#include "ClientEffectPrecacheSystem.h"
+#include "model_types.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -216,6 +218,10 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
+
+CLIENTEFFECT_REGISTER_BEGIN( PrecacheStyle )
+CLIENTEFFECT_MATERIAL( "models/effects/styleskill.vmt" )
+CLIENTEFFECT_REGISTER_END()
 
 ConVar cl_ragdoll_fade_time( "cl_ragdoll_fade_time", "15", FCVAR_CLIENTDLL );
 ConVar cl_ragdoll_pronecheck_distance( "cl_ragdoll_pronecheck_distance", "64", FCVAR_GAMEDLL );
@@ -741,6 +747,86 @@ void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
 	}
 
 	UpdateVisibility();
+}
+
+int C_SDKPlayer::DrawModel( int flags )
+{
+	if (IsStyleSkillActive())
+	{
+		if (flags & STUDIO_RENDER)
+		{
+			CMaterialReference hMaterial;
+			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
+			modelrender->ForcedMaterialOverride( hMaterial );
+		}
+
+		int iResult = BaseClass::DrawModel(flags);
+
+		if (flags & STUDIO_RENDER)
+			modelrender->ForcedMaterialOverride( nullptr );
+
+		return iResult;
+	}
+	else
+		return BaseClass::DrawModel(flags);
+}
+
+bool C_SDKPlayer::IsOverridingViewmodel( void )
+{
+	C_SDKPlayer* pPlayer = this;
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
+		 pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
+	{
+		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
+	}
+
+	if ( pPlayer->IsStyleSkillActive() )
+		return true;
+
+	return BaseClass::IsOverridingViewmodel();
+}
+
+int	C_SDKPlayer::DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags )
+{
+	int ret = 0;
+
+	C_SDKPlayer* pPlayer = this;
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
+		pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
+	{
+		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
+	}
+
+	if ( pPlayer->IsStyleSkillActive() )
+	{
+		if ( flags & STUDIO_RENDER )
+		{
+			CMaterialReference hMaterial;
+			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
+			modelrender->ForcedMaterialOverride( hMaterial );
+		}
+
+		// We allow our weapon to then override this if it wants to.
+		// This allows c_* weapons to draw themselves.
+		C_BaseCombatWeapon* pWeapon = pViewmodel->GetOwningWeapon();
+		if ( pWeapon && pWeapon->IsOverridingViewmodel() )
+		{
+			ret = pWeapon->DrawOverriddenViewmodel( pViewmodel, flags );
+		}
+		else
+		{
+			ret = pViewmodel->DrawOverriddenViewmodel( flags );
+		}
+
+		if ( flags & STUDIO_RENDER )
+		{
+			modelrender->ForcedMaterialOverride( NULL );
+		}
+	}
+
+	return ret;
 }
 
 void C_SDKPlayer::PlayReloadEffect()
