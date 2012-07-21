@@ -913,19 +913,24 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 		CSDKPlayerShared* pAttackerSDKShared = &pAttackerSDK->m_Shared;
 
-		if(pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsRolling() || pAttackerSDKShared->IsSliding())
+		float flDamage = info.GetDamage() / 4.0f;	// Damaging someone for 100% of their health is enough to get one bar.
+
+		if (pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
-			pAttackerSDK->AddStylePoints(25.0f/4.0f, STYLE_POINT_LARGE);
-		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(25.0f/4.0f/2.0f, STYLE_POINT_LARGE);
-		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
-			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*1.5f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(flDamage, STYLE_POINT_LARGE);
 		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f*2.0f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(flDamage*0.6f, STYLE_POINT_SMALL);
+		else if (pAttackerSDKShared->IsRolling())
+			// Rolling, which is easier to do and typically happens after the dive, gives only half.
+			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
+		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
+		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
+			// Damaging a stunting dude gives me more bar than usual.
+			pAttackerSDK->AddStylePoints(flDamage*0.3f, STYLE_POINT_SMALL);
 		else
-			pAttackerSDK->AddStylePoints(25.0f/4.0f/5.0f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(flDamage*0.2f, STYLE_POINT_SMALL);
 	}
 
 	m_flNextRegen = gpGlobals->curtime + 10;
@@ -956,16 +961,19 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
-		if(pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsRolling() || pAttackerSDKShared.IsSliding())
+		if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
 			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
-		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(25.0f/2.0f, STYLE_POINT_STYLISH);
 		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(5*2.0f, STYLE_POINT_SMALL);
+			pAttackerSDK->AddStylePoints(15, STYLE_POINT_LARGE);
+		else if (pAttackerSDKShared.IsRolling())
+			// Rolling, which is easier to do and typically happens after the dive, gives only half.
+			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
+		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(5*1.5f, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(7.5f, STYLE_POINT_LARGE);
 		else
 			pAttackerSDK->AddStylePoints(5, STYLE_POINT_LARGE);
 	}
