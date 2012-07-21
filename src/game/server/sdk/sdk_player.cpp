@@ -10,6 +10,7 @@
 #include "sdk_team.h"
 #include "sdk_gamerules.h"
 #include "weapon_sdkbase.h"
+#include "weapon_grenade.h"
 #include "predicted_viewmodel.h"
 #include "iservervehicle.h"
 #include "viewport_panel_names.h"
@@ -953,6 +954,14 @@ ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	StopSound( "Player.GoSlide" );
+
+	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
+	{
+		CWeaponGrenade* pGrenadeWeapon = static_cast<CWeaponGrenade*>(GetActiveSDKWeapon());
+
+		if (pGrenadeWeapon->IsPinPulled())
+			pGrenadeWeapon->DropGrenade();
+	}
 
 	ThrowActiveWeapon();
 

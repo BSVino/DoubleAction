@@ -127,9 +127,8 @@ void CBaseSDKGrenade::PrimaryAttack()
 	// Don't let weapon idle interfere in the middle of a throw!
 	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 
-	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
+	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
