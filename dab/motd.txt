@@ -44,6 +44,7 @@ Toggle third person camera - X<br>
 Activate style skill - :<br>
 Buy stuff - b<br>
 Change character - n<br>
+Activate Slowmo - e<br>
 Stunts:<br>
 * Dive - While moving, Right click<br>
 * Slide - While moving, Ctrl + Right click<br>

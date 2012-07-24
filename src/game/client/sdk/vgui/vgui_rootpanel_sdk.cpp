@@ -103,9 +103,13 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 		surface()->DrawFilledRect( 0, ScreenHeight()-iBarHeight, ScreenWidth(), ScreenHeight() );
 	}
 
-	if (ConVarRef("dab_globalslow").GetFloat() < 1)
+	float flSlow = 1;
+	if (pPlayer)
+		flSlow *= pPlayer->GetSlowMoMultiplier();
+
+	if (flSlow < 1)
 	{
-		surface()->DrawSetColor(Color(0, 0, 255, 1));
+		surface()->DrawSetColor(Color(0, 0, 255, (int)RemapValClamped(flSlow, 1, 0, 0, 10)));
 		surface()->DrawFilledRect( 0, 0, ScreenWidth(), ScreenHeight() );
 	}
 }

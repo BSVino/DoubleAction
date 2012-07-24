@@ -65,6 +65,8 @@ public:
 
 	virtual void GiveDefaultItems();
 
+	virtual bool			PlayerUse( void );
+
 	virtual void			GetStepSoundVelocities( float *velwalk, float *velrun );
 
 	// Animstate handles this.
@@ -201,6 +203,10 @@ public:
 
 	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
 
+	void ActivateSlowMo();
+	float GetSlowMoMultiplier() const;
+	float GetSlowMoGoal() const;
+
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
 private:
@@ -326,6 +332,11 @@ public:
 	float		m_flNextRegen;
 	float		m_flNextHealthDecay;
 	float		m_flNextSecondWindRegen;
+
+	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( float, m_flSlowMoSeconds );
+	CNetworkVar( float, m_flSlowMoTime );
+	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 };

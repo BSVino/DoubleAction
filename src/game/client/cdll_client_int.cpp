@@ -98,6 +98,10 @@
 #include "PortalRender.h"
 #endif
 
+#ifdef SDK_DLL
+#include "c_sdk_player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1781,7 +1785,9 @@ void OnRenderStart()
 
 		float flFrameTime = gpGlobals->frametime;
 #ifdef SDK_DLL
-		flFrameTime *= ConVarRef("dab_globalslow").GetFloat();
+		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+		if (pLocal)
+			flFrameTime *= pLocal->GetSlowMoMultiplier();
 #endif
 
 		ParticleMgr()->Simulate( flFrameTime );

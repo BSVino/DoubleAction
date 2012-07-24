@@ -593,4 +593,22 @@
 		"wide"					"f60"	[$X360]
 		"tall"					"100"
 	}
+
+	HudSlowMo
+	{
+		"fieldName" "HudSlowMo"
+		"xpos"	"20"
+		"ypos"	"20"
+		"wide"	"60"
+		"tall"  "40"
+		"visible" "1"
+		"enabled" "1"
+
+		"PaintBackgroundType"	"2"
+
+		"text_xpos" "8"
+		"text_ypos" "32"
+		"digit_xpos" "25"
+		"digit_ypos" "2"
+	}
 }

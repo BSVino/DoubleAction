@@ -514,7 +514,7 @@ public:
 	bool					IsPlayerUnderwater( void ) { return m_bPlayerUnderwater; }
 
 	virtual bool			CanBreatheUnderwater() const { return false; }
-	virtual void			PlayerUse( void );
+	virtual bool			PlayerUse( void );
 	virtual void			PlayUseDenySound() {}
 
 	virtual CBaseEntity		*FindUseEntity( void );

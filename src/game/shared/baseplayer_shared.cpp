@@ -1175,12 +1175,12 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 //-----------------------------------------------------------------------------
 // Purpose: Handles USE keypress
 //-----------------------------------------------------------------------------
-void CBasePlayer::PlayerUse ( void )
+bool CBasePlayer::PlayerUse ( void )
 {
 #ifdef GAME_DLL
 	// Was use pressed or released?
 	if ( ! ((m_nButtons | m_afButtonPressed | m_afButtonReleased) & IN_USE) )
-		return;
+		return false;
 
 	if ( IsObserver() )
 	{
@@ -1190,7 +1190,7 @@ void CBasePlayer::PlayerUse ( void )
 		else if ( m_afButtonReleased & IN_USE )
 			ObserverUse( false );
 		
-		return;
+		return false;
 	}
 
 #if !defined(_XBOX)
@@ -1237,7 +1237,7 @@ void CBasePlayer::PlayerUse ( void )
 		// Controlling some latched entity?
 		if ( ClearUseEntity() )
 		{
-			return;
+			return true;
 		}
 		else
 		{
@@ -1245,7 +1245,7 @@ void CBasePlayer::PlayerUse ( void )
 			{
 				m_afPhysicsFlags &= ~PFLAG_DIROVERRIDE;
 				m_iTrain = TRAIN_NEW|TRAIN_OFF;
-				return;
+				return true;
 			}
 			else
 			{	// Start controlling the train!
@@ -1256,7 +1256,7 @@ void CBasePlayer::PlayerUse ( void )
 					m_iTrain = TrainSpeed(pTrain->m_flSpeed, ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
 					m_iTrain |= TRAIN_NEW;
 					EmitSound( "Player.UseTrain" );
-					return;
+					return true;
 				}
 			}
 		}
@@ -1282,16 +1282,19 @@ void CBasePlayer::PlayerUse ( void )
 			if ( pUseEntity->ObjectCaps() & FCAP_ONOFF_USE )
 			{
 				pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_ON );
+				return true;
 			}
 			else
 			{
 				pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_TOGGLE );
+				return true;
 			}
 		}
 		// UNDONE: Send different USE codes for ON/OFF.  Cache last ONOFF_USE object to send 'off' if you turn away
 		else if ( (m_afButtonReleased & IN_USE) && (pUseEntity->ObjectCaps() & FCAP_ONOFF_USE) )	// BUGBUG This is an "off" use
 		{
 			pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_OFF );
+			return true;
 		}
 	}
 	else if ( m_afButtonPressed & IN_USE )
@@ -1299,6 +1302,8 @@ void CBasePlayer::PlayerUse ( void )
 		PlayUseDenySound();
 	}
 #endif
+
+	return false;
 }
 
 ConVar	sv_suppress_viewpunch( "sv_suppress_viewpunch", "0", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );

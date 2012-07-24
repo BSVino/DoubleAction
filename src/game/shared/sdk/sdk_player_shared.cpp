@@ -20,6 +20,7 @@
 #include "obstacle_pushaway.h"
 #include "props_shared.h"
 #include "ammodef.h"
+#include "in_buttons.h"
 
 #include "decals.h"
 #include "util_shared.h"
@@ -305,6 +306,29 @@ void CSDKPlayer::SharedSpawn()
 //	m_bPlayingProneMoveSound = false;
 #endif // SDK_USE_PRONE
 }
+
+bool CSDKPlayer::PlayerUse()
+{
+	bool bUsed = BaseClass::PlayerUse();
+
+	if (bUsed)
+		return bUsed;
+
+	if (!(m_afButtonPressed & IN_USE))
+		return false;
+
+	if (!IsAlive())
+		return false;
+
+	if (m_flSlowMoSeconds > 0)
+	{
+		ActivateSlowMo();
+		return true;
+	}
+
+	return false;
+}
+
 #if defined ( SDK_USE_SPRINTING )
 void CSDKPlayer::SetSprinting( bool bIsSprinting )
 {
@@ -1039,10 +1063,42 @@ void CSDKPlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 
 float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 {
-	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * dab_globalslow.GetFloat();
+	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * GetSlowMoMultiplier();
+}
+
+void CSDKPlayer::ActivateSlowMo()
+{
+	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
+	m_iSlowMoType = SLOWMO_ACTIVATED;
+	m_flSlowMoSeconds = 0;
+}
+
+float CSDKPlayer::GetSlowMoMultiplier() const
+{
+	return m_flSlowMoMultiplier * dab_globalslow.GetFloat();
+}
+
+float CSDKPlayer::GetSlowMoGoal() const
+{
+	if (m_iSlowMoType == SLOWMO_STYLESKILL)
+		return 0.8;
+	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
+		return 0.6;
+	else if (m_iSlowMoType == SLOWMO_PASSIVE)
+		return 0.4;
+	else //if (m_iSlowMoType == SLOWMO_NONE)
+		return 1;
 }
 
 void CSDKPlayer::UpdateCurrentTime()
 {
-	m_flCurrentTime += gpGlobals->frametime * dab_globalslow.GetFloat();
+	m_flCurrentTime += gpGlobals->frametime * GetSlowMoMultiplier();
+
+	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
+
+	if ((m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL) && gpGlobals->curtime > m_flSlowMoTime)
+	{
+		m_flSlowMoTime = 0;
+		m_iSlowMoType = SLOWMO_NONE;
+	}
 }

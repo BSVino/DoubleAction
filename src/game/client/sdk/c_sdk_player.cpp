@@ -147,6 +147,11 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 
+	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
+
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
 
@@ -220,6 +225,9 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStyleSkillStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flSlowMoSeconds, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flSlowMoTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
@@ -1414,7 +1422,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	else
 		flTiltGoal = 0;
 
-	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10*dab_globalslow.GetFloat());
+	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10*GetSlowMoMultiplier());
 
 	if (m_Shared.m_flViewTilt > 0)
 	{

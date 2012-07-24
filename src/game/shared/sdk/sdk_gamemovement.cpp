@@ -349,7 +349,7 @@ void CSDKGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMo
 
 	float flFrameTime = gpGlobals->frametime;
 
-	gpGlobals->frametime *= dab_globalslow.GetFloat();
+	gpGlobals->frametime *= m_pSDKPlayer->GetSlowMoMultiplier();
 
 	BaseClass::ProcessMovement( pBasePlayer, pMove );
 

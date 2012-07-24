@@ -41,6 +41,8 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int DrawModel( int flags );
 
+	virtual bool			PlayerUse( void );
+
 	virtual bool	IsOverridingViewmodel( void );
 	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
 
@@ -113,6 +115,11 @@ public:
 	void SetSprinting( bool bIsSprinting );
 	bool IsSprinting( void );
 #endif
+
+	void ActivateSlowMo();
+	float GetSlowMoMultiplier() const;
+	float GetSlowMoGoal() const;
+	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
@@ -210,6 +217,11 @@ private:
 
 	CArmament		m_aLoadout[MAX_LOADOUT];
 	int				m_iLoadoutWeight;
+
+	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( float, m_flSlowMoSeconds );
+	CNetworkVar( float, m_flSlowMoTime );
+	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 };

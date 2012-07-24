@@ -283,7 +283,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
 		if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * dab_globalslow.GetFloat(), m_flCurrentFeetYaw );
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
 			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 
@@ -379,7 +379,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 		else
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * dab_globalslow.GetFloat(), m_flCurrentFeetYaw );
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
 			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 	}
@@ -465,7 +465,7 @@ void CSDKPlayerAnimState::ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr )
 void CSDKPlayerAnimState::EstimateYaw( void )
 {
 	// Get the frame time.
-	float flDeltaTime = gpGlobals->frametime * dab_globalslow.GetFloat();
+	float flDeltaTime = gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier();
 	if ( flDeltaTime == 0.0f )
 		return;
 

@@ -3,6 +3,12 @@
 #include "dab_viewmodel.h"
 #include "sdk_gamerules.h"
 
+#ifdef CLIENT_DLL
+#include "c_sdk_player.h"
+#else
+#include "sdk_player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -15,5 +21,11 @@ END_NETWORK_TABLE()
 
 float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 {
-	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * m_flPlaybackRate * dab_globalslow.GetFloat();
+	float flSlow = 1;
+
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+	if (pOwner)
+		flSlow *= pOwner->GetSlowMoMultiplier();
+
+	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * m_flPlaybackRate * flSlow;
 }

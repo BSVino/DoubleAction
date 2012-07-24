@@ -608,6 +608,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_slowmo.cpp" />
     <ClCompile Include="sdk\sdk_hud_stylebar.cpp" />
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
     <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />

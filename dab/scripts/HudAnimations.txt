@@ -704,3 +704,28 @@ event HideCommentary
 	Animate 	HudCommentary 	Alpha	0 Linear 0.0 0.5
 }
 
+event SlowMoIncreased
+{
+	Animate HudAmmo		FgColor	"BrightFg"		Linear	0.0	0.15
+	Animate HudAmmo		FgColor	"FgColor"		Deaccel	0.15	1.5
+	Animate HudAmmo		Blur		"5"			Linear	0.0	0.0 
+	Animate HudAmmo		Blur		"0"			Accel		0.01	1.5 
+}
+
+event SlowMoDecreased
+{
+	StopEvent AmmoIncreased	0.0
+	
+	Animate HudAmmo		Blur		"7"			Linear	0.0	0.0
+	Animate HudAmmo		Blur		"0"			Deaccel	0.1	1.5
+	
+	Animate HudAmmo		TextColor	"BrightFg"		Linear	0.0	0.1
+	Animate HudAmmo		TextColor	"FgColor"		Deaccel	0.1	0.75
+}
+
+event SlowMoEmpty
+{
+	Animate Hudammo	FgColor		"FgColor"	Linear	0.0	0.2
+	Animate Hudammo	FgColor		"FgColor"		Accel		0.2	1.2		
+}
+

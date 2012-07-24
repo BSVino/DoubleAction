@@ -347,7 +347,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		CheckReload();
 
 	// A multiplier of 1 means that for every second of firing the player needs to wait one second to get back to full accuracy.
-	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat() * dab_globalslow.GetFloat());
+	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat() * pPlayer->GetSlowMoMultiplier());
 
 	if (m_flAccuracyDecay < 0)
 		m_flAccuracyDecay = 0;

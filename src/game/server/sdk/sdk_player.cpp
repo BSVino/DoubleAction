@@ -149,6 +149,11 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 
+	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
+
 	SendPropFloat		( SENDINFO( m_flCurrentTime ) ),
 END_SEND_TABLE()
 
@@ -579,6 +584,11 @@ void CSDKPlayer::Spawn()
 	m_flStyleSkillStart = -1;
 
 	m_flCurrentTime = gpGlobals->curtime;
+
+	m_iSlowMoType = SLOWMO_NONE;
+	m_flSlowMoSeconds = 0;
+	m_flSlowMoTime = 0;
+	m_flSlowMoMultiplier = 1;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1016,6 +1026,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 			pAttackerSDK->AddStylePoints(7.5f, STYLE_POINT_LARGE);
 		else
 			pAttackerSDK->AddStylePoints(5, STYLE_POINT_LARGE);
+
+		pAttackerSDK->m_flSlowMoSeconds = clamp(pAttackerSDK->m_flSlowMoSeconds+1, 0, 5);
 	}
 	else
 		m_hObserverTarget.Set( NULL );

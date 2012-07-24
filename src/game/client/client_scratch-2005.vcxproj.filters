@@ -1440,6 +1440,9 @@
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_slowmo.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

@@ -20,6 +20,7 @@
 #include "ieffects.h"
 #include "hudelement.h"
 #include "sdk_gamerules.h"
+#include "c_sdk_player.h"
 
 using namespace vgui;
 
@@ -234,7 +235,12 @@ void CHudDamageIndicator::Paint()
 {
 	if( m_flFadeCompleteTime > gpGlobals->curtime )
 	{
-		float flFade = gpGlobals->frametime * 2 * dab_globalslow.GetFloat();
+		float flFade = gpGlobals->frametime * 2;
+
+		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+		if (pLocal)
+			flFade *= pLocal->GetSlowMoMultiplier();
+
 		// draw damage indicators	
 		DrawDamageIndicatorFront( flFade );
 		DrawDamageIndicatorRear( flFade );
