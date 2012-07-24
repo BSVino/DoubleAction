@@ -41,12 +41,13 @@ Controls:<br>
 Move around - WASD<br>
 Jump - Spacebar<br>
 Toggle third person camera - X<br>
+Activate style skill - :<br>
 Buy stuff - b<br>
 Change character - n<br>
 Stunts:<br>
-* Dive - Jump + Right click<br>
-* Slide - Right click + WASD<br>
-* Roll - Double tap Ctrl + WASD<br>
+* Dive - While moving, Right click<br>
+* Slide - While moving, Ctrl + Right click<br>
+* Roll - While moving, Double tap Ctrl<br>
 * Hold right click at the end of a dive or roll to stay on the ground<br>
 </body>
 </html>
