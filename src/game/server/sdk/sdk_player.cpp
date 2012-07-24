@@ -326,17 +326,29 @@ void CSDKPlayer::PreThink(void)
 		}
 	}
 
-	if (m_Shared.IsDiving())
+	if (IsAlive() && (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || !GetGroundEntity()))
 	{
-		trace_t	tr;
-		UTIL_TraceHull(GetAbsOrigin(), GetAbsOrigin()+GetAbsVelocity(), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+		Vector vecNormalizedVelocity = GetAbsVelocity();
+		vecNormalizedVelocity.NormalizeInPlace();
 
-		if (tr.fraction < 1.0f)
+		trace_t	tr;
+		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+		CBaseEntity* pHit = NULL;
+
+		if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+			pHit = tr.m_pEnt;
+
+		if (!pHit && vecNormalizedVelocity.z < 0 && (m_Shared.IsDiving() || !GetGroundEntity()))
 		{
-			CBaseEntity* pHit = tr.m_pEnt;
-			if (FStrEq(pHit->GetClassname(), "func_breakable"))
-				pHit->TakeDamage(CTakeDamageInfo(this, this, 50, DMG_CRUSH));
+			UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() - Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+			if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+				pHit = tr.m_pEnt;
 		}
+
+		if (pHit)
+			pHit->TakeDamage(CTakeDamageInfo(this, this, 50, DMG_CRUSH));
 	}
 
 	State_PreThink();
