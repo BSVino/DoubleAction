@@ -232,20 +232,20 @@ void CSDKPlayer::FireBullet(
 		switch (eWeaponType)
 		{
 		case WT_RIFLE:
-			flPenetrationDistance = 20;
+			flPenetrationDistance = 25;
 			break;
 
 		case WT_SHOTGUN:
-			flPenetrationDistance = 2;
+			flPenetrationDistance = 5;
 			break;
 
 		case WT_SMG:
-			flPenetrationDistance = 10;
+			flPenetrationDistance = 15;
 			break;
 
 		case WT_PISTOL:
 		default:
-			flPenetrationDistance = 10;
+			flPenetrationDistance = 15;
 			break;
 		}
 
