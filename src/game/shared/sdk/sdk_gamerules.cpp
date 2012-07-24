@@ -1223,6 +1223,26 @@ const char *CSDKGameRules::GetPlayerClassName( int cls, int team )
 }
 #endif
 
+float CSDKGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
+{
+	CSDKPlayer* pSDKPlayer = ToSDKPlayer(pPlayer);
+
+	float flFallVelocity = pSDKPlayer->m_Local.m_flFallVelocity;
+	float flDiveFallSpeed = 800;
+
+	float flExcessSpeed = flFallVelocity - PLAYER_MAX_SAFE_FALL_SPEED;
+
+	if (pSDKPlayer->m_Shared.IsDiving())
+		flExcessSpeed = flFallVelocity - flDiveFallSpeed;
+
+	float flDamage = RemapValClamped(flExcessSpeed, 0, 100, 0, 10);
+
+	if (pSDKPlayer->m_Shared.IsDiving())
+		flDamage /= 2;
+
+	return flDamage;
+} 
+
 //-----------------------------------------------------------------------------
 // Purpose: Init CS ammo definitions
 //-----------------------------------------------------------------------------

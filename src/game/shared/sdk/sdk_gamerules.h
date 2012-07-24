@@ -133,6 +133,8 @@ public:
 	const char *GetPlayerClassName( int cls, int team );
 #endif
 
+	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
+
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
