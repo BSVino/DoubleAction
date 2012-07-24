@@ -623,10 +623,13 @@ bool CWeaponSDKBase::Deploy( )
 
 	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
 
-	float flSpeedMultiplier = 1;
+	float flSpeedMultiplier = GetSDKWpnData().m_flDrawTimeMultiplier;
 
 	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flSpeedMultiplier *= 0.6f;
+
+	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
+	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
 
 	if (pOwner)
 	{
@@ -634,6 +637,8 @@ bool CWeaponSDKBase::Deploy( )
 
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
+
+		pOwner->SetNextAttack( gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier );
 	}
 
 	pOwner->m_Shared.SetAimIn(0.0f);
