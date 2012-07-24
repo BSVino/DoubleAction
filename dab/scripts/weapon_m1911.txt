@@ -1,7 +1,7 @@
 WeaponData
 {
 	// Weapon characteristics:
-	"Damage"				"35"		// damage per bullet
+	"Damage"				"38"		// damage per bullet
 	"Bullets"				"1"		// bullets per shoot
 	"CycleTime"				"0.2"		// time between shoots
 	"ReloadTimeMultiplier"	"0.8"
@@ -20,8 +20,8 @@ WeaponData
 	"clip_size"				"7"
 	"NumClips"				"6"
 
-	"ViewPunchMultiplier"	"0.15"
-	"Recoil"				"12"
+	"ViewPunchMultiplier"	"0.13"
+	"Recoil"				"10"
 	"Spread"				"0.02"
 	
 	"WeaponType"			"pistol"
