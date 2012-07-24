@@ -1010,6 +1010,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	BaseClass::Event_Killed( info );
 
+	// Force it to turn itself of so that the refund code doesn't run.
+	if (m_flStylePoints >= 100)
+		m_flStylePoints -= 0.1f;
+
 	if (IsStyleSkillActive())
 	{
 		// If the player died while the style meter was active, refund the unused portion.
