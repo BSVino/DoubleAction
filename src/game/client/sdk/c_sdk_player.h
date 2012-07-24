@@ -29,6 +29,9 @@ public:
 	C_SDKPlayer();
 	~C_SDKPlayer();
 
+	virtual void PreThink();
+	virtual void UpdateCurrentTime();
+
 	static C_SDKPlayer* GetLocalSDKPlayer();
 
 	virtual const QAngle& GetRenderAngles();
@@ -42,6 +45,8 @@ public:
 	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
 
 	virtual void	GetStepSoundVelocities( float *velwalk, float *velrun );
+
+	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 
@@ -147,6 +152,8 @@ public:
 
 	virtual void				OverrideView( CViewSetup *pSetup );
 
+	float			GetCurrentTime() const { return m_flCurrentTime; }
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )
@@ -203,6 +210,8 @@ private:
 
 	CArmament		m_aLoadout[MAX_LOADOUT];
 	int				m_iLoadoutWeight;
+
+	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 };
 
 

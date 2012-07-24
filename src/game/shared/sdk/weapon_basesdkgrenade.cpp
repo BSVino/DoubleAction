@@ -125,10 +125,10 @@ void CBaseSDKGrenade::PrimaryAttack()
 	m_bPinPulled = true;
 	
 	// Don't let weapon idle interfere in the middle of a throw!
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration();
+	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -157,11 +157,11 @@ void CBaseSDKGrenade::SecondaryAttack()
 	}
 
 	// Don't let weapon idle interfere in the middle of a throw!
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 
 	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
 }
 
 //-----------------------------------------------------------------------------
@@ -170,17 +170,17 @@ void CBaseSDKGrenade::SecondaryAttack()
 //-----------------------------------------------------------------------------
 bool CBaseSDKGrenade::Reload()
 {
-	if ( ( m_bRedraw ) && ( m_flNextPrimaryAttack <= gpGlobals->curtime ) && ( m_flNextSecondaryAttack <= gpGlobals->curtime ) )
+	if ( ( m_bRedraw ) && ( m_flNextPrimaryAttack <= GetCurrentTime() ) && ( m_flNextSecondaryAttack <= GetCurrentTime() ) )
 	{
 		//Redraw the weapon
 		SendWeaponAnim( ACT_VM_DRAW );
 
 		//Update our times
 		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+		m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+		m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
 
-		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 	}
 
 	return true;
@@ -212,7 +212,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 	
 		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
-		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 
 		m_bPinPulled = false;
 //		m_bSecondary = false;
@@ -220,7 +220,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 	else if( m_bRedraw )
 	{
 		// Has the throw animation finished playing
-		if( m_flTimeWeaponIdle < gpGlobals->curtime )
+		if( m_flTimeWeaponIdle < GetCurrentTime() )
 		{
 			// if we're officially out of grenades, ditch this weapon
 			if( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
@@ -234,8 +234,8 @@ void CBaseSDKGrenade::ItemPostFrame()
 			else
 			{
 				m_bRedraw = false;
-				m_flNextPrimaryAttack = gpGlobals->curtime + 1.2;
-				m_flNextSecondaryAttack = gpGlobals->curtime + 1.2;
+				m_flNextPrimaryAttack = GetCurrentTime() + 1.2;
+				m_flNextSecondaryAttack = GetCurrentTime() + 1.2;
 				SendWeaponAnim( GetDeployActivity() );			
 			}
 			return;	//don't animate this grenade any more!
@@ -260,8 +260,8 @@ void CBaseSDKGrenade::ItemPostFrame()
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
 		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+		m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+		m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
 	}
 
 	void CBaseSDKGrenade::ThrowGrenade()
@@ -269,13 +269,13 @@ void CBaseSDKGrenade::ItemPostFrame()
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
 		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+		m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+		m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
 	}
 
 	void CBaseSDKGrenade::StartGrenadeThrow()
 	{
-		m_fThrowTime = gpGlobals->curtime + 0.1f;
+		m_fThrowTime = GetCurrentTime() + 0.1f;
 	}
 
 #else
@@ -300,7 +300,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 
 	void CBaseSDKGrenade::StartGrenadeThrow()
 	{
-		m_fThrowTime = gpGlobals->curtime + 0.1f;
+		m_fThrowTime = GetCurrentTime() + 0.1f;
 	}
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
 	void CBaseSDKGrenade::CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc )

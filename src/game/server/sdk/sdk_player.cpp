@@ -148,6 +148,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
+
+	SendPropFloat		( SENDINFO( m_flCurrentTime ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -266,6 +268,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
 	m_flNextSecondWindRegen = 0;
+
+	m_flCurrentTime = gpGlobals->curtime;
 }
 
 
@@ -299,28 +303,30 @@ ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEA
 
 void CSDKPlayer::PreThink(void)
 {
+	UpdateCurrentTime();
+
 	if (IsAlive())
 	{
-		if (!IsStyleSkillActive() && gpGlobals->curtime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
+		if (!IsStyleSkillActive() && m_flCurrentTime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
 		{
 			m_iHealth -= dab_decayamount.GetFloat();
 
-			m_flNextHealthDecay = gpGlobals->curtime + 2;
+			m_flNextHealthDecay = m_flCurrentTime + 2;
 		}
 
 		if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
 		{
-			if (gpGlobals->curtime > m_flNextSecondWindRegen)
+			if (m_flCurrentTime > m_flNextSecondWindRegen)
 			{
 				TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
 
-				m_flNextSecondWindRegen = gpGlobals->curtime + 1;
+				m_flNextSecondWindRegen = m_flCurrentTime + 1;
 			}
 
 		}
-		else if (gpGlobals->curtime > m_flNextRegen)
+		else if (m_flCurrentTime > m_flNextRegen)
 		{
-			m_flNextRegen = gpGlobals->curtime + 1;
+			m_flNextRegen = m_flCurrentTime + 1;
 
 			if (GetHealth() < GetMaxHealth()/2)
 				TakeHealth(min(dab_regenamount.GetFloat(), GetMaxHealth()/2 - GetHealth()), 0);
@@ -397,7 +403,7 @@ void CSDKPlayer::PostThink()
 
 	if (m_flStyleSkillStart > 0)
 	{
-		if (gpGlobals->curtime > m_flStyleSkillStart + dab_stylemetertime.GetFloat())
+		if (m_flCurrentTime > m_flStyleSkillStart + dab_stylemetertime.GetFloat())
 		{
 			m_flStyleSkillStart = -1;
 
@@ -571,6 +577,8 @@ void CSDKPlayer::Spawn()
 	pl.deadflag = false;
 
 	m_flStyleSkillStart = -1;
+
+	m_flCurrentTime = gpGlobals->curtime;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -957,7 +965,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->AddStylePoints(flDamage*0.2f, STYLE_POINT_SMALL);
 	}
 
-	m_flNextRegen = gpGlobals->curtime + 10;
+	m_flNextRegen = m_flCurrentTime + 10;
 
 	return 1;
 }
@@ -1030,7 +1038,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (IsStyleSkillActive())
 	{
 		// If the player died while the style meter was active, refund the unused portion.
-		float flUnused = 1-((gpGlobals->curtime - m_flStyleSkillStart)/dab_stylemetertime.GetFloat());
+		float flUnused = 1-((m_flCurrentTime - m_flStyleSkillStart)/dab_stylemetertime.GetFloat());
 		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
 		SetStylePoints(m_flStylePoints + flRefund);
 	}
@@ -1216,7 +1224,7 @@ void CSDKPlayer::CreateViewModel( int index /*=0*/ )
 	if ( GetViewModel( index ) )
 		return;
 
-	CPredictedViewModel *vm = ( CPredictedViewModel * )CreateEntityByName( "predicted_viewmodel" );
+	CPredictedViewModel *vm = ( CPredictedViewModel * )CreateEntityByName( "dab_viewmodel" );
 	if ( vm )
 	{
 		vm->SetAbsOrigin( GetAbsOrigin() );
@@ -2256,7 +2264,7 @@ void CSDKPlayer::ActivateMeter()
 	if (!IsAlive())
 		return;
 
-	m_flStyleSkillStart = gpGlobals->curtime;
+	m_flStyleSkillStart = m_flCurrentTime;
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");

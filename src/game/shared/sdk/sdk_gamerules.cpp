@@ -152,6 +152,8 @@ static CSDKViewVectors g_SDKViewVectors(
 #endif
 );
 
+ConVar dab_globalslow("dab_globalslow", "1", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");
+
 const CViewVectors* CSDKGameRules::GetViewVectors() const
 {
 	return (CViewVectors*)GetSDKViewVectors();

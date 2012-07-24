@@ -62,9 +62,12 @@ public:
 
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
+	virtual	void			CheckReload( void );
+	virtual bool			ReloadOrSwitchWeapons( void );
 	virtual bool			Deploy();
 	virtual bool			Holster( CBaseCombatWeapon *pSwitchingTo );
 	virtual void			SendReloadEvents();
+	virtual bool			HasWeaponIdleTimeElapsed( void );
 
 	//Tony; added so we can have base functionality without implementing it into every weapon.
 	virtual void ItemPostFrame();
@@ -115,6 +118,8 @@ public:
 	virtual weapontype_t GetWeaponType() const;
 
 	virtual bool FullAimIn() { return false; }
+
+	float	GetCurrentTime() const;
 
 private:
 

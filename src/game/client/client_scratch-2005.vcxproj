@@ -218,6 +218,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
@@ -828,6 +829,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClCompile Include="toolframework_client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="achievement_notification_panel.h" />
     <ClInclude Include="..\shared\achievement_saverestore.h" />

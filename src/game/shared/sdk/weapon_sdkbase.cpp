@@ -12,6 +12,7 @@
 #include "ammodef.h"
 
 #include "sdk_fx_shared.h"
+#include "sdk_gamerules.h"
 
 #if defined( CLIENT_DLL )
 
@@ -221,7 +222,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	AddViewKick();
 
 	//Tony; update our weapon idle time
-	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+	SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 
 	float flFireRate = GetFireRate();
 	if (pPlayer->m_Shared.IsAimedIn() && HasAimInFireRateBonus())
@@ -246,8 +247,8 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (m_flAccuracyDecay > dab_fulldecay.GetFloat())
 		m_flAccuracyDecay = dab_fulldecay.GetFloat();
 
-	m_flNextPrimaryAttack = gpGlobals->curtime + flFireRate;
-	m_flNextSecondaryAttack = gpGlobals->curtime + SequenceDuration();
+	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
+	m_flNextSecondaryAttack = GetCurrentTime() + SequenceDuration();
 }
 
 void CWeaponSDKBase::SecondaryAttack()
@@ -346,7 +347,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		CheckReload();
 
 	// A multiplier of 1 means that for every second of firing the player needs to wait one second to get back to full accuracy.
-	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat());
+	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat() * dab_globalslow.GetFloat());
 
 	if (m_flAccuracyDecay < 0)
 		m_flAccuracyDecay = 0;
@@ -354,21 +355,21 @@ void CWeaponSDKBase::ItemPostFrame( void )
 	bool bFired = false;
 
 	// Secondary attack has priority
-	if ((pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) && pPlayer->CanAttack())
+	if ((pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= GetCurrentTime()) && pPlayer->CanAttack())
 	{
 		if (UsesSecondaryAmmo() && pPlayer->GetAmmoCount(m_iSecondaryAmmoType)<=0 )
 		{
-			if (m_flNextEmptySoundTime < gpGlobals->curtime)
+			if (m_flNextEmptySoundTime < GetCurrentTime())
 			{
 				WeaponSound(EMPTY);
-				m_flNextSecondaryAttack = m_flNextEmptySoundTime = gpGlobals->curtime + 0.5;
+				m_flNextSecondaryAttack = m_flNextEmptySoundTime = GetCurrentTime() + 0.5;
 			}
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bAltFiresUnderwater == false)
 		{
 			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+			m_flNextPrimaryAttack = GetCurrentTime() + 0.2;
 		}
 		else
 		{
@@ -388,7 +389,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		}
 	}
 	
-	if ( !bFired && (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && pPlayer->CanAttack())
+	if ( !bFired && (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->CanAttack())
 	{
 		// Clip empty? Or out of ammo on a no-clip weapon?
 		if ( !IsMeleeWeapon() && (( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
@@ -399,7 +400,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		{
 			// This weapon doesn't fire underwater
 			WeaponSound(EMPTY);
-			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+			m_flNextPrimaryAttack = GetCurrentTime() + 0.2;
 		}
 		else
 		{
@@ -447,9 +448,9 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		}
 
 		m_bFireOnEmpty = false;
-		if ( (pPlayer->GetShotsFired() > 0) && (m_flDecreaseShotsFired < gpGlobals->curtime)	)
+		if ( (pPlayer->GetShotsFired() > 0) && (m_flDecreaseShotsFired < GetCurrentTime())	)
 		{
-			m_flDecreaseShotsFired = gpGlobals->curtime + 0.05495;
+			m_flDecreaseShotsFired = GetCurrentTime() + 0.05495;
 			pPlayer->DecreaseShotsFired();
 		}
 	}
@@ -543,7 +544,7 @@ void CWeaponSDKBase::WeaponIdle( void )
 	if ( HasWeaponIdleTimeElapsed() )
 	{
 		SendWeaponAnim( GetIdleActivity() );
-		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
+		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 	}
 }
 
@@ -560,7 +561,7 @@ bool CWeaponSDKBase::Reload( void )
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 			flSpeedMultiplier *= 0.6f;
 
-		float flSequenceEndTime = gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
+		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
 		CBasePlayer* pOwner = ToBasePlayer(GetOwner());
 		if (pOwner)
@@ -590,6 +591,7 @@ bool CWeaponSDKBase::Reload( void )
 
 	return fRet;
 }
+
 void CWeaponSDKBase::SendReloadEvents()
 {
 	CSDKPlayer *pPlayer = GetPlayerOwner();
@@ -608,6 +610,96 @@ void CWeaponSDKBase::SendReloadEvents()
 	// Make the player play his reload animation.
 	pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 }
+
+void CWeaponSDKBase::CheckReload()
+{
+	if ( m_bReloadsSingly )
+	{
+		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+		if ( !pOwner )
+			return;
+
+		if ((m_bInReload) && (m_flNextPrimaryAttack <= GetCurrentTime()))
+		{
+			if ( pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2) && m_iClip1 > 0 )
+			{
+				m_bInReload = false;
+				return;
+			}
+
+			// If out of ammo end reload
+			if (pOwner->GetAmmoCount(m_iPrimaryAmmoType) <=0)
+			{
+				FinishReload();
+				return;
+			}
+			// If clip not full reload again
+			else if (m_iClip1 < GetMaxClip1())
+			{
+				// Add them to the clip
+				m_iClip1 += 1;
+				pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+
+				Reload();
+				return;
+			}
+			// Clip full, stop reloading
+			else
+			{
+				FinishReload();
+				m_flNextPrimaryAttack	= GetCurrentTime();
+				m_flNextSecondaryAttack = GetCurrentTime();
+				return;
+			}
+		}
+	}
+	else
+	{
+		if ( (m_bInReload) && (m_flNextPrimaryAttack <= GetCurrentTime()))
+		{
+			FinishReload();
+			m_flNextPrimaryAttack	= GetCurrentTime();
+			m_flNextSecondaryAttack = GetCurrentTime();
+			m_bInReload = false;
+		}
+	}
+}
+
+bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
+{
+	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	Assert( pOwner );
+
+	m_bFireOnEmpty = false;
+
+	// If we don't have any ammo, switch to the next best weapon
+	if ( !HasAnyAmmo() && m_flNextPrimaryAttack < GetCurrentTime() && m_flNextSecondaryAttack < GetCurrentTime() )
+	{
+		// weapon isn't useable, switch.
+		if ( ( (GetWeaponFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) == false ) && ( g_pGameRules->SwitchToNextBestWeapon( pOwner, this ) ) )
+		{
+			m_flNextPrimaryAttack = GetCurrentTime() + 0.3;
+			return true;
+		}
+	}
+	else
+	{
+		// Weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
+		if ( UsesClipsForAmmo1() && 
+			 (m_iClip1 == 0) && 
+			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
+			 m_flNextPrimaryAttack < GetCurrentTime() && 
+			 m_flNextSecondaryAttack < GetCurrentTime() )
+		{
+			// if we're successfully reloading, we're done
+			if ( Reload() )
+				return true;
+		}
+	}
+
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -628,8 +720,8 @@ bool CWeaponSDKBase::Deploy( )
 	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flSpeedMultiplier *= 0.6f;
 
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier;
+	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
+	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
 	if (pOwner)
 	{
@@ -638,7 +730,7 @@ bool CWeaponSDKBase::Deploy( )
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 
-		pOwner->SetNextAttack( gpGlobals->curtime + SequenceDuration() * flSpeedMultiplier );
+		pOwner->SetNextAttack( GetCurrentTime() + SequenceDuration() * flSpeedMultiplier );
 	}
 
 	pOwner->m_Shared.SetAimIn(0.0f);
@@ -671,7 +763,7 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (pOwner)
 	{
-		pOwner->SetNextAttack( gpGlobals->curtime + flSequenceDuration );
+		pOwner->SetNextAttack( GetCurrentTime() + flSequenceDuration );
 	}
 
 	// If we don't have a holster anim, hide immediately to avoid timing issues
@@ -682,10 +774,31 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	else
 	{
 		// Hide the weapon when the holster animation's finished
-		SetContextThink( &CBaseCombatWeapon::HideThink, gpGlobals->curtime + flSequenceDuration, SDK_HIDEWEAPON_THINK_CONTEXT );
+		SetContextThink( &CBaseCombatWeapon::HideThink, GetCurrentTime() + flSequenceDuration, SDK_HIDEWEAPON_THINK_CONTEXT );
 	}
 
 	return true;
+}
+
+bool CWeaponSDKBase::HasWeaponIdleTimeElapsed( void )
+{
+	if ( GetCurrentTime() > m_flTimeWeaponIdle )
+		return true;
+
+	return false;
+}
+
+float CWeaponSDKBase::GetCurrentTime() const
+{
+	if (!GetOwner())
+		return gpGlobals->curtime;
+
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+
+	if (!pOwner)
+		return gpGlobals->curtime;
+
+	return pOwner->GetCurrentTime();
 }
 
 #ifdef GAME_DLL

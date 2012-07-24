@@ -14,6 +14,7 @@
 
 #include "sdk_shareddefs.h"
 #include "sdk_playeranimstate.h"
+#include "sdk_gamerules.h"
 #include "base_playeranimstate.h"
 #include "datacache/imdlcache.h"
 
@@ -282,8 +283,8 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
 		if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
-			m_flLastAimTurnTime = gpGlobals->curtime;
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * dab_globalslow.GetFloat(), m_flCurrentFeetYaw );
+			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 
 		QAngle angSlide;
@@ -352,7 +353,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		{
 			m_flGoalFeetYaw	= m_flEyeYaw;
 			m_flCurrentFeetYaw = m_flEyeYaw;
-			m_PoseParameterData.m_flLastAimTurnTime = gpGlobals->curtime;
+			m_PoseParameterData.m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 		// Make sure the feet yaw isn't too far out of sync with the eye yaw.
 		// TODO: Do something better here!
@@ -378,8 +379,8 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 		else
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
-			m_flLastAimTurnTime = gpGlobals->curtime;
+			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * dab_globalslow.GetFloat(), m_flCurrentFeetYaw );
+			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 	}
 
@@ -464,7 +465,7 @@ void CSDKPlayerAnimState::ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr )
 void CSDKPlayerAnimState::EstimateYaw( void )
 {
 	// Get the frame time.
-	float flDeltaTime = gpGlobals->frametime;
+	float flDeltaTime = gpGlobals->frametime * dab_globalslow.GetFloat();
 	if ( flDeltaTime == 0.0f )
 		return;
 
@@ -717,6 +718,18 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->slide so just idle.
 		}
 		break;
+
+	case PLAYERANIMEVENT_JUMP:
+		{
+			// Jump.
+			m_bJumping = true;
+			m_bFirstJumpFrame = true;
+			m_flJumpStartTime = m_pSDKPlayer->GetCurrentTime();
+
+			RestartMainSequence();
+
+			break;
+		}
 
 	default:
 		{
@@ -972,7 +985,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		}
 		// Don't check if he's on the ground for a sec.. sometimes the client still has the
 		// on-ground flag set right when the message comes in.
-		else if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
+		else if ( m_pSDKPlayer->GetCurrentTime() - m_flJumpStartTime > 0.2f )
 		{
 			if ( m_pSDKPlayer->GetFlags() & FL_ONGROUND )
 			{
@@ -986,7 +999,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		// if we're still jumping
 		if ( m_bJumping )
 		{
-			if ( gpGlobals->curtime - m_flJumpStartTime > 0.5 )
+			if ( m_pSDKPlayer->GetCurrentTime() - m_flJumpStartTime > 0.5 )
 				idealActivity = ACT_DAB_JUMP_FLOAT;
 			else
 				idealActivity = ACT_DAB_JUMP_START;

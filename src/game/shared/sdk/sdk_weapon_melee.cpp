@@ -79,11 +79,11 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 	if ( pPlayer == NULL )
 		return;
 
-	if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= gpGlobals->curtime) && pPlayer->CanAttack() )
+	if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->CanAttack() )
 	{
 		PrimaryAttack();
 	} 
-	else if ( (pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) && pPlayer->CanAttack() )
+	else if ( (pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= GetCurrentTime()) && pPlayer->CanAttack() )
 	{
 		SecondaryAttack();
 	}
@@ -383,6 +383,6 @@ void CWeaponSDKMelee::Swing( bool bIsSecondary )
 		flFireRate *= 0.7f;
 
 	//Setup our next attack times
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flFireRate;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
 	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
 }

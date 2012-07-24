@@ -217,6 +217,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\achievementmgr.cpp" />
     <ClCompile Include="..\shared\achievements_hlx.cpp" />
     <ClCompile Include="..\shared\activitylist.cpp" />
+    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
@@ -815,6 +816,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\achievementmgr.h" />
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
+    <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="ai_baseactor.h" />
     <ClInclude Include="ai_basehumanoid.h" />

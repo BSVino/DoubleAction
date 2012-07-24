@@ -166,7 +166,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	{
 		if( m_pSDKPlayer->m_Shared.IsGoingProne() )
 		{
-			float pronetime = m_pSDKPlayer->m_Shared.m_flGoProneTime - gpGlobals->curtime;
+			float pronetime = m_pSDKPlayer->m_Shared.m_flGoProneTime - m_pSDKPlayer->GetCurrentTime();
 
 			//interp to prone speed
 			float flProneFraction = SimpleSpline( pronetime / TIME_TO_PRONE );
@@ -180,7 +180,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		}
 		else if ( m_pSDKPlayer->m_Shared.IsGettingUpFromProne() )
 		{
-			float pronetime = m_pSDKPlayer->m_Shared.m_flUnProneTime - gpGlobals->curtime;
+			float pronetime = m_pSDKPlayer->m_Shared.m_flUnProneTime - m_pSDKPlayer->GetCurrentTime();
 
 			//interp to regular speed speed
 			float flProneFraction = SimpleSpline( pronetime / TIME_TO_PRONE );
@@ -347,7 +347,13 @@ void CSDKGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMo
 	m_pSDKPlayer = ToSDKPlayer( pBasePlayer );
 	Assert( m_pSDKPlayer );
 
+	float flFrameTime = gpGlobals->frametime;
+
+	gpGlobals->frametime *= dab_globalslow.GetFloat();
+
 	BaseClass::ProcessMovement( pBasePlayer, pMove );
+
+	gpGlobals->frametime = flFrameTime;
 }
 
 bool CSDKGameMovement::CanAccelerate()
@@ -1309,7 +1315,7 @@ void CSDKGameMovement::Duck( void )
 	// Prone / UnProne - we don't duck if this is happening
 	if( m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == true )
 	{
-		float pronetime = m_pSDKPlayer->m_Shared.m_flUnProneTime - gpGlobals->curtime;
+		float pronetime = m_pSDKPlayer->m_Shared.m_flUnProneTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( pronetime < 0 )
 		{
@@ -1342,7 +1348,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if ( m_pSDKPlayer->m_Shared.IsGoingProne() == true )
 	{
-		float pronetime = m_pSDKPlayer->m_Shared.m_flGoProneTime - gpGlobals->curtime;
+		float pronetime = m_pSDKPlayer->m_Shared.m_flGoProneTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( pronetime < 0 )
 		{
@@ -1360,7 +1366,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	if( m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() == true )
 	{
-		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - gpGlobals->curtime;
+		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( slidetime < 0 )
 			FinishUnSlide();
@@ -1393,7 +1399,7 @@ void CSDKGameMovement::Duck( void )
 		}
 		else
 		{
-			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime());
+			float fraction = (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime());
 			SetSlideEyeOffset( fraction );
 		}
 	}
@@ -1404,13 +1410,13 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
 		}
-		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
 		}
 		// before we begin to stand up from the roll, let's make sure we don't want to go prone instead
-		else if ( gpGlobals->curtime > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
+		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
 		{
 			// force transition to duck if there won't be room to stand
 			if ( !CanUnduck() )
@@ -1442,7 +1448,7 @@ void CSDKGameMovement::Duck( void )
 		}
 		else
 		{
-			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetRollTime()) / (ROLL_TIME + ROLLFINISH_TIME);
+			float fraction = (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetRollTime()) / (ROLL_TIME + ROLLFINISH_TIME);
 			SetRollEyeOffset( fraction );
 		}
 	}

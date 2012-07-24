@@ -19,6 +19,7 @@
 #include "materialsystem/imaterialvar.h"
 #include "ieffects.h"
 #include "hudelement.h"
+#include "sdk_gamerules.h"
 
 using namespace vgui;
 
@@ -233,7 +234,7 @@ void CHudDamageIndicator::Paint()
 {
 	if( m_flFadeCompleteTime > gpGlobals->curtime )
 	{
-		float flFade = gpGlobals->frametime * 2;
+		float flFade = gpGlobals->frametime * 2 * dab_globalslow.GetFloat();
 		// draw damage indicators	
 		DrawDamageIndicatorFront( flFade );
 		DrawDamageIndicatorRear( flFade );

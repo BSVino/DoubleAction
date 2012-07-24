@@ -46,7 +46,7 @@ void CWeaponShotgun::PrimaryAttack()
 	if (pPlayer->GetWaterLevel() == 3)
 	{
 		PlayEmptySound( );
-		m_flNextPrimaryAttack = gpGlobals->curtime + 0.15;
+		m_flNextPrimaryAttack = GetCurrentTime() + 0.15;
 		return;
 	}
 
@@ -65,7 +65,7 @@ bool CWeaponShotgun::Reload()
 		return true;
 
 	// don't reload until recoil is done
-	if (m_flNextPrimaryAttack > gpGlobals->curtime)
+	if (m_flNextPrimaryAttack > GetCurrentTime())
 		return true;
 		
 	CBaseViewModel *vm = pPlayer->GetViewModel( m_nViewModelIndex );
@@ -80,10 +80,10 @@ bool CWeaponShotgun::Reload()
 
 		SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
 		m_iInSpecialReload = 1;
-		pPlayer->m_flNextAttack = gpGlobals->curtime + flStartTime;
-		m_flNextPrimaryAttack = gpGlobals->curtime + flStartTime;
-		m_flNextSecondaryAttack = gpGlobals->curtime + flStartTime;
-		SetWeaponIdleTime( gpGlobals->curtime + flStartTime );
+		pPlayer->m_flNextAttack = GetCurrentTime() + flStartTime;
+		m_flNextPrimaryAttack = GetCurrentTime() + flStartTime;
+		m_flNextSecondaryAttack = GetCurrentTime() + flStartTime;
+		SetWeaponIdleTime( GetCurrentTime() + flStartTime );
 
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
@@ -92,7 +92,7 @@ bool CWeaponShotgun::Reload()
 	}
 	else if (m_iInSpecialReload == 1)
 	{
-		if (m_flTimeWeaponIdle > gpGlobals->curtime)
+		if (m_flTimeWeaponIdle > GetCurrentTime())
 			return true;
 		// was waiting for gun to move to side
 		m_iInSpecialReload = 2;
@@ -100,7 +100,7 @@ bool CWeaponShotgun::Reload()
 		float flReloadTime = 0.45 * flSpeedMultiplier;
 
 		SendWeaponAnim( ACT_VM_RELOAD );
-		SetWeaponIdleTime( gpGlobals->curtime + flReloadTime );
+		SetWeaponIdleTime( GetCurrentTime() + flReloadTime );
 
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
@@ -129,13 +129,13 @@ void CWeaponShotgun::WeaponIdle()
 {
 	CSDKPlayer *pPlayer = GetPlayerOwner();
 
-	if (m_flPumpTime && m_flPumpTime < gpGlobals->curtime)
+	if (m_flPumpTime && m_flPumpTime < GetCurrentTime())
 	{
 		// play pumping sound
 		m_flPumpTime = 0;
 	}
 
-	if (m_flTimeWeaponIdle < gpGlobals->curtime)
+	if (m_flTimeWeaponIdle < GetCurrentTime())
 	{
 		if (m_iClip1 == 0 && m_iInSpecialReload == 0 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ))
 		{
@@ -154,8 +154,8 @@ void CWeaponShotgun::WeaponIdle()
 				
 				// play cocking sound
 				m_iInSpecialReload = 0;
-				SetWeaponIdleTime( gpGlobals->curtime + 1.5 );
-				m_flNextPrimaryAttack = gpGlobals->curtime + 0.15; // Add a small delay between finishing reload and firing again
+				SetWeaponIdleTime( GetCurrentTime() + 1.5 );
+				m_flNextPrimaryAttack = GetCurrentTime() + 0.15; // Add a small delay between finishing reload and firing again
 			}
 		}
 		else

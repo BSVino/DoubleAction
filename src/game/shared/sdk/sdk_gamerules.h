@@ -213,5 +213,6 @@ inline CSDKGameRules* SDKGameRules()
 	return static_cast<CSDKGameRules*>(g_pGameRules);
 }
 
+extern ConVar dab_globalslow;
 
 #endif // SDK_GAMERULES_H

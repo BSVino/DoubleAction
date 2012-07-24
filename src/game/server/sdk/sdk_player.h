@@ -61,6 +61,7 @@ public:
 	virtual void PostThink();
 	virtual void Spawn();
 	virtual void InitialSpawn();
+	virtual void UpdateCurrentTime();
 
 	virtual void GiveDefaultItems();
 
@@ -93,6 +94,8 @@ public:
 	virtual void	SetSpawnArmorValue( int i ) { m_iSpawnArmorValue = i; }
 
 	virtual void	PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
+
+	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
@@ -197,6 +200,8 @@ public:
 	void ActivateMeter();
 
 	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
+
+	float GetCurrentTime() const { return m_flCurrentTime; }
 
 private:
 	bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
@@ -321,6 +326,8 @@ public:
 	float		m_flNextRegen;
 	float		m_flNextHealthDecay;
 	float		m_flNextSecondWindRegen;
+
+	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 };
 
 

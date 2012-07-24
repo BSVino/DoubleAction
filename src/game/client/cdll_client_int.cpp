@@ -1778,7 +1778,13 @@ void OnRenderStart()
 	// their own update system).
 	{
 		VPROF_BUDGET( "ParticleMgr()->Simulate", VPROF_BUDGETGROUP_PARTICLE_SIMULATION );
-		ParticleMgr()->Simulate( gpGlobals->frametime );
+
+		float flFrameTime = gpGlobals->frametime;
+#ifdef SDK_DLL
+		flFrameTime *= ConVarRef("dab_globalslow").GetFloat();
+#endif
+
+		ParticleMgr()->Simulate( flFrameTime );
 	}
 
 	// Now that the view model's position is setup and aiments are marked dirty, update

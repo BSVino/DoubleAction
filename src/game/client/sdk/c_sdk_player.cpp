@@ -25,6 +25,7 @@
 #include <baseviewport.h>
 #include "ClientEffectPrecacheSystem.h"
 #include "model_types.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -145,6 +146,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
+
+	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -217,6 +220,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStyleSkillStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -614,6 +618,14 @@ C_SDKPlayer::C_SDKPlayer() :
 C_SDKPlayer::~C_SDKPlayer()
 {
 	m_PlayerAnimState->Release();
+}
+
+
+void C_SDKPlayer::PreThink()
+{
+	UpdateCurrentTime();
+
+	BaseClass::PreThink();
 }
 
 
@@ -1402,7 +1414,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	else
 		flTiltGoal = 0;
 
-	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10);
+	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10*dab_globalslow.GetFloat());
 
 	if (m_Shared.m_flViewTilt > 0)
 	{

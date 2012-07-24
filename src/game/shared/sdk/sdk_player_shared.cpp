@@ -422,18 +422,18 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, 0.5, 1);
 
 	if (flAmount == 1.0f)
-		m_flFreezeUntil = gpGlobals->curtime;
+		m_flFreezeUntil = m_flCurrentTime;
 	else if (flTime < 0)
 		m_flFreezeUntil = 0;
 	else
-		m_flFreezeUntil = gpGlobals->curtime + flTime;
+		m_flFreezeUntil = m_flCurrentTime + flTime;
 }
 
 bool CSDKPlayer::PlayerFrozen()
 {
 	// m_flFreezeUntil == 0 means to freeze for an indefinite amount of time.
 	// Otherwise it means freeze until curtime >= m_flFreezeUntil.
-	return (m_flFreezeUntil == 0) || (gpGlobals->curtime < m_flFreezeUntil);
+	return (m_flFreezeUntil == 0) || (m_flCurrentTime < m_flFreezeUntil);
 }
 
 // --------------------------------------------------------------------------------------------------- //
@@ -512,7 +512,7 @@ void CSDKPlayerShared::StartGoingProne( void )
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoProne" );
 
 	// slow to prone speed
-	m_flGoProneTime = gpGlobals->curtime + TIME_TO_PRONE;
+	m_flGoProneTime = m_pOuter->GetCurrentTime() + TIME_TO_PRONE;
 
 	m_flUnProneTime = 0.0f;	//reset
 
@@ -528,7 +528,7 @@ void CSDKPlayerShared::StandUpFromProne( void )
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnProne" );
 
 	// speed up to target speed
-	m_flUnProneTime = gpGlobals->curtime + TIME_TO_PRONE;
+	m_flUnProneTime = m_pOuter->GetCurrentTime() + TIME_TO_PRONE;
 
 	m_flGoProneTime = 0.0f;	//reset 
 }
@@ -604,7 +604,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	m_vecSlideDirection = m_pOuter->GetAbsVelocity();
 	m_vecSlideDirection.GetForModify().NormalizeInPlace();
 
-	m_flSlideTime = gpGlobals->curtime;
+	m_flSlideTime = m_pOuter->GetCurrentTime();
 	m_flUnSlideTime = 0;
 }
 
@@ -621,7 +621,7 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
 
-	m_flUnSlideTime = gpGlobals->curtime + TIME_TO_UNSLIDE;
+	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
@@ -637,10 +637,10 @@ float CSDKPlayerShared::GetSlideFriction() const
 	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flMultiplier = 5;
 
-	if (gpGlobals->curtime - m_flSlideTime < sdk_slidetime.GetFloat())
+	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat())
 		return 0.1f/flMultiplier;
 
-	return RemapValClamped(gpGlobals->curtime, m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f)/flMultiplier;
+	return RemapValClamped(m_pOuter->GetCurrentTime(), m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f)/flMultiplier;
 }
 
 void CSDKPlayerShared::SetDuckPress(bool bReset)
@@ -693,7 +693,7 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 	m_vecRollDirection = m_pOuter->GetAbsVelocity();
 	m_vecRollDirection.GetForModify().NormalizeInPlace();
 
-	m_flRollTime = gpGlobals->curtime;
+	m_flRollTime = m_pOuter->GetCurrentTime();
 }
 
 void CSDKPlayerShared::EndRoll()
@@ -1035,4 +1035,14 @@ void CSDKPlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 
 	if (!( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) ))
 		*velwalk = 110;
+}
+
+float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
+{
+	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * dab_globalslow.GetFloat();
+}
+
+void CSDKPlayer::UpdateCurrentTime()
+{
+	m_flCurrentTime += gpGlobals->frametime * dab_globalslow.GetFloat();
 }

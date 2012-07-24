@@ -99,7 +99,7 @@ public:
 	inline float SequenceDuration( void ) { return SequenceDuration( m_nSequence ); }
 	float	SequenceDuration( CStudioHdr *pStudioHdr, int iSequence );
 	inline float SequenceDuration( int iSequence ) { return SequenceDuration(GetModelPtr(), iSequence); }
-	float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
+	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 	inline float	GetSequenceCycleRate( int iSequence ) { return GetSequenceCycleRate(GetModelPtr(),iSequence); }
 	float	GetLastVisibleCycle( CStudioHdr *pStudioHdr, int iSequence );
 	virtual float	GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence );

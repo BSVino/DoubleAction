@@ -1416,6 +1416,9 @@
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -2940,6 +2943,9 @@
       <Filter>Tools Framework</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\dab_viewmodel.h">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
