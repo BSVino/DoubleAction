@@ -292,6 +292,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bDiving = false;
 	m_Shared.m_bRolling = false;
 	m_Shared.m_bSliding = false;
+	m_Shared.m_bDiveSliding = false;
 	m_Shared.m_bProne = false;
 	m_Shared.m_bAimedIn = false;
 	m_Shared.m_bIsTryingUnprone = false;
@@ -452,6 +453,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 #endif
 
 	m_bSliding = false;
+	m_bDiveSliding = false;
 	m_bRolling = false;
 }
 
@@ -554,6 +556,11 @@ bool CSDKPlayerShared::IsSliding() const
 	return m_bSliding;
 }
 
+bool CSDKPlayerShared::IsDiveSliding() const
+{
+	return IsSliding() && m_bDiveSliding;
+}
+
 bool CSDKPlayerShared::CanSlide() const
 {
 	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
@@ -580,7 +587,7 @@ bool CSDKPlayerShared::CanSlide() const
 	return true;
 }
 
-void CSDKPlayerShared::StartSliding()
+void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 {
 	if (!CanSlide())
 		return;
@@ -590,6 +597,7 @@ void CSDKPlayerShared::StartSliding()
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
 
 	m_bSliding = true;
+	m_bDiveSliding = bDiveSliding;
 
 	ForceUnzoom();
 
@@ -603,6 +611,7 @@ void CSDKPlayerShared::StartSliding()
 void CSDKPlayerShared::EndSlide()
 {
 	m_bSliding = false;
+	m_bDiveSliding = false;
 	m_flSlideTime = 0;
 }
 

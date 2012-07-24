@@ -243,7 +243,7 @@ bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 
 void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 {
-	if (m_pSDKPlayer->m_Shared.IsSliding())
+	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsDiveSliding())
 	{
 		QAngle angSlide;
 		VectorAngles(m_pSDKPlayer->m_Shared.GetSlideDirection(), angSlide);
@@ -266,7 +266,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 
 void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 {
-	if (m_pSDKPlayer->m_Shared.IsSliding())
+	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsDiveSliding())
 	{
 		Vector vecVelocity;
 		GetOuterAbsVelocity( vecVelocity );
@@ -528,7 +528,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_ATTACK_PRIMARY:
 		{
 			// Weapon primary fire.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
@@ -557,7 +557,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_ATTACK_SECONDARY:
 		{
 			// Weapon secondary fire.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
@@ -601,7 +601,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD:
 		{
 			// Weapon reload.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_SLIDE );
@@ -799,7 +799,7 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 {
-	if ( m_pSDKPlayer->m_Shared.IsProne() )
+	if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
 			idealActivity = ACT_DAB_PRONECHEST_IDLE;		
@@ -875,7 +875,7 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 
 bool CSDKPlayerAnimState::HandleSliding( Activity &idealActivity )
 {
-	if ( m_pSDKPlayer->m_Shared.IsSliding() )
+	if ( m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsDiveSliding() )
 	{
 		idealActivity = ACT_DAB_SLIDE;		
 

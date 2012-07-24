@@ -1387,6 +1387,10 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 			SetUnSlideEyeOffset( 0.0 );
 		}
+		else if (m_pSDKPlayer->m_Shared.IsDiveSliding())
+		{
+			SetSlideEyeOffset(1);
+		}
 		else
 		{
 			float fraction = (gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime());
@@ -1449,8 +1453,19 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndDive();
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
-			// if we're pressing the stunt button or don't have room to roll, land prone
-			if ( mv->m_nButtons & IN_ALT1 || !CanUnprone() )
+			if (mv->m_nButtons & IN_ALT1)
+			{
+				m_pSDKPlayer->m_Shared.StartSliding(true);
+
+				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
+
+				SetSlideEyeOffset( 1.0 );
+			}
+			// if we don't have room to roll, land prone
+			else if ( !CanUnprone() )
 			{
 				m_pSDKPlayer->m_Shared.SetProne(true, true);
 				SetProneEyeOffset( 1.0 );
