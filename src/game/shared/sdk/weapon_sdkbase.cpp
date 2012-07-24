@@ -225,8 +225,17 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	float flFireRate = GetFireRate();
 	if (pPlayer->m_Shared.IsAimedIn() && HasAimInFireRateBonus())
+	{
 		// We lerp from .8 instead of 1 to be a bit more forgiving when the player first taps the aim button.
-		flFireRate *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 0.8f, 0.7f);
+		float flFireRateMultiplier = RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 0.8f, 0.7f);
+
+		flFireRate *= flFireRateMultiplier;
+
+		CBaseViewModel* vm = pPlayer->GetViewModel( m_nViewModelIndex );
+
+		if (vm)
+			vm->SetPlaybackRate( 1/flFireRateMultiplier );
+	}
 
 	if (m_flAccuracyDecay < 0)
 		m_flAccuracyDecay = 0;
