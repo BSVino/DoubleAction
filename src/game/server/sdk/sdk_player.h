@@ -64,6 +64,8 @@ public:
 
 	virtual void GiveDefaultItems();
 
+	virtual void			GetStepSoundVelocities( float *velwalk, float *velrun );
+
 	// Animstate handles this.
 	void SetAnimation( PLAYER_ANIM playerAnim ) { return; }
 

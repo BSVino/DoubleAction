@@ -1019,3 +1019,11 @@ int CSDKPlayer::GetLoadoutWeaponCount(SDKWeaponID eWeapon)
 {
 	return m_aLoadout[eWeapon].m_iCount;
 }
+
+void CSDKPlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
+{
+	BaseClass::GetStepSoundVelocities(velwalk, velrun);
+
+	if (!( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) ))
+		*velwalk = 110;
+}

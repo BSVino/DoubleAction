@@ -81,7 +81,9 @@ void C_SDKRootPanel::PaintBackground()
 void C_SDKRootPanel::RenderLetterboxing( void )
 {
 	C_SDKPlayer* pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
-	if (pPlayer && pPlayer->m_Shared.GetAimIn() > 0)
+	C_WeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
+
+	if (pPlayer && pPlayer->m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
 	{
 		// Consider 50% fully letterboxed 
 		float flRealAimIn = pPlayer->m_Shared.GetAimIn()*2;

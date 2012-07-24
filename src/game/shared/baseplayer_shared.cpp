@@ -469,7 +469,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 
 	GetStepSoundVelocities( &velwalk, &velrun );
 
-	bool onground = ( GetFlags() & FL_ONGROUND );
+	bool onground = ( !!GetGroundEntity() );
 	bool movingalongground = ( groundspeed > 0.0001f );
 	bool moving_fast_enough =  ( speed >= velwalk );
 

@@ -149,11 +149,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 			if ( m_pSDKPlayer->m_Shared.IsAimedIn() )
 			{
 				// Consider 50% fully aimed in for speed purposes.
-
-				if (m_pSDKPlayer->GetActiveSDKWeapon() && m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
-					flMaxSpeed = RemapValClamped(m_pSDKPlayer->m_Shared.GetAimIn()*2, 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
-				else
-					flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
+				flMaxSpeed = RemapValClamped(m_pSDKPlayer->m_Shared.GetAimIn()*2, 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
 			}
 			else
 				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;

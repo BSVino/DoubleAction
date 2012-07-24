@@ -636,6 +636,8 @@ bool CWeaponSDKBase::Deploy( )
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 	}
 
+	pOwner->m_Shared.SetAimIn(0.0f);
+
 	return bDeploy;
 }
 

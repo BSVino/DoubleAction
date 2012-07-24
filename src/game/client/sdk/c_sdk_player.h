@@ -41,6 +41,8 @@ public:
 	virtual bool	IsOverridingViewmodel( void );
 	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
 
+	virtual void	GetStepSoundVelocities( float *velwalk, float *velrun );
+
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 
 	// Player avoidance

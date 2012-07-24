@@ -1416,7 +1416,10 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		pSetup->angles.z += flDot * m_Shared.m_flViewTilt * 5;
 	}
 
-	pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
+	C_WeaponSDKBase* pWeapon = GetActiveSDKWeapon();
+
+	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
+		pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
 }
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
