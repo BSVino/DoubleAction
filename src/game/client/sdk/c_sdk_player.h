@@ -116,7 +116,7 @@ public:
 	bool IsSprinting( void );
 #endif
 
-	void ActivateSlowMo();
+	void ActivateSlowMo(slowmo_type eType = SLOWMO_ACTIVATED);
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }

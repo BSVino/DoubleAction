@@ -1066,11 +1066,21 @@ float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * GetSlowMoMultiplier();
 }
 
-void CSDKPlayer::ActivateSlowMo()
+void CSDKPlayer::ActivateSlowMo(slowmo_type eType)
 {
-	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
-	m_iSlowMoType = SLOWMO_ACTIVATED;
-	m_flSlowMoSeconds = 0;
+	if (eType == SLOWMO_ACTIVATED)
+	{
+		if (m_iSlowMoType == SLOWMO_STYLESKILL)
+			return;
+
+		m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
+		m_flSlowMoSeconds = 0;
+		m_iSlowMoType = eType;
+	}
+	else if (eType == SLOWMO_STYLESKILL)
+	{
+		m_iSlowMoType = eType;
+	}
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
@@ -1084,7 +1094,7 @@ float CSDKPlayer::GetSlowMoMultiplier() const
 
 float CSDKPlayer::GetSlowMoGoal() const
 {
-	if (m_iSlowMoType == SLOWMO_STYLESKILL)
+	if (m_iSlowMoType == SLOWMO_STYLESKILL || (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SLOWMO))
 		return 0.8;
 	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
 		return 0.6;
@@ -1100,7 +1110,7 @@ void CSDKPlayer::UpdateCurrentTime()
 
 	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
 
-	if ((m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL) && gpGlobals->curtime > m_flSlowMoTime)
+	if (m_iSlowMoType == SLOWMO_ACTIVATED && gpGlobals->curtime > m_flSlowMoTime)
 	{
 		m_flSlowMoTime = 0;
 		m_iSlowMoType = SLOWMO_NONE;

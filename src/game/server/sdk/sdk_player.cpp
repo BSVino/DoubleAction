@@ -413,6 +413,16 @@ void CSDKPlayer::PostThink()
 
 			CSingleUserRecipientFilter filter( this );
 			EmitSound(filter, entindex(), "HudMeter.End");
+
+			if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
+			{
+				Assert(m_iSlowMoType == SLOWMO_STYLESKILL);
+
+				m_flSlowMoTime = 0;
+				m_iSlowMoType = SLOWMO_NONE;
+
+				SDKGameRules()->PlayerSlowMoUpdate(this);
+			}
 		}
 	}
 
@@ -2318,6 +2328,8 @@ void CSDKPlayer::ActivateMeter()
 		GiveNamedItem( "weapon_grenade" );
 		CBasePlayer::GiveAmmo( 10, "grenades");
 	}
+	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
+		ActivateSlowMo(SLOWMO_STYLESKILL);
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)
