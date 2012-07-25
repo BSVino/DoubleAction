@@ -151,8 +151,6 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
-
-	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -177,6 +175,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
 	RecvPropTime( RECVINFO(m_flStyleSkillStart) ),
+
+	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //

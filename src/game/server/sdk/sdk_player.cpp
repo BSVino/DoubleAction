@@ -153,8 +153,6 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
-
-	SendPropFloat		( SENDINFO( m_flCurrentTime ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -198,6 +196,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropTime( SENDINFO( m_flStyleSkillStart ) ),
 
+	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
