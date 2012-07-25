@@ -174,6 +174,14 @@ public:
 	int SelectDefaultTeam( void );
 
 	virtual void ServerActivate();
+
+	void	ReCalculateSlowMo();
+	void	CalculateSlowMoForPlayer(CSDKPlayer* pPlayer);	// Is this player being slowed by those around?
+	void	PlayerSlowMoUpdate(CSDKPlayer* pPlayer);		// This player activated or deactivated slowmo, update surrounding players.
+
+protected:
+	void	GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer);
+
 protected:
 	void CheckPlayerPositions( void );
 
@@ -202,6 +210,8 @@ public:
 
 private:
 	CNetworkVar( float, m_flGameStartTime );
+
+	float	m_flNextSlowMoUpdate;
 };
 
 //-----------------------------------------------------------------------------

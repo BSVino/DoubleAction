@@ -589,6 +589,8 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
+
+	SDKGameRules()->CalculateSlowMoForPlayer(this);
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1059,6 +1061,13 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Going down with one bar drops you to half bar, but going down with full bar loses you two bars.
 	// This way, running around with your bar full you run a high risk.
 	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, 25, 100, dab_stylemeteractivationcost.GetFloat()/2, dab_stylemeteractivationcost.GetFloat()*2));
+
+	// Turn off slow motion.
+	m_flSlowMoSeconds = 0;
+	m_flSlowMoTime = 0;
+	m_iSlowMoType = SLOWMO_NONE;
+
+	SDKGameRules()->PlayerSlowMoUpdate(this);
 }
 
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
@@ -2312,6 +2321,12 @@ void CSDKPlayer::ActivateMeter()
 	}
 }
 
+void CSDKPlayer::SetSlowMoType(int iType)
+{
+	if (iType != m_iSlowMoType)
+		m_iSlowMoType = iType;
+}
+
 void CC_ActivateMeter_f (void)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
@@ -2427,3 +2442,15 @@ void CC_Drop(const CCommand& args)
 }
 
 static ConCommand drop("drop", CC_Drop, "Drop the weapon the player currently holds.", FCVAR_GAMEDLL);
+
+void CC_GiveSlowMo(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->m_flSlowMoSeconds += 1;
+}
+
+static ConCommand give_slowmo("give_slowmo", CC_GiveSlowMo, "Give the player one second of slow motion.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);

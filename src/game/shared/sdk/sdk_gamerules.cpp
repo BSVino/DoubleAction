@@ -10,6 +10,7 @@
 #include "ammodef.h"
 #include "KeyValues.h"
 #include "weapon_sdkbase.h"
+#include "vprof.h"
 
 
 #ifdef CLIENT_DLL
@@ -266,7 +267,9 @@ CSDKGameRules::CSDKGameRules()
 
 	m_flGameStartTime = 0;
 
+	m_flNextSlowMoUpdate = 0;
 }
+
 void CSDKGameRules::ServerActivate()
 {
 	//Tony; initialize the level
@@ -280,6 +283,167 @@ void CSDKGameRules::ServerActivate()
 		m_flGameStartTime.GetForModify() = 0.0f;
 	}
 }
+
+void CSDKGameRules::ReCalculateSlowMo()
+{
+	// Reset all passive players to none, to prevent circular activations
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
+		if (!pPlayer)
+			continue;
+
+		CSDKPlayer* pSDKPlayer = static_cast<CSDKPlayer*>(pPlayer);
+
+		if (pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE)
+			pSDKPlayer->SetSlowMoType(SLOWMO_NONE);
+	}
+
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
+		if (!pPlayer)
+			continue;
+
+		CSDKPlayer* pSDKPlayer = static_cast<CSDKPlayer*>(pPlayer);
+
+		// If the player is passive it means they've already been reached recursively.
+		// If the player activated their own slowmo then they don't need to be calculated.
+		if (pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE || pSDKPlayer->GetSlowMoType() == SLOWMO_ACTIVATED || pSDKPlayer->GetSlowMoType() == SLOWMO_STYLESKILL)
+			GiveSlowMoToNearbyPlayers(pSDKPlayer);
+		else
+			CalculateSlowMoForPlayer(pSDKPlayer);
+	}
+
+	m_flNextSlowMoUpdate = gpGlobals->curtime + 0.5f;
+}
+
+void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
+{
+	if (!pPlayer)
+		return;
+
+	if (!pPlayer->IsAlive())
+	{
+		pPlayer->SetSlowMoType(SLOWMO_NONE);
+		return;
+	}
+
+	// If I activated slow then I get to keep my slow level.
+	if (pPlayer->GetSlowMoType() == SLOWMO_ACTIVATED)
+		return;
+
+	if (pPlayer->GetSlowMoType() == SLOWMO_STYLESKILL)
+		return;
+
+	// Players who haven't activated anything are at the whims of those who have.
+
+	bool bOtherInSlow = false;
+
+	CUtlVector<CSDKPlayer*> apOthersInPVS;
+
+	CBaseEntity* pOther = NULL;
+
+	while ((pOther = UTIL_EntitiesInPVS(pPlayer, pOther)) != NULL)
+	{
+		CSDKPlayer* pOtherPlayer = ToSDKPlayer(pOther);
+		if (!pOtherPlayer)
+			continue;
+
+		if (pOtherPlayer == pPlayer)
+			continue;
+
+		apOthersInPVS.AddToTail(pOtherPlayer);
+	}
+
+	for (int i = 0; i < apOthersInPVS.Size(); i++)
+	{
+		CSDKPlayer* pOtherPlayer = apOthersInPVS[i];
+
+		if (!pOtherPlayer->IsAlive())
+			continue;
+
+		if (pOtherPlayer->GetSlowMoType() != SLOWMO_NONE)
+		{
+			bOtherInSlow = true;
+			break;
+		}
+	}
+
+	// If any of these players are in slow then I'm in slow too.
+	if (bOtherInSlow)
+		pPlayer->SetSlowMoType(SLOWMO_PASSIVE);
+	else
+		pPlayer->SetSlowMoType(SLOWMO_NONE);
+}
+
+void CSDKGameRules::PlayerSlowMoUpdate(CSDKPlayer* pPlayer)
+{
+	if (!pPlayer)
+		return;
+
+	if (pPlayer->GetSlowMoType() == SLOWMO_NONE)
+		// I turned off my slow-mo. Circular activations are possible. Just re-calculate for all players.
+		ReCalculateSlowMo();
+	else
+		GiveSlowMoToNearbyPlayers(pPlayer);
+}
+
+void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
+{
+	if (!pPlayer)
+		return;
+
+	if (!pPlayer->IsAlive())
+	{
+		pPlayer->SetSlowMoType(SLOWMO_NONE);
+		return;
+	}
+
+	if (pPlayer->GetSlowMoType() == SLOWMO_NONE)
+		return;
+
+	// I have some slowmo on me. Pass it to other players nearby.
+
+	CUtlVector<CSDKPlayer*> apOthersInPVS;
+
+	CBaseEntity* pOther = NULL;
+
+	while ((pOther = UTIL_EntitiesInPVS(pPlayer, pOther)) != NULL)
+	{
+		CSDKPlayer* pOtherPlayer = ToSDKPlayer(pOther);
+		if (!pOtherPlayer)
+			continue;
+
+		if (pOtherPlayer == pPlayer)
+			continue;
+
+		// If they already have slow mo, we don't need to pass it to them.
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_STYLESKILL)
+			continue;
+
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_ACTIVATED)
+			continue;
+
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE)
+			continue;
+
+		apOthersInPVS.AddToTail(pOtherPlayer);
+	}
+
+	for (int i = 0; i < apOthersInPVS.Size(); i++)
+	{
+		CSDKPlayer* pOtherPlayer = apOthersInPVS[i];
+
+		// It could have been already done by a previous iteration of the recursion below.
+		if (pOtherPlayer->GetSlowMoType() != SLOWMO_NONE)
+			continue;
+
+		pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
+		GiveSlowMoToNearbyPlayers(pOtherPlayer);
+	}
+}
+
 void CSDKGameRules::CheckLevelInitialized()
 {
 	if ( !m_bLevelInitialized )
@@ -488,7 +652,11 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 void CSDKGameRules::Think()
 {
 	BaseClass::Think();
+
+	if (gpGlobals->curtime > m_flNextSlowMoUpdate)
+		ReCalculateSlowMo();
 }
+
 Vector DropToGround( 
 					CBaseEntity *pMainEnt, 
 					const Vector &vPos, 

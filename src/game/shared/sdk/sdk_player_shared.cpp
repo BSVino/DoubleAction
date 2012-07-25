@@ -1071,6 +1071,10 @@ void CSDKPlayer::ActivateSlowMo()
 	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
 	m_iSlowMoType = SLOWMO_ACTIVATED;
 	m_flSlowMoSeconds = 0;
+
+#ifdef GAME_DLL
+	SDKGameRules()->PlayerSlowMoUpdate(this);
+#endif
 }
 
 float CSDKPlayer::GetSlowMoMultiplier() const
@@ -1100,5 +1104,9 @@ void CSDKPlayer::UpdateCurrentTime()
 	{
 		m_flSlowMoTime = 0;
 		m_iSlowMoType = SLOWMO_NONE;
+
+#ifdef GAME_DLL
+		SDKGameRules()->PlayerSlowMoUpdate(this);
+#endif
 	}
 }

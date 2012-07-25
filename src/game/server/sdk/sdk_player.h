@@ -206,6 +206,8 @@ public:
 	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
+	int GetSlowMoType() const { return m_iSlowMoType; }
+	void SetSlowMoType(int iType);
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
