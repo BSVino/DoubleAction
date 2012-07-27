@@ -146,6 +146,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropTime		( SENDINFO( m_flFreezeUntil ) ),
 	SendPropFloat		( SENDINFO( m_flFreezeAmount ) ),
 
+	SendPropFloat		( SENDINFO( m_flDisarmRedraw ) ),
+
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 
@@ -598,6 +600,7 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
+	m_flDisarmRedraw = -1;
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 }
@@ -1119,7 +1122,7 @@ int CSDKPlayer::GetMaxHealth() const
 	return BaseClass::GetMaxHealth();
 }
 
-void CSDKPlayer::ThrowActiveWeapon( void )
+void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
 
@@ -1133,17 +1136,32 @@ void CSDKPlayer::ThrowActiveWeapon( void )
 
 		float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
 
+		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
-		SwitchToNextBestWeapon( pWeapon );
+
+		if (bAutoSwitch)
+			SwitchToNextBestWeapon( pWeapon );
+
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
 	}
 }
+
+bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
+{
+	if (GetCurrentTime() < m_flDisarmRedraw)
+		return false;
+
+	return BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
+}
+
 void CSDKPlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 {
+	m_flDisarmRedraw = -1;
+
 	BaseClass::Weapon_Equip( pWeapon );
 	dynamic_cast<CWeaponSDKBase*>(pWeapon)->SetDieThink( false );	//Make sure the context think for removing is gone!!
-
 }
+
 void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  )
 {
 	Vector vecOrigin;
@@ -2142,6 +2160,12 @@ void CSDKPlayer::State_Enter_ACTIVE()
 
 void CSDKPlayer::State_PreThink_ACTIVE()
 {
+	if (m_flDisarmRedraw > 0 && GetCurrentTime() > m_flDisarmRedraw)
+	{
+		m_flDisarmRedraw = -1;
+
+		SwitchToNextBestWeapon( NULL );
+	}
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -2186,6 +2210,8 @@ bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	return false;
 }
 
+ConVar dab_disarmredraw("dab_disarmredraw", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "After how long does the player draw his next weapon after he's been disarmed?");
+
 void CSDKPlayer::Disarm()
 {
 	CWeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
@@ -2203,7 +2229,9 @@ void CSDKPlayer::Disarm()
 	if (pActiveWeapon->GetWeaponType() == WT_SHOTGUN)
 		return;
 
-	ThrowActiveWeapon();
+	ThrowActiveWeapon(false);
+
+	m_flDisarmRedraw = GetCurrentTime() + dab_disarmredraw.GetFloat();
 }
 
 CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
@@ -2485,3 +2513,15 @@ void CC_GiveSlowMo(const CCommand& args)
 }
 
 static ConCommand give_slowmo("give_slowmo", CC_GiveSlowMo, "Give the player one second of slow motion.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CC_DisarmMe(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->Disarm();
+}
+
+static ConCommand disarmme("disarmme", CC_DisarmMe, "Disarm the player as a test.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);

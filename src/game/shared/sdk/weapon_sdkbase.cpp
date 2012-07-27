@@ -249,7 +249,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		m_flAccuracyDecay = dab_fulldecay.GetFloat();
 
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
-	m_flNextSecondaryAttack = GetCurrentTime() + SequenceDuration();
+	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
 }
 
 void CWeaponSDKBase::SecondaryAttack()
@@ -284,7 +284,6 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 
 	Vector swingEnd = swingStart + forward * GetMeleeRange();
 	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
-	Activity nHitActivity = ACT_VM_HITCENTER;
 
 #ifndef CLIENT_DLL
 	// Like bullets, melee traces have to trace against triggers.
@@ -315,7 +314,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 			}
 			else
 			{
-				nHitActivity = ChooseIntersectionPointAndActivity( traceHit, g_meleeMins, g_meleeMaxs, pOwner );
+				ChooseIntersectionPointAndActivity( traceHit, g_meleeMins, g_meleeMaxs, pOwner );
 			}
 		}
 	}
@@ -325,8 +324,6 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	// -------------------------
 	if ( traceHit.fraction == 1.0f )
 	{
-		nHitActivity = bIsSecondary ? ACT_VM_MISSCENTER2 : ACT_VM_MISSCENTER;
-
 		// We want to test the first swing again
 		Vector testEnd = swingStart + forward * GetMeleeRange();
 		
@@ -341,14 +338,20 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	}
 
 	// Send the anim
-	SendWeaponAnim( nHitActivity );
+	if (!SendWeaponAnim( ACT_VM_HITCENTER ))
+		SendWeaponAnim( ACT_VM_DRAW );	// If the animation is missing, play the draw animation instead as a placeholder.
 
-	pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+	if (bIsSecondary)
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
+	else
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
-	AddViewKick();
+	AddMeleeViewKick();
 
 	float flFireRate = GetFireRate();
 	if (bIsSecondary)
+		flFireRate = 0.4f;	// Disarms carry risk!
+	else if (pOwner->m_nButtons & IN_SPEED)
 		flFireRate = GetSecondaryFireRate();
 
 	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
@@ -566,6 +569,23 @@ void CWeaponSDKBase::AddViewKick()
 	}
 }
 
+void CWeaponSDKBase::AddMeleeViewKick()
+{
+	CSDKPlayer *pPlayer = GetPlayerOwner();
+
+	if ( !pPlayer )
+		return;
+
+	// Update punch angles.
+	QAngle angle = pPlayer->GetPunchAngle();
+
+	angle.x -= SharedRandomInt( "PunchAngle", 4, 6 );
+
+	float flRecoilBonus = 1;
+
+	pPlayer->SetPunchAngle( angle * 0.4f * flRecoilBonus );
+}
+
 float CWeaponSDKBase::GetWeaponSpread()
 {
 	return GetSDKWpnData().m_flSpread;
@@ -575,6 +595,9 @@ float CWeaponSDKBase::GetWeaponSpread()
 void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
 {
 	BaseClass::CreateMove(flInputSampleTime, pCmd, vecOldViewAngles);
+
+	if (!GetPlayerOwner())
+		return;
 
 	Vector vecRecoil = GetPlayerOwner()->m_Shared.GetRecoil(flInputSampleTime);
 	pCmd->viewangles[PITCH] -= vecRecoil.y;
@@ -991,7 +1014,12 @@ bool CWeaponSDKBase::Deploy( )
 
 	//Tony; on deploy clear shots fired.
 	if (GetPlayerOwner())
+	{
 		GetPlayerOwner()->ClearShotsFired();
+
+		if (GetPlayerOwner()->GetCurrentTime() < GetPlayerOwner()->m_flDisarmRedraw)
+			return false;
+	}
 
 	bool bDeploy = DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDeployActivity(), (char*)GetAnimPrefix() );
 
@@ -999,7 +1027,7 @@ bool CWeaponSDKBase::Deploy( )
 
 	float flSpeedMultiplier = GetSDKWpnData().m_flDrawTimeMultiplier;
 
-	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+	if (pOwner && pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flSpeedMultiplier *= 0.6f;
 
 	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
@@ -1013,9 +1041,9 @@ bool CWeaponSDKBase::Deploy( )
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 
 		pOwner->SetNextAttack( GetCurrentTime() + SequenceDuration() * flSpeedMultiplier );
-	}
 
-	pOwner->m_Shared.SetAimIn(0.0f);
+		pOwner->m_Shared.SetAimIn(0.0f);
+	}
 
 	return bDeploy;
 }

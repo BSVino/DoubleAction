@@ -87,8 +87,9 @@ public:
 	CWeaponSDKBase* GetActiveSDKWeapon() const;
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
 
+	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
-	virtual void ThrowActiveWeapon( void );
+	virtual void ThrowActiveWeapon( bool bAutoSwitch = true );
 
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
@@ -336,6 +337,8 @@ public:
 	float		m_flNextRegen;
 	float		m_flNextHealthDecay;
 	float		m_flNextSecondWindRegen;
+
+	CNetworkVar( float, m_flDisarmRedraw );
 
 	CNetworkVar( int, m_iSlowMoType );
 	CNetworkVar( float, m_flSlowMoSeconds );

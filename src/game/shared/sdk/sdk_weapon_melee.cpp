@@ -116,8 +116,11 @@ float CWeaponSDKMelee::GetMeleeDamage( bool bIsSecondary ) const
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	float flDamage = GetSDKWpnData().m_iDamage;
+
 	if (bIsSecondary)
 		flDamage = 10;	//Disarm damage.
+	else if (pPlayer->m_nButtons & IN_SPEED)
+		flDamage = GetSDKWpnData().m_iSecondaryDamage;
 
 	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flDamage *= 2.0f;

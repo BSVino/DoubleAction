@@ -80,10 +80,11 @@ public:
 	virtual	void      ImpactEffect( trace_t &trace );
 	virtual bool      ImpactWater( const Vector &start, const Vector &end );
 
-	virtual float	GetMeleeRange( void )								{	return	32.0f;	}
+	virtual float	GetMeleeRange( void )								{	return	40.0f;	}
 	virtual float	GetMeleeDamage( bool bSecondary ) const;
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
+	virtual void			AddMeleeViewKick();
 
 #ifdef CLIENT_DLL
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );

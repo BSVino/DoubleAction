@@ -175,6 +175,8 @@ public: // Public Variables
 	CNetworkVar( float, m_flFreezeUntil );
 	CNetworkVar( float, m_flFreezeAmount );
 
+	CNetworkVar( float, m_flDisarmRedraw );
+
 	EHANDLE	m_hRagdoll;
 
 	int	m_headYawPoseParam;

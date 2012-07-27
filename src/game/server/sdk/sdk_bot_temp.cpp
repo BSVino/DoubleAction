@@ -112,7 +112,15 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 
 	pPlayer->ChangeTeam( TEAM_UNASSIGNED );
 	pPlayer->RemoveAllItems( true );
-	pPlayer->Spawn();
+
+	SDKWeaponID eWeapon = SDK_WEAPON_NONE;
+	
+	while (eWeapon == SDK_WEAPON_NONE || eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_CROWBAR)
+		eWeapon = (SDKWeaponID)RandomInt(1, WEAPON_MAX-1);
+
+	pPlayer->AddToLoadout(eWeapon);
+
+	pPlayer->State_Transition( STATE_ACTIVE );
 
 	CCommand args;
 

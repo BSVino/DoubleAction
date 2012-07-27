@@ -144,6 +144,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropTime		( RECVINFO( m_flFreezeUntil ) ),
 	RecvPropFloat		( RECVINFO( m_flFreezeAmount ) ),
 
+	RecvPropFloat		( RECVINFO( m_flDisarmRedraw ) ),
+
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 
@@ -221,6 +223,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( m_Shared, CSDKPlayerShared ),
 	DEFINE_PRED_FIELD( m_flFreezeUntil, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flFreezeAmount, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flDisarmRedraw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
