@@ -30,6 +30,8 @@ WeaponData
 		"special1"			"WeaponFrag.Roll"
 		"double_shot"		"common/null.wav"
 		"single_shot"		"common/null.wav"
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"Weapon_Brawl.PunchHit"
 	}
 
 	// Weapon Sprite data is loaded by the Client DLL.

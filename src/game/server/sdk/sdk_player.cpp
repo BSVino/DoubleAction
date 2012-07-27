@@ -977,7 +977,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		else if (pAttackerSDKShared->IsRolling())
 			// Rolling, which is easier to do and typically happens after the dive, gives only half.
 			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
-		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+		else if (info.GetDamageType() == DMG_CLUB)
 			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
@@ -1030,7 +1030,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		else if (pAttackerSDKShared.IsRolling())
 			// Rolling, which is easier to do and typically happens after the dive, gives only half.
 			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
-		else if (pAttackerSDK->GetActiveSDKWeapon() && pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL && info.GetDamageType() == DMG_CLUB)
+		else if (info.GetDamageType() == DMG_CLUB)
 			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
@@ -2184,6 +2184,26 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
 	return false;
+}
+
+void CSDKPlayer::Disarm()
+{
+	CWeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
+	if (!pActiveWeapon)
+		return;
+
+	if (pActiveWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		return;
+
+	// Rifles can't be disarmed
+	if (pActiveWeapon->GetWeaponType() == WT_RIFLE)
+		return;
+
+	// Shotguns can't be disarmed
+	if (pActiveWeapon->GetWeaponType() == WT_SHOTGUN)
+		return;
+
+	ThrowActiveWeapon();
 }
 
 CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )

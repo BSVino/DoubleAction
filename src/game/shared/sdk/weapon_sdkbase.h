@@ -74,6 +74,15 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
+	virtual void      Swing(bool bIsSecondary);
+	virtual void      Hit(trace_t &traceHit, bool bIsSecondary);
+	virtual Activity  ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner );
+	virtual	void      ImpactEffect( trace_t &trace );
+	virtual bool      ImpactWater( const Vector &start, const Vector &end );
+
+	virtual float	GetMeleeRange( void )								{	return	32.0f;	}
+	virtual float	GetMeleeDamage( bool bSecondary ) const;
+
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
 
 #ifdef CLIENT_DLL

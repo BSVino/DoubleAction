@@ -41,19 +41,9 @@ public:
 	virtual Activity	GetPrimaryAttackActivity( void )	{	return	ACT_VM_HITCENTER;	}
 	virtual Activity	GetSecondaryAttackActivity( void )	{	return	ACT_VM_HITCENTER2;	}
 
-	virtual float	GetRange( void )								{	return	32.0f;	}
-	virtual	float	GetDamage( bool bSecondary )	{	return	bSecondary?GetSDKWpnData().m_iSecondaryDamage:GetSDKWpnData().m_iDamage;	}
+	virtual	float	GetMeleeDamage( bool bSecondary ) const;
 
 	CWeaponSDKMelee( const CWeaponSDKMelee & );
-
-protected:
-	virtual	void	ImpactEffect( trace_t &trace );
-
-private:
-	bool			ImpactWater( const Vector &start, const Vector &end );
-	void			Swing( bool bIsSecondary );
-	void			Hit( trace_t &traceHit, bool bSecondary );
-	Activity		ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner );
 };
 
 

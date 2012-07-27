@@ -144,6 +144,8 @@ public:
 	virtual CBaseEntity*	GiveNamedItem( const char *szName, int iSubType = 0 );
 	virtual bool			BumpWeapon( CBaseCombatWeapon *pWeapon );
 
+	virtual void Disarm();
+
 // In shared code.
 public:
 	void FireBullet( 
