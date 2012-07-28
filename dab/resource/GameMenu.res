@@ -41,13 +41,13 @@
 	}
 	"8"
 	{
-		"label" "#GameUI_ReportBug"
-		"command" "engine bug"
+		"label" ""
+		"command" ""
 	}
 	"9"
 	{
-		"label" "#GameUI_LaunchBenchmark"
-		"command" "OpenBenchmarkDialog"
+		"label" ""
+		"command" ""
 	}
 	"10"
 	{
