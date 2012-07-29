@@ -6,6 +6,10 @@
 
 #include "cbase.h"
 
+#ifdef CLIENT_DLL
+	#include "input.h"
+#endif
+
 #include "sdk_gamerules.h"
 
 #include "takedamageinfo.h"
@@ -262,6 +266,51 @@ void CSDKPlayer::FireBullet(
 		// Set up the next trace.
 		vecSrc = tr.endpos + vecDir;	// One unit in the direction of fire so that we firmly embed ourselves in whatever solid was hit.
 	}
+}
+
+void CSDKPlayer::DoMuzzleFlash()
+{
+#ifdef CLIENT_DLL
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
+
+	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
+	{
+		for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+		{
+			CBaseViewModel *vm = GetViewModel( i );
+			if ( !vm )
+				continue;
+
+			vm->DoMuzzleFlash();
+		}
+	}
+	else if (pActiveWeapon)
+	{
+		// Force world model so the attachments work.
+		pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
+
+		switch (pActiveWeapon->GetWeaponType())
+		{
+		case WT_PISTOL:
+		default:
+			pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
+			break;
+
+		case WT_SMG:
+			pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
+			break;
+
+		case WT_RIFLE:
+			pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
+			break;
+
+		case WT_SHOTGUN:
+			pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
+			break;
+		}
+	}
+#endif
 }
 
 bool CSDKPlayer::CanMove( void ) const

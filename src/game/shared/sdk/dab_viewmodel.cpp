@@ -29,3 +29,28 @@ float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence
 
 	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * m_flPlaybackRate * flSlow;
 }
+
+void CDABViewModel::DoMuzzleFlash()
+{
+#ifdef CLIENT_DLL
+	switch (GetDAWeapon()->GetWeaponType())
+	{
+	case WT_PISTOL:
+	default:
+		ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1" );
+		break;
+
+	case WT_SMG:
+		ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "1" );
+		break;
+
+	case WT_RIFLE:
+		ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "1" );
+		break;
+
+	case WT_SHOTGUN:
+		ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "1" );
+		break;
+	}
+#endif
+}

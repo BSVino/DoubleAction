@@ -173,8 +173,6 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	pPlayer->NoteWeaponFired();
 #endif
 
-	pPlayer->DoMuzzleFlash();
-
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
 	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)

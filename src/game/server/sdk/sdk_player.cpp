@@ -485,6 +485,10 @@ void CSDKPlayer::Precache()
 	PrecacheParticleSystem( "impact_glass" );
 	PrecacheParticleSystem( "impact_tile" );
 	PrecacheParticleSystem( "impact_wood" );
+	PrecacheParticleSystem( "muzzleflash_pistol" );
+	PrecacheParticleSystem( "muzzleflash_smg" );
+	PrecacheParticleSystem( "muzzleflash_rifle" );
+	PrecacheParticleSystem( "muzzleflash_shotgun" );
 
 	BaseClass::Precache();
 }

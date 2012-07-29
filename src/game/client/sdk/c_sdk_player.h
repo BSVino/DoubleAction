@@ -92,6 +92,8 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
+	virtual void DoMuzzleFlash();
+
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();
 

@@ -161,6 +161,8 @@ public:
 		float x,
 		float y );
 
+	virtual void DoMuzzleFlash();
+
 	CNetworkVarEmbedded( CSDKPlayerShared, m_Shared );
 	virtual void			PlayerDeathThink( void );
 	virtual bool		ClientCommand( const CCommand &args );

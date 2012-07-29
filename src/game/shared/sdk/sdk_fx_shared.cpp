@@ -171,6 +171,8 @@ void FX_FireBullets(
 	if ( !pPlayer )
 		return;
 	
+	pPlayer->DoMuzzleFlash();
+
 	StartGroupingSounds();
 
 #if !defined (CLIENT_DLL)
