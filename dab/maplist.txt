@@ -1,8 +1,9 @@
-da_megachat_b2
+da_megachat_b3
 da_ultrawish_b1
-da_jah_streets
+da_jah_streets_b3
+da_autumn_b3
 da_jinkies_b2
-da_doubletrouble_b1
+da_doubletrouble_b2
 da_keroberos_b5
 da_makeouttactics_b2
 da_morgendorffer_b1
