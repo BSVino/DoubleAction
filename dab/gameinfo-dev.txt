@@ -15,7 +15,8 @@
 	}
 	FileSystem
 	{
-		SteamAppId				218		// GCF for Source SDK Base 2007
+		SteamAppId				440     // There's a bug where HLMV and Hammer won't work unless TF2 is loaded.
+		//SteamAppId				218		// GCF for Source SDK Base 2007
 		ToolsAppId				211		// Tools will load this (ie: source SDK caches) to get things like materials\debug, materials\editor, etc.
 
 		//Orange box sdk allows an extra appid to be defined here to mount additional content. 240 is CounterStrike: Source
@@ -28,6 +29,7 @@
 			Game	|all_source_engine_paths|ep2
 			Game	|all_source_engine_paths|episodic	// Ep2 also uses some Ep1 content
 			Game	|all_source_engine_paths|hl2
+			Game	|all_source_engine_paths|dab
 		}
 	}
 }
