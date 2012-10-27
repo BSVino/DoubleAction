@@ -80,7 +80,7 @@ public:
 	virtual	void      ImpactEffect( trace_t &trace );
 	virtual bool      ImpactWater( const Vector &start, const Vector &end );
 
-	virtual float	GetMeleeRange( void )								{	return	40.0f;	}
+	virtual float	GetMeleeRange( void )								{	return	60.0f;	}
 	virtual float	GetMeleeDamage( bool bSecondary ) const;
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
