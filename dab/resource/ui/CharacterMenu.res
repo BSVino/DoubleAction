@@ -135,7 +135,7 @@
 		"activeimage"	"cls_blue_class6_active"
 		"inactiveimage"	"cls_blue_class6"
 
-		"sequence"		"unarmed_idle"
+		"sequence"		"idle"
 		"body_yaw"		"25"
 		"body_pitch"	"-30"
 		"weaponmodel"	"models/weapons/m3.mdl"

@@ -731,6 +731,12 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			break;
 		}
 
+	case PLAYERANIMEVENT_CANCEL:
+		{
+			ResetGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD );
+			break;
+		}
+
 	default:
 		{
 			BaseClass::DoAnimationEvent( event, nData );

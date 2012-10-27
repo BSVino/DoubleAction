@@ -339,6 +339,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if (!SendWeaponAnim( ACT_VM_HITCENTER ))
 		SendWeaponAnim( ACT_VM_DRAW );	// If the animation is missing, play the draw animation instead as a placeholder.
 
+	// Cancel it quickly before attacking again so that it doesn't just restart the gesture.
+	pOwner->DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
 	if (bIsSecondary)
 		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
 	else
