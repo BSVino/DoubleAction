@@ -203,6 +203,9 @@ void FX_FireBullets(
 			x,y );
 	}
 
+	if (pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		pPlayer->UseStyleCharge(3);
+
 #if !defined (CLIENT_DLL)
 	lagcompensation->FinishLagCompensation( pPlayer );
 #endif

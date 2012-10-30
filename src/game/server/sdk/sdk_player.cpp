@@ -152,6 +152,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 
 	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
 	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
@@ -196,7 +197,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
-	SendPropTime( SENDINFO( m_flStyleSkillStart ) ),
+	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 END_SEND_TABLE()
@@ -324,9 +325,11 @@ void CSDKPlayer::PreThink(void)
 		{
 			if (m_flCurrentTime > m_flNextSecondWindRegen)
 			{
-				TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+				int iHealthTaken = TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
 
 				m_flNextSecondWindRegen = m_flCurrentTime + 1;
+
+				UseStyleCharge(iHealthTaken);
 			}
 
 		}
@@ -404,27 +407,6 @@ void CSDKPlayer::PostThink()
 			else if ( m_Shared.IsProne() )
 				SetCollisionBounds( VEC_PRONE_HULL_MIN, VEC_PRONE_HULL_MAX );
 			VPROF_SCOPE_END();
-		}
-	}
-
-	if (m_flStyleSkillStart > 0)
-	{
-		if (m_flCurrentTime > m_flStyleSkillStart + dab_stylemetertime.GetFloat())
-		{
-			m_flStyleSkillStart = -1;
-
-			CSingleUserRecipientFilter filter( this );
-			EmitSound(filter, entindex(), "HudMeter.End");
-
-			if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
-			{
-				Assert(m_iSlowMoType == SLOWMO_STYLESKILL);
-
-				m_flSlowMoTime = 0;
-				m_iSlowMoType = SLOWMO_NONE;
-
-				SDKGameRules()->PlayerSlowMoUpdate(this);
-			}
 		}
 	}
 
@@ -596,11 +578,12 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 
-	m_flStyleSkillStart = -1;
+	m_flStyleSkillCharge = 0;
 
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iSlowMoType = SLOWMO_NONE;
+	m_bHasSuperSlowMo = false;
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
@@ -819,7 +802,10 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bCheckFriendlyFire = true;
 
 	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+	{
+		UseStyleCharge(flDamage * 0.2f);
 		flDamage *= 0.6f;
+	}
 
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
@@ -973,7 +959,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 		CSDKPlayerShared* pAttackerSDKShared = &pAttackerSDK->m_Shared;
 
-		float flDamage = info.GetDamage() / 4.0f;	// Damaging someone for 100% of their health is enough to get one bar.
+		float flDamage = info.GetDamage() / 8.0f;	// Damaging someone for 100% of their health is enough to get one bar.
 
 		if (pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
@@ -999,6 +985,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 }
 
 ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
+ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1030,22 +1017,22 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
 		if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
-			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12, STYLE_POINT_STYLISH);
 		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(15, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(7, STYLE_POINT_LARGE);
 		else if (pAttackerSDKShared.IsRolling())
 			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12*0.5f, STYLE_POINT_STYLISH);
 		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12*0.5f, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(7.5f, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(3, STYLE_POINT_LARGE);
 		else
-			pAttackerSDK->AddStylePoints(5, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(2, STYLE_POINT_LARGE);
 
-		pAttackerSDK->m_flSlowMoSeconds = clamp(pAttackerSDK->m_flSlowMoSeconds+1, 0, 5);
+		pAttackerSDK->GiveSlowMo(1);
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -1067,9 +1054,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (IsStyleSkillActive())
 	{
-		// If the player died while the style meter was active, refund the unused portion.
-		float flUnused = 1-((m_flCurrentTime - m_flStyleSkillStart)/dab_stylemetertime.GetFloat());
-		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
+		// If the player died while the style meter was active, refund some of the unused portion.
+		float flUnused = m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat();
+		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat() / 2;
 		SetStylePoints(m_flStylePoints + flRefund);
 	}
 
@@ -1082,6 +1069,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
+	m_bHasSuperSlowMo = false;
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 }
@@ -1107,7 +1095,7 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	m_iHealth += flHealth;
 
 	if (m_iHealth > iMax*flMultiplier)
-		m_iHealth = iMax;
+		m_iHealth = iMax*flMultiplier;
 
 	return m_iHealth - oldHealth;
 
@@ -2292,10 +2280,19 @@ void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 	if (IsStyleSkillActive())
 		return;
 
+	if (m_iSlowMoType == SLOWMO_STYLESKILL)
+		return;
+
 	if (m_Shared.IsAimedIn())
 		points /= 2;
 
 	m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
+
+	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
+	{
+		ActivateMeter();
+		return;
+	}
 
 	CSingleUserRecipientFilter filter( this );
 	if (eStyle == STYLE_POINT_SMALL)
@@ -2337,16 +2334,16 @@ bool CSDKPlayer::UseStylePoints (void)
 
 void CSDKPlayer::ActivateMeter()
 {
-	if (m_flStyleSkillStart > 0)
-		return;
-
 	if (!UseStylePoints())
 		return;
 
 	if (!IsAlive())
 		return;
 
-	m_flStyleSkillStart = m_flCurrentTime;
+	m_flStylePoints = 0;
+
+	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
+		m_flStyleSkillCharge += dab_stylemetertotalcharge.GetFloat();
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
@@ -2381,7 +2378,10 @@ void CSDKPlayer::ActivateMeter()
 		CBasePlayer::GiveAmmo( 10, "grenades");
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
-		ActivateSlowMo(SLOWMO_STYLESKILL);
+	{
+		m_bHasSuperSlowMo = true;
+		GiveSlowMo(6);   // Gets cut in two because super slow mo is on, so it's really 3
+	}
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)
@@ -2390,16 +2390,25 @@ void CSDKPlayer::SetSlowMoType(int iType)
 		m_iSlowMoType = iType;
 }
 
-void CC_ActivateMeter_f (void)
+void CSDKPlayer::GiveSlowMo(float flSeconds)
+{
+	if (m_bHasSuperSlowMo)
+		flSeconds /= 2;
+
+	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, 5);
+}
+
+void CC_ActivateSlowmo_f (void)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
 
-	pPlayer->ActivateMeter();
+	if (pPlayer->m_flSlowMoSeconds > 0)
+		pPlayer->ActivateSlowMo();
 }
 
-static ConCommand activatemeter("activatemeter", CC_ActivateMeter_f, "Activate the style meter." );
+static ConCommand activateslowmo("activateslowmo", CC_ActivateSlowmo_f, "Activate slow motion." );
 
 void CC_Character(const CCommand& args)
 {
@@ -2513,7 +2522,7 @@ void CC_GiveSlowMo(const CCommand& args)
 	if (!pPlayer)
 		return;
 
-	pPlayer->m_flSlowMoSeconds += 1;
+	pPlayer->GiveSlowMo(1);
 }
 
 static ConCommand give_slowmo("give_slowmo", CC_GiveSlowMo, "Give the player one second of slow motion.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);

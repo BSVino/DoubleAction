@@ -329,10 +329,17 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		ImpactWater( swingStart, testEnd );
 
 		WeaponSound( MELEE_MISS );
+
+		// Use less charge than if it's a hit
+		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			pOwner->UseStyleCharge(5);
 	}
 	else
 	{
 		Hit( traceHit, bIsSecondary );
+
+		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			pOwner->UseStyleCharge(10);
 	}
 
 	// Send the anim
@@ -857,6 +864,10 @@ bool CWeaponSDKBase::Reload( void )
 {
 	bool fRet;
 	float fCacheTime = m_flNextSecondaryAttack;
+
+	// Player gets a reload speed boost with Adrenaline.
+	if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		ToSDKPlayer(GetOwner())->UseStyleCharge(5);
 
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )

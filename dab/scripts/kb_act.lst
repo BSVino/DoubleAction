@@ -15,7 +15,7 @@
 "+attack2"	"#Valve_Secondary_Attack"
 "+reload"	"#Valve_Reload_Weapon"
 "+alt1"		"#DAB_Stunt"
-"activatemeter"	"#DAB_Activate_Meter"
+"activateslowmo"	"#DAB_Activate_SlowMo"
 "slot1"		"#Valve_Weapon_Category_1"
 "slot2"		"#Valve_Weapon_Category_2"
 "slot3" 	"#Valve_Weapon_Category_3"

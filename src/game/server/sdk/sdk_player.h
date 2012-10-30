@@ -203,16 +203,18 @@ public:
 	void SetStylePoints(float points);
 	bool UseStylePoints();
 	bool IsStyleSkillActive() const;
+	void UseStyleCharge(float flCharge);
 
 	void ActivateMeter();
 
 	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
 
-	void ActivateSlowMo(slowmo_type eType = SLOWMO_ACTIVATED);
+	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	int GetSlowMoType() const { return m_iSlowMoType; }
 	void SetSlowMoType(int iType);
+	void GiveSlowMo(float flSeconds);
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
@@ -259,7 +261,7 @@ private:
 
 	// Universal Meter
 	CNetworkVar(float, m_flStylePoints);
-	CNetworkVar(float, m_flStyleSkillStart);
+	CNetworkVar(float, m_flStyleSkillCharge);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
@@ -343,6 +345,7 @@ public:
 	CNetworkVar( float, m_flDisarmRedraw );
 
 	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( bool, m_bHasSuperSlowMo );
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );

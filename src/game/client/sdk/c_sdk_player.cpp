@@ -150,6 +150,7 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 
 	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
+	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
@@ -176,7 +177,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
-	RecvPropTime( RECVINFO(m_flStyleSkillStart) ),
+	RecvPropFloat( RECVINFO(m_flStyleSkillCharge) ),
 
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
@@ -227,7 +228,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
-	DEFINE_PRED_FIELD( m_flStyleSkillStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flStyleSkillCharge, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoSeconds, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   

@@ -109,17 +109,22 @@ void CHudStyleBar::Paint()
 		return;
 
 	Color clrBar;
-	if (m_flStyle > 25)
+	if (pPlayer->IsStyleSkillActive())
+	{
 		clrBar = gHUD.m_clrCaution;
+		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
+	}
 	else
 		clrBar = gHUD.m_clrNormal;
 
-	if (pPlayer->IsStyleSkillActive())
-		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
-
 	surface()->DrawSetColor( clrBar );
 
-	float flPercent = m_flStyle / 100.0f;
+	float flPercent;
+	if (pPlayer->IsStyleSkillActive())
+		flPercent = min(pPlayer->GetStyleSkillCharge() / 100, 1);
+	else
+		flPercent = m_flStyle * 4 / 100.0f;
+
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 	float flBarHeight = iHeight - m_flGap*2;

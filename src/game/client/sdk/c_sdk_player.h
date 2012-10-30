@@ -98,7 +98,9 @@ public:
 	virtual bool	PlayerFrozen();
 
 	float GetStylePoints() { return m_flStylePoints; }
+	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
 	bool IsStyleSkillActive() const;
+	void UseStyleCharge(float flCharge);
 
 	virtual void SharedSpawn();
 	
@@ -118,10 +120,11 @@ public:
 	bool IsSprinting( void );
 #endif
 
-	void ActivateSlowMo(slowmo_type eType = SLOWMO_ACTIVATED);
+	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
+	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
@@ -209,7 +212,7 @@ private:
 	int m_ArmorValue;
 
 	float m_flStylePoints;
-	float m_flStyleSkillStart;
+	float m_flStyleSkillCharge;
 
 	class CSDKSoundEvent
 	{
@@ -223,6 +226,7 @@ private:
 	int				m_iLoadoutWeight;
 
 	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( bool, m_bHasSuperSlowMo );
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );

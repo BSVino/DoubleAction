@@ -369,12 +369,6 @@ bool CSDKPlayer::PlayerUse()
 	if (!IsAlive())
 		return false;
 
-	if (m_flSlowMoSeconds > 0)
-	{
-		ActivateSlowMo();
-		return true;
-	}
-
 	return false;
 }
 
@@ -484,7 +478,12 @@ bool CSDKPlayer::IsStyleSkillActive() const
 	if (m_flStylePoints >= 100)
 		return true;
 
-	return m_flStyleSkillStart > 0;
+	return m_flStyleSkillCharge > 0;
+}
+
+void CSDKPlayer::UseStyleCharge(float flCharge)
+{
+	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 }
 
 void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
@@ -665,6 +664,9 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	if (!CanSlide())
 		return;
 
+	if (m_iStyleSkill == SKILL_ADRENALINE)
+		m_pOuter->UseStyleCharge(5);
+
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
@@ -817,6 +819,9 @@ Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
+
+	if (m_iStyleSkill == SKILL_ADRENALINE)
+		m_pOuter->UseStyleCharge(5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -1115,21 +1120,15 @@ float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * GetSlowMoMultiplier();
 }
 
-void CSDKPlayer::ActivateSlowMo(slowmo_type eType)
+void CSDKPlayer::ActivateSlowMo()
 {
-	if (eType == SLOWMO_ACTIVATED)
-	{
-		if (m_iSlowMoType == SLOWMO_STYLESKILL)
-			return;
+	if (!m_flSlowMoSeconds)
+		return;
 
-		m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
-		m_flSlowMoSeconds = 0;
-		m_iSlowMoType = eType;
-	}
-	else if (eType == SLOWMO_STYLESKILL)
-	{
-		m_iSlowMoType = eType;
-	}
+	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
+	m_flSlowMoSeconds = 0;
+	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
+	m_bHasSuperSlowMo = false;
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
@@ -1159,7 +1158,7 @@ void CSDKPlayer::UpdateCurrentTime()
 
 	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
 
-	if (m_iSlowMoType == SLOWMO_ACTIVATED && gpGlobals->curtime > m_flSlowMoTime)
+	if (gpGlobals->curtime > m_flSlowMoTime)
 	{
 		m_flSlowMoTime = 0;
 		m_iSlowMoType = SLOWMO_NONE;
