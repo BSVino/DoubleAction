@@ -2284,7 +2284,10 @@ void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 		return;
 
 	if (m_Shared.IsAimedIn())
-		points /= 2;
+		points *= 1.2f;
+
+	if (m_iSlowMoType != SLOWMO_NONE)
+		points *= 1.3f;
 
 	m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
 
