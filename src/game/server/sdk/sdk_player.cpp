@@ -1016,7 +1016,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
-		if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
+		CSDKWeaponInfo *pWeaponInfo = pAttackerSDK->GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID()):NULL;
+
+		if (pAttackerSDK->GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && pAttackerSDK->GetActiveSDKWeapon()->m_iClip1 == 0)
+			// Killing a player with your last bullet.
+			pAttackerSDK->AddStylePoints(12, STYLE_POINT_STYLISH);
+		else if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
 			pAttackerSDK->AddStylePoints(12, STYLE_POINT_STYLISH);
 		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 			// Damaging a dude through a wall with a firearm.
