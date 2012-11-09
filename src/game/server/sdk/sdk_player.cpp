@@ -961,6 +961,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		float flDamage = info.GetDamage() / 8.0f;	// Damaging someone for 100% of their health is enough to get one bar.
 
+		float flDistance = pAttackerSDK->GetAbsOrigin().DistTo(GetAbsOrigin());
+		flDamage *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
+
 		if (pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsSliding())
 			// Damaging a dude while stunting enough to kill him gives a full bar.
 			pAttackerSDK->AddStylePoints(flDamage, STYLE_POINT_LARGE);
@@ -1018,24 +1021,27 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		CSDKWeaponInfo *pWeaponInfo = pAttackerSDK->GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID()):NULL;
 
+		float flDistance = pAttackerSDK->GetAbsOrigin().DistTo(GetAbsOrigin());
+		float flDistanceBonus = RemapValClamped(flDistance, 512, 1024, 1, 1.5f);
+
 		if (pAttackerSDK->GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && pAttackerSDK->GetActiveSDKWeapon()->m_iClip1 == 0)
 			// Killing a player with your last bullet.
-			pAttackerSDK->AddStylePoints(12, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12 * flDistanceBonus, STYLE_POINT_STYLISH);
 		else if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
-			pAttackerSDK->AddStylePoints(12, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12 * flDistanceBonus, STYLE_POINT_STYLISH);
 		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(7, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(7 * flDistanceBonus, STYLE_POINT_LARGE);
 		else if (pAttackerSDKShared.IsRolling())
 			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(12*0.5f, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12*0.5f * flDistanceBonus, STYLE_POINT_STYLISH);
 		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(12*0.5f, STYLE_POINT_STYLISH);
+			pAttackerSDK->AddStylePoints(12*0.5f * flDistanceBonus, STYLE_POINT_STYLISH);
 		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
 			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(3, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(3 * flDistanceBonus, STYLE_POINT_LARGE);
 		else
-			pAttackerSDK->AddStylePoints(2, STYLE_POINT_LARGE);
+			pAttackerSDK->AddStylePoints(2 * flDistanceBonus, STYLE_POINT_LARGE);
 
 		pAttackerSDK->GiveSlowMo(1);
 	}
