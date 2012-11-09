@@ -17,6 +17,7 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 
+class CProjectedLightEffect;
 
 class C_SDKPlayer : public C_BasePlayer
 {
@@ -63,7 +64,22 @@ public:
 	// Have this player play the sounds from his view model's reload animation.
 	void PlayReloadEffect();
 
-// Called by shared code.
+	virtual void	UpdateFlashlight( void );
+	void	TurnOffFlashlight( void );
+	virtual const char *GetFlashlightTextureName( void ) const { return NULL; }
+	virtual float GetFlashlightFOV( void ) const { return 0.0f; }
+	virtual float GetFlashlightFarZ( void ) const { return 0.0f; }
+	virtual float GetFlashlightLinearAtten( void ) const { return 0.0f; }
+	virtual Vector GetFlashlightOrigin() const { return m_vecFlashlightOrigin; }
+	virtual bool CastsFlashlightShadows( void ) const { return true; }
+	virtual void GetFlashlightOffset( const Vector &vecForward, const Vector &vecRight, const Vector &vecUp, Vector *pVecOffset ) const;
+
+	virtual bool				ShouldReceiveProjectedTextures( int flags )
+	{
+		return true;
+	}
+
+	// Called by shared code.
 public:
 	SDKPlayerState State_Get() const;
 	
@@ -232,6 +248,13 @@ private:
 	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
+
+	CProjectedLightEffect *m_pProjectedFlashlight;
+	bool			m_bFlashlightEnabled;
+	Vector	m_vecFlashlightOrigin;
+	Vector	m_vecFlashlightForward;
+	Vector	m_vecFlashlightUp;
+	Vector	m_vecFlashlightRight;
 };
 
 

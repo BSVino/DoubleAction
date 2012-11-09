@@ -26,6 +26,7 @@
 #include "ClientEffectPrecacheSystem.h"
 #include "model_types.h"
 #include "sdk_gamerules.h"
+#include "projectedlighteffect.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -630,6 +631,11 @@ C_SDKPlayer::C_SDKPlayer() :
 C_SDKPlayer::~C_SDKPlayer()
 {
 	m_PlayerAnimState->Release();
+
+	if ( m_bFlashlightEnabled )
+	{
+		TurnOffFlashlight();
+	}
 }
 
 
@@ -1453,4 +1459,135 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
 	gViewPortInterface->FindPanelByName(PANEL_BUY)->Update();
+}
+
+class FlashlightSupressor
+{
+public:
+	bool operator()( C_BasePlayer *player )
+	{
+		ToSDKPlayer(player)->TurnOffFlashlight();
+		return true;
+	}
+};
+
+void C_SDKPlayer::UpdateFlashlight()
+{
+	//Tony; keeping this variable for later.
+	C_SDKPlayer *pFlashlightPlayer = this;
+
+	if ( !IsAlive() )
+	{
+		if ( GetObserverMode() == OBS_MODE_IN_EYE )
+			pFlashlightPlayer = ToSDKPlayer( GetObserverTarget() );
+	}
+
+	if ( !pFlashlightPlayer )
+		return;
+
+	///////////////////////////////////////////////////////////
+	//Tony; flashlight VECTORS
+	/////
+	Vector vecForward, vecRight, vecUp;
+	EyeVectors( &vecForward, &vecRight, &vecUp );
+
+	if ( this == C_BasePlayer::GetLocalPlayer() )
+	{
+		CBaseViewModel *vm = GetViewModel( 0 );
+		//Tony; if viewmodel is found, override.
+		if ( vm )
+		{
+			Vector dummy;
+			QAngle gunAttachmentAngles;
+			//Tony; todo; we need a flashlight attachment point on the view models!
+			if ( vm->GetAttachment( vm->LookupAttachment("muzzle"), dummy, gunAttachmentAngles ) )
+				AngleVectors( gunAttachmentAngles, &vecForward, &vecRight, &vecUp );
+		}
+
+		//Tony; just set this shit for now, directly.
+		pFlashlightPlayer->m_vecFlashlightOrigin = EyePosition();//vecPos;
+		pFlashlightPlayer->m_vecFlashlightForward = vecForward;
+		pFlashlightPlayer->m_vecFlashlightRight = vecRight;
+		pFlashlightPlayer->m_vecFlashlightUp = vecUp;
+	}
+	else
+	{
+		//Tony; in order to make this look okay for other players we need to swap the angles so it points down, otherwise it looks dumb.
+		pFlashlightPlayer->m_vecFlashlightOrigin = pFlashlightPlayer->GetAbsOrigin() + vecForward * 16.0f; //shift ahead a bit.. i dunno how much i should actually shift yet. but..
+		pFlashlightPlayer->m_vecFlashlightForward = -vecUp;//vecForward;
+		pFlashlightPlayer->m_vecFlashlightRight = vecRight;
+		pFlashlightPlayer->m_vecFlashlightUp = vecForward;//vecUp;
+	}
+
+	///////////////////////////////////////////////////////////
+
+	int projManagerIdx = pFlashlightPlayer->index;
+
+	if ( pFlashlightPlayer )
+		ProjectedLightEffectManager(projManagerIdx).SetEntityIndex( pFlashlightPlayer->index );
+
+	if ( pFlashlightPlayer && pFlashlightPlayer->IsAlive() && pFlashlightPlayer->IsEffectActive( EF_DIMLIGHT ) )
+	{
+		// Make sure we're using the proper flashlight texture
+		const char *pszTextureName = pFlashlightPlayer->GetFlashlightTextureName();
+
+		if ( !m_bFlashlightEnabled )
+		{
+			// Turned on the light; create it.
+			if ( pszTextureName )
+			{
+				ProjectedLightEffectManager(projManagerIdx).TurnOnFlashlight( pFlashlightPlayer->index, pszTextureName, pFlashlightPlayer->GetFlashlightFOV(),
+					pFlashlightPlayer->GetFlashlightFarZ(), pFlashlightPlayer->GetFlashlightLinearAtten() );
+			}
+			else
+			{
+				ProjectedLightEffectManager(projManagerIdx).TurnOnFlashlight( pFlashlightPlayer->index );
+			}
+			m_bFlashlightEnabled = true;
+		}
+	}
+	else if ( m_bFlashlightEnabled )
+	{
+		ProjectedLightEffectManager(projManagerIdx).TurnOffFlashlight();
+		m_bFlashlightEnabled = false;
+	}
+
+	if ( pFlashlightPlayer )
+	{
+		Vector vecForward, vecRight, vecUp;
+		Vector vecPos;
+		//Check to see if we have an externally specified flashlight origin, if not, use eye vectors/render origin
+		if ( pFlashlightPlayer->m_vecFlashlightOrigin != vec3_origin && pFlashlightPlayer->m_vecFlashlightOrigin.IsValid() )
+		{
+			vecPos = pFlashlightPlayer->m_vecFlashlightOrigin;
+			vecForward = pFlashlightPlayer->m_vecFlashlightForward;
+			vecRight = pFlashlightPlayer->m_vecFlashlightRight;
+			vecUp = pFlashlightPlayer->m_vecFlashlightUp;
+		}
+		else
+		{
+			EyeVectors( &vecForward, &vecRight, &vecUp );
+			vecPos = GetRenderOrigin() + m_vecViewOffset;
+		}
+
+		// Update the light with the new position and direction.		
+		ProjectedLightEffectManager(projManagerIdx).UpdateFlashlight( vecPos, vecForward, vecRight, vecUp, pFlashlightPlayer->GetFlashlightFOV(), 
+			pFlashlightPlayer->CastsFlashlightShadows(), pFlashlightPlayer->GetFlashlightFarZ(), pFlashlightPlayer->GetFlashlightLinearAtten(),
+			pFlashlightPlayer->GetFlashlightTextureName() );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Turns off flashlight if it's active (TERROR)
+//-----------------------------------------------------------------------------
+void C_SDKPlayer::TurnOffFlashlight( void )
+{
+	int nSlot = this->index;
+
+	if ( m_bFlashlightEnabled )
+	{
+		ProjectedLightEffectManager( nSlot ).TurnOffFlashlight();
+		m_bFlashlightEnabled = false;
+	}
 }

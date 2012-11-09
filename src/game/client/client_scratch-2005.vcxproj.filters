@@ -1443,6 +1443,9 @@
     <ClCompile Include="sdk\sdk_hud_slowmo.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\projectedlighteffect.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3238,6 +3241,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h">
       <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\projectedlighteffect.h">
+      <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
