@@ -238,10 +238,6 @@ END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
 
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheStyle )
-CLIENTEFFECT_MATERIAL( "models/effects/styleskill.vmt" )
-CLIENTEFFECT_REGISTER_END()
-
 ConVar cl_ragdoll_fade_time( "cl_ragdoll_fade_time", "15", FCVAR_CLIENTDLL );
 ConVar cl_ragdoll_pronecheck_distance( "cl_ragdoll_pronecheck_distance", "64", FCVAR_GAMEDLL );
 
@@ -785,13 +781,6 @@ int C_SDKPlayer::DrawModel( int flags )
 {
 	if (IsStyleSkillActive())
 	{
-		if (flags & STUDIO_RENDER)
-		{
-			CMaterialReference hMaterial;
-			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
-			modelrender->ForcedMaterialOverride( hMaterial );
-		}
-
 		int iResult = BaseClass::DrawModel(flags);
 
 		if (flags & STUDIO_RENDER)
@@ -833,13 +822,6 @@ int	C_SDKPlayer::DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags
 
 	if ( pPlayer->IsStyleSkillActive() )
 	{
-		if ( flags & STUDIO_RENDER )
-		{
-			CMaterialReference hMaterial;
-			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
-			modelrender->ForcedMaterialOverride( hMaterial );
-		}
-
 		// We allow our weapon to then override this if it wants to.
 		// This allows c_* weapons to draw themselves.
 		C_BaseCombatWeapon* pWeapon = pViewmodel->GetOwningWeapon();
