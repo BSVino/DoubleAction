@@ -808,11 +808,11 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height( "sdk_dive_height", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "430", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 Vector CSDKPlayerShared::StartDiving()
