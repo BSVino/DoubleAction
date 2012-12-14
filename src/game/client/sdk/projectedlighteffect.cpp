@@ -579,6 +579,10 @@ void CProjectedLightEffectManager::UpdateFlashlight( const Vector &vecPos, const
 
 	bool bMuzzleFlashActive = ( m_nMuzzleFlashFrameCountdown > 0 ) || (pPlayer->GetCurrentTime() < m_flMuzzleFlashStart + m_muzzleFlashTimer.GetCountdownDuration());
 
+	// Don't let values from a previous level change trigger it.
+	if (m_flMuzzleFlashStart - pPlayer->GetCurrentTime() > 5)
+		bMuzzleFlashActive = false;
+
 	if ( m_pFlashlightEffect )
 	{
 		m_flFov = flFov;
