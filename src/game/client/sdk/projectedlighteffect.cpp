@@ -577,13 +577,16 @@ void CProjectedLightEffectManager::UpdateFlashlight( const Vector &vecPos, const
 
 	C_SDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex( m_nFlashlightEntIndex ));
 
-	bool bMuzzleFlashActive = ( m_nMuzzleFlashFrameCountdown > 0 ) || (pPlayer->GetCurrentTime() < m_flMuzzleFlashStart + m_muzzleFlashTimer.GetCountdownDuration());
+	bool bMuzzleFlashActive = false;
+	
+	if (pPlayer)
+		bMuzzleFlashActive = ( m_nMuzzleFlashFrameCountdown > 0 ) || (pPlayer->GetCurrentTime() < m_flMuzzleFlashStart + m_muzzleFlashTimer.GetCountdownDuration());
 
 	// Don't let values from a previous level change trigger it.
 	if (m_flMuzzleFlashStart - pPlayer->GetCurrentTime() > 5)
 		bMuzzleFlashActive = false;
 
-	if ( m_pFlashlightEffect )
+	if ( pPlayer && m_pFlashlightEffect )
 	{
 		m_flFov = flFov;
 		m_flFarZ = flFarZ;
@@ -618,6 +621,10 @@ void CProjectedLightEffectManager::UpdateFlashlight( const Vector &vecPos, const
 void CProjectedLightEffectManager::TriggerMuzzleFlash()
 {
 	C_SDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex( m_nFlashlightEntIndex ));
+
+	if (!pPlayer)
+		return;
+
 	m_flMuzzleFlashStart = pPlayer->GetCurrentTime();
 	m_nMuzzleFlashFrameCountdown = 2;
 	m_muzzleFlashTimer.Start( 0.12f );		// show muzzleflash for 2 frames or 66ms, whichever is longer
