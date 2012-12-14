@@ -83,6 +83,8 @@ private:
 	float m_flLinearAtten;
 	int m_nMuzzleFlashFrameCountdown;
 	CountdownTimer m_muzzleFlashTimer;
+	float m_flMuzzleFlashStart;
+	float m_flInitialMuzzleFlashBrightness;
 	float m_flMuzzleFlashBrightness;
 	bool m_bFlashlightOn;
 	int m_nFXComputeFrame;
@@ -90,7 +92,7 @@ private:
 
 public:
 	CProjectedLightEffectManager() : m_pFlashlightEffect( NULL ), m_pFlashlightTextureName( NULL ), m_nFlashlightEntIndex( -1 ), m_flFov( 0.0f ),
-		m_flFarZ( 0.0f ), m_flLinearAtten( 0.0f ), m_nMuzzleFlashFrameCountdown( 0 ), m_flMuzzleFlashBrightness( 1.0f ),
+		m_flFarZ( 0.0f ), m_flLinearAtten( 0.0f ), m_nMuzzleFlashFrameCountdown( 0 ), m_flInitialMuzzleFlashBrightness( 1.0f ), m_flMuzzleFlashBrightness( 1.0f ),
 		m_bFlashlightOn( false ), m_nFXComputeFrame( -1 ), m_bFlashlightOverride( false ) {}
 
 	void TurnOnFlashlight( int nEntIndex = 0, const char *pszTextureName = NULL, float flFov = 0.0f, float flFarZ = 0.0f, float flLinearAtten = 0.0f )
@@ -158,56 +160,14 @@ public:
 
 	bool IsFlashlightOn() const { return m_bFlashlightOn; }
 
-	void UpdateFlashlight( const Vector &vecPos, const Vector &vecDir, const Vector &vecRight, const Vector &vecUp, float flFov, bool castsShadows,
-		float flFarZ, float flLinearAtten, const char* pTextureName = NULL )
-	{
-		if ( m_bFlashlightOverride )
-		{
-			// don't mess with it while it's overridden
-			return;
-		}
-
-		bool bMuzzleFlashActive = ( m_nMuzzleFlashFrameCountdown > 0 ) || !m_muzzleFlashTimer.IsElapsed();
-
-		if ( m_pFlashlightEffect )
-		{
-			m_flFov = flFov;
-			m_flFarZ = flFarZ;
-			m_flLinearAtten = flLinearAtten;
-			m_pFlashlightEffect->UpdateLight( m_nFlashlightEntIndex, vecPos, vecDir, vecRight, vecUp, flFov, flFarZ, flLinearAtten, castsShadows, pTextureName );
-			m_pFlashlightEffect->SetMuzzleFlashEnabled( bMuzzleFlashActive, m_flMuzzleFlashBrightness );
-		}
-
-		if ( !bMuzzleFlashActive && !m_bFlashlightOn && m_pFlashlightEffect )
-		{
-			delete m_pFlashlightEffect;
-			m_pFlashlightEffect = NULL;
-		}
-
-		if ( bMuzzleFlashActive && !m_bFlashlightOn && !m_pFlashlightEffect )
-		{
-			m_pFlashlightEffect = new CProjectedLightEffect( m_nFlashlightEntIndex );
-			m_pFlashlightEffect->SetMuzzleFlashEnabled( bMuzzleFlashActive, m_flMuzzleFlashBrightness );
-		}
-
-		if ( bMuzzleFlashActive && m_nFXComputeFrame != gpGlobals->framecount )
-		{
-			m_nFXComputeFrame = gpGlobals->framecount;
-			m_nMuzzleFlashFrameCountdown--;
-		}
-	}
+	void UpdateFlashlight( const Vector &vecPos, const Vector &vecDir, const Vector &vecRight, const Vector &vecUp, float flFov, bool castsShadows, float flFarZ, float flLinearAtten, const char* pTextureName = NULL );
 
 	void SetEntityIndex( int index )
 	{
 		m_nFlashlightEntIndex = index;
 	}
 
-	void TriggerMuzzleFlash()
-	{
-		m_nMuzzleFlashFrameCountdown = 2;
-		m_muzzleFlashTimer.Start( 0.066f );		// show muzzleflash for 2 frames or 66ms, whichever is longer
-		m_flMuzzleFlashBrightness = random->RandomFloat( 0.4f, 2.0f );
-	}
+	void TriggerMuzzleFlash();
 
 	const char *GetFlashlightTextureName( void ) const
 	{

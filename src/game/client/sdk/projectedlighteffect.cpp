@@ -567,6 +567,59 @@ void CProjectedLightEffect::LightOff()
 	}
 }
 
+void CProjectedLightEffectManager::UpdateFlashlight( const Vector &vecPos, const Vector &vecDir, const Vector &vecRight, const Vector &vecUp, float flFov, bool castsShadows, float flFarZ, float flLinearAtten, const char* pTextureName)
+{
+	if ( m_bFlashlightOverride )
+	{
+		// don't mess with it while it's overridden
+		return;
+	}
+
+	C_SDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex( m_nFlashlightEntIndex ));
+
+	bool bMuzzleFlashActive = ( m_nMuzzleFlashFrameCountdown > 0 ) || (pPlayer->GetCurrentTime() < m_flMuzzleFlashStart + m_muzzleFlashTimer.GetCountdownDuration());
+
+	if ( m_pFlashlightEffect )
+	{
+		m_flFov = flFov;
+		m_flFarZ = flFarZ;
+		m_flLinearAtten = flLinearAtten;
+		m_pFlashlightEffect->UpdateLight( m_nFlashlightEntIndex, vecPos, vecDir, vecRight, vecUp, flFov, flFarZ, flLinearAtten, castsShadows, pTextureName );
+
+		float flFadeOut = RemapValClamped(pPlayer->GetCurrentTime(), m_flMuzzleFlashStart, m_flMuzzleFlashStart+m_muzzleFlashTimer.GetCountdownDuration(), 1.0, 0.0f);
+		m_flMuzzleFlashBrightness = m_flInitialMuzzleFlashBrightness * flFadeOut;
+
+		m_pFlashlightEffect->SetMuzzleFlashEnabled( bMuzzleFlashActive, m_flMuzzleFlashBrightness );
+	}
+
+	if ( !bMuzzleFlashActive && !m_bFlashlightOn && m_pFlashlightEffect )
+	{
+		delete m_pFlashlightEffect;
+		m_pFlashlightEffect = NULL;
+	}
+
+	if ( bMuzzleFlashActive && !m_bFlashlightOn && !m_pFlashlightEffect )
+	{
+		m_pFlashlightEffect = new CProjectedLightEffect( m_nFlashlightEntIndex );
+		m_pFlashlightEffect->SetMuzzleFlashEnabled( bMuzzleFlashActive, m_flInitialMuzzleFlashBrightness );
+	}
+
+	if ( bMuzzleFlashActive && m_nFXComputeFrame != gpGlobals->framecount )
+	{
+		m_nFXComputeFrame = gpGlobals->framecount;
+		m_nMuzzleFlashFrameCountdown--;
+	}
+}
+
+void CProjectedLightEffectManager::TriggerMuzzleFlash()
+{
+	C_SDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex( m_nFlashlightEntIndex ));
+	m_flMuzzleFlashStart = pPlayer->GetCurrentTime();
+	m_nMuzzleFlashFrameCountdown = 2;
+	m_muzzleFlashTimer.Start( 0.12f );		// show muzzleflash for 2 frames or 66ms, whichever is longer
+	m_flInitialMuzzleFlashBrightness = random->RandomFloat( 0.4f, 2.0f );
+}
+
 bool CTraceFilterSkipPlayerAndViewModelProjected::ShouldHitEntity( IHandleEntity *pServerEntity, int contentsMask )
 {
 	// Test against the vehicle too?
