@@ -91,6 +91,8 @@ public:
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
 	virtual void ThrowActiveWeapon( bool bAutoSwitch = true );
 
+	virtual Vector  EyePosition();
+
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
 	virtual int		SpawnArmorValue( void ) const { return m_iSpawnArmorValue; }

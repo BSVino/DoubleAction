@@ -338,6 +338,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
+	m_Shared.m_flViewBobRamp = 0;
 	m_Shared.m_flLastDuckPress = -1;
 	m_Shared.m_bDiving = false;
 	m_Shared.m_bRolling = false;
@@ -1167,4 +1168,44 @@ void CSDKPlayer::UpdateCurrentTime()
 		SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
 	}
+
+	float flMaxBobSpeed = m_Shared.m_flRunSpeed*0.7f;
+	float flBobRampGoal = RemapValClamped(GetLocalVelocity().LengthSqr(), 0, flMaxBobSpeed*flMaxBobSpeed, 0, 1);
+	if (!GetGroundEntity() || m_Shared.IsRolling() || m_Shared.IsSliding())
+		flBobRampGoal = 0;
+
+	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
+}
+
+ConVar da_viewbob( "da_viewbob", "3", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
+
+Vector CSDKPlayer::EyePosition()
+{
+	Vector vecPosition = BaseClass::EyePosition();
+
+	if (m_Shared.m_flViewBobRamp)
+	{
+		Vector vecRight, vecUp;
+		AngleVectors(EyeAngles(), NULL, &vecRight, &vecUp);
+
+		float flViewBobMagnitude = m_Shared.m_flViewBobRamp * da_viewbob.GetFloat();
+
+		float flRunPeriod = M_PI * 3;
+		float flRunUpBob = sin(GetCurrentTime() * flRunPeriod * 2) * (flViewBobMagnitude / 2);
+		float flRunRightBob = sin(GetCurrentTime() * flRunPeriod) * flViewBobMagnitude;
+
+		float flWalkPeriod = M_PI * 1.5f;
+		float flWalkUpBob = sin(GetCurrentTime() * flWalkPeriod * 2) * (flViewBobMagnitude / 2);
+		float flWalkRightBob = sin(GetCurrentTime() * flWalkPeriod) * flViewBobMagnitude;
+
+		// 0 is walk, 1 is run.
+		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed, 1.0f, 0.0f, 1.0f);
+
+		float flRightBob = RemapValClamped(flRunRamp, 0, 1, flWalkRightBob, flRunRightBob);
+		float flUpBob = RemapValClamped(flRunRamp, 0, 1, flWalkUpBob, flRunUpBob);
+
+		vecPosition += vecRight * flRightBob + vecUp * flUpBob;
+	}
+
+	return vecPosition;
 }

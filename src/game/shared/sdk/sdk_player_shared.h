@@ -151,6 +151,8 @@ private:
 	CNetworkVar( Vector, m_vecDiveDirection );
 	float m_flViewTilt;
 
+	float m_flViewBobRamp;
+
 	CNetworkVar( bool, m_bAimedIn );
 	CNetworkVar( float, m_flAimIn );
 

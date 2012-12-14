@@ -53,6 +53,8 @@ public:
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 
+	virtual Vector  EyePosition();
+
 	// Player avoidance
 	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void AvoidPlayers( CUserCmd *pCmd );
