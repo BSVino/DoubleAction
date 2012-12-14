@@ -1158,7 +1158,7 @@ void CSDKPlayer::UpdateCurrentTime()
 
 	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
 
-	if (gpGlobals->curtime > m_flSlowMoTime)
+	if (m_flSlowMoTime > 0 && gpGlobals->curtime > m_flSlowMoTime)
 	{
 		m_flSlowMoTime = 0;
 		m_iSlowMoType = SLOWMO_NONE;

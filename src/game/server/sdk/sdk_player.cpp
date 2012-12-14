@@ -150,12 +150,6 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
-
-	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
-	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
-	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
-	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -199,6 +193,11 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 
+	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
+	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 END_SEND_TABLE()
 

@@ -149,12 +149,6 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
-
-	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
-	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -180,6 +174,11 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
 	RecvPropFloat( RECVINFO(m_flStyleSkillCharge) ),
 
+	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
+	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 END_RECV_TABLE()
 
