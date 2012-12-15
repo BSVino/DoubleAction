@@ -14,12 +14,7 @@
 #include "sdk_playeranimstate.h"
 #include "sdk_player_shared.h"
 
-typedef enum
-{
-	STYLE_POINT_SMALL,
-	STYLE_POINT_LARGE,
-	STYLE_POINT_STYLISH,
-} style_point_t;
+#include "da.h"
 
 // Function table for each player state.
 class CSDKPlayerStateInfo
@@ -80,6 +75,9 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+
+	void         AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info);
+	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle);
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

@@ -966,29 +966,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if( pAttacker && pAttacker->IsPlayer() )
 	{
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
-		CSDKPlayerShared* pAttackerSDKShared = &pAttackerSDK->m_Shared;
 
-		float flDamage = info.GetDamage() / 8.0f;	// Damaging someone for 100% of their health is enough to get one bar.
-
-		float flDistance = pAttackerSDK->GetAbsOrigin().DistTo(GetAbsOrigin());
-		flDamage *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
-
-		if (pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsSliding())
-			// Damaging a dude while stunting enough to kill him gives a full bar.
-			pAttackerSDK->AddStylePoints(flDamage, STYLE_POINT_LARGE);
-		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
-			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(flDamage*0.6f, STYLE_POINT_SMALL);
-		else if (pAttackerSDKShared->IsRolling())
-			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
-		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
-		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
-			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(flDamage*0.3f, STYLE_POINT_SMALL);
-		else
-			pAttackerSDK->AddStylePoints(flDamage*0.2f, STYLE_POINT_SMALL);
+		pAttackerSDK->AwardStylePoints(this, false, info);
 	}
 
 	m_flNextRegen = m_flCurrentTime + 10;
@@ -1026,32 +1005,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		SetFOV( this, 0 );
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
-		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
-		CSDKWeaponInfo *pWeaponInfo = pAttackerSDK->GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(pAttackerSDK->GetActiveSDKWeapon()->GetWeaponID()):NULL;
-
-		float flDistance = pAttackerSDK->GetAbsOrigin().DistTo(GetAbsOrigin());
-		float flDistanceBonus = RemapValClamped(flDistance, 512, 1024, 1, 1.5f);
-
-		if (pAttackerSDK->GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && pAttackerSDK->GetActiveSDKWeapon()->m_iClip1 == 0)
-			// Killing a player with your last bullet.
-			pAttackerSDK->AddStylePoints(12 * flDistanceBonus, STYLE_POINT_STYLISH);
-		else if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
-			pAttackerSDK->AddStylePoints(12 * flDistanceBonus, STYLE_POINT_STYLISH);
-		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
-			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(7 * flDistanceBonus, STYLE_POINT_LARGE);
-		else if (pAttackerSDKShared.IsRolling())
-			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(12*0.5f * flDistanceBonus, STYLE_POINT_STYLISH);
-		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(12*0.5f * flDistanceBonus, STYLE_POINT_STYLISH);
-		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
-			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(3 * flDistanceBonus, STYLE_POINT_LARGE);
-		else
-			pAttackerSDK->AddStylePoints(2 * flDistanceBonus, STYLE_POINT_LARGE);
-
+		pAttackerSDK->AwardStylePoints(this, true, info);
 		pAttackerSDK->GiveSlowMo(1);
 	}
 	else
@@ -1092,6 +1047,176 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bHasSuperSlowMo = false;
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
+}
+
+void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
+{
+	if (pVictim == this)
+		return;
+
+	float flPoints = 1;
+
+	if (bKilledVictim)
+	{
+		// Give me half of the activation cost. The other half I'll get from damaging.
+		flPoints = dab_stylemeteractivationcost.GetFloat()/2;
+	}
+	else
+	{
+		// Damaging someone stylishly for 100% of their health is enough to get one bar.
+		// The player will get half the points from damaging and the other half from killing.
+		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/2);
+	}
+
+	if (m_Shared.IsAimedIn())
+		flPoints *= 1.2f;
+
+	if (m_iSlowMoType != SLOWMO_NONE)
+		flPoints *= 1.3f;
+
+	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
+	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
+
+	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
+
+	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && GetActiveSDKWeapon()->m_iClip1 == 0)
+	{
+		// Killing a player with your last bullet.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
+	}
+	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
+	{
+		// Damaging a dude enough to kill him while stunting gives a full bar.
+		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (m_Shared.IsDiving())
+		{
+			if (bKilledVictim)
+				SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
+			else
+				SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+		}
+		else
+		{
+			if (bKilledVictim)
+				SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+			else
+				SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+		}
+	}
+	else if (info.GetDamageType() == DMG_BLAST)
+	{
+		// Grenades are cool.
+		AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+	}
+	else if (flDistance > 1200)
+	{
+		// Long range.
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
+	}
+	else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
+	{
+		// Damaging a dude through a wall with a firearm.
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_SMALL);
+	}
+	else if (m_Shared.IsRolling())
+	{
+		// Rolling, which is easier to do and typically happens after the dive, gives only half.
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_STUNT_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_STUNT, STYLE_POINT_LARGE);
+	}
+	else if (info.GetDamageType() == DMG_CLUB)
+	{
+		// Brawl
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
+	}
+	else
+	{
+		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
+			// Damaging a stunting dude gives me slightly more bar than usual.
+			AddStylePoints(flPoints*0.3f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+		else
+			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		// Only some chance of sending a message at all.
+		if (bKilledVictim || random->RandomInt(0, 3) == 0)
+		{
+			int iRandom = random->RandomInt(0, 1);
+			announcement_t eAnnouncement;
+			switch (iRandom)
+			{
+			case 0:
+			default:
+				eAnnouncement = ANNOUNCEMENT_STYLISH;
+				break;
+
+			case 1:
+				eAnnouncement = ANNOUNCEMENT_COOL;
+				break;
+			}
+
+			// If the victim isn't doing anything very stylish then just say it's cool.
+			if (!(pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding()))
+				eAnnouncement = ANNOUNCEMENT_COOL;
+
+			if (m_Shared.IsAimedIn())
+				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
+
+			if (bKilledVictim && m_flSlowMoMultiplier < 1)
+				eAnnouncement = ANNOUNCEMENT_SLOWMO_KILL;
+
+			if (bKilledVictim)
+				SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
+			else
+				SendAnnouncement(eAnnouncement, STYLE_POINT_SMALL);
+		}
+	}
+}
+
+void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle)
+{
+	CSingleUserRecipientFilter user( UTIL_PlayerByIndex(1) );
+	user.MakeReliable();
+
+	// Start the message block
+	UserMessageBegin( user, "StyleAnnouncement" );
+
+		// Send our text to the client
+		WRITE_LONG( eAnnouncement );
+		WRITE_BYTE( ePointStyle );
+
+		if (IsStyleSkillActive())
+			WRITE_FLOAT( m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat() );
+		else
+			WRITE_FLOAT( GetStylePoints()/dab_stylemeteractivationcost.GetFloat() );
+
+	// End the message block
+	MessageEnd();
 }
 
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
@@ -2300,18 +2425,13 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 {
 	if (IsStyleSkillActive())
-		return;
-
-	if (m_iSlowMoType == SLOWMO_STYLESKILL)
-		return;
-
-	if (m_Shared.IsAimedIn())
-		points *= 1.2f;
-
-	if (m_iSlowMoType != SLOWMO_NONE)
-		points *= 1.3f;
-
-	m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
+	{
+		points = RemapValClamped(points, 0, dab_stylemeteractivationcost.GetFloat(), 0, dab_stylemetertotalcharge.GetFloat());
+		points /= 2;
+		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > dab_stylemetertotalcharge.GetFloat()) ? dab_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
+	}
+	else
+		m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
 
 	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
 	{
@@ -2368,7 +2488,7 @@ void CSDKPlayer::ActivateMeter()
 	m_flStylePoints = 0;
 
 	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
-		m_flStyleSkillCharge += dab_stylemetertotalcharge.GetFloat();
+		m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");

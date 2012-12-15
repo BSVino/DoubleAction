@@ -4,13 +4,13 @@
 	{
 		"fieldName" "HudStyleBar"
 		"visible" "1"
-		"PaintBackgroundType"	"2"
-		"xpos"	"r50"
+		"xpos"	"r350"
 		"ypos"	"150"
 		"tall"  "200"
-		"wide"	"10"
+		"wide"	"300"
 
 		"Gap"	"2"
+		"BarWidth" "10"
 	}
 	HudHealth
 	{

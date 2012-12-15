@@ -177,5 +177,159 @@
 				"width"		"82"
 				"height"	"69"
 		}
-	}	
+
+		// Announcements
+		"announcement_cool"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "0"
+			"width"   "86"
+			"height"  "48"
+		}
+		"announcement_stylish"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "48"
+			"width"   "128"
+			"height"  "48"
+		}
+		"announcement_dive"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "96"
+			"width"   "80"
+			"height"  "48"
+		}
+		"announcement_dive_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "144"
+			"width"   "144"
+			"height"  "48"
+		}
+		"announcement_slide"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "192"
+			"width"   "91"
+			"height"  "48"
+		}
+		"announcement_slide_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "240"
+			"width"   "154"
+			"height"  "48"
+		}
+		"announcement_stunt"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "288"
+			"width"   "102"
+			"height"  "48"
+		}
+		"announcement_stunt_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "336"
+			"width"   "165"
+			"height"  "48"
+		}
+		"announcement_through_wall"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "384"
+			"width"   "236"
+			"height"  "48"
+		}
+		"announcement_last_bullet"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "432"
+			"width"   "186"
+			"height"  "48"
+		}
+		"announcement_long_range"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "480"
+			"width"   "176"
+			"height"  "48"
+		}
+		"announcement_long_range_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "528"
+			"width"   "238"
+			"height"  "48"
+		}
+		"announcement_double_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "576"
+			"width"   "179"
+			"height"  "48"
+		}
+		"announcement_grenade"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "624"
+			"width"   "134"
+			"height"  "48"
+		}
+		"announcement_grenade_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "672"
+			"width"   "197"
+			"height"  "48"
+		}
+		"announcement_slowmo_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "720"
+			"width"   "201"
+			"height"  "48"
+		}
+		"announcement_tacticool"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "768"
+			"width"   "154"
+			"height"  "48"
+		}
+		"announcement_brawl"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "816"
+			"width"   "111"
+			"height"  "48"
+		}
+		"announcement_brawl_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "864"
+			"width"   "175"
+			"height"  "48"
+		}
+	}
 }
