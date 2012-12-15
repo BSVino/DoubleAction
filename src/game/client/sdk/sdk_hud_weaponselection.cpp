@@ -257,7 +257,7 @@ void CHudWeaponSelection::Paint()
 					int x_offs = (largeBoxWide - iconWidth) / 2;
 					int y_offs = (largeBoxTall - iconHeight) / 2;
 
-					if (!pWeapon->CanBeSelected())
+					if (!pWeapon->CanBeSelected() || !pWeapon->HasAnyAmmo())
 					{
 						// unselectable weapon, display as such
 						col = Color(255, 0, 0, col[3]);

@@ -86,6 +86,8 @@ public:
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
 	virtual void			AddMeleeViewKick();
 
+	virtual bool			CanBeSelected( void );
+
 #ifdef CLIENT_DLL
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );
 #endif
@@ -117,7 +119,8 @@ public:
 	}
 #endif
 
-	virtual bool CanWeaponBeDropped() const {	return true; }
+	virtual bool CanWeaponBeDropped() const { return true; }
+	virtual bool AllowsAutoSwitchFrom() const { return false; }
 
 	virtual float GetViewPunchMultiplier();
 	virtual float GetRecoil();

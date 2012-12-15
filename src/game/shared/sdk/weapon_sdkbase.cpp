@@ -991,12 +991,7 @@ bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 	// If we don't have any ammo, switch to the next best weapon
 	if ( !HasAnyAmmo() && m_flNextPrimaryAttack < GetCurrentTime() && m_flNextSecondaryAttack < GetCurrentTime() )
 	{
-		// weapon isn't useable, switch.
-		if ( ( (GetWeaponFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) == false ) && ( g_pGameRules->SwitchToNextBestWeapon( pOwner, this ) ) )
-		{
-			m_flNextPrimaryAttack = GetCurrentTime() + 0.3;
-			return true;
-		}
+		// This block used to have an auto switch to a non-empty weapon, but no longer.
 	}
 	else
 	{
@@ -1135,3 +1130,11 @@ void CWeaponSDKBase::Die( void )
 	UTIL_Remove( this );
 }
 #endif
+
+bool CWeaponSDKBase::CanBeSelected()
+{
+	if ( !VisibleInWeaponSelection() )
+		return false;
+
+	return true;
+}

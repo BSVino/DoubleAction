@@ -90,6 +90,7 @@ public:
 	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
 	virtual void ThrowActiveWeapon( bool bAutoSwitch = true );
+	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 
 	virtual Vector  EyePosition();
 

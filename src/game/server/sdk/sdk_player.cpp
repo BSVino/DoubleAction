@@ -482,12 +482,19 @@ void CSDKPlayer::GiveDefaultItems()
 	{
 		GiveNamedItem( "weapon_brawl" );
 
+		CWeaponSDKBase* pHeaviestWeapon = nullptr;
+
 		for (int i = 0; i < MAX_LOADOUT; i++)
 		{
 			if (m_aLoadout[i].m_iCount)
 			{
 				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
-				GiveNamedItem( szName );
+				CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(GiveNamedItem( szName ));
+
+				if (!pHeaviestWeapon)
+					pHeaviestWeapon = pWeapon;
+				else if (pWeapon && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
+					pHeaviestWeapon = pWeapon;
 
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 				if (pInfo)
@@ -499,6 +506,9 @@ void CSDKPlayer::GiveDefaultItems()
 				}
 			}
 		}
+
+		if (pHeaviestWeapon)
+			Weapon_Switch(pHeaviestWeapon);
 
 		for (int i = 0; i < WeaponCount(); i++)
 		{
@@ -1141,10 +1151,10 @@ void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
 
-		if (bAutoSwitch)
-			SwitchToNextBestWeapon( pWeapon );
-
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
+
+		if (bAutoSwitch)
+			SwitchToNextBestWeapon( nullptr );
 	}
 }
 
@@ -1187,6 +1197,8 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	}
 
 	vecThrow *= random->RandomFloat( 150.0f, 240.0f );
+
+	vecThrow += GetAbsVelocity();
 
 	pWeapon->SetAbsOrigin( vecOrigin );
 	pWeapon->SetAbsAngles( vecAngles );

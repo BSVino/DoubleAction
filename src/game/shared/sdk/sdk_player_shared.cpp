@@ -1209,3 +1209,29 @@ Vector CSDKPlayer::EyePosition()
 
 	return vecPosition;
 }
+
+bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
+{
+	if (IsPlayer())
+	{
+		CBasePlayer *pPlayer = (CBasePlayer *)this;
+#if !defined( CLIENT_DLL )
+		IServerVehicle *pVehicle = pPlayer->GetVehicle();
+#else
+		IClientVehicle *pVehicle = pPlayer->GetVehicle();
+#endif
+		if (pVehicle && !pPlayer->UsingStandardWeaponsInVehicle())
+			return false;
+	}
+
+	if ( !pWeapon->CanDeploy() )
+		return false;
+	
+	if ( GetActiveWeapon() )
+	{
+		if ( !GetActiveWeapon()->CanHolster() )
+			return false;
+	}
+
+	return true;
+}
