@@ -3,26 +3,26 @@ WeaponData
 	// Weapon characteristics:
 	"Damage"				"26"		// damage per bullet
 	"Bullets"				"1"		// bullets per shoot
-	"CycleTime"				"0.15"		// time between shoots
+	"CycleTime"				"0.075"		// time between shoots
 	"DrawTimeMultiplier"	"0.5"
 	"ReloadTimeMultiplier"	"0.5"
 
 	"BuiltRightHanded"		"0"
-	
+
 	// Weapon data is loaded by both the Game and Client DLLs.
 	"printname"				"#SDK_Weapon_P99"
 	"viewmodel"				"models/weapons/v_pist_usp.mdl"
 	"playermodel"			"models/weapons/p99.mdl"
 	"PlayerAnimationExtension"	"mp5"
-	
+
 	"bucket"				"1"
 	"bucket_position"		"0"
 
 	"clip_size"				"16"
 	"NumClips"				"6"
 
-	"ViewPunchMultiplier"	"0.4"
-	"Recoil"				"6"
+	"ViewPunchMultiplier"	"0.3"
+	"Recoil"				"4"
 	"Spread"				"0.01"
 
 	"WeaponType"			"pistol"
@@ -37,7 +37,7 @@ WeaponData
 	SoundData
 	{
 		//"reload"			"Default.Reload"
-		//"empty"			"Default.ClipEmpty_Rifle"
+		"empty"			"Default.ClipEmpty_Rifle"
 		"single_shot"		"Weapon_P99.Single"
 		"melee_miss"		"Weapon_Brawl.PunchMiss"
 		"melee_hit"			"Weapon_Brawl.PunchHit"

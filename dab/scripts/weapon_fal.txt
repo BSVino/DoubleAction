@@ -4,7 +4,7 @@ WeaponData
 	"Damage"				"18"		// damage per bullet
 	"Bullets"				"1"			// bullets per shoot
 	"CycleTime"				"0.092"		// time between shoots
-	"ReloadTimeMultiplier"	"1.0"
+	"ReloadTimeMultiplier"	"0.8"
 
 	"BuiltRightHanded"		"0"
 	
@@ -39,7 +39,7 @@ WeaponData
 	SoundData
 	{
 		//"reload"			"Default.Reload"
-		//"empty"			"Default.ClipEmpty_Rifle"
+		"empty"			"Default.ClipEmpty_Rifle"
 		"single_shot"		"Weapon_FAL.Single"
 		"melee_miss"		"Weapon_Brawl.PunchMiss"
 		"melee_hit"			"Weapon_Brawl.PunchHit"

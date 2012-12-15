@@ -3,17 +3,17 @@ WeaponData
 	// Weapon characteristics:
 	"Damage"				"38"		// damage per bullet
 	"Bullets"				"1"		// bullets per shoot
-	"CycleTime"				"0.2"		// time between shoots
+	"CycleTime"				"0.15"		// time between shoots
 	"ReloadTimeMultiplier"	"0.8"
 
 	"BuiltRightHanded"		"0"
-	
+
 	// Weapon data is loaded by both the Game and Client DLLs.
 	"printname"				"#SDK_Weapon_M1911"
 	"viewmodel"				"models/weapons/v_pist_deagle.mdl"
 	"playermodel"			"models/weapons/m1911.mdl"
 	"PlayerAnimationExtension"	"mp5"
-	
+
 	"bucket"				"1"
 	"bucket_position"		"1"
 
@@ -23,7 +23,7 @@ WeaponData
 	"ViewPunchMultiplier"	"0.13"
 	"Recoil"				"10"
 	"Spread"				"0.02"
-	
+
 	"WeaponType"			"pistol"
 
 	"primary_ammo"			"45acp"
@@ -36,7 +36,7 @@ WeaponData
 	SoundData
 	{
 		//"reload"			"Default.Reload"
-		//"empty"			"Default.ClipEmpty_Rifle"
+		"empty"			"Default.ClipEmpty_Rifle"
 		"single_shot"		"Weapon_M1911.Single"
 		"melee_miss"		"Weapon_Brawl.PunchMiss"
 		"melee_hit"			"Weapon_Brawl.PunchHit"

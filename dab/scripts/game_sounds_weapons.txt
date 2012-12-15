@@ -407,3 +407,13 @@
 	"wave"			")weapons/p99/P99_single_1.wav"
 	"wave"			")weapons/p99/P99_single_2.wav"
 }
+
+"Default.ClipEmpty_Rifle"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"1.0"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"			"PITCH_NORM"
+
+	"wave"			"weapons/dryfire.wav"
+}

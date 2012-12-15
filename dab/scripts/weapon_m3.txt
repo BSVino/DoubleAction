@@ -39,7 +39,7 @@ WeaponData
 	SoundData
 	{
 		//"reload"			"Default.Reload"
-		//"empty"			"Default.ClipEmpty_Rifle"
+		"empty"			"Default.ClipEmpty_Rifle"
 		"single_shot"		"Weapon_M3.Single"
 		special3			Default.Zoom
 		"melee_miss"		"Weapon_Brawl.PunchMiss"
