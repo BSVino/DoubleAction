@@ -55,8 +55,8 @@ void CDABViewModel::DoMuzzleFlash()
 #endif
 }
 
-ConVar da_weaponbob( "da_weaponbob", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
-ConVar da_weapondrop( "da_weapondrop", "1.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon drop while running." );
+ConVar da_weaponbob( "da_weaponbob", "0.7", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
+ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon drop while running." );
 
 void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
 {

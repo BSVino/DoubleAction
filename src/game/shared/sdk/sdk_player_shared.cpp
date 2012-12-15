@@ -1177,7 +1177,7 @@ void CSDKPlayer::UpdateCurrentTime()
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
 }
 
-ConVar da_viewbob( "da_viewbob", "3", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
+ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
 
 Vector CSDKPlayer::EyePosition()
 {
