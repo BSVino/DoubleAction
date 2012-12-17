@@ -614,6 +614,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
     <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />
     <ClCompile Include="sdk\vgui\dab_skillmenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_instructor.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -853,6 +854,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClInclude Include="sdk\vgui\dab_buymenu.h" />
     <ClInclude Include="sdk\vgui\dab_charactermenu.h" />
     <ClInclude Include="sdk\vgui\dab_skillmenu.h" />
+    <ClInclude Include="sdk\vgui\da_instructor.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />

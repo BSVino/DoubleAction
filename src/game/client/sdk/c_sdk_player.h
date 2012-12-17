@@ -17,10 +17,37 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 
+#include "da_instructor.h"
+
 class CProjectedLightEffect;
 
 class C_SDKPlayer : public C_BasePlayer
 {
+public:
+	class CLessonProgress
+	{
+	public:
+		CLessonProgress()
+		{
+			m_flLastTimeShowed = 0;
+			m_iTimesLearned = 0;
+			m_flLastTimeLearned = 0;
+		}
+
+	public:
+		CUtlString     m_sLessonName;
+		double         m_flLastTimeShowed;
+		int            m_iTimesLearned;
+		double         m_flLastTimeLearned;
+	};
+
+	class LessonPriorityLess
+	{
+	public:
+		typedef C_SDKPlayer::CLessonProgress* LessonPointer;
+		bool Less( const LessonPointer& lhs, const LessonPointer& rhs, void *pCtx );
+	};
+
 public:
 	DECLARE_CLASS( C_SDKPlayer, C_BasePlayer );
 	DECLARE_CLIENTCLASS();
@@ -146,6 +173,8 @@ public:
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
 	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
 
+	bool HasPlayerDied() const { return m_bHasPlayerDied; }
+
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	CSDKPlayerShared m_Shared;
@@ -171,6 +200,16 @@ public:
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
 	int GetLoadoutWeight() { return m_iLoadoutWeight; }
 
+	virtual void	Instructor_Initialize();
+	virtual void	Instructor_Think();
+	virtual void	Instructor_Respawn();
+
+	virtual void	Instructor_LessonLearned(const CUtlString& sLesson);
+	virtual bool	Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress);
+	virtual bool	Instructor_IsLessonValid(const CLessonProgress* pLessonProgress);
+	virtual class CLessonProgress*  Instructor_GetBestLesson();
+	CInstructor*    GetInstructor() { return m_pInstructor; }
+
 	void LocalPlayerRespawn( void );
 
 	//Tony; update lookat, if our model has moving eyes setup, they need to be updated.
@@ -185,6 +224,8 @@ public:
 	virtual void				OverrideView( CViewSetup *pSetup );
 
 	float			GetCurrentTime() const { return m_flCurrentTime; }
+
+	float           GetLastSpawnTime() const { return m_flLastSpawnTime; }
 
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
@@ -253,12 +294,21 @@ private:
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 
+	CNetworkVar( float, m_flLastSpawnTime );
+
+	CNetworkVar( bool, m_bHasPlayerDied );
+
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;
 	Vector	m_vecFlashlightOrigin;
 	Vector	m_vecFlashlightForward;
 	Vector	m_vecFlashlightUp;
 	Vector	m_vecFlashlightRight;
+
+	class CInstructor*                     m_pInstructor;
+	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
+	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
+	float                                  m_flLastLesson;
 };
 
 

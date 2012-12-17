@@ -27,6 +27,7 @@
 #include "model_types.h"
 #include "sdk_gamerules.h"
 #include "projectedlighteffect.h"
+#include "voice_status.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -180,6 +181,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
+	RecvPropFloat		( RECVINFO( m_flLastSpawnTime ) ),
+
+	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -234,6 +238,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flSlowMoTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flLastSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -640,6 +645,11 @@ void C_SDKPlayer::PreThink()
 	UpdateCurrentTime();
 
 	BaseClass::PreThink();
+
+	Instructor_Think();
+
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this && GetClientVoiceMgr()->IsLocalPlayerSpeaking())
+		Instructor_LessonLearned("voicechat");
 }
 
 
@@ -763,6 +773,11 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 #endif
 
 	InitSpeeds(); //Tony; initialize player speeds.
+
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this)
+		m_pInstructor = new CInstructor();
+
+	Instructor_Respawn();
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

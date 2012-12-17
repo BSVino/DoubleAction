@@ -87,7 +87,7 @@ public:
 
 	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
-	virtual void ThrowActiveWeapon( bool bAutoSwitch = true );
+	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 
 	virtual Vector  EyePosition();
@@ -100,6 +100,8 @@ public:
 	virtual void	PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
+
+	virtual void	Instructor_LessonLearned(const char* pszLesson);
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
@@ -126,6 +128,8 @@ public:
 	void RemoveFromLoadout(SDKWeaponID eWeapon);
 	void CountLoadoutWeight();
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+
+	void SelectItem( const char *pstr, int iSubType = 0 );
 
 	void SetSkillMenuOpen( bool bIsOpen );
 	bool IsSkillMenuOpen( void );
@@ -352,6 +356,10 @@ public:
 	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
+
+	CNetworkVar( float, m_flLastSpawnTime );
+
+	CNetworkVar( bool, m_bHasPlayerDied );
 };
 
 

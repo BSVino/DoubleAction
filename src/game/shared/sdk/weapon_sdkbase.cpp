@@ -275,6 +275,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if (bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
+	pOwner->Instructor_LessonLearned("brawl");
+
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
 
@@ -872,6 +874,8 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
+		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
+
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
@@ -879,13 +883,14 @@ bool CWeaponSDKBase::Reload( void )
 
 		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
-		CBasePlayer* pOwner = ToBasePlayer(GetOwner());
-		if (pOwner)
+		if (pSDKOwner)
 		{
-			CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+			CBaseViewModel *vm = pSDKOwner->GetViewModel( m_nViewModelIndex );
 
 			if (vm)
 				vm->SetPlaybackRate( 1/flSpeedMultiplier );
+
+			pSDKOwner->Instructor_LessonLearned("reload");
 		}
 
 		MDLCACHE_CRITICAL_SECTION();

@@ -1,5 +1,22 @@
 "Resource/HudLayout.res"
 {
+	HudLessonPanel
+	{
+		"fieldName"          "HudLessonPanel"
+		"visible"            "0"
+		"enabled"            "1"
+		"xpos"               "c-240"
+		"ypos"               "c60"
+		"wide"               "480"
+		"tall"               "100"
+		"HintSize"           "1"
+		"text_xpos"          "8"
+		"text_ypos"          "8"
+		"center_x"           "0"    // center text horizontally
+		"center_y"           "-1"   // align text on the bottom
+		"paintbackground"    "0"
+	}
+
 	HudStyleBar
 	{
 		"fieldName" "HudStyleBar"

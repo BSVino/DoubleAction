@@ -88,6 +88,7 @@ bool CWeaponShotgun::Reload()
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 
+		pPlayer->Instructor_LessonLearned("reload");
 		return true;
 	}
 	else if (m_iInSpecialReload == 1)

@@ -686,6 +686,15 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 void CSDKPlayerShared::EndSlide()
 {
+	// If it was long enough to notice what it was, then train the slide.
+	if (gpGlobals->curtime > m_flSlideTime + 1)
+	{
+		if (m_bDiveSliding)
+			m_pOuter->Instructor_LessonLearned("diveafterslide");
+		else
+			m_pOuter->Instructor_LessonLearned("slide");
+	}
+
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_flSlideTime = 0;
@@ -842,6 +851,8 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->SetGroundEntity(NULL);
 
+	m_pOuter->Instructor_LessonLearned("dive");
+
 	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 	{
 		m_pOuter->SetGravity(sdk_dive_gravity_adrenaline.GetFloat());
@@ -921,6 +932,16 @@ bool CSDKPlayerShared::IsAimedIn() const
 
 void CSDKPlayerShared::SetAimIn(bool bAimIn)
 {
+	// If we're aimed in and aimin is being turned off and we're aimed in enough to have noticed a change, train the aimin lesson.
+	if (m_bAimedIn && !bAimIn && m_flAimIn > 0.5f)
+	{
+		CWeaponSDKBase* pWeapon = m_pOuter->GetActiveSDKWeapon();
+
+		// Also must be holding an aimin weapon.
+		if (pWeapon && (pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus() || pWeapon->HasAimInSpeedPenalty()))
+			m_pOuter->Instructor_LessonLearned("aimin");
+	}
+
 	m_bAimedIn = bAimIn;
 }
 

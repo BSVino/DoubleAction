@@ -199,6 +199,9 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
+	SendPropFloat( SENDINFO( m_flLastSpawnTime ) ),
+
+	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -274,6 +277,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
 	m_flNextSecondWindRegen = 0;
+
+	m_bHasPlayerDied = false;
 
 	m_flCurrentTime = gpGlobals->curtime;
 }
@@ -599,6 +604,8 @@ void CSDKPlayer::Spawn()
 	m_flDisarmRedraw = -1;
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
+
+	m_flLastSpawnTime = gpGlobals->curtime;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -968,6 +975,10 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
 		pAttackerSDK->AwardStylePoints(this, false, info);
+
+		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
+		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
+			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 	}
 
 	m_flNextRegen = m_flCurrentTime + 10;
@@ -1045,6 +1056,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
+
+	m_bHasPlayerDied = true;
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 }
@@ -1259,7 +1272,7 @@ int CSDKPlayer::GetMaxHealth() const
 	return BaseClass::GetMaxHealth();
 }
 
-void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
+bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
 
@@ -1280,7 +1293,11 @@ void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 
 		if (bAutoSwitch)
 			SwitchToNextBestWeapon( nullptr );
+
+		return true;
 	}
+
+	return false;
 }
 
 bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
@@ -1447,6 +1464,17 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 	gEvilImpulse101		= false;
 }
 
+void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
+{
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	CDisablePredictionFiltering disabler(true);
+
+	UserMessageBegin( filter, "LessonLearned" );
+		WRITE_STRING( pszLesson );
+	MessageEnd();
+}
 
 void CSDKPlayer::FlashlightTurnOn( void )
 {
@@ -1867,6 +1895,21 @@ void CSDKPlayer::CountLoadoutWeight()
 
 		m_iLoadoutWeight += pWeaponInfo->iWeight * m_aLoadout[i].m_iCount;
 	}
+}
+
+void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
+{
+	bool bPreviousWeaponWasOutOfAmmo = false;
+	if (GetActiveSDKWeapon() && !GetActiveSDKWeapon()->HasPrimaryAmmo())
+		bPreviousWeaponWasOutOfAmmo = true;
+
+	BaseClass::SelectItem(pstr, iSubType);
+
+	// If we switched from a weapon that's out of ammo to a weapon with ammo then we train that lesson.
+	if (bPreviousWeaponWasOutOfAmmo && GetActiveSDKWeapon() && GetActiveSDKWeapon()->HasPrimaryAmmo())
+		Instructor_LessonLearned("outofammo");
+	else
+		Instructor_LessonLearned("switchweapons");
 }
 
 void CSDKPlayer::SetSkillMenuOpen( bool bOpen )
@@ -2549,6 +2592,8 @@ void CC_ActivateSlowmo_f (void)
 	if ( !pPlayer )
 		return;
 
+	pPlayer->Instructor_LessonLearned("slowmo");
+
 	if (pPlayer->m_flSlowMoSeconds > 0)
 		pPlayer->ActivateSlowMo();
 }
@@ -2604,6 +2649,7 @@ void CC_Buy(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
+		pPlayer->Instructor_LessonLearned("buy");
 		pPlayer->ShowBuyMenu();
 		return;
 	}
@@ -2655,7 +2701,8 @@ void CC_Drop(const CCommand& args)
 	if (!pPlayer)
 		return;
 
-	pPlayer->ThrowActiveWeapon();
+	if (pPlayer->ThrowActiveWeapon())
+		pPlayer->Instructor_LessonLearned("throw");
 }
 
 static ConCommand drop("drop", CC_Drop, "Drop the weapon the player currently holds.", FCVAR_GAMEDLL);

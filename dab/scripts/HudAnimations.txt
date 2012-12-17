@@ -39,6 +39,36 @@
 //
 
 
+event LessonShow
+{
+	StopPanelAnimations HudLessonPanel 0.0
+
+	Animate HudLessonPanel HintSize "1"             Deaccel 0.0  0.3
+	Animate HudLessonPanel FgColor  "FgColor"       Linear  0.4  0.4
+
+	// flash text
+	Animate HudLessonPanel FgColor  "FgColor"       Linear  1.5  0.01
+	Animate HudLessonPanel FgColor  "255 220 0 255" Linear  2.0  0.2
+	Animate HudLessonPanel FgColor  "FgColor"       Linear  2.2  0.2
+	Animate HudLessonPanel FgColor  "255 220 0 255" Linear  3.0  0.2
+	Animate HudLessonPanel FgColor  "FgColor"       Linear  3.2  0.2
+
+	// hide the panel after a while
+	Animate HudLessonPanel FgColor  "255 220 0 0"   Linear  10.0 0.2
+	Animate HudLessonPanel HintSize "0"             Deaccel 10.2 0.3
+
+	Animate HudLessonPanel Position "c-240 c60"     Deaccel 0.0  0.3
+	Animate HudLessonPanel Position "c-240 600"     Linear  10.5 0.1
+}
+
+event LessonHide
+{
+	Animate HudLessonPanel FgColor  "255 220 0 0"   Linear  0.0  0.2
+	Animate HudLessonPanel HintSize "0"	            Deaccel 0.2  0.3
+
+	Animate HudLessonPanel Position "c-240 600"     Linear  10.5 0.1
+}
+
 event LevelInit
 {
 }

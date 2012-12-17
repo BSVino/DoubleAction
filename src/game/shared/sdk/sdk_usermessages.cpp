@@ -51,5 +51,6 @@ void RegisterUserMessages()
 	usermessages->Register( "GameMessage", -1 );
 
 	usermessages->Register( "StyleAnnouncement", 9 );
+	usermessages->Register( "LessonLearned", -1 );
 }
 
