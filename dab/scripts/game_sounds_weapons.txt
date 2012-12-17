@@ -30,7 +30,7 @@
 	"volume"		"1.0"
 	
 	"soundlevel"	"SNDLVL_GUNFIRE"
-	"pitch"		"95,125"
+	"pitch"		"100,110"
 
 	"wave"			")weapons/mp5k/single.wav"
 	
@@ -72,7 +72,7 @@
 	"channel"		"CHAN_WEAPON"
 	"volume"		"1.0"
 	"soundlevel"	"SNDLVL_GUNFIRE"
-	"pitch"		"95,125"
+	"pitch"		"100,110"
 
 	"wave"			")weapons/m1911/single.wav"
 	
@@ -407,7 +407,6 @@
 	"wave"			")weapons/p99/P99_single_1.wav"
 	"wave"			")weapons/p99/P99_single_2.wav"
 }
-
 "Default.ClipEmpty_Rifle"
 {
 	"channel"		"CHAN_WEAPON"
