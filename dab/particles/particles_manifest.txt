@@ -1,7 +1,0 @@
-particles_manifest
-{
-	"file"		"particles/weapon_fx.pcf"
-	"file"		"particles/impact_fx.pcf"
-	"file"		"particles/blood_impact.pcf"
-	"file"		"particles/jah_streets.pcf"
-}
