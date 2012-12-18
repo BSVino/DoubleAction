@@ -487,7 +487,7 @@ void CSDKPlayer::GiveDefaultItems()
 	{
 		GiveNamedItem( "weapon_brawl" );
 
-		CWeaponSDKBase* pHeaviestWeapon = nullptr;
+		CWeaponSDKBase* pHeaviestWeapon = NULL;
 
 		for (int i = 0; i < MAX_LOADOUT; i++)
 		{
@@ -1292,7 +1292,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
 
 		if (bAutoSwitch)
-			SwitchToNextBestWeapon( nullptr );
+			SwitchToNextBestWeapon( NULL );
 
 		return true;
 	}
