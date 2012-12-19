@@ -1040,16 +1040,17 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (IsStyleSkillActive())
 	{
-		// If the player died while the style meter was active, refund some of the unused portion.
+		// If the player died while the style meter was active, refund the unused portion.
 		float flUnused = m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat();
-		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat() / 2;
+		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
 		SetStylePoints(m_flStylePoints + flRefund);
 	}
 
 	// Losing a whole activation can be rough, let's be a bit more forgiving.
-	// Going down with one bar drops you to half bar, but going down with full bar loses you two bars.
+	// Going down with lots of bar drops you more than going down with just a little bar.
 	// This way, running around with your bar full you run a high risk.
-	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, 25, 100, dab_stylemeteractivationcost.GetFloat()/2, dab_stylemeteractivationcost.GetFloat()*2));
+	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
+	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
