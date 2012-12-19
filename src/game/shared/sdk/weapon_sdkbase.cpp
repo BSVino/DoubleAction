@@ -867,13 +867,13 @@ bool CWeaponSDKBase::Reload( void )
 	bool fRet;
 	float fCacheTime = m_flNextSecondaryAttack;
 
-	// Player gets a reload speed boost with Adrenaline.
-	if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		ToSDKPlayer(GetOwner())->UseStyleCharge(5);
-
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
+		// Player gets a reload speed boost with Adrenaline.
+		if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			ToSDKPlayer(GetOwner())->UseStyleCharge(5);
+
 		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
 
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
@@ -988,9 +988,6 @@ void CWeaponSDKBase::CheckReload()
 
 bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	Assert( pOwner );
-
 	m_bFireOnEmpty = false;
 
 	// If we don't have any ammo, switch to the next best weapon
@@ -1004,8 +1001,8 @@ bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 		if ( UsesClipsForAmmo1() && 
 			 (m_iClip1 == 0) && 
 			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
-			 GetCurrentTime() > m_flNextPrimaryAttack + 3 &&
-			 GetCurrentTime() > m_flNextSecondaryAttack + 3 )
+			 GetCurrentTime() > m_flNextPrimaryAttack + 1.5f &&
+			 GetCurrentTime() > m_flNextSecondaryAttack + 1.5f )
 		{
 			// if we're successfully reloading, we're done
 			if ( Reload() )

@@ -429,6 +429,9 @@ bool LessonPriorityCompare( const LessonProgressPointer& l, const LessonProgress
 
 void C_SDKPlayer::Instructor_Think()
 {
+	if (!m_pInstructor)
+		return;
+
 	if (!m_pInstructor->IsInitialized())
 		m_pInstructor->Initialize();
 
@@ -495,6 +498,9 @@ void C_SDKPlayer::Instructor_Think()
 
 void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 {
+	if (!m_pInstructor)
+		return;
+
 	if (!m_pInstructor->IsInitialized())
 		m_pInstructor->Initialize();
 
@@ -531,6 +537,9 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 
 bool C_SDKPlayer::Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress)
 {
+	if (!m_pInstructor)
+		return false;
+
 	Assert(pLessonProgress);
 	if (!pLessonProgress)
 		return true;
@@ -547,6 +556,9 @@ bool C_SDKPlayer::Instructor_IsLessonLearned(const CLessonProgress* pLessonProgr
 // Can this lesson be displayed right now?
 bool C_SDKPlayer::Instructor_IsLessonValid(const CLessonProgress* pLessonProgress)
 {
+	if (!m_pInstructor)
+		return false;
+
 	Assert(pLessonProgress);
 	if (!pLessonProgress)
 		return true;

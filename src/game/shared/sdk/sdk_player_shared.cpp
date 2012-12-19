@@ -144,7 +144,7 @@ void CSDKPlayer::FireBullet(
 			break;
 
 		case WT_SHOTGUN:
-			flDistanceMultiplier = pow ( 0.25f, (flCurrentDistance / 500));
+			flDistanceMultiplier = pow ( 0.40f, (flCurrentDistance / 500));
 			break;
 
 		case WT_SMG:
@@ -1147,7 +1147,7 @@ void CSDKPlayer::ActivateSlowMo()
 	if (!m_flSlowMoSeconds)
 		return;
 
-	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
+	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds + 0.5f;    // 1 second becomes 1.5 seconds, 2 becomes 2.5, etc
 	m_flSlowMoSeconds = 0;
 	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
 	m_bHasSuperSlowMo = false;
@@ -1204,7 +1204,13 @@ Vector CSDKPlayer::EyePosition()
 {
 	Vector vecPosition = BaseClass::EyePosition();
 
-	if (m_Shared.m_flViewBobRamp)
+	bool bIsInThird = false;
+
+#ifdef CLIENT_DLL
+	bIsInThird = ::input->CAM_IsThirdPerson();
+#endif
+
+	if (m_Shared.m_flViewBobRamp && !bIsInThird)
 	{
 		Vector vecRight, vecUp;
 		AngleVectors(EyeAngles(), NULL, &vecRight, &vecUp);

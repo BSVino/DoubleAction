@@ -1197,7 +1197,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			if (!(pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding()))
 				eAnnouncement = ANNOUNCEMENT_COOL;
 
-			if (m_Shared.IsAimedIn())
+			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
 				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
 
 			if (bKilledVictim && m_flSlowMoMultiplier < 1)
@@ -1213,7 +1213,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle)
 {
-	CSingleUserRecipientFilter user( UTIL_PlayerByIndex(1) );
+	CSingleUserRecipientFilter user( this );
 	user.MakeReliable();
 
 	// Start the message block
