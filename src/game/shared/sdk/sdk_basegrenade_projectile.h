@@ -26,8 +26,8 @@ public:
 	DECLARE_CLASS( CBaseGrenadeProjectile, CBaseGrenade );
 	DECLARE_NETWORKCLASS(); 
 
+	virtual void Precache();
 	virtual void Spawn();
-
 
 public:
 	//Tony; by default projectiles don't have one, so make sure derived weapons do!!
@@ -47,6 +47,8 @@ public:
 	float m_flSpawnTime;
 #else
 	DECLARE_DATADESC();
+
+	virtual void		Explode( trace_t *pTrace, int bitsDamageType );
 
 	bool	CreateVPhysics( void );
 	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
