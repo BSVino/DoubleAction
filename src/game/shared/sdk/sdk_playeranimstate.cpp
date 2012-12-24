@@ -559,17 +559,17 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			// Weapon secondary fire.
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_SLIDE );
 			else if ( m_pSDKPlayer->m_Shared.IsRolling() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_ROLL );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_ROLL );
 			else if ( m_pSDKPlayer->m_Shared.IsDiving() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_DIVE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_DIVE );
 			else if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_CROUCH );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL );
 
 			iGestureActivity = ACT_VM_PRIMARYATTACK;
 			break;
@@ -663,7 +663,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bProneTransition = true;
 			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_STAND;
+			m_iProneActivity = ACT_DAB_PRONE_TO_STAND;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->stand so just idle.
 		}
@@ -845,10 +845,7 @@ bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
 			RestartMainSequence();	// Reset the animation.
 		}
 
-		// Next four lines are because the animations aren't done yet. They could be removed once the transition animations are in.
-		if (m_pSDKPlayer->m_Shared.IsProne())
-			m_bProneTransition = false;
-		else if (m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsProne())
+		if (!m_pSDKPlayer->m_Shared.IsProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne())
 			m_bProneTransition = false;
 
 		//Tony; check the cycle, and then stop overriding

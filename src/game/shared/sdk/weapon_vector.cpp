@@ -74,6 +74,12 @@ acttable_t CWeaponVector::m_acttable[] =
 	{ ACT_DAB_RELOAD_CROUCH,			ACT_DAB_RELOAD_CROUCH_VECTOR,			false },
 	{ ACT_DAB_RELOAD_PRONE,				ACT_DAB_RELOAD_PRONE_VECTOR,			false },
 	{ ACT_DAB_RELOAD_SLIDE,				ACT_DAB_RELOAD_SLIDE_VECTOR,			false },
+	{ ACT_DAB_BRAWL,                    ACT_DAB_BRAWL_VECTOR,                   false },
+	{ ACT_DAB_BRAWL_CROUCH,             ACT_DAB_BRAWL_CROUCH_VECTOR,            false },
+	{ ACT_DAB_BRAWL_PRONE,              ACT_DAB_BRAWL_PRONE_VECTOR,             false },
+	{ ACT_DAB_BRAWL_SLIDE,              ACT_DAB_BRAWL_SLIDE_VECTOR,             false },
+	{ ACT_DAB_BRAWL_DIVE,               ACT_DAB_BRAWL_DIVE_VECTOR,              false },
+	{ ACT_DAB_BRAWL_ROLL,               ACT_DAB_BRAWL_ROLL_VECTOR,              false },
 	{ ACT_DAB_JUMP_START,				ACT_DAB_JUMP_START_VECTOR,				false },
 	{ ACT_DAB_JUMP_FLOAT,				ACT_DAB_JUMP_FLOAT_VECTOR,				false },
 	{ ACT_DAB_JUMP_LAND,				ACT_DAB_JUMP_LAND_VECTOR,				false },
@@ -83,6 +89,7 @@ acttable_t CWeaponVector::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_VECTOR,					false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_VECTOR,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_VECTOR,					false },
+	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_VECTOR,          false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponVector );
