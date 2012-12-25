@@ -70,6 +70,8 @@ public:
 
 	void FinishUnSlide( void );
 
+	virtual bool LadderMove( void );
+
 	void SetSlideEyeOffset( float flFraction );
 	void SetUnSlideEyeOffset( float flFraction );
 	void SetRollEyeOffset( float flFraction );
@@ -1178,6 +1180,24 @@ void CSDKGameMovement::FinishUnSlide( void )
 	}
 
 	CategorizePosition();
+}
+
+bool CSDKGameMovement::LadderMove()
+{
+	bool bLadder = BaseClass::LadderMove();
+
+	if (bLadder)
+	{
+		m_pSDKPlayer->m_Shared.EndDive();
+		m_pSDKPlayer->m_Shared.EndRoll();
+		m_pSDKPlayer->m_Shared.EndSlide();
+		m_pSDKPlayer->m_Shared.SetProne(false, true);
+		m_pSDKPlayer->m_Shared.SetJumping(false);
+		SetProneEyeOffset(1);
+		SetRollEyeOffset(1);
+	}
+
+	return bLadder;
 }
 
 void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
