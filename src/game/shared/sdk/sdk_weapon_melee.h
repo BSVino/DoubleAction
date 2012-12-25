@@ -43,6 +43,9 @@ public:
 
 	virtual	float	GetMeleeDamage( bool bSecondary ) const;
 
+	virtual float GetBrawlFireRate( void ) { return GetFireRate(); }
+	virtual float GetBrawlSecondaryFireRate( void ) { return GetSecondaryFireRate(); }
+
 	CWeaponSDKMelee( const CWeaponSDKMelee & );
 };
 
