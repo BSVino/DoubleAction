@@ -216,3 +216,22 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 		pSetup->angles.z = flRoll;
 	}
 }
+
+ConVar m_verticaldamping("m_verticaldamping", "0.85", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen vertical component of mouse movement.", true, 0.1f, true, 1);
+ConVar m_slowmodamping("m_slowmodamping", "0.6", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during slow motion.", true, 0.1f, true, 1);
+
+void ClientModeSDKNormal::OverrideMouseInput( float *x, float *y )
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
+	float flMultiplier = RemapValClamped(pPlayer->GetSlowMoMultiplier(), 0.4f, 1, m_slowmodamping.GetFloat(), 1);
+
+	*x *= flMultiplier;
+	*y *= flMultiplier;
+
+	*y *= m_verticaldamping.GetFloat();
+
+	BaseClass::OverrideMouseInput(x, y);
+}

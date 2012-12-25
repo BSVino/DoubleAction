@@ -83,22 +83,31 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 	C_SDKPlayer* pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
 	C_WeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
 
-	if (pPlayer && pPlayer->m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
+	float flLetterbox = 0.0;
+	if (pPlayer)
 	{
-		// Consider 50% fully letterboxed 
-		float flRealAimIn = pPlayer->m_Shared.GetAimIn()*2;
-		if (flRealAimIn > 1)
-			flRealAimIn = 1;
+		if (pPlayer->m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
+		{
+			flLetterbox = pPlayer->m_Shared.GetAimIn()*2;
+			if (flLetterbox > 1)
+				flLetterbox = 1;
+		}
 
+		if (pPlayer->GetSlowMoMultiplier() < 1)
+			flLetterbox = max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
+	}
+
+	if (flLetterbox > 0)
+	{
 		int iWidth = ScreenWidth();
 		int iHeight = ScreenHeight();
 
 		int i169Height = iWidth*9/16;
 		if (i169Height >= iHeight - 50)
 			i169Height = iHeight - 50;
-		int iBarHeight = ((iHeight - i169Height)/2)*flRealAimIn;
+		int iBarHeight = ((iHeight - i169Height)/2)*flLetterbox;
 
-		surface()->DrawSetColor(Color(0, 0, 0, 255*flRealAimIn));
+		surface()->DrawSetColor(Color(0, 0, 0, 255*flLetterbox));
 		surface()->DrawFilledRect( 0, 0, ScreenWidth(), iBarHeight );
 		surface()->DrawFilledRect( 0, ScreenHeight()-iBarHeight, ScreenWidth(), ScreenHeight() );
 	}

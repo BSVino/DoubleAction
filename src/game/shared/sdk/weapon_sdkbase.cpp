@@ -275,6 +275,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if (bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
+	pOwner->Instructor_LessonLearned("brawl");
+
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
 
@@ -329,16 +331,25 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		ImpactWater( swingStart, testEnd );
 
 		WeaponSound( MELEE_MISS );
+
+		// Use less charge than if it's a hit
+		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			pOwner->UseStyleCharge(5);
 	}
 	else
 	{
 		Hit( traceHit, bIsSecondary );
+
+		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			pOwner->UseStyleCharge(10);
 	}
 
 	// Send the anim
 	if (!SendWeaponAnim( ACT_VM_HITCENTER ))
 		SendWeaponAnim( ACT_VM_DRAW );	// If the animation is missing, play the draw animation instead as a placeholder.
 
+	// Cancel it quickly before attacking again so that it doesn't just restart the gesture.
+	pOwner->DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
 	if (bIsSecondary)
 		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
 	else
@@ -859,6 +870,12 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
+		// Player gets a reload speed boost with Adrenaline.
+		if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+			ToSDKPlayer(GetOwner())->UseStyleCharge(5);
+
+		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
+
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
@@ -866,13 +883,14 @@ bool CWeaponSDKBase::Reload( void )
 
 		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
-		CBasePlayer* pOwner = ToBasePlayer(GetOwner());
-		if (pOwner)
+		if (pSDKOwner)
 		{
-			CBaseViewModel *vm = pOwner->GetViewModel( m_nViewModelIndex );
+			CBaseViewModel *vm = pSDKOwner->GetViewModel( m_nViewModelIndex );
 
 			if (vm)
 				vm->SetPlaybackRate( 1/flSpeedMultiplier );
+
+			pSDKOwner->Instructor_LessonLearned("reload");
 		}
 
 		MDLCACHE_CRITICAL_SECTION();
@@ -970,20 +988,12 @@ void CWeaponSDKBase::CheckReload()
 
 bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	Assert( pOwner );
-
 	m_bFireOnEmpty = false;
 
 	// If we don't have any ammo, switch to the next best weapon
 	if ( !HasAnyAmmo() && m_flNextPrimaryAttack < GetCurrentTime() && m_flNextSecondaryAttack < GetCurrentTime() )
 	{
-		// weapon isn't useable, switch.
-		if ( ( (GetWeaponFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) == false ) && ( g_pGameRules->SwitchToNextBestWeapon( pOwner, this ) ) )
-		{
-			m_flNextPrimaryAttack = GetCurrentTime() + 0.3;
-			return true;
-		}
+		// This block used to have an auto switch to a non-empty weapon, but no longer.
 	}
 	else
 	{
@@ -991,8 +1001,8 @@ bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 		if ( UsesClipsForAmmo1() && 
 			 (m_iClip1 == 0) && 
 			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
-			 m_flNextPrimaryAttack < GetCurrentTime() && 
-			 m_flNextSecondaryAttack < GetCurrentTime() )
+			 GetCurrentTime() > m_flNextPrimaryAttack + 1.5f &&
+			 GetCurrentTime() > m_flNextSecondaryAttack + 1.5f )
 		{
 			// if we're successfully reloading, we're done
 			if ( Reload() )
@@ -1122,3 +1132,11 @@ void CWeaponSDKBase::Die( void )
 	UTIL_Remove( this );
 }
 #endif
+
+bool CWeaponSDKBase::CanBeSelected()
+{
+	if ( !VisibleInWeaponSelection() )
+		return false;
+
+	return true;
+}

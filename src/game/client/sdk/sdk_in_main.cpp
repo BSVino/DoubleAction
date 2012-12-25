@@ -10,6 +10,8 @@
 #include "sdk_in_main.h"
 #include "tier0/vprof.h"
 
+#include "c_sdk_player.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -64,12 +66,15 @@ void CSDKInput::ThirdPersonToggle(void)
 		GoThirdPerson();
 }
 
-void AB_ThirdPersonToggle(void)
+void DA_ThirdPersonToggle(void)
 {
 	SDKInput()->ThirdPersonToggle();
+
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	pPlayer->Instructor_LessonLearned("thirdperson");
 }
 
-static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::AB_ThirdPersonToggle, "Toggle third person mode." );
+static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::DA_ThirdPersonToggle, "Toggle third person mode." );
 static ConVar cl_thirdperson( "cl_thirdperson", "0", FCVAR_ARCHIVE, "Choose third person mode." );
 
 void AB_Input_LevelInit()

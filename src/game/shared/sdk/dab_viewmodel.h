@@ -19,5 +19,8 @@ public:
 
 	virtual void DoMuzzleFlash();
 
+	virtual void CalcViewModelLag( Vector& origin, QAngle& angles, QAngle& original_angles ) {};
+	virtual void AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles );
+
 	CWeaponSDKBase* GetDAWeapon() { return static_cast<CWeaponSDKBase*>(GetOwningWeapon()); }
 };

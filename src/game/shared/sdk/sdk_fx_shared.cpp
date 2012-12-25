@@ -16,6 +16,7 @@
 
 #include "fx_impact.h"
 #include "c_sdk_player.h"
+#include "projectedlighteffect.h"
 
 	// this is a cheap ripoff from CBaseCombatWeapon::WeaponSound():
 	void FX_WeaponSound(
@@ -162,6 +163,10 @@ void FX_FireBullets(
 
 	if ( bDoEffects)
 	{
+#ifdef CLIENT_DLL
+		ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
+#endif
+
 		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
 	}
 
@@ -202,6 +207,9 @@ void FX_FireBullets(
 			bDoEffects,
 			x,y );
 	}
+
+	if (pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		pPlayer->UseStyleCharge(3);
 
 #if !defined (CLIENT_DLL)
 	lagcompensation->FinishLagCompensation( pPlayer );

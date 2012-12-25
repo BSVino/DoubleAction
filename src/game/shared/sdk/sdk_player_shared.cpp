@@ -144,7 +144,7 @@ void CSDKPlayer::FireBullet(
 			break;
 
 		case WT_SHOTGUN:
-			flDistanceMultiplier = pow ( 0.25f, (flCurrentDistance / 500));
+			flDistanceMultiplier = pow ( 0.40f, (flCurrentDistance / 500));
 			break;
 
 		case WT_SMG:
@@ -338,6 +338,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
+	m_Shared.m_flViewBobRamp = 0;
 	m_Shared.m_flLastDuckPress = -1;
 	m_Shared.m_bDiving = false;
 	m_Shared.m_bRolling = false;
@@ -368,12 +369,6 @@ bool CSDKPlayer::PlayerUse()
 
 	if (!IsAlive())
 		return false;
-
-	if (m_flSlowMoSeconds > 0)
-	{
-		ActivateSlowMo();
-		return true;
-	}
 
 	return false;
 }
@@ -484,7 +479,12 @@ bool CSDKPlayer::IsStyleSkillActive() const
 	if (m_flStylePoints >= 100)
 		return true;
 
-	return m_flStyleSkillStart > 0;
+	return m_flStyleSkillCharge > 0;
+}
+
+void CSDKPlayer::UseStyleCharge(float flCharge)
+{
+	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 }
 
 void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
@@ -665,6 +665,9 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	if (!CanSlide())
 		return;
 
+	if (m_iStyleSkill == SKILL_ADRENALINE)
+		m_pOuter->UseStyleCharge(5);
+
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
@@ -683,6 +686,15 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 void CSDKPlayerShared::EndSlide()
 {
+	// If it was long enough to notice what it was, then train the slide.
+	if (gpGlobals->curtime > m_flSlideTime + 1)
+	{
+		if (m_bDiveSliding)
+			m_pOuter->Instructor_LessonLearned("diveafterslide");
+		else
+			m_pOuter->Instructor_LessonLearned("slide");
+	}
+
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_flSlideTime = 0;
@@ -806,17 +818,20 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height( "sdk_dive_height", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "430", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
+
+	if (m_iStyleSkill == SKILL_ADRENALINE)
+		m_pOuter->UseStyleCharge(5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -835,6 +850,8 @@ Vector CSDKPlayerShared::StartDiving()
 	m_pOuter->DoAnimationEvent(PLAYERANIMEVENT_DIVE);
 
 	m_pOuter->SetGroundEntity(NULL);
+
+	m_pOuter->Instructor_LessonLearned("dive");
 
 	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 	{
@@ -915,6 +932,16 @@ bool CSDKPlayerShared::IsAimedIn() const
 
 void CSDKPlayerShared::SetAimIn(bool bAimIn)
 {
+	// If we're aimed in and aimin is being turned off and we're aimed in enough to have noticed a change, train the aimin lesson.
+	if (m_bAimedIn && !bAimIn && m_flAimIn > 0.5f)
+	{
+		CWeaponSDKBase* pWeapon = m_pOuter->GetActiveSDKWeapon();
+
+		// Also must be holding an aimin weapon.
+		if (pWeapon && (pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus() || pWeapon->HasAimInSpeedPenalty()))
+			m_pOuter->Instructor_LessonLearned("aimin");
+	}
+
 	m_bAimedIn = bAimIn;
 }
 
@@ -1115,21 +1142,15 @@ float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 	return BaseClass::GetSequenceCycleRate( pStudioHdr, iSequence ) * GetSlowMoMultiplier();
 }
 
-void CSDKPlayer::ActivateSlowMo(slowmo_type eType)
+void CSDKPlayer::ActivateSlowMo()
 {
-	if (eType == SLOWMO_ACTIVATED)
-	{
-		if (m_iSlowMoType == SLOWMO_STYLESKILL)
-			return;
+	if (!m_flSlowMoSeconds)
+		return;
 
-		m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds;
-		m_flSlowMoSeconds = 0;
-		m_iSlowMoType = eType;
-	}
-	else if (eType == SLOWMO_STYLESKILL)
-	{
-		m_iSlowMoType = eType;
-	}
+	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds + 0.5f;    // 1 second becomes 1.5 seconds, 2 becomes 2.5, etc
+	m_flSlowMoSeconds = 0;
+	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
+	m_bHasSuperSlowMo = false;
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
@@ -1159,7 +1180,7 @@ void CSDKPlayer::UpdateCurrentTime()
 
 	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
 
-	if (m_iSlowMoType == SLOWMO_ACTIVATED && gpGlobals->curtime > m_flSlowMoTime)
+	if (m_flSlowMoTime > 0 && gpGlobals->curtime > m_flSlowMoTime)
 	{
 		m_flSlowMoTime = 0;
 		m_iSlowMoType = SLOWMO_NONE;
@@ -1168,4 +1189,76 @@ void CSDKPlayer::UpdateCurrentTime()
 		SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
 	}
+
+	float flMaxBobSpeed = m_Shared.m_flRunSpeed*0.7f;
+	float flBobRampGoal = RemapValClamped(GetLocalVelocity().LengthSqr(), 0, flMaxBobSpeed*flMaxBobSpeed, 0, 1);
+	if (!GetGroundEntity() || m_Shared.IsRolling() || m_Shared.IsSliding())
+		flBobRampGoal = 0;
+
+	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
+}
+
+ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
+
+Vector CSDKPlayer::EyePosition()
+{
+	Vector vecPosition = BaseClass::EyePosition();
+
+	bool bIsInThird = false;
+
+#ifdef CLIENT_DLL
+	bIsInThird = ::input->CAM_IsThirdPerson();
+#endif
+
+	if (m_Shared.m_flViewBobRamp && !bIsInThird)
+	{
+		Vector vecRight, vecUp;
+		AngleVectors(EyeAngles(), NULL, &vecRight, &vecUp);
+
+		float flViewBobMagnitude = m_Shared.m_flViewBobRamp * da_viewbob.GetFloat();
+
+		float flRunPeriod = M_PI * 3;
+		float flRunUpBob = sin(GetCurrentTime() * flRunPeriod * 2) * (flViewBobMagnitude / 2);
+		float flRunRightBob = sin(GetCurrentTime() * flRunPeriod) * flViewBobMagnitude;
+
+		float flWalkPeriod = M_PI * 1.5f;
+		float flWalkUpBob = sin(GetCurrentTime() * flWalkPeriod * 2) * (flViewBobMagnitude / 2);
+		float flWalkRightBob = sin(GetCurrentTime() * flWalkPeriod) * flViewBobMagnitude;
+
+		// 0 is walk, 1 is run.
+		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed, 1.0f, 0.0f, 1.0f);
+
+		float flRightBob = RemapValClamped(flRunRamp, 0, 1, flWalkRightBob, flRunRightBob);
+		float flUpBob = RemapValClamped(flRunRamp, 0, 1, flWalkUpBob, flRunUpBob);
+
+		vecPosition += vecRight * flRightBob + vecUp * flUpBob;
+	}
+
+	return vecPosition;
+}
+
+bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
+{
+	if (IsPlayer())
+	{
+		CBasePlayer *pPlayer = (CBasePlayer *)this;
+#if !defined( CLIENT_DLL )
+		IServerVehicle *pVehicle = pPlayer->GetVehicle();
+#else
+		IClientVehicle *pVehicle = pPlayer->GetVehicle();
+#endif
+		if (pVehicle && !pPlayer->UsingStandardWeaponsInVehicle())
+			return false;
+	}
+
+	if ( !pWeapon->CanDeploy() )
+		return false;
+	
+	if ( GetActiveWeapon() )
+	{
+		if ( !GetActiveWeapon()->CanHolster() )
+			return false;
+	}
+
+	return true;
 }

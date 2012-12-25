@@ -106,6 +106,11 @@ public:
 	Vector	GetRecoil(float flFrameTime);
 	void	SetRecoil(float flRecoil);
 
+	float   GetViewBobRamp() const { return m_flViewBobRamp; }
+
+	float   GetRunSpeed() const { return m_flRunSpeed; }
+	float   GetAimInSpeed() const { return m_flAimInSpeed; }
+
 	void	ForceUnzoom( void );
 
 #ifdef SDK_USE_SPRINTING
@@ -150,6 +155,8 @@ private:
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
 	float m_flViewTilt;
+
+	float m_flViewBobRamp;
 
 	CNetworkVar( bool, m_bAimedIn );
 	CNetworkVar( float, m_flAimIn );

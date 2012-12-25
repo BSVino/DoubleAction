@@ -17,9 +17,37 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 
+#include "da_instructor.h"
+
+class CProjectedLightEffect;
 
 class C_SDKPlayer : public C_BasePlayer
 {
+public:
+	class CLessonProgress
+	{
+	public:
+		CLessonProgress()
+		{
+			m_flLastTimeShowed = 0;
+			m_iTimesLearned = 0;
+			m_flLastTimeLearned = 0;
+		}
+
+	public:
+		CUtlString     m_sLessonName;
+		double         m_flLastTimeShowed;
+		int            m_iTimesLearned;
+		double         m_flLastTimeLearned;
+	};
+
+	class LessonPriorityLess
+	{
+	public:
+		typedef C_SDKPlayer::CLessonProgress* LessonPointer;
+		bool Less( const LessonPointer& lhs, const LessonPointer& rhs, void *pCtx );
+	};
+
 public:
 	DECLARE_CLASS( C_SDKPlayer, C_BasePlayer );
 	DECLARE_CLIENTCLASS();
@@ -52,6 +80,8 @@ public:
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 
+	virtual Vector  EyePosition();
+
 	// Player avoidance
 	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void AvoidPlayers( CUserCmd *pCmd );
@@ -63,7 +93,22 @@ public:
 	// Have this player play the sounds from his view model's reload animation.
 	void PlayReloadEffect();
 
-// Called by shared code.
+	virtual void	UpdateFlashlight( void );
+	void	TurnOffFlashlight( void );
+	virtual const char *GetFlashlightTextureName( void ) const { return NULL; }
+	virtual float GetFlashlightFOV( void ) const { return 0.0f; }
+	virtual float GetFlashlightFarZ( void ) const { return 0.0f; }
+	virtual float GetFlashlightLinearAtten( void ) const { return 0.0f; }
+	virtual Vector GetFlashlightOrigin() const { return m_vecFlashlightOrigin; }
+	virtual bool CastsFlashlightShadows( void ) const { return true; }
+	virtual void GetFlashlightOffset( const Vector &vecForward, const Vector &vecRight, const Vector &vecUp, Vector *pVecOffset ) const;
+
+	virtual bool				ShouldReceiveProjectedTextures( int flags )
+	{
+		return true;
+	}
+
+	// Called by shared code.
 public:
 	SDKPlayerState State_Get() const;
 	
@@ -71,6 +116,8 @@ public:
 	virtual bool ShouldDraw();
 
 	CWeaponSDKBase *GetActiveSDKWeapon() const;
+
+	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
@@ -98,7 +145,9 @@ public:
 	virtual bool	PlayerFrozen();
 
 	float GetStylePoints() { return m_flStylePoints; }
+	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
 	bool IsStyleSkillActive() const;
+	void UseStyleCharge(float flCharge);
 
 	virtual void SharedSpawn();
 	
@@ -118,10 +167,13 @@ public:
 	bool IsSprinting( void );
 #endif
 
-	void ActivateSlowMo(slowmo_type eType = SLOWMO_ACTIVATED);
+	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
+	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
+
+	bool HasPlayerDied() const { return m_bHasPlayerDied; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
@@ -148,6 +200,16 @@ public:
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
 	int GetLoadoutWeight() { return m_iLoadoutWeight; }
 
+	virtual void	Instructor_Initialize();
+	virtual void	Instructor_Think();
+	virtual void	Instructor_Respawn();
+
+	virtual void	Instructor_LessonLearned(const CUtlString& sLesson);
+	virtual bool	Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress);
+	virtual bool	Instructor_IsLessonValid(const CLessonProgress* pLessonProgress);
+	virtual class CLessonProgress*  Instructor_GetBestLesson();
+	CInstructor*    GetInstructor() { return m_pInstructor; }
+
 	void LocalPlayerRespawn( void );
 
 	//Tony; update lookat, if our model has moving eyes setup, they need to be updated.
@@ -162,6 +224,8 @@ public:
 	virtual void				OverrideView( CViewSetup *pSetup );
 
 	float			GetCurrentTime() const { return m_flCurrentTime; }
+
+	float           GetLastSpawnTime() const { return m_flLastSpawnTime; }
 
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
@@ -209,7 +273,7 @@ private:
 	int m_ArmorValue;
 
 	float m_flStylePoints;
-	float m_flStyleSkillStart;
+	float m_flStyleSkillCharge;
 
 	class CSDKSoundEvent
 	{
@@ -223,11 +287,28 @@ private:
 	int				m_iLoadoutWeight;
 
 	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( bool, m_bHasSuperSlowMo );
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
+
+	CNetworkVar( float, m_flLastSpawnTime );
+
+	CNetworkVar( bool, m_bHasPlayerDied );
+
+	CProjectedLightEffect *m_pProjectedFlashlight;
+	bool			m_bFlashlightEnabled;
+	Vector	m_vecFlashlightOrigin;
+	Vector	m_vecFlashlightForward;
+	Vector	m_vecFlashlightUp;
+	Vector	m_vecFlashlightRight;
+
+	class CInstructor*                     m_pInstructor;
+	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
+	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
+	float                                  m_flLastLesson;
 };
 
 

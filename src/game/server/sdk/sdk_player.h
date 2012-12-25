@@ -14,12 +14,7 @@
 #include "sdk_playeranimstate.h"
 #include "sdk_player_shared.h"
 
-typedef enum
-{
-	STYLE_POINT_SMALL,
-	STYLE_POINT_LARGE,
-	STYLE_POINT_STYLISH,
-} style_point_t;
+#include "da.h"
 
 // Function table for each player state.
 class CSDKPlayerStateInfo
@@ -81,6 +76,9 @@ public:
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 
+	void         AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info);
+	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle);
+
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;
 	
@@ -89,7 +87,10 @@ public:
 
 	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
-	virtual void ThrowActiveWeapon( bool bAutoSwitch = true );
+	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
+	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
+
+	virtual Vector  EyePosition();
 
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
@@ -99,6 +100,8 @@ public:
 	virtual void	PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
+
+	virtual void	Instructor_LessonLearned(const char* pszLesson);
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
@@ -125,6 +128,8 @@ public:
 	void RemoveFromLoadout(SDKWeaponID eWeapon);
 	void CountLoadoutWeight();
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+
+	void SelectItem( const char *pstr, int iSubType = 0 );
 
 	void SetSkillMenuOpen( bool bIsOpen );
 	bool IsSkillMenuOpen( void );
@@ -203,16 +208,18 @@ public:
 	void SetStylePoints(float points);
 	bool UseStylePoints();
 	bool IsStyleSkillActive() const;
+	void UseStyleCharge(float flCharge);
 
 	void ActivateMeter();
 
 	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
 
-	void ActivateSlowMo(slowmo_type eType = SLOWMO_ACTIVATED);
+	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	int GetSlowMoType() const { return m_iSlowMoType; }
 	void SetSlowMoType(int iType);
+	void GiveSlowMo(float flSeconds);
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
@@ -259,7 +266,7 @@ private:
 
 	// Universal Meter
 	CNetworkVar(float, m_flStylePoints);
-	CNetworkVar(float, m_flStyleSkillStart);
+	CNetworkVar(float, m_flStyleSkillCharge);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
@@ -343,11 +350,16 @@ public:
 	CNetworkVar( float, m_flDisarmRedraw );
 
 	CNetworkVar( int, m_iSlowMoType );
+	CNetworkVar( bool, m_bHasSuperSlowMo );
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
+
+	CNetworkVar( float, m_flLastSpawnTime );
+
+	CNetworkVar( bool, m_bHasPlayerDied );
 };
 
 

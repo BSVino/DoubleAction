@@ -77,20 +77,6 @@ void CHudSlowMo::Reset()
 
 	m_flSlowMo = 0;
 
-	wchar_t *tempString = g_pVGuiLocalize->Find("#DAB_Hud_SlowMo");
-	if (tempString)
-	{
-		wchar_t wzFinal[512] = L"";
-
-		UTIL_ReplaceKeyBindings( tempString, 0, wzFinal, sizeof( wzFinal ) );
-
-		SetLabelText(wzFinal);
-	}
-	else
-	{
-		SetLabelText(L"SLOWMO");
-	}
-
 	UpdatePlayerSlowMo( C_BasePlayer::GetLocalPlayer() );
 }
 
@@ -108,6 +94,23 @@ void CHudSlowMo::UpdatePlayerSlowMo( C_BasePlayer *player )
 	SetPaintBackgroundEnabled(true);
 
 	SetSlowMo(pSDKPlayer->GetSlowMoSeconds());
+
+	wchar_t *pszSlowmo = g_pVGuiLocalize->Find("#DAB_Hud_SlowMo");
+	if (pSDKPlayer->HasSuperSlowMo())
+		pszSlowmo = g_pVGuiLocalize->Find("#DAB_Hud_SuperSlowMo");
+
+	if (pszSlowmo)
+	{
+		wchar_t wzFinal[512] = L"";
+
+		UTIL_ReplaceKeyBindings( pszSlowmo, 0, wzFinal, sizeof( wzFinal ) );
+
+		SetLabelText(wzFinal);
+	}
+	else
+	{
+		SetLabelText(L"SLOWMO");
+	}
 }
 
 void CHudSlowMo::OnThink()

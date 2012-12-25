@@ -150,11 +150,6 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
-
-	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
-	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
-	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
-	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -196,9 +191,17 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
-	SendPropTime( SENDINFO( m_flStyleSkillStart ) ),
+	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 
+	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
+	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
+	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
+	SendPropFloat( SENDINFO( m_flLastSpawnTime ) ),
+
+	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -275,6 +278,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextHealthDecay = 0;
 	m_flNextSecondWindRegen = 0;
 
+	m_bHasPlayerDied = false;
+
 	m_flCurrentTime = gpGlobals->curtime;
 }
 
@@ -324,9 +329,11 @@ void CSDKPlayer::PreThink(void)
 		{
 			if (m_flCurrentTime > m_flNextSecondWindRegen)
 			{
-				TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+				int iHealthTaken = TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
 
 				m_flNextSecondWindRegen = m_flCurrentTime + 1;
+
+				UseStyleCharge(iHealthTaken);
 			}
 
 		}
@@ -407,27 +414,6 @@ void CSDKPlayer::PostThink()
 		}
 	}
 
-	if (m_flStyleSkillStart > 0)
-	{
-		if (m_flCurrentTime > m_flStyleSkillStart + dab_stylemetertime.GetFloat())
-		{
-			m_flStyleSkillStart = -1;
-
-			CSingleUserRecipientFilter filter( this );
-			EmitSound(filter, entindex(), "HudMeter.End");
-
-			if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
-			{
-				Assert(m_iSlowMoType == SLOWMO_STYLESKILL);
-
-				m_flSlowMoTime = 0;
-				m_iSlowMoType = SLOWMO_NONE;
-
-				SDKGameRules()->PlayerSlowMoUpdate(this);
-			}
-		}
-	}
-
 	QAngle angles = GetLocalAngles();
 	angles[PITCH] = 0;
 	SetLocalAngles( angles );
@@ -501,12 +487,19 @@ void CSDKPlayer::GiveDefaultItems()
 	{
 		GiveNamedItem( "weapon_brawl" );
 
+		CWeaponSDKBase* pHeaviestWeapon = NULL;
+
 		for (int i = 0; i < MAX_LOADOUT; i++)
 		{
 			if (m_aLoadout[i].m_iCount)
 			{
 				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
-				GiveNamedItem( szName );
+				CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(GiveNamedItem( szName ));
+
+				if (!pHeaviestWeapon)
+					pHeaviestWeapon = pWeapon;
+				else if (pWeapon && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
+					pHeaviestWeapon = pWeapon;
 
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 				if (pInfo)
@@ -518,6 +511,9 @@ void CSDKPlayer::GiveDefaultItems()
 				}
 			}
 		}
+
+		if (pHeaviestWeapon)
+			Weapon_Switch(pHeaviestWeapon);
 
 		for (int i = 0; i < WeaponCount(); i++)
 		{
@@ -596,17 +592,20 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 
-	m_flStyleSkillStart = -1;
+	m_flStyleSkillCharge = 0;
 
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iSlowMoType = SLOWMO_NONE;
+	m_bHasSuperSlowMo = false;
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
+
+	m_flLastSpawnTime = gpGlobals->curtime;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -819,7 +818,10 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bCheckFriendlyFire = true;
 
 	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+	{
+		UseStyleCharge(flDamage * 0.2f);
 		flDamage *= 0.6f;
+	}
 
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
@@ -971,26 +973,12 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if( pAttacker && pAttacker->IsPlayer() )
 	{
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
-		CSDKPlayerShared* pAttackerSDKShared = &pAttackerSDK->m_Shared;
 
-		float flDamage = info.GetDamage() / 4.0f;	// Damaging someone for 100% of their health is enough to get one bar.
+		pAttackerSDK->AwardStylePoints(this, false, info);
 
-		if (pAttackerSDKShared->IsDiving() || pAttackerSDKShared->IsSliding())
-			// Damaging a dude while stunting enough to kill him gives a full bar.
-			pAttackerSDK->AddStylePoints(flDamage, STYLE_POINT_LARGE);
-		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
-			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(flDamage*0.6f, STYLE_POINT_SMALL);
-		else if (pAttackerSDKShared->IsRolling())
-			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
-		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(flDamage*0.5f, STYLE_POINT_LARGE);
-		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
-			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(flDamage*0.3f, STYLE_POINT_SMALL);
-		else
-			pAttackerSDK->AddStylePoints(flDamage*0.2f, STYLE_POINT_SMALL);
+		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
+		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
+			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 	}
 
 	m_flNextRegen = m_flCurrentTime + 10;
@@ -999,6 +987,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 }
 
 ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
+ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1027,25 +1016,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		SetFOV( this, 0 );
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
-		CSDKPlayerShared pAttackerSDKShared = pAttackerSDK->m_Shared;
 
-		if (pAttackerSDKShared.IsDiving() || pAttackerSDKShared.IsSliding())
-			pAttackerSDK->AddStylePoints(25, STYLE_POINT_STYLISH);
-		else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
-			// Damaging a dude through a wall with a firearm.
-			pAttackerSDK->AddStylePoints(15, STYLE_POINT_LARGE);
-		else if (pAttackerSDKShared.IsRolling())
-			// Rolling, which is easier to do and typically happens after the dive, gives only half.
-			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
-		else if (info.GetDamageType() == DMG_CLUB)
-			pAttackerSDK->AddStylePoints(25.0f*0.5f, STYLE_POINT_STYLISH);
-		else if (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding())
-			// Damaging a stunting dude gives me more bar than usual.
-			pAttackerSDK->AddStylePoints(7.5f, STYLE_POINT_LARGE);
-		else
-			pAttackerSDK->AddStylePoints(5, STYLE_POINT_LARGE);
-
-		pAttackerSDK->m_flSlowMoSeconds = clamp(pAttackerSDK->m_flSlowMoSeconds+1, 0, 5);
+		pAttackerSDK->AwardStylePoints(this, true, info);
+		pAttackerSDK->GiveSlowMo(1);
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -1068,22 +1041,196 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (IsStyleSkillActive())
 	{
 		// If the player died while the style meter was active, refund the unused portion.
-		float flUnused = 1-((m_flCurrentTime - m_flStyleSkillStart)/dab_stylemetertime.GetFloat());
+		float flUnused = m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat();
 		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
 		SetStylePoints(m_flStylePoints + flRefund);
 	}
 
 	// Losing a whole activation can be rough, let's be a bit more forgiving.
-	// Going down with one bar drops you to half bar, but going down with full bar loses you two bars.
+	// Going down with lots of bar drops you more than going down with just a little bar.
 	// This way, running around with your bar full you run a high risk.
-	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, 25, 100, dab_stylemeteractivationcost.GetFloat()/2, dab_stylemeteractivationcost.GetFloat()*2));
+	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
+	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
+	m_bHasSuperSlowMo = false;
+
+	m_bHasPlayerDied = true;
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
+}
+
+void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
+{
+	if (pVictim == this)
+		return;
+
+	float flPoints = 1;
+
+	if (bKilledVictim)
+	{
+		// Give me half of the activation cost. The other half I'll get from damaging.
+		flPoints = dab_stylemeteractivationcost.GetFloat()/2;
+	}
+	else
+	{
+		// Damaging someone stylishly for 100% of their health is enough to get one bar.
+		// The player will get half the points from damaging and the other half from killing.
+		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/2);
+	}
+
+	if (m_Shared.IsAimedIn())
+		flPoints *= 1.2f;
+
+	if (m_iSlowMoType != SLOWMO_NONE)
+		flPoints *= 1.3f;
+
+	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
+	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
+
+	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
+
+	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && GetActiveSDKWeapon()->m_iClip1 == 0)
+	{
+		// Killing a player with your last bullet.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
+	}
+	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
+	{
+		// Damaging a dude enough to kill him while stunting gives a full bar.
+		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (m_Shared.IsDiving())
+		{
+			if (bKilledVictim)
+				SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
+			else
+				SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+		}
+		else
+		{
+			if (bKilledVictim)
+				SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+			else
+				SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+		}
+	}
+	else if (info.GetDamageType() == DMG_BLAST)
+	{
+		// Grenades are cool.
+		AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+	}
+	else if (flDistance > 1200)
+	{
+		// Long range.
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
+	}
+	else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
+	{
+		// Damaging a dude through a wall with a firearm.
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_SMALL);
+	}
+	else if (m_Shared.IsRolling())
+	{
+		// Rolling, which is easier to do and typically happens after the dive, gives only half.
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_STUNT_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_STUNT, STYLE_POINT_LARGE);
+	}
+	else if (info.GetDamageType() == DMG_CLUB)
+	{
+		// Brawl
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
+	}
+	else
+	{
+		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
+			// Damaging a stunting dude gives me slightly more bar than usual.
+			AddStylePoints(flPoints*0.3f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+		else
+			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		// Only some chance of sending a message at all.
+		if (bKilledVictim || random->RandomInt(0, 3) == 0)
+		{
+			int iRandom = random->RandomInt(0, 1);
+			announcement_t eAnnouncement;
+			switch (iRandom)
+			{
+			case 0:
+			default:
+				eAnnouncement = ANNOUNCEMENT_STYLISH;
+				break;
+
+			case 1:
+				eAnnouncement = ANNOUNCEMENT_COOL;
+				break;
+			}
+
+			// If the victim isn't doing anything very stylish then just say it's cool.
+			if (!(pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding()))
+				eAnnouncement = ANNOUNCEMENT_COOL;
+
+			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
+				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
+
+			if (bKilledVictim && m_flSlowMoMultiplier < 1)
+				eAnnouncement = ANNOUNCEMENT_SLOWMO_KILL;
+
+			if (bKilledVictim)
+				SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
+			else
+				SendAnnouncement(eAnnouncement, STYLE_POINT_SMALL);
+		}
+	}
+}
+
+void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle)
+{
+	CSingleUserRecipientFilter user( this );
+	user.MakeReliable();
+
+	// Start the message block
+	UserMessageBegin( user, "StyleAnnouncement" );
+
+		// Send our text to the client
+		WRITE_LONG( eAnnouncement );
+		WRITE_BYTE( ePointStyle );
+
+		if (IsStyleSkillActive())
+			WRITE_FLOAT( m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat() );
+		else
+			WRITE_FLOAT( GetStylePoints()/dab_stylemeteractivationcost.GetFloat() );
+
+	// End the message block
+	MessageEnd();
 }
 
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
@@ -1107,7 +1254,7 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	m_iHealth += flHealth;
 
 	if (m_iHealth > iMax*flMultiplier)
-		m_iHealth = iMax;
+		m_iHealth = iMax*flMultiplier;
 
 	return m_iHealth - oldHealth;
 
@@ -1126,7 +1273,7 @@ int CSDKPlayer::GetMaxHealth() const
 	return BaseClass::GetMaxHealth();
 }
 
-void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
+bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
 
@@ -1143,11 +1290,15 @@ void CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
 
-		if (bAutoSwitch)
-			SwitchToNextBestWeapon( pWeapon );
-
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
+
+		if (bAutoSwitch)
+			SwitchToNextBestWeapon( NULL );
+
+		return true;
 	}
+
+	return false;
 }
 
 bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
@@ -1189,6 +1340,8 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	}
 
 	vecThrow *= random->RandomFloat( 150.0f, 240.0f );
+
+	vecThrow += GetAbsVelocity();
 
 	pWeapon->SetAbsOrigin( vecOrigin );
 	pWeapon->SetAbsAngles( vecAngles );
@@ -1312,6 +1465,17 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 	gEvilImpulse101		= false;
 }
 
+void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
+{
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	CDisablePredictionFiltering disabler(true);
+
+	UserMessageBegin( filter, "LessonLearned" );
+		WRITE_STRING( pszLesson );
+	MessageEnd();
+}
 
 void CSDKPlayer::FlashlightTurnOn( void )
 {
@@ -1732,6 +1896,21 @@ void CSDKPlayer::CountLoadoutWeight()
 
 		m_iLoadoutWeight += pWeaponInfo->iWeight * m_aLoadout[i].m_iCount;
 	}
+}
+
+void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
+{
+	bool bPreviousWeaponWasOutOfAmmo = false;
+	if (GetActiveSDKWeapon() && !GetActiveSDKWeapon()->HasPrimaryAmmo())
+		bPreviousWeaponWasOutOfAmmo = true;
+
+	BaseClass::SelectItem(pstr, iSubType);
+
+	// If we switched from a weapon that's out of ammo to a weapon with ammo then we train that lesson.
+	if (bPreviousWeaponWasOutOfAmmo && GetActiveSDKWeapon() && GetActiveSDKWeapon()->HasPrimaryAmmo())
+		Instructor_LessonLearned("outofammo");
+	else
+		Instructor_LessonLearned("switchweapons");
 }
 
 void CSDKPlayer::SetSkillMenuOpen( bool bOpen )
@@ -2290,12 +2469,19 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 {
 	if (IsStyleSkillActive())
-		return;
-
-	if (m_Shared.IsAimedIn())
+	{
+		points = RemapValClamped(points, 0, dab_stylemeteractivationcost.GetFloat(), 0, dab_stylemetertotalcharge.GetFloat());
 		points /= 2;
+		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > dab_stylemetertotalcharge.GetFloat()) ? dab_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
+	}
+	else
+		m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
 
-	m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
+	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
+	{
+		ActivateMeter();
+		return;
+	}
 
 	CSingleUserRecipientFilter filter( this );
 	if (eStyle == STYLE_POINT_SMALL)
@@ -2337,16 +2523,16 @@ bool CSDKPlayer::UseStylePoints (void)
 
 void CSDKPlayer::ActivateMeter()
 {
-	if (m_flStyleSkillStart > 0)
-		return;
-
 	if (!UseStylePoints())
 		return;
 
 	if (!IsAlive())
 		return;
 
-	m_flStyleSkillStart = m_flCurrentTime;
+	m_flStylePoints = 0;
+
+	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
+		m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
@@ -2381,7 +2567,10 @@ void CSDKPlayer::ActivateMeter()
 		CBasePlayer::GiveAmmo( 10, "grenades");
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
-		ActivateSlowMo(SLOWMO_STYLESKILL);
+	{
+		m_bHasSuperSlowMo = true;
+		GiveSlowMo(6);   // Gets cut in two because super slow mo is on, so it's really 3
+	}
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)
@@ -2390,16 +2579,27 @@ void CSDKPlayer::SetSlowMoType(int iType)
 		m_iSlowMoType = iType;
 }
 
-void CC_ActivateMeter_f (void)
+void CSDKPlayer::GiveSlowMo(float flSeconds)
+{
+	if (m_bHasSuperSlowMo)
+		flSeconds /= 2;
+
+	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, 5);
+}
+
+void CC_ActivateSlowmo_f (void)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
 
-	pPlayer->ActivateMeter();
+	pPlayer->Instructor_LessonLearned("slowmo");
+
+	if (pPlayer->m_flSlowMoSeconds > 0)
+		pPlayer->ActivateSlowMo();
 }
 
-static ConCommand activatemeter("activatemeter", CC_ActivateMeter_f, "Activate the style meter." );
+static ConCommand activateslowmo("activateslowmo", CC_ActivateSlowmo_f, "Activate slow motion." );
 
 void CC_Character(const CCommand& args)
 {
@@ -2450,6 +2650,7 @@ void CC_Buy(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
+		pPlayer->Instructor_LessonLearned("buy");
 		pPlayer->ShowBuyMenu();
 		return;
 	}
@@ -2501,7 +2702,8 @@ void CC_Drop(const CCommand& args)
 	if (!pPlayer)
 		return;
 
-	pPlayer->ThrowActiveWeapon();
+	if (pPlayer->ThrowActiveWeapon())
+		pPlayer->Instructor_LessonLearned("throw");
 }
 
 static ConCommand drop("drop", CC_Drop, "Drop the weapon the player currently holds.", FCVAR_GAMEDLL);
@@ -2513,7 +2715,7 @@ void CC_GiveSlowMo(const CCommand& args)
 	if (!pPlayer)
 		return;
 
-	pPlayer->m_flSlowMoSeconds += 1;
+	pPlayer->GiveSlowMo(1);
 }
 
 static ConCommand give_slowmo("give_slowmo", CC_GiveSlowMo, "Give the player one second of slow motion.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);

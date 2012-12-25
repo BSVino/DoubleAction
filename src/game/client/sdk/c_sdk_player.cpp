@@ -26,6 +26,8 @@
 #include "ClientEffectPrecacheSystem.h"
 #include "model_types.h"
 #include "sdk_gamerules.h"
+#include "projectedlighteffect.h"
+#include "voice_status.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -148,11 +150,6 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
-
-	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
-	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -176,9 +173,17 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
-	RecvPropTime( RECVINFO(m_flStyleSkillStart) ),
+	RecvPropFloat( RECVINFO(m_flStyleSkillCharge) ),
 
+	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
+	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),
+	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
+	RecvPropFloat		( RECVINFO( m_flLastSpawnTime ) ),
+
+	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -212,6 +217,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bDiving, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecDiveDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flViewTilt, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_flViewBobRamp, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_bAimedIn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flAimIn, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
@@ -227,18 +233,15 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flStylePoints, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
-	DEFINE_PRED_FIELD( m_flStyleSkillStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flStyleSkillCharge, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoSeconds, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flLastSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
-
-CLIENTEFFECT_REGISTER_BEGIN( PrecacheStyle )
-CLIENTEFFECT_MATERIAL( "models/effects/styleskill.vmt" )
-CLIENTEFFECT_REGISTER_END()
 
 ConVar cl_ragdoll_fade_time( "cl_ragdoll_fade_time", "15", FCVAR_CLIENTDLL );
 ConVar cl_ragdoll_pronecheck_distance( "cl_ragdoll_pronecheck_distance", "64", FCVAR_GAMEDLL );
@@ -629,6 +632,11 @@ C_SDKPlayer::C_SDKPlayer() :
 C_SDKPlayer::~C_SDKPlayer()
 {
 	m_PlayerAnimState->Release();
+
+	if ( m_bFlashlightEnabled )
+	{
+		TurnOffFlashlight();
+	}
 }
 
 
@@ -637,6 +645,11 @@ void C_SDKPlayer::PreThink()
 	UpdateCurrentTime();
 
 	BaseClass::PreThink();
+
+	Instructor_Think();
+
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this && GetClientVoiceMgr()->IsLocalPlayerSpeaking())
+		Instructor_LessonLearned("voicechat");
 }
 
 
@@ -760,6 +773,11 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 #endif
 
 	InitSpeeds(); //Tony; initialize player speeds.
+
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this)
+		m_pInstructor = new CInstructor();
+
+	Instructor_Respawn();
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
@@ -778,13 +796,6 @@ int C_SDKPlayer::DrawModel( int flags )
 {
 	if (IsStyleSkillActive())
 	{
-		if (flags & STUDIO_RENDER)
-		{
-			CMaterialReference hMaterial;
-			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
-			modelrender->ForcedMaterialOverride( hMaterial );
-		}
-
 		int iResult = BaseClass::DrawModel(flags);
 
 		if (flags & STUDIO_RENDER)
@@ -826,13 +837,6 @@ int	C_SDKPlayer::DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags
 
 	if ( pPlayer->IsStyleSkillActive() )
 	{
-		if ( flags & STUDIO_RENDER )
-		{
-			CMaterialReference hMaterial;
-			hMaterial.Init("models/effects/styleskill.vmt", TEXTURE_GROUP_CLIENT_EFFECTS);
-			modelrender->ForcedMaterialOverride( hMaterial );
-		}
-
 		// We allow our weapon to then override this if it wants to.
 		// This allows c_* weapons to draw themselves.
 		C_BaseCombatWeapon* pWeapon = pViewmodel->GetOwningWeapon();
@@ -1452,4 +1456,135 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
 	gViewPortInterface->FindPanelByName(PANEL_BUY)->Update();
+}
+
+class FlashlightSupressor
+{
+public:
+	bool operator()( C_BasePlayer *player )
+	{
+		ToSDKPlayer(player)->TurnOffFlashlight();
+		return true;
+	}
+};
+
+void C_SDKPlayer::UpdateFlashlight()
+{
+	//Tony; keeping this variable for later.
+	C_SDKPlayer *pFlashlightPlayer = this;
+
+	if ( !IsAlive() )
+	{
+		if ( GetObserverMode() == OBS_MODE_IN_EYE )
+			pFlashlightPlayer = ToSDKPlayer( GetObserverTarget() );
+	}
+
+	if ( !pFlashlightPlayer )
+		return;
+
+	///////////////////////////////////////////////////////////
+	//Tony; flashlight VECTORS
+	/////
+	Vector vecForward, vecRight, vecUp;
+	EyeVectors( &vecForward, &vecRight, &vecUp );
+
+	if ( this == C_BasePlayer::GetLocalPlayer() )
+	{
+		CBaseViewModel *vm = GetViewModel( 0 );
+		//Tony; if viewmodel is found, override.
+		if ( vm )
+		{
+			Vector dummy;
+			QAngle gunAttachmentAngles;
+			//Tony; todo; we need a flashlight attachment point on the view models!
+			if ( vm->GetAttachment( vm->LookupAttachment("muzzle"), dummy, gunAttachmentAngles ) )
+				AngleVectors( gunAttachmentAngles, &vecForward, &vecRight, &vecUp );
+		}
+
+		//Tony; just set this shit for now, directly.
+		pFlashlightPlayer->m_vecFlashlightOrigin = EyePosition();//vecPos;
+		pFlashlightPlayer->m_vecFlashlightForward = vecForward;
+		pFlashlightPlayer->m_vecFlashlightRight = vecRight;
+		pFlashlightPlayer->m_vecFlashlightUp = vecUp;
+	}
+	else
+	{
+		//Tony; in order to make this look okay for other players we need to swap the angles so it points down, otherwise it looks dumb.
+		pFlashlightPlayer->m_vecFlashlightOrigin = pFlashlightPlayer->GetAbsOrigin() + vecForward * 16.0f; //shift ahead a bit.. i dunno how much i should actually shift yet. but..
+		pFlashlightPlayer->m_vecFlashlightForward = -vecUp;//vecForward;
+		pFlashlightPlayer->m_vecFlashlightRight = vecRight;
+		pFlashlightPlayer->m_vecFlashlightUp = vecForward;//vecUp;
+	}
+
+	///////////////////////////////////////////////////////////
+
+	int projManagerIdx = pFlashlightPlayer->index;
+
+	if ( pFlashlightPlayer )
+		ProjectedLightEffectManager(projManagerIdx).SetEntityIndex( pFlashlightPlayer->index );
+
+	if ( pFlashlightPlayer && pFlashlightPlayer->IsAlive() && pFlashlightPlayer->IsEffectActive( EF_DIMLIGHT ) )
+	{
+		// Make sure we're using the proper flashlight texture
+		const char *pszTextureName = pFlashlightPlayer->GetFlashlightTextureName();
+
+		if ( !m_bFlashlightEnabled )
+		{
+			// Turned on the light; create it.
+			if ( pszTextureName )
+			{
+				ProjectedLightEffectManager(projManagerIdx).TurnOnFlashlight( pFlashlightPlayer->index, pszTextureName, pFlashlightPlayer->GetFlashlightFOV(),
+					pFlashlightPlayer->GetFlashlightFarZ(), pFlashlightPlayer->GetFlashlightLinearAtten() );
+			}
+			else
+			{
+				ProjectedLightEffectManager(projManagerIdx).TurnOnFlashlight( pFlashlightPlayer->index );
+			}
+			m_bFlashlightEnabled = true;
+		}
+	}
+	else if ( m_bFlashlightEnabled )
+	{
+		ProjectedLightEffectManager(projManagerIdx).TurnOffFlashlight();
+		m_bFlashlightEnabled = false;
+	}
+
+	if ( pFlashlightPlayer )
+	{
+		Vector vecForward, vecRight, vecUp;
+		Vector vecPos;
+		//Check to see if we have an externally specified flashlight origin, if not, use eye vectors/render origin
+		if ( pFlashlightPlayer->m_vecFlashlightOrigin != vec3_origin && pFlashlightPlayer->m_vecFlashlightOrigin.IsValid() )
+		{
+			vecPos = pFlashlightPlayer->m_vecFlashlightOrigin;
+			vecForward = pFlashlightPlayer->m_vecFlashlightForward;
+			vecRight = pFlashlightPlayer->m_vecFlashlightRight;
+			vecUp = pFlashlightPlayer->m_vecFlashlightUp;
+		}
+		else
+		{
+			EyeVectors( &vecForward, &vecRight, &vecUp );
+			vecPos = GetRenderOrigin() + m_vecViewOffset;
+		}
+
+		// Update the light with the new position and direction.		
+		ProjectedLightEffectManager(projManagerIdx).UpdateFlashlight( vecPos, vecForward, vecRight, vecUp, pFlashlightPlayer->GetFlashlightFOV(), 
+			pFlashlightPlayer->CastsFlashlightShadows(), pFlashlightPlayer->GetFlashlightFarZ(), pFlashlightPlayer->GetFlashlightLinearAtten(),
+			pFlashlightPlayer->GetFlashlightTextureName() );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Turns off flashlight if it's active (TERROR)
+//-----------------------------------------------------------------------------
+void C_SDKPlayer::TurnOffFlashlight( void )
+{
+	int nSlot = this->index;
+
+	if ( m_bFlashlightEnabled )
+	{
+		ProjectedLightEffectManager( nSlot ).TurnOffFlashlight();
+		m_bFlashlightEnabled = false;
+	}
 }

@@ -37,6 +37,7 @@ public:
 	virtual bool	CanRecordDemo( char *errorMsg, int length ) const;
 
 	virtual void	OverrideView( CViewSetup *pSetup );
+	virtual void	OverrideMouseInput( float *x, float *y );
 
 private:
 	

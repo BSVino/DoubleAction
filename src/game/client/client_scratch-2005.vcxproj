@@ -608,11 +608,13 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sdk\projectedlighteffect.cpp" />
     <ClCompile Include="sdk\sdk_hud_slowmo.cpp" />
     <ClCompile Include="sdk\sdk_hud_stylebar.cpp" />
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
     <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />
     <ClCompile Include="sdk\vgui\dab_skillmenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_instructor.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -847,10 +849,12 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\particle_property.h" />
     <ClInclude Include="..\shared\playerclass_info_parse.h" />
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
+    <ClInclude Include="sdk\projectedlighteffect.h" />
     <ClInclude Include="sdk\sdk_in_main.h" />
     <ClInclude Include="sdk\vgui\dab_buymenu.h" />
     <ClInclude Include="sdk\vgui\dab_charactermenu.h" />
     <ClInclude Include="sdk\vgui\dab_skillmenu.h" />
+    <ClInclude Include="sdk\vgui\da_instructor.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />

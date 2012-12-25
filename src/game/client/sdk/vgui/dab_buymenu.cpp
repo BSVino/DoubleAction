@@ -349,7 +349,7 @@ void CDABBuyMenu::Update()
 		{
 			KeyValues* pAnimation = pValues->FindKey("animation");
 			if (pAnimation)
-				pAnimation->SetString("sequence", "unarmed_idle");
+				pAnimation->SetString("sequence", "idle");
 
 			KeyValues* pWeapon = pValues->FindKey("attached_model");
 			if (pWeapon)
