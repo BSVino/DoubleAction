@@ -296,7 +296,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
 
 		// Back off by hull "radius"
-		swingEnd -= forward * meleeHullRadius;
+		swingEnd -= forward * meleeHullRadius / 2;
 
 		UTIL_TraceHull( swingStart, swingEnd, g_meleeMins, g_meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
 		if ( traceHit.fraction < 1.0 && traceHit.m_pEnt )
@@ -307,7 +307,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 			float dot = vecToTarget.Dot( forward );
 
 			// YWB:  Make sure they are sort of facing the guy at least...
-			if ( dot < 0.70721f )
+			if ( dot < 0.6f )
 			{
 				// Force amiss
 				traceHit.fraction = 1.0f;
