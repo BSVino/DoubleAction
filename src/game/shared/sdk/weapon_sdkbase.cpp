@@ -359,8 +359,6 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 
 	float flFireRate = GetFireRate();
 	if (bIsSecondary)
-		flFireRate = 0.4f;	// Disarms carry risk!
-	else if (pOwner->m_nButtons & IN_SPEED)
 		flFireRate = GetSecondaryFireRate();
 
 	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
@@ -462,6 +460,7 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 	// Apply an impact effect
 	ImpactEffect( traceHit );
 
+#if 0
 #ifndef CLIENT_DLL
 	bool bWeaponDisarms = true;
 	if (GetWeaponType() == WT_RIFLE)
@@ -475,6 +474,7 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		if (pVictim && pVictim->IsAlive())
 			pVictim->Disarm();
 	}
+#endif
 #endif
 }
 
