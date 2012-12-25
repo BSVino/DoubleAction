@@ -602,6 +602,7 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
+	m_iStyleKillStreak = 0;
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
@@ -1067,6 +1068,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 {
 	if (pVictim == this)
 		return;
+
+	if (bKilledVictim && IsStyleSkillActive())
+	{
+		m_iStyleKillStreak++;
+
+		if (m_iStyleKillStreak%3 == 0)
+			TakeHealth(50, DMG_GENERIC);
+	}
 
 	float flPoints = 1;
 
@@ -2533,6 +2542,8 @@ void CSDKPlayer::ActivateMeter()
 
 	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
 		m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
+
+	m_iStyleKillStreak = 0;
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");

@@ -360,6 +360,8 @@ public:
 	CNetworkVar( float, m_flLastSpawnTime );
 
 	CNetworkVar( bool, m_bHasPlayerDied );
+
+	int    m_iStyleKillStreak;
 };
 
 
