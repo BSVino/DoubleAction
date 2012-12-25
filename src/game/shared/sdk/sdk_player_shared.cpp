@@ -1176,6 +1176,8 @@ float CSDKPlayer::GetSlowMoGoal() const
 
 void CSDKPlayer::UpdateCurrentTime()
 {
+	bool bWasInSlow = (m_flSlowMoMultiplier < 1);
+
 	m_flCurrentTime += gpGlobals->frametime * GetSlowMoMultiplier();
 
 	m_flSlowMoMultiplier = Approach(GetSlowMoGoal(), m_flSlowMoMultiplier, gpGlobals->frametime*2);
@@ -1189,6 +1191,15 @@ void CSDKPlayer::UpdateCurrentTime()
 		SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
 	}
+
+	bool bNowInSlow = (m_flSlowMoMultiplier < 1);
+
+	CSingleUserRecipientFilter filter( this );
+	filter.UsePredictionRules();
+	if (!bWasInSlow && bNowInSlow)
+		EmitSound( filter, entindex(), "SlowMo.Start" );
+	else if (bWasInSlow && !bNowInSlow)
+		EmitSound( filter, entindex(), "SlowMo.End" );
 
 	float flMaxBobSpeed = m_Shared.m_flRunSpeed*0.7f;
 	float flBobRampGoal = RemapValClamped(GetLocalVelocity().LengthSqr(), 0, flMaxBobSpeed*flMaxBobSpeed, 0, 1);
