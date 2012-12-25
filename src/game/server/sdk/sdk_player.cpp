@@ -792,10 +792,21 @@ void CSDKPlayer::InitialSpawn( void )
 
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
+	Vector vecToDamagePoint = ptr->endpos - GetAbsOrigin();
+	float flDistance = vecToDamagePoint.Length2D();
+
+	if (flDistance > CollisionProp()->BoundingRadius2D())
+	{
+		vecToDamagePoint.z = 0;
+		vecToDamagePoint.NormalizeInPlace();
+		ptr->endpos = GetAbsOrigin() + vecToDamagePoint * CollisionProp()->BoundingRadius2D();
+	}
+
 	//Tony; disable prediction filtering, and call the baseclass.
 	CDisablePredictionFiltering disabler;
 	BaseClass::TraceAttack( inputInfo, vecDir, ptr );
 }
+
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
