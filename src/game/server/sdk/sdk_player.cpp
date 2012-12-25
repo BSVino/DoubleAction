@@ -1113,7 +1113,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
 
-	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && GetActiveSDKWeapon()->m_iClip1 == 0)
+	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
 		// Killing a player with your last bullet.
 		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
@@ -1198,7 +1198,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
 
 		// Only some chance of sending a message at all.
-		if (bKilledVictim || random->RandomInt(0, 3) == 0)
+		if (bKilledVictim)
 		{
 			int iRandom = random->RandomInt(0, 1);
 			announcement_t eAnnouncement;
@@ -1213,10 +1213,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				eAnnouncement = ANNOUNCEMENT_COOL;
 				break;
 			}
-
-			// If the victim isn't doing anything very stylish then just say it's cool.
-			if (!(pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding()))
-				eAnnouncement = ANNOUNCEMENT_COOL;
 
 			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
 				eAnnouncement = ANNOUNCEMENT_TACTICOOL;

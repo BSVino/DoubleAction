@@ -17,6 +17,7 @@
 
 typedef enum {
 	WT_NONE = 0,
+	WT_MELEE,
 	WT_RIFLE,
 	WT_SHOTGUN,
 	WT_SMG,
