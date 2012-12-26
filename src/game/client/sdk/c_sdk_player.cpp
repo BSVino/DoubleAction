@@ -392,43 +392,14 @@ void C_SDKRagdoll::CreateRagdoll()
 		// move my current model instance to the ragdoll's so decals are preserved.
 		pPlayer->SnatchModelInstance( this );
 
-		VarMapping_t *varMap = GetVarMapping();
+		Interp_Copy( pPlayer );
 
-		// Copy all the interpolated vars from the player entity.
-		// The entity uses the interpolated history to get bone velocity.
-		if ( !pPlayer->IsLocalPlayer() && pPlayer->IsInterpolationEnabled() )
-		{
-			Interp_Copy( pPlayer );
+		SetAbsAngles( pPlayer->GetRenderAngles() );
+		GetRotationInterpolator().Reset();
 
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-			GetRotationInterpolator().Reset();
-
-			m_flAnimTime = pPlayer->m_flAnimTime;
-			SetSequence( pPlayer->GetSequence() );
-			m_flPlaybackRate = pPlayer->GetPlaybackRate();
-		}
-		else
-		{
-			// This is the local player, so set them in a default
-			// pose and slam their velocity, angles and origin
-			SetAbsOrigin( m_vecRagdollOrigin );
-
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-
-			SetAbsVelocity( m_vecRagdollVelocity );
-
-			int iSeq = LookupSequence( "RagdollSpawn" );	// hax, find a neutral standing pose
-			if ( iSeq == -1 )
-			{
-				Assert( false );	// missing look_idle?
-				iSeq = 0;
-			}
-			
-			SetSequence( iSeq );	// look_idle, basic pose
-			SetCycle( 0.0 );
-
-			Interp_Reset( varMap );
-		}		
+		m_flAnimTime = pPlayer->m_flAnimTime;
+		SetSequence( pPlayer->GetSequence() );
+		m_flPlaybackRate = pPlayer->GetPlaybackRate();
 
 		m_nBody = pPlayer->GetBody();
 	}
