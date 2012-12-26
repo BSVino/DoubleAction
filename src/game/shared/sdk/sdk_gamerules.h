@@ -135,6 +135,8 @@ public:
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
 
+	virtual void OverrideSoundParams(CSoundParameters& oParams);
+
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.

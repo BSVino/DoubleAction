@@ -1411,7 +1411,22 @@ float CSDKGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 		flDamage /= 2;
 
 	return flDamage;
-} 
+}
+
+void CSDKGameRules::OverrideSoundParams( CSoundParameters& oParams )
+{
+#ifdef CLIENT_DLL
+	if (FStrEq(oParams.soundname, "SlowMo.Start"))
+		return;
+
+	if (FStrEq(oParams.soundname, "SlowMo.End"))
+		return;
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	oParams.pitch *= pLocalPlayer->GetSlowMoMultiplier();
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Init CS ammo definitions
