@@ -332,6 +332,9 @@ private:
 
 	int m_iSpawnArmorValue;
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_ArmorValue );
+
+	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
+
 public:
 #if defined ( SDK_USE_PRONE )
 	bool m_bUnProneToDuck;		//Tony; GAMEMOVEMENT USED VARIABLE

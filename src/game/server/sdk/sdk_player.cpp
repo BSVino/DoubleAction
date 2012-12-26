@@ -314,6 +314,8 @@ ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEA
 
 void CSDKPlayer::PreThink(void)
 {
+	m_vecTotalBulletForce = vec3_origin;
+
 	UpdateCurrentTime();
 
 	if (IsAlive())
@@ -819,6 +821,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	m_vecTotalBulletForce += info.GetDamageForce();
+
 	float flArmorBonus = 0.5f;
 	float flArmorRatio = 0.5f;
 	float flDamage = info.GetDamage();
@@ -1003,6 +1007,9 @@ ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEA
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	CTakeDamageInfo subinfo = info;
+	subinfo.SetDamageForce( m_vecTotalBulletForce );
+
 	StopSound( "Player.GoSlide" );
 
 	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
@@ -1409,7 +1416,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
-		pRagdoll->m_vecForce = Vector(0,0,0);
+		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 	}
 
 	// ragdolls will be removed on round restart automatically
