@@ -993,8 +993,13 @@ bool C_SDKPlayer::CanShowSkillMenu( void )
 	return ( GetTeamNumber() != TEAM_SPECTATOR );
 }
 
+ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "20.0" );
+
 void C_SDKPlayer::ClientThink()
 {
+	ConVarRef mat_motion_blur_strength( "mat_motion_blur_strength" );
+	mat_motion_blur_strength.SetValue(RemapValClamped(GetSlowMoMultiplier(), 0.8f, 1, da_slowmo_motion_blur.GetFloat(), 1));
+
 	UpdateSoundEvents();
 
 	// Pass on through to the base class.
@@ -1372,7 +1377,8 @@ void C_SDKPlayer::UpdateSoundEvents()
 
 static ConVar cam_right("cam_right", "15", FCVAR_ARCHIVE);
 static ConVar cam_up("cam_up", "10", FCVAR_ARCHIVE);
-static ConVar dab_aimin_fov_delta("dab_aimin_fov_delta", "10", FCVAR_ARCHIVE);
+static ConVar dab_aimin_fov_delta_high("dab_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
@@ -1419,7 +1425,12 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	C_WeaponSDKBase* pWeapon = GetActiveSDKWeapon();
 
 	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
-		pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
+	{
+		if (pWeapon->HasAimInFireRateBonus())
+			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_low.GetFloat();
+		else
+			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_high.GetFloat();
+	}
 }
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )

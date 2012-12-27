@@ -195,10 +195,9 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (pPlayer->m_Shared.IsAimedIn() && !WeaponSpreadFixed())
 	{
 		if (GetSDKWpnData().m_bAimInSpreadBonus)
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.3f);
 		else
-			// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.8f);
 	}
 
 	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
@@ -580,20 +579,29 @@ void CWeaponSDKBase::AddViewKick()
 
 		angle.x -= SharedRandomInt( "PunchAngle", 4, 6 );
 
+		float flPunchBonus = 1;
 		float flRecoilBonus = 1;
 		if (GetPlayerOwner()->m_Shared.IsAimedIn())
 		{
 			if (HasAimInRecoilBonus())
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+			{
+				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.8f, 1, 0.2f);
+			}
 			else
-				// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+			{
+				flPunchBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.8f);
+				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.6f);
+			}
 		}
 
 		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		{
+			flPunchBonus *= 0.5f;
 			flRecoilBonus *= 0.5f;
+		}
 
-		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );
+		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flPunchBonus );
 		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
 	}
 }
