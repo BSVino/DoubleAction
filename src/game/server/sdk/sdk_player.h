@@ -58,6 +58,8 @@ public:
 	virtual void InitialSpawn();
 	virtual void UpdateCurrentTime();
 
+	virtual void StartTouch( CBaseEntity *pOther );
+
 	virtual void GiveDefaultItems();
 
 	virtual bool			PlayerUse( void );

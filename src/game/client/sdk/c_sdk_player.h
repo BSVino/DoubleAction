@@ -60,6 +60,8 @@ public:
 	virtual void PreThink();
 	virtual void UpdateCurrentTime();
 
+	virtual void StartTouch( CBaseEntity *pOther );
+
 	static C_SDKPlayer* GetLocalSDKPlayer();
 
 	virtual const QAngle& GetRenderAngles();

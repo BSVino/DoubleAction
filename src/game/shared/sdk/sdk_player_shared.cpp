@@ -357,6 +357,18 @@ void CSDKPlayer::SharedSpawn()
 #endif // SDK_USE_PRONE
 }
 
+void CSDKPlayer::StartTouch(CBaseEntity *pOther)
+{
+	BaseClass::StartTouch(pOther);
+
+	CGameTrace tr;
+	tr = GetTouchTrace();
+
+	// If I'm diving and I hit a wall at a blunt angle, don't dive afterwards.
+	if (m_Shared.IsDiving() && tr.plane.normal.Dot(m_Shared.m_vecDiveDirection) < -0.95f)
+		m_Shared.m_bRollAfterDive = false;
+}
+
 bool CSDKPlayer::PlayerUse()
 {
 	bool bUsed = BaseClass::PlayerUse();
@@ -838,6 +850,7 @@ Vector CSDKPlayerShared::StartDiving()
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoDive" );
 
 	m_bDiving = true;
+	m_bRollAfterDive = true;
 
 	ForceUnzoom();
 

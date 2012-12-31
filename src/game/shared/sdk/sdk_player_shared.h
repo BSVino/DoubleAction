@@ -94,6 +94,7 @@ public:
 	Vector	StartDiving();
 	void	EndDive();
 	Vector	GetDiveDirection() const { return m_vecDiveDirection; };
+	bool    ShouldRollAfterDiving() const { return m_bRollAfterDive; }
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -154,6 +155,7 @@ private:
 
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
+	CNetworkVar( bool, m_bRollAfterDive );
 	float m_flViewTilt;
 
 	float m_flViewBobRamp;

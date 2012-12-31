@@ -1501,7 +1501,7 @@ void CSDKGameMovement::Duck( void )
 				filter.UsePredictionRules();
 				m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.DiveLand" );
 			}
-			else if (m_pSDKPlayer->m_Shared.CanRoll())
+			else if (m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
 			{
 				m_pSDKPlayer->m_Shared.StartRolling(true);
 				SetRollEyeOffset( 0.0 );
