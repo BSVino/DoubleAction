@@ -234,9 +234,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 			else
 			{
 				m_bRedraw = false;
-				m_flNextPrimaryAttack = GetCurrentTime() + 1.2;
-				m_flNextSecondaryAttack = GetCurrentTime() + 1.2;
-				SendWeaponAnim( GetDeployActivity() );			
+				pPlayer->SwitchToNextBestWeapon( this ); //Tony; now switch! cuz we rans outs!
 			}
 			return;	//don't animate this grenade any more!
 		}	
