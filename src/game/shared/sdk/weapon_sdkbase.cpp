@@ -1099,9 +1099,12 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	// kill any think functions
 	SetThink(NULL);
 
+	// Send holster animation
+	SendWeaponAnim( ACT_VM_HOLSTER );
+
 	// Some weapon's don't have holster anims yet, so detect that
 	float flSequenceDuration = 0;
-	SendWeaponAnim( GetHolsterActivity() );
+	if ( GetActivity() == ACT_VM_HOLSTER )
 	{
 		flSequenceDuration = SequenceDuration();
 	}
