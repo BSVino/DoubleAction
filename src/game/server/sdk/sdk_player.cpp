@@ -359,14 +359,22 @@ void CSDKPlayer::PreThink(void)
 
 		CBaseEntity* pHit = NULL;
 
-		if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+		bool bIsBreakable = false;
+		if (tr.m_pEnt)
+		{
+			bIsBreakable = FStrEq(tr.m_pEnt->GetClassname(), "func_breakable");
+			if (!bIsBreakable)
+				bIsBreakable = FStrEq(tr.m_pEnt->GetClassname(), "func_breakable_surf");
+		}
+
+		if (tr.fraction < 1.0f && bIsBreakable)
 			pHit = tr.m_pEnt;
 
 		if (!pHit && vecNormalizedVelocity.z < 0 && (m_Shared.IsDiving() || !GetGroundEntity()))
 		{
 			UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() - Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
-			if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+			if (tr.fraction < 1.0f && bIsBreakable)
 				pHit = tr.m_pEnt;
 		}
 
