@@ -78,6 +78,8 @@ bool CWeaponShotgun::Reload()
 
 		float flStartTime = 0.5f * flSpeedMultiplier;
 
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
+
 		SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
 		m_iInSpecialReload = 1;
 		pPlayer->m_flNextAttack = GetCurrentTime() + flStartTime;
@@ -103,6 +105,8 @@ bool CWeaponShotgun::Reload()
 		SendWeaponAnim( ACT_VM_RELOAD );
 		SetWeaponIdleTime( GetCurrentTime() + flReloadTime );
 
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD_LOOP );
+
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 	}
@@ -110,14 +114,22 @@ bool CWeaponShotgun::Reload()
 	{
 		// Add them to the clip
 		m_iClip1 += 1;
-		
+
 #ifdef GAME_DLL
-		SendReloadEvents();
+		// Send a message to any clients that have this entity to play the reload.
+		CPASFilter filter( pPlayer->GetAbsOrigin() );
+		filter.RemoveRecipient( pPlayer );
+
+		UserMessageBegin( filter, "ReloadEffect" );
+		WRITE_SHORT( pPlayer->entindex() );
+		MessageEnd();
 #endif
-		CSDKPlayer *pPlayer = GetPlayerOwner();
 
 		if ( pPlayer )
 			 pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+
+		if ( pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 || m_iClip1 == GetMaxClip1() )
+			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD_END );
 
 		m_iInSpecialReload = 1;
 	}

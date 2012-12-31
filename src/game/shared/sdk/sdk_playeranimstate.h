@@ -74,6 +74,8 @@ public:
 
 	virtual Activity CalcMainActivity();	
 
+	virtual bool        ShouldUseAimInAnims();
+
 private:
 	
 	CSDKPlayer   *m_pSDKPlayer;

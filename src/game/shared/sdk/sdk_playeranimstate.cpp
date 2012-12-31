@@ -25,7 +25,7 @@
 #endif
 
 #define SDK_RUN_SPEED				320.0f
-#define SDK_WALK_SPEED				75.0f
+#define SDK_WALK_SPEED				120.0f
 #define SDK_CROUCHWALK_SPEED		110.0f
 
 //-----------------------------------------------------------------------------
@@ -617,12 +617,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_LOOP );
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_LOOP );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
@@ -630,12 +632,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_END:
 		{
 			// Weapon reload.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_END );
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_END );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
@@ -779,13 +783,21 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 {
-	// In TF we run all the time now.
 	float flSpeed = GetOuterXYSpeed();
 
-	if ( flSpeed > MOVING_MINIMUM_SPEED )
+	if ( flSpeed > 150 )
 	{
-		// Always assume a run.
-		idealActivity = ACT_DAB_RUN_IDLE;
+		if (ShouldUseAimInAnims())
+			idealActivity = ACT_DAB_RUN_AIM;
+		else
+			idealActivity = ACT_DAB_RUN_IDLE;
+	}
+	else if ( flSpeed > MOVING_MINIMUM_SPEED )
+	{
+		if (ShouldUseAimInAnims())
+			idealActivity = ACT_DAB_WALK_AIM;
+		else
+			idealActivity = ACT_DAB_WALK_IDLE;
 	}
 
 	return true;
@@ -801,9 +813,19 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-			idealActivity = ACT_DAB_CROUCH_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_CROUCH_AIM;
+			else
+				idealActivity = ACT_DAB_CROUCH_IDLE;		
+		}
 		else
-			idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_CROUCHWALK_AIM;
+			else
+				idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
+		}
 
 		return true;
 	}
@@ -821,7 +843,12 @@ bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 	if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-			idealActivity = ACT_DAB_PRONECHEST_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_PRONECHEST_AIM;
+			else
+				idealActivity = ACT_DAB_PRONECHEST_IDLE;		
+		}
 		else
 			idealActivity = ACT_DAB_CRAWL_IDLE;		
 
@@ -1009,6 +1036,12 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		}
 	}	
 
+	if (!m_pSDKPlayer->GetGroundEntity())
+	{
+		idealActivity = ACT_DAB_JUMP_FLOAT;
+		return true;
+	}
+
 	if ( m_bJumping )
 		return true;
 
@@ -1027,6 +1060,9 @@ extern ConVar anim_showmainactivity;
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
 	Activity idealActivity = ACT_DAB_STAND_IDLE;
+
+	if (ShouldUseAimInAnims())
+		idealActivity = ACT_DAB_STAND_AIM;
 
 	if (
 		HandleDiving( idealActivity ) ||
@@ -1069,3 +1105,16 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	return idealActivity;
 }
 
+bool CSDKPlayerAnimState::ShouldUseAimInAnims()
+{
+	if (!m_pSDKPlayer->m_Shared.IsAimedIn())
+		return false;
+
+	if (!m_pSDKPlayer->GetActiveSDKWeapon())
+		return false;
+
+	if (!m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
+		return false;
+
+	return true;
+}
