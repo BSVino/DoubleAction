@@ -500,7 +500,7 @@ void CSDKPlayer::GiveDefaultItems()
 
 				if (!pHeaviestWeapon)
 					pHeaviestWeapon = pWeapon;
-				else if (pWeapon && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
+				else if (pWeapon && pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
 					pHeaviestWeapon = pWeapon;
 
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
