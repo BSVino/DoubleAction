@@ -181,7 +181,6 @@ public:
 	CNetworkVar( bool, m_bIsTryingUnprone );
 #endif
 
-	CNetworkVar( bool, m_bCanRollInto );
 	CNetworkVar( float, m_flUnSlideTime );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );

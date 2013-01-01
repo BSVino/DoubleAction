@@ -1443,18 +1443,10 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->m_Shared.EndRoll();
 				FinishDuck();
 			}
-
-			// if we want to transition to prone or duck, attempt to do so now
-			if ( m_pSDKPlayer->m_Shared.m_bCanRollInto )
+			else
 			{
-				if ( mv->m_nButtons & IN_DUCK )
-				{
-					m_pSDKPlayer->m_Shared.EndRoll();
-					SetRollEyeOffset( 0.0 );
-					FinishDuck();
-				}
-				// no longer give the option to roll into another position
-				m_pSDKPlayer->m_Shared.m_bCanRollInto = false;
+				float fraction = (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetRollTime()) / (ROLL_TIME + ROLLFINISH_TIME);
+				SetRollEyeOffset( fraction );
 			}
 		}
 		else

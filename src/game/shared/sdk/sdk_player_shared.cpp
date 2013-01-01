@@ -790,7 +790,6 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 	if (!CanRoll())
 		return;
 
-	m_bCanRollInto = true;
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;
 

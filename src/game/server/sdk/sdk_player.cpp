@@ -119,7 +119,6 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bRollingFromDive ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),
-	SendPropBool( SENDINFO( m_bCanRollInto ) ),
 	SendPropBool( SENDINFO( m_bDiving ) ),
 	SendPropVector( SENDINFO(m_vecDiveDirection) ),
 	SendPropBool( SENDINFO( m_bRollAfterDive ) ),
