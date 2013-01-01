@@ -919,6 +919,8 @@ void CHLClient::Shutdown( void )
 	DisconnectTier2Libraries( );
 	ConVar_Unregister();
 	DisconnectTier1Libraries( );
+
+	SteamAPI_Shutdown();
 }
 
 
