@@ -1538,6 +1538,7 @@ void CSDKGameMovement::Duck( void )
 			bGoProne = false;
 
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
+		bool bGetUpFromProne = bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD));
 
 		bool bSlide = false;
 		bool bRoll = false;
@@ -1581,7 +1582,7 @@ void CSDKGameMovement::Duck( void )
 
 			return;
 		}
-		else if ( bGetUp && m_pSDKPlayer->m_Shared.IsProne() && CanUnprone() )
+		else if ( bGetUpFromProne && m_pSDKPlayer->m_Shared.IsProne() && CanUnprone() )
 		{
 			m_pSDKPlayer->m_Shared.SetProne( false );
 			m_pSDKPlayer->m_Shared.StandUpFromProne();
