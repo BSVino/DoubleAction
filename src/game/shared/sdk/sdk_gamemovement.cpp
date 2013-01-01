@@ -1581,7 +1581,7 @@ void CSDKGameMovement::Duck( void )
 			bGoProne = false;
 
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
-		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD)));
+		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
 
 		bool bSlide = false;
 		bool bRoll = false;
