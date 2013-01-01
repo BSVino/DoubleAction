@@ -31,6 +31,10 @@ ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | F
 ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
+#ifdef CLIENT_DLL
+ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVAR_USERINFO );
+#endif
+
 extern bool g_bMovementOptimizations;
 
 class CSDKGameMovement : public CGameMovement
@@ -1480,9 +1484,35 @@ void CSDKGameMovement::Duck( void )
 
 			bool bPlayerHoldingMoveKeys = !!(mv->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT));
 
-			if (mv->m_nButtons & IN_DUCK || !CanUnprone() || (bPlayerHoldingMoveKeys && flWishDotLocal < -0.7f))
+#ifdef GAME_DLL
+			bool bDiveToProne = !!atoi(engine->GetClientConVarValue( m_pSDKPlayer->entindex(), "da_dive_land_behavior" ));
+#else
+			bool bDiveToProne = da_dive_land_behavior.GetBool();
+#endif
+
+			bool bWantsProne, bWantsSlide, bWantsRoll;
+
+			if (bDiveToProne)
 			{
-				// if pulling back on the movement button or if we don't have room to roll, land prone
+				// If holding the stunt button, slide
+				bWantsSlide = !!(mv->m_nButtons & IN_ALT1);
+				// If holding the movement key forward, roll
+				bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
+				// Otherwise, prone
+				bWantsProne = !bWantsRoll && !bWantsSlide;
+			}
+			else
+			{
+				// If pulling back on the movement button, land prone
+				bWantsProne = mv->m_nButtons & IN_DUCK || (bPlayerHoldingMoveKeys && flWishDotLocal < -0.7f);
+				// If pushing forward on the movement button or holding stunt, slide
+				bWantsSlide = mv->m_nButtons & IN_ALT1 || (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
+				// Otherwise roll
+				bWantsRoll = true;
+			}
+
+			if (!CanUnprone() || bWantsProne)
+			{
 				m_pSDKPlayer->m_Shared.SetProne(true, true);
 				SetProneEyeOffset( 1.0 );
 				m_pSDKPlayer->m_Shared.m_bProneSliding = true;
@@ -1493,7 +1523,7 @@ void CSDKGameMovement::Duck( void )
 
 				m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime = m_pSDKPlayer->GetCurrentTime() + 0.4f;
 			}
-			else if (mv->m_nButtons & IN_ALT1 || (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f))
+			else if (bWantsSlide)
 			{
 				Vector vecAbsVelocity = m_pSDKPlayer->GetAbsVelocity();
 				float flVelocity = vecAbsVelocity.Length();
@@ -1514,7 +1544,7 @@ void CSDKGameMovement::Duck( void )
 
 				SetSlideEyeOffset( 1.0 );
 			}
-			else if (m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
+			else if (bWantsRoll && m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
 			{
 				m_pSDKPlayer->m_Shared.StartRolling(true);
 				SetRollEyeOffset( 0.0 );
