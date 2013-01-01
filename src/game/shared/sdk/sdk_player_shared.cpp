@@ -714,6 +714,15 @@ void CSDKPlayerShared::EndSlide()
 
 void CSDKPlayerShared::StandUpFromSlide( void )
 {	
+	// If it was long enough to notice what it was, then train the slide.
+	if (gpGlobals->curtime > m_flSlideTime + 1)
+	{
+		if (m_bDiveSliding)
+			m_pOuter->Instructor_LessonLearned("diveafterslide");
+		else
+			m_pOuter->Instructor_LessonLearned("slide");
+	}
+
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
