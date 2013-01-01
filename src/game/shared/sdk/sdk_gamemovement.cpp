@@ -1245,8 +1245,6 @@ void CSDKGameMovement::SetRollEyeOffset( float flFraction )
 	{
 		Vector vecSlideViewOffset = VEC_SLIDE_VIEW;
 		Vector vecEndViewOffset = GetPlayerViewOffset( false );
-		if (mv->m_nButtons & IN_ALT1)
-			vecEndViewOffset = VEC_PRONE_VIEW;
 
 		Vector temp = player->GetViewOffset();
 		flFraction = RemapVal( flFraction, 0.5f, 1.0f, 0, 1 );
@@ -1449,14 +1447,7 @@ void CSDKGameMovement::Duck( void )
 			// if we want to transition to prone or duck, attempt to do so now
 			if ( m_pSDKPlayer->m_Shared.m_bCanRollInto )
 			{
-				if ( mv->m_nButtons & IN_ALT1 )
-				{
-					m_pSDKPlayer->m_Shared.EndRoll();
-					SetRollEyeOffset( 0.0 );
-					m_pSDKPlayer->m_Shared.SetProne(true, true);
-					SetProneEyeOffset( 1.0 );
-				}
-				else if ( mv->m_nButtons & IN_DUCK )
+				if ( mv->m_nButtons & IN_DUCK )
 				{
 					m_pSDKPlayer->m_Shared.EndRoll();
 					SetRollEyeOffset( 0.0 );
