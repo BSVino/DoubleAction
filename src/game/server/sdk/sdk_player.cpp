@@ -103,6 +103,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bProne ) ),
 	SendPropTime( SENDINFO( m_flGoProneTime ) ),
 	SendPropTime( SENDINFO( m_flUnProneTime ) ),
+	SendPropTime( SENDINFO( m_flDisallowUnProneTime ) ),
 	SendPropBool( SENDINFO( m_bProneSliding ) ),
 #endif
 #if defined ( SDK_USE_SPRINTING )

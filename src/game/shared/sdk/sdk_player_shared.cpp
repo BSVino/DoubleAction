@@ -576,6 +576,7 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 {
 	m_bProne = bProne;
 	m_bProneSliding = false;
+	m_flDisallowUnProneTime = -1;
 
 	if ( bNoAnimation )
 	{

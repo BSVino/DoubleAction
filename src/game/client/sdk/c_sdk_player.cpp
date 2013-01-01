@@ -104,6 +104,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bProne ) ),
 	RecvPropTime( RECVINFO( m_flGoProneTime ) ),
 	RecvPropTime( RECVINFO( m_flUnProneTime ) ),
+	RecvPropTime( RECVINFO( m_flDisallowUnProneTime ) ),
 	RecvPropBool( RECVINFO( m_bProneSliding ) ),
 #endif
 #if defined( SDK_USE_SPRINTING )
@@ -197,6 +198,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bProne, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flGoProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flDisallowUnProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bProneSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 #if defined( SDK_USE_SPRINTING )

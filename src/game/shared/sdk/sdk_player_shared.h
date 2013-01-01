@@ -177,6 +177,7 @@ public:
 
 	CNetworkVar( float, m_flUnProneTime );
 	CNetworkVar( float, m_flGoProneTime );
+	CNetworkVar( float, m_flDisallowUnProneTime );
 	CNetworkVar( bool, m_bProneSliding );
 	CNetworkVar( bool, m_bIsTryingUnprone );
 #endif

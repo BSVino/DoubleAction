@@ -1462,8 +1462,49 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndDive();
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
-			if (mv->m_nButtons & IN_ALT1)
+			Vector vecForward, vecRight, vecUp;
+			AngleVectors( mv->m_vecViewAngles, &vecForward, &vecRight, &vecUp );
+			vecForward.z = 0.0f;
+			vecRight.z = 0.0f;		
+			VectorNormalize( vecForward );
+			VectorNormalize( vecRight );
+
+			// Find the direction,velocity in the x,y plane.
+			Vector vecWishDirection( vecForward.x*mv->m_flForwardMove + vecRight.x*mv->m_flSideMove, vecForward.y*mv->m_flForwardMove + vecRight.y*mv->m_flSideMove, 0.0f );
+			vecWishDirection.NormalizeInPlace();
+
+			Vector vecLocalVelocity = m_pSDKPlayer->GetLocalVelocity();
+			vecLocalVelocity.NormalizeInPlace();
+
+			float flWishDotLocal = vecWishDirection.Dot(vecLocalVelocity);
+
+			bool bPlayerHoldingMoveKeys = !!(mv->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT));
+
+			if (mv->m_nButtons & IN_DUCK || !CanUnprone() || (bPlayerHoldingMoveKeys && flWishDotLocal < -0.7f))
 			{
+				// if pulling back on the movement button or if we don't have room to roll, land prone
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset( 1.0 );
+				m_pSDKPlayer->m_Shared.m_bProneSliding = true;
+
+				CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
+				filter.UsePredictionRules();
+				m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.DiveLand" );
+
+				m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime = m_pSDKPlayer->GetCurrentTime() + 0.4f;
+			}
+			else if (mv->m_nButtons & IN_ALT1 || (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f))
+			{
+				Vector vecAbsVelocity = m_pSDKPlayer->GetAbsVelocity();
+				float flVelocity = vecAbsVelocity.Length();
+
+				// Throw in some of the wish velocity into the slide.
+				vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
+				vecAbsVelocity.NormalizeInPlace();
+				vecAbsVelocity *= flVelocity;
+
+				m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
+
 				m_pSDKPlayer->m_Shared.StartSliding(true);
 
 				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
@@ -1472,17 +1513,6 @@ void CSDKGameMovement::Duck( void )
 				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
 				SetSlideEyeOffset( 1.0 );
-			}
-			// if we don't have room to roll, land prone
-			else if ( !CanUnprone() )
-			{
-				m_pSDKPlayer->m_Shared.SetProne(true, true);
-				SetProneEyeOffset( 1.0 );
-				m_pSDKPlayer->m_Shared.m_bProneSliding = true;
-
-				CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
-				filter.UsePredictionRules();
-				m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.DiveLand" );
 			}
 			else if (m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
 			{
@@ -1521,7 +1551,7 @@ void CSDKGameMovement::Duck( void )
 			bGoProne = false;
 
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
-		bool bGetUpFromProne = bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD));
+		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD)));
 
 		bool bSlide = false;
 		bool bRoll = false;
