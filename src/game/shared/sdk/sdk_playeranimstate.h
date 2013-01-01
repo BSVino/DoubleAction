@@ -71,6 +71,7 @@ public:
 	virtual void		ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr );
 
 	virtual void		EstimateYaw( void );
+	void                ConvergeYawAnglesThroughZero( float flGoalYaw, float flYawRate, float flDeltaTime, float &flCurrentYaw );
 
 	virtual Activity CalcMainActivity();	
 

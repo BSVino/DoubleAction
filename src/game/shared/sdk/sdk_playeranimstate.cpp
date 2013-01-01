@@ -379,7 +379,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 		else
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
+			ConvergeYawAnglesThroughZero( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
 			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 	}
@@ -514,6 +514,36 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 		else
 			m_PoseParameterData.m_flEstimateYaw = 180-flYawDelta;
 	}
+}
+
+void CSDKPlayerAnimState::ConvergeYawAnglesThroughZero( float flGoalYaw, float flYawRate, float flDeltaTime, float &flCurrentYaw )
+{
+	float flFadeTurnDegrees = 60;
+
+	float flEyeGoalYaw = AngleDiff(flGoalYaw, m_flEyeYaw);
+	float flEyeCurrentYaw = AngleDiff(flCurrentYaw, m_flEyeYaw);
+
+	// Find the yaw delta.
+	float flDeltaYaw = flEyeGoalYaw - flEyeCurrentYaw;
+	float flDeltaYawAbs = fabs( flDeltaYaw );
+
+	// Always do at least a bit of the turn (1%).
+	float flScale = 1.0f;
+	flScale = flDeltaYawAbs / flFadeTurnDegrees;
+	flScale = clamp( flScale, 0.01f, 1.0f );
+
+	float flYaw = flYawRate * flDeltaTime * flScale;
+	if ( flDeltaYawAbs < flYaw )
+	{
+		flCurrentYaw = flGoalYaw;
+	}
+	else
+	{
+		float flSide = ( flDeltaYaw < 0.0f ) ? -1.0f : 1.0f;
+		flCurrentYaw += ( flYaw * flSide );
+	}
+
+	flCurrentYaw = AngleNormalize( flCurrentYaw );
 }
 
 //-----------------------------------------------------------------------------
