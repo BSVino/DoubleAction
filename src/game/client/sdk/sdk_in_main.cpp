@@ -43,6 +43,8 @@ void AB_Input_LevelInit()
 #define	DIST	 2
 extern float MoveToward( float cur, float goal, float lag );
 
+static ConVar da_cam_yaw("da_cam_yaw", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CSDKInput::CAM_Think( void )
 {
 	VPROF("CAM_Think");
@@ -112,7 +114,7 @@ void CSDKInput::CAM_Think( void )
 
 	QAngle angOffset;
 	angOffset.x = camOffset.x;
-	angOffset.y = camOffset.y;
+	angOffset.y = camOffset.y + da_cam_yaw.GetFloat();
 	angOffset.z = camOffset.z;
 
 	CAM_SetCameraThirdData(NULL, angOffset);
