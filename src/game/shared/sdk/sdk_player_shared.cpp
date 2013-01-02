@@ -335,6 +335,8 @@ void CSDKPlayer::SharedSpawn()
 
 	SetGravity(1);
 
+	m_flReadyWeaponUntil = -1;
+
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
@@ -514,6 +516,16 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 		m_flFreezeUntil = m_flCurrentTime + flTime;
 }
 
+void CSDKPlayer::ReadyWeapon()
+{
+	m_flReadyWeaponUntil = GetCurrentTime() + 2.5f;
+}
+
+bool CSDKPlayer::IsWeaponReady()
+{
+	return GetCurrentTime() < m_flReadyWeaponUntil;
+}
+
 bool CSDKPlayer::PlayerFrozen()
 {
 	// m_flFreezeUntil == 0 means to freeze for an indefinite amount of time.
@@ -588,6 +600,9 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 	{
 		ForceUnzoom();
 	}
+
+	if (!bProne)
+		m_pOuter->ReadyWeapon();
 }
 
 void CSDKPlayerShared::StartGoingProne( void )
@@ -711,6 +726,8 @@ void CSDKPlayerShared::EndSlide()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_flSlideTime = 0;
+
+	m_pOuter->ReadyWeapon();
 }
 
 void CSDKPlayerShared::StandUpFromSlide( void )
@@ -806,6 +823,8 @@ void CSDKPlayerShared::EndRoll()
 {
 	m_bRolling = false;
 	m_flRollTime = 0;
+
+	m_pOuter->ReadyWeapon();
 }
 
 bool CSDKPlayerShared::IsDiving() const
@@ -895,6 +914,8 @@ void CSDKPlayerShared::EndDive()
 	m_pOuter->SetGravity(1);
 	m_bDiving = false;
 	m_pOuter->RemoveEffects( EF_NOINTERP );
+
+	m_pOuter->ReadyWeapon();
 }
 
 #if defined ( SDK_USE_SPRINTING )
@@ -1177,6 +1198,8 @@ void CSDKPlayer::ActivateSlowMo()
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
+
+	ReadyWeapon();
 }
 
 float CSDKPlayer::GetSlowMoMultiplier() const

@@ -62,6 +62,7 @@ public:
 
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
+	virtual void            FinishReload();
 	virtual	void			CheckReload( void );
 	virtual bool			ReloadOrSwitchWeapons( void );
 	virtual bool			Deploy();

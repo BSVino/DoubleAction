@@ -178,6 +178,8 @@ void FX_FireBullets(
 	
 	pPlayer->DoMuzzleFlash();
 
+	pPlayer->ReadyWeapon();
+
 	StartGroupingSounds();
 
 #if !defined (CLIENT_DLL)

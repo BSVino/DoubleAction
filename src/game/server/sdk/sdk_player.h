@@ -182,6 +182,9 @@ public:
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();
 
+	virtual void    ReadyWeapon();
+	virtual bool    IsWeaponReady();
+
 #if defined ( SDK_USE_SPRINTING )
 	void SetSprinting( bool bIsSprinting );
 #endif // SDK_USE_SPRINTING
@@ -347,6 +350,8 @@ public:
 
 	CNetworkVar( float, m_flFreezeUntil );
 	CNetworkVar( float, m_flFreezeAmount );
+
+	CNetworkVar( float, m_flReadyWeaponUntil );
 
 	float		m_flNextRegen;
 	float		m_flNextHealthDecay;

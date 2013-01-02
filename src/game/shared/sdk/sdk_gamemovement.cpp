@@ -903,6 +903,8 @@ bool CSDKGameMovement::CheckJumpButton( void )
 
 	m_pSDKPlayer->m_Shared.SetJumping( true );
 
+	m_pSDKPlayer->ReadyWeapon();
+
 	return true;
 }
 

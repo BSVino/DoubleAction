@@ -276,6 +276,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 
 	pOwner->Instructor_LessonLearned("brawl");
 
+	pOwner->ReadyWeapon();
+
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
 
@@ -737,6 +739,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		if ( !IsMeleeWeapon() && (( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
 		{
 			HandleFireOnEmpty();
+			pPlayer->ReadyWeapon();
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
@@ -904,6 +907,9 @@ bool CWeaponSDKBase::Reload( void )
 
 		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
 
+		if (pSDKOwner)
+			pSDKOwner->ReadyWeapon();
+
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
 		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
@@ -939,6 +945,14 @@ bool CWeaponSDKBase::Reload( void )
 	}
 
 	return fRet;
+}
+
+void CWeaponSDKBase::FinishReload()
+{
+	BaseClass::FinishReload();
+
+	if (GetPlayerOwner())
+		GetPlayerOwner()->ReadyWeapon();
 }
 
 void CWeaponSDKBase::SendReloadEvents()
@@ -1080,6 +1094,9 @@ bool CWeaponSDKBase::Deploy( )
 
 		pOwner->m_Shared.SetAimIn(0.0f);
 	}
+
+	if (bDeploy && pOwner)
+		pOwner->ReadyWeapon();
 
 	return bDeploy;
 }

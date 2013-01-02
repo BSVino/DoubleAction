@@ -819,6 +819,8 @@ bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 	{
 		if (ShouldUseAimInAnims())
 			idealActivity = ACT_DAB_RUN_AIM;
+		else if (m_pSDKPlayer->IsWeaponReady())
+			idealActivity = ACT_DAB_RUN_READY;
 		else
 			idealActivity = ACT_DAB_RUN_IDLE;
 	}
@@ -826,6 +828,8 @@ bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 	{
 		if (ShouldUseAimInAnims())
 			idealActivity = ACT_DAB_WALK_AIM;
+		else if (m_pSDKPlayer->IsWeaponReady())
+			idealActivity = ACT_DAB_WALK_READY;
 		else
 			idealActivity = ACT_DAB_WALK_IDLE;
 	}
@@ -846,6 +850,8 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 		{
 			if (ShouldUseAimInAnims())
 				idealActivity = ACT_DAB_CROUCH_AIM;
+			else if (m_pSDKPlayer->IsWeaponReady())
+				idealActivity = ACT_DAB_CROUCH_READY;
 			else
 				idealActivity = ACT_DAB_CROUCH_IDLE;		
 		}
@@ -853,6 +859,8 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 		{
 			if (ShouldUseAimInAnims())
 				idealActivity = ACT_DAB_CROUCHWALK_AIM;
+			else if (m_pSDKPlayer->IsWeaponReady())
+				idealActivity = ACT_DAB_CROUCHWALK_READY;
 			else
 				idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
 		}
@@ -1093,6 +1101,8 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	if (ShouldUseAimInAnims())
 		idealActivity = ACT_DAB_STAND_AIM;
+	else if (m_pSDKPlayer->IsWeaponReady())
+		idealActivity = ACT_DAB_STAND_READY;
 
 	if (
 		HandleDiving( idealActivity ) ||

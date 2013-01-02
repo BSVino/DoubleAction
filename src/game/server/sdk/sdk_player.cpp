@@ -201,6 +201,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 	SendPropFloat( SENDINFO( m_flLastSpawnTime ) ),
+	SendPropTime		( SENDINFO( m_flReadyWeaponUntil ) ),
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 END_SEND_TABLE()
@@ -274,6 +275,8 @@ CSDKPlayer::CSDKPlayer()
 
 	m_flFreezeUntil = .1;
 	m_flFreezeAmount = 0;
+
+	m_flFreezeUntil = -1;
 
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
@@ -931,6 +934,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	// fire global game event
 
+	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetDamageType() == DMG_BULLET)
+		ReadyWeapon();
+
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
 
 	if ( event )
@@ -1338,7 +1344,12 @@ bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 	if (GetCurrentTime() < m_flDisarmRedraw)
 		return false;
 
-	return BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
+	bool bSwitched = BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
+
+	if (bSwitched)
+		ReadyWeapon();
+
+	return bSwitched;
 }
 
 void CSDKPlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )

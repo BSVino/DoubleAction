@@ -146,6 +146,9 @@ public:
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();
 
+	virtual void    ReadyWeapon();
+	virtual bool    IsWeaponReady();
+
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
 	bool IsStyleSkillActive() const;
@@ -242,6 +245,8 @@ public: // Public Variables
 
 	CNetworkVar( float, m_flFreezeUntil );
 	CNetworkVar( float, m_flFreezeAmount );
+
+	CNetworkVar( float, m_flReadyWeaponUntil );
 
 	CNetworkVar( float, m_flDisarmRedraw );
 
