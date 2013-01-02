@@ -741,6 +741,8 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
 
+	m_pOuter->FreezePlayer(0.4f, 0.3f);
+
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );

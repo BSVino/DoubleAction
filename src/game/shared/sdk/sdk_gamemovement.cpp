@@ -161,11 +161,11 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
 
 			mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
-
-			if (m_pSDKPlayer->PlayerFrozen())
-				mv->m_flClientMaxSpeed *= m_pSDKPlayer->m_flFreezeAmount;
 		}
 	}
+
+	if (m_pSDKPlayer->PlayerFrozen())
+		mv->m_flClientMaxSpeed *= m_pSDKPlayer->m_flFreezeAmount;
 
 #if defined ( SDK_USE_PRONE )
 	if ( m_pSDKPlayer->GetGroundEntity() != NULL )
