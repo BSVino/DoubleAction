@@ -180,6 +180,9 @@ public:
 
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
 
+	bool IsInThirdPerson() const { return m_bThirdPerson; }
+	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	CSDKPlayerShared m_Shared;
@@ -304,6 +307,8 @@ private:
 	CNetworkVar( float, m_flLastSpawnTime );
 
 	CNetworkVar( bool, m_bHasPlayerDied );
+
+	CNetworkVar( bool, m_bThirdPerson );
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;

@@ -186,6 +186,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropTime		( RECVINFO( m_flReadyWeaponUntil ) ),
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
+	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -1004,6 +1005,17 @@ void C_SDKPlayer::ClientThink()
 	ConVarRef mat_motion_blur_strength( "mat_motion_blur_strength" );
 	mat_motion_blur_strength.SetValue(RemapValClamped(GetSlowMoMultiplier(), 0.8f, 1, da_slowmo_motion_blur.GetFloat(), 1));
 
+	if (::input->CAM_IsThirdPerson() && !IsInThirdPerson())
+	{
+		::input->CAM_ToFirstPerson();
+		ThirdPersonSwitch(false);
+	}
+	else if (!::input->CAM_IsThirdPerson() && IsInThirdPerson())
+	{
+		::input->CAM_ToThirdPerson();
+		ThirdPersonSwitch(true);
+	}
+
 	UpdateSoundEvents();
 
 	// Pass on through to the base class.
@@ -1379,8 +1391,10 @@ void C_SDKPlayer::UpdateSoundEvents()
 	}
 }
 
-static ConVar cam_right("cam_right", "15", FCVAR_ARCHIVE);
-static ConVar cam_up("cam_up", "10", FCVAR_ARCHIVE);
+static ConVar da_cam_back("da_cam_back", "60", FCVAR_USERINFO|FCVAR_ARCHIVE);
+static ConVar da_cam_right("da_cam_right", "15", FCVAR_USERINFO|FCVAR_ARCHIVE);
+static ConVar da_cam_up("da_cam_up", "10", FCVAR_USERINFO|FCVAR_ARCHIVE);
+
 static ConVar dab_aimin_fov_delta_high("dab_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
@@ -1396,10 +1410,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		angCamera[ YAW ] = vecOffset[ YAW ];
 		angCamera[ ROLL ] = 0;
 
-		Vector camForward, camRight, camUp;
-		AngleVectors( angCamera, &camForward, &camRight, &camUp );
-
-		pSetup->origin = pSetup->origin + camRight*cam_right.GetFloat() + camUp*cam_up.GetFloat();
+		pSetup->origin = GetThirdPersonCameraPosition(pSetup->origin, angCamera);
 	}
 
 	BaseClass::OverrideView(pSetup);

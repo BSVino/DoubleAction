@@ -1320,3 +1320,37 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 
 	return true;
 }
+
+#define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
+
+const Vector CSDKPlayer::GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
+{
+#ifdef GAME_DLL
+	float flCamBack = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
+	float flCamUp = atof(engine->GetClientConVarValue( entindex(), "da_cam_up" ));
+	float flCamRight = atof(engine->GetClientConVarValue( entindex(), "da_cam_right" ));
+#else
+	ConVarRef da_cam_back("da_cam_back");
+	ConVarRef da_cam_up("da_cam_up");
+	ConVarRef da_cam_right("da_cam_right");
+
+	float flCamBack = da_cam_back.GetFloat();
+	float flCamUp = da_cam_up.GetFloat();
+	float flCamRight = da_cam_right.GetFloat();
+#endif
+
+	Vector camForward, camRight, camUp;
+	AngleVectors( angCamera, &camForward, &camRight, &camUp );
+
+	Vector vecCameraOffset = -camForward*flCamBack + camRight*flCamRight + camUp*flCamUp;
+	Vector vecNewOrigin = vecEye + vecCameraOffset;
+
+	trace_t trace;
+
+	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
+	UTIL_TraceHull( vecEye, vecNewOrigin,
+		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
+		MASK_SOLID, &traceFilter, &trace );
+
+	return vecEye + vecCameraOffset * trace.fraction;
+}

@@ -206,10 +206,29 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (!WeaponSpreadFixed())
 		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
 
+	QAngle angShoot = pPlayer->EyeAngles() + pPlayer->GetPunchAngle();
+
+	if (pPlayer->IsInThirdPerson())
+	{
+		// First find where the camera should be.
+		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition(pPlayer->Weapon_ShootPosition(), angShoot);
+
+		Vector vecShoot;
+		AngleVectors(angShoot, &vecShoot);
+
+		trace_t tr;
+		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+
+		Vector vecBulletDirection = tr.endpos - pPlayer->Weapon_ShootPosition();
+		vecBulletDirection.NormalizeInPlace();
+
+		VectorAngles(vecBulletDirection, angShoot);
+	}
+
 	FX_FireBullets(
 		pPlayer->entindex(),
 		pPlayer->Weapon_ShootPosition(),
-		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(),
+		angShoot,
 		GetWeaponID(),
 		0, //Tony; fire mode - this is unused at the moment, left over from CSS when SDK* was created in the first place.
 		CBaseEntity::GetPredictionRandomSeed() & 255,

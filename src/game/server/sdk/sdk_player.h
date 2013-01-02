@@ -154,6 +154,10 @@ public:
 
 	virtual void Disarm();
 
+	virtual void ThirdPersonToggle();
+	virtual bool IsInThirdPerson() const { return m_bThirdPerson; }
+	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+
 // In shared code.
 public:
 	void FireBullet( 
@@ -370,6 +374,8 @@ public:
 	CNetworkVar( float, m_flLastSpawnTime );
 
 	CNetworkVar( bool, m_bHasPlayerDied );
+
+	CNetworkVar( bool, m_bThirdPerson );
 
 	int    m_iStyleKillStreak;
 };

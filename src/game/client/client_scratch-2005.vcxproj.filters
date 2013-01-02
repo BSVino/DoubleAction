@@ -1449,6 +1449,9 @@
     <ClCompile Include="sdk\vgui\da_instructor.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\da_hud_crosshair.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

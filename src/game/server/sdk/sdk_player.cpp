@@ -204,6 +204,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropTime		( SENDINFO( m_flReadyWeaponUntil ) ),
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
+	SendPropBool( SENDINFO( m_bThirdPerson ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -283,6 +284,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextSecondWindRegen = 0;
 
 	m_bHasPlayerDied = false;
+	m_bThirdPerson = false;
 
 	m_flCurrentTime = gpGlobals->curtime;
 }
@@ -797,6 +799,8 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 void CSDKPlayer::InitialSpawn( void )
 {
+	m_bThirdPerson = !!atoi(engine->GetClientConVarValue( entindex(), "cl_thirdperson" ));
+
 	BaseClass::InitialSpawn();
 
 	State_Enter( STATE_WELCOME );
@@ -2632,6 +2636,12 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, 5);
 }
 
+void CSDKPlayer::ThirdPersonToggle()
+{
+	m_bThirdPerson = !m_bThirdPerson;
+	Instructor_LessonLearned("thirdperson");
+}
+
 void CC_ActivateSlowmo_f (void)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
@@ -2776,3 +2786,15 @@ void CC_DisarmMe(const CCommand& args)
 }
 
 static ConCommand disarmme("disarmme", CC_DisarmMe, "Disarm the player as a test.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CC_ThirdPersonToggle(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->ThirdPersonToggle();
+}
+
+static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::CC_ThirdPersonToggle, "Toggle third person mode.", FCVAR_GAMEDLL );
