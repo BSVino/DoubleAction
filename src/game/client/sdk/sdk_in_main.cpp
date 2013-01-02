@@ -117,6 +117,10 @@ void CSDKInput::CAM_Think( void )
 	angOffset.y = camOffset.y + da_cam_yaw.GetFloat();
 	angOffset.z = camOffset.z;
 
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer)
+		angOffset += pPlayer->GetPunchAngle();
+
 	CAM_SetCameraThirdData(NULL, angOffset);
 }
 
