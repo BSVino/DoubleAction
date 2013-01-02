@@ -153,6 +153,7 @@ acttable_t CWeaponGrenade::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_GRENADE,					false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_GRENADE,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_GRENADE,					false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_GRENADE,              false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_GRENADE,         false },
 };
 

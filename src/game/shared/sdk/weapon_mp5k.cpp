@@ -94,6 +94,7 @@ acttable_t CWeaponMP5K::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_MP5K,						false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_MP5K,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_MP5K,						false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_MP5K,                 false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_MP5K,            false },
 };
 

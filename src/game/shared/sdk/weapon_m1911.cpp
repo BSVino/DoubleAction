@@ -95,6 +95,7 @@ acttable_t CWeaponM1911::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_M1911,						false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_M1911,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_M1911,					false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_M1911,                false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_M1911,           false },
 };
 

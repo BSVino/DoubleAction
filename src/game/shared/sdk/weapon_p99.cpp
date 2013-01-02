@@ -95,6 +95,7 @@ acttable_t CWeaponP99::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_P99,					false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_P99,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_P99,					false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_P99,              false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_P99,         false },
 };
 

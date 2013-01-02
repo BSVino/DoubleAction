@@ -103,6 +103,7 @@ acttable_t CWeaponFAL::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL_FAL,						false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART_FAL,					false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE_FAL,						false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_FAL,                  false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_FAL,             false },
 };
 

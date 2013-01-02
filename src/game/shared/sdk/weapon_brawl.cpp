@@ -100,6 +100,7 @@ acttable_t CWeaponBrawl::m_acttable[] =
 	{ ACT_DAB_ROLL,						ACT_DAB_ROLL,					false },
 	{ ACT_DAB_SLIDESTART,				ACT_DAB_SLIDESTART,				false },
 	{ ACT_DAB_SLIDE,					ACT_DAB_SLIDE,					false },
+	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE,              false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND,         false },
 };
 

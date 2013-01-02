@@ -322,8 +322,11 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	// Check to see if we are moving.
 	bool bMoving = ( vecVelocity.Length() > 1.0f ) ? true : false;
 
-	// If we are moving or are prone and undeployed.
-	if ( bMoving || m_bForceAimYaw )
+	if ( m_pSDKPlayer->m_Shared.IsProne() )
+	{
+		m_flGoalFeetYaw = m_flCurrentFeetYaw = m_flEyeYaw;
+	}
+	else if ( bMoving || m_bForceAimYaw )
 	{
 		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
 		{
@@ -475,7 +478,11 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 	QAngle angles = GetBasePlayer()->GetLocalAngles();
 
 	// If we are not moving, sync up the feet and eyes slowly.
-	if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
+	if (m_pSDKPlayer->m_Shared.IsProne())
+	{
+		// Don't touch it
+	}
+	else if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
 	{
 		float flYawDelta = angles[YAW] - m_PoseParameterData.m_flEstimateYaw;
 		flYawDelta = AngleNormalize( flYawDelta );
@@ -878,7 +885,13 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 {
-	if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+	if ( m_pSDKPlayer->m_Shared.IsDiveSliding() )
+	{
+		idealActivity = ACT_DAB_DIVESLIDE;
+
+		return true;
+	}
+	else if ( m_pSDKPlayer->m_Shared.IsProne() )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
 		{
