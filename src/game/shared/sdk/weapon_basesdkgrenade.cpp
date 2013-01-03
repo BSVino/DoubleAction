@@ -136,32 +136,7 @@ void CBaseSDKGrenade::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CBaseSDKGrenade::SecondaryAttack()
 {
-	if ( m_bRedraw )
-		return;
-
-	CSDKPlayer *pPlayer = GetPlayerOwner();
-	
-	if ( pPlayer == NULL )
-		return;
-
-	//See if we're ducking
-	if ( pPlayer->GetFlags() & FL_DUCKING )
-	{
-		//Send the weapon animation
-		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
-	}
-	else
-	{
-		//Send the weapon animation
-		SendWeaponAnim( ACT_VM_HAULBACK );
-	}
-
-	// Don't let weapon idle interfere in the middle of a throw!
-	SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
-
-	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+	BaseClass::SecondaryAttack();
 }
 
 //-----------------------------------------------------------------------------
