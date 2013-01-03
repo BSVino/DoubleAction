@@ -1488,6 +1488,15 @@ void CSDKPlayer::CreateViewModel( int index /*=0*/ )
 	}
 }
 
+void CSDKPlayer::ImpulseCommands()
+{
+	// Disable the flashlight
+	if (GetImpulse() == 100)
+		return;
+
+	BaseClass::ImpulseCommands();
+}
+
 void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 {
 	if ( !sv_cheats->GetBool() )

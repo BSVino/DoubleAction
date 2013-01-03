@@ -94,6 +94,7 @@ public:
 
 	virtual Vector  EyePosition();
 
+	virtual void    ImpulseCommands( void );
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
 	virtual int		SpawnArmorValue( void ) const { return m_iSpawnArmorValue; }
