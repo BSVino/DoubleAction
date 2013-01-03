@@ -28,6 +28,8 @@
 #include "sdk_gamerules.h"
 #include "projectedlighteffect.h"
 #include "voice_status.h"
+#include "toolframework/itoolframework.h"
+#include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -998,6 +1000,11 @@ bool C_SDKPlayer::CanShowSkillMenu( void )
 	return ( GetTeamNumber() != TEAM_SPECTATOR );
 }
 
+bool C_BasePlayer::ShouldDrawLocalPlayer()
+{
+	return C_SDKPlayer::GetLocalSDKPlayer()->IsInThirdPerson() || ( ToolsEnabled() && ToolFramework_IsThirdPersonCamera() );
+}
+
 ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "20.0" );
 
 void C_SDKPlayer::ClientThink()
@@ -1403,7 +1410,7 @@ static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHE
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
-	if (::input->CAM_IsThirdPerson())
+	if (IsInThirdPerson())
 	{
 		Vector vecOffset;
 		::input->CAM_GetCameraOffset( vecOffset );
