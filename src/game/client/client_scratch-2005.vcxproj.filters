@@ -1452,6 +1452,9 @@
     <ClCompile Include="sdk\da_hud_crosshair.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
+    <ClCompile Include="hl2\C_Func_Monitor.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

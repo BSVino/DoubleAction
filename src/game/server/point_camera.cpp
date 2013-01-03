@@ -59,6 +59,8 @@ CPointCamera::CPointCamera()
 //-----------------------------------------------------------------------------
 void CPointCamera::Spawn( void )
 {
+	m_bActive = true;
+
 	BaseClass::Spawn();
 
 	if ( m_spawnflags & SF_CAMERA_START_OFF )
