@@ -42,6 +42,8 @@ public:
 	virtual void Update( float eyeYaw, float eyePitch );
 	bool	SetupPoseParameters( CStudioHdr *pStudioHdr );
 
+	virtual void GetOuterAbsVelocity( Vector& vel );
+
 	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
 	bool	HandleMoving( Activity &idealActivity );

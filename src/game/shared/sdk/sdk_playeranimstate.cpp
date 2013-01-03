@@ -242,6 +242,18 @@ bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 	return true;
 }
 
+void CSDKPlayerAnimState::GetOuterAbsVelocity(Vector& vel)
+{
+	BaseClass::GetOuterAbsVelocity(vel);
+
+#ifdef CLIENT_DLL
+	// For non-local players this is an estimation based on interp data.
+	// Compensate for slow motion accordingly.
+	if (m_pSDKPlayer != C_SDKPlayer::GetLocalSDKPlayer())
+		vel /= m_pSDKPlayer->GetSlowMoMultiplier();
+#endif
+}
+
 void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 {
 	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsDiveSliding())
