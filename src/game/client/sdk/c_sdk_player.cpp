@@ -1005,15 +1005,18 @@ void C_SDKPlayer::ClientThink()
 	ConVarRef mat_motion_blur_strength( "mat_motion_blur_strength" );
 	mat_motion_blur_strength.SetValue(RemapValClamped(GetSlowMoMultiplier(), 0.8f, 1, da_slowmo_motion_blur.GetFloat(), 1));
 
-	if (::input->CAM_IsThirdPerson() && !IsInThirdPerson())
+	if (this == C_SDKPlayer::GetLocalSDKPlayer())
 	{
-		::input->CAM_ToFirstPerson();
-		ThirdPersonSwitch(false);
-	}
-	else if (!::input->CAM_IsThirdPerson() && IsInThirdPerson())
-	{
-		::input->CAM_ToThirdPerson();
-		ThirdPersonSwitch(true);
+		if (::input->CAM_IsThirdPerson() && !IsInThirdPerson())
+		{
+			::input->CAM_ToFirstPerson();
+			ThirdPersonSwitch(false);
+		}
+		else if (!::input->CAM_IsThirdPerson() && IsInThirdPerson())
+		{
+			::input->CAM_ToThirdPerson();
+			ThirdPersonSwitch(true);
+		}
 	}
 
 	UpdateSoundEvents();
