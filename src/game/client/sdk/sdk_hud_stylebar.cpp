@@ -82,6 +82,7 @@ private:
 	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
 
 	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
+	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];
 
 	class CAnnouncement
 	{
@@ -100,6 +101,8 @@ DECLARE_HUD_MESSAGE( CHudStyleBar, StyleAnnouncement );
 CHudStyleBar::CHudStyleBar( const char *pElementName )
 	: CHudElement( pElementName ), BaseClass( NULL, "HudStyleBar" )
 {
+	memset(m_apActiveSkillIcons, 0, sizeof(m_apActiveSkillIcons));
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
@@ -185,17 +188,36 @@ void CHudStyleBar::Paint()
 			m_apAnnouncements[i] = gHUD.GetIcon(g_apszAnnouncementTextures[i]);
 	}
 
+	if (!m_apActiveSkillIcons[SKILL_ADRENALINE])
+	{
+		m_apActiveSkillIcons[SKILL_ADRENALINE] = gHUD.GetIcon("Armor");
+		m_apActiveSkillIcons[SKILL_SECONDWIND] = gHUD.GetIcon("health");
+		m_apActiveSkillIcons[SKILL_SLOWMO] = gHUD.GetIcon("Super_slow");
+		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("Recoil");
+	}
+
+	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
+
+	float flStyleTextureWidth = 0;
+	float flStyleTextureHeight = 0;
+
+	if (pStyleTexture)
+	{
+		flStyleTextureWidth = pStyleTexture->EffectiveWidth(1);
+		flStyleTextureHeight = pStyleTexture->EffectiveHeight(1);
+	}
+
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
 	surface()->DrawSetColor( Color(0, 0, 0, 100) );
-	surface()->DrawFilledRect( iWidth - m_flBarWidth, 0, iWidth, iHeight );
+	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2, 0, iWidth - flStyleTextureWidth/2 + m_flBarWidth/2, iHeight - flStyleTextureHeight - m_flGap );
 
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
 	{
 		clrBar = gHUD.m_clrCaution;
-		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
+		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.1f, 1)*255);
 	}
 	else
 		clrBar = gHUD.m_clrNormal;
@@ -208,8 +230,33 @@ void CHudStyleBar::Paint()
 	else
 		flPercent = m_flStyle * 4 / 100.0f;
 
-	float flBarHeight = iHeight - m_flGap*2;
-	surface()->DrawFilledRect( iWidth - m_flBarWidth + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - m_flGap, flBarHeight );
+	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
+	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap, flBarHeight );
+
+	if (pStyleTexture)
+	{
+		float flAlpha = 1;
+		float flNonRed = 0;
+		float flRed = 0;
+
+		if (pPlayer->IsStyleSkillActive())
+		{
+			flAlpha = RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.5f, 1);
+			flNonRed = Gain(1-Oscillate(gpGlobals->curtime, 1), 0.7f);
+			flRed = 1;
+		}
+
+		pStyleTexture->DrawSelf(
+				iWidth - flStyleTextureWidth, iHeight - flStyleTextureHeight,
+				flStyleTextureWidth, flStyleTextureHeight,
+				Color(
+					Lerp(flRed, 255, gHUD.m_clrCaution.r()),
+					Lerp(flNonRed, 255, gHUD.m_clrCaution.g()),
+					Lerp(flNonRed, 255, gHUD.m_clrCaution.b()),
+					255*flAlpha
+				)
+			);
+	}
 
 	int iNext;
 	for (int i = m_aAnnouncements.Head(); i != m_aAnnouncements.InvalidIndex(); i = iNext)
