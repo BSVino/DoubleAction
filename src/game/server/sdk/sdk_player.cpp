@@ -1988,6 +1988,7 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 {
 	m_Shared.m_iStyleSkill = eSkill;
 	SetStylePoints(0);
+	m_flStyleSkillCharge = 0;
 }
 
 #if defined ( SDK_USE_PRONE )
