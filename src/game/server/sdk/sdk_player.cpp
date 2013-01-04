@@ -2757,6 +2757,32 @@ void CC_Buy(const CCommand& args)
 		return;
 	}
 
+	if (Q_strncmp(args[1], "random", 6) == 0)
+	{
+		pPlayer->ClearLoadout();
+
+		// Buy a primary weapon
+		SDKWeaponID eWeapon = WEAPON_NONE;
+		do
+		{
+			eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+		}
+		while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !pPlayer->CanAddToLoadout(eWeapon));
+
+		pPlayer->AddToLoadout(eWeapon);
+
+		// Buy a secondary weapon
+		do
+		{
+			eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+		}
+		while (eWeapon == SDK_WEAPON_BRAWL || !pPlayer->CanAddToLoadout(eWeapon));
+
+		pPlayer->AddToLoadout(eWeapon);
+
+		return;
+	}
+
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
 		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));

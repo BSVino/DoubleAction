@@ -1155,6 +1155,15 @@ void CSDKPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, floa
 
 bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 {
+	if (eWeapon == SDK_WEAPON_CROWBAR) // This doesn't exist yet.
+		return false;
+
+	if (eWeapon <= WEAPON_NONE)
+		return false;
+
+	if (eWeapon >= WEAPON_MAX)
+		return false;
+
 	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
 
 	if (pWeaponInfo->iWeight + m_iLoadoutWeight > MAX_LOADOUT_WEIGHT)
