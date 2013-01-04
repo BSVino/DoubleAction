@@ -1211,12 +1211,12 @@ float CSDKPlayer::GetSlowMoMultiplier() const
 
 float CSDKPlayer::GetSlowMoGoal() const
 {
-	if (m_iSlowMoType == SLOWMO_STYLESKILL || (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SLOWMO))
+	if (m_iSlowMoType == SLOWMO_STYLESKILL)
 		return 0.8;
 	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
-		return 0.6;
+		return 0.55;
 	else if (m_iSlowMoType == SLOWMO_PASSIVE)
-		return 0.4;
+		return 0.3;
 	else //if (m_iSlowMoType == SLOWMO_NONE)
 		return 1;
 }
