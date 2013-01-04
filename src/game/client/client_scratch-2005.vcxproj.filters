@@ -1455,6 +1455,9 @@
     <ClCompile Include="hl2\C_Func_Monitor.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_notices.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

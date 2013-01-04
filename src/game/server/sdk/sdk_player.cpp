@@ -1111,7 +1111,11 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		m_iStyleKillStreak++;
 
 		if (m_iStyleKillStreak%3 == 0)
+		{
 			TakeHealth(50, DMG_GENERIC);
+
+			SendNotice(NOTICE_STYLESTREAK);
+		}
 	}
 
 	float flPoints = 1;
@@ -1272,6 +1276,16 @@ void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t eP
 			WRITE_FLOAT( GetStylePoints()/dab_stylemeteractivationcost.GetFloat() );
 
 	// End the message block
+	MessageEnd();
+}
+
+void CSDKPlayer::SendNotice(notice_t eNotice)
+{
+	CSingleUserRecipientFilter user( this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "Notice" );
+		WRITE_LONG( eNotice );
 	MessageEnd();
 }
 
@@ -2624,11 +2638,23 @@ void CSDKPlayer::ActivateMeter()
 
 		GiveNamedItem( "weapon_grenade" );
 		CBasePlayer::GiveAmmo( 10, "grenades");
+
+		SendNotice(NOTICE_MARKSMAN);
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
 	{
 		m_bHasSuperSlowMo = true;
 		GiveSlowMo(6);   // Gets cut in two because super slow mo is on, so it's really 3
+
+		SendNotice(NOTICE_SUPERSLO);
+	}
+	else if (m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+	{
+		SendNotice(NOTICE_TOUGHTOKILL);
+	}
+	else if (m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+	{
+		SendNotice(NOTICE_ADRENALINE);
 	}
 }
 
@@ -2643,7 +2669,12 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 	if (m_bHasSuperSlowMo)
 		flSeconds /= 2;
 
-	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, 5);
+	float flMaxSlow = 5;
+
+	if (m_flSlowMoSeconds < flMaxSlow)
+		SendNotice(NOTICE_SLOMO);
+
+	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, flMaxSlow);
 }
 
 void CSDKPlayer::ThirdPersonToggle()

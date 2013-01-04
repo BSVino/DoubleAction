@@ -611,6 +611,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     </ClCompile>
     <ClCompile Include="sdk\da_hud_crosshair.cpp" />
     <ClCompile Include="sdk\projectedlighteffect.cpp" />
+    <ClCompile Include="sdk\sdk_hud_notices.cpp" />
     <ClCompile Include="sdk\sdk_hud_slowmo.cpp" />
     <ClCompile Include="sdk\sdk_hud_stylebar.cpp" />
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
