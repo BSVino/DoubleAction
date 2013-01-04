@@ -2727,7 +2727,7 @@ void CC_Character(const CCommand& args)
 
 		if (FStrEq(args[1], "random"))
 		{
-			pPlayer->SetCharacter(pszPossiblePlayerModels[RandomInt(0, i-1)]);
+			pPlayer->SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]);
 			return;
 		}
 
