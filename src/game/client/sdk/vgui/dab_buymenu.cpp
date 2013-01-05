@@ -122,6 +122,7 @@ SDKWeaponID CWeaponButton::GetWeaponID()
 
 CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : vgui::Frame( NULL, PANEL_BUY )
 {
+	m_pszCharacterPreview = "models/player/playermale.mdl";
 	m_pFolderBackground = nullptr;
 
 	m_pViewPort = pViewPort;
