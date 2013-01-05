@@ -1458,6 +1458,9 @@
     <ClCompile Include="sdk\sdk_hud_notices.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\vgui\folder_gui.cpp">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3259,6 +3262,9 @@
     </ClInclude>
     <ClInclude Include="sdk\vgui\da_instructor.h">
       <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\vgui\folder_gui.h">
+      <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

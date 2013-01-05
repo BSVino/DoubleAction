@@ -39,3 +39,17 @@ typedef enum {
 	NOTICE_STYLESTREAK,
 	TOTAL_NOTICES
 } notice_t;
+
+inline const char* WeaponTypeToAlias( weapontype_t id )
+{
+	static const char* aszWeaponTypes[] = {
+		"none",
+		"melee",
+		"rifle",
+		"shotgun",
+		"smg",
+		"pistol",
+	};
+
+	return aszWeaponTypes[id];
+}
