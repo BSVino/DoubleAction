@@ -146,11 +146,7 @@ void CDABBuyMenu::Reset()
 void CDABBuyMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
-	{
-		engine->CheckPoint( "BuyMenu" );
-
 		m_iBuyMenuKey = gameuifuncs->GetButtonCodeForBind( "buy" );
-	}
 
 	m_pWeaponInfo->SetText("");
 	m_pWeaponImage->SwapModel("");

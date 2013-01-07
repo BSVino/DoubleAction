@@ -129,11 +129,7 @@ void CDABSkillMenu::Reset()
 void CDABSkillMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
-	{
-		engine->CheckPoint( "SkillMenu" );
-
 		m_iSkillMenuKey = gameuifuncs->GetButtonCodeForBind( "skill" );
-	}
 
 	for( int i = 0; i< GetChildCount(); i++ ) 
 	{
