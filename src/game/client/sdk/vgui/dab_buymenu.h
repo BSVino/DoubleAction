@@ -14,6 +14,8 @@
 #include "iconpanel.h"
 #include <vgui_controls/CheckButton.h>
 
+#include "folder_gui.h"
+
 class CWeaponButton : public vgui::Button
 {
 private:
@@ -38,10 +40,10 @@ private:
 	IBorder* m_pArmedBorder;
 };
 
-class CDABBuyMenu : public vgui::Frame, public IViewPortPanel
+class CDABBuyMenu : public CFolderMenu, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CDABBuyMenu, vgui::Frame );
+	DECLARE_CLASS_SIMPLE( CDABBuyMenu, CFolderMenu );
 
 public:
 	CDABBuyMenu(IViewPort *pViewPort);
@@ -53,7 +55,6 @@ public:
 	virtual void Update( void );
 	void MoveToCenterOfScreen();
 	virtual Panel *CreateControlByName( const char *controlName );
-	virtual void OnTick( void );
 	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void SetVisible( bool state );
 	virtual void ShowPanel(bool bShow);
@@ -66,14 +67,14 @@ public:
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
-	MESSAGE_FUNC_CHARPTR( OnShowPage, "ShowPage", page );
-
-	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
-
-	void SetCharacterPreview(const char* pszCharacter);
-
 	vgui::Label*       GetWeaponInfo();
 	class CModelPanel* GetWeaponImage();
+
+protected:
+	// vgui overrides for rounded corner background
+	virtual void PaintBackground();
+	virtual void PaintBorder();
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
 	IViewPort	*m_pViewPort;
@@ -86,22 +87,7 @@ private:
 	CUtlVector<CFolderLabel*> m_apWeights;
 	CUtlVector<CFolderLabel*> m_apQuantities;
 
-	CheckButton*   m_pSuicideOption;
-
 	ButtonCode_t m_iBuyMenuKey;
-
-	const char*	m_pszCharacterPreview;
-
-protected:
-	// vgui overrides for rounded corner background
-	virtual void PaintBackground();
-	virtual void PaintBorder();
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-
-private:
-	// rounded corners
-	Color					 m_bgColor;
-	Color					 m_borderColor;
 };
 
 #endif //SDK_BUYMENU_H

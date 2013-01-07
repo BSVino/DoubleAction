@@ -394,11 +394,6 @@ void CDABCharacterMenu::OnCommand( const char *command )
 
 		BaseClass::OnCommand( command );
 
-//		if ( hud_Characterautokill.GetBool() )
-//			engine->ClientCmd( "kill" );
-
-		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->SetCharacterPreview(&command[10]);
-
 		engine->ClientCmd( command );
 	}
 	else

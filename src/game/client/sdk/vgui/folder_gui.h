@@ -1,8 +1,49 @@
 #pragma once
 
 #include <vgui_controls/Label.h>
+#include <vgui_controls/Frame.h>
 
-vgui::Panel* Folder_CreateControlByName( vgui::EditablePanel* pParent, const char *controlName );
+namespace vgui
+{
+	class CCheckButton;
+}
+
+class CFolderMenu : public vgui::Frame
+{
+private:
+	DECLARE_CLASS_SIMPLE( CFolderMenu, vgui::Frame );
+
+public:
+	CFolderMenu(const char* pszName);
+	virtual ~CFolderMenu();
+
+	virtual void Update( void );
+	void MoveToCenterOfScreen();
+	virtual Panel *CreateControlByName( const char *controlName );
+	virtual void ShowPanel(bool bShow);
+	void OnCommand( const char *command );
+
+	virtual void SetData(KeyValues *data) {};
+	virtual bool NeedsUpdate( void ) { return false; }
+	virtual bool HasInputElements( void ) { return true; }
+	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
+	virtual bool IsVisible() { return BaseClass::IsVisible(); }
+	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
+
+	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
+
+	void SetCharacterPreview(const char* pszCharacter);
+
+protected:
+	virtual void PaintBackground();
+	virtual void PaintBorder();
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+
+private:
+	vgui::CheckButton*  m_pSuicideOption;
+
+	const char*         m_pszCharacterPreview;
+};
 
 class CFolderLabel : public vgui::Label
 {

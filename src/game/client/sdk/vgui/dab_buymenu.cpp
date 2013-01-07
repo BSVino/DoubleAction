@@ -51,7 +51,6 @@
 using namespace vgui;
 
 ConVar _cl_buymenuopen( "_cl_buymenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "internal cvar used to tell server when buy menu is open" );
-ConVar hud_buyautokill("hud_buyautokill", "0");
 
 CWeaponButton::CWeaponButton(vgui::Panel *parent, const char *panelName )
 	: Button( parent, panelName, "WeaponButton")
@@ -120,29 +119,11 @@ SDKWeaponID CWeaponButton::GetWeaponID()
 	return AliasToWeaponID(m_szWeaponID);
 }
 
-CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : vgui::Frame( NULL, PANEL_BUY )
+CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY )
 {
-	m_pszCharacterPreview = "models/player/playermale.mdl";
-
 	m_pViewPort = pViewPort;
 
-	// initialize dialog
-	SetTitle("", true);
-
-	// load the new scheme early!!
-	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
-	SetMoveable(false);
-	SetSizeable(false);
-
-	// hide the system buttons
-	SetTitleBarVisible( false );
-	SetProportional(true);
-
 	m_iBuyMenuKey = BUTTON_CODE_INVALID;
-
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
-
-	m_pSuicideOption = new CheckButton( this, "suicide_option", "Sky is blue?" );
 
 	LoadControlSettings( "Resource/UI/BuyMenu.res" );
 	InvalidateLayout();
@@ -169,8 +150,6 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 		engine->CheckPoint( "BuyMenu" );
 
 		m_iBuyMenuKey = gameuifuncs->GetButtonCodeForBind( "buy" );
-
-		m_pSuicideOption->SetSelected( hud_buyautokill.GetBool() );
 	}
 
 	m_pWeaponInfo->SetText("");
@@ -374,172 +353,15 @@ void CDABBuyMenu::Update()
 		}
 	}
 
-	CFolderLabel* pLabels[2];
-	pLabels[0] = dynamic_cast<CFolderLabel *>(FindChildByName("RequestedArmament1"));
-	pLabels[1] = dynamic_cast<CFolderLabel *>(FindChildByName("RequestedArmament2"));
-
-	int iArmamentsOn1 = 0;
-
-	std::wostringstream sLabel1;
-	std::wostringstream sLabel2;
-
-	SDKWeaponID eFirst = WEAPON_NONE;
-	for (int i = 0; i < MAX_LOADOUT; i++)
-	{
-		if (!pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i))
-			continue;
-
-		CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
-		if (!pWeaponInfo)
-			continue;
-
-		if (!eFirst)
-			eFirst = (SDKWeaponID)i;
-
-		std::wostringstream sLabel;
-
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( pWeaponInfo->szPrintName );
-		if ( pchFmt && pchFmt[0] )
-			sLabel << pchFmt;
-		else
-			sLabel << pWeaponInfo->szPrintName;
-
-		if (pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i) > 1)
-			sLabel << " x" << pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i) << "\n";
-		else
-			sLabel << "\n";
-
-		if (pWeaponInfo->szAmmo1[0] && !FStrEq(pWeaponInfo->szAmmo1, "grenades"))
-		{
-			int iAmmo = min(pWeaponInfo->iMaxClip1*pWeaponInfo->m_iDefaultAmmoClips, GetAmmoDef()->GetAmmoOfIndex(GetAmmoDef()->Index(pWeaponInfo->szAmmo1))->pMaxCarry);
-			int iMags = iAmmo/pWeaponInfo->iMaxClip1;
-			sLabel << "  " << pWeaponInfo->szAmmo1 << " x" << iAmmo << "\n";
-			sLabel << "  " << pWeaponInfo->iMaxClip1 << " round mag x" << iMags << "\n";
-		}
-
-		sLabel << "\n";
-
-		if (iArmamentsOn1 >= 2)
-			sLabel2 << sLabel.str();
-		else
-			sLabel1 << sLabel.str();
-
-		iArmamentsOn1++;
-	}
-
-	pLabels[0]->SetText(sLabel1.str().c_str());
-	pLabels[1]->SetText(sLabel2.str().c_str());
-
-	const char szPlayerPreviewTemplate[] =
-		"	\"model\"\n"
-		"	{\n"
-		"		\"spotlight\"	\"1\"\n"
-		"		\"modelname\"	\"models/player/playermale.mdl\"\n"
-		"		\"origin_z\"	\"-57\"\n"
-		"		\"origin_y\"	\"10\"\n"
-		"		\"origin_x\"	\"110\"\n"
-		"		\"angles_y\"	\"180\"\n"
-
-		"		\"animation\"\n"
-		"		{\n"
-		"			\"sequence\"		\"m1911_idle\"\n"
-		"			\"pose_parameters\"\n"
-		"			{\n"
-		"				\"body_yaw\" \"25.0\"\n"
-		"				\"body_pitch\" \"-30.0\"\n"
-		"			}\n"
-		"		}\n"
-			
-		"		\"attached_model\"\n"
-		"		{\n"
-		"			\"modelname\" \"models/weapons/m1911.mdl\"\n"
-		"		}\n"
-		"	}";
-
-	CModelPanel *pPlayerPreview = dynamic_cast<CModelPanel *>(FindChildByName("player_preview"));
-	CSDKWeaponInfo* pWeaponInfo = nullptr;
-	if (eFirst)
-		pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
-
-	if (pPlayerPreview)
-	{
-		KeyValues* pValues = new KeyValues("preview");
-		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
-
-		pValues->SetString("modelname", m_pszCharacterPreview);
-
-		pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
-		pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
-		pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
-
-		if (pWeaponInfo)
-		{
-			KeyValues* pAnimation = pValues->FindKey("animation");
-			if (pAnimation)
-				pAnimation->SetString("sequence", VarArgs("%s_idle", WeaponIDToAlias(eFirst)));
-
-			KeyValues* pWeapon = pValues->FindKey("attached_model");
-			if (pWeapon)
-				pWeapon->SetString("modelname", pWeaponInfo->szWorldModel);
-		}
-		else
-		{
-			KeyValues* pAnimation = pValues->FindKey("animation");
-			if (pAnimation)
-				pAnimation->SetString("sequence", "idle");
-
-			KeyValues* pWeapon = pValues->FindKey("attached_model");
-			if (pWeapon)
-				pWeapon->SetString("modelname", "");
-		}
-
-		pPlayerPreview->ParseModelInfo(pValues);
-
-		pValues->deleteThis();
-	}
+	BaseClass::Update();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 Panel *CDABBuyMenu::CreateControlByName( const char *controlName )
 {
 	if (FStrEq(controlName, "WeaponButton"))
 		return new CWeaponButton(this, nullptr);
 
-	Panel* pResult = Folder_CreateControlByName( this, controlName );
-	if (pResult)
-		return pResult;
-
-	return BaseClass::CreateControlByName( controlName );
-}
-
-//-----------------------------------------------------------------------------
-// Catch the mouseover event and set the active class
-//-----------------------------------------------------------------------------
-void CDABBuyMenu::OnShowPage( const char *pagename )
-{
-}
-
-void CDABBuyMenu::OnSuicideOptionChanged( vgui::Panel *Panel )
-{
-	hud_buyautokill.SetValue( m_pSuicideOption->IsSelected() );
-}
-//-----------------------------------------------------------------------------
-// Do things that should be done often, eg number of players in the 
-// selected class
-//-----------------------------------------------------------------------------
-void CDABBuyMenu::OnTick( void )
-{
-	//When a player changes teams, their class and team values don't get here 
-	//necessarily before the command to update the class menu. This leads to the cancel button 
-	//being visible and people cancelling before they have a class. check for class == PLAYERCLASS_UNASSIGNED and if so
-	//hide the cancel button
-
-	if ( !IsVisible() )
-		return;
-
-	BaseClass::OnTick();
+	return BaseClass::CreateControlByName(controlName);
 }
 
 void CDABBuyMenu::SetVisible( bool state )
@@ -567,9 +389,6 @@ void CDABBuyMenu::OnCommand( const char *command )
 		gViewPortInterface->ShowBackGround( false );
 
 		BaseClass::OnCommand( command );
-
-		if ( hud_buyautokill.GetBool() )
-			engine->ClientCmd( "kill" );
 	}
 	else
 		engine->ClientCmd( command );
@@ -592,28 +411,7 @@ void CDABBuyMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	m_bgColor = GetSchemeColor("BgColor", GetBgColor(), pScheme);
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
-
-	SetBgColor( Color(0, 0, 0, 0) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
-
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
-}
-
-void CDABBuyMenu::SetCharacterPreview(const char* pszCharacter)
-{
-	for (int i = 0; ; i++)
-	{
-		if (pszPossiblePlayerModels[i] == nullptr)
-			break;
-
-		if (FStrEq(VarArgs("models/player/%s.mdl", pszCharacter), pszPossiblePlayerModels[i]))
-		{
-			m_pszCharacterPreview = pszPossiblePlayerModels[i];
-			return;
-		}
-	}
 }
 
 vgui::Label* CDABBuyMenu::GetWeaponInfo()
