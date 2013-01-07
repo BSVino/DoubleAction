@@ -123,7 +123,6 @@ SDKWeaponID CWeaponButton::GetWeaponID()
 CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : vgui::Frame( NULL, PANEL_BUY )
 {
 	m_pszCharacterPreview = "models/player/playermale.mdl";
-	m_pFolderBackground = nullptr;
 
 	m_pViewPort = pViewPort;
 
@@ -209,6 +208,10 @@ void CDABBuyMenu::MoveToCenterOfScreen()
 	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
 	SetPos((ww - GetWide()) / 2, (wt - GetTall()) / 2);
 }
+
+static ConVar hud_playerpreview_x("hud_playerpreview_x", "120", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_playerpreview_y("hud_playerpreview_y", "-5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CDABBuyMenu::Update()
 {
@@ -433,8 +436,8 @@ void CDABBuyMenu::Update()
 		"		\"spotlight\"	\"1\"\n"
 		"		\"modelname\"	\"models/player/playermale.mdl\"\n"
 		"		\"origin_z\"	\"-57\"\n"
-		"		\"origin_y\"	\"0\"\n"
-		"		\"origin_x\"	\"130\"\n"
+		"		\"origin_y\"	\"10\"\n"
+		"		\"origin_x\"	\"110\"\n"
 		"		\"angles_y\"	\"180\"\n"
 
 		"		\"animation\"\n"
@@ -464,6 +467,10 @@ void CDABBuyMenu::Update()
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
 
 		pValues->SetString("modelname", m_pszCharacterPreview);
+
+		pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
+		pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
+		pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
 
 		if (pWeaponInfo)
 		{
@@ -568,29 +575,14 @@ void CDABBuyMenu::OnCommand( const char *command )
 		engine->ClientCmd( command );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint background with rounded corners
-//-----------------------------------------------------------------------------
 void CDABBuyMenu::PaintBackground()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	if (!m_pFolderBackground)
-		m_pFolderBackground = gHUD.GetIcon("folder_background");
-
-	m_pFolderBackground->DrawSelf(0, 0, wide, tall, Color(255, 255, 255, 255));
+	// Don't
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint border with rounded corners
-//-----------------------------------------------------------------------------
 void CDABBuyMenu::PaintBorder()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBorder( m_borderColor, wide, tall );
+	// Don't
 }
 
 //-----------------------------------------------------------------------------

@@ -92,8 +92,6 @@ private:
 
 	const char*	m_pszCharacterPreview;
 
-	CHudTexture* m_pFolderBackground;
-
 protected:
 	// vgui overrides for rounded corner background
 	virtual void PaintBackground();
