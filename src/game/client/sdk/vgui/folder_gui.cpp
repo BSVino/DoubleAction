@@ -6,6 +6,7 @@
 
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
+#include <vgui/IVGUI.h>
 
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/CheckButton.h>
@@ -28,10 +29,14 @@ ConVar hud_buyautokill("hud_buyautokill", "0");
 
 CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
 {
+	m_bNeedsUpdate = false;
+
 	m_pszCharacterPreview = "models/player/playermale.mdl";
 
 	// initialize dialog
 	SetTitle("", true);
+
+	vgui::ivgui()->AddTickSignal( GetVPanel() );
 
 	// load the new scheme early!!
 	SetScheme(scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
@@ -255,6 +260,17 @@ void CFolderMenu::OnCommand( const char *command )
 	}
 	else
 		engine->ClientCmd( command );
+}
+
+void CFolderMenu::OnTick()
+{
+	if (m_bNeedsUpdate)
+	{
+		Update();
+		m_bNeedsUpdate = false;
+	}
+
+	BaseClass::OnTick();
 }
 
 void CFolderMenu::PaintBackground()

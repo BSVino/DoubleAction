@@ -31,6 +31,9 @@
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
 
+#include "dab_buymenu.h"
+#include "dab_charactermenu.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 #include "tier0/memdbgon.h"
@@ -1462,7 +1465,12 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
-	gViewPortInterface->FindPanelByName(PANEL_BUY)->Update();
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		//gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT)->MarkForUpdate();
+	}
 }
 
 class FlashlightSupressor

@@ -17,11 +17,13 @@ public:
 	CFolderMenu(const char* pszName);
 	virtual ~CFolderMenu();
 
+	void MarkForUpdate() { m_bNeedsUpdate = true; }
 	virtual void Update( void );
 	void MoveToCenterOfScreen();
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void ShowPanel(bool bShow);
 	void OnCommand( const char *command );
+	virtual void OnTick( void );
 
 	virtual void SetData(KeyValues *data) {};
 	virtual bool NeedsUpdate( void ) { return false; }
@@ -40,6 +42,8 @@ protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
+	bool                m_bNeedsUpdate;
+
 	vgui::CheckButton*  m_pSuicideOption;
 
 	const char*         m_pszCharacterPreview;
