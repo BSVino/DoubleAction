@@ -33,11 +33,7 @@ protected:
 	virtual void PaintBackground();
 	virtual void PaintBorder();
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-
-private:
-	// rounded corners
-	Color					 m_bgColor;
-	Color					 m_borderColor;
+	virtual Panel *CreateControlByName( const char *controlName );
 };
 
 
