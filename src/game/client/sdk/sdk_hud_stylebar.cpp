@@ -190,10 +190,10 @@ void CHudStyleBar::Paint()
 
 	if (!m_apActiveSkillIcons[SKILL_ADRENALINE])
 	{
-		m_apActiveSkillIcons[SKILL_ADRENALINE] = gHUD.GetIcon("Armor");
-		m_apActiveSkillIcons[SKILL_SECONDWIND] = gHUD.GetIcon("health");
-		m_apActiveSkillIcons[SKILL_SLOWMO] = gHUD.GetIcon("Super_slow");
-		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("Recoil");
+		m_apActiveSkillIcons[SKILL_ADRENALINE] = gHUD.GetIcon("adrenaline");
+		m_apActiveSkillIcons[SKILL_SECONDWIND] = gHUD.GetIcon("secondwind");
+		m_apActiveSkillIcons[SKILL_SLOWMO] = gHUD.GetIcon("slowmo");
+		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("marksman");
 	}
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];

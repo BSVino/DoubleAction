@@ -48,7 +48,6 @@ public:
 
 	virtual void Reset();
 	virtual void Update( void );
-	void MoveToCenterOfScreen();
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void SetVisible( bool state );

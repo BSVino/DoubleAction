@@ -85,6 +85,8 @@ static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVA
 
 void CFolderMenu::Update()
 {
+	MoveToCenterOfScreen();
+
 	Button *entry = dynamic_cast<Button *>(FindChildByName("ApproveButton"));
 	if (entry)
 		entry->SetVisible(true);

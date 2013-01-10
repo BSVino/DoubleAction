@@ -151,21 +151,12 @@ void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-void CDABCharacterMenu::MoveToCenterOfScreen()
-{
-	int wx, wy, ww, wt;
-	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
-	SetPos((ww - GetWide()) / 2, (wt - GetTall()) / 2);
-}
-
 static ConVar hud_characterpreview_x("hud_characterpreview_x", "130", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_characterpreview_z("hud_characterpreview_z", "-35", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CDABCharacterMenu::Update()
 {
-	MoveToCenterOfScreen();
-
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)

@@ -2000,6 +2000,9 @@ void CSDKPlayer::ShowSkillMenu()
 
 void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 {
+	if (eSkill <= SKILL_NONE || eSkill >= SKILL_MAX)
+		eSkill = SKILL_MARKSMAN;
+
 	m_Shared.m_iStyleSkill = eSkill;
 	SetStylePoints(0);
 	m_flStyleSkillCharge = 0;
@@ -2809,6 +2812,12 @@ void CC_Skill(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		pPlayer->ShowSkillMenu();
+		return;
+	}
+
+	if (FStrEq(args[1], "random"))
+	{
+		pPlayer->SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_MAX-1));
 		return;
 	}
 

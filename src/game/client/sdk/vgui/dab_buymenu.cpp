@@ -177,13 +177,6 @@ void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-void CDABBuyMenu::MoveToCenterOfScreen()
-{
-	int wx, wy, ww, wt;
-	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
-	SetPos((ww - GetWide()) / 2, (wt - GetTall()) / 2);
-}
-
 static ConVar hud_playerpreview_x("hud_playerpreview_x", "120", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_playerpreview_y("hud_playerpreview_y", "-5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
@@ -215,8 +208,6 @@ void CDABBuyMenu::Update()
 	CFolderLabel* pWeaponQuantity = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponQuantity"));
 	int iWeaponQuantityX, iWeaponQuantityY;
 	pWeaponQuantity->GetPos(iWeaponQuantityX, iWeaponQuantityY);
-
-	MoveToCenterOfScreen();
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
