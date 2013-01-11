@@ -188,7 +188,9 @@ void CDABCharacterMenu::Update()
 		"		}\n"
 		"	}";
 
-	if (m_pszCharacterModel[0])
+	if (strcmp(m_pszCharacterModel, "random") == 0)
+		m_pCharacterImage->SwapModel("");
+	else if (m_pszCharacterModel[0])
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
