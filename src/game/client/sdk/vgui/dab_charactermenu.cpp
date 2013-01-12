@@ -258,7 +258,7 @@ void CDABCharacterMenu::SetVisible( bool state )
 
 void CDABCharacterMenu::OnCommand( const char *command )
 {
-	if ( Q_strncmp( command, "character", 9 ) == 0 )
+	if ( Q_strncmp( command, "character ", 10 ) == 0 )
 	{
 		Close();
 

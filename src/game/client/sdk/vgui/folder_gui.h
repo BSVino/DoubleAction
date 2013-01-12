@@ -34,8 +34,6 @@ public:
 
 	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
 
-	void SetCharacterPreview(const char* pszCharacter);
-
 protected:
 	virtual void PaintBackground();
 	virtual void PaintBorder();
@@ -44,9 +42,11 @@ protected:
 private:
 	bool                m_bNeedsUpdate;
 
+	class CFolderLabel* m_pProfileInfo;
+
 	vgui::CheckButton*  m_pSuicideOption;
 
-	const char*         m_pszCharacterPreview;
+	char                m_szCharacter[100];
 };
 
 class CFolderLabel : public vgui::Label

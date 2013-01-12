@@ -31,12 +31,16 @@ CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
 {
 	m_bNeedsUpdate = false;
 
-	m_pszCharacterPreview = "models/player/playermale.mdl";
+	m_szCharacter[0] = '\0';
 
 	// initialize dialog
 	SetTitle("", true);
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
+
+	m_pSuicideOption = new CheckButton( this, "suicide_option", "" );
+
+	m_pProfileInfo = new CFolderLabel( this, "ProfileInfo" );
 
 	// load the new scheme early!!
 	SetScheme(scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
@@ -46,8 +50,6 @@ CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
 	// hide the system buttons
 	SetTitleBarVisible( false );
 	SetProportional(true);
-
-	m_pSuicideOption = new CheckButton( this, "suicide_option", "Sky is blue?" );
 }
 
 //Destructor
@@ -91,12 +93,17 @@ void CFolderMenu::Update()
 	if (entry)
 		entry->SetVisible(true);
 
-	MoveToCenterOfScreen();
-
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)
 		return;
+
+	Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
+
+	if (m_szCharacter[0])
+		m_pProfileInfo->SetText((std::string("#DAB_CharacterInfo_") + m_szCharacter).c_str());
+	else
+		m_pProfileInfo->SetText("#DAB_CharacterInfo_None");
 
 	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
 	if (pSlotsLabel)
@@ -206,12 +213,12 @@ void CFolderMenu::Update()
 	if (eFirst)
 		pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
 
-	if (pPlayerPreview)
+	if (m_szCharacter[0] && pPlayerPreview)
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
 
-		pValues->SetString("modelname", m_pszCharacterPreview);
+		pValues->SetString("modelname", VarArgs("models/player/%s.mdl", m_szCharacter));
 
 		pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
 		pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
@@ -242,6 +249,8 @@ void CFolderMenu::Update()
 
 		pValues->deleteThis();
 	}
+	else if (pPlayerPreview)
+		pPlayerPreview->SwapModel("");
 }
 
 void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
@@ -293,21 +302,6 @@ void CFolderMenu::ApplySchemeSettings( IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
-}
-
-void CFolderMenu::SetCharacterPreview(const char* pszCharacter)
-{
-	for (int i = 0; ; i++)
-	{
-		if (pszPossiblePlayerModels[i] == nullptr)
-			break;
-
-		if (FStrEq(VarArgs("models/player/%s.mdl", pszCharacter), pszPossiblePlayerModels[i]))
-		{
-			m_pszCharacterPreview = pszPossiblePlayerModels[i];
-			return;
-		}
-	}
 }
 
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)

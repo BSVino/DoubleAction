@@ -223,7 +223,7 @@ public:
 
 	void ActivateMeter();
 
-	void SetCharacter(const char* pszCharacter) { m_pszCharacter = pszCharacter; }
+	bool SetCharacter(const char* pszCharacter);
 
 	void ActivateSlowMo();
 	float GetSlowMoMultiplier() const;
@@ -292,7 +292,6 @@ private:
 #endif
 
 	bool m_bIsCharacterMenuOpen;
-	const char* m_pszCharacter;
 
 	bool m_bIsBuyMenuOpen;
 	bool m_bIsSkillMenuOpen;
@@ -380,6 +379,8 @@ public:
 	CNetworkVar( bool, m_bThirdPerson );
 
 	int    m_iStyleKillStreak;
+
+	CNetworkVar( string_t, m_iszCharacter );
 };
 
 

@@ -33,6 +33,7 @@
 
 #include "dab_buymenu.h"
 #include "dab_charactermenu.h"
+#include "dab_skillmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -136,6 +137,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
 BEGIN_RECV_TABLE_NOBASE(CArmament, DT_Loadout)
 	RecvPropInt(RECVINFO(m_iCount), 0, RecvProxy_Loadout),
@@ -192,6 +194,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
+
+	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -1469,7 +1473,19 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	{
 		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
 		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		//gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT)->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+	}
+}
+
+void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	RecvProxy_StringToString( pData, pStruct, pOut );
+
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
 	}
 }
 

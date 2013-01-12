@@ -6,6 +6,9 @@
 //=============================================================================//
 
 #include "cbase.h"
+
+#include <string>
+
 #include "sdk_player.h"
 #include "sdk_team.h"
 #include "sdk_gamerules.h"
@@ -205,6 +208,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
+	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -272,8 +276,6 @@ CSDKPlayer::CSDKPlayer()
 
 	m_pCurStateInfo = NULL;	// no state yet
 
-	m_pszCharacter = NULL;
-
 	m_flFreezeUntil = .1;
 	m_flFreezeAmount = 0;
 
@@ -287,6 +289,8 @@ CSDKPlayer::CSDKPlayer()
 	m_bThirdPerson = false;
 
 	m_flCurrentTime = gpGlobals->curtime;
+
+	m_iszCharacter = NULL_STRING;
 }
 
 
@@ -561,13 +565,13 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
-	if (m_pszCharacter)
-		SetModel( m_pszCharacter );
+	if (STRING(m_iszCharacter.Get())[0])
+		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else
 		SetModel( SDK_PLAYER_MODEL );
-	
+
 	SetBloodColor( BLOOD_COLOR_RED );
-	
+
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
@@ -2686,6 +2690,31 @@ void CSDKPlayer::ThirdPersonToggle()
 	Instructor_LessonLearned("thirdperson");
 }
 
+bool CSDKPlayer::SetCharacter(const char* pszCharacter)
+{
+	for (int i = 0; ; i++)
+	{
+		if (pszPossiblePlayerModels[i] == nullptr)
+			break;
+
+		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
+		{
+			std::string sCharacter(pszCharacter);
+			sCharacter = sCharacter.substr(14);
+			m_iszCharacter = AllocPooledString(sCharacter.substr(0, sCharacter.length()-4).c_str());
+			return true;
+		}
+
+		if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", pszCharacter), pszPossiblePlayerModels[i]))
+		{
+			m_iszCharacter = AllocPooledString(pszCharacter);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void CC_ActivateSlowmo_f (void)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
@@ -2715,23 +2744,21 @@ void CC_Character(const CCommand& args)
 
 	if (args.ArgC() == 2)
 	{
-		int i;
-		for (i = 0; ; i++)
-		{
-			if (pszPossiblePlayerModels[i] == NULL)
-				break;
-
-			if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", args[1]), pszPossiblePlayerModels[i]))
-			{
-				pPlayer->SetCharacter(pszPossiblePlayerModels[i]);
-				return;
-			}
-		}
+		if (pPlayer->SetCharacter(args[1]))
+			return;
 
 		if (FStrEq(args[1], "random"))
 		{
-			pPlayer->SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]);
-			return;
+			// Count # of possible player models for random
+			int i;
+			for (i = 0; ; i++)
+			{
+				if (pszPossiblePlayerModels[i] == NULL)
+					break;
+			}
+
+			if (pPlayer->SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]))
+				return;
 		}
 
 		Error("Couldn't find that player model.\n");

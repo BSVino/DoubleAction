@@ -183,6 +183,8 @@ public:
 	bool IsInThirdPerson() const { return m_bThirdPerson; }
 	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
 
+	const char* GetCharacter() const { return m_iszCharacter; }
+
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	CSDKPlayerShared m_Shared;
@@ -309,6 +311,8 @@ private:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+
+	char m_iszCharacter[256];
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;
