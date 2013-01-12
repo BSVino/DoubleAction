@@ -43,6 +43,7 @@ private:
 	bool                m_bNeedsUpdate;
 
 	class CFolderLabel* m_pProfileInfo;
+	class CFolderLabel* m_pCharacteristicsInfo;
 
 	vgui::CheckButton*  m_pSuicideOption;
 

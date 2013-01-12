@@ -101,6 +101,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 #endif
 END_RECV_TABLE()
 
+void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut );
+
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	RecvPropFloat( RECVINFO( m_flStamina ) ),
@@ -132,7 +134,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bRollAfterDive ) ),
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
-	RecvPropInt( RECVINFO( m_iStyleSkill ) ),
+	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -1480,6 +1482,18 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	RecvProxy_StringToString( pData, pStruct, pOut );
+
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+	}
+}
+
+void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{

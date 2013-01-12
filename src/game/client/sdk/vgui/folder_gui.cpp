@@ -41,6 +41,7 @@ CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
 	m_pSuicideOption = new CheckButton( this, "suicide_option", "" );
 
 	m_pProfileInfo = new CFolderLabel( this, "ProfileInfo" );
+	m_pCharacteristicsInfo = new CFolderLabel( this, "CharacteristicsInfo" );
 
 	// load the new scheme early!!
 	SetScheme(scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
@@ -251,6 +252,11 @@ void CFolderMenu::Update()
 	}
 	else if (pPlayerPreview)
 		pPlayerPreview->SwapModel("");
+
+	if (pPlayer->m_Shared.m_iStyleSkill)
+		m_pCharacteristicsInfo->SetText((std::string("#DAB_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
+	else
+		m_pCharacteristicsInfo->SetText("");
 }
 
 void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
