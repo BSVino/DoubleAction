@@ -28,6 +28,8 @@ public:
 	void (CSDKPlayer::*pfnPreThink)();	// Do a PreThink() in this state.
 };
 
+extern ConVar bot_mimic;
+
 //=============================================================================
 // >> SDK Game player
 //=============================================================================
@@ -38,6 +40,26 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_PREDICTABLE();
 	DECLARE_DATADESC();
+
+	typedef enum
+	{
+		VIS_NONE		= 0x00,
+		VIS_GUT			= 0x01,
+		VIS_HEAD		= 0x02,
+		VIS_LEFT_SIDE	= 0x04,			///< the left side of the object from our point of view (not their left side)
+		VIS_RIGHT_SIDE	= 0x08,			///< the right side of the object from our point of view (not their right side)
+		VIS_FEET		= 0x10
+	} VisiblePartType;
+
+	struct PartInfo
+	{
+		Vector m_headPos;											///< current head position
+		Vector m_gutPos;											///< current gut position
+		Vector m_feetPos;											///< current feet position
+		Vector m_leftSidePos;										///< current left side position
+		Vector m_rightSidePos;										///< current right side position
+		int m_validFrame;											///< frame of last computation (for lazy evaluation)
+	};
 
 	CSDKPlayer();
 	~CSDKPlayer();
@@ -77,6 +99,16 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+
+	virtual bool        FVisible(CBaseEntity* pEntity, int iTraceMask = MASK_OPAQUE, CBaseEntity** ppBlocker = NULL);
+	virtual bool        IsVisible(const Vector &pos, bool testFOV = false, const CBaseEntity *ignore = NULL) const;	///< return true if we can see the point
+	virtual bool        IsVisible(CSDKPlayer* pPlayer, bool testFOV = false, unsigned char* visParts = NULL) const;
+	virtual Vector      GetPartPosition(CSDKPlayer* player, VisiblePartType part) const;	///< return world space position of given part on player
+	virtual void        ComputePartPositions(CSDKPlayer *player);					///< compute part positions from bone location
+	virtual Vector      GetCentroid() const;
+	virtual CSDKPlayer* FindClosestFriend(float flMaxDistance, bool bFOV = true);
+	virtual bool        RunMimicCommand( CUserCmd& cmd );
+	virtual bool        IsReloading( void ) const;
 
 	void         AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info);
 	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle);
@@ -132,6 +164,10 @@ public:
 	void RemoveFromLoadout(SDKWeaponID eWeapon);
 	void CountLoadoutWeight();
 	int GetLoadoutWeaponCount(SDKWeaponID eWeapon);
+	void BuyRandom();
+
+	bool PickRandomCharacter();
+	void PickRandomSkill();
 
 	void SelectItem( const char *pstr, int iSubType = 0 );
 
@@ -159,6 +195,8 @@ public:
 	virtual void ThirdPersonToggle();
 	virtual bool IsInThirdPerson() const { return m_bThirdPerson; }
 	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+
+	bool InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 
 // In shared code.
 public:
@@ -319,6 +357,7 @@ private:
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
+public:
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 
 private:
@@ -381,6 +420,9 @@ public:
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );
+
+protected:
+	static PartInfo m_partInfo[ MAX_PLAYERS ];						///< part positions for each player
 };
 
 

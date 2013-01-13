@@ -27,6 +27,10 @@
 
 extern int gEvilImpulse101;
 
+ConVar bot_mimic( "bot_mimic", "0", FCVAR_CHEAT );
+ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
+ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
+ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
 
 ConVar SDK_ShowStateTransitions( "sdk_ShowStateTransitions", "-2", FCVAR_CHEAT, "sdk_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 
@@ -318,6 +322,298 @@ void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExit
 	// Teleport( &newPos, &newAng, &vec3_origin );
 }
 
+bool CSDKPlayer::FVisible(CBaseEntity *pEntity, int iTraceMask, CBaseEntity **ppBlocker)
+{
+	if (pEntity->IsPlayer())
+		return IsVisible(dynamic_cast<CSDKPlayer*>(pEntity));
+	else
+		return CBasePlayer::FVisible(pEntity, iTraceMask, ppBlocker);
+}
+
+bool CSDKPlayer::IsVisible( const Vector &pos, bool testFOV, const CBaseEntity *ignore ) const
+{
+	// is it in my general viewcone?
+	if (testFOV && !const_cast<CSDKPlayer*>(this)->FInViewCone( pos ))
+		return false;
+
+	// check line of sight
+	// Must include CONTENTS_MONSTER to pick up all non-brush objects like barrels
+	trace_t result;
+	CTraceFilterNoNPCsOrPlayer traceFilter( ignore, COLLISION_GROUP_NONE );
+	UTIL_TraceLine( const_cast<CSDKPlayer*>(this)->EyePosition(), pos, MASK_OPAQUE, &traceFilter, &result );
+	if (result.fraction != 1.0f)
+		return false;
+
+	return true;
+}
+
+bool CSDKPlayer::IsVisible(CSDKPlayer *pPlayer, bool testFOV, unsigned char *visParts) const
+{
+	if (!pPlayer)
+		return false;
+
+	// optimization - assume if center is not in FOV, nothing is
+	// we're using WorldSpaceCenter instead of GUT so we can skip GetPartPosition below - that's
+	// the most expensive part of this, and if we can skip it, so much the better.
+	if (testFOV && !(const_cast<CSDKPlayer*>(this)->FInViewCone( pPlayer->WorldSpaceCenter() )))
+	{
+		return false;
+	}
+
+	unsigned char testVisParts = VIS_NONE;
+
+	// check gut
+	Vector partPos = GetPartPosition( pPlayer, VIS_GUT );
+
+	// finish gut check
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_GUT;
+	}
+
+
+	// check top of head
+	partPos = GetPartPosition( pPlayer, VIS_HEAD );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_HEAD;
+	}
+
+	// check feet
+	partPos = GetPartPosition( pPlayer, VIS_FEET );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_FEET;
+	}
+
+	// check "edges"
+	partPos = GetPartPosition( pPlayer, VIS_LEFT_SIDE );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_LEFT_SIDE;
+	}
+
+	partPos = GetPartPosition( pPlayer, VIS_RIGHT_SIDE );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_RIGHT_SIDE;
+	}
+
+	if (visParts)
+		*visParts = testVisParts;
+
+	if (testVisParts)
+		return true;
+
+	return false;
+}
+
+Vector CSDKPlayer::GetPartPosition(CSDKPlayer* player, VisiblePartType part) const
+{
+	// which PartInfo corresponds to the given player
+	PartInfo* info = &m_partInfo[ player->entindex() % MAX_PLAYERS ];
+
+	if (gpGlobals->framecount > info->m_validFrame)
+	{
+		// update part positions
+		const_cast<CSDKPlayer*>(this)->ComputePartPositions( player );
+		info->m_validFrame = gpGlobals->framecount;
+	}
+
+	// return requested part position
+	switch( part )
+	{
+		default:
+		{
+			AssertMsg( false, "GetPartPosition: Invalid part" );
+			// fall thru to GUT
+		}
+
+		case VIS_GUT:
+			return info->m_gutPos;
+
+		case VIS_HEAD:
+			return info->m_headPos;
+			
+		case VIS_FEET:
+			return info->m_feetPos;
+
+		case VIS_LEFT_SIDE:
+			return info->m_leftSidePos;
+			
+		case VIS_RIGHT_SIDE:
+			return info->m_rightSidePos;
+	}
+}
+
+CSDKPlayer::PartInfo CSDKPlayer::m_partInfo[ MAX_PLAYERS ];
+
+//--------------------------------------------------------------------------------------------------------------
+/**
+ * Compute part positions from bone location.
+ */
+void CSDKPlayer::ComputePartPositions( CSDKPlayer *player )
+{
+	const int headBox = 1;
+	const int gutBox = 3;
+	const int leftElbowBox = 11;
+	const int rightElbowBox = 9;
+	//const int hipBox = 0;
+	//const int leftFootBox = 4;
+	//const int rightFootBox = 8;
+	const int maxBoxIndex = leftElbowBox;
+
+	// which PartInfo corresponds to the given player
+	PartInfo *info = &m_partInfo[ player->entindex() % MAX_PLAYERS ];
+
+	// always compute feet, since it doesn't rely on bones
+	info->m_feetPos = player->GetAbsOrigin();
+	info->m_feetPos.z += 5.0f;
+
+	// get bone positions for interesting points on the player
+	MDLCACHE_CRITICAL_SECTION();
+	CStudioHdr *studioHdr = player->GetModelPtr();
+	if (studioHdr)
+	{
+		mstudiohitboxset_t *set = studioHdr->pHitboxSet( player->GetHitboxSet() );
+		if (set && maxBoxIndex < set->numhitboxes)
+		{
+			QAngle angles;
+			mstudiobbox_t *box;
+
+			// gut
+			box = set->pHitbox( gutBox );
+			player->GetBonePosition( box->bone, info->m_gutPos, angles );	
+
+			// head
+			box = set->pHitbox( headBox );
+			player->GetBonePosition( box->bone, info->m_headPos, angles );
+
+			Vector forward, right;
+			AngleVectors( angles, &forward, &right, NULL );
+
+			// in local bone space
+			const float headForwardOffset = 4.0f;
+			const float headRightOffset = 2.0f;
+			info->m_headPos += headForwardOffset * forward + headRightOffset * right;
+
+			/// @todo Fix this hack - lower the head target because it's a bit too high for the current T model
+			info->m_headPos.z -= 2.0f;
+
+
+			// left side
+			box = set->pHitbox( leftElbowBox );
+			player->GetBonePosition( box->bone, info->m_leftSidePos, angles );	
+
+			// right side
+			box = set->pHitbox( rightElbowBox );
+			player->GetBonePosition( box->bone, info->m_rightSidePos, angles );	
+
+			return;
+		}
+	}
+
+
+	// default values if bones are not available
+	info->m_headPos = player->GetCentroid();
+	info->m_gutPos = info->m_headPos;
+	info->m_leftSidePos = info->m_headPos;
+	info->m_rightSidePos = info->m_headPos;
+}
+
+Vector CSDKPlayer::GetCentroid( ) const
+{
+	Vector centroid = GetAbsOrigin();
+
+	const Vector &mins = WorldAlignMins();
+	const Vector &maxs = WorldAlignMaxs();
+
+	centroid.z += (maxs.z - mins.z)/2.0f;
+
+	return centroid;
+}
+
+CSDKPlayer* CSDKPlayer::FindClosestFriend(float flMaxDistance, bool bFOV)
+{
+	CSDKPlayer* pClosest = NULL;
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer == this)
+			continue;
+
+		if (SDKGameRules()->PlayerRelationship(this, pPlayer) == GR_NOTTEAMMATE)
+			continue;
+
+		if (!IsVisible(pPlayer, bFOV))
+			continue;
+
+		float flDistance = (GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
+		if (flDistance > flMaxDistance)
+			continue;
+
+		if (pClosest && (pClosest->GetAbsOrigin() - GetAbsOrigin()).Length() > flDistance)
+			continue;
+
+		pClosest = pPlayer;
+	}
+
+	return pClosest;
+}
+
+bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
+{
+	if ( !IsBot() )
+		return false;
+
+	int iMimic = abs( bot_mimic.GetInt() );
+	if ( iMimic > gpGlobals->maxClients )
+		return false;
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex( iMimic );
+	if ( !pPlayer )
+		return false;
+
+	if ( !pPlayer->GetLastUserCommand() )
+		return false;
+
+	cmd = *pPlayer->GetLastUserCommand();
+	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+	pl.fixangle = FIXANGLE_NONE;
+
+	return true;
+}
+
+inline bool CSDKPlayer::IsReloading( void ) const
+{
+	CWeaponSDKBase *pPrimary = GetActiveSDKWeapon();
+
+	if (pPrimary && pPrimary->m_bInReload)
+		return true;
+
+	return false;
+}
+
 ConVar dab_regenamount( "dab_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
@@ -604,6 +900,9 @@ void CSDKPlayer::Spawn()
 
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
+
+	for( int p=0; p<MAX_PLAYERS; ++p )
+		m_partInfo[p].m_validFrame = 0;
 
 	InitSpeeds(); //Tony; initialize player speeds.
 
@@ -1972,6 +2271,51 @@ void CSDKPlayer::CountLoadoutWeight()
 	}
 }
 
+void CSDKPlayer::BuyRandom()
+{
+	ClearLoadout();
+
+	// Buy a primary weapon
+	SDKWeaponID eWeapon = WEAPON_NONE;
+	do
+	{
+		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+	}
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+
+	AddToLoadout(eWeapon);
+
+	// Buy a secondary weapon
+	do
+	{
+		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+	}
+	while (eWeapon == SDK_WEAPON_BRAWL || !CanAddToLoadout(eWeapon));
+
+	AddToLoadout(eWeapon);
+}
+
+bool CSDKPlayer::PickRandomCharacter()
+{
+	// Count # of possible player models for random
+	int i;
+	for (i = 0; ; i++)
+	{
+		if (pszPossiblePlayerModels[i] == NULL)
+			break;
+	}
+
+	if (SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]))
+		return true;
+
+	return false;
+}
+
+void CSDKPlayer::PickRandomSkill()
+{
+	SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_MAX-1));
+}
+
 void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
 {
 	bool bPreviousWeaponWasOutOfAmmo = false;
@@ -2690,6 +3034,15 @@ void CSDKPlayer::ThirdPersonToggle()
 	Instructor_LessonLearned("thirdperson");
 }
 
+bool CSDKPlayer::InSameTeam( CBaseEntity *pEntity ) const
+{
+	if (SDKGameRules()->IsTeamplay())
+		return BaseClass::InSameTeam(pEntity);
+
+	// If we're not in teamplay it's every man for himself.
+	return false;
+}
+
 bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 {
 	for (int i = 0; ; i++)
@@ -2749,15 +3102,7 @@ void CC_Character(const CCommand& args)
 
 		if (FStrEq(args[1], "random"))
 		{
-			// Count # of possible player models for random
-			int i;
-			for (i = 0; ; i++)
-			{
-				if (pszPossiblePlayerModels[i] == NULL)
-					break;
-			}
-
-			if (pPlayer->SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]))
+			if (pPlayer->PickRandomCharacter())
 				return;
 		}
 
@@ -2789,27 +3134,7 @@ void CC_Buy(const CCommand& args)
 
 	if (Q_strncmp(args[1], "random", 6) == 0)
 	{
-		pPlayer->ClearLoadout();
-
-		// Buy a primary weapon
-		SDKWeaponID eWeapon = WEAPON_NONE;
-		do
-		{
-			eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
-		}
-		while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !pPlayer->CanAddToLoadout(eWeapon));
-
-		pPlayer->AddToLoadout(eWeapon);
-
-		// Buy a secondary weapon
-		do
-		{
-			eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
-		}
-		while (eWeapon == SDK_WEAPON_BRAWL || !pPlayer->CanAddToLoadout(eWeapon));
-
-		pPlayer->AddToLoadout(eWeapon);
-
+		pPlayer->BuyRandom();
 		return;
 	}
 
@@ -2844,7 +3169,7 @@ void CC_Skill(const CCommand& args)
 
 	if (FStrEq(args[1], "random"))
 	{
-		pPlayer->SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_MAX-1));
+		pPlayer->PickRandomSkill();
 		return;
 	}
 

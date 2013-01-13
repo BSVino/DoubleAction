@@ -82,3 +82,35 @@ CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)
 
 	return static_cast< CSDKWeaponInfo* >( GetFileWeaponInfoFromHandle( hWeaponFile ) );
 }
+
+static char* g_szWeaponTypes[] =
+{
+	"none",
+	"melee",
+	"rifle",
+	"shotgun",
+	"smg",
+	"pistol",
+};
+
+weapontype_t CSDKWeaponInfo::StringToWeaponType( const char* szString )
+{
+	for (int i = 0; i < WT_MAX; i++)
+	{
+		if (Q_strcmp(szString, g_szWeaponTypes[i]) == 0)
+			return (weapontype_t)i;
+	}
+	return WT_NONE;
+}
+
+const char* CSDKWeaponInfo::WeaponTypeToString( weapontype_t eWeapon )
+{
+	if (eWeapon == WT_NONE)
+		return "none";
+
+	if (eWeapon < 0 || eWeapon >= WT_MAX)
+		return "none";
+
+	return g_szWeaponTypes[eWeapon];
+}
+

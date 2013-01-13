@@ -20,6 +20,8 @@
 
 class CSDKPlayer;
 
+inline const char *GetTranslatedWeaponAlias(const char *alias) { return alias; };
+
 // These are the names of the ammo types that the weapon script files reference.
 class CWeaponSDKBase : public CBaseCombatWeapon
 {
@@ -106,6 +108,8 @@ public:
 	virtual float GetBrawlFireRate( void );
 	virtual float GetBrawlSecondaryFireRate( void );
 
+	virtual bool  IsFullAuto() const { return GetFireMode() == FM_AUTOMATIC; }
+
 	//Tony; by default, burst fire weapons use a max of 3 shots (3 - 1)
 	//weapons with more, ie: a 5 round burst, can override and determine which firemode it's in.
 	virtual int MaxBurstShots() const { return 2; }
@@ -133,6 +137,7 @@ public:
 	virtual bool HasAimInRecoilBonus();
 
 	virtual weapontype_t GetWeaponType() const;
+	static weapontype_t  GetWeaponType( SDKWeaponID eWeapon );
 
 	virtual bool FullAimIn() { return false; }
 

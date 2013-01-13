@@ -28,6 +28,8 @@
 	#include "player_resource.h"
 	#include "mapentities.h"
 	#include "sdk_basegrenade_projectile.h"
+	#include "bot.h"
+
 #endif
 
 
@@ -282,6 +284,8 @@ void CSDKGameRules::ServerActivate()
 		Warning( "Trying to set a NaN game start time\n" );
 		m_flGameStartTime.GetForModify() = 0.0f;
 	}
+
+	TheBots->ServerActivate();
 }
 
 void CSDKGameRules::ReCalculateSlowMo()
@@ -655,6 +659,15 @@ void CSDKGameRules::Think()
 
 	if (gpGlobals->curtime > m_flNextSlowMoUpdate)
 		ReCalculateSlowMo();
+}
+
+// The bots do their processing after physics simulation etc so their visibility checks don't recompute
+// bone positions multiple times a frame.
+void CSDKGameRules::EndGameFrame( void )
+{
+	TheBots->StartFrame();
+
+	BaseClass::EndGameFrame();
 }
 
 Vector DropToGround( 

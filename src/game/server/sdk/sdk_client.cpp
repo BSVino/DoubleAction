@@ -147,6 +147,7 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 		engine->ServerCommand("reload\n");
 	}
 }
+
 void GameStartFrame( void )
 {
 	VPROF( "GameStartFrame" );
@@ -162,8 +163,6 @@ void GameStartFrame( void )
 #else
 	gpGlobals->teamplay = false;
 #endif
-	extern void Bot_RunAll();
-	Bot_RunAll();
 }
 
 //=========================================================

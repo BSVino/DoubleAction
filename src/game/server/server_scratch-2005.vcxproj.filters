@@ -22,9 +22,6 @@
     <Filter Include="Source Files\SDK\Player">
       <UniqueIdentifier>{14f6ff05-04da-4ebb-9775-12811eea127b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\SDK\PerfBots">
-      <UniqueIdentifier>{448b7309-9877-48fd-874d-25e3c46dc2f8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Multiplayer">
       <UniqueIdentifier>{ebf12224-c28d-4539-8f21-a7ce9eafb1b2}</UniqueIdentifier>
     </Filter>
@@ -39,6 +36,9 @@
     </Filter>
     <Filter Include="Tools Framework">
       <UniqueIdentifier>{2c63b60d-8f86-48f7-8fb4-9efa12758fef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDK\Bots">
+      <UniqueIdentifier>{a57f8449-6b34-404d-9fe9-2326a985415a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1377,9 +1377,6 @@
     <ClCompile Include="sdk\sdk_playermove.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_bot_temp.cpp">
-      <Filter>Source Files\SDK\PerfBots</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp">
       <Filter>Source Files\Multiplayer</Filter>
     </ClCompile>
@@ -1421,6 +1418,105 @@
     </ClCompile>
     <ClCompile Include="hl2\Func_Monitor.cpp">
       <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_attack.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_buy.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_follow.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_hide.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_hunt.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_idle.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_investigate_noise.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_move_to.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_chatter.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event_player.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event_weapon.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_init.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_listen.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_manager.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_nav.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_pathfind.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_radio.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_statemachine.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_update.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_vision.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_weapon.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_gamestate.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\bot_profile.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\bot_util.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\nav_path.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\shared_util.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\bot.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\bot_hide.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\bot\bot_manager.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2309,9 +2405,6 @@
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h">
       <Filter>Source Files\SDK\Player</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\sdk_bot_temp.h">
-      <Filter>Source Files\SDK\PerfBots</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h">
       <Filter>Source Files\Multiplayer</Filter>
     </ClInclude>
@@ -2950,6 +3043,42 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h">
       <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\bot\da_bot.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\bot\da_bot_chatter.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\bot\da_bot_manager.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\bot\da_gamestate.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\bot_profile.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\bot_util.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\improv_locomotor.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\nav_path.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\shared_util.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\bot.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\bot_constants.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\bot\bot_manager.h">
+      <Filter>Source Files\SDK\Bots</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

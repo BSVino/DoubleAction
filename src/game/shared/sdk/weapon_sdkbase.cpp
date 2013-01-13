@@ -693,6 +693,16 @@ weapontype_t CWeaponSDKBase::GetWeaponType() const
 	return GetSDKWpnData().m_eWeaponType;
 }
 
+weapontype_t CWeaponSDKBase::GetWeaponType(SDKWeaponID eWeapon)
+{
+	CSDKWeaponInfo *pFileInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
+
+	if (!pFileInfo)
+		return WT_NONE;
+
+	return pFileInfo->m_eWeaponType;
+}
+
 ConVar dab_decaymultiplier( "dab_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
 
 //Tony; added so we can have base functionality without implementing it into every weapon.
