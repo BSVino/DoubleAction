@@ -106,7 +106,7 @@ void CSDKTargetId::Paint()
 	wchar_t sIDString[ MAX_ID_STRING ];
 	sIDString[0] = 0;
 
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	if ( !pPlayer )
 		return;

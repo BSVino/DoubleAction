@@ -59,10 +59,12 @@ public:
 
 	virtual void PreThink();
 	virtual void UpdateCurrentTime();
+	virtual void UpdateViewBobRamp();
 
 	virtual void StartTouch( CBaseEntity *pOther );
 
 	static C_SDKPlayer* GetLocalSDKPlayer();
+	static C_SDKPlayer* GetLocalOrSpectatedPlayer();
 
 	virtual const QAngle& GetRenderAngles();
 	virtual const Vector& GetRenderOrigin();
@@ -73,14 +75,12 @@ public:
 
 	virtual bool			PlayerUse( void );
 
-	virtual bool	IsOverridingViewmodel( void );
-	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
-
 	virtual void	GetStepSoundVelocities( float *velwalk, float *velrun );
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
+	virtual void CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 
 	virtual Vector  EyePosition();
 

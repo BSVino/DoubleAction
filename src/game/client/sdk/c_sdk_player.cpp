@@ -631,6 +631,11 @@ void C_SDKPlayer::PreThink()
 {
 	UpdateCurrentTime();
 
+	// Need to update view bob ramp for the in-eye target,
+	// since PreThink (and thus UpdateCurrentTime()) is only called for the local player
+	if (GetObserverMode() == OBS_MODE_IN_EYE && GetObserverTarget() && GetObserverTarget()->IsPlayer())
+		ToSDKPlayer(GetObserverTarget())->UpdateViewBobRamp();
+
 	BaseClass::PreThink();
 
 	Instructor_Think();
@@ -643,6 +648,16 @@ void C_SDKPlayer::PreThink()
 C_SDKPlayer* C_SDKPlayer::GetLocalSDKPlayer()
 {
 	return ToSDKPlayer( C_BasePlayer::GetLocalPlayer() );
+}
+
+C_SDKPlayer* C_SDKPlayer::GetLocalOrSpectatedPlayer()
+{
+	C_SDKPlayer* pLocal = GetLocalSDKPlayer();
+
+	if (pLocal && pLocal->GetObserverMode() == OBS_MODE_IN_EYE && pLocal->GetObserverTarget() && pLocal->GetObserverTarget()->IsPlayer())
+		return ToSDKPlayer(pLocal->GetObserverTarget());
+
+	return pLocal;
 }
 
 const QAngle &C_SDKPlayer::EyeAngles()
@@ -794,57 +809,6 @@ int C_SDKPlayer::DrawModel( int flags )
 		return BaseClass::DrawModel(flags);
 }
 
-bool C_SDKPlayer::IsOverridingViewmodel( void )
-{
-	C_SDKPlayer* pPlayer = this;
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
-		 pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
-	{
-		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
-	}
-
-	if ( pPlayer->IsStyleSkillActive() )
-		return true;
-
-	return BaseClass::IsOverridingViewmodel();
-}
-
-int	C_SDKPlayer::DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags )
-{
-	int ret = 0;
-
-	C_SDKPlayer* pPlayer = this;
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
-		pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
-	{
-		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
-	}
-
-	if ( pPlayer->IsStyleSkillActive() )
-	{
-		// We allow our weapon to then override this if it wants to.
-		// This allows c_* weapons to draw themselves.
-		C_BaseCombatWeapon* pWeapon = pViewmodel->GetOwningWeapon();
-		if ( pWeapon && pWeapon->IsOverridingViewmodel() )
-		{
-			ret = pWeapon->DrawOverriddenViewmodel( pViewmodel, flags );
-		}
-		else
-		{
-			ret = pViewmodel->DrawOverriddenViewmodel( flags );
-		}
-
-		if ( flags & STUDIO_RENDER )
-		{
-			modelrender->ForcedMaterialOverride( NULL );
-		}
-	}
-
-	return ret;
-}
-
 void C_SDKPlayer::PlayReloadEffect()
 {
 	// Only play the effect for other players.
@@ -979,6 +943,35 @@ void C_SDKPlayer::CalcVehicleView(IClientVehicle *pVehicle,	Vector& eyeOrigin, Q
 		vieweffects->CalcShake();
 		vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
 	}
+}
+
+void C_SDKPlayer::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	C_BaseEntity *target = GetObserverTarget();
+
+	if ( !target ) 
+	{
+		// just copy a save in-map position
+		VectorCopy( EyePosition(), eyeOrigin );
+		VectorCopy( EyeAngles(), eyeAngles );
+		return;
+	};
+
+	if ( !target->IsAlive() )
+	{
+		// if dead, show from 3rd person
+		CalcChaseCamView( eyeOrigin, eyeAngles, fov );
+		return;
+	}
+
+	fov = GetFOV();	// TODO use tragets FOV
+
+	m_flObserverChaseDistance = 0.0;
+
+	eyeAngles = target->EyeAngles() + GetPunchAngle();
+	eyeOrigin = target->EyePosition();
+
+	engine->SetViewAngles( eyeAngles );
 }
 
 #if defined ( SDK_USE_PLAYERCLASSES )
@@ -1419,7 +1412,7 @@ static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHE
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
-	if (IsInThirdPerson())
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this && IsInThirdPerson())
 	{
 		Vector vecOffset;
 		::input->CAM_GetCameraOffset( vecOffset );

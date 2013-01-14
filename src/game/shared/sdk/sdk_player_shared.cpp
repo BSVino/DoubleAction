@@ -1257,9 +1257,20 @@ void CSDKPlayer::UpdateCurrentTime()
 	else if (bWasInSlow && !bNowInSlow)
 		EmitSound( filter, entindex(), "SlowMo.End" );
 
+	UpdateViewBobRamp();
+}
+
+void CSDKPlayer::UpdateViewBobRamp()
+{
+#ifdef CLIENT_DLL
+	// It's not filled in for remote clients, so force the local one since it's the same.
+	float flMaxBobSpeed = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed*0.7f;
+#else
 	float flMaxBobSpeed = m_Shared.m_flRunSpeed*0.7f;
+#endif
+
 	float flBobRampGoal = RemapValClamped(GetLocalVelocity().LengthSqr(), 0, flMaxBobSpeed*flMaxBobSpeed, 0, 1);
-	if (!GetGroundEntity() || m_Shared.IsRolling() || m_Shared.IsSliding())
+	if (!(GetFlags() & FL_ONGROUND) || m_Shared.IsRolling() || m_Shared.IsSliding())
 		flBobRampGoal = 0;
 
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
@@ -1275,6 +1286,9 @@ Vector CSDKPlayer::EyePosition()
 
 #ifdef CLIENT_DLL
 	bIsInThird = ::input->CAM_IsThirdPerson();
+
+	if (C_SDKPlayer::GetLocalOrSpectatedPlayer() ==  this && C_SDKPlayer::GetLocalSDKPlayer() != C_SDKPlayer::GetLocalOrSpectatedPlayer())
+		bIsInThird = false;
 #endif
 
 	if (m_Shared.m_flViewBobRamp && !bIsInThird)
@@ -1292,8 +1306,15 @@ Vector CSDKPlayer::EyePosition()
 		float flWalkUpBob = sin(GetCurrentTime() * flWalkPeriod * 2) * (flViewBobMagnitude / 2);
 		float flWalkRightBob = sin(GetCurrentTime() * flWalkPeriod) * flViewBobMagnitude;
 
+#ifdef CLIENT_DLL
+		// It's not filled in for remote clients, so force the local one since it's the same.
+		float flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+#else
+		float flSpeedRatio = m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed;
+#endif
+
 		// 0 is walk, 1 is run.
-		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed, 1.0f, 0.0f, 1.0f);
+		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, flSpeedRatio, 1.0f, 0.0f, 1.0f);
 
 		float flRightBob = RemapValClamped(flRunRamp, 0, 1, flWalkRightBob, flRunRightBob);
 		float flUpBob = RemapValClamped(flRunRamp, 0, 1, flWalkUpBob, flRunUpBob);

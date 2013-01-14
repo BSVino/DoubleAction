@@ -1787,7 +1787,7 @@ void OnRenderStart()
 
 		float flFrameTime = gpGlobals->frametime;
 #ifdef SDK_DLL
-		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 		if (pLocal)
 			flFrameTime *= pLocal->GetSlowMoMultiplier();
 #endif

@@ -189,7 +189,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 	QAngle camAngles;
 
 	// Let the player override the view.
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if(!pPlayer)
 		return;
 

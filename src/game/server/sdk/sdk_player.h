@@ -79,6 +79,7 @@ public:
 	virtual void Spawn();
 	virtual void InitialSpawn();
 	virtual void UpdateCurrentTime();
+	virtual void UpdateViewBobRamp();
 
 	virtual void StartTouch( CBaseEntity *pOther );
 

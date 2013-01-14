@@ -117,7 +117,7 @@ void CSDKInput::CAM_Think( void )
 	angOffset.y = camOffset.y + da_cam_yaw.GetFloat();
 	angOffset.z = camOffset.z;
 
-	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (pPlayer)
 		angOffset += pPlayer->GetPunchAngle();
 
