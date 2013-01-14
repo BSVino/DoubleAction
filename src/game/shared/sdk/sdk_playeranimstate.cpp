@@ -1099,7 +1099,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		}
 	}	
 
-	if (!m_bJumping && !m_pSDKPlayer->GetGroundEntity())
+	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND))
 	{
 		idealActivity = ACT_DAB_JUMP_FLOAT;
 		return true;
