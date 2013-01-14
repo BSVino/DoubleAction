@@ -871,6 +871,8 @@ void CSDKPlayer::Spawn()
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
+	m_nRenderFX = kRenderNormal;
+
 	//Tony; if we're spawning in active state, equip the suit so the hud works. -- Gotta love base code !
 	if ( State_Get() == STATE_ACTIVE )
 	{
@@ -2634,14 +2636,13 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsSkillMenuOpen())
 			return;
 
-		State_Transition( STATE_ACTIVE );
+		State_Transition( STATE_OBSERVER_MODE );
 	}
 }
 
 void CSDKPlayer::State_Enter_OBSERVER_MODE()
 {
-	// Always start a spectator session in roaming mode
-	m_iObserverLastMode = OBS_MODE_ROAMING;
+	m_nRenderFX = kRenderNormal;
 
 	if( m_hObserverTarget == NULL )
 	{
@@ -2685,6 +2686,8 @@ void CSDKPlayer::State_Enter_OBSERVER_MODE()
 
 void CSDKPlayer::State_PreThink_OBSERVER_MODE()
 {
+	if ((m_nButtons & IN_ATTACK) && !(m_afButtonLast & IN_ATTACK))
+		State_Transition( STATE_ACTIVE );
 
 	//Tony; if we're in eye, or chase, validate the target - if it's invalid, find a new one, or go back to roaming
 	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE )

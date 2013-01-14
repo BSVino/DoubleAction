@@ -246,3 +246,27 @@ void ClientModeSDKNormal::OverrideMouseInput( float *x, float *y )
 
 	BaseClass::OverrideMouseInput(x, y);
 }
+
+int ClientModeSDKNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR)
+	{
+		// Override base class for +attack, it respawns us.
+		if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+attack" ) == 0 )
+			return 1;
+	}
+
+	// Default binding is +alt1 on the right mouse. Have this switch players.
+	if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+alt1" ) == 0 )
+	{
+		if (pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR)
+			engine->ClientCmd( "spec_prev" );
+		else
+			engine->ClientCmd( "spec_next" );
+
+		return 0;
+	}
+
+	return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
+}
