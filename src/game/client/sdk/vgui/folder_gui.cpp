@@ -275,8 +275,16 @@ void CFolderMenu::OnCommand( const char *command )
 		if ( hud_buyautokill.GetBool() )
 			engine->ClientCmd( "kill" );
 	}
+	else if ( Q_stricmp( command, "spectate" ) == 0 )
+	{
+		engine->ServerCmd( "spectate" );	
+
+		Close();
+
+		BaseClass::OnCommand( command );
+	}
 	else
-		engine->ClientCmd( command );
+		engine->ClientCmd( command );	
 }
 
 void CFolderMenu::OnTick()

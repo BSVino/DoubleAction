@@ -135,8 +135,6 @@ void CDABCharacterMenu::ShowPanel( bool bShow )
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-	
-	m_pViewPort->ShowBackGround( bShow );
 }
 
 void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
@@ -269,7 +267,7 @@ void CDABCharacterMenu::OnCommand( const char *command )
 		engine->ClientCmd( command );
 	}
 	else
-		engine->ClientCmd( command );
+		BaseClass::OnCommand(command);
 }
 
 void CDABCharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)

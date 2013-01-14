@@ -161,8 +161,6 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-	
-	m_pViewPort->ShowBackGround( bShow );
 }
 
 void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
@@ -365,20 +363,6 @@ void CDABBuyMenu::SetVisible( bool state )
 		engine->ServerCmd( "menuclosed" );	
 		engine->ClientCmd( "_cl_buymenuopen 0" );
 	}
-}
-
-void CDABBuyMenu::OnCommand( const char *command )
-{
-	if ( Q_stricmp( command, "close" ) == 0 )
-	{
-		Close();
-
-		gViewPortInterface->ShowBackGround( false );
-
-		BaseClass::OnCommand( command );
-	}
-	else
-		engine->ClientCmd( command );
 }
 
 void CDABBuyMenu::PaintBackground()

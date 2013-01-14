@@ -180,9 +180,8 @@ public:
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
-#if defined ( SDK_USE_TEAMS )
 	virtual void ChangeTeam( int iTeamNum );
-#endif
+
 	// Player avoidance
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void SDKPushawayThink(void);

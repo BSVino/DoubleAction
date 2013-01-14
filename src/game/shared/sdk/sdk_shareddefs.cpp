@@ -52,11 +52,11 @@ ConVar	mp_limit_pc_class3(		"mp_limit_pc_class3", "-1", FCVAR_REPLICATED, "Class
 
 const char *pszTeamNames[] =
 {
-	"#SDK_Team_Unassigned",
-	"#SDK_Team_Spectator",
-	"#SDK_Team_Blue",
-	"#SDK_Team_Red",
-	"#SDK_Team_Deathmatch",
+	"#DAB_Team_Unassigned",
+	"#DAB_Team_Spectator",
+	"#DAB_Team_Blue",
+	"#DAB_Team_Red",
+	"#DAB_Team_Deathmatch",
 };
 
 //Tony; We need to precache all possible player models that we're going to use

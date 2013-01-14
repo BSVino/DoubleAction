@@ -134,8 +134,6 @@ void CDABSkillMenu::ShowPanel( bool bShow )
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-	
-	m_pViewPort->ShowBackGround( bShow );
 }
 
 void CDABSkillMenu::OnKeyCodePressed( KeyCode code )

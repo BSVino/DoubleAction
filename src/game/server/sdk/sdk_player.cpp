@@ -1025,7 +1025,6 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 // Purpose: Put the player in the specified team
 //-----------------------------------------------------------------------------
 //Tony; if we're not using actual teams, we don't need to override this.
-#if defined ( SDK_USE_TEAMS )
 void CSDKPlayer::ChangeTeam( int iTeamNum )
 {
 	if ( !GetGlobalTeam( iTeamNum ) )
@@ -1040,15 +1039,14 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	if ( iTeamNum == iOldTeam )
 		return;
 	
-	m_bTeamChanged = true;
-
 	// do the team change:
 	BaseClass::ChangeTeam( iTeamNum );
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
 	{
-		State_Transition( STATE_OBSERVER_MODE );
+		if (SDKGameRules()->IsTeamplay())
+			State_Transition( STATE_OBSERVER_MODE );
 	}
 	else if ( iTeamNum == TEAM_SPECTATOR )
 	{
@@ -1078,8 +1076,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 #endif
 	}
 }
-
-#endif // SDK_USE_TEAMS
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1947,7 +1943,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetBuyMenuOpen( false );
 
-		if ( State_Get() == STATE_BUYINGWEAPONS || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_BUYINGWEAPONS || IsDead()) )
 			State_Transition( STATE_PICKINGSKILL );
 
 		return true;
@@ -1961,7 +1957,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetCharacterMenuOpen( false );
 
-		if ( State_Get() == STATE_PICKINGCHARACTER || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGCHARACTER || IsDead()) )
 			State_Transition( STATE_BUYINGWEAPONS );
 
 		return true;
@@ -1975,7 +1971,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetSkillMenuOpen( false );
 
-		if ( State_Get() == STATE_PICKINGSKILL || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGSKILL || IsDead()) )
 			State_Transition( STATE_ACTIVE );
 
 		return true;
@@ -1993,7 +1989,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 // can be closed...false if the menu should be displayed again
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
-	CSDKGameRules *mp = SDKGameRules();
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{
@@ -2008,7 +2003,8 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 		ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
 		return true;
 	}
-#endif
+
+	CSDKGameRules *mp = SDKGameRules();
 	if ( team == TEAM_UNASSIGNED )
 	{
 		// Attempt to auto-select a team, may set team to T, CT or SPEC
@@ -2023,6 +2019,7 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 			team = TEAM_SPECTATOR;
 		}
 	}
+#endif
 
 	if ( team == iOldTeam )
 		return true;	// we wouldn't change the team
@@ -2736,18 +2733,30 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 
 void CSDKPlayer::State_Enter_PICKINGCHARACTER()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowCharacterMenu();
 	PhysObjectSleep();
 }
 
 void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowBuyMenu();
 	PhysObjectSleep();
 }
 
 void CSDKPlayer::State_Enter_PICKINGSKILL()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowSkillMenu();
 	PhysObjectSleep();
 }
@@ -3091,12 +3100,18 @@ void CC_Character(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		pPlayer->ShowCharacterMenu();
+		if (pPlayer->IsAlive())
+			pPlayer->ShowCharacterMenu();
+		else
+			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
+		pPlayer->StopObserverMode();
+
 		if (pPlayer->SetCharacter(args[1]))
 			return;
 
@@ -3122,24 +3137,32 @@ void CC_Buy(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		pPlayer->Instructor_LessonLearned("buy");
-		pPlayer->ShowBuyMenu();
+
+		if (pPlayer->IsAlive())
+			pPlayer->ShowBuyMenu();
+		else
+			pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 		return;
 	}
 
 	if (Q_strncmp(args[1], "clear", 5) == 0)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->ClearLoadout();
 		return;
 	}
 
 	if (Q_strncmp(args[1], "random", 6) == 0)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->BuyRandom();
 		return;
 	}
 
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));
 		return;
 	}
@@ -3147,6 +3170,7 @@ void CC_Buy(const CCommand& args)
 	SDKWeaponID eWeapon = AliasToWeaponID(args[1]);
 	if (eWeapon)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->AddToLoadout(eWeapon);
 		return;
 	}
@@ -3163,7 +3187,11 @@ void CC_Skill(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		pPlayer->ShowSkillMenu();
+		if (pPlayer->IsAlive())
+			pPlayer->ShowSkillMenu();
+		else
+			pPlayer->State_Transition( STATE_PICKINGSKILL );
+
 		return;
 	}
 
