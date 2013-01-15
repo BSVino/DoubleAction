@@ -1596,7 +1596,7 @@ void CSDKGameMovement::Duck( void )
 			else
 			{
 				float flTime = gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetLastDuckPress();
-				if (flTime < 0.2f)
+				if (flTime < 0.4f)
 				{
 					bRoll = true;
 					m_pSDKPlayer->m_Shared.SetDuckPress(true);

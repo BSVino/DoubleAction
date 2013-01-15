@@ -802,6 +802,9 @@ bool CSDKPlayerShared::CanRoll() const
 	if (!CanChangePosition())
 		return false;
 
+	if (!(m_pOuter->GetFlags() & FL_ONGROUND))
+		return false;
+
 	return true;
 }
 
