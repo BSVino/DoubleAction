@@ -140,7 +140,7 @@ void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ClientCmd("skill random");
+		engine->ClientCmd("setskill random");
 	}
 	else if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
 	{
