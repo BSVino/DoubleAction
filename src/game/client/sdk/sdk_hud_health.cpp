@@ -48,6 +48,7 @@ class CHudHealth : public CHudElement, public CHudNumericDisplay
 
 public:
 	CHudHealth( const char *pElementName );
+	virtual void ApplySchemeSettings( IScheme *scheme );
 	virtual void Init( void );
 	virtual void VidInit( void );
 	virtual void Reset( void );
@@ -57,15 +58,24 @@ public:
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
+	int GetLerpedHealth();
+
+	CPanelAnimationVarAliasType( float, m_flHealthLerpTime, "HealthLerpTime", "0.25", "float" );
+
 private:
-	// old variables
-	int		m_iHealth;
-	
+	int     m_iOldHealth;
+	int     m_iHealth;
+	float   m_flLastHealthChange;
+
 	int		m_bitsDamage;
 
-	CHudTexture	*m_pBackground;
-	CHudTexture	*m_pFill;
-	CHudTexture	*m_pSplat;
+	CHudTexture* m_pBackground;
+	CHudTexture* m_pFill;
+	CHudTexture* m_pSplat1;
+	CHudTexture* m_pSplat2;
+	CHudTexture* m_pCap;
+	CHudTexture* m_pArmor;
+	CHudTexture* m_pArmorGlow;
 };
 
 DECLARE_HUDELEMENT( CHudHealth );
@@ -79,15 +89,24 @@ CHudHealth::CHudHealth( const char *pElementName ) : CHudElement( pElementName )
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
 }
 
+void CHudHealth::ApplySchemeSettings( IScheme *scheme )
+{
+	BaseClass::ApplySchemeSettings(scheme);
+
+	m_pBackground = gHUD.GetIcon("health_background");
+	m_pFill = gHUD.GetIcon("health_fill");
+	m_pSplat1 = gHUD.GetIcon("health_splat1");
+	m_pSplat2 = gHUD.GetIcon("health_splat2");
+	m_pCap = gHUD.GetIcon("health_cap");
+	m_pArmor = gHUD.GetIcon("health_armor");
+	m_pArmorGlow = gHUD.GetIcon("health_armor_glow");
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudHealth::Init()
 {
-	m_pBackground = gHUD.GetIcon("health_background");
-	m_pFill = gHUD.GetIcon("health_fill");
-	m_pSplat = gHUD.GetIcon("health_splat");
-
 	HOOK_HUD_MESSAGE( CHudHealth, Damage );
 	Reset();
 }
@@ -97,8 +116,10 @@ void CHudHealth::Init()
 //-----------------------------------------------------------------------------
 void CHudHealth::Reset()
 {
-	m_iHealth		= INIT_HEALTH;
-	m_bitsDamage	= 0;
+	m_iHealth = INIT_HEALTH;
+	m_iOldHealth = INIT_HEALTH;
+	m_flLastHealthChange = -1;
+	m_bitsDamage = 0;
 
 	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
@@ -140,7 +161,9 @@ void CHudHealth::OnThink()
 		return;
 	}
 
+	m_iOldHealth = GetLerpedHealth();
 	m_iHealth = newHealth;
+	m_flLastHealthChange = gpGlobals->curtime;
 
 	if ( m_iHealth >= 20 )
 	{
@@ -160,7 +183,6 @@ void CHudHealth::OnThink()
 //-----------------------------------------------------------------------------
 void CHudHealth::MsgFunc_Damage( bf_read &msg )
 {
-
 	int armor = msg.ReadByte();	// armor
 	int damageTaken = msg.ReadByte();	// health
 	long bitsDamage = msg.ReadLong(); // damage bits
@@ -191,13 +213,6 @@ void CHudHealth::Paint()
 
 	if (!pPlayer->IsAlive())
 		return;
-
-	if (!m_pBackground)
-		m_pBackground = gHUD.GetIcon("health_background");
-	if (!m_pFill)
-		m_pFill = gHUD.GetIcon("health_fill");
-	if (!m_pSplat)
-		m_pSplat = gHUD.GetIcon("health_splat");
 
 //	if (pPlayer->IsStyleSkillActive())
 //		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
@@ -237,20 +252,69 @@ void CHudHealth::Paint()
 			iYOffset = iElementBuffer;
 		}
 
-		if (m_iHealth > i*100/iSectionsPerRow)
+		int iLerpedHealth = GetLerpedHealth();
+
+		if (iLerpedHealth > i*100/iSectionsPerRow)
 		{
-			if (m_pBackground)
-				m_pBackground->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, iSectionWidth, iHeight/2, Color(255, 255, 255, 255) );
-			if (m_pFill)
+			float flFillWidth = RemapValClamped(iLerpedHealth, i*100/iSectionsPerRow, (i+1)*100/iSectionsPerRow, 0, 1);
+
+			if (i < iSectionsPerRow)
 			{
-				float flFillWidth = RemapValClamped(m_iHealth, i*100/iSectionsPerRow, (i+1)*100/iSectionsPerRow, 0, 1);
-				m_pFill->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
+				if (m_pBackground)
+					m_pBackground->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, iSectionWidth, iHeight/2, Color(255, 255, 255, 255) );
+
+				if (m_pFill)
+				{
+					m_pFill->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
+
+					if (flFillWidth < 0.95f)
+						m_pCap->DrawSelf(iXOffset + i*(iSectionWidth+iBuffer) + iSectionWidth*flFillWidth - m_pCap->Width()/2, iYOffset, m_pCap->Width(), iHeight/2, Color(255, 255, 255, 255) );
+				}
+			}
+			else
+			{
+				if (m_pArmor)
+					m_pArmor->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
+			}
+
+			if (m_iOldHealth > m_iHealth + 5 && flFillWidth < 1 && gpGlobals->curtime < m_flLastHealthChange + m_flHealthLerpTime && m_pArmorGlow)
+			{
+				float flAlpha = Gain(RemapValClamped(gpGlobals->curtime, m_flLastHealthChange + m_flHealthLerpTime/2, m_flLastHealthChange + m_flHealthLerpTime, 1, 0), 0.7f);
+				m_pArmorGlow->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer) + iSectionWidth*flFillWidth - m_pArmorGlow->Width()/2, iYOffset, m_pArmorGlow->Width(), iHeight/2, Color(255, 255, 255, 255*flAlpha) );
 			}
 		}
-		else if (m_pSplat)
+		else if (m_pSplat1 && m_pSplat2)
 		{
 			if (m_iHealth < iMaxHealth)
-				m_pSplat->DrawSelf( 0 + i*(iSectionWidth+iBuffer), iHeight/2, iSectionWidth + iElementBuffer*2, iHeight/2 + iElementBuffer*2, Color(255, 255, 255, 255) );
+			{
+				CHudTexture* pSplat;
+				switch (i)
+				{
+				default:
+				case 0:
+				case 2:
+					pSplat = m_pSplat1;
+					break;
+
+				case 1:
+				case 3:
+					pSplat = m_pSplat2;
+					break;
+				}
+
+				int iSplatWidth = iSectionWidth + iElementBuffer*2;
+				int iSplatHeight = iHeight/2 + iElementBuffer*2;
+				int iSplatSize = min(iSplatWidth, iSplatHeight);
+
+				pSplat->DrawSelf( 0 + i*(iSectionWidth+iBuffer) + iSplatWidth/2 - iSplatSize/2, iHeight/2 + iSplatHeight/2 - iSplatSize/2, iSplatSize, iSplatSize, Color(255, 255, 255, 255) );
+			}
 		}
 	}
+}
+
+int CHudHealth::GetLerpedHealth()
+{
+	float flHealthLerp = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + m_flHealthLerpTime, 0, 1);
+	flHealthLerp = Bias(flHealthLerp, 0.8f);
+	return RemapValClamped(flHealthLerp, 0, 1, m_iOldHealth, m_iHealth);
 }
