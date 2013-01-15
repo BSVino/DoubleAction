@@ -93,6 +93,14 @@ Panel *CSDKTextWindow::CreateControlByName( const char *controlName )
 	return BaseClass::CreateControlByName(controlName);
 }
 
+void CSDKTextWindow::OnKeyCodePressed( KeyCode code )
+{
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+		OnCommand("okay");
+	else
+		BaseClass::OnKeyCodePressed( code );
+}
+
 CON_COMMAND(hud_reload_motd, "Reload resource for motd menu.")
 {
 	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( "info" );

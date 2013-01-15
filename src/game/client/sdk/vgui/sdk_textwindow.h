@@ -34,6 +34,7 @@ protected:
 	virtual void PaintBorder();
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	virtual Panel *CreateControlByName( const char *controlName );
+	virtual void OnKeyCodePressed(vgui::KeyCode code);
 };
 
 

@@ -165,7 +165,12 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 
 void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
 {
-	if ( m_iBuyMenuKey != BUTTON_CODE_INVALID && m_iBuyMenuKey == code )
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+	{
+		engine->ClientCmd("buy random");
+		OnCommand("close");
+	}
+	else if ( m_iBuyMenuKey != BUTTON_CODE_INVALID && m_iBuyMenuKey == code )
 	{
 		ShowPanel( false );
 	}

@@ -139,7 +139,12 @@ void CDABCharacterMenu::ShowPanel( bool bShow )
 
 void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
 {
-	if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+	{
+		engine->ClientCmd("character random");
+		OnCommand("close");
+	}
+	else if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
 	{
 		ShowPanel( false );
 	}

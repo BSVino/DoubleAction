@@ -138,7 +138,11 @@ void CDABSkillMenu::ShowPanel( bool bShow )
 
 void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 {
-	if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+	{
+		engine->ClientCmd("skill random");
+	}
+	else if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
 	{
 		ShowPanel( false );
 	}
