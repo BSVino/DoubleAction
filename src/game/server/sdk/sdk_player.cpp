@@ -1482,7 +1482,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
 		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
 	}
-	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && vecVictimForward.Dot(vecKillerToVictim) < 0.3f)
+	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && vecVictimForward.Dot(vecKillerToVictim) < 0.3f && flDistance < 100)
 	{
 		// Killing a player by shooting in the head from behind.
 		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
