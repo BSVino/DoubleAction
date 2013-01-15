@@ -606,7 +606,7 @@ void CWeaponSDKBase::AddViewKick()
 		{
 			if (HasAimInRecoilBonus())
 			{
-				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.2f);
 				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.8f, 1, 0.2f);
 			}
 			else
