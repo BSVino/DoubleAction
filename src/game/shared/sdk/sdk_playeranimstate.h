@@ -39,7 +39,7 @@ public:
 
 	virtual void ClearAnimationState();
 	virtual Activity TranslateActivity( Activity actDesired );
-	virtual void Update( float eyeYaw, float eyePitch );
+	virtual void Update( float eyeYaw, float eyePitch, float flCharacterYaw, float flCharacterPitch );
 	bool	SetupPoseParameters( CStudioHdr *pStudioHdr );
 
 	virtual void GetOuterAbsVelocity( Vector& vel );
@@ -90,6 +90,9 @@ private:
 #endif
 
 	bool		m_bFacingForward;
+
+	float       m_flCharacterEyeYaw;
+	float       m_flCharacterEyePitch;
 
 	Activity	m_iDiveActivity;
 	bool		m_bDiveStart;

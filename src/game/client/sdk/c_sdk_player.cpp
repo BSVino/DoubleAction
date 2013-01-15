@@ -694,11 +694,12 @@ const Vector& C_SDKPlayer::GetRenderOrigin( void )
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
 	QAngle angEyeAngles = EyeAngles();
+	QAngle angCharacterEyeAngles = angEyeAngles;
 
 	if (IsInThirdPerson())
-		VectorAngles(m_vecThirdTarget - EyePosition(), Vector(0, 0, 1), angEyeAngles);
+		VectorAngles(m_vecThirdTarget - EyePosition(), Vector(0, 0, 1), angCharacterEyeAngles);
 
-	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH] );
+	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
 
 	BaseClass::UpdateClientSideAnimation();
 }

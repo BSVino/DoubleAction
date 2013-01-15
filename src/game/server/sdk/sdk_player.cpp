@@ -739,16 +739,17 @@ void CSDKPlayer::PostThink()
 	
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
+	QAngle angCharacterEyeAngles = m_angEyeAngles;
 
 	if (IsInThirdPerson())
 	{
-		VectorAngles(m_vecThirdTarget - EyePosition(), m_angEyeAngles.GetForModify());
+		VectorAngles(m_vecThirdTarget - EyePosition(), angCharacterEyeAngles);
 
-		m_angEyeAngles.GetForModify()[YAW] = AngleNormalize(m_angEyeAngles[YAW]);
-		m_angEyeAngles.GetForModify()[PITCH] = AngleNormalize(m_angEyeAngles[PITCH]);
+		angCharacterEyeAngles[YAW] = AngleNormalize(angCharacterEyeAngles[YAW]);
+		angCharacterEyeAngles[PITCH] = AngleNormalize(angCharacterEyeAngles[PITCH]);
 	}
 
-	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )

@@ -156,7 +156,7 @@ Activity CSDKPlayerAnimState::TranslateActivity( Activity actDesired )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
+void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacterYaw, float flCharacterPitch )
 {
 	// Profile the animation update.
 	VPROF( "CMultiPlayerAnimState::Update" );
@@ -181,6 +181,9 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 	// Store the eye angles.
 	m_flEyeYaw = AngleNormalize( eyeYaw );
 	m_flEyePitch = AngleNormalize( eyePitch );
+
+	m_flCharacterEyeYaw = AngleNormalize( flCharacterYaw );
+	m_flCharacterEyePitch = AngleNormalize( flCharacterPitch );
 
 	// Compute the player sequences.
 	ComputeSequences( pStudioHdr );
@@ -269,6 +272,18 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 
 		// Set the aim yaw and save.
 		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
+		m_DebugAnimData.m_flAimPitch = flAimPitch;
+
+		return;
+	}
+
+	if (m_pSDKPlayer->IsInThirdPerson())
+	{
+		// Use the character's eye direction instead of the actual.
+		float flAimPitch = m_flCharacterEyePitch;
+
+		// Set the aim pitch pose parameter and save.
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, -flAimPitch );
 		m_DebugAnimData.m_flAimPitch = flAimPitch;
 
 		return;
@@ -407,6 +422,10 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 	// Find the aim(torso) yaw base on the eye and feet yaws.
 	float flAimYaw = m_flEyeYaw - m_flCurrentFeetYaw;
+
+	if (m_pSDKPlayer->IsInThirdPerson())
+		flAimYaw = m_flCharacterEyeYaw - m_flCurrentFeetYaw;
+
 	flAimYaw = AngleNormalize( flAimYaw );
 
 	// Set the aim yaw and save.
