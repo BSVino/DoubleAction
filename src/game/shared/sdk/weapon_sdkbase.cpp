@@ -558,9 +558,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	// The heavier the damage the more it hurts.
-	float flDamage = GetSDKWpnData().iWeight;
-
-	flDamage *= 2.0;
+	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
 
 	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 		flDamage *= 2.0f;
