@@ -1536,9 +1536,8 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			}
 		}
 	}
-	else if (flDistance < 60)
+	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
 	{
-		// Long range.
 		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
 
 		if (bKilledVictim)
@@ -3349,3 +3348,23 @@ void CC_ThirdPersonToggle(const CCommand& args)
 }
 
 static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::CC_ThirdPersonToggle, "Toggle third person mode.", FCVAR_GAMEDLL );
+
+void CC_HealMe_f(const CCommand &args)
+{
+	if ( !sv_cheats->GetBool() )
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+	if ( !pPlayer )
+		return;
+
+	int iDamage = 10;
+	if ( args.ArgC() >= 2 )
+	{
+		iDamage = atoi( args[ 1 ] );
+	}
+
+	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
+}
+
+static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);
