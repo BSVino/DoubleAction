@@ -1037,6 +1037,9 @@ void CDABotManager::MaintainBotQuota( void )
 	else
 		desiredBotCount = min( desiredBotCount, gpGlobals->maxClients - humanPlayersInGame );
 
+	if (desiredBotCount < 0)
+		desiredBotCount = 0;
+
 	// add bots if necessary
 	if (desiredBotCount > botsInGame)
 	{

@@ -342,6 +342,12 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 
 	// Players who haven't activated anything are at the whims of those who have.
 
+	if (gpGlobals->eLoadType == MapLoad_Background)
+	{
+		pPlayer->SetSlowMoType(SLOWMO_NONE);
+		return;
+	}
+
 	bool bOtherInSlow = false;
 
 	CUtlVector<CSDKPlayer*> apOthersInPVS;

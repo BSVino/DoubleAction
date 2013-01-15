@@ -57,6 +57,11 @@ static const char* g_apszAnnouncementTextures[] = {
 	"announcement_tacticool",
 	"announcement_brawl",
 	"announcement_brawl_kill",
+	"announcement_divepunch",
+	"announcement_slidepunch",
+	"announcement_headshot",
+	"announcement_point_blank",
+	"announcement_execution",
 };
 
 class CHudStyleBar : public CHudElement, public vgui::Panel

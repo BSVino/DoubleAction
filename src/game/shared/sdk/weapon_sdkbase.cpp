@@ -287,7 +287,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if ( !pOwner )
 		return;
 
-	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsSliding() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
+	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
 		return;
 
 	if (bIsSecondary && pOwner->m_Shared.IsDiving())

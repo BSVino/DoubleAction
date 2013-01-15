@@ -1116,7 +1116,10 @@ void CSDKPlayer::InitialSpawn( void )
 
 	BaseClass::InitialSpawn();
 
-	State_Enter( STATE_WELCOME );
+	if (gpGlobals->eLoadType == MapLoad_Background)
+		State_Enter( STATE_OBSERVER_MODE );
+	else
+		State_Enter( STATE_WELCOME );
 
 	ClearLoadout();
 }
@@ -1456,33 +1459,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
 
-	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
-	{
-		// Killing a player with your last bullet.
-		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
-		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
-	}
-	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
-	{
-		// Damaging a dude enough to kill him while stunting gives a full bar.
-		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+	Vector vecVictimForward;
+	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
 
-		if (m_Shared.IsDiving())
-		{
-			if (bKilledVictim)
-				SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
-			else
-				SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
-		}
-		else
-		{
-			if (bKilledVictim)
-				SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
-			else
-				SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
-		}
-	}
-	else if (info.GetDamageType() == DMG_BLAST)
+	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
+	vecKillerToVictim.NormalizeInPlace();
+
+	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
+	if (info.GetDamageType() == DMG_BLAST)
 	{
 		// Grenades are cool.
 		AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
@@ -1491,6 +1475,76 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
 		else
 			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+	}
+	else if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
+	{
+		// Killing a player with your last bullet.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
+	}
+	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && vecVictimForward.Dot(vecKillerToVictim) < 0.3f)
+	{
+		// Killing a player by shooting in the head from behind.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
+	}
+	else if (pVictim->LastHitGroup() == HITGROUP_HEAD)
+	{
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
+	}
+	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
+	{
+		// Damaging a dude enough to kill him while stunting gives a full bar.
+		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (m_Shared.IsDiving())
+		{
+			if (info.GetDamageType() == DMG_CLUB)
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
+			}
+			else
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+			}
+		}
+		else
+		{
+			if (info.GetDamageType() == DMG_CLUB)
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
+			}
+			else
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+			}
+		}
+	}
+	else if (flDistance < 60)
+	{
+		// Long range.
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
 	}
 	else if (flDistance > 1200)
 	{
