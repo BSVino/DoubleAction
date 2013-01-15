@@ -2597,6 +2597,10 @@ void CSDKPlayer::State_Enter_DEATH_ANIM()
 	RemoveEffects( EF_NODRAW );	// still draw player body
 }
 
+extern ConVar spec_freeze_time;
+extern ConVar spec_freeze_traveltime;
+
+#define SDK_DEATH_ANIMATION_TIME 0.5f
 
 void CSDKPlayer::State_PreThink_DEATH_ANIM()
 {
@@ -2617,6 +2621,28 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 			SetAbsVelocity( vAbsVel );
 		}
 	}
+
+	if (gpGlobals->curtime < m_flDeathTime + SDK_DEATH_ANIMATION_TIME)
+		return;
+
+	float flTimeInFreeze = spec_freeze_traveltime.GetFloat() + spec_freeze_time.GetFloat();
+	float flFreezeEnd = (m_flDeathTime + SDK_DEATH_ANIMATION_TIME + flTimeInFreeze );
+
+	if ( GetObserverTarget() && GetObserverTarget() != this )
+	{
+		if ( gpGlobals->curtime < flFreezeEnd )
+		{
+			if ( GetObserverMode() != OBS_MODE_FREEZECAM )
+			{
+				StartObserverMode( OBS_MODE_FREEZECAM );
+				PhysObjectSleep();
+			}
+			return;
+		}
+	}
+
+	if ( gpGlobals->curtime < flFreezeEnd )
+		return;
 
 	if ( gpGlobals->curtime >= (m_flDeathTime + SDK_PLAYER_DEATH_TIME ) )	// let the death cam stay going up to min spawn time.
 	{
