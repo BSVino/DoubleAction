@@ -150,7 +150,7 @@ void CHudNotices::Paint()
 
 	auto* pTexture = m_apNotices[m_eNotice];
 
-	float flScale = 1;
+	float flScale = 0.8f;
 	if (m_eNotice == NOTICE_SLOMO)
 		flScale = 0.6f;
 
