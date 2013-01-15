@@ -80,6 +80,7 @@ public:
 	virtual void InitialSpawn();
 	virtual void UpdateCurrentTime();
 	virtual void UpdateViewBobRamp();
+	virtual void UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye);
 
 	virtual void StartTouch( CBaseEntity *pOther );
 
@@ -194,7 +195,9 @@ public:
 
 	virtual void ThirdPersonToggle();
 	virtual bool IsInThirdPerson() const { return m_bThirdPerson; }
-	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+	const Vector GetThirdPersonCameraPosition();
+	const Vector GetThirdPersonCameraTarget();
 
 	bool InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 
@@ -416,6 +419,8 @@ public:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+	Vector m_vecThirdCamera; // Where is the third person camera?
+	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 
 	int    m_iStyleKillStreak;
 

@@ -60,6 +60,7 @@ public:
 	virtual void PreThink();
 	virtual void UpdateCurrentTime();
 	virtual void UpdateViewBobRamp();
+	virtual void UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye);
 
 	virtual void StartTouch( CBaseEntity *pOther );
 
@@ -181,7 +182,9 @@ public:
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
 
 	bool IsInThirdPerson() const { return m_bThirdPerson; }
-	const Vector GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+	const Vector GetThirdPersonCameraPosition();
+	const Vector GetThirdPersonCameraTarget();
 
 	const char* GetCharacter() const { return m_iszCharacter; }
 
@@ -311,6 +314,8 @@ private:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+	Vector m_vecThirdCamera; // Where is the third person camera?
+	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 
 	char m_iszCharacter[256];
 

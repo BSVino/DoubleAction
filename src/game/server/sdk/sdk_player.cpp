@@ -622,6 +622,9 @@ void CSDKPlayer::PreThink(void)
 {
 	m_vecTotalBulletForce = vec3_origin;
 
+	if (IsInThirdPerson())
+		UpdateThirdCamera(Weapon_ShootPosition(), EyeAngles() + GetPunchAngle());
+
 	UpdateCurrentTime();
 
 	if (IsAlive())
@@ -737,7 +740,15 @@ void CSDKPlayer::PostThink()
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	if (IsInThirdPerson())
+	{
+		VectorAngles(m_vecThirdTarget - EyePosition(), m_angEyeAngles.GetForModify());
+
+		m_angEyeAngles.GetForModify()[YAW] = AngleNormalize(m_angEyeAngles[YAW]);
+		m_angEyeAngles.GetForModify()[PITCH] = AngleNormalize(m_angEyeAngles[PITCH]);
+	}
+
+	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )

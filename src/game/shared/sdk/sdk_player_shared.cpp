@@ -1276,6 +1276,23 @@ void CSDKPlayer::UpdateViewBobRamp()
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
 }
 
+void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
+{
+	if (!IsInThirdPerson())
+		return;
+
+	m_vecThirdCamera = CalculateThirdPersonCameraPosition(vecEye, angEye);
+
+	Vector vecShoot;
+	AngleVectors(angEye, &vecShoot);
+
+	// Trace to see where the camera is pointing
+	trace_t tr;
+	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+
+	m_vecThirdTarget = tr.endpos;
+}
+
 ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
 
 Vector CSDKPlayer::EyePosition()
@@ -1353,7 +1370,7 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 
 #define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
 
-const Vector CSDKPlayer::GetThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
+const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
 #ifdef GAME_DLL
 	float flCamBack = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
@@ -1383,4 +1400,14 @@ const Vector CSDKPlayer::GetThirdPersonCameraPosition(const Vector& vecEye, cons
 		MASK_SOLID, &traceFilter, &trace );
 
 	return vecEye + vecCameraOffset * trace.fraction;
+}
+
+const Vector CSDKPlayer::GetThirdPersonCameraPosition()
+{
+	return m_vecThirdCamera;
+}
+
+const Vector CSDKPlayer::GetThirdPersonCameraTarget()
+{
+	return m_vecThirdTarget;
 }

@@ -173,16 +173,9 @@ void CDAHudCrosshair::Paint( void )
 
 	if (pPlayer && pPlayer->IsInThirdPerson())
 	{
-		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition(pPlayer->Weapon_ShootPosition(), pPlayer->EyeAngles());
+		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
 
-		Vector vecShoot;
-		AngleVectors(pPlayer->EyeAngles(), &vecShoot);
-
-		// Trace to see where the camera is pointing
-		trace_t tr;
-		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
-
-		Vector vecForward = tr.endpos - pPlayer->Weapon_ShootPosition();
+		Vector vecForward = pPlayer->GetThirdPersonCameraTarget() - pPlayer->Weapon_ShootPosition();
 
 		// Now trace to see where the player will hit
 		trace_t tr2;
@@ -191,7 +184,7 @@ void CDAHudCrosshair::Paint( void )
 		//DebugDrawLine(vecCamera, tr.endpos, 255, 0, 0, true, 0.1f);
 		//DebugDrawLine(pPlayer->Weapon_ShootPosition(), tr2.endpos, 0, 0, 255, true, 0.1f);
 
-		if ((tr2.endpos - tr.endpos).LengthSqr() > 1)
+		if ((tr2.endpos - pPlayer->GetThirdPersonCameraTarget()).LengthSqr() > 1)
 		{
 			bObstruction = true;
 

@@ -255,6 +255,9 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flLastSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_bThirdPerson, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -690,7 +693,13 @@ const Vector& C_SDKPlayer::GetRenderOrigin( void )
 
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
-	m_PlayerAnimState->Update( EyeAngles()[YAW], EyeAngles()[PITCH] );
+	QAngle angEyeAngles = EyeAngles();
+
+	if (IsInThirdPerson())
+		VectorAngles(m_vecThirdTarget - EyePosition(), Vector(0, 0, 1), angEyeAngles);
+
+	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH] );
+
 	BaseClass::UpdateClientSideAnimation();
 }
 //-----------------------------------------------------------------------------
@@ -1422,7 +1431,9 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		angCamera[ YAW ] = vecOffset[ YAW ];
 		angCamera[ ROLL ] = 0;
 
-		pSetup->origin = GetThirdPersonCameraPosition(pSetup->origin, angCamera);
+		UpdateThirdCamera(pSetup->origin, angCamera);
+
+		pSetup->origin = GetThirdPersonCameraPosition();
 	}
 
 	BaseClass::OverrideView(pSetup);

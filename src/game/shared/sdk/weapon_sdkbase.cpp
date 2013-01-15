@@ -211,7 +211,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (pPlayer->IsInThirdPerson())
 	{
 		// First find where the camera should be.
-		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition(pPlayer->Weapon_ShootPosition(), angShoot);
+		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
 
 		Vector vecShoot;
 		AngleVectors(angShoot, &vecShoot);
