@@ -1373,18 +1373,34 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
 #ifdef GAME_DLL
-	float flCamBack = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
-	float flCamUp = atof(engine->GetClientConVarValue( entindex(), "da_cam_up" ));
-	float flCamRight = atof(engine->GetClientConVarValue( entindex(), "da_cam_right" ));
+	float flCamBackIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
+	float flCamUpIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_up" ));
+	float flCamRightIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_right" ));
+
+	float flCamBackAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_back_aim" ));
+	float flCamUpAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_up_aim" ));
+	float flCamRightAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_right_aim" ));
 #else
 	ConVarRef da_cam_back("da_cam_back");
 	ConVarRef da_cam_up("da_cam_up");
 	ConVarRef da_cam_right("da_cam_right");
 
-	float flCamBack = da_cam_back.GetFloat();
-	float flCamUp = da_cam_up.GetFloat();
-	float flCamRight = da_cam_right.GetFloat();
+	ConVarRef da_cam_back_aim("da_cam_back_aim");
+	ConVarRef da_cam_up_aim("da_cam_up_aim");
+	ConVarRef da_cam_right_aim("da_cam_right_aim");
+
+	float flCamBackIdle = da_cam_back.GetFloat();
+	float flCamUpIdle = da_cam_up.GetFloat();
+	float flCamRightIdle = da_cam_right.GetFloat();
+
+	float flCamBackAim = da_cam_back_aim.GetFloat();
+	float flCamUpAim = da_cam_up_aim.GetFloat();
+	float flCamRightAim = da_cam_right_aim.GetFloat();
 #endif
+
+	float flCamBack = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamBackIdle, flCamBackAim);
+	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);
+	float flCamRight = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamRightIdle, flCamRightAim);
 
 	Vector camForward, camRight, camUp;
 	AngleVectors( angCamera, &camForward, &camRight, &camUp );
