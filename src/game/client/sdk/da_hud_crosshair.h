@@ -40,6 +40,7 @@ private:
 	// Crosshair sprite and colors
 	CHudTexture		*m_pCrosshair;
 	CHudTexture		*m_pDefaultCrosshair;
+	CHudTexture*    m_pObstructionCrosshair;
 	Color			m_clrCrosshair;
 	QAngle			m_vecCrossHairOffsetAngle;
 

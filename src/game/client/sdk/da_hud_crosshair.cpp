@@ -48,6 +48,8 @@ void CDAHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	m_pDefaultCrosshair = gHUD.GetIcon("crosshair_default");
+	m_pObstructionCrosshair = gHUD.GetIcon("crosshair_obstruction");
+
 	SetPaintBackgroundEnabled( false );
 
     SetSize( ScreenWidth(), ScreenHeight() );
@@ -126,27 +128,24 @@ void CDAHudCrosshair::CalculateCrosshair( void )
 		return;
 	}
 
-	Color clr = gHUD.m_clrNormal;
+	Color clrHUD = gHUD.m_clrNormal;
+	clrHUD[3] = 255;
+	Color white( 255, 255, 255, 255 );
 
-	if ( pPlayer->GetFOV() >= 90 )
+	if ( pPlayer->m_Shared.GetAimIn() <= 0.5f || !pWeapon->HasAimInRecoilBonus() )
 	{ 
 		if ( pWeapon->GetWpnData().iconCrosshair )
-		{
-			clr[3] = 255;
-			SetCrosshair( pWeapon->GetWpnData().iconCrosshair, clr );
-		}
+			SetCrosshair( pWeapon->GetWpnData().iconCrosshair, clrHUD );
 		else
-		{
 			ResetCrosshair();
-		}
 	}
 	else
 	{ 
-		Color white( 255, 255, 255, 255 );
-
 		// zoomed crosshairs
 		if ( pWeapon->GetWpnData().iconZoomedCrosshair )
 			SetCrosshair( pWeapon->GetWpnData().iconZoomedCrosshair, white );
+		else if ( pWeapon->GetWpnData().iconCrosshair )
+			SetCrosshair( pWeapon->GetWpnData().iconCrosshair, clrHUD );
 		else
 			ResetCrosshair();
 	}
@@ -171,7 +170,7 @@ void CDAHudCrosshair::Paint( void )
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
-	if (pPlayer && pPlayer->IsInThirdPerson())
+	if (pPlayer && pPlayer->IsInThirdPerson() && m_pObstructionCrosshair)
 	{
 		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
 
@@ -197,9 +196,9 @@ void CDAHudCrosshair::Paint( void )
 			x2 = ScreenWidth()/2 + 0.5 * vecScreen.x * ScreenWidth() + 0.5;
 			y2 = ScreenHeight()/2 - 0.5 * vecScreen.y * ScreenHeight() + 0.5;
 
-			m_pCrosshair->DrawSelf( 
-					x2 - 0.5f * m_pCrosshair->Width(), 
-					y2 - 0.5f * m_pCrosshair->Height(),
+			m_pObstructionCrosshair->DrawSelf( 
+					x2 - 0.5f * m_pObstructionCrosshair->Width(), 
+					y2 - 0.5f * m_pObstructionCrosshair->Height(),
 					m_clrCrosshair );
 		}
 	}
