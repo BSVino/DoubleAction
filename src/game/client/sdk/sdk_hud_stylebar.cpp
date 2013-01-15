@@ -136,6 +136,15 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 	oAnnouncement.m_ePointStyle = ePointStyle;
 	oAnnouncement.m_flBarPosition = flBar;
 
+	if (m_aAnnouncements.Count())
+	{
+		// If a few at a time come in off the wire don't throw them all up at once. Subsequent ones should come in with a delay.
+
+		float flDelay = 0.02f;
+		if (gpGlobals->curtime < m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay)
+			oAnnouncement.m_flStartTime = m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay;
+	}
+
 	m_aAnnouncements.AddToTail(oAnnouncement);
 }
 
@@ -277,6 +286,9 @@ void CHudStyleBar::Paint()
 			continue;
 
 		if (!m_apAnnouncements[pAnnouncement->m_eAnnouncement])
+			continue;
+
+		if (gpGlobals->curtime < pAnnouncement->m_flStartTime)
 			continue;
 
 		auto* pTexture = m_apAnnouncements[pAnnouncement->m_eAnnouncement];
