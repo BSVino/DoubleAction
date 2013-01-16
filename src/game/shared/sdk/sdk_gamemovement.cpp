@@ -1609,7 +1609,7 @@ void CSDKGameMovement::Duck( void )
 		if (bStunt)
 		{
 			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				m_pSDKPlayer->GetGroundEntity() && (mv->m_nButtons & IN_DUCK);
+				(m_pSDKPlayer->GetFlags() & FL_ONGROUND) && (mv->m_nButtons & IN_DUCK);
 
 			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
