@@ -197,7 +197,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		if (GetSDKWpnData().m_bAimInSpreadBonus)
 			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.3f);
 		else
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.8f);
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
 	}
 
 	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
@@ -609,8 +609,8 @@ void CWeaponSDKBase::AddViewKick()
 			}
 			else
 			{
-				flPunchBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.8f);
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.5f, 1, 0.6f);
+				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
 			}
 		}
 
