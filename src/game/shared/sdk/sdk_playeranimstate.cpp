@@ -92,6 +92,10 @@ CSDKPlayerAnimState::~CSDKPlayerAnimState()
 void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 {
 	m_pSDKPlayer = pPlayer;
+
+	m_flCharacterEyeYaw = 0;
+	m_flCharacterEyePitch = 0;
+
 #if defined ( SDK_USE_PRONE )
 	m_iProneActivity = ACT_MP_STAND_TO_PRONE;
 	m_bProneTransition = false;
@@ -182,8 +186,8 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacte
 	m_flEyeYaw = AngleNormalize( eyeYaw );
 	m_flEyePitch = AngleNormalize( eyePitch );
 
-	m_flCharacterEyeYaw = AngleNormalize( flCharacterYaw );
-	m_flCharacterEyePitch = AngleNormalize( flCharacterPitch );
+	m_flCharacterEyeYaw += AngleNormalize( flCharacterYaw - m_flCharacterEyeYaw ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
+	m_flCharacterEyePitch += AngleNormalize( flCharacterPitch - m_flCharacterEyePitch ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
 
 	// Compute the player sequences.
 	ComputeSequences( pStudioHdr );
