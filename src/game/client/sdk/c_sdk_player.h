@@ -306,6 +306,7 @@ private:
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );
+	float m_flLastSlowMoMultiplier;
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 

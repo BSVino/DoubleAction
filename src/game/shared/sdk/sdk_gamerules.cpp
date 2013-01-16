@@ -1435,13 +1435,16 @@ float CSDKGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 	return flDamage;
 }
 
-void CSDKGameRules::OverrideSoundParams( CSoundParameters& oParams )
+void CSDKGameRules::OverrideSoundParams( const EmitSound_t& ep, CSoundParameters& oParams )
 {
 #ifdef CLIENT_DLL
-	if (FStrEq(oParams.soundname, "SlowMo.Start"))
+	if (FStrEq(ep.m_pSoundName, "SlowMo.Start"))
 		return;
 
-	if (FStrEq(oParams.soundname, "SlowMo.End"))
+	if (FStrEq(ep.m_pSoundName, "SlowMo.End"))
+		return;
+
+	if (FStrEq(ep.m_pSoundName, "SlowMo.Loop"))
 		return;
 
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();

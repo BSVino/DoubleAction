@@ -616,6 +616,7 @@ C_SDKPlayer::C_SDKPlayer() :
 
 	m_fNextThinkPushAway = 0.0f;
 
+	m_flLastSlowMoMultiplier = 1;
 }
 
 
@@ -1017,10 +1018,34 @@ bool C_BasePlayer::ShouldDrawLocalPlayer()
 	return C_SDKPlayer::GetLocalSDKPlayer()->IsInThirdPerson() || ( ToolsEnabled() && ToolFramework_IsThirdPersonCamera() );
 }
 
-ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "20.0" );
+ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "15.0" );
 
 void C_SDKPlayer::ClientThink()
 {
+	bool bWasInSlow = false;
+
+	bool bLocalPlayer = (C_SDKPlayer::GetLocalOrSpectatedPlayer() == this);
+	if (bLocalPlayer)
+		bWasInSlow = (m_flLastSlowMoMultiplier < 1);
+
+	if (bLocalPlayer)
+	{
+		bool bNowInSlow = (GetSlowMoMultiplier() < 1);
+
+		if (!bWasInSlow && bNowInSlow)
+		{
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Start" );
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Loop" );
+		}
+		else if (bWasInSlow && !bNowInSlow)
+		{
+			C_SDKPlayer::GetLocalSDKPlayer()->StopSound( "SlowMo.Loop" );
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.End" );
+		}
+	}
+
+	m_flLastSlowMoMultiplier = GetSlowMoMultiplier();
+
 	ConVarRef mat_motion_blur_strength( "mat_motion_blur_strength" );
 	mat_motion_blur_strength.SetValue(RemapValClamped(GetSlowMoMultiplier(), 0.8f, 1, da_slowmo_motion_blur.GetFloat(), 1));
 

@@ -433,7 +433,7 @@ public:
 		}
 
 #ifdef SDK_DLL
-		SDKGameRules()->OverrideSoundParams(params);
+		SDKGameRules()->OverrideSoundParams(ep, params);
 #endif
 
 #if !defined( CLIENT_DLL )

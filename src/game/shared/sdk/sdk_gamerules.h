@@ -135,7 +135,7 @@ public:
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
 
-	virtual void OverrideSoundParams(CSoundParameters& oParams);
+	virtual void OverrideSoundParams(const EmitSound_t& ep, CSoundParameters& oParams);
 
 #ifdef CLIENT_DLL
 
