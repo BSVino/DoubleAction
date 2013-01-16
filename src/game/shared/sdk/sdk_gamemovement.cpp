@@ -138,7 +138,15 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	else if ( m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->GetGroundEntity() )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
 	else if ( m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity() )
-		mv->m_flClientMaxSpeed = sdk_dive_speed.GetFloat();
+	{
+		if (m_pSDKPlayer->IsStyleSkillActive() && m_pSDKPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+		{
+			ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
+			mv->m_flClientMaxSpeed = sdk_dive_speed_adrenaline.GetFloat();
+		}
+		else
+			mv->m_flClientMaxSpeed = sdk_dive_speed.GetFloat();
+	}
 	else
 	{
 		float stamina = 100.0f;
@@ -1539,7 +1547,9 @@ void CSDKGameMovement::Duck( void )
 
 				m_pSDKPlayer->m_Shared.StartSliding(true);
 
-				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
+
+				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
 				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
@@ -1670,9 +1680,11 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if( bSlide && m_pSDKPlayer->m_Shared.CanSlide() )
 		{
+			float flSpeedFraction = RemapValClamped(m_pSDKPlayer->GetAbsVelocity().Length()/m_pSDKPlayer->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
+
 			m_pSDKPlayer->m_Shared.StartSliding();
 
-			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
 			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 			mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 			player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();

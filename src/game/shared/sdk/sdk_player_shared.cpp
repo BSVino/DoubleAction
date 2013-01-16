@@ -903,25 +903,27 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->Instructor_LessonLearned("dive");
 
+	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
+
 	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
 	{
 		m_pOuter->SetGravity(sdk_dive_gravity_adrenaline.GetFloat());
 
-		return m_vecDiveDirection.Get() * sdk_dive_speed_adrenaline.GetFloat() + Vector(0, 0, sdk_dive_height_adrenaline.GetFloat());
+		return m_vecDiveDirection.Get() * (sdk_dive_speed_adrenaline.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height_adrenaline.GetFloat());
 	}
 	else if (bWasOnGround)
 	{
 		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
 
 		ConVarRef sdk_dive_speed("sdk_dive_speed");
-		return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
+		return m_vecDiveDirection.Get() * (sdk_dive_speed.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height.GetFloat());
 	}
 	else
 	{
 		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
 
 		ConVarRef sdk_dive_speed("sdk_dive_speed");
-		return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height_high.GetFloat());
+		return m_vecDiveDirection.Get() * (sdk_dive_speed.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height_high.GetFloat());
 	}
 }
 
