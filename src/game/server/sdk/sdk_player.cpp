@@ -1404,7 +1404,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Going down with lots of bar drops you more than going down with just a little bar.
 	// This way, running around with your bar full you run a high risk.
 	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
-	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
+
+	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling())
+		// Lose less bar if you die during a stunt. Going out with style is never a bad thing!
+		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/16, flActivationCost/4));
+	else
+		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
