@@ -528,7 +528,7 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 
 void CSDKPlayer::ReadyWeapon()
 {
-	m_flReadyWeaponUntil = GetCurrentTime() + 2.5f;
+	m_flReadyWeaponUntil = GetCurrentTime() + 3.5f;
 }
 
 bool CSDKPlayer::IsWeaponReady()
