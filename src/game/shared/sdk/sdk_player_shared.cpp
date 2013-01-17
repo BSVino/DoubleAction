@@ -267,6 +267,9 @@ void CSDKPlayer::FireBullet(
 void CSDKPlayer::DoMuzzleFlash()
 {
 #ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
 
