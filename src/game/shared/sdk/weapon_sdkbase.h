@@ -77,7 +77,7 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
-	virtual void      Swing(bool bIsSecondary);
+	virtual void      Swing(bool bIsSecondary, bool bIsStockAttack = false);
 	virtual void      Hit(trace_t &traceHit, bool bIsSecondary);
 	virtual Activity  ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner );
 	virtual	void      ImpactEffect( trace_t &trace );

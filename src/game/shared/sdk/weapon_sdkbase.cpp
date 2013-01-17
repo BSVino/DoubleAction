@@ -269,7 +269,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 void CWeaponSDKBase::SecondaryAttack()
 {
-	Swing(true);
+	Swing(true, true);
 }
 
 #define MELEE_HULL_DIM		16
@@ -277,7 +277,7 @@ void CWeaponSDKBase::SecondaryAttack()
 static const Vector g_meleeMins(-MELEE_HULL_DIM,-MELEE_HULL_DIM,-MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM,MELEE_HULL_DIM,MELEE_HULL_DIM);
 
-void CWeaponSDKBase::Swing(bool bIsSecondary)
+void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 {
 	trace_t traceHit;
 
@@ -289,7 +289,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
 		return;
 
-	if (bIsSecondary && pOwner->m_Shared.IsDiving())
+	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
 	pOwner->Instructor_LessonLearned("brawl");
@@ -338,7 +338,10 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		}
 	}
 
-	pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
+	if (bIsSecondary)
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
+	else
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 2.5f);
 
 	// -------------------------
 	//	Miss
