@@ -1938,6 +1938,9 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 
 void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
 {
+	if (gpGlobals->eLoadType == MapLoad_Background)
+		return;
+
 	CSingleUserRecipientFilter filter( this );
 	filter.MakeReliable();
 
