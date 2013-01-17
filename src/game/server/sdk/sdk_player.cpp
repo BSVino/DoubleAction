@@ -1447,7 +1447,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
-	m_bHasSuperSlowMo = false;
 
 	m_bHasPlayerDied = true;
 

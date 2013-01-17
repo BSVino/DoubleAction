@@ -1229,7 +1229,6 @@ void CSDKPlayer::ActivateSlowMo()
 	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds + 0.5f;    // 1 second becomes 1.5 seconds, 2 becomes 2.5, etc
 	m_flSlowMoSeconds = 0;
 	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
-	m_bHasSuperSlowMo = false;
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
