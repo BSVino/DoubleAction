@@ -175,11 +175,11 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+	/*if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
 	{
 		// Marksmen don't consume ammo while their skill is active.
 	}
-	else
+	else*/
 	{
 		// Make sure we don't fire more than the amount in the clip
 		if ( UsesClipsForAmmo1() )
@@ -200,8 +200,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
 	}
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		flSpread *= 0.5f;
+	flSpread = pPlayer->m_Shared.ModifySkillValue(flSpread, -0.25f, SKILL_MARKSMAN);
 
 	if (!WeaponSpreadFixed())
 		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
@@ -353,15 +352,13 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		WeaponSound( MELEE_MISS );
 
 		// Use less charge than if it's a hit
-		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			pOwner->UseStyleCharge(5);
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
 	}
 	else
 	{
 		Hit( traceHit, bIsSecondary );
 
-		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			pOwner->UseStyleCharge(10);
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 10);
 	}
 
 	// Send the anim
@@ -383,8 +380,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	else
 		flFireRate = GetBrawlFireRate();
 
-	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flFireRate *= 0.7f;
+	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
@@ -560,9 +556,6 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	// The heavier the damage the more it hurts.
 	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flDamage *= 2.0f;
-
 	if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
 
@@ -614,11 +607,8 @@ void CWeaponSDKBase::AddViewKick()
 			}
 		}
 
-		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		{
-			flPunchBonus *= 0.5f;
-			flRecoilBonus *= 0.5f;
-		}
+		flPunchBonus = pPlayer->m_Shared.ModifySkillValue(flPunchBonus, -0.25f, SKILL_MARKSMAN);
+		flRecoilBonus = pPlayer->m_Shared.ModifySkillValue(flRecoilBonus, -0.25f, SKILL_MARKSMAN);
 
 		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flPunchBonus );
 		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
@@ -928,9 +918,7 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
-		// Player gets a reload speed boost with Adrenaline.
-		if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			ToSDKPlayer(GetOwner())->UseStyleCharge(5);
+		ToSDKPlayer(GetOwner())->UseStyleCharge(SKILL_MARKSMAN, 5);
 
 		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
 
@@ -939,8 +927,7 @@ bool CWeaponSDKBase::Reload( void )
 
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
-		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			flSpeedMultiplier *= 0.6f;
+		flSpeedMultiplier = GetPlayerOwner()->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.2f, SKILL_MARKSMAN);
 
 		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
@@ -976,10 +963,41 @@ bool CWeaponSDKBase::Reload( void )
 
 void CWeaponSDKBase::FinishReload()
 {
-	BaseClass::FinishReload();
+	CSDKPlayer *pOwner = GetPlayerOwner();
 
-	if (GetPlayerOwner())
-		GetPlayerOwner()->ReadyWeapon();
+	if (pOwner)
+	{
+		bool bConsume = true;
+		if (pOwner->IsStyleSkillActive(SKILL_MARKSMAN))
+			bConsume = false;
+
+		// If I use primary clips, reload primary
+		if ( UsesClipsForAmmo1() )
+		{
+			int primary	= min( GetMaxClip1() - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));	
+			m_iClip1 += primary;
+
+			if (bConsume)
+				pOwner->RemoveAmmo( primary, m_iPrimaryAmmoType);
+		}
+
+		// If I use secondary clips, reload secondary
+		if ( UsesClipsForAmmo2() )
+		{
+			int secondary = min( GetMaxClip2() - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
+			m_iClip2 += secondary;
+
+			if (bConsume)
+				pOwner->RemoveAmmo( secondary, m_iSecondaryAmmoType );
+		}
+
+		if ( m_bReloadsSingly )
+		{
+			m_bInReload = false;
+		}
+
+		pOwner->ReadyWeapon();
+	}
 }
 
 void CWeaponSDKBase::SendReloadEvents()
@@ -1104,8 +1122,7 @@ bool CWeaponSDKBase::Deploy( )
 
 	float flSpeedMultiplier = GetSDKWpnData().m_flDrawTimeMultiplier;
 
-	if (pOwner && pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flSpeedMultiplier *= 0.6f;
+	flSpeedMultiplier = pOwner->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.3f, SKILL_MARKSMAN);
 
 	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;

@@ -118,10 +118,12 @@ const char *WeaponIDToAlias( SDKWeaponID id )
 static const char * s_SkillAliasInfo[] = 
 {
 	"none",			// SKILL_NONE
-	"adrenaline",	// SKILL_ADRENALINE
-	"secondwind",	// SKILL_SECONDWIND
-	"slowmo",		// SKILL_SLOWMO
-	"marksman",		// SKILL_MARKSMAN
+	"bouncer",      // SKILL_BOUNCER
+	"athletic",     // SKILL_ATHLETIC
+	"resilient",    // SKILL_RESILIENT
+	"reflexes",     // SKILL_REFLEXES
+	"marksman",     // SKILL_MARKSMAN
+	"troll",        // SKILL_TROLL
 	NULL,
 };
 

@@ -259,8 +259,8 @@ public:
 	void AddStylePoints(float points, style_point_t eStyle);
 	void SetStylePoints(float points);
 	bool UseStylePoints();
-	bool IsStyleSkillActive() const;
-	void UseStyleCharge(float flCharge);
+	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
+	void UseStyleCharge(SkillID eSkill, float flCharge);
 
 	void ActivateMeter();
 
@@ -400,9 +400,8 @@ public:
 
 	CNetworkVar( float, m_flReadyWeaponUntil );
 
-	float		m_flNextRegen;
-	float		m_flNextHealthDecay;
-	float		m_flNextSecondWindRegen;
+	float       m_flNextRegen;
+	float       m_flNextHealthDecay;
 
 	CNetworkVar( float, m_flDisarmRedraw );
 

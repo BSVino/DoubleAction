@@ -805,21 +805,6 @@ void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
 	UpdateVisibility();
 }
 
-int C_SDKPlayer::DrawModel( int flags )
-{
-	if (IsStyleSkillActive())
-	{
-		int iResult = BaseClass::DrawModel(flags);
-
-		if (flags & STUDIO_RENDER)
-			modelrender->ForcedMaterialOverride( nullptr );
-
-		return iResult;
-	}
-	else
-		return BaseClass::DrawModel(flags);
-}
-
 void C_SDKPlayer::PlayReloadEffect()
 {
 	// Only play the effect for other players.

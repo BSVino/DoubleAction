@@ -126,9 +126,11 @@ void CHudNotices::Paint()
 	if (!m_apNotices[NOTICE_MARKSMAN])
 	{
 		m_apNotices[NOTICE_MARKSMAN] = gHUD.GetIcon("notice_marksman");
-		m_apNotices[NOTICE_ADRENALINE] = gHUD.GetIcon("notice_adrenaline");
+		m_apNotices[NOTICE_BOUNCER] = gHUD.GetIcon("notice_bouncer");
+		m_apNotices[NOTICE_ATHLETIC] = gHUD.GetIcon("notice_athletic");
 		m_apNotices[NOTICE_SUPERSLO] = gHUD.GetIcon("notice_superslo");
-		m_apNotices[NOTICE_TOUGHTOKILL] = gHUD.GetIcon("notice_toughtokill");
+		m_apNotices[NOTICE_RESILIENT] = gHUD.GetIcon("notice_resilietn");
+		m_apNotices[NOTICE_TROLL] = gHUD.GetIcon("notice_troll");
 		m_apNotices[NOTICE_SLOMO] = gHUD.GetIcon("notice_slowmo");
 		m_apNotices[NOTICE_STYLESTREAK] = gHUD.GetIcon("notice_stylestreak");
 	}
@@ -149,6 +151,10 @@ void CHudNotices::Paint()
 	GetSize(iWidth, iHeight);
 
 	auto* pTexture = m_apNotices[m_eNotice];
+
+	Assert(pTexture);
+	if (!pTexture)
+		return;
 
 	float flScale = 0.8f;
 	if (m_eNotice == NOTICE_SLOMO)

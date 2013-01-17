@@ -126,7 +126,14 @@ bool CWeaponShotgun::Reload()
 #endif
 
 		if ( pPlayer )
-			 pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		{
+			bool bConsume = true;
+			if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
+				bConsume = false;
+
+			if (bConsume)
+				pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		}
 
 		if ( pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 || m_iClip1 == GetMaxClip1() )
 			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD_END );

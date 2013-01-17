@@ -139,13 +139,13 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
 	else if ( m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity() )
 	{
-		if (m_pSDKPlayer->IsStyleSkillActive() && m_pSDKPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		{
-			ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
-			mv->m_flClientMaxSpeed = sdk_dive_speed_adrenaline.GetFloat();
-		}
-		else
-			mv->m_flClientMaxSpeed = sdk_dive_speed.GetFloat();
+		ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
+
+		float flSpeedRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+		flSpeedRatio -= 1; // 0 means unchanged.
+		flSpeedRatio /= 2; // It gets doubled when the skill is on.
+
+		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, flSpeedRatio, SKILL_ATHLETIC);
 	}
 	else
 	{
@@ -206,8 +206,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	}	
 #endif // SDK_USE_PRONE
 
-	if (m_pSDKPlayer->IsStyleSkillActive() && m_pSDKPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		mv->m_flClientMaxSpeed *= 1.3f;
+	mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, 0.25f, SKILL_ATHLETIC);
 }
 
 ConVar cl_show_speed( "cl_show_speed", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "spam console with local player speed" );

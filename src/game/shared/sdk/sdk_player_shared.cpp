@@ -60,11 +60,7 @@ void CSDKPlayer::FireBullet(
 						   float y	// spread y factor
 						   )
 {
-	float fCurrentDamage = iDamage;   // damage of the bullet at it's current trajectory
 	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
-
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		fCurrentDamage *= 1.6f;
 
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
@@ -218,7 +214,7 @@ void CSDKPlayer::FireBullet(
 		// add damage to entity that we hit
 
 #ifdef GAME_DLL
-		float flBulletDamage = fCurrentDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
+		float flBulletDamage = iDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
 
 		ClearMultiDamage();
 
@@ -485,19 +481,30 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 }
 
 ConVar dab_styletime( "dab_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
-bool CSDKPlayer::IsStyleSkillActive() const
+bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 {
 	if (dab_styletime.GetBool())
-		return true;
+	{
+		if (eSkill == SKILL_NONE)
+			return true;
+		else
+			return m_Shared.m_iStyleSkill == eSkill;
+	}
 
-	if (m_flStylePoints >= 100)
-		return true;
+	if (m_flStyleSkillCharge == 0)
+		return false;
 
-	return m_flStyleSkillCharge > 0;
+	if (eSkill == SKILL_NONE)
+		return true;
+	else
+		return m_Shared.m_iStyleSkill == eSkill;
 }
 
-void CSDKPlayer::UseStyleCharge(float flCharge)
+void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 {
+	if (!IsStyleSkillActive(eSkill))
+		return;
+
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 }
 
@@ -505,8 +512,8 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, 0.5, 1);
+	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
 		m_flFreezeUntil = m_flCurrentTime;
@@ -693,8 +700,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	if (!CanSlide())
 		return;
 
-	if (m_iStyleSkill == SKILL_ADRENALINE)
-		m_pOuter->UseStyleCharge(5);
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -760,8 +766,9 @@ float CSDKPlayerShared::GetSlideFriction() const
 		return 1;
 
 	float flMultiplier = 1;
-	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flMultiplier = 5;
+
+	if (m_iStyleSkill == SKILL_ATHLETIC)
+		flMultiplier = ModifySkillValue(2.5, 0.5f, SKILL_ATHLETIC);
 
 	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat())
 		return 0.1f/flMultiplier;
@@ -877,8 +884,7 @@ Vector CSDKPlayerShared::StartDiving()
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
 
-	if (m_iStyleSkill == SKILL_ADRENALINE)
-		m_pOuter->UseStyleCharge(5);
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -905,26 +911,25 @@ Vector CSDKPlayerShared::StartDiving()
 
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
-	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-	{
-		m_pOuter->SetGravity(sdk_dive_gravity_adrenaline.GetFloat());
+	float flDiveHeight = sdk_dive_height.GetFloat();
+	if (!bWasOnGround)
+		flDiveHeight = sdk_dive_height_high.GetFloat();
 
-		return m_vecDiveDirection.Get() * (sdk_dive_speed_adrenaline.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height_adrenaline.GetFloat());
-	}
-	else if (bWasOnGround)
-	{
-		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+	float flRatio = sdk_dive_height_adrenaline.GetFloat()/flDiveHeight;
+	float flModifier = (flRatio - 1)/2;
 
-		ConVarRef sdk_dive_speed("sdk_dive_speed");
-		return m_vecDiveDirection.Get() * (sdk_dive_speed.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height.GetFloat());
-	}
-	else
-	{
-		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+	flDiveHeight = ModifySkillValue(flDiveHeight, flModifier, SKILL_ATHLETIC);
 
-		ConVarRef sdk_dive_speed("sdk_dive_speed");
-		return m_vecDiveDirection.Get() * (sdk_dive_speed.GetFloat() * flSpeedFraction) + Vector(0, 0, sdk_dive_height_high.GetFloat());
-	}
+	flRatio = sdk_dive_gravity_adrenaline.GetFloat()/sdk_dive_gravity.GetFloat();
+	flModifier = (flRatio - 1)/2;
+
+	m_pOuter->SetGravity(ModifySkillValue(sdk_dive_gravity.GetFloat(), flModifier, SKILL_ATHLETIC));
+
+	ConVarRef sdk_dive_speed("sdk_dive_speed");
+	flRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+	flModifier = (flRatio - 1)/2;
+
+	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
 }
 
 void CSDKPlayerShared::EndDive()
@@ -1239,9 +1244,9 @@ float CSDKPlayer::GetSlowMoGoal() const
 	if (m_iSlowMoType == SLOWMO_STYLESKILL)
 		return 0.8;
 	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
-		return 0.55;
+		return 0.5;
 	else if (m_iSlowMoType == SLOWMO_PASSIVE)
-		return 0.3;
+		return 0.4;
 	else //if (m_iSlowMoType == SLOWMO_NONE)
 		return 1;
 }
@@ -1259,6 +1264,13 @@ void CSDKPlayer::UpdateCurrentTime()
 
 #ifdef GAME_DLL
 		SDKGameRules()->PlayerSlowMoUpdate(this);
+
+		if (IsStyleSkillActive(SKILL_REFLEXES))
+		{
+			// They used the superslow, empty the style meter.
+			m_flStyleSkillCharge = 0;
+			SetStylePoints(0);
+		}
 #endif
 	}
 
@@ -1431,4 +1443,15 @@ const Vector CSDKPlayer::GetThirdPersonCameraPosition()
 const Vector CSDKPlayer::GetThirdPersonCameraTarget()
 {
 	return m_vecThirdTarget;
+}
+
+float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID eSkill) const
+{
+	if (m_iStyleSkill != eSkill)
+		return flValue;
+
+	if (m_pOuter->IsStyleSkillActive())
+		flModify *= 2;
+
+	return flValue * (flModify+1);
 }

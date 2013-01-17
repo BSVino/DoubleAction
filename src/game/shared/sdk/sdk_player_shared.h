@@ -114,6 +114,8 @@ public:
 
 	void	ForceUnzoom( void );
 
+	float   ModifySkillValue(float flValue, float flModify, SkillID eSkill) const;
+
 #ifdef SDK_USE_SPRINTING
 	bool	IsSprinting( void ) { return m_bIsSprinting; }
 

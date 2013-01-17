@@ -120,8 +120,7 @@ float CWeaponSDKMelee::GetMeleeDamage( bool bIsSecondary ) const
 	if (bIsSecondary)
 		flDamage = GetSDKWpnData().m_iSecondaryDamage;
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flDamage *= 2.0f;
+	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
 
 	if (pPlayer->m_Shared.IsDiving())
 		flDamage *= 1.5f;

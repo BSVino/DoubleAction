@@ -226,8 +226,8 @@ void FX_FireBullets(
 			x,y );
 	}
 
-	if (pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		pPlayer->UseStyleCharge(3);
+	// Adjust the style charge spend for the fire rate of the weapon so that weapons with a high ROF don't suck it up.
+	pPlayer->UseStyleCharge(SKILL_MARKSMAN, pWeaponInfo->m_flCycleTime * 10);
 
 #if !defined (CLIENT_DLL)
 	for (int i = 1; i <= min(iMaxPlayers, gpGlobals->maxClients); i++)

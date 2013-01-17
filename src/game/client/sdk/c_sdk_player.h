@@ -72,7 +72,6 @@ public:
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
-	virtual int DrawModel( int flags );
 
 	virtual bool			PlayerUse( void );
 
@@ -152,8 +151,8 @@ public:
 
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
-	bool IsStyleSkillActive() const;
-	void UseStyleCharge(float flCharge);
+	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
+	void UseStyleCharge(SkillID eSkill, float flCharge);
 
 	virtual void SharedSpawn();
 	

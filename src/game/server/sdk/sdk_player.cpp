@@ -287,7 +287,6 @@ CSDKPlayer::CSDKPlayer()
 
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
-	m_flNextSecondWindRegen = 0;
 
 	m_bHasPlayerDied = false;
 	m_bThirdPerson = false;
@@ -616,7 +615,7 @@ inline bool CSDKPlayer::IsReloading( void ) const
 
 ConVar dab_regenamount( "dab_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
-ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
+ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
 void CSDKPlayer::PreThink(void)
 {
@@ -633,27 +632,32 @@ void CSDKPlayer::PreThink(void)
 		{
 			m_iHealth -= dab_decayamount.GetFloat();
 
-			m_flNextHealthDecay = m_flCurrentTime + 2;
+			m_flNextHealthDecay = m_flCurrentTime + 1;
 		}
 
-		if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+		if (m_flCurrentTime > m_flNextRegen)
 		{
-			if (m_flCurrentTime > m_flNextSecondWindRegen)
-			{
-				int iHealthTaken = TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+			float flRatio = dab_regenamount_secondwind.GetFloat()/dab_regenamount.GetFloat();
+			float flModifier = (flRatio - 1)/2;
+			float flHealth = m_Shared.ModifySkillValue(dab_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
 
-				m_flNextSecondWindRegen = m_flCurrentTime + 1;
-
-				UseStyleCharge(iHealthTaken);
-			}
-
-		}
-		else if (m_flCurrentTime > m_flNextRegen)
-		{
 			m_flNextRegen = m_flCurrentTime + 1;
 
-			if (GetHealth() < GetMaxHealth()/2)
-				TakeHealth(min(dab_regenamount.GetFloat(), GetMaxHealth()/2 - GetHealth()), 0);
+			// Heal up to 50% of the player's health.
+			int iMaxHealth = GetMaxHealth()/2;
+
+			if (IsStyleSkillActive(SKILL_RESILIENT))
+				// If Resilient is active, heal up to 100%, which is actually 200 health
+				iMaxHealth = GetMaxHealth();
+			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+				// If it's passive heal up to 150 health
+				iMaxHealth = GetMaxHealth() * 1.5f;
+
+			int iHealthTaken = 0;
+			if (GetHealth() < iMaxHealth)
+				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
+
+			UseStyleCharge(SKILL_RESILIENT, iHealthTaken/2);
 		}
 	}
 
@@ -815,6 +819,7 @@ void CSDKPlayer::GiveDefaultItems()
 	{
 		GiveNamedItem( "weapon_brawl" );
 
+		bool bHasGrenade = false;
 		CWeaponSDKBase* pHeaviestWeapon = NULL;
 
 		for (int i = 0; i < MAX_LOADOUT; i++)
@@ -835,7 +840,10 @@ void CSDKPlayer::GiveDefaultItems()
 					if (!FStrEq(pInfo->szAmmo1, "grenades"))
 						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 					else
+					{
+						bHasGrenade = true;
 						CBasePlayer::GiveAmmo( m_aLoadout[i].m_iCount-1, "grenades");
+					}
 				}
 			}
 		}
@@ -859,6 +867,14 @@ void CSDKPlayer::GiveDefaultItems()
 
 			Weapon_SetLast(GetWeapon(i));
 			break;
+		}
+
+		if (m_Shared.m_iStyleSkill == SKILL_TROLL)
+		{
+			if (bHasGrenade)
+				CBasePlayer::GiveAmmo(1, "grenades");
+			else
+				GiveNamedItem( "weapon_grenade" );
 		}
 	}
 }
@@ -936,6 +952,8 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
+
+	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
@@ -1165,11 +1183,11 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+/*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
 		UseStyleCharge(flDamage * 0.2f);
-		flDamage *= 0.6f;
-	}
+		flDamage = m_Shared.ModifySkillValue(flDamage, 0.3f, SKILL_IMPERVIOUS);
+	}*/
 
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
@@ -1332,7 +1350,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 	}
 
-	m_flNextRegen = m_flCurrentTime + 10;
+	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
+		m_flNextRegen = m_flCurrentTime + 10;
 
 	return 1;
 }
@@ -1669,7 +1688,7 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 
 	float flMultiplier = 1.5f;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+	if (IsStyleSkillActive(SKILL_RESILIENT))
 		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
 
 // heal
@@ -1688,14 +1707,12 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	// Don't call parent class, we override with special behavior
 }
 
-ConVar dab_secondwind_health_bonus( "dab_secondwind_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar dab_resilient_health_bonus( "dab_resilient_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 
 int CSDKPlayer::GetMaxHealth() const
 {
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
-	{
-		return BaseClass::GetMaxHealth() + dab_secondwind_health_bonus.GetInt();
-	}
+	if (IsStyleSkillActive(SKILL_RESILIENT))
+		return BaseClass::GetMaxHealth() + dab_resilient_health_bonus.GetInt();
 
 	return BaseClass::GetMaxHealth();
 }
@@ -2423,6 +2440,8 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 	m_Shared.m_iStyleSkill = eSkill;
 	SetStylePoints(0);
 	m_flStyleSkillCharge = 0;
+
+	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 }
 
 #if defined ( SDK_USE_PRONE )
@@ -3061,8 +3080,7 @@ void CSDKPlayer::ActivateMeter()
 
 	m_flStylePoints = 0;
 
-	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
-		m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
+	m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
 
 	m_iStyleKillStreak = 0;
 
@@ -3095,26 +3113,26 @@ void CSDKPlayer::ActivateMeter()
 			}
 		}
 
-		GiveNamedItem( "weapon_grenade" );
-		CBasePlayer::GiveAmmo( 10, "grenades");
-
 		SendNotice(NOTICE_MARKSMAN);
 	}
-	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
+	else if (m_Shared.m_iStyleSkill == SKILL_TROLL)
 	{
-		m_bHasSuperSlowMo = true;
-		GiveSlowMo(6);   // Gets cut in two because super slow mo is on, so it's really 3
+		GiveNamedItem( "weapon_grenade" );
+
+		SendNotice(NOTICE_TROLL);
+	}
+	else if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+	{
+		GiveSlowMo(3);
 
 		SendNotice(NOTICE_SUPERSLO);
 	}
-	else if (m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
-	{
-		SendNotice(NOTICE_TOUGHTOKILL);
-	}
-	else if (m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-	{
-		SendNotice(NOTICE_ADRENALINE);
-	}
+	else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+		SendNotice(NOTICE_RESILIENT);
+	else if (m_Shared.m_iStyleSkill == SKILL_ATHLETIC)
+		SendNotice(NOTICE_ATHLETIC);
+	else if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+		SendNotice(NOTICE_BOUNCER);
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)
@@ -3125,10 +3143,10 @@ void CSDKPlayer::SetSlowMoType(int iType)
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)
 {
-	if (m_bHasSuperSlowMo)
-		flSeconds /= 2;
-
 	float flMaxSlow = 5;
+
+	if (IsStyleSkillActive(SKILL_REFLEXES))
+		flMaxSlow += 3;
 
 	if (m_flSlowMoSeconds < flMaxSlow)
 		SendNotice(NOTICE_SLOMO);

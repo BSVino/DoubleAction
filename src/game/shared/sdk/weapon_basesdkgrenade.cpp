@@ -182,9 +182,12 @@ void CBaseSDKGrenade::ItemPostFrame()
 //			DropGrenade();
 //		else
 			ThrowGrenade();
-		
-		DecrementAmmo( pPlayer );
-	
+
+		if (!pPlayer->IsStyleSkillActive(SKILL_TROLL))
+			DecrementAmmo( pPlayer );
+
+		pPlayer->UseStyleCharge(SKILL_TROLL, 40);
+
 		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
 		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
@@ -206,10 +209,17 @@ void CBaseSDKGrenade::ItemPostFrame()
 #endif
 				pPlayer->SwitchToNextBestWeapon( NULL ); //Tony; now switch! cuz we rans outs!
 			}
+			else if (pPlayer->IsStyleSkillActive(SKILL_TROLL))
+			{
+				m_bRedraw = false;
+				m_flNextPrimaryAttack = GetCurrentTime() + 1.2;
+				m_flNextSecondaryAttack = GetCurrentTime() + 1.2;
+				SendWeaponAnim( GetDeployActivity() );	
+			}
 			else
 			{
 				m_bRedraw = false;
-				pPlayer->SwitchToNextBestWeapon( this ); //Tony; now switch! cuz we rans outs!
+				pPlayer->SwitchToNextBestWeapon( this );
 			}
 			return;	//don't animate this grenade any more!
 		}	
