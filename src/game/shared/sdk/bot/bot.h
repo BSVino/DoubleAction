@@ -30,6 +30,8 @@
 #include "util.h"
 #include "shareddefs.h"
 
+#include "sdk_gamerules.h"
+
 #include "tier0/vprof.h"
 
 class BotProfile;
@@ -901,7 +903,7 @@ inline bool CBot< PlayerType >::IsEnemy( CBaseEntity *ent ) const
 	CBasePlayer *player = static_cast<CBasePlayer *>( ent );
 
 	// if they are on our team, they are our friends
-	if (player->GetTeamNumber() == GetTeamNumber())
+	if (SDKGameRules()->IsTeamplay() && player->GetTeamNumber() == GetTeamNumber())
 		return false;
 
 	// yep, we hate 'em

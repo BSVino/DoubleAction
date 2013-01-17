@@ -41,13 +41,13 @@ void CDABot::OnPlayerDeath( IGameEvent *event )
 	}
 
 	// react to teammate death
-	if (victim->GetTeamNumber() == GetTeamNumber())
+	if (!IsEnemy(victim))
 	{
 		// note time of death
 		m_friendDeathTimestamp = gpGlobals->curtime;
 
 		// chastise friendly fire from humans
-		if (killer && !killer->IsBot() && killer->GetTeamNumber() == GetTeamNumber() && killer != this)
+		if (killer && !killer->IsBot() && !IsEnemy(killer) && killer != this)
 		{
 			GetChatter()->KilledFriend();
 		}
@@ -82,7 +82,7 @@ void CDABot::OnPlayerDeath( IGameEvent *event )
 				if (other && other->IsPlayer())
 				{
 					CSDKPlayer *killer = static_cast<CSDKPlayer *>( other );
-					if (killer->GetTeamNumber() != GetTeamNumber())
+					if (IsEnemy(killer))
 					{
 						// check if we saw our friend die - dont check FOV - assume we're aware of our surroundings in combat
 						// snipers stay put
@@ -122,7 +122,7 @@ void CDABot::OnPlayerDeath( IGameEvent *event )
 		// forget our current noise - it may have come from the now dead enemy
 		ForgetNoise();
 
-		if (killer && killer->GetTeamNumber() == GetTeamNumber())
+		if (killer && !IsEnemy(killer))
 		{
 			// only chatter about enemy kills if we see them occur, and they were the last one we see
 			if (GetNearbyEnemyCount() <= 1)
