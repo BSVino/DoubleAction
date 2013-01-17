@@ -338,6 +338,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		}
 	}
 
+	pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
+
 	// -------------------------
 	//	Miss
 	// -------------------------
@@ -350,15 +352,10 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		ImpactWater( swingStart, testEnd );
 
 		WeaponSound( MELEE_MISS );
-
-		// Use less charge than if it's a hit
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
 	}
 	else
 	{
 		Hit( traceHit, bIsSecondary );
-
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 10);
 	}
 
 	// Send the anim
