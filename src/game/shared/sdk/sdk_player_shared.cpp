@@ -893,6 +893,10 @@ Vector CSDKPlayerShared::StartDiving()
 	m_bDiving = true;
 	m_bRollAfterDive = true;
 
+#ifdef GAME_DLL
+	m_pOuter->OnDive();
+#endif
+
 	ForceUnzoom();
 
 	m_vecDiveDirection = m_pOuter->GetAbsVelocity();

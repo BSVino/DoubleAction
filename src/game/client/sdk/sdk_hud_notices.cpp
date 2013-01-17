@@ -48,14 +48,14 @@ public:
 	virtual void Reset( void );
 	virtual void OnThink();
 
+	virtual bool ShouldDraw( void );
+
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
 	void	MsgFunc_Notice( bf_read &msg );
 
 private:
-	int		m_flStyle;
-
 	CHudTexture* m_apNotices[TOTAL_NOTICES];
 
 	float    m_flStartTime;
@@ -73,7 +73,9 @@ CHudNotices::CHudNotices( const char *pElementName )
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD );
+	SetHiddenBits( 0 );
+
+	m_flStartTime = -1;
 }
 
 void CHudNotices::Init()
@@ -99,7 +101,7 @@ void CHudNotices::MsgFunc_Notice( bf_read &msg )
 
 void CHudNotices::Reset()
 {
-	m_flStyle = 0;
+	m_flStartTime = -1;
 }
 
 void CHudNotices::VidInit()
@@ -114,13 +116,31 @@ void CHudNotices::OnThink()
 		return;
 }
 
+bool CHudNotices::ShouldDraw()
+{
+	if (m_flStartTime < 0)
+		return false;
+
+	if (gpGlobals->curtime > m_flStartTime + hud_noticetime.GetFloat())
+		return false;
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return false;
+
+	if (!pPlayer->IsAlive())
+	{
+		if (m_eNotice != NOTICE_WORTHIT)
+			return false;
+	}
+
+	return true;
+}
+
 void CHudNotices::Paint()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if ( !pPlayer )
-		return;
-
-	if (!pPlayer->IsAlive())
 		return;
 
 	if (!m_apNotices[NOTICE_MARKSMAN])
@@ -128,11 +148,12 @@ void CHudNotices::Paint()
 		m_apNotices[NOTICE_MARKSMAN] = gHUD.GetIcon("notice_marksman");
 		m_apNotices[NOTICE_BOUNCER] = gHUD.GetIcon("notice_bouncer");
 		m_apNotices[NOTICE_ATHLETIC] = gHUD.GetIcon("notice_athletic");
-		m_apNotices[NOTICE_SUPERSLO] = gHUD.GetIcon("notice_superslo");
-		m_apNotices[NOTICE_RESILIENT] = gHUD.GetIcon("notice_resilietn");
+		m_apNotices[NOTICE_SUPERSLO] = gHUD.GetIcon("notice_reflexes");
+		m_apNotices[NOTICE_RESILIENT] = gHUD.GetIcon("notice_resilient");
 		m_apNotices[NOTICE_TROLL] = gHUD.GetIcon("notice_troll");
 		m_apNotices[NOTICE_SLOMO] = gHUD.GetIcon("notice_slowmo");
 		m_apNotices[NOTICE_STYLESTREAK] = gHUD.GetIcon("notice_stylestreak");
+		m_apNotices[NOTICE_WORTHIT] = gHUD.GetIcon("notice_worthit");
 	}
 
 	if (m_eNotice < 0)

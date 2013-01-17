@@ -1142,6 +1142,11 @@ void CSDKPlayer::InitialSpawn( void )
 	ClearLoadout();
 }
 
+void CSDKPlayer::OnDive()
+{
+	m_bDamagedEnemyDuringDive = false;
+}
+
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
 	Vector vecToDamagePoint = ptr->endpos - GetAbsOrigin();
@@ -1348,6 +1353,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
 		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
+
+		pAttackerSDK->m_bDamagedEnemyDuringDive = true;
 	}
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
@@ -1365,6 +1372,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
 
 	StopSound( "Player.GoSlide" );
+
+	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_Shared.IsDiving() && m_bDamagedEnemyDuringDive)
+	{
+		SendNotice(NOTICE_WORTHIT);
+		AddStylePoints(10, STYLE_POINT_STYLISH);
+	}
 
 	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
 	{

@@ -82,6 +82,8 @@ public:
 	virtual void UpdateViewBobRamp();
 	virtual void UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye);
 
+	virtual void OnDive();
+
 	virtual void StartTouch( CBaseEntity *pOther );
 
 	virtual void GiveDefaultItems();
@@ -386,6 +388,8 @@ private:
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_ArmorValue );
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
+
+	bool   m_bDamagedEnemyDuringDive;
 
 public:
 #if defined ( SDK_USE_PRONE )
