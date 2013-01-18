@@ -472,7 +472,18 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		// Now hit all triggers along the ray that... 
 		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
 #endif
-		WeaponSound( MELEE_HIT );
+		CSoundParameters params;
+
+		if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer() && GetParametersForSound( "Weapon_Brawl.PunchHit", params, NULL ) )
+		{
+			CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
+			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
+				filter.UsePredictionRules();
+
+			EmitSound( filter, traceHit.m_pEnt->entindex(), params );
+		}
+		else
+			WeaponSound( MELEE_HIT );
 	}
 
 	// Apply an impact effect
