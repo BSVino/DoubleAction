@@ -206,7 +206,7 @@ void CDAHudCrosshair::Paint( void )
 	m_pCrosshair->DrawSelf( 
 			x - 0.5f * m_pCrosshair->Width(), 
 			y - 0.5f * m_pCrosshair->Height(),
-			bObstruction?Color(m_clrCrosshair.r(), m_clrCrosshair.g()/2, m_clrCrosshair.b()/2, m_clrCrosshair.a()/2):m_clrCrosshair );
+			bObstruction?Color(128, 128, 128, m_clrCrosshair.a()/2):m_clrCrosshair );
 }
 
 //-----------------------------------------------------------------------------
