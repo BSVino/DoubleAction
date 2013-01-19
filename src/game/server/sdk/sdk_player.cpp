@@ -3191,9 +3191,9 @@ bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 
 		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
 		{
-            char szCharacter[100];
-            Q_strcpy(szCharacter, pszCharacter+14);
-            szCharacter[strlen(szCharacter)-4] = '\0';
+			char szCharacter[100];
+			Q_strcpy(szCharacter, pszCharacter+14);
+			szCharacter[strlen(szCharacter)-4] = '\0';
 			m_iszCharacter = AllocPooledString(szCharacter);
 			return true;
 		}
