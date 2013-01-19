@@ -7,8 +7,6 @@
 
 #include "cbase.h"
 
-#include <string>
-
 #include "sdk_player.h"
 #include "sdk_team.h"
 #include "sdk_gamerules.h"
@@ -3188,14 +3186,15 @@ bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 {
 	for (int i = 0; ; i++)
 	{
-		if (pszPossiblePlayerModels[i] == nullptr)
+		if (pszPossiblePlayerModels[i] == NULL)
 			break;
 
 		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
 		{
-			std::string sCharacter(pszCharacter);
-			sCharacter = sCharacter.substr(14);
-			m_iszCharacter = AllocPooledString(sCharacter.substr(0, sCharacter.length()-4).c_str());
+            char szCharacter[100];
+            Q_strcpy(szCharacter, pszCharacter+14);
+            szCharacter[strlen(szCharacter)-4] = '\0';
+			m_iszCharacter = AllocPooledString(szCharacter);
 			return true;
 		}
 
