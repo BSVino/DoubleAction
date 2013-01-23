@@ -1382,10 +1382,20 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CWeaponGrenade* pGrenadeWeapon = static_cast<CWeaponGrenade*>(GetActiveSDKWeapon());
 
 		if (pGrenadeWeapon->IsPinPulled())
+		{
 			pGrenadeWeapon->DropGrenade();
+
+			pGrenadeWeapon->DecrementAmmo( this );
+
+			if (GetAmmoCount(pGrenadeWeapon->GetPrimaryAmmoType()) <= 0)
+			{
+				Weapon_Drop( pGrenadeWeapon, NULL, NULL );
+				UTIL_Remove(pGrenadeWeapon);
+			}
+		}
 	}
 
-	ThrowActiveWeapon();
+	while (ThrowActiveWeapon());
 
 	CBaseEntity* pAttacker = info.GetAttacker();
 
@@ -1730,6 +1740,9 @@ int CSDKPlayer::GetMaxHealth() const
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
+
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		return false;
 
 	if( pWeapon && pWeapon->CanWeaponBeDropped() )
 	{
