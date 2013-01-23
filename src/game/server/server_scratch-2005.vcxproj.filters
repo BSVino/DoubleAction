@@ -1518,6 +1518,9 @@
     <ClCompile Include="..\shared\sdk\bot\bot_manager.cpp">
       <Filter>Source Files\SDK\Bots</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\da_ammo_pickup.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3079,6 +3082,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\bot\bot_manager.h">
       <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\da_ammo_pickup.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

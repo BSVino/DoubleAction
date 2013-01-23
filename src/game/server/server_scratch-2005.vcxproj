@@ -669,6 +669,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\bot\states\da_bot_move_to.cpp" />
     <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp" />
     <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp" />
+    <ClCompile Include="sdk\da_ammo_pickup.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">
@@ -1096,6 +1097,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="sdk\bot\da_bot_chatter.h" />
     <ClInclude Include="sdk\bot\da_bot_manager.h" />
     <ClInclude Include="sdk\bot\da_gamestate.h" />
+    <ClInclude Include="sdk\da_ammo_pickup.h" />
     <ClInclude Include="ServerNetworkProperty.h" />
     <ClInclude Include="..\..\public\shattersurfacetypes.h" />
     <ClInclude Include="..\shared\sheetsimulator.h" />
