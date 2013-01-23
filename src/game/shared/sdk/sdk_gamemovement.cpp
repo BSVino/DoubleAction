@@ -100,6 +100,7 @@ public:
 #define ROLL_TIME 0.65f
 #define ROLLFINISH_TIME 0.2f
 #define SLIDE_TIME 6.0f
+#define DIVE_RISE_TIME 0.3f
 
 // Expose our interface.
 static CSDKGameMovement g_GameMovement;
@@ -537,6 +538,42 @@ void CSDKGameMovement::PlayerMove( void )
 	}
 
 	BaseClass::PlayerMove();
+
+	if (m_pSDKPlayer->m_Shared.IsDiving())
+	{
+		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
+		{
+			float flDiveLerpTime = DIVE_RISE_TIME;
+
+			float flCurrentLerp = RemapValClamped(m_pSDKPlayer->GetCurrentTime(), m_pSDKPlayer->m_Shared.GetDiveTime(), m_pSDKPlayer->m_Shared.GetDiveTime() + flDiveLerpTime, 0, 1);
+			float flCurrentBias = Bias(flCurrentLerp, 0.6f);
+			float flLastTimeBias = Bias(m_pSDKPlayer->m_Shared.GetDiveLerped(), 0.6f);
+
+			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
+			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
+
+			float flMoveUpHeight = flHullHeightNormal-flHullHeightDive;
+
+			float flCurrentHeight = flMoveUpHeight*flCurrentBias;
+			float flLastTimeHeight = flMoveUpHeight*flLastTimeBias;
+
+			float flHeightToMoveUp = flCurrentHeight - flLastTimeHeight;
+
+			Vector vecNewPosition = mv->GetAbsOrigin() + Vector(0, 0, flHeightToMoveUp);
+
+			trace_t trace;
+			TracePlayerBBoxWithStep( mv->GetAbsOrigin(), vecNewPosition, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+
+			mv->SetAbsOrigin( trace.endpos );
+
+			m_pSDKPlayer->m_Shared.IncreaseDiveLerped(flCurrentLerp - m_pSDKPlayer->m_Shared.GetDiveLerped());
+
+			Vector vecViewOffset = Lerp(flCurrentBias, GetPlayerViewOffset(false), VEC_DIVE_VIEW);
+			m_pSDKPlayer->SetViewOffset( vecViewOffset );
+		}
+		else
+			m_pSDKPlayer->SetViewOffset( VEC_DIVE_VIEW );
+	}
 }
 
 extern void TracePlayerBBoxForGround( const Vector& start, const Vector& end, const Vector& minsSrc,
@@ -610,6 +647,10 @@ void CSDKGameMovement::CategorizePosition( void )
 		{
 			SetGroundEntity( &trace );
 		}
+	}
+	else if (m_pSDKPlayer->m_Shared.IsDiving() && m_pSDKPlayer->GetCurrentTime() < m_pSDKPlayer->m_Shared.GetDiveTime() + DIVE_RISE_TIME)
+	{
+		SetGroundEntity(NULL);
 	}
 	else
 	{
@@ -1448,7 +1489,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsDiving() )
 	{
-		if (m_pSDKPlayer->GetGroundEntity())
+		if (m_pSDKPlayer->GetGroundEntity() && m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetDiveTime() + DIVE_RISE_TIME)
 		{
 			m_pSDKPlayer->m_Shared.EndDive();
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
@@ -1673,11 +1714,6 @@ void CSDKGameMovement::Duck( void )
 		else if( bDive && m_pSDKPlayer->m_Shared.CanDive() )
 		{
 			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
-
-			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
-			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
-			mv->SetAbsOrigin( mv->GetAbsOrigin() + Vector(0, 0, flHullHeightNormal-flHullHeightDive) );
-			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 		}
 	}
 
@@ -1915,8 +1951,5 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 
 const Vector& CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 {
-	if (m_pSDKPlayer->m_Shared.IsDiving())
-		return VEC_DIVE_VIEW;
-
 	return BaseClass::GetPlayerViewOffset(ducked);
 }

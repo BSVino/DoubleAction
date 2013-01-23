@@ -887,6 +887,9 @@ Vector CSDKPlayerShared::StartDiving()
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
 
+	m_flDiveTime = m_pOuter->GetCurrentTime();
+	m_flDiveLerped = 0;
+
 	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
@@ -906,8 +909,6 @@ Vector CSDKPlayerShared::StartDiving()
 	m_vecDiveDirection.GetForModify().z = 0;
 	m_vecDiveDirection.GetForModify().NormalizeInPlace();
 
-	// We need to turn off interp since the dive changes our origin abruptly.
-	m_pOuter->AddEffects( EF_NOINTERP );
 	m_pOuter->DoAnimationEvent(PLAYERANIMEVENT_DIVE);
 
 	bool bWasOnGround = m_pOuter->GetFlags() & FL_ONGROUND;
@@ -941,9 +942,10 @@ Vector CSDKPlayerShared::StartDiving()
 
 void CSDKPlayerShared::EndDive()
 {
+	m_flDiveTime = 0;
+
 	m_pOuter->SetGravity(1);
 	m_bDiving = false;
-	m_pOuter->RemoveEffects( EF_NOINTERP );
 
 	m_pOuter->ReadyWeapon();
 }
