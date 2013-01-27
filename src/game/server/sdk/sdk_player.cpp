@@ -587,6 +587,9 @@ bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
 	if ( !IsBot() )
 		return false;
 
+	if ( bot_freeze.GetBool() )
+		return true;
+
 	int iMimic = abs( bot_mimic.GetInt() );
 	if ( iMimic > gpGlobals->maxClients )
 		return false;

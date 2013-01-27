@@ -155,6 +155,8 @@ void CDABot::ComputeLadderAngles( float *yaw, float *pitch )
 	}
 }
 
+extern ConVar bot_freeze;
+
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Move actual view angles towards desired ones.
@@ -171,7 +173,7 @@ void CDABot::UpdateLookAngles( void )
 	float damping;
 
 	// If mimicing the player, don't modify the view angles.
-	if ( bot_mimic.GetInt() )
+	if ( bot_mimic.GetInt() || bot_freeze.GetBool() )
 		return;
 
 	// springs are stiffer when attacking, so we can track and move between targets better
