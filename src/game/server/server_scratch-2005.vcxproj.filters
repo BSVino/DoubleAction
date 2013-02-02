@@ -1392,9 +1392,6 @@
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_m3.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1519,6 +1516,9 @@
       <Filter>Source Files\SDK\Bots</Filter>
     </ClCompile>
     <ClCompile Include="sdk\da_ammo_pickup.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>

@@ -228,7 +228,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_m3.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />

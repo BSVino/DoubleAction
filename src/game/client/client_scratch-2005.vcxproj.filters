@@ -1413,9 +1413,6 @@
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_m3.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1460,6 +1457,9 @@
     </ClCompile>
     <ClCompile Include="sdk\vgui\folder_gui.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
