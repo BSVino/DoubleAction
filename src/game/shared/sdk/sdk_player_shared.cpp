@@ -119,15 +119,8 @@ void CSDKPlayer::FireBullet(
 		if (pWeaponInfo)
 			eWeaponType = pWeaponInfo->m_eWeaponType;
 
-		//calculate the damage based on the distance the bullet travelled.
-		flCurrentDistance += tr.fraction * flMaxRange;
-
-		// First 500 units, no decrease in damage.
-		flCurrentDistance -= 500;
-		if (flCurrentDistance < 0)
-			flCurrentDistance = 0;
-
-		float flDistanceMultiplier;
+		float flDamageMultiplier = 1;
+		float flMaxRange = 3000;
 
 		// Power formula works like so:
 		// pow( x, distance/y )
@@ -136,22 +129,39 @@ void CSDKPlayer::FireBullet(
 		switch (eWeaponType)
 		{
 		case WT_RIFLE:
-			flDistanceMultiplier = pow ( 0.75f, (flCurrentDistance / 3000));
+			flDamageMultiplier = 0.75f;
+			flMaxRange = 3000;
 			break;
 
 		case WT_SHOTGUN:
-			flDistanceMultiplier = pow ( 0.40f, (flCurrentDistance / 500));
+			flDamageMultiplier = 0.40f;
+			flMaxRange = 500;
 			break;
 
 		case WT_SMG:
-			flDistanceMultiplier = pow ( 0.50f, (flCurrentDistance / 1000));
+			flDamageMultiplier = 0.50f;
+			flMaxRange = 1000;
 			break;
 
 		case WT_PISTOL:
 		default:
-			flDistanceMultiplier = pow ( 0.55f, (flCurrentDistance / 1500));
+			flDamageMultiplier = 0.55f;
+			flMaxRange = 1500;
 			break;
 		}
+
+		//calculate the damage based on the distance the bullet travelled.
+		flCurrentDistance += tr.fraction * flMaxRange;
+
+		// First 500 units, no decrease in damage.
+		flCurrentDistance -= 500;
+		if (flCurrentDistance < 0)
+			flCurrentDistance = 0;
+
+		if (flCurrentDistance > flMaxRange)
+			flCurrentDistance = flMaxRange;
+
+		float flDistanceMultiplier = pow(flDamageMultiplier, (flCurrentDistance / flMaxRange));
 
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
 
@@ -225,6 +235,8 @@ void CSDKPlayer::FireBullet(
 		TraceAttackToTriggers( info, tr.startpos, tr.endpos, vecDir );
 
 		ApplyMultiDamage();
+#else
+		flDistanceMultiplier = flDistanceMultiplier; // Silence warning.
 #endif
 
 		pIgnore = tr.m_pEnt;
