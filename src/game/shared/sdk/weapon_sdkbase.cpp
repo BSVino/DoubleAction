@@ -567,6 +567,8 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	// The heavier the damage the more it hurts.
 	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
 
+	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
+
 	if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
 
