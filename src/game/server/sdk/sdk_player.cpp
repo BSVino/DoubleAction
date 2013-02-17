@@ -907,6 +907,8 @@ void CSDKPlayer::Spawn()
 
 	m_nRenderFX = kRenderNormal;
 
+	AddFlag(FL_ONGROUND);
+
 	//Tony; if we're spawning in active state, equip the suit so the hud works. -- Gotta love base code !
 	if ( State_Get() == STATE_ACTIVE )
 	{
