@@ -185,26 +185,36 @@ void CHudNotices::Paint()
 	float flEndTime = m_flStartTime + hud_noticetime.GetFloat();
 	float flSlideOutTime = flEndTime - 0.5f;
 
-	float flSlideInXStart = 100;
-	float flSlideInXEnd = 80;
+	float flSlideInXStart = -pTexture->EffectiveWidth(flScale);
+	float flSlideSlowXStart = iWidth - 100 - pTexture->EffectiveWidth(flScale);
+	float flSlideSlowXEnd = iWidth - 80 - pTexture->EffectiveWidth(flScale);
+	float flSlideOutXEnd = iWidth;
+
+	if (m_eNotice == NOTICE_SLOMO || m_eNotice == NOTICE_STYLESTREAK || m_eNotice == NOTICE_WORTHIT)
+	{
+		flSlideInXStart = iWidth;
+		flSlideSlowXStart = 100;
+		flSlideSlowXEnd = 80;
+		flSlideOutXEnd = -300;
+	}
 
 	float flSlideIn;
 	float flAlpha = 1;
 	if (gpGlobals->curtime < flSlideInTime)
 	{
 		float flSlideInRamp = RemapValClamped(gpGlobals->curtime, m_flStartTime, flSlideInTime, 0, 1);
-		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.75), 0, 1, iWidth, flSlideInXStart);
+		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.75), 0, 1, flSlideInXStart, flSlideSlowXStart);
 		flAlpha = RemapValClamped(gpGlobals->curtime, m_flStartTime, flSlideInTime, 0, 1);
 	}
 	else if (gpGlobals->curtime < flSlideOutTime)
 	{
-		flSlideIn = RemapVal(gpGlobals->curtime, flSlideInTime, flSlideOutTime, flSlideInXStart, flSlideInXEnd);
+		flSlideIn = RemapVal(gpGlobals->curtime, flSlideInTime, flSlideOutTime, flSlideSlowXStart, flSlideSlowXEnd);
 		flAlpha = 1;
 	}
 	else
 	{
 		float flSlideInRamp = RemapValClamped(gpGlobals->curtime, flSlideOutTime, flEndTime, 0, 1);
-		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.25), 0, 1, flSlideInXEnd, -300);
+		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.25), 0, 1, flSlideSlowXEnd, flSlideOutXEnd);
 		flAlpha = RemapValClamped(gpGlobals->curtime, flSlideOutTime, flEndTime, 1, 0);
 	}
 
