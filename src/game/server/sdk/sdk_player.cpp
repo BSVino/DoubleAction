@@ -2427,9 +2427,13 @@ void CSDKPlayer::BuyRandom()
 	{
 		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
 	}
-	while (eWeapon == SDK_WEAPON_BRAWL || !CanAddToLoadout(eWeapon));
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
+
+	// Fill the rest up with grenades.
+	while (CanAddToLoadout(SDK_WEAPON_GRENADE))
+		AddToLoadout(SDK_WEAPON_GRENADE);
 }
 
 bool CSDKPlayer::PickRandomCharacter()
