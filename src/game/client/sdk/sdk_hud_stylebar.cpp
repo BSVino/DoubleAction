@@ -151,6 +151,7 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 void CHudStyleBar::Reset()
 {
 	m_flStyle = 0;
+	m_aAnnouncements.RemoveAll();
 }
 
 void CHudStyleBar::VidInit()
