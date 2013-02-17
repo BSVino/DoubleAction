@@ -1544,6 +1544,12 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
 		else
 			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+
+		if (!IsAlive() && bKilledVictim)
+		{
+			AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+			SendNotice(NOTICE_WORTHIT);
+		}
 	}
 	else if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
