@@ -656,14 +656,14 @@ void CSDKPlayer::PreThink(void)
 				// If Resilient is active, heal up to 100%, which is actually 200 health
 				iMaxHealth = GetMaxHealth();
 			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
-				// If it's passive heal up to 150 health
-				iMaxHealth = GetMaxHealth() * 1.5f;
+				// If it's passive heal higher than 100%
+				iMaxHealth = GetMaxHealth() * 1.25f;
 
 			int iHealthTaken = 0;
 			if (GetHealth() < iMaxHealth)
 				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
 
-			UseStyleCharge(SKILL_RESILIENT, iHealthTaken/2);
+			UseStyleCharge(SKILL_RESILIENT, iHealthTaken*2/3);
 		}
 	}
 
@@ -1367,6 +1367,10 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
 		m_flNextRegen = m_flCurrentTime + 10;
+	else if (!IsStyleSkillActive())
+		m_flNextRegen = m_flCurrentTime + 6;
+	else
+		m_flNextRegen = m_flCurrentTime + 3;
 
 	return 1;
 }
