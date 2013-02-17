@@ -1021,6 +1021,9 @@ void C_SDKPlayer::ClientThink()
 	{
 		bool bNowInSlow = (GetSlowMoMultiplier() < 1);
 
+		if (!C_SDKPlayer::GetLocalOrSpectatedPlayer()->IsAlive())
+			bNowInSlow = false;
+
 		if (!bWasInSlow && bNowInSlow)
 		{
 			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Start" );
