@@ -219,7 +219,22 @@ void CBaseSDKGrenade::ItemPostFrame()
 			else
 			{
 				m_bRedraw = false;
-				pPlayer->SwitchToNextBestWeapon( this );
+
+				// Only switch to the next best weapon if the next best weapon is not brawl.
+				CBaseCombatWeapon *pNewWeapon = g_pGameRules->GetNextBestWeapon(pPlayer, this);
+				CWeaponSDKBase* pSDKNewWeapon = dynamic_cast<CWeaponSDKBase*>(pNewWeapon);
+
+				bool bSwitch = true;
+
+				if (!pSDKNewWeapon)
+					bSwitch = false;
+
+				// If I'm going to switch to brawl but I have more grenades, don't switch.
+				if (pSDKNewWeapon && pSDKNewWeapon->GetWeaponID() == SDK_WEAPON_BRAWL && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) > 0)
+					bSwitch = false;
+
+				if (bSwitch)
+					pPlayer->SwitchToNextBestWeapon( this );
 			}
 			return;	//don't animate this grenade any more!
 		}	
