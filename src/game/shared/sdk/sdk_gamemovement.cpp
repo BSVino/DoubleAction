@@ -350,8 +350,22 @@ void CSDKGameMovement::CheckFalling( void )
 		}
 	}
 
+	if ( player->GetGroundEntity() != NULL && !IsDead() && player->m_Local.m_flFallVelocity >= 600 )
+	{
+		if ( player->GetWaterLevel() == 0 )
+		{
+			if (!m_pSDKPlayer->m_Shared.IsDiving())
+			{
+				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
+				m_pSDKPlayer->m_Shared.StartRolling();
+				//m_pSDKPlayer->FreezePlayer(0.6f, RemapValClamped(m_pSDKPlayer->m_Local.m_flFallVelocity, 600, 1000, 0.4f, 0.8f));
+			}
+		}
+	}
+
 	BaseClass::CheckFalling();
 }
+
 void CSDKGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMove )
 {
 	//Store the player pointer
