@@ -1284,13 +1284,6 @@ void CSDKPlayer::UpdateCurrentTime()
 
 #ifdef GAME_DLL
 		SDKGameRules()->PlayerSlowMoUpdate(this);
-
-		if (IsStyleSkillActive(SKILL_REFLEXES))
-		{
-			// They used the superslow, empty the style meter.
-			m_flStyleSkillCharge = 0;
-			SetStylePoints(0);
-		}
 #endif
 	}
 

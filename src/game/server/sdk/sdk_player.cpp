@@ -960,6 +960,8 @@ void CSDKPlayer::Spawn()
 	m_iStyleKillStreak = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+		GiveSlowMo(1);
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
@@ -1427,8 +1429,11 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		pAttackerSDK->AwardStylePoints(this, true, info);
-		pAttackerSDK->GiveSlowMo(1);
+		if (pAttacker != this)
+		{
+			pAttackerSDK->AwardStylePoints(this, true, info);
+			pAttackerSDK->GiveSlowMo(1);
+		}
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -2476,6 +2481,8 @@ void CSDKPlayer::ShowSkillMenu()
 
 void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 {
+	int iOldSkill = m_Shared.m_iStyleSkill;
+
 	if (eSkill <= SKILL_NONE || eSkill >= SKILL_MAX)
 		eSkill = SKILL_MARKSMAN;
 
@@ -2484,6 +2491,12 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 	m_flStyleSkillCharge = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
+
+	if (iOldSkill == SKILL_REFLEXES)
+		GiveSlowMo(-1);
+
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+		GiveSlowMo(1);
 }
 
 #if defined ( SDK_USE_PRONE )
@@ -3165,9 +3178,13 @@ void CSDKPlayer::ActivateMeter()
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 	{
-		GiveSlowMo(3);
+		GiveSlowMo(2); // You get one from the kill so it's three total.
 
 		SendNotice(NOTICE_SUPERSLO);
+
+		// They used the superslow, empty the style meter.
+		m_flStyleSkillCharge = 0;
+		SetStylePoints(0);
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
 		SendNotice(NOTICE_RESILIENT);
@@ -3190,7 +3207,7 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 	if (IsStyleSkillActive(SKILL_REFLEXES))
 		flMaxSlow += 3;
 
-	if (m_flSlowMoSeconds < flMaxSlow)
+	if (flSeconds > 0 && m_flSlowMoSeconds < flMaxSlow)
 		SendNotice(NOTICE_SLOMO);
 
 	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, flMaxSlow);

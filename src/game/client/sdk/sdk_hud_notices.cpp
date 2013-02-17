@@ -101,7 +101,6 @@ void CHudNotices::MsgFunc_Notice( bf_read &msg )
 
 void CHudNotices::Reset()
 {
-	m_flStartTime = -1;
 }
 
 void CHudNotices::VidInit()
@@ -111,9 +110,11 @@ void CHudNotices::VidInit()
 
 void CHudNotices::OnThink()
 {
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( !pPlayer )
-		return;
+	if (gpGlobals->curtime < m_flStartTime)
+		m_flStartTime = -1;
+
+	if (gpGlobals->curtime > m_flStartTime + hud_noticetime.GetFloat())
+		m_flStartTime = -1;
 }
 
 bool CHudNotices::ShouldDraw()
