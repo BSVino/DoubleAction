@@ -1430,7 +1430,7 @@ float CSDKGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 	if (pSDKPlayer->m_Shared.IsDiving())
 		flDamage = RemapValClamped(flExcessSpeed, 0, 300, 0, 10);
 	else
-		flDamage = RemapValClamped(flExcessSpeed, 0, 300, 0, 25);
+		flDamage = RemapValClamped(flExcessSpeed, 0, 300, 0, 50);
 
 	return flDamage;
 }
