@@ -196,7 +196,7 @@ public:
 	virtual void Disarm();
 
 	virtual void ThirdPersonToggle();
-	virtual bool IsInThirdPerson() const { return m_bThirdPerson; }
+	virtual bool IsInThirdPerson() const;
 	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
 	const Vector GetThirdPersonCameraPosition();
 	const Vector GetThirdPersonCameraTarget();

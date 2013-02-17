@@ -180,7 +180,7 @@ public:
 
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
 
-	bool IsInThirdPerson() const { return m_bThirdPerson; }
+	bool IsInThirdPerson() const;
 	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
 	const Vector GetThirdPersonCameraPosition();
 	const Vector GetThirdPersonCameraTarget();

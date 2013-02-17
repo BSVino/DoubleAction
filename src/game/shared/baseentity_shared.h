@@ -104,7 +104,7 @@ inline int	CBaseEntity::GetFlags( void ) const
 	return m_fFlags;
 }
 
-inline bool CBaseEntity::IsAlive( void )
+inline bool CBaseEntity::IsAlive( void ) const
 {
 	return m_lifeState == LIFE_ALIVE; 
 }

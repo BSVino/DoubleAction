@@ -1400,6 +1400,14 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 
 #define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
 
+bool CSDKPlayer::IsInThirdPerson() const
+{
+	if (!IsAlive())
+		return false;
+
+	return m_bThirdPerson;
+}
+
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
 #ifdef GAME_DLL
