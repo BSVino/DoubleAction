@@ -152,7 +152,7 @@
     <Lib>
       <UseUnicodeResponseFiles>false</UseUnicodeResponseFiles>
       <AdditionalDependencies>Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>..\lib\public\tier1.lib</OutputFile>
+      <OutputFile>$(OutDir)tier1.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Xdcmake>
