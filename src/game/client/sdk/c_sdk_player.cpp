@@ -1487,7 +1487,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 
 	C_WeaponSDKBase* pWeapon = GetActiveSDKWeapon();
 
-	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
+	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus() || m_Shared.m_iStyleSkill == SKILL_MARKSMAN))
 	{
 		if (pWeapon->HasAimInFireRateBonus())
 			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_low.GetFloat();
