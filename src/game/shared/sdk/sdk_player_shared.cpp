@@ -36,6 +36,8 @@
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
+	#include "r_efx.h"
+	#include "dlight.h"
 
 	#define CRecipientFilter C_RecipientFilter
 #else
@@ -284,6 +286,24 @@ void CSDKPlayer::DoMuzzleFlash()
 
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
+
+	if (pActiveWeapon)
+	{
+		Vector vecEyeForward;
+		EyeVectors(&vecEyeForward);
+		Vector vecMuzzle = EyePosition() + vecEyeForward * 60;
+
+		float flTime = random->RandomFloat( 0.05f, 0.1f ) * (1/GetSlowMoMultiplier());
+
+		dlight_t *dl = effects->CL_AllocDlight ( entindex() );
+		dl->origin = vecMuzzle;
+		dl->color.r = 255;
+		dl->color.g = 165;
+		dl->color.b = 0;
+		dl->die = gpGlobals->curtime + flTime;
+		dl->radius = random->RandomFloat( 500.0f, 700.0f );
+		dl->decay = dl->radius / flTime;
+	}
 
 	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 	{
