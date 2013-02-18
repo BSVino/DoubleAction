@@ -1325,13 +1325,15 @@ void CSDKGameMovement::FixPlayerDiveStuck( bool upward )
 	{
 		Vector org = mv->GetAbsOrigin();
 		org.z += direction;
-		mv->SetAbsOrigin( org );
-		hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, dummy );
+		hitent = TestPlayerPosition( org, COLLISION_GROUP_PLAYER_MOVEMENT, dummy );
 		if (hitent == INVALID_ENTITY_HANDLE )
+		{
+			mv->SetAbsOrigin( org );
 			return;
+		}
 	}
 
-	mv->SetAbsOrigin( test ); // Failed
+	// Failed
 }
 
 //-----------------------------------------------------------------------------
@@ -1480,6 +1482,9 @@ void CSDKGameMovement::Duck( void )
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
+
+			if (!CanUnduck())
+				FinishDuck();
 		}
 		// before we begin to stand up from the roll, let's make sure we don't want to go prone instead
 		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
@@ -1603,9 +1608,19 @@ void CSDKGameMovement::Duck( void )
 			else
 			{
 				m_pSDKPlayer->m_Shared.SetProne(false, false);
-				m_pSDKPlayer->m_Shared.StandUpFromProne();
-				m_pSDKPlayer->m_bUnProneToDuck = false;
-				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
+
+				if (!CanUnduck())
+				{
+					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
+					m_pSDKPlayer->m_bUnProneToDuck = true;
+					FinishDuck();
+				}
+				else
+				{
+					m_pSDKPlayer->m_Shared.StandUpFromProne();
+					m_pSDKPlayer->m_bUnProneToDuck = false;
+					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
+				}
 
 				CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
 				filter.UsePredictionRules();
