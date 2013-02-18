@@ -112,6 +112,7 @@ public:
 	void	SetRecoil(float flRecoil);
 
 	float   GetViewBobRamp() const { return m_flViewBobRamp; }
+	float   GetViewTilt() const { return m_flViewTilt; }
 
 	float   GetRunSpeed() const { return m_flRunSpeed; }
 	float   GetAimInSpeed() const { return m_flAimInSpeed; }

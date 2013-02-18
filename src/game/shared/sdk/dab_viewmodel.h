@@ -13,6 +13,9 @@ class CDABViewModel : public CPredictedViewModel
 	DECLARE_CLASS( CDABViewModel, CPredictedViewModel );
 
 public:
+	CDABViewModel();
+
+public:
 	DECLARE_NETWORKCLASS();
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
@@ -23,4 +26,8 @@ public:
 	virtual void AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles );
 
 	CWeaponSDKBase* GetDAWeapon() { return static_cast<CWeaponSDKBase*>(GetOwningWeapon()); }
+
+private:
+
+	Vector m_vecPlayerVelocityLerp;
 };
