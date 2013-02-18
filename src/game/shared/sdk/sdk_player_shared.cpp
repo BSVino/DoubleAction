@@ -421,11 +421,6 @@ bool CSDKPlayer::CanAttack( void )
 	#endif // SDK_SHOOT_WHILE_SPRINTING
 #endif // SDK_USE_SPRINTING
 
-#if !defined ( SDK_SHOOT_ON_LADDERS )
-	if ( GetMoveType() == MOVETYPE_LADDER )
-		return false;
-#endif //SDK_SHOOT_ON_LADDERS
-
 #if !defined ( SDK_SHOOT_WHILE_JUMPING )
 	if ( m_Shared.IsJumping() )
 		return false;
