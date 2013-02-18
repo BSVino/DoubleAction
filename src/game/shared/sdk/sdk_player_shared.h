@@ -106,6 +106,7 @@ public:
 	void	SetAimIn(bool bAimIn);
 	float	GetAimIn() const { return m_flAimIn; }
 	void	SetAimIn(float flAimIn) { m_flAimIn = flAimIn; }
+	void    RampSlowAimIn(float flGoal);
 
 	Vector	GetRecoil(float flFrameTime);
 	void	SetRecoil(float flRecoil);
@@ -169,6 +170,7 @@ private:
 
 	CNetworkVar( bool, m_bAimedIn );
 	CNetworkVar( float, m_flAimIn );
+	CNetworkVar( float, m_flSlowAimIn );
 
 	Vector	m_vecRecoilDirection;
 	float	m_flRecoilAccumulator;

@@ -136,6 +136,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropFloat( RECVINFO(m_flDiveLerped) ),
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
+	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
 	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
@@ -239,6 +240,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flViewBobRamp, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_bAimedIn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flAimIn, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flSlowAimIn, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -1440,6 +1442,7 @@ static ConVar da_cam_up_aim("da_cam_up_aim", "5", FCVAR_USERINFO|FCVAR_ARCHIVE, 
 
 static ConVar dab_aimin_fov_delta_high("dab_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_aimin_slow_fov_delta("da_aimin_slow_fov_delta", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
@@ -1491,6 +1494,8 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		else
 			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_high.GetFloat();
 	}
+
+	pSetup->fov -= Bias(m_Shared.m_flSlowAimIn, 0.65f)*da_aimin_slow_fov_delta.GetFloat();
 }
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )

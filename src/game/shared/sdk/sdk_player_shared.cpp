@@ -1032,6 +1032,17 @@ void CSDKPlayerShared::SetAimIn(bool bAimIn)
 	m_bAimedIn = bAimIn;
 }
 
+ConVar da_slowaimin_speedin("da_slowaimin_speedin", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_slowaimin_speedout("da_slowaimin_speedout", "10", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayerShared::RampSlowAimIn(float flGoal)
+{
+	if (flGoal > 0)
+		m_flSlowAimIn = Approach(flGoal, m_flSlowAimIn, da_slowaimin_speedin.GetFloat()*gpGlobals->frametime);
+	else
+		m_flSlowAimIn = Approach(flGoal, m_flSlowAimIn, da_slowaimin_speedout.GetFloat()*gpGlobals->frametime);
+}
+
 ConVar dab_recoildecay("dab_recoildecay", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
