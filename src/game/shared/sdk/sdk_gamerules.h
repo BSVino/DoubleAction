@@ -199,7 +199,7 @@ private:
 	int	m_iSpawnPointCount_Red;	//number of red spawns on the map
 #endif // SDK_USE_TEAMS
 
-	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld );
+	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
 
 public:
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
