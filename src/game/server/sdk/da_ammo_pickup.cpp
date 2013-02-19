@@ -77,7 +77,7 @@ bool CAmmoPickup::MyTouch( CBasePlayer *pPlayer )
 		bool bHasWeaponUsingThisAmmo = false;
 		for (int j = 0; j < pPlayer->WeaponCount(); j++)
 		{
-			auto pWeapon = pPlayer->GetWeapon(j);
+			CBaseCombatWeapon* pWeapon = pPlayer->GetWeapon(j);
 			if (!pWeapon)
 				continue;
 
