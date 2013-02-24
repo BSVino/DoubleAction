@@ -100,7 +100,7 @@ public:
 #define ROLL_TIME 0.65f
 #define ROLLFINISH_TIME 0.2f
 #define SLIDE_TIME 6.0f
-#define DIVE_RISE_TIME 0.3f
+#define DIVE_RISE_TIME 0.4f
 
 // Expose our interface.
 static CSDKGameMovement g_GameMovement;
@@ -559,9 +559,11 @@ void CSDKGameMovement::PlayerMove( void )
 		{
 			float flDiveLerpTime = DIVE_RISE_TIME;
 
+			float flBiasAmount = 0.7f;
+
 			float flCurrentLerp = RemapValClamped(m_pSDKPlayer->GetCurrentTime(), m_pSDKPlayer->m_Shared.GetDiveTime(), m_pSDKPlayer->m_Shared.GetDiveTime() + flDiveLerpTime, 0, 1);
-			float flCurrentBias = Bias(flCurrentLerp, 0.6f);
-			float flLastTimeBias = Bias(m_pSDKPlayer->m_Shared.GetDiveLerped(), 0.6f);
+			float flCurrentBias = Bias(flCurrentLerp, flBiasAmount);
+			float flLastTimeBias = Bias(m_pSDKPlayer->m_Shared.GetDiveLerped(), flBiasAmount);
 
 			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
 			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
