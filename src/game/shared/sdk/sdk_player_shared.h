@@ -181,6 +181,12 @@ private:
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
 public:
+	/*JK My stuff here*/
+	CNetworkVar (float, nextjump);
+	CNetworkVar (int, numjumps);
+	CNetworkVar (float, superjump);
+	CNetworkVar (float, lasttap);
+public:
 
 #ifdef SDK_USE_PRONE
 	float m_flNextProneCheck; // Prevent it switching their prone state constantly.

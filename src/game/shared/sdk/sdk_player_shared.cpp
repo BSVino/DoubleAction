@@ -382,6 +382,11 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 
+	m_Shared.superjump = 0;
+	m_Shared.numjumps = 0;
+	m_Shared.nextjump = 0;
+	m_Shared.lasttap = -1;
+
 	//Tony; todo; fix
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
@@ -873,7 +878,6 @@ bool CSDKPlayerShared::IsDiving() const
 {
 	return m_bDiving && m_pOuter->IsAlive();
 }
-
 bool CSDKPlayerShared::CanDive() const
 {
 	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
@@ -916,6 +920,9 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_flDiveTime = m_pOuter->GetCurrentTime();
 	m_flDiveLerped = 0;
+
+	/*Dives cancel superjump*/
+	this->superjump = 0;
 
 	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
@@ -964,7 +971,11 @@ Vector CSDKPlayerShared::StartDiving()
 	flRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
 	flModifier = (flRatio - 1)/2;
 
-	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
+	float height = flDiveHeight;
+	float pitch = m_pOuter->EyeAngles ().x;
+	if (pitch <= -10) height *= 1.5;
+	else if (pitch >= 10) height *= 0.5;
+	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, height);
 }
 
 void CSDKPlayerShared::EndDive()
