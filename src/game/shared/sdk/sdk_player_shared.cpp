@@ -386,6 +386,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.numjumps = 0;
 	m_Shared.nextjump = 0;
 	m_Shared.lasttap = -1;
+	m_Shared.ismantelling = false;
 
 	//Tony; todo; fix
 

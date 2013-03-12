@@ -33,7 +33,7 @@ ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT 
 
 
 ConVar  da_superjump_height ( "da_jk_superjump_height", "550", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  da_superjump_duration ( "da_jk_superjump_duration", "2000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  da_superjump_duration ( "da_jk_superjump_duration", "1000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  da_walljump_limit ( "da_jk_walljump_limit", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 
@@ -67,6 +67,8 @@ public:
 	virtual void FixPlayerDiveStuck( bool upward );
 
 	void FullWalkMove ();
+	void manteltrace (const Vector &start, const Vector &end, const Vector &mins, const Vector &maxs, trace_t &tr);
+	bool checkmantel (void);
 
 	// Ducking
 	virtual bool CanUnduck( void );
@@ -344,6 +346,84 @@ void CSDKGameMovement::CheckParameters( void )
 		Msg( "player speed %.1f ( max: %f ) \n",actual_speed, mv->m_flClientMaxSpeed );
 	}
 }
+inline void
+CSDKGameMovement::manteltrace (const Vector &start, const Vector &end, const Vector &mins, const Vector &maxs, trace_t &tr)
+{
+	Ray_t ray;
+	ray.Init (start, end, mins, maxs);
+	UTIL_TraceRay( ray, PlayerSolidMask (), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+}
+bool
+CSDKGameMovement::checkmantel (void)
+{
+	trace_t	tr;
+	Vector pr, pr2;
+	Vector forward;
+	Vector mins;
+
+	if (!(mv->m_nButtons&(IN_JUMP)))
+	{/*Must have stunt or jump key held*/
+		return false;
+	}
+	if (m_pSDKPlayer->m_Shared.IsDiveSliding () ||
+		m_pSDKPlayer->m_Shared.IsSliding ())
+	{/*Must not be in a slide*/
+		return false;
+	}
+	AngleVectors (mv->m_vecViewAngles, &forward, NULL, NULL);
+	/*Ensure player is against a wall. Note the special bbox. 
+	We want to only check walls that are at least at the player's eye level*/
+	mins = GetPlayerMins ();
+	mins[2] = GetPlayerViewOffset (m_pSDKPlayer->IsDucked ()).z;
+	pr = mv->GetAbsOrigin () + forward;
+	manteltrace (mv->GetAbsOrigin (), pr, mins, GetPlayerMaxs (), tr);
+	if (tr.fraction == 1)
+	{
+		Msg ("No wall\n");
+		return false;
+	}
+	/*Ensure there is empty space above the player*/
+	pr = tr.endpos;
+	pr2 = tr.endpos + Vector (0, 0, 1+GetPlayerMaxs ().z);
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
+	if (tr.fraction != 1)
+	{
+		Msg ("No space\n");
+		return false;
+	}
+	/*From the last probed position ensure that 
+	there is empty space in front of the player*/
+	pr = tr.endpos;
+	pr2 = pr + forward;
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
+	if (tr.fraction != 1)
+	{
+		Msg ("Too far\n");
+		return false;
+	}
+	/*From the last probed position ensure that
+	there is a space for the player to stand on*/
+	pr = tr.endpos;
+	pr2 = pr + Vector (0, 0, -128);
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
+	if (tr.fraction == 1)
+	{/*This should only happen if ledges are too thin*/
+		Msg ("No ledge\n");
+		return false;
+	}
+	/*Now having found a ledge to grab, probe the space above it so
+	that we can ensure there will be room for the player to at least crouch*/
+	pr = tr.endpos;
+	pr2 = pr + Vector (0, 0, GetPlayerMaxs (true).z);
+	manteltrace (pr, pr2, GetPlayerMins (true),  GetPlayerMaxs (true), tr);
+	if (tr.allsolid || tr.fraction != 1)
+	{
+		Msg ("No room %i %f\n", tr.allsolid, tr.fraction);
+		return false;
+	}
+	m_pSDKPlayer->m_Shared.superjump = 0;
+	return true;
+}
 void CSDKGameMovement::CheckFalling( void )
 {
 	// if we landed on the ground
@@ -567,7 +647,7 @@ void CSDKGameMovement::PlayerMove( void )
 	BaseClass::PlayerMove();
 
 	if (mv->m_nButtons&IN_ALT1)
-	{/*FIXME: There has to be a better place for this*/
+	{
 		checkwallstunt ();
 	}
 
@@ -914,8 +994,8 @@ CSDKGameMovement::checkwallstunt (void)
 	{
 		CPASFilter filter (m_pSDKPlayer->GetAbsOrigin ());
 		filter.UsePredictionRules();
-		VectorMA (mv->m_vecVelocity, 256, tr.plane.normal, mv->m_vecVelocity);
-		mv->m_vecVelocity[2] = 256;
+		VectorMA (mv->m_vecVelocity, 250, tr.plane.normal, mv->m_vecVelocity);
+		mv->m_vecVelocity[2] = 500;
 		m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex(), "Player.GoDive");
 		m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
 		return true;
@@ -1025,7 +1105,7 @@ bool CSDKGameMovement::CheckJumpButton( void )
 			
 			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
 			m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex(), "Player.GoDive");
-			m_pSDKPlayer->m_Shared.nextjump = 450; /*Arbitrary*/
+			m_pSDKPlayer->m_Shared.nextjump = 300; /*Arbitrary*/
 			m_pSDKPlayer->m_Shared.numjumps++;
 			finishjump (mv->m_vecVelocity[2] - z);
 			return true;
@@ -1140,16 +1220,63 @@ void CSDKGameMovement::FullWalkMove( )
 		{
 			mv->m_nOldButtons &= ~IN_JUMP;
 		}
-
 		if (m_pSDKPlayer->m_Shared.superjump)
 		{/*Add in Superjump velocity*/
-			float x = m_pSDKPlayer->m_Shared.superjump/da_superjump_duration.GetFloat ();
-			float y = da_superjump_height.GetFloat ()*(x*x);
-			m_pSDKPlayer->m_Shared.SetJumping( true );
-			mv->m_vecVelocity[2] = y;
-			FinishGravity();
+			trace_t	tr;
+			TracePlayerBBox (mv->GetAbsOrigin (), 
+					mv->GetAbsOrigin () + Vector (0, 0, 1),
+					PlayerSolidMask (), 
+					COLLISION_GROUP_PLAYER_MOVEMENT, 
+					tr);
+			if (tr.fraction < 1)
+			{/*Cancel superjump if we hit the ceiling.*/
+				m_pSDKPlayer->m_Shared.superjump = 0;
+			}
+			else
+			{
+				float x = m_pSDKPlayer->m_Shared.superjump/da_superjump_duration.GetFloat ();
+				float y = da_superjump_height.GetFloat ()*(x*x);
+				m_pSDKPlayer->m_Shared.SetJumping( true );
+				mv->m_vecVelocity[2] = y;
+				FinishGravity();
+			}
 		}
+		if (!m_pSDKPlayer->m_Shared.ismantelling) m_pSDKPlayer->m_Shared.ismantelling = checkmantel ();
+		if (m_pSDKPlayer->m_Shared.ismantelling)
+		{
+			trace_t tr;
+			Vector forward;
+			Vector pos;
 
+			AngleVectors (mv->m_vecAbsViewAngles, &forward, NULL, NULL);
+			pos = mv->GetAbsOrigin() + forward;
+			TracePlayerBBox (mv->GetAbsOrigin(), 
+							 pos, 
+							 MASK_PLAYERSOLID, 
+							 COLLISION_GROUP_PLAYER_MOVEMENT, 
+							 tr);
+			if (tr.fraction < 1)
+			{
+				pos = mv->GetAbsOrigin() + Vector(0, 0, 250*gpGlobals->frametime);
+				TracePlayerBBox (mv->GetAbsOrigin(), 
+										 pos, 
+										 MASK_PLAYERSOLID, 
+										 COLLISION_GROUP_PLAYER_MOVEMENT, 
+										 tr);
+			}
+			else
+			{
+				pos = mv->GetAbsOrigin() + 250*gpGlobals->frametime*forward;
+				TracePlayerBBox (mv->GetAbsOrigin(), 
+										 pos, 
+										 MASK_PLAYERSOLID, 
+										 COLLISION_GROUP_PLAYER_MOVEMENT, 
+										 tr);
+				m_pSDKPlayer->m_Shared.ismantelling = false;
+			}
+			mv->SetAbsOrigin (tr.endpos);
+			return;
+		}
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
 		if (player->GetGroundEntity() != NULL)
