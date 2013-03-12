@@ -150,7 +150,7 @@
     </PreLinkEvent>
     <Lib>
       <UseUnicodeResponseFiles>false</UseUnicodeResponseFiles>
-      <OutputFile>..\..\lib\public\vgui_controls.lib</OutputFile>
+      <OutputFile>$(OutDir)vgui_controls.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Lib>
     <Xdcmake>

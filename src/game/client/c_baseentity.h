@@ -981,7 +981,7 @@ public:
 	bool					PhysicsRunSpecificThink( int nContextIndex, BASEPTR thinkFunc );
 
 	virtual void					PhysicsSimulate( void );
-	virtual bool					IsAlive( void );
+	virtual bool					IsAlive( void ) const;
 
 	bool							IsInWorld( void ) { return true; }
 

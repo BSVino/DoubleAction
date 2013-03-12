@@ -734,6 +734,9 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 		slotPos = pActiveWeapon->GetPosition() + 1;
 	}
 
+	if (!IsInSelectionMode() && pPlayer->GetActiveWeapon() && pPlayer->GetActiveWeapon()->GetSlot() == iSlot)
+		slotPos = pPlayer->GetActiveWeapon()->GetPosition() + 1;
+
 	// find the weapon in this slot
 	pActiveWeapon = GetNextActivePos( iSlot, slotPos );
 	if ( !pActiveWeapon )

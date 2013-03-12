@@ -28,6 +28,12 @@
 #include "sdk_gamerules.h"
 #include "projectedlighteffect.h"
 #include "voice_status.h"
+#include "toolframework/itoolframework.h"
+#include "toolframework_client.h"
+
+#include "dab_buymenu.h"
+#include "dab_charactermenu.h"
+#include "dab_skillmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -95,6 +101,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 #endif
 END_RECV_TABLE()
 
+void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut );
+
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	RecvPropFloat( RECVINFO( m_flStamina ) ),
@@ -104,6 +112,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bProne ) ),
 	RecvPropTime( RECVINFO( m_flGoProneTime ) ),
 	RecvPropTime( RECVINFO( m_flUnProneTime ) ),
+	RecvPropTime( RECVINFO( m_flDisallowUnProneTime ) ),
 	RecvPropBool( RECVINFO( m_bProneSliding ) ),
 #endif
 #if defined( SDK_USE_SPRINTING )
@@ -120,16 +129,20 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bRollingFromDive ) ),
 	RecvPropVector( RECVINFO(m_vecRollDirection) ),
 	RecvPropTime( RECVINFO(m_flRollTime) ),
-	RecvPropBool( RECVINFO( m_bCanRollInto ) ),
 	RecvPropBool( RECVINFO( m_bDiving ) ),
 	RecvPropVector( RECVINFO(m_vecDiveDirection) ),
+	RecvPropBool( RECVINFO( m_bRollAfterDive ) ),
+	RecvPropTime( RECVINFO(m_flDiveTime) ),
+	RecvPropFloat( RECVINFO(m_flDiveLerped) ),
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
-	RecvPropInt( RECVINFO( m_iStyleSkill ) ),
+	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
+	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
 BEGIN_RECV_TABLE_NOBASE(CArmament, DT_Loadout)
 	RecvPropInt(RECVINFO(m_iCount), 0, RecvProxy_Loadout),
@@ -182,8 +195,12 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropFloat		( RECVINFO( m_flSlowMoMultiplier ) ),
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 	RecvPropFloat		( RECVINFO( m_flLastSpawnTime ) ),
+	RecvPropTime		( RECVINFO( m_flReadyWeaponUntil ) ),
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
+	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
+
+	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -197,6 +214,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bProne, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flGoProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flDisallowUnProneTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bProneSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 #if defined( SDK_USE_SPRINTING )
@@ -213,13 +231,16 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bRollingFromDive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRollDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flRollTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bCanRollInto, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDiving, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecDiveDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bRollAfterDive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flDiveTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flDiveLerped, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flViewTilt, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flViewBobRamp, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_bAimedIn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flAimIn, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flSlowAimIn, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -229,6 +250,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( m_Shared, CSDKPlayerShared ),
 	DEFINE_PRED_FIELD( m_flFreezeUntil, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flFreezeAmount, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flReadyWeaponUntil, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flDisarmRedraw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   
@@ -239,6 +261,9 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flSlowMoMultiplier, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flLastSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_bThirdPerson, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -392,43 +417,14 @@ void C_SDKRagdoll::CreateRagdoll()
 		// move my current model instance to the ragdoll's so decals are preserved.
 		pPlayer->SnatchModelInstance( this );
 
-		VarMapping_t *varMap = GetVarMapping();
+		Interp_Copy( pPlayer );
 
-		// Copy all the interpolated vars from the player entity.
-		// The entity uses the interpolated history to get bone velocity.
-		if ( !pPlayer->IsLocalPlayer() && pPlayer->IsInterpolationEnabled() )
-		{
-			Interp_Copy( pPlayer );
+		SetAbsAngles( pPlayer->GetRenderAngles() );
+		GetRotationInterpolator().Reset();
 
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-			GetRotationInterpolator().Reset();
-
-			m_flAnimTime = pPlayer->m_flAnimTime;
-			SetSequence( pPlayer->GetSequence() );
-			m_flPlaybackRate = pPlayer->GetPlaybackRate();
-		}
-		else
-		{
-			// This is the local player, so set them in a default
-			// pose and slam their velocity, angles and origin
-			SetAbsOrigin( m_vecRagdollOrigin );
-
-			SetAbsAngles( pPlayer->GetRenderAngles() );
-
-			SetAbsVelocity( m_vecRagdollVelocity );
-
-			int iSeq = LookupSequence( "RagdollSpawn" );	// hax, find a neutral standing pose
-			if ( iSeq == -1 )
-			{
-				Assert( false );	// missing look_idle?
-				iSeq = 0;
-			}
-			
-			SetSequence( iSeq );	// look_idle, basic pose
-			SetCycle( 0.0 );
-
-			Interp_Reset( varMap );
-		}		
+		m_flAnimTime = pPlayer->m_flAnimTime;
+		SetSequence( pPlayer->GetSequence() );
+		m_flPlaybackRate = pPlayer->GetPlaybackRate();
 
 		m_nBody = pPlayer->GetBody();
 	}
@@ -626,6 +622,7 @@ C_SDKPlayer::C_SDKPlayer() :
 
 	m_fNextThinkPushAway = 0.0f;
 
+	m_flLastSlowMoMultiplier = 1;
 }
 
 
@@ -644,6 +641,11 @@ void C_SDKPlayer::PreThink()
 {
 	UpdateCurrentTime();
 
+	// Need to update view bob ramp for the in-eye target,
+	// since PreThink (and thus UpdateCurrentTime()) is only called for the local player
+	if (GetObserverMode() == OBS_MODE_IN_EYE && GetObserverTarget() && GetObserverTarget()->IsPlayer())
+		ToSDKPlayer(GetObserverTarget())->UpdateViewBobRamp();
+
 	BaseClass::PreThink();
 
 	Instructor_Think();
@@ -656,6 +658,16 @@ void C_SDKPlayer::PreThink()
 C_SDKPlayer* C_SDKPlayer::GetLocalSDKPlayer()
 {
 	return ToSDKPlayer( C_BasePlayer::GetLocalPlayer() );
+}
+
+C_SDKPlayer* C_SDKPlayer::GetLocalOrSpectatedPlayer()
+{
+	C_SDKPlayer* pLocal = GetLocalSDKPlayer();
+
+	if (pLocal && pLocal->GetObserverMode() == OBS_MODE_IN_EYE && pLocal->GetObserverTarget() && pLocal->GetObserverTarget()->IsPlayer())
+		return ToSDKPlayer(pLocal->GetObserverTarget());
+
+	return pLocal;
 }
 
 const QAngle &C_SDKPlayer::EyeAngles()
@@ -688,7 +700,14 @@ const Vector& C_SDKPlayer::GetRenderOrigin( void )
 
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
-	m_PlayerAnimState->Update( EyeAngles()[YAW], EyeAngles()[PITCH] );
+	QAngle angEyeAngles = EyeAngles();
+	QAngle angCharacterEyeAngles = angEyeAngles;
+
+	if (IsInThirdPerson())
+		VectorAngles(m_vecThirdTarget - EyePosition(), Vector(0, 0, 1), angCharacterEyeAngles);
+
+	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
+
 	BaseClass::UpdateClientSideAnimation();
 }
 //-----------------------------------------------------------------------------
@@ -790,72 +809,6 @@ void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
 	}
 
 	UpdateVisibility();
-}
-
-int C_SDKPlayer::DrawModel( int flags )
-{
-	if (IsStyleSkillActive())
-	{
-		int iResult = BaseClass::DrawModel(flags);
-
-		if (flags & STUDIO_RENDER)
-			modelrender->ForcedMaterialOverride( nullptr );
-
-		return iResult;
-	}
-	else
-		return BaseClass::DrawModel(flags);
-}
-
-bool C_SDKPlayer::IsOverridingViewmodel( void )
-{
-	C_SDKPlayer* pPlayer = this;
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
-		 pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
-	{
-		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
-	}
-
-	if ( pPlayer->IsStyleSkillActive() )
-		return true;
-
-	return BaseClass::IsOverridingViewmodel();
-}
-
-int	C_SDKPlayer::DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags )
-{
-	int ret = 0;
-
-	C_SDKPlayer* pPlayer = this;
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( pLocalPlayer && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && 
-		pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverTarget()->IsPlayer() )
-	{
-		pPlayer = assert_cast<C_SDKPlayer*>(pLocalPlayer->GetObserverTarget());
-	}
-
-	if ( pPlayer->IsStyleSkillActive() )
-	{
-		// We allow our weapon to then override this if it wants to.
-		// This allows c_* weapons to draw themselves.
-		C_BaseCombatWeapon* pWeapon = pViewmodel->GetOwningWeapon();
-		if ( pWeapon && pWeapon->IsOverridingViewmodel() )
-		{
-			ret = pWeapon->DrawOverriddenViewmodel( pViewmodel, flags );
-		}
-		else
-		{
-			ret = pViewmodel->DrawOverriddenViewmodel( flags );
-		}
-
-		if ( flags & STUDIO_RENDER )
-		{
-			modelrender->ForcedMaterialOverride( NULL );
-		}
-	}
-
-	return ret;
 }
 
 void C_SDKPlayer::PlayReloadEffect()
@@ -994,6 +947,35 @@ void C_SDKPlayer::CalcVehicleView(IClientVehicle *pVehicle,	Vector& eyeOrigin, Q
 	}
 }
 
+void C_SDKPlayer::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	C_BaseEntity *target = GetObserverTarget();
+
+	if ( !target ) 
+	{
+		// just copy a save in-map position
+		VectorCopy( EyePosition(), eyeOrigin );
+		VectorCopy( EyeAngles(), eyeAngles );
+		return;
+	};
+
+	if ( !target->IsAlive() )
+	{
+		// if dead, show from 3rd person
+		CalcChaseCamView( eyeOrigin, eyeAngles, fov );
+		return;
+	}
+
+	fov = GetFOV();	// TODO use tragets FOV
+
+	m_flObserverChaseDistance = 0.0;
+
+	eyeAngles = target->EyeAngles() + GetPunchAngle();
+	eyeOrigin = target->EyePosition();
+
+	engine->SetViewAngles( eyeAngles );
+}
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 bool C_SDKPlayer::CanShowClassMenu( void )
 {
@@ -1022,8 +1004,59 @@ bool C_SDKPlayer::CanShowSkillMenu( void )
 	return ( GetTeamNumber() != TEAM_SPECTATOR );
 }
 
+bool C_BasePlayer::ShouldDrawLocalPlayer()
+{
+	return C_SDKPlayer::GetLocalSDKPlayer()->IsInThirdPerson() || ( ToolsEnabled() && ToolFramework_IsThirdPersonCamera() );
+}
+
+ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "15.0" );
+
 void C_SDKPlayer::ClientThink()
 {
+	bool bWasInSlow = false;
+
+	bool bLocalPlayer = (C_SDKPlayer::GetLocalOrSpectatedPlayer() == this);
+	if (bLocalPlayer)
+		bWasInSlow = (m_flLastSlowMoMultiplier < 1);
+
+	if (bLocalPlayer)
+	{
+		bool bNowInSlow = (GetSlowMoMultiplier() < 1);
+
+		if (!C_SDKPlayer::GetLocalOrSpectatedPlayer()->IsAlive())
+			bNowInSlow = false;
+
+		if (!bWasInSlow && bNowInSlow)
+		{
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Start" );
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Loop" );
+		}
+		else if (bWasInSlow && !bNowInSlow)
+		{
+			C_SDKPlayer::GetLocalSDKPlayer()->StopSound( "SlowMo.Loop" );
+			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.End" );
+		}
+	}
+
+	m_flLastSlowMoMultiplier = GetSlowMoMultiplier();
+
+	ConVarRef mat_motion_blur_strength( "mat_motion_blur_strength" );
+	mat_motion_blur_strength.SetValue(RemapValClamped(GetSlowMoMultiplier(), 0.8f, 1, da_slowmo_motion_blur.GetFloat(), 1));
+
+	if (this == C_SDKPlayer::GetLocalSDKPlayer())
+	{
+		if (::input->CAM_IsThirdPerson() && !IsInThirdPerson())
+		{
+			::input->CAM_ToFirstPerson();
+			ThirdPersonSwitch(false);
+		}
+		else if (!::input->CAM_IsThirdPerson() && IsInThirdPerson())
+		{
+			::input->CAM_ToThirdPerson();
+			ThirdPersonSwitch(true);
+		}
+	}
+
 	UpdateSoundEvents();
 
 	// Pass on through to the base class.
@@ -1399,13 +1432,21 @@ void C_SDKPlayer::UpdateSoundEvents()
 	}
 }
 
-static ConVar cam_right("cam_right", "15", FCVAR_ARCHIVE);
-static ConVar cam_up("cam_up", "10", FCVAR_ARCHIVE);
-static ConVar dab_aimin_fov_delta("dab_aimin_fov_delta", "10", FCVAR_ARCHIVE);
+static ConVar da_cam_back("da_cam_back", "60", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits", true, 5, true, 150);
+static ConVar da_cam_right("da_cam_right", "15", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits", true, -30, true, 30);
+static ConVar da_cam_up("da_cam_up", "10", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits", true, -20, true, 30);
+
+static ConVar da_cam_back_aim("da_cam_back_aim", "25", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits while aiming in", true, 5, true, 150);
+static ConVar da_cam_right_aim("da_cam_right_aim", "20", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in", true, -30, true, 30);
+static ConVar da_cam_up_aim("da_cam_up_aim", "5", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits while aiming in", true, -20, true, 30);
+
+static ConVar dab_aimin_fov_delta_high("dab_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_aimin_slow_fov_delta("da_aimin_slow_fov_delta", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
-	if (::input->CAM_IsThirdPerson())
+	if (C_SDKPlayer::GetLocalSDKPlayer() == this && IsInThirdPerson())
 	{
 		Vector vecOffset;
 		::input->CAM_GetCameraOffset( vecOffset );
@@ -1415,10 +1456,9 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		angCamera[ YAW ] = vecOffset[ YAW ];
 		angCamera[ ROLL ] = 0;
 
-		Vector camForward, camRight, camUp;
-		AngleVectors( angCamera, &camForward, &camRight, &camUp );
+		UpdateThirdCamera(pSetup->origin, angCamera);
 
-		pSetup->origin = pSetup->origin + camRight*cam_right.GetFloat() + camUp*cam_up.GetFloat();
+		pSetup->origin = GetThirdPersonCameraPosition();
 	}
 
 	BaseClass::OverrideView(pSetup);
@@ -1447,15 +1487,51 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 
 	C_WeaponSDKBase* pWeapon = GetActiveSDKWeapon();
 
-	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus()))
-		pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta.GetFloat();
+	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus() || IsStyleSkillActive(SKILL_MARKSMAN)))
+	{
+		if (pWeapon->HasAimInFireRateBonus())
+			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_low.GetFloat();
+		else
+			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_high.GetFloat();
+	}
+
+	pSetup->fov -= Bias(m_Shared.m_flSlowAimIn, 0.65f)*da_aimin_slow_fov_delta.GetFloat();
 }
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
-	gViewPortInterface->FindPanelByName(PANEL_BUY)->Update();
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+	}
+}
+
+void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	RecvProxy_StringToString( pData, pStruct, pOut );
+
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+	}
+}
+
+void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
+
+	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
+	{
+		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+	}
 }
 
 class FlashlightSupressor

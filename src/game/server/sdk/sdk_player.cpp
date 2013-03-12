@@ -6,6 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+
 #include "sdk_player.h"
 #include "sdk_team.h"
 #include "sdk_gamerules.h"
@@ -19,11 +20,18 @@
 #include "obstacle_pushaway.h"
 #include "in_buttons.h"
 #include "vprof.h"
+
+#include "da_ammo_pickup.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern int gEvilImpulse101;
 
+ConVar bot_mimic( "bot_mimic", "0", FCVAR_CHEAT );
+ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
+ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
+ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
 
 ConVar SDK_ShowStateTransitions( "sdk_ShowStateTransitions", "-2", FCVAR_CHEAT, "sdk_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 
@@ -103,6 +111,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bProne ) ),
 	SendPropTime( SENDINFO( m_flGoProneTime ) ),
 	SendPropTime( SENDINFO( m_flUnProneTime ) ),
+	SendPropTime( SENDINFO( m_flDisallowUnProneTime ) ),
 	SendPropBool( SENDINFO( m_bProneSliding ) ),
 #endif
 #if defined ( SDK_USE_SPRINTING )
@@ -119,11 +128,14 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bRollingFromDive ) ),
 	SendPropVector( SENDINFO(m_vecRollDirection) ),
 	SendPropTime( SENDINFO( m_flRollTime ) ),
-	SendPropBool( SENDINFO( m_bCanRollInto ) ),
 	SendPropBool( SENDINFO( m_bDiving ) ),
 	SendPropVector( SENDINFO(m_vecDiveDirection) ),
+	SendPropBool( SENDINFO( m_bRollAfterDive ) ),
+	SendPropTime( SENDINFO( m_flDiveTime ) ),
+	SendPropFloat( SENDINFO( m_flDiveLerped ) ),
 	SendPropBool( SENDINFO( m_bAimedIn ) ),
 	SendPropFloat( SENDINFO( m_flAimIn ) ),
+	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -200,8 +212,11 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropTime		( SENDINFO( m_flSlowMoMultiplier ) ),
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 	SendPropFloat( SENDINFO( m_flLastSpawnTime ) ),
+	SendPropTime		( SENDINFO( m_flReadyWeaponUntil ) ),
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
+	SendPropBool( SENDINFO( m_bThirdPerson ) ),
+	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -269,18 +284,20 @@ CSDKPlayer::CSDKPlayer()
 
 	m_pCurStateInfo = NULL;	// no state yet
 
-	m_pszCharacter = NULL;
-
 	m_flFreezeUntil = .1;
 	m_flFreezeAmount = 0;
 
+	m_flFreezeUntil = -1;
+
 	m_flNextRegen = 0;
 	m_flNextHealthDecay = 0;
-	m_flNextSecondWindRegen = 0;
 
 	m_bHasPlayerDied = false;
+	m_bThirdPerson = false;
 
 	m_flCurrentTime = gpGlobals->curtime;
+
+	m_iszCharacter = NULL_STRING;
 }
 
 
@@ -308,12 +325,312 @@ void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExit
 	// Teleport( &newPos, &newAng, &vec3_origin );
 }
 
+bool CSDKPlayer::FVisible(CBaseEntity *pEntity, int iTraceMask, CBaseEntity **ppBlocker)
+{
+	if (pEntity->IsPlayer())
+		return IsVisible(dynamic_cast<CSDKPlayer*>(pEntity));
+	else
+		return CBasePlayer::FVisible(pEntity, iTraceMask, ppBlocker);
+}
+
+bool CSDKPlayer::IsVisible( const Vector &pos, bool testFOV, const CBaseEntity *ignore ) const
+{
+	// is it in my general viewcone?
+	if (testFOV && !const_cast<CSDKPlayer*>(this)->FInViewCone( pos ))
+		return false;
+
+	// check line of sight
+	// Must include CONTENTS_MONSTER to pick up all non-brush objects like barrels
+	trace_t result;
+	CTraceFilterNoNPCsOrPlayer traceFilter( ignore, COLLISION_GROUP_NONE );
+	UTIL_TraceLine( const_cast<CSDKPlayer*>(this)->EyePosition(), pos, MASK_OPAQUE, &traceFilter, &result );
+	if (result.fraction != 1.0f)
+		return false;
+
+	return true;
+}
+
+bool CSDKPlayer::IsVisible(CSDKPlayer *pPlayer, bool testFOV, unsigned char *visParts) const
+{
+	if (!pPlayer)
+		return false;
+
+	// optimization - assume if center is not in FOV, nothing is
+	// we're using WorldSpaceCenter instead of GUT so we can skip GetPartPosition below - that's
+	// the most expensive part of this, and if we can skip it, so much the better.
+	if (testFOV && !(const_cast<CSDKPlayer*>(this)->FInViewCone( pPlayer->WorldSpaceCenter() )))
+	{
+		return false;
+	}
+
+	unsigned char testVisParts = VIS_NONE;
+
+	// check gut
+	Vector partPos = GetPartPosition( pPlayer, VIS_GUT );
+
+	// finish gut check
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_GUT;
+	}
+
+
+	// check top of head
+	partPos = GetPartPosition( pPlayer, VIS_HEAD );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_HEAD;
+	}
+
+	// check feet
+	partPos = GetPartPosition( pPlayer, VIS_FEET );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_FEET;
+	}
+
+	// check "edges"
+	partPos = GetPartPosition( pPlayer, VIS_LEFT_SIDE );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_LEFT_SIDE;
+	}
+
+	partPos = GetPartPosition( pPlayer, VIS_RIGHT_SIDE );
+	if (IsVisible( partPos, testFOV ))
+	{
+		if (visParts == NULL)
+			return true;
+
+		testVisParts |= VIS_RIGHT_SIDE;
+	}
+
+	if (visParts)
+		*visParts = testVisParts;
+
+	if (testVisParts)
+		return true;
+
+	return false;
+}
+
+Vector CSDKPlayer::GetPartPosition(CSDKPlayer* player, VisiblePartType part) const
+{
+	// which PartInfo corresponds to the given player
+	PartInfo* info = &m_partInfo[ player->entindex() % MAX_PLAYERS ];
+
+	if (gpGlobals->framecount > info->m_validFrame)
+	{
+		// update part positions
+		const_cast<CSDKPlayer*>(this)->ComputePartPositions( player );
+		info->m_validFrame = gpGlobals->framecount;
+	}
+
+	// return requested part position
+	switch( part )
+	{
+		default:
+		{
+			AssertMsg( false, "GetPartPosition: Invalid part" );
+			// fall thru to GUT
+		}
+
+		case VIS_GUT:
+			return info->m_gutPos;
+
+		case VIS_HEAD:
+			return info->m_headPos;
+			
+		case VIS_FEET:
+			return info->m_feetPos;
+
+		case VIS_LEFT_SIDE:
+			return info->m_leftSidePos;
+			
+		case VIS_RIGHT_SIDE:
+			return info->m_rightSidePos;
+	}
+}
+
+CSDKPlayer::PartInfo CSDKPlayer::m_partInfo[ MAX_PLAYERS ];
+
+//--------------------------------------------------------------------------------------------------------------
+/**
+ * Compute part positions from bone location.
+ */
+void CSDKPlayer::ComputePartPositions( CSDKPlayer *player )
+{
+	const int headBox = 1;
+	const int gutBox = 3;
+	const int leftElbowBox = 11;
+	const int rightElbowBox = 9;
+	//const int hipBox = 0;
+	//const int leftFootBox = 4;
+	//const int rightFootBox = 8;
+	const int maxBoxIndex = leftElbowBox;
+
+	// which PartInfo corresponds to the given player
+	PartInfo *info = &m_partInfo[ player->entindex() % MAX_PLAYERS ];
+
+	// always compute feet, since it doesn't rely on bones
+	info->m_feetPos = player->GetAbsOrigin();
+	info->m_feetPos.z += 5.0f;
+
+	// get bone positions for interesting points on the player
+	MDLCACHE_CRITICAL_SECTION();
+	CStudioHdr *studioHdr = player->GetModelPtr();
+	if (studioHdr)
+	{
+		mstudiohitboxset_t *set = studioHdr->pHitboxSet( player->GetHitboxSet() );
+		if (set && maxBoxIndex < set->numhitboxes)
+		{
+			QAngle angles;
+			mstudiobbox_t *box;
+
+			// gut
+			box = set->pHitbox( gutBox );
+			player->GetBonePosition( box->bone, info->m_gutPos, angles );	
+
+			// head
+			box = set->pHitbox( headBox );
+			player->GetBonePosition( box->bone, info->m_headPos, angles );
+
+			Vector forward, right;
+			AngleVectors( angles, &forward, &right, NULL );
+
+			// in local bone space
+			const float headForwardOffset = 4.0f;
+			const float headRightOffset = 2.0f;
+			info->m_headPos += headForwardOffset * forward + headRightOffset * right;
+
+			/// @todo Fix this hack - lower the head target because it's a bit too high for the current T model
+			info->m_headPos.z -= 2.0f;
+
+
+			// left side
+			box = set->pHitbox( leftElbowBox );
+			player->GetBonePosition( box->bone, info->m_leftSidePos, angles );	
+
+			// right side
+			box = set->pHitbox( rightElbowBox );
+			player->GetBonePosition( box->bone, info->m_rightSidePos, angles );	
+
+			return;
+		}
+	}
+
+
+	// default values if bones are not available
+	info->m_headPos = player->GetCentroid();
+	info->m_gutPos = info->m_headPos;
+	info->m_leftSidePos = info->m_headPos;
+	info->m_rightSidePos = info->m_headPos;
+}
+
+Vector CSDKPlayer::GetCentroid( ) const
+{
+	Vector centroid = GetAbsOrigin();
+
+	const Vector &mins = WorldAlignMins();
+	const Vector &maxs = WorldAlignMaxs();
+
+	centroid.z += (maxs.z - mins.z)/2.0f;
+
+	return centroid;
+}
+
+CSDKPlayer* CSDKPlayer::FindClosestFriend(float flMaxDistance, bool bFOV)
+{
+	CSDKPlayer* pClosest = NULL;
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer == this)
+			continue;
+
+		if (SDKGameRules()->PlayerRelationship(this, pPlayer) == GR_NOTTEAMMATE)
+			continue;
+
+		if (!IsVisible(pPlayer, bFOV))
+			continue;
+
+		float flDistance = (GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
+		if (flDistance > flMaxDistance)
+			continue;
+
+		if (pClosest && (pClosest->GetAbsOrigin() - GetAbsOrigin()).Length() > flDistance)
+			continue;
+
+		pClosest = pPlayer;
+	}
+
+	return pClosest;
+}
+
+bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
+{
+	if ( !IsBot() )
+		return false;
+
+	if ( bot_freeze.GetBool() )
+		return true;
+
+	int iMimic = abs( bot_mimic.GetInt() );
+	if ( iMimic > gpGlobals->maxClients )
+		return false;
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex( iMimic );
+	if ( !pPlayer )
+		return false;
+
+	if ( !pPlayer->GetLastUserCommand() )
+		return false;
+
+	cmd = *pPlayer->GetLastUserCommand();
+	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+	pl.fixangle = FIXANGLE_NONE;
+
+	return true;
+}
+
+inline bool CSDKPlayer::IsReloading( void ) const
+{
+	CWeaponSDKBase *pPrimary = GetActiveSDKWeapon();
+
+	if (pPrimary && pPrimary->m_bInReload)
+		return true;
+
+	return false;
+}
+
 ConVar dab_regenamount( "dab_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
-ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
+ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
 void CSDKPlayer::PreThink(void)
 {
+	m_vecTotalBulletForce = vec3_origin;
+
+	if (IsInThirdPerson())
+		UpdateThirdCamera(Weapon_ShootPosition(), EyeAngles() + GetPunchAngle());
+
 	UpdateCurrentTime();
 
 	if (IsAlive())
@@ -322,27 +639,32 @@ void CSDKPlayer::PreThink(void)
 		{
 			m_iHealth -= dab_decayamount.GetFloat();
 
-			m_flNextHealthDecay = m_flCurrentTime + 2;
+			m_flNextHealthDecay = m_flCurrentTime + 1;
 		}
 
-		if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+		if (m_flCurrentTime > m_flNextRegen)
 		{
-			if (m_flCurrentTime > m_flNextSecondWindRegen)
-			{
-				int iHealthTaken = TakeHealth(dab_regenamount_secondwind.GetFloat(), 0);
+			float flRatio = dab_regenamount_secondwind.GetFloat()/dab_regenamount.GetFloat();
+			float flModifier = (flRatio - 1)/2;
+			float flHealth = m_Shared.ModifySkillValue(dab_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
 
-				m_flNextSecondWindRegen = m_flCurrentTime + 1;
-
-				UseStyleCharge(iHealthTaken);
-			}
-
-		}
-		else if (m_flCurrentTime > m_flNextRegen)
-		{
 			m_flNextRegen = m_flCurrentTime + 1;
 
-			if (GetHealth() < GetMaxHealth()/2)
-				TakeHealth(min(dab_regenamount.GetFloat(), GetMaxHealth()/2 - GetHealth()), 0);
+			// Heal up to 50% of the player's health.
+			int iMaxHealth = GetMaxHealth()/2;
+
+			if (IsStyleSkillActive(SKILL_RESILIENT))
+				// If Resilient is active, heal up to 100%, which is actually 200 health
+				iMaxHealth = GetMaxHealth();
+			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+				// If it's passive heal higher than 100%
+				iMaxHealth = GetMaxHealth() * 1.25f;
+
+			int iHealthTaken = 0;
+			if (GetHealth() < iMaxHealth)
+				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
+
+			UseStyleCharge(SKILL_RESILIENT, iHealthTaken*2/3);
 		}
 	}
 
@@ -356,14 +678,22 @@ void CSDKPlayer::PreThink(void)
 
 		CBaseEntity* pHit = NULL;
 
-		if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+		bool bIsBreakable = false;
+		if (tr.m_pEnt)
+		{
+			bIsBreakable = FStrEq(tr.m_pEnt->GetClassname(), "func_breakable");
+			if (!bIsBreakable)
+				bIsBreakable = FStrEq(tr.m_pEnt->GetClassname(), "func_breakable_surf");
+		}
+
+		if (tr.fraction < 1.0f && bIsBreakable)
 			pHit = tr.m_pEnt;
 
 		if (!pHit && vecNormalizedVelocity.z < 0 && (m_Shared.IsDiving() || !GetGroundEntity()))
 		{
 			UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() - Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
-			if (tr.m_pEnt && tr.fraction < 1.0f && FStrEq(tr.m_pEnt->GetClassname(), "func_breakable"))
+			if (tr.fraction < 1.0f && bIsBreakable)
 				pHit = tr.m_pEnt;
 		}
 
@@ -420,8 +750,17 @@ void CSDKPlayer::PostThink()
 	
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
+	QAngle angCharacterEyeAngles = m_angEyeAngles;
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	if (IsInThirdPerson())
+	{
+		VectorAngles(m_vecThirdTarget - EyePosition(), angCharacterEyeAngles);
+
+		angCharacterEyeAngles[YAW] = AngleNormalize(angCharacterEyeAngles[YAW]);
+		angCharacterEyeAngles[PITCH] = AngleNormalize(angCharacterEyeAngles[PITCH]);
+	}
+
+	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
@@ -487,6 +826,7 @@ void CSDKPlayer::GiveDefaultItems()
 	{
 		GiveNamedItem( "weapon_brawl" );
 
+		bool bHasGrenade = false;
 		CWeaponSDKBase* pHeaviestWeapon = NULL;
 
 		for (int i = 0; i < MAX_LOADOUT; i++)
@@ -498,7 +838,7 @@ void CSDKPlayer::GiveDefaultItems()
 
 				if (!pHeaviestWeapon)
 					pHeaviestWeapon = pWeapon;
-				else if (pWeapon && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
+				else if (pWeapon && pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
 					pHeaviestWeapon = pWeapon;
 
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
@@ -507,7 +847,10 @@ void CSDKPlayer::GiveDefaultItems()
 					if (!FStrEq(pInfo->szAmmo1, "grenades"))
 						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 					else
+					{
+						bHasGrenade = true;
 						CBasePlayer::GiveAmmo( m_aLoadout[i].m_iCount-1, "grenades");
+					}
 				}
 			}
 		}
@@ -532,6 +875,14 @@ void CSDKPlayer::GiveDefaultItems()
 			Weapon_SetLast(GetWeapon(i));
 			break;
 		}
+
+		if (m_Shared.m_iStyleSkill == SKILL_TROLL)
+		{
+			if (bHasGrenade)
+				CBasePlayer::GiveAmmo(1, "grenades");
+			else
+				GiveNamedItem( "weapon_grenade" );
+		}
 	}
 }
 
@@ -545,15 +896,19 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
-	if (m_pszCharacter)
-		SetModel( m_pszCharacter );
+	if (STRING(m_iszCharacter.Get())[0])
+		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else
 		SetModel( SDK_PLAYER_MODEL );
-	
+
 	SetBloodColor( BLOOD_COLOR_RED );
-	
+
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
+
+	m_nRenderFX = kRenderNormal;
+
+	AddFlag(FL_ONGROUND);
 
 	//Tony; if we're spawning in active state, equip the suit so the hud works. -- Gotta love base code !
 	if ( State_Get() == STATE_ACTIVE )
@@ -585,6 +940,9 @@ void CSDKPlayer::Spawn()
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
 
+	for( int p=0; p<MAX_PLAYERS; ++p )
+		m_partInfo[p].m_validFrame = 0;
+
 	InitSpeeds(); //Tony; initialize player speeds.
 
 	SetArmorValue(SpawnArmorValue());
@@ -602,6 +960,11 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
+	m_iStyleKillStreak = 0;
+
+	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+		GiveSlowMo(1);
 
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
@@ -705,7 +1068,6 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 // Purpose: Put the player in the specified team
 //-----------------------------------------------------------------------------
 //Tony; if we're not using actual teams, we don't need to override this.
-#if defined ( SDK_USE_TEAMS )
 void CSDKPlayer::ChangeTeam( int iTeamNum )
 {
 	if ( !GetGlobalTeam( iTeamNum ) )
@@ -720,15 +1082,14 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	if ( iTeamNum == iOldTeam )
 		return;
 	
-	m_bTeamChanged = true;
-
 	// do the team change:
 	BaseClass::ChangeTeam( iTeamNum );
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
 	{
-		State_Transition( STATE_OBSERVER_MODE );
+		if (SDKGameRules()->IsTeamplay())
+			State_Transition( STATE_OBSERVER_MODE );
 	}
 	else if ( iTeamNum == TEAM_SPECTATOR )
 	{
@@ -759,8 +1120,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 }
 
-#endif // SDK_USE_TEAMS
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -782,19 +1141,40 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 void CSDKPlayer::InitialSpawn( void )
 {
+	m_bThirdPerson = !!atoi(engine->GetClientConVarValue( entindex(), "cl_thirdperson" ));
+
 	BaseClass::InitialSpawn();
 
-	State_Enter( STATE_WELCOME );
+	if (gpGlobals->eLoadType == MapLoad_Background)
+		State_Enter( STATE_OBSERVER_MODE );
+	else
+		State_Enter( STATE_WELCOME );
 
 	ClearLoadout();
 }
 
+void CSDKPlayer::OnDive()
+{
+	m_bDamagedEnemyDuringDive = false;
+}
+
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
+	Vector vecToDamagePoint = ptr->endpos - GetAbsOrigin();
+	float flDistance = vecToDamagePoint.Length2D();
+
+	if (flDistance > CollisionProp()->BoundingRadius2D())
+	{
+		vecToDamagePoint.z = 0;
+		vecToDamagePoint.NormalizeInPlace();
+		ptr->endpos = GetAbsOrigin() + vecToDamagePoint * CollisionProp()->BoundingRadius2D();
+	}
+
 	//Tony; disable prediction filtering, and call the baseclass.
 	CDisablePredictionFiltering disabler;
 	BaseClass::TraceAttack( inputInfo, vecDir, ptr );
 }
+
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
@@ -807,6 +1187,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	m_vecTotalBulletForce += info.GetDamageForce();
+
 	float flArmorBonus = 0.5f;
 	float flArmorRatio = 0.5f;
 	float flDamage = info.GetDamage();
@@ -817,11 +1199,11 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
+/*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
 		UseStyleCharge(flDamage * 0.2f);
-		flDamage *= 0.6f;
-	}
+		flDamage = m_Shared.ModifySkillValue(flDamage, 0.3f, SKILL_IMPERVIOUS);
+	}*/
 
 	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
 	{
@@ -906,6 +1288,9 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	// fire global game event
 
+	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetDamageType() == DMG_BULLET)
+		ReadyWeapon();
+
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
 
 	if ( event )
@@ -979,9 +1364,16 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
 		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
+
+		pAttackerSDK->m_bDamagedEnemyDuringDive = true;
 	}
 
-	m_flNextRegen = m_flCurrentTime + 10;
+	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
+		m_flNextRegen = m_flCurrentTime + 10;
+	else if (!IsStyleSkillActive())
+		m_flNextRegen = m_flCurrentTime + 6;
+	else
+		m_flNextRegen = m_flCurrentTime + 3;
 
 	return 1;
 }
@@ -991,17 +1383,44 @@ ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEA
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
+	CTakeDamageInfo subinfo = info;
+	subinfo.SetDamageForce( m_vecTotalBulletForce );
+
 	StopSound( "Player.GoSlide" );
+
+	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_Shared.IsDiving() && m_bDamagedEnemyDuringDive)
+	{
+		SendNotice(NOTICE_WORTHIT);
+		AddStylePoints(10, STYLE_POINT_STYLISH);
+	}
 
 	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
 	{
 		CWeaponGrenade* pGrenadeWeapon = static_cast<CWeaponGrenade*>(GetActiveSDKWeapon());
 
 		if (pGrenadeWeapon->IsPinPulled())
+		{
 			pGrenadeWeapon->DropGrenade();
+
+			pGrenadeWeapon->DecrementAmmo( this );
+
+			if (GetAmmoCount(pGrenadeWeapon->GetPrimaryAmmoType()) <= 0)
+			{
+				Weapon_Drop( pGrenadeWeapon, NULL, NULL );
+				UTIL_Remove(pGrenadeWeapon);
+			}
+		}
 	}
 
-	ThrowActiveWeapon();
+	while (ThrowActiveWeapon());
+
+	CAmmoPickup* pAmmoPickup = static_cast<CAmmoPickup*>(CBaseEntity::Create( "da_ammo_pickup", GetAbsOrigin(), GetAbsAngles() ));
+
+	if (!pAmmoPickup->TakeAmmoFromPlayer(this))
+		UTIL_Remove(pAmmoPickup);
+
+	pAmmoPickup->SetThink(&CAmmoPickup::SUB_Remove);
+	pAmmoPickup->SetNextThink(gpGlobals->curtime + 30);
 
 	CBaseEntity* pAttacker = info.GetAttacker();
 
@@ -1017,8 +1436,11 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		pAttackerSDK->AwardStylePoints(this, true, info);
-		pAttackerSDK->GiveSlowMo(1);
+		if (pAttacker != this)
+		{
+			pAttackerSDK->AwardStylePoints(this, true, info);
+			pAttackerSDK->GiveSlowMo(1);
+		}
 	}
 	else
 		m_hObserverTarget.Set( NULL );
@@ -1050,13 +1472,17 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Going down with lots of bar drops you more than going down with just a little bar.
 	// This way, running around with your bar full you run a high risk.
 	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
-	SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
+
+	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling())
+		// Lose less bar if you die during a stunt. Going out with style is never a bad thing!
+		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/16, flActivationCost/4));
+	else
+		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
-	m_bHasSuperSlowMo = false;
 
 	m_bHasPlayerDied = true;
 
@@ -1067,6 +1493,18 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 {
 	if (pVictim == this)
 		return;
+
+	if (bKilledVictim && IsStyleSkillActive())
+	{
+		m_iStyleKillStreak++;
+
+		if (m_iStyleKillStreak%3 == 0)
+		{
+			TakeHealth(50, DMG_GENERIC);
+
+			SendNotice(NOTICE_STYLESTREAK);
+		}
+	}
 
 	float flPoints = 1;
 
@@ -1093,33 +1531,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
 
-	if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType != WT_NONE && GetActiveSDKWeapon()->m_iClip1 == 0)
-	{
-		// Killing a player with your last bullet.
-		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
-		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
-	}
-	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
-	{
-		// Damaging a dude enough to kill him while stunting gives a full bar.
-		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+	Vector vecVictimForward;
+	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
 
-		if (m_Shared.IsDiving())
-		{
-			if (bKilledVictim)
-				SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
-			else
-				SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
-		}
-		else
-		{
-			if (bKilledVictim)
-				SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
-			else
-				SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
-		}
-	}
-	else if (info.GetDamageType() == DMG_BLAST)
+	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
+	vecKillerToVictim.NormalizeInPlace();
+
+	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
+	if (info.GetDamageType() == DMG_BLAST)
 	{
 		// Grenades are cool.
 		AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
@@ -1128,6 +1547,81 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
 		else
 			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+
+		if (!IsAlive() && bKilledVictim)
+		{
+			AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+			SendNotice(NOTICE_WORTHIT);
+		}
+	}
+	else if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
+	{
+		// Killing a player with your last bullet.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
+	}
+	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && vecVictimForward.Dot(vecKillerToVictim) < 0.3f && flDistance < 100)
+	{
+		// Killing a player by shooting in the head from behind.
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		SendAnnouncement(ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
+	}
+	else if (pVictim->LastHitGroup() == HITGROUP_HEAD)
+	{
+		AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
+		else
+			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
+	}
+	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
+	{
+		// Damaging a dude enough to kill him while stunting gives a full bar.
+		AddStylePoints(flPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		if (m_Shared.IsDiving())
+		{
+			if (info.GetDamageType() == DMG_CLUB)
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
+			}
+			else
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+			}
+		}
+		else
+		{
+			if (info.GetDamageType() == DMG_CLUB)
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
+			}
+			else
+			{
+				if (bKilledVictim)
+					SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+				else
+					SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+			}
+		}
+	}
+	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
+	{
+		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
 	}
 	else if (flDistance > 1200)
 	{
@@ -1178,7 +1672,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
 
 		// Only some chance of sending a message at all.
-		if (bKilledVictim || random->RandomInt(0, 3) == 0)
+		if (bKilledVictim)
 		{
 			int iRandom = random->RandomInt(0, 1);
 			announcement_t eAnnouncement;
@@ -1193,10 +1687,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				eAnnouncement = ANNOUNCEMENT_COOL;
 				break;
 			}
-
-			// If the victim isn't doing anything very stylish then just say it's cool.
-			if (!(pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding()))
-				eAnnouncement = ANNOUNCEMENT_COOL;
 
 			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
 				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
@@ -1233,6 +1723,16 @@ void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t eP
 	MessageEnd();
 }
 
+void CSDKPlayer::SendNotice(notice_t eNotice)
+{
+	CSingleUserRecipientFilter user( this );
+	user.MakeReliable();
+
+	UserMessageBegin( user, "Notice" );
+		WRITE_LONG( eNotice );
+	MessageEnd();
+}
+
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
 	if ( !edict() || m_takedamage < DAMAGE_YES )
@@ -1242,7 +1742,7 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 
 	float flMultiplier = 1.5f;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
+	if (IsStyleSkillActive(SKILL_RESILIENT))
 		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
 
 // heal
@@ -1261,14 +1761,12 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	// Don't call parent class, we override with special behavior
 }
 
-ConVar dab_secondwind_health_bonus( "dab_secondwind_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar dab_resilient_health_bonus( "dab_resilient_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 
 int CSDKPlayer::GetMaxHealth() const
 {
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SECONDWIND)
-	{
-		return BaseClass::GetMaxHealth() + dab_secondwind_health_bonus.GetInt();
-	}
+	if (IsStyleSkillActive(SKILL_RESILIENT))
+		return BaseClass::GetMaxHealth() + dab_resilient_health_bonus.GetInt();
 
 	return BaseClass::GetMaxHealth();
 }
@@ -1276,6 +1774,9 @@ int CSDKPlayer::GetMaxHealth() const
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
+
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		return false;
 
 	if( pWeapon && pWeapon->CanWeaponBeDropped() )
 	{
@@ -1306,7 +1807,12 @@ bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 	if (GetCurrentTime() < m_flDisarmRedraw)
 		return false;
 
-	return BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
+	bool bSwitched = BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
+
+	if (bSwitched)
+		ReadyWeapon();
+
+	return bSwitched;
 }
 
 void CSDKPlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
@@ -1393,7 +1899,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
-		pRagdoll->m_vecForce = Vector(0,0,0);
+		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -1441,6 +1947,15 @@ void CSDKPlayer::CreateViewModel( int index /*=0*/ )
 	}
 }
 
+void CSDKPlayer::ImpulseCommands()
+{
+	// Disable the flashlight
+	if (GetImpulse() == 100)
+		return;
+
+	BaseClass::ImpulseCommands();
+}
+
 void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 {
 	if ( !sv_cheats->GetBool() )
@@ -1467,6 +1982,9 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 
 void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
 {
+	if (gpGlobals->eLoadType == MapLoad_Background)
+		return;
+
 	CSingleUserRecipientFilter filter( this );
 	filter.MakeReliable();
 
@@ -1574,7 +2092,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetBuyMenuOpen( false );
 
-		if ( State_Get() == STATE_BUYINGWEAPONS || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_BUYINGWEAPONS || IsDead()) )
 			State_Transition( STATE_PICKINGSKILL );
 
 		return true;
@@ -1588,7 +2106,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetCharacterMenuOpen( false );
 
-		if ( State_Get() == STATE_PICKINGCHARACTER || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGCHARACTER || IsDead()) )
 			State_Transition( STATE_BUYINGWEAPONS );
 
 		return true;
@@ -1602,7 +2120,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		SetSkillMenuOpen( false );
 
-		if ( State_Get() == STATE_PICKINGSKILL || IsDead() )
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGSKILL || IsDead()) )
 			State_Transition( STATE_ACTIVE );
 
 		return true;
@@ -1620,7 +2138,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 // can be closed...false if the menu should be displayed again
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
-	CSDKGameRules *mp = SDKGameRules();
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{
@@ -1635,7 +2152,8 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 		ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
 		return true;
 	}
-#endif
+
+	CSDKGameRules *mp = SDKGameRules();
 	if ( team == TEAM_UNASSIGNED )
 	{
 		// Attempt to auto-select a team, may set team to T, CT or SPEC
@@ -1650,6 +2168,7 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 			team = TEAM_SPECTATOR;
 		}
 	}
+#endif
 
 	if ( team == iOldTeam )
 		return true;	// we wouldn't change the team
@@ -1898,6 +2417,55 @@ void CSDKPlayer::CountLoadoutWeight()
 	}
 }
 
+void CSDKPlayer::BuyRandom()
+{
+	ClearLoadout();
+
+	// Buy a primary weapon
+	SDKWeaponID eWeapon = WEAPON_NONE;
+	do
+	{
+		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+	}
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+
+	AddToLoadout(eWeapon);
+
+	// Buy a secondary weapon
+	do
+	{
+		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
+	}
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+
+	AddToLoadout(eWeapon);
+
+	// Fill the rest up with grenades.
+	while (CanAddToLoadout(SDK_WEAPON_GRENADE))
+		AddToLoadout(SDK_WEAPON_GRENADE);
+}
+
+bool CSDKPlayer::PickRandomCharacter()
+{
+	// Count # of possible player models for random
+	int i;
+	for (i = 0; ; i++)
+	{
+		if (pszPossiblePlayerModels[i] == NULL)
+			break;
+	}
+
+	if (SetCharacter(pszPossiblePlayerModels[random->RandomInt(0, i-1)]))
+		return true;
+
+	return false;
+}
+
+void CSDKPlayer::PickRandomSkill()
+{
+	SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_MAX-1));
+}
+
 void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
 {
 	bool bPreviousWeaponWasOutOfAmmo = false;
@@ -1930,8 +2498,22 @@ void CSDKPlayer::ShowSkillMenu()
 
 void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 {
+	int iOldSkill = m_Shared.m_iStyleSkill;
+
+	if (eSkill <= SKILL_NONE || eSkill >= SKILL_MAX)
+		eSkill = SKILL_MARKSMAN;
+
 	m_Shared.m_iStyleSkill = eSkill;
 	SetStylePoints(0);
+	m_flStyleSkillCharge = 0;
+
+	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
+
+	if (iOldSkill == SKILL_REFLEXES)
+		GiveSlowMo(-1);
+
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+		GiveSlowMo(1);
 }
 
 #if defined ( SDK_USE_PRONE )
@@ -2164,6 +2746,10 @@ void CSDKPlayer::State_Enter_DEATH_ANIM()
 	RemoveEffects( EF_NODRAW );	// still draw player body
 }
 
+extern ConVar spec_freeze_time;
+extern ConVar spec_freeze_traveltime;
+
+#define SDK_DEATH_ANIMATION_TIME 0.5f
 
 void CSDKPlayer::State_PreThink_DEATH_ANIM()
 {
@@ -2184,6 +2770,28 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 			SetAbsVelocity( vAbsVel );
 		}
 	}
+
+	if (gpGlobals->curtime < m_flDeathTime + SDK_DEATH_ANIMATION_TIME)
+		return;
+
+	float flTimeInFreeze = spec_freeze_traveltime.GetFloat() + spec_freeze_time.GetFloat();
+	float flFreezeEnd = (m_flDeathTime + SDK_DEATH_ANIMATION_TIME + flTimeInFreeze );
+
+	if ( GetObserverTarget() && GetObserverTarget() != this )
+	{
+		if ( gpGlobals->curtime < flFreezeEnd )
+		{
+			if ( GetObserverMode() != OBS_MODE_FREEZECAM )
+			{
+				StartObserverMode( OBS_MODE_FREEZECAM );
+				PhysObjectSleep();
+			}
+			return;
+		}
+	}
+
+	if ( gpGlobals->curtime < flFreezeEnd )
+		return;
 
 	if ( gpGlobals->curtime >= (m_flDeathTime + SDK_PLAYER_DEATH_TIME ) )	// let the death cam stay going up to min spawn time.
 	{
@@ -2215,14 +2823,13 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsSkillMenuOpen())
 			return;
 
-		State_Transition( STATE_ACTIVE );
+		State_Transition( STATE_OBSERVER_MODE );
 	}
 }
 
 void CSDKPlayer::State_Enter_OBSERVER_MODE()
 {
-	// Always start a spectator session in roaming mode
-	m_iObserverLastMode = OBS_MODE_ROAMING;
+	m_nRenderFX = kRenderNormal;
 
 	if( m_hObserverTarget == NULL )
 	{
@@ -2266,6 +2873,8 @@ void CSDKPlayer::State_Enter_OBSERVER_MODE()
 
 void CSDKPlayer::State_PreThink_OBSERVER_MODE()
 {
+	if ((m_nButtons & IN_ATTACK) && !(m_afButtonLast & IN_ATTACK))
+		State_Transition( STATE_ACTIVE );
 
 	//Tony; if we're in eye, or chase, validate the target - if it's invalid, find a new one, or go back to roaming
 	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE )
@@ -2314,18 +2923,30 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 
 void CSDKPlayer::State_Enter_PICKINGCHARACTER()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowCharacterMenu();
 	PhysObjectSleep();
 }
 
 void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowBuyMenu();
 	PhysObjectSleep();
 }
 
 void CSDKPlayer::State_Enter_PICKINGSKILL()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
+
+	StopObserverMode();
 	ShowSkillMenu();
 	PhysObjectSleep();
 }
@@ -2531,8 +3152,9 @@ void CSDKPlayer::ActivateMeter()
 
 	m_flStylePoints = 0;
 
-	if (m_Shared.m_iStyleSkill != SKILL_SLOWMO)
-		m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
+	m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
+
+	m_iStyleKillStreak = 0;
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
@@ -2563,14 +3185,30 @@ void CSDKPlayer::ActivateMeter()
 			}
 		}
 
-		GiveNamedItem( "weapon_grenade" );
-		CBasePlayer::GiveAmmo( 10, "grenades");
+		SendNotice(NOTICE_MARKSMAN);
 	}
-	else if (m_Shared.m_iStyleSkill == SKILL_SLOWMO)
+	else if (m_Shared.m_iStyleSkill == SKILL_TROLL)
 	{
-		m_bHasSuperSlowMo = true;
-		GiveSlowMo(6);   // Gets cut in two because super slow mo is on, so it's really 3
+		GiveNamedItem( "weapon_grenade" );
+
+		SendNotice(NOTICE_TROLL);
 	}
+	else if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+	{
+		GiveSlowMo(2); // You get one from the kill so it's three total.
+
+		SendNotice(NOTICE_SUPERSLO);
+
+		// They used the superslow, empty the style meter.
+		m_flStyleSkillCharge = 0;
+		SetStylePoints(0);
+	}
+	else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+		SendNotice(NOTICE_RESILIENT);
+	else if (m_Shared.m_iStyleSkill == SKILL_ATHLETIC)
+		SendNotice(NOTICE_ATHLETIC);
+	else if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+		SendNotice(NOTICE_BOUNCER);
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)
@@ -2581,10 +3219,56 @@ void CSDKPlayer::SetSlowMoType(int iType)
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)
 {
-	if (m_bHasSuperSlowMo)
-		flSeconds /= 2;
+	float flMaxSlow = 5;
 
-	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, 5);
+	if (IsStyleSkillActive(SKILL_REFLEXES))
+		flMaxSlow += 3;
+
+	if (flSeconds > 0 && m_flSlowMoSeconds < flMaxSlow)
+		SendNotice(NOTICE_SLOMO);
+
+	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, flMaxSlow);
+}
+
+void CSDKPlayer::ThirdPersonToggle()
+{
+	m_bThirdPerson = !m_bThirdPerson;
+	Instructor_LessonLearned("thirdperson");
+}
+
+bool CSDKPlayer::InSameTeam( CBaseEntity *pEntity ) const
+{
+	if (SDKGameRules()->IsTeamplay())
+		return BaseClass::InSameTeam(pEntity);
+
+	// If we're not in teamplay it's every man for himself.
+	return false;
+}
+
+bool CSDKPlayer::SetCharacter(const char* pszCharacter)
+{
+	for (int i = 0; ; i++)
+	{
+		if (pszPossiblePlayerModels[i] == NULL)
+			break;
+
+		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
+		{
+			char szCharacter[100];
+			Q_strcpy(szCharacter, pszCharacter+14);
+			szCharacter[strlen(szCharacter)-4] = '\0';
+			m_iszCharacter = AllocPooledString(szCharacter);
+			return true;
+		}
+
+		if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", pszCharacter), pszPossiblePlayerModels[i]))
+		{
+			m_iszCharacter = AllocPooledString(pszCharacter);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void CC_ActivateSlowmo_f (void)
@@ -2610,29 +3294,25 @@ void CC_Character(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		pPlayer->ShowCharacterMenu();
+		if (pPlayer->IsAlive())
+			pPlayer->ShowCharacterMenu();
+		else
+			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
-		int i;
-		for (i = 0; ; i++)
-		{
-			if (pszPossiblePlayerModels[i] == NULL)
-				break;
+		pPlayer->StopObserverMode();
 
-			if (FStrEq(UTIL_VarArgs("models/player/%s.mdl", args[1]), pszPossiblePlayerModels[i]))
-			{
-				pPlayer->SetCharacter(pszPossiblePlayerModels[i]);
-				return;
-			}
-		}
+		if (pPlayer->SetCharacter(args[1]))
+			return;
 
 		if (FStrEq(args[1], "random"))
 		{
-			pPlayer->SetCharacter(pszPossiblePlayerModels[RandomInt(0, i-1)]);
-			return;
+			if (pPlayer->PickRandomCharacter())
+				return;
 		}
 
 		Error("Couldn't find that player model.\n");
@@ -2651,18 +3331,32 @@ void CC_Buy(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		pPlayer->Instructor_LessonLearned("buy");
-		pPlayer->ShowBuyMenu();
+
+		if (pPlayer->IsAlive())
+			pPlayer->ShowBuyMenu();
+		else
+			pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 		return;
 	}
 
 	if (Q_strncmp(args[1], "clear", 5) == 0)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->ClearLoadout();
+		return;
+	}
+
+	if (Q_strncmp(args[1], "random", 6) == 0)
+	{
+		pPlayer->StopObserverMode();
+		pPlayer->BuyRandom();
 		return;
 	}
 
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));
 		return;
 	}
@@ -2670,6 +3364,7 @@ void CC_Buy(const CCommand& args)
 	SDKWeaponID eWeapon = AliasToWeaponID(args[1]);
 	if (eWeapon)
 	{
+		pPlayer->StopObserverMode();
 		pPlayer->AddToLoadout(eWeapon);
 		return;
 	}
@@ -2686,7 +3381,17 @@ void CC_Skill(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		pPlayer->ShowSkillMenu();
+		if (pPlayer->IsAlive())
+			pPlayer->ShowSkillMenu();
+		else
+			pPlayer->State_Transition( STATE_PICKINGSKILL );
+
+		return;
+	}
+
+	if (FStrEq(args[1], "random"))
+	{
+		pPlayer->PickRandomSkill();
 		return;
 	}
 
@@ -2731,3 +3436,35 @@ void CC_DisarmMe(const CCommand& args)
 }
 
 static ConCommand disarmme("disarmme", CC_DisarmMe, "Disarm the player as a test.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CC_ThirdPersonToggle(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->ThirdPersonToggle();
+}
+
+static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::CC_ThirdPersonToggle, "Toggle third person mode.", FCVAR_GAMEDLL );
+
+void CC_HealMe_f(const CCommand &args)
+{
+	if ( !sv_cheats->GetBool() )
+		return;
+
+	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+	if ( !pPlayer )
+		return;
+
+	int iDamage = 10;
+	if ( args.ArgC() >= 2 )
+	{
+		iDamage = atoi( args[ 1 ] );
+	}
+
+	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
+}
+
+static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);

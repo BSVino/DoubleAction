@@ -7,6 +7,7 @@
 
 #include "cbase.h"
 #include <stdio.h>
+#include <string>
 
 #include <cdll_client_int.h>
 
@@ -48,59 +49,61 @@ using namespace vgui;
 
 ConVar _cl_skillmenuopen( "_cl_skillmenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "internal cvar used to tell server when skill menu is open" );
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-Panel *CDABSkillInfoPanel::CreateControlByName( const char *controlName )
+CSkillButton::CSkillButton(vgui::Panel *parent, const char *panelName )
+	: Button( parent, panelName, "WeaponButton")
 {
-	if ( !Q_stricmp( "CIconPanel", controlName ) )
-	{
-		return new CIconPanel(this, "icon_panel");
-	}
-	else
-	{
-		return BaseClass::CreateControlByName( controlName );
-	}
+	m_szSkillName[0] = '\0';
+
+	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
+	InvalidateLayout(true, true);
 }
 
-void CDABSkillInfoPanel::ApplySchemeSettings( IScheme *pScheme )
+void CSkillButton::ApplySettings( KeyValues *resourceData )
 {
-	RichText *pSkillInfo = dynamic_cast<RichText*>(FindChildByName("skillInfo"));
+	BaseClass::ApplySettings( resourceData );
 
-	if ( pSkillInfo )
-	{
-		pSkillInfo->SetBorder(pScheme->GetBorder("NoBorder"));
-		pSkillInfo->SetBgColor(pScheme->GetColor("Blank", Color(0,0,0,0)));
-	}
-
-	BaseClass::ApplySchemeSettings( pScheme );
+	strcpy(m_szSkillName, resourceData->GetString("skill"));
 }
 
-CDABSkillMenu::CDABSkillMenu(IViewPort* pViewPort) : vgui::Frame( NULL, PANEL_BUY_EQUIP_CT )
+void CSkillButton::OnCursorEntered()
+{
+	BaseClass::OnCursorEntered();
+
+	InvalidateLayout();
+
+	CDABSkillMenu* pParent = dynamic_cast<CDABSkillMenu*>(GetParent());
+	if (!pParent)
+		return;
+
+	vgui::Label* pInfoLabel = pParent->GetSkillInfo();
+	if (pInfoLabel)
+		pInfoLabel->SetText((std::string("#skillinfo_") + m_szSkillName).c_str());
+
+	CPanelTexture* pInfoTexture = pParent->GetSkillIcon();
+	if (pInfoTexture)
+		pInfoTexture->SetImage(m_szSkillName);
+}
+
+void CSkillButton::OnCursorExited()
+{
+	BaseClass::OnCursorExited();
+
+	InvalidateLayout();
+}
+
+SkillID CSkillButton::GetSkill()
+{
+	return AliasToSkillID(m_szSkillName);
+}
+
+CDABSkillMenu::CDABSkillMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY_EQUIP_CT )
 {
 	m_pViewPort = pViewPort;
 
-	// initialize dialog
-	SetTitle("", true);
-
-	// load the new scheme early!!
-	SetScheme("SourceScheme");
-	SetMoveable(false);
-	SetSizeable(false);
-
-	// hide the system buttons
-	SetTitleBarVisible( false );
-	SetProportional(true);
-
-	// info window about this class
-	m_pPanel = new EditablePanel( this, "SkillInfo" );
-
 	m_iSkillMenuKey = BUTTON_CODE_INVALID;
-	m_pInitialButton = NULL;
 
-	m_pSkillInfoPanel = new CDABSkillInfoPanel( this, "SkillInfoPanel" );
-	
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
+	m_pSkillInfo = new CFolderLabel(this, "SkillInfo");
+	m_pSkillIcon = new CPanelTexture(this, "SkillIcon");
 
 	LoadControlSettings( "Resource/UI/SkillMenu.res" );
 	InvalidateLayout();
@@ -111,48 +114,15 @@ CDABSkillMenu::~CDABSkillMenu()
 {
 }
 
-void CDABSkillMenu::Reset()
+void CDABSkillMenu::Update()
 {
-	for ( int i = 0 ; i < GetChildCount() ; ++i )
-	{
-		// Hide the subpanel for the CSkillButtons
-		CSkillButton *pPanel = dynamic_cast<CSkillButton *>( GetChild( i ) );
-
-		if ( pPanel )
-			pPanel->HidePage();
-	}
-
-	if (m_pInitialButton)
-		m_pInitialButton->ShowPage();
+	BaseClass::Update();
 }
 
 void CDABSkillMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
-	{
-		engine->CheckPoint( "SkillMenu" );
-
 		m_iSkillMenuKey = gameuifuncs->GetButtonCodeForBind( "skill" );
-	}
-
-	for( int i = 0; i< GetChildCount(); i++ ) 
-	{
-		//Tony; using mouse over button for now, later we'll use CModelButton when I get it implemented!!
-		CSkillButton *button = dynamic_cast<CSkillButton *>(GetChild(i));
-
-		if ( button )
-		{
-			if( button == m_pInitialButton && bShow == true )
-				button->ShowPage();
-			else
-				button->HidePage();
-		}
-	}
-
-	CSkillButton *pRandom = dynamic_cast<CSkillButton *>( FindChildByName("random") );
-
-	if ( pRandom )
-		pRandom->HidePage();
 
 	if ( bShow )
 	{
@@ -164,13 +134,15 @@ void CDABSkillMenu::ShowPanel( bool bShow )
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-	
-	m_pViewPort->ShowBackGround( bShow );
 }
 
 void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 {
-	if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+	{
+		engine->ClientCmd("setskill random");
+	}
+	else if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
 	{
 		ShowPanel( false );
 	}
@@ -180,75 +152,12 @@ void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-void CDABSkillMenu::MoveToCenterOfScreen()
-{
-	int wx, wy, ww, wt;
-	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
-	SetPos((ww - GetWide()) / 2, (wt - GetTall()) / 2);
-}
-
-void CDABSkillMenu::Update()
-{
-	Button *entry = dynamic_cast<Button *>(FindChildByName("CancelButton"));
-	if (entry)
-		entry->SetVisible(true);
-
-	MoveToCenterOfScreen();
-
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if (!pPlayer)
-		return;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 Panel *CDABSkillMenu::CreateControlByName( const char *controlName )
 {
 	if ( !Q_stricmp( "SkillButton", controlName ) )
-	{
-		CSkillButton *newButton = new CSkillButton( this, NULL, m_pSkillInfoPanel );
-
-		if( !m_pInitialButton )
-		{
-			m_pInitialButton = newButton;
-		}
-
-		return newButton;
-	}
-	else if ( !Q_stricmp( "CIconPanel", controlName ) )
-	{
-		return new CIconPanel(this, "icon_panel");
-	}
+		return new CSkillButton( this, NULL );
 	else
-	{
 		return BaseClass::CreateControlByName( controlName );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Catch the mouseover event and set the active class
-//-----------------------------------------------------------------------------
-void CDABSkillMenu::OnShowPage( const char *pagename )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Do things that should be done often, eg number of players in the 
-// selected class
-//-----------------------------------------------------------------------------
-void CDABSkillMenu::OnTick( void )
-{
-	//When a player changes teams, their class and team values don't get here 
-	//necessarily before the command to update the class menu. This leads to the cancel button 
-	//being visible and people cancelling before they have a class. check for class == PLAYERCLASS_UNASSIGNED and if so
-	//hide the cancel button
-
-	if ( !IsVisible() )
-		return;
-
-	BaseClass::OnTick();
 }
 
 void CDABSkillMenu::SetVisible( bool state )
@@ -276,26 +185,14 @@ void CDABSkillMenu::OnCommand( const char *command )
 	gViewPortInterface->ShowBackGround( false );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint background with rounded corners
-//-----------------------------------------------------------------------------
 void CDABSkillMenu::PaintBackground()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBackground( m_bgColor, wide, tall );
+	// Don't
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint border with rounded corners
-//-----------------------------------------------------------------------------
 void CDABSkillMenu::PaintBorder()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBorder( m_borderColor, wide, tall );
+	// Don't
 }
 
 //-----------------------------------------------------------------------------
@@ -305,28 +202,17 @@ void CDABSkillMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	m_bgColor = GetSchemeColor("BgColor", GetBgColor(), pScheme);
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
-
-	SetBgColor( Color(0, 0, 0, 0) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
-
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
-void CDABSkillMenu::SetCharacterPreview(const char* pszCharacter)
+CFolderLabel* CDABSkillMenu::GetSkillInfo()
 {
-	for (int i = 0; ; i++)
-	{
-		if (pszPossiblePlayerModels[i] == nullptr)
-			break;
+	return m_pSkillInfo;
+}
 
-		if (FStrEq(VarArgs("models/player/%s.mdl", pszCharacter), pszPossiblePlayerModels[i]))
-		{
-			m_pszCharacterPreview = pszPossiblePlayerModels[i];
-			return;
-		}
-	}
+CPanelTexture* CDABSkillMenu::GetSkillIcon()
+{
+	return m_pSkillIcon;
 }
 
 CON_COMMAND(hud_reload_skill, "Reload resource for skill menu.")

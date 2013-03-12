@@ -25,7 +25,7 @@
 #endif
 
 #define SDK_RUN_SPEED				320.0f
-#define SDK_WALK_SPEED				75.0f
+#define SDK_WALK_SPEED				120.0f
 #define SDK_CROUCHWALK_SPEED		110.0f
 
 //-----------------------------------------------------------------------------
@@ -92,6 +92,10 @@ CSDKPlayerAnimState::~CSDKPlayerAnimState()
 void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 {
 	m_pSDKPlayer = pPlayer;
+
+	m_flCharacterEyeYaw = 0;
+	m_flCharacterEyePitch = 0;
+
 #if defined ( SDK_USE_PRONE )
 	m_iProneActivity = ACT_MP_STAND_TO_PRONE;
 	m_bProneTransition = false;
@@ -156,7 +160,7 @@ Activity CSDKPlayerAnimState::TranslateActivity( Activity actDesired )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
+void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacterYaw, float flCharacterPitch )
 {
 	// Profile the animation update.
 	VPROF( "CMultiPlayerAnimState::Update" );
@@ -181,6 +185,9 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 	// Store the eye angles.
 	m_flEyeYaw = AngleNormalize( eyeYaw );
 	m_flEyePitch = AngleNormalize( eyePitch );
+
+	m_flCharacterEyeYaw += AngleNormalize( flCharacterYaw - m_flCharacterEyeYaw ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
+	m_flCharacterEyePitch += AngleNormalize( flCharacterPitch - m_flCharacterEyePitch ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
 
 	// Compute the player sequences.
 	ComputeSequences( pStudioHdr );
@@ -242,6 +249,18 @@ bool CSDKPlayerAnimState::SetupPoseParameters( CStudioHdr *pStudioHdr )
 	return true;
 }
 
+void CSDKPlayerAnimState::GetOuterAbsVelocity(Vector& vel)
+{
+	BaseClass::GetOuterAbsVelocity(vel);
+
+#ifdef CLIENT_DLL
+	// For non-local players this is an estimation based on interp data.
+	// Compensate for slow motion accordingly.
+	if (m_pSDKPlayer != C_SDKPlayer::GetLocalSDKPlayer())
+		vel /= m_pSDKPlayer->GetSlowMoMultiplier();
+#endif
+}
+
 void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 {
 	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsDiveSliding())
@@ -257,6 +276,18 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 
 		// Set the aim yaw and save.
 		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, flAimPitch );
+		m_DebugAnimData.m_flAimPitch = flAimPitch;
+
+		return;
+	}
+
+	if (m_pSDKPlayer->IsInThirdPerson())
+	{
+		// Use the character's eye direction instead of the actual.
+		float flAimPitch = m_flCharacterEyePitch;
+
+		// Set the aim pitch pose parameter and save.
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimPitch, -flAimPitch );
 		m_DebugAnimData.m_flAimPitch = flAimPitch;
 
 		return;
@@ -322,8 +353,11 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	// Check to see if we are moving.
 	bool bMoving = ( vecVelocity.Length() > 1.0f ) ? true : false;
 
-	// If we are moving or are prone and undeployed.
-	if ( bMoving || m_bForceAimYaw )
+	if ( m_pSDKPlayer->m_Shared.IsProne() )
+	{
+		m_flGoalFeetYaw = m_flCurrentFeetYaw = m_flEyeYaw;
+	}
+	else if ( bMoving || m_bForceAimYaw )
 	{
 		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
 		{
@@ -379,7 +413,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 		else
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
+			ConvergeYawAnglesThroughZero( m_flGoalFeetYaw, 720.0f, gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier(), m_flCurrentFeetYaw );
 			m_flLastAimTurnTime = m_pSDKPlayer->GetCurrentTime();
 		}
 	}
@@ -392,6 +426,10 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 	// Find the aim(torso) yaw base on the eye and feet yaws.
 	float flAimYaw = m_flEyeYaw - m_flCurrentFeetYaw;
+
+	if (m_pSDKPlayer->IsInThirdPerson())
+		flAimYaw = m_flCharacterEyeYaw - m_flCurrentFeetYaw;
+
 	flAimYaw = AngleNormalize( flAimYaw );
 
 	// Set the aim yaw and save.
@@ -475,7 +513,11 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 	QAngle angles = GetBasePlayer()->GetLocalAngles();
 
 	// If we are not moving, sync up the feet and eyes slowly.
-	if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
+	if (m_pSDKPlayer->m_Shared.IsProne())
+	{
+		// Don't touch it
+	}
+	else if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
 	{
 		float flYawDelta = angles[YAW] - m_PoseParameterData.m_flEstimateYaw;
 		flYawDelta = AngleNormalize( flYawDelta );
@@ -514,6 +556,36 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 		else
 			m_PoseParameterData.m_flEstimateYaw = 180-flYawDelta;
 	}
+}
+
+void CSDKPlayerAnimState::ConvergeYawAnglesThroughZero( float flGoalYaw, float flYawRate, float flDeltaTime, float &flCurrentYaw )
+{
+	float flFadeTurnDegrees = 60;
+
+	float flEyeGoalYaw = AngleDiff(flGoalYaw, m_flEyeYaw);
+	float flEyeCurrentYaw = AngleDiff(flCurrentYaw, m_flEyeYaw);
+
+	// Find the yaw delta.
+	float flDeltaYaw = flEyeGoalYaw - flEyeCurrentYaw;
+	float flDeltaYawAbs = fabs( flDeltaYaw );
+
+	// Always do at least a bit of the turn (1%).
+	float flScale = 1.0f;
+	flScale = flDeltaYawAbs / flFadeTurnDegrees;
+	flScale = clamp( flScale, 0.01f, 1.0f );
+
+	float flYaw = flYawRate * flDeltaTime * flScale;
+	if ( flDeltaYawAbs < flYaw )
+	{
+		flCurrentYaw = flGoalYaw;
+	}
+	else
+	{
+		float flSide = ( flDeltaYaw < 0.0f ) ? -1.0f : 1.0f;
+		flCurrentYaw += ( flYaw * flSide );
+	}
+
+	flCurrentYaw = AngleNormalize( flCurrentYaw );
 }
 
 //-----------------------------------------------------------------------------
@@ -559,17 +631,17 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			// Weapon secondary fire.
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_PRONE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_SLIDE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_SLIDE );
 			else if ( m_pSDKPlayer->m_Shared.IsRolling() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_ROLL );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_ROLL );
 			else if ( m_pSDKPlayer->m_Shared.IsDiving() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_DIVE );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_DIVE );
 			else if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK_CROUCH );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_PRIMARYATTACK );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_BRAWL );
 
 			iGestureActivity = ACT_VM_PRIMARYATTACK;
 			break;
@@ -617,12 +689,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_LOOP );
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_LOOP );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
@@ -630,12 +704,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_END:
 		{
 			// Weapon reload.
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_END );
+			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_PRONE );
+			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_END );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END_CROUCH );
 			else
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
+				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_END );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
 			break;
@@ -663,7 +739,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bProneTransition = true;
 			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_STAND;
+			m_iProneActivity = ACT_DAB_PRONE_TO_STAND;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->stand so just idle.
 		}
@@ -779,13 +855,25 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 {
-	// In TF we run all the time now.
 	float flSpeed = GetOuterXYSpeed();
 
-	if ( flSpeed > MOVING_MINIMUM_SPEED )
+	if ( flSpeed > 150 )
 	{
-		// Always assume a run.
-		idealActivity = ACT_DAB_RUN_IDLE;
+		if (ShouldUseAimInAnims())
+			idealActivity = ACT_DAB_RUN_AIM;
+		else if (m_pSDKPlayer->IsWeaponReady())
+			idealActivity = ACT_DAB_RUN_READY;
+		else
+			idealActivity = ACT_DAB_RUN_IDLE;
+	}
+	else if ( flSpeed > MOVING_MINIMUM_SPEED )
+	{
+		if (ShouldUseAimInAnims())
+			idealActivity = ACT_DAB_WALK_AIM;
+		else if (m_pSDKPlayer->IsWeaponReady())
+			idealActivity = ACT_DAB_WALK_READY;
+		else
+			idealActivity = ACT_DAB_WALK_IDLE;
 	}
 
 	return true;
@@ -801,9 +889,23 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-			idealActivity = ACT_DAB_CROUCH_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_CROUCH_AIM;
+			else if (m_pSDKPlayer->IsWeaponReady())
+				idealActivity = ACT_DAB_CROUCH_READY;
+			else
+				idealActivity = ACT_DAB_CROUCH_IDLE;		
+		}
 		else
-			idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_CROUCHWALK_AIM;
+			else if (m_pSDKPlayer->IsWeaponReady())
+				idealActivity = ACT_DAB_CROUCHWALK_READY;
+			else
+				idealActivity = ACT_DAB_CROUCHWALK_IDLE;		
+		}
 
 		return true;
 	}
@@ -818,10 +920,21 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 {
-	if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
+	if ( m_pSDKPlayer->m_Shared.IsDiveSliding() )
+	{
+		idealActivity = ACT_DAB_DIVESLIDE;
+
+		return true;
+	}
+	else if ( m_pSDKPlayer->m_Shared.IsProne() )
 	{
 		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-			idealActivity = ACT_DAB_PRONECHEST_IDLE;		
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_PRONECHEST_AIM;
+			else
+				idealActivity = ACT_DAB_PRONECHEST_IDLE;		
+		}
 		else
 			idealActivity = ACT_DAB_CRAWL_IDLE;		
 
@@ -845,10 +958,7 @@ bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
 			RestartMainSequence();	// Reset the animation.
 		}
 
-		// Next four lines are because the animations aren't done yet. They could be removed once the transition animations are in.
-		if (m_pSDKPlayer->m_Shared.IsProne())
-			m_bProneTransition = false;
-		else if (m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsProne())
+		if (!m_pSDKPlayer->m_Shared.IsProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne())
 			m_bProneTransition = false;
 
 		//Tony; check the cycle, and then stop overriding
@@ -1012,6 +1122,12 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		}
 	}	
 
+	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND))
+	{
+		idealActivity = ACT_DAB_JUMP_FLOAT;
+		return true;
+	}
+
 	if ( m_bJumping )
 		return true;
 
@@ -1030,6 +1146,11 @@ extern ConVar anim_showmainactivity;
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
 	Activity idealActivity = ACT_DAB_STAND_IDLE;
+
+	if (ShouldUseAimInAnims())
+		idealActivity = ACT_DAB_STAND_AIM;
+	else if (m_pSDKPlayer->IsWeaponReady())
+		idealActivity = ACT_DAB_STAND_READY;
 
 	if (
 		HandleDiving( idealActivity ) ||
@@ -1072,3 +1193,16 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	return idealActivity;
 }
 
+bool CSDKPlayerAnimState::ShouldUseAimInAnims()
+{
+	if (!m_pSDKPlayer->m_Shared.IsAimedIn())
+		return false;
+
+	if (!m_pSDKPlayer->GetActiveSDKWeapon())
+		return false;
+
+	if (!m_pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
+		return false;
+
+	return true;
+}

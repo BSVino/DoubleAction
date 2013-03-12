@@ -217,14 +217,14 @@ void CModelPanel::SetDefaultAnimation( const char *pszName )
 //-----------------------------------------------------------------------------
 void CModelPanel::SwapModel( const char *pszName, const char *pszAttached )
 {
-	if ( !m_pModelInfo || !pszName || !pszName[0] )
-		return;
-
 	int len = Q_strlen( pszName ) + 1;
 	char *pAlloced = new char[ len ];
 	Assert( pAlloced );
 	Q_strncpy( pAlloced, pszName, len );
 	m_pModelInfo->m_pszModelName = pAlloced;
+
+	if (!pszName || !pszName[0])
+		return;
 
 	ClearAttachedModelInfos();
 
@@ -488,6 +488,12 @@ void CModelPanel::Paint()
 	if ( !pLocalPlayer || !m_pModelInfo )
 		return;
 
+	if (!m_pModelInfo->m_pszModelName)
+		return;
+
+	if (!m_pModelInfo->m_pszModelName[0])
+		return;
+
 	MDLCACHE_CRITICAL_SECTION();
 
 	if ( m_bPanelDirty )
@@ -497,7 +503,7 @@ void CModelPanel::Paint()
 		SetupModel();
 
 		// are we trying to play a VCD?
-		if ( Q_strlen( m_pModelInfo->m_pszVCD ) > 0 )
+		if ( m_pModelInfo->m_pszVCD && Q_strlen( m_pModelInfo->m_pszVCD ) > 0 )
 		{
 			SetupVCD();
 		}

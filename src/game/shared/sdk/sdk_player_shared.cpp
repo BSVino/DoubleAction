@@ -36,6 +36,8 @@
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
+	#include "r_efx.h"
+	#include "dlight.h"
 
 	#define CRecipientFilter C_RecipientFilter
 #else
@@ -60,11 +62,7 @@ void CSDKPlayer::FireBullet(
 						   float y	// spread y factor
 						   )
 {
-	float fCurrentDamage = iDamage;   // damage of the bullet at it's current trajectory
 	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
-
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		fCurrentDamage *= 1.6f;
 
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
@@ -123,15 +121,8 @@ void CSDKPlayer::FireBullet(
 		if (pWeaponInfo)
 			eWeaponType = pWeaponInfo->m_eWeaponType;
 
-		//calculate the damage based on the distance the bullet travelled.
-		flCurrentDistance += tr.fraction * flMaxRange;
-
-		// First 500 units, no decrease in damage.
-		flCurrentDistance -= 500;
-		if (flCurrentDistance < 0)
-			flCurrentDistance = 0;
-
-		float flDistanceMultiplier;
+		float flDamageMultiplier = 1;
+		float flMaxRange = 3000;
 
 		// Power formula works like so:
 		// pow( x, distance/y )
@@ -140,22 +131,39 @@ void CSDKPlayer::FireBullet(
 		switch (eWeaponType)
 		{
 		case WT_RIFLE:
-			flDistanceMultiplier = pow ( 0.75f, (flCurrentDistance / 3000));
+			flDamageMultiplier = 0.75f;
+			flMaxRange = 3000;
 			break;
 
 		case WT_SHOTGUN:
-			flDistanceMultiplier = pow ( 0.40f, (flCurrentDistance / 500));
+			flDamageMultiplier = 0.40f;
+			flMaxRange = 500;
 			break;
 
 		case WT_SMG:
-			flDistanceMultiplier = pow ( 0.50f, (flCurrentDistance / 1000));
+			flDamageMultiplier = 0.50f;
+			flMaxRange = 1000;
 			break;
 
 		case WT_PISTOL:
 		default:
-			flDistanceMultiplier = pow ( 0.55f, (flCurrentDistance / 1500));
+			flDamageMultiplier = 0.55f;
+			flMaxRange = 1500;
 			break;
 		}
+
+		//calculate the damage based on the distance the bullet travelled.
+		flCurrentDistance += tr.fraction * flMaxRange;
+
+		// First 500 units, no decrease in damage.
+		flCurrentDistance -= 500;
+		if (flCurrentDistance < 0)
+			flCurrentDistance = 0;
+
+		if (flCurrentDistance > flMaxRange)
+			flCurrentDistance = flMaxRange;
+
+		float flDistanceMultiplier = pow(flDamageMultiplier, (flCurrentDistance / flMaxRange));
 
 		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
 
@@ -218,7 +226,7 @@ void CSDKPlayer::FireBullet(
 		// add damage to entity that we hit
 
 #ifdef GAME_DLL
-		float flBulletDamage = fCurrentDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
+		float flBulletDamage = iDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
 
 		ClearMultiDamage();
 
@@ -229,6 +237,8 @@ void CSDKPlayer::FireBullet(
 		TraceAttackToTriggers( info, tr.startpos, tr.endpos, vecDir );
 
 		ApplyMultiDamage();
+#else
+		flDistanceMultiplier = flDistanceMultiplier; // Silence warning.
 #endif
 
 		pIgnore = tr.m_pEnt;
@@ -271,8 +281,29 @@ void CSDKPlayer::FireBullet(
 void CSDKPlayer::DoMuzzleFlash()
 {
 #ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
+
+	if (pActiveWeapon)
+	{
+		Vector vecEyeForward;
+		EyeVectors(&vecEyeForward);
+		Vector vecMuzzle = EyePosition() + vecEyeForward * 60;
+
+		float flTime = random->RandomFloat( 0.05f, 0.1f ) * (1/GetSlowMoMultiplier());
+
+		dlight_t *dl = effects->CL_AllocDlight ( entindex() );
+		dl->origin = vecMuzzle;
+		dl->color.r = 255;
+		dl->color.g = 165;
+		dl->color.b = 0;
+		dl->die = gpGlobals->curtime + flTime;
+		dl->radius = random->RandomFloat( 500.0f, 700.0f );
+		dl->decay = dl->radius / flTime;
+	}
 
 	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 	{
@@ -335,6 +366,8 @@ void CSDKPlayer::SharedSpawn()
 
 	SetGravity(1);
 
+	m_flReadyWeaponUntil = -1;
+
 	m_Shared.SetJumping( false );
 
 	m_Shared.m_flViewTilt = 0;
@@ -355,6 +388,18 @@ void CSDKPlayer::SharedSpawn()
 #if defined ( SDK_USE_PRONE )
 //	m_bPlayingProneMoveSound = false;
 #endif // SDK_USE_PRONE
+}
+
+void CSDKPlayer::StartTouch(CBaseEntity *pOther)
+{
+	BaseClass::StartTouch(pOther);
+
+	CGameTrace tr;
+	tr = GetTouchTrace();
+
+	// If I'm diving and I hit a wall at a blunt angle, don't dive afterwards.
+	if (m_Shared.IsDiving() && tr.plane.normal.Dot(m_Shared.m_vecDiveDirection) < -0.95f)
+		m_Shared.m_bRollAfterDive = false;
 }
 
 bool CSDKPlayer::PlayerUse()
@@ -395,11 +440,6 @@ bool CSDKPlayer::CanAttack( void )
 			return false;
 	#endif // SDK_SHOOT_WHILE_SPRINTING
 #endif // SDK_USE_SPRINTING
-
-#if !defined ( SDK_SHOOT_ON_LADDERS )
-	if ( GetMoveType() == MOVETYPE_LADDER )
-		return false;
-#endif //SDK_SHOOT_ON_LADDERS
 
 #if !defined ( SDK_SHOOT_WHILE_JUMPING )
 	if ( m_Shared.IsJumping() )
@@ -471,19 +511,30 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 }
 
 ConVar dab_styletime( "dab_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
-bool CSDKPlayer::IsStyleSkillActive() const
+bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 {
 	if (dab_styletime.GetBool())
-		return true;
+	{
+		if (eSkill == SKILL_NONE)
+			return true;
+		else
+			return m_Shared.m_iStyleSkill == eSkill;
+	}
 
-	if (m_flStylePoints >= 100)
-		return true;
+	if (m_flStyleSkillCharge == 0)
+		return false;
 
-	return m_flStyleSkillCharge > 0;
+	if (eSkill == SKILL_NONE)
+		return true;
+	else
+		return m_Shared.m_iStyleSkill == eSkill;
 }
 
-void CSDKPlayer::UseStyleCharge(float flCharge)
+void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 {
+	if (!IsStyleSkillActive(eSkill))
+		return;
+
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 }
 
@@ -491,8 +542,8 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, 0.5, 1);
+	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
 		m_flFreezeUntil = m_flCurrentTime;
@@ -500,6 +551,16 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 		m_flFreezeUntil = 0;
 	else
 		m_flFreezeUntil = m_flCurrentTime + flTime;
+}
+
+void CSDKPlayer::ReadyWeapon()
+{
+	m_flReadyWeaponUntil = GetCurrentTime() + 3.5f;
+}
+
+bool CSDKPlayer::IsWeaponReady()
+{
+	return GetCurrentTime() < m_flReadyWeaponUntil;
 }
 
 bool CSDKPlayer::PlayerFrozen()
@@ -564,6 +625,7 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 {
 	m_bProne = bProne;
 	m_bProneSliding = false;
+	m_flDisallowUnProneTime = -1;
 
 	if ( bNoAnimation )
 	{
@@ -575,6 +637,9 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 	{
 		ForceUnzoom();
 	}
+
+	if (!bProne)
+		m_pOuter->ReadyWeapon();
 }
 
 void CSDKPlayerShared::StartGoingProne( void )
@@ -665,8 +730,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	if (!CanSlide())
 		return;
 
-	if (m_iStyleSkill == SKILL_ADRENALINE)
-		m_pOuter->UseStyleCharge(5);
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -698,10 +762,23 @@ void CSDKPlayerShared::EndSlide()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_flSlideTime = 0;
+
+	m_pOuter->ReadyWeapon();
 }
 
 void CSDKPlayerShared::StandUpFromSlide( void )
 {	
+	// If it was long enough to notice what it was, then train the slide.
+	if (gpGlobals->curtime > m_flSlideTime + 1)
+	{
+		if (m_bDiveSliding)
+			m_pOuter->Instructor_LessonLearned("diveafterslide");
+		else
+			m_pOuter->Instructor_LessonLearned("slide");
+	}
+
+	m_pOuter->FreezePlayer(0.4f, 0.3f);
+
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
@@ -719,8 +796,9 @@ float CSDKPlayerShared::GetSlideFriction() const
 		return 1;
 
 	float flMultiplier = 1;
-	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flMultiplier = 5;
+
+	if (m_iStyleSkill == SKILL_ATHLETIC)
+		flMultiplier = ModifySkillValue(2.5, 0.5f, SKILL_ATHLETIC);
 
 	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat())
 		return 0.1f/flMultiplier;
@@ -761,6 +839,9 @@ bool CSDKPlayerShared::CanRoll() const
 	if (!CanChangePosition())
 		return false;
 
+	if (!(m_pOuter->GetFlags() & FL_ONGROUND))
+		return false;
+
 	return true;
 }
 
@@ -769,7 +850,6 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 	if (!CanRoll())
 		return;
 
-	m_bCanRollInto = true;
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;
 
@@ -785,6 +865,8 @@ void CSDKPlayerShared::EndRoll()
 {
 	m_bRolling = false;
 	m_flRollTime = 0;
+
+	m_pOuter->ReadyWeapon();
 }
 
 bool CSDKPlayerShared::IsDiving() const
@@ -818,26 +900,35 @@ bool CSDKPlayerShared::CanDive() const
 	return true;
 }
 
-ConVar  sdk_dive_height( "sdk_dive_height", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.7", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+
+ConVar  sdk_dive_height_high( "sdk_dive_height_high", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
 
-	if (m_iStyleSkill == SKILL_ADRENALINE)
-		m_pOuter->UseStyleCharge(5);
+	m_flDiveTime = m_pOuter->GetCurrentTime();
+	m_flDiveLerped = 0;
+
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoDive" );
 
 	m_bDiving = true;
+	m_bRollAfterDive = true;
+
+#ifdef GAME_DLL
+	m_pOuter->OnDive();
+#endif
 
 	ForceUnzoom();
 
@@ -845,34 +936,45 @@ Vector CSDKPlayerShared::StartDiving()
 	m_vecDiveDirection.GetForModify().z = 0;
 	m_vecDiveDirection.GetForModify().NormalizeInPlace();
 
-	// We need to turn off interp since the dive changes our origin abruptly.
-	m_pOuter->AddEffects( EF_NOINTERP );
 	m_pOuter->DoAnimationEvent(PLAYERANIMEVENT_DIVE);
+
+	bool bWasOnGround = m_pOuter->GetFlags() & FL_ONGROUND;
 
 	m_pOuter->SetGroundEntity(NULL);
 
 	m_pOuter->Instructor_LessonLearned("dive");
 
-	if (m_pOuter->IsStyleSkillActive() && m_pOuter->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-	{
-		m_pOuter->SetGravity(sdk_dive_gravity_adrenaline.GetFloat());
+	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
-		return m_vecDiveDirection.Get() * sdk_dive_speed_adrenaline.GetFloat() + Vector(0, 0, sdk_dive_height_adrenaline.GetFloat());
-	}
-	else
-	{
-		m_pOuter->SetGravity(sdk_dive_gravity.GetFloat());
+	float flDiveHeight = sdk_dive_height.GetFloat();
+	if (!bWasOnGround)
+		flDiveHeight = sdk_dive_height_high.GetFloat();
 
-		ConVarRef sdk_dive_speed("sdk_dive_speed");
-		return m_vecDiveDirection.Get() * sdk_dive_speed.GetFloat() + Vector(0, 0, sdk_dive_height.GetFloat());
-	}
+	float flRatio = sdk_dive_height_adrenaline.GetFloat()/flDiveHeight;
+	float flModifier = (flRatio - 1)/2;
+
+	flDiveHeight = ModifySkillValue(flDiveHeight, flModifier, SKILL_ATHLETIC);
+
+	flRatio = sdk_dive_gravity_adrenaline.GetFloat()/sdk_dive_gravity.GetFloat();
+	flModifier = (flRatio - 1)/2;
+
+	m_pOuter->SetGravity(ModifySkillValue(sdk_dive_gravity.GetFloat(), flModifier, SKILL_ATHLETIC));
+
+	ConVarRef sdk_dive_speed("sdk_dive_speed");
+	flRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+	flModifier = (flRatio - 1)/2;
+
+	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
 }
 
 void CSDKPlayerShared::EndDive()
 {
+	m_flDiveTime = 0;
+
 	m_pOuter->SetGravity(1);
 	m_bDiving = false;
-	m_pOuter->RemoveEffects( EF_NOINTERP );
+
+	m_pOuter->ReadyWeapon();
 }
 
 #if defined ( SDK_USE_SPRINTING )
@@ -943,6 +1045,17 @@ void CSDKPlayerShared::SetAimIn(bool bAimIn)
 	}
 
 	m_bAimedIn = bAimIn;
+}
+
+ConVar da_slowaimin_speedin("da_slowaimin_speedin", "0.1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_slowaimin_speedout("da_slowaimin_speedout", "10", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayerShared::RampSlowAimIn(float flGoal)
+{
+	if (flGoal > 0)
+		m_flSlowAimIn = Approach(flGoal, m_flSlowAimIn, da_slowaimin_speedin.GetFloat()*gpGlobals->frametime);
+	else
+		m_flSlowAimIn = Approach(flGoal, m_flSlowAimIn, da_slowaimin_speedout.GetFloat()*gpGlobals->frametime);
 }
 
 ConVar dab_recoildecay("dab_recoildecay", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
@@ -1110,6 +1223,15 @@ void CSDKPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, floa
 
 bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 {
+	if (eWeapon == SDK_WEAPON_CROWBAR) // This doesn't exist yet.
+		return false;
+
+	if (eWeapon <= WEAPON_NONE)
+		return false;
+
+	if (eWeapon >= WEAPON_MAX)
+		return false;
+
 	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
 
 	if (pWeaponInfo->iWeight + m_iLoadoutWeight > MAX_LOADOUT_WEIGHT)
@@ -1150,11 +1272,12 @@ void CSDKPlayer::ActivateSlowMo()
 	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds + 0.5f;    // 1 second becomes 1.5 seconds, 2 becomes 2.5, etc
 	m_flSlowMoSeconds = 0;
 	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
-	m_bHasSuperSlowMo = false;
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
+
+	ReadyWeapon();
 }
 
 float CSDKPlayer::GetSlowMoMultiplier() const
@@ -1164,10 +1287,10 @@ float CSDKPlayer::GetSlowMoMultiplier() const
 
 float CSDKPlayer::GetSlowMoGoal() const
 {
-	if (m_iSlowMoType == SLOWMO_STYLESKILL || (IsStyleSkillActive() && m_Shared.m_iStyleSkill == SKILL_SLOWMO))
+	if (m_iSlowMoType == SLOWMO_STYLESKILL)
 		return 0.8;
 	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
-		return 0.6;
+		return 0.5;
 	else if (m_iSlowMoType == SLOWMO_PASSIVE)
 		return 0.4;
 	else //if (m_iSlowMoType == SLOWMO_NONE)
@@ -1190,12 +1313,40 @@ void CSDKPlayer::UpdateCurrentTime()
 #endif
 	}
 
+	UpdateViewBobRamp();
+}
+
+void CSDKPlayer::UpdateViewBobRamp()
+{
+#ifdef CLIENT_DLL
+	// It's not filled in for remote clients, so force the local one since it's the same.
+	float flMaxBobSpeed = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed*0.7f;
+#else
 	float flMaxBobSpeed = m_Shared.m_flRunSpeed*0.7f;
+#endif
+
 	float flBobRampGoal = RemapValClamped(GetLocalVelocity().LengthSqr(), 0, flMaxBobSpeed*flMaxBobSpeed, 0, 1);
-	if (!GetGroundEntity() || m_Shared.IsRolling() || m_Shared.IsSliding())
+	if (!(GetFlags() & FL_ONGROUND) || m_Shared.IsRolling() || m_Shared.IsSliding())
 		flBobRampGoal = 0;
 
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
+}
+
+void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
+{
+	if (!IsInThirdPerson())
+		return;
+
+	m_vecThirdCamera = CalculateThirdPersonCameraPosition(vecEye, angEye);
+
+	Vector vecShoot;
+	AngleVectors(angEye, &vecShoot);
+
+	// Trace to see where the camera is pointing
+	trace_t tr;
+	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+
+	m_vecThirdTarget = tr.endpos;
 }
 
 ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
@@ -1208,6 +1359,9 @@ Vector CSDKPlayer::EyePosition()
 
 #ifdef CLIENT_DLL
 	bIsInThird = ::input->CAM_IsThirdPerson();
+
+	if (C_SDKPlayer::GetLocalOrSpectatedPlayer() ==  this && C_SDKPlayer::GetLocalSDKPlayer() != C_SDKPlayer::GetLocalOrSpectatedPlayer())
+		bIsInThird = false;
 #endif
 
 	if (m_Shared.m_flViewBobRamp && !bIsInThird)
@@ -1225,8 +1379,15 @@ Vector CSDKPlayer::EyePosition()
 		float flWalkUpBob = sin(GetCurrentTime() * flWalkPeriod * 2) * (flViewBobMagnitude / 2);
 		float flWalkRightBob = sin(GetCurrentTime() * flWalkPeriod) * flViewBobMagnitude;
 
+#ifdef CLIENT_DLL
+		// It's not filled in for remote clients, so force the local one since it's the same.
+		float flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+#else
+		float flSpeedRatio = m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed;
+#endif
+
 		// 0 is walk, 1 is run.
-		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed, 1.0f, 0.0f, 1.0f);
+		float flRunRamp = RemapValClamped(m_Shared.m_flViewBobRamp, flSpeedRatio, 1.0f, 0.0f, 1.0f);
 
 		float flRightBob = RemapValClamped(flRunRamp, 0, 1, flWalkRightBob, flRunRightBob);
 		float flUpBob = RemapValClamped(flRunRamp, 0, 1, flWalkUpBob, flRunUpBob);
@@ -1261,4 +1422,83 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 	}
 
 	return true;
+}
+
+#define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
+
+bool CSDKPlayer::IsInThirdPerson() const
+{
+	if (!IsAlive())
+		return false;
+
+	return m_bThirdPerson;
+}
+
+const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
+{
+#ifdef GAME_DLL
+	float flCamBackIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
+	float flCamUpIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_up" ));
+	float flCamRightIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_right" ));
+
+	float flCamBackAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_back_aim" ));
+	float flCamUpAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_up_aim" ));
+	float flCamRightAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_right_aim" ));
+#else
+	ConVarRef da_cam_back("da_cam_back");
+	ConVarRef da_cam_up("da_cam_up");
+	ConVarRef da_cam_right("da_cam_right");
+
+	ConVarRef da_cam_back_aim("da_cam_back_aim");
+	ConVarRef da_cam_up_aim("da_cam_up_aim");
+	ConVarRef da_cam_right_aim("da_cam_right_aim");
+
+	float flCamBackIdle = da_cam_back.GetFloat();
+	float flCamUpIdle = da_cam_up.GetFloat();
+	float flCamRightIdle = da_cam_right.GetFloat();
+
+	float flCamBackAim = da_cam_back_aim.GetFloat();
+	float flCamUpAim = da_cam_up_aim.GetFloat();
+	float flCamRightAim = da_cam_right_aim.GetFloat();
+#endif
+
+	float flCamBack = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamBackIdle, flCamBackAim);
+	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);
+	float flCamRight = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamRightIdle, flCamRightAim);
+
+	Vector camForward, camRight, camUp;
+	AngleVectors( angCamera, &camForward, &camRight, &camUp );
+
+	Vector vecCameraOffset = -camForward*flCamBack + camRight*flCamRight + camUp*flCamUp;
+	Vector vecNewOrigin = vecEye + vecCameraOffset;
+
+	trace_t trace;
+
+	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
+	UTIL_TraceHull( vecEye, vecNewOrigin,
+		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
+		MASK_SOLID, &traceFilter, &trace );
+
+	return vecEye + vecCameraOffset * trace.fraction;
+}
+
+const Vector CSDKPlayer::GetThirdPersonCameraPosition()
+{
+	return m_vecThirdCamera;
+}
+
+const Vector CSDKPlayer::GetThirdPersonCameraTarget()
+{
+	return m_vecThirdTarget;
+}
+
+float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID eSkill) const
+{
+	if (m_iStyleSkill != eSkill)
+		return flValue;
+
+	if (m_pOuter->IsStyleSkillActive())
+		flModify *= 2;
+
+	return flValue * (flModify+1);
 }

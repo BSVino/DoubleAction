@@ -52,11 +52,11 @@ ConVar	mp_limit_pc_class3(		"mp_limit_pc_class3", "-1", FCVAR_REPLICATED, "Class
 
 const char *pszTeamNames[] =
 {
-	"#SDK_Team_Unassigned",
-	"#SDK_Team_Spectator",
-	"#SDK_Team_Blue",
-	"#SDK_Team_Red",
-	"#SDK_Team_Deathmatch",
+	"#DAB_Team_Unassigned",
+	"#DAB_Team_Spectator",
+	"#DAB_Team_Blue",
+	"#DAB_Team_Red",
+	"#DAB_Team_Deathmatch",
 };
 
 //Tony; We need to precache all possible player models that we're going to use
@@ -76,7 +76,7 @@ static const char * s_WeaponAliasInfo[] =
 {
 	"none",		// WEAPON_NONE
 	"fal",		// SDK_WEAPON_FAL
-	"m3",		// SDK_WEAPON_SHOTGUN
+	"mossberg", // SDK_WEAPON_MOSSBERG
 	"vector",	// SDK_WEAPON_VECTOR
 	"mp5k",		// SDK_WEAPON_MP5
 	"m1911",	// SDK_WEAPON_M1911
@@ -118,10 +118,12 @@ const char *WeaponIDToAlias( SDKWeaponID id )
 static const char * s_SkillAliasInfo[] = 
 {
 	"none",			// SKILL_NONE
-	"adrenaline",	// SKILL_ADRENALINE
-	"secondwind",	// SKILL_SECONDWIND
-	"slowmo",		// SKILL_SLOWMO
-	"marksman",		// SKILL_MARKSMAN
+	"bouncer",      // SKILL_BOUNCER
+	"athletic",     // SKILL_ATHLETIC
+	"resilient",    // SKILL_RESILIENT
+	"reflexes",     // SKILL_REFLEXES
+	"marksman",     // SKILL_MARKSMAN
+	"troll",        // SKILL_TROLL
 	NULL,
 };
 

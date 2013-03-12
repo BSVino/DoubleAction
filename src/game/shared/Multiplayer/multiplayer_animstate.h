@@ -211,7 +211,7 @@ protected:
 	virtual int SelectWeightedSequence( Activity activity ) { return GetBasePlayer()->SelectWeightedSequence( activity ); }
 	virtual void RestartMainSequence();
 
-	void GetOuterAbsVelocity( Vector& vel );
+	virtual void GetOuterAbsVelocity( Vector& vel );
 	float GetOuterXYSpeed();
 
 	virtual bool HandleJumping( Activity &idealActivity );

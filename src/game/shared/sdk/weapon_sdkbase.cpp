@@ -175,11 +175,11 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+	/*if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
 	{
 		// Marksmen don't consume ammo while their skill is active.
 	}
-	else
+	else*/
 	{
 		// Make sure we don't fire more than the amount in the clip
 		if ( UsesClipsForAmmo1() )
@@ -195,22 +195,39 @@ void CWeaponSDKBase::PrimaryAttack( void )
 	if (pPlayer->m_Shared.IsAimedIn() && !WeaponSpreadFixed())
 	{
 		if (GetSDKWpnData().m_bAimInSpreadBonus)
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.3f);
 		else
-			// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
 	}
 
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-		flSpread *= 0.5f;
+	flSpread = pPlayer->m_Shared.ModifySkillValue(flSpread, -0.25f, SKILL_MARKSMAN);
 
 	if (!WeaponSpreadFixed())
 		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
 
+	QAngle angShoot = pPlayer->EyeAngles() + pPlayer->GetPunchAngle();
+
+	if (pPlayer->IsInThirdPerson())
+	{
+		// First find where the camera should be.
+		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
+
+		Vector vecShoot;
+		AngleVectors(angShoot, &vecShoot);
+
+		trace_t tr;
+		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+
+		Vector vecBulletDirection = tr.endpos - pPlayer->Weapon_ShootPosition();
+		vecBulletDirection.NormalizeInPlace();
+
+		VectorAngles(vecBulletDirection, angShoot);
+	}
+
 	FX_FireBullets(
 		pPlayer->entindex(),
 		pPlayer->Weapon_ShootPosition(),
-		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(),
+		angShoot,
 		GetWeaponID(),
 		0, //Tony; fire mode - this is unused at the moment, left over from CSS when SDK* was created in the first place.
 		CBaseEntity::GetPredictionRandomSeed() & 255,
@@ -252,7 +269,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 void CWeaponSDKBase::SecondaryAttack()
 {
-	Swing(true);
+	Swing(true, true);
 }
 
 #define MELEE_HULL_DIM		16
@@ -260,7 +277,7 @@ void CWeaponSDKBase::SecondaryAttack()
 static const Vector g_meleeMins(-MELEE_HULL_DIM,-MELEE_HULL_DIM,-MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM,MELEE_HULL_DIM,MELEE_HULL_DIM);
 
-void CWeaponSDKBase::Swing(bool bIsSecondary)
+void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 {
 	trace_t traceHit;
 
@@ -269,13 +286,15 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 	if ( !pOwner )
 		return;
 
-	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsSliding() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
+	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
 		return;
 
-	if (bIsSecondary && pOwner->m_Shared.IsDiving())
+	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
 	pOwner->Instructor_LessonLearned("brawl");
+
+	pOwner->ReadyWeapon();
 
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
@@ -296,7 +315,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		float meleeHullRadius = 1.732f * MELEE_HULL_DIM;  // hull is +/- 16, so use cuberoot of 2 to determine how big the hull is from center to the corner point
 
 		// Back off by hull "radius"
-		swingEnd -= forward * meleeHullRadius;
+		swingEnd -= forward * meleeHullRadius / 2;
 
 		UTIL_TraceHull( swingStart, swingEnd, g_meleeMins, g_meleeMaxs, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
 		if ( traceHit.fraction < 1.0 && traceHit.m_pEnt )
@@ -307,7 +326,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 			float dot = vecToTarget.Dot( forward );
 
 			// YWB:  Make sure they are sort of facing the guy at least...
-			if ( dot < 0.70721f )
+			if ( dot < 0.6f )
 			{
 				// Force amiss
 				traceHit.fraction = 1.0f;
@@ -318,6 +337,11 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 			}
 		}
 	}
+
+	if (bIsSecondary)
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
+	else
+		pOwner->UseStyleCharge(SKILL_BOUNCER, 2.5f);
 
 	// -------------------------
 	//	Miss
@@ -331,17 +355,10 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 		ImpactWater( swingStart, testEnd );
 
 		WeaponSound( MELEE_MISS );
-
-		// Use less charge than if it's a hit
-		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			pOwner->UseStyleCharge(5);
 	}
 	else
 	{
 		Hit( traceHit, bIsSecondary );
-
-		if (pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			pOwner->UseStyleCharge(10);
 	}
 
 	// Send the anim
@@ -357,14 +374,13 @@ void CWeaponSDKBase::Swing(bool bIsSecondary)
 
 	AddMeleeViewKick();
 
-	float flFireRate = GetFireRate();
+	float flFireRate;
 	if (bIsSecondary)
-		flFireRate = 0.4f;	// Disarms carry risk!
-	else if (pOwner->m_nButtons & IN_SPEED)
-		flFireRate = GetSecondaryFireRate();
+		flFireRate = GetBrawlSecondaryFireRate();
+	else
+		flFireRate = GetBrawlFireRate();
 
-	if (pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flFireRate *= 0.7f;
+	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
@@ -456,12 +472,24 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		// Now hit all triggers along the ray that... 
 		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
 #endif
-		WeaponSound( MELEE_HIT );
+		CSoundParameters params;
+
+		if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer() && GetParametersForSound( "Weapon_Brawl.PunchHit", params, NULL ) )
+		{
+			CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
+			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
+				filter.UsePredictionRules();
+
+			EmitSound( filter, traceHit.m_pEnt->entindex(), params );
+		}
+		else
+			WeaponSound( MELEE_HIT );
 	}
 
 	// Apply an impact effect
 	ImpactEffect( traceHit );
 
+#if 0
 #ifndef CLIENT_DLL
 	bool bWeaponDisarms = true;
 	if (GetWeaponType() == WT_RIFLE)
@@ -475,6 +503,7 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		if (pVictim && pVictim->IsAlive())
 			pVictim->Disarm();
 	}
+#endif
 #endif
 }
 
@@ -536,17 +565,32 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	// The heavier the damage the more it hurts.
-	float flDamage = GetSDKWpnData().iWeight;
+	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
 
-	flDamage *= 2.0;
-
-	if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flDamage *= 2.0f;
+	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
 
 	if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
 
 	return flDamage;
+}
+
+float CWeaponSDKBase::GetBrawlFireRate()
+{
+	// This is overridden with melee and unused with brawl for firearms
+	Assert(false);
+
+	return 1;
+}
+
+float CWeaponSDKBase::GetBrawlSecondaryFireRate()
+{
+	// The heavier it is the longer it takes to swing.
+	float flWeight = GetSDKWpnData().iWeight;
+
+	float flTime = RemapVal(flWeight, 5, 20, 0.15f, 0.6f);
+
+	return flTime;
 }
 
 void CWeaponSDKBase::AddViewKick()
@@ -560,20 +604,26 @@ void CWeaponSDKBase::AddViewKick()
 
 		angle.x -= SharedRandomInt( "PunchAngle", 4, 6 );
 
+		float flPunchBonus = 1;
 		float flRecoilBonus = 1;
 		if (GetPlayerOwner()->m_Shared.IsAimedIn())
 		{
 			if (HasAimInRecoilBonus())
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.5f);
+			{
+				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.2f);
+				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.8f, 1, 0.2f);
+			}
 			else
-				// Since weapons without the bonus are generally capped at 50% aim in, this ends up being a .8 multiplier.
-				flRecoilBonus = RemapVal(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+			{
+				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+			}
 		}
 
-		if (pPlayer->IsStyleSkillActive() && pPlayer->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
-			flRecoilBonus *= 0.5f;
+		flPunchBonus = pPlayer->m_Shared.ModifySkillValue(flPunchBonus, -0.25f, SKILL_MARKSMAN);
+		flRecoilBonus = pPlayer->m_Shared.ModifySkillValue(flRecoilBonus, -0.25f, SKILL_MARKSMAN);
 
-		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flRecoilBonus );
+		pPlayer->SetPunchAngle( angle * GetViewPunchMultiplier() * flPunchBonus );
 		pPlayer->m_Shared.SetRecoil(SharedRandomFloat("Recoil", 1, 1.1f) * GetRecoil() * flRecoilBonus);
 	}
 }
@@ -644,6 +694,16 @@ weapontype_t CWeaponSDKBase::GetWeaponType() const
 	return GetSDKWpnData().m_eWeaponType;
 }
 
+weapontype_t CWeaponSDKBase::GetWeaponType(SDKWeaponID eWeapon)
+{
+	CSDKWeaponInfo *pFileInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
+
+	if (!pFileInfo)
+		return WT_NONE;
+
+	return pFileInfo->m_eWeaponType;
+}
+
 ConVar dab_decaymultiplier( "dab_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
 
 //Tony; added so we can have base functionality without implementing it into every weapon.
@@ -709,6 +769,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		if ( !IsMeleeWeapon() && (( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
 		{
 			HandleFireOnEmpty();
+			pPlayer->ReadyWeapon();
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
@@ -870,16 +931,16 @@ bool CWeaponSDKBase::Reload( void )
 	fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), GetReloadActivity() );
 	if ( fRet )
 	{
-		// Player gets a reload speed boost with Adrenaline.
-		if (ToSDKPlayer(GetOwner()) && ToSDKPlayer(GetOwner())->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			ToSDKPlayer(GetOwner())->UseStyleCharge(5);
+		ToSDKPlayer(GetOwner())->UseStyleCharge(SKILL_MARKSMAN, 5);
 
 		CSDKPlayer* pSDKOwner = ToSDKPlayer(GetOwner());
 
+		if (pSDKOwner)
+			pSDKOwner->ReadyWeapon();
+
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
-		if (GetPlayerOwner()->IsStyleSkillActive() && GetPlayerOwner()->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-			flSpeedMultiplier *= 0.6f;
+		flSpeedMultiplier = GetPlayerOwner()->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.2f, SKILL_MARKSMAN);
 
 		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
@@ -911,6 +972,45 @@ bool CWeaponSDKBase::Reload( void )
 	}
 
 	return fRet;
+}
+
+void CWeaponSDKBase::FinishReload()
+{
+	CSDKPlayer *pOwner = GetPlayerOwner();
+
+	if (pOwner)
+	{
+		bool bConsume = true;
+		if (pOwner->IsStyleSkillActive(SKILL_MARKSMAN))
+			bConsume = false;
+
+		// If I use primary clips, reload primary
+		if ( UsesClipsForAmmo1() )
+		{
+			int primary	= min( GetMaxClip1() - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));	
+			m_iClip1 += primary;
+
+			if (bConsume)
+				pOwner->RemoveAmmo( primary, m_iPrimaryAmmoType);
+		}
+
+		// If I use secondary clips, reload secondary
+		if ( UsesClipsForAmmo2() )
+		{
+			int secondary = min( GetMaxClip2() - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
+			m_iClip2 += secondary;
+
+			if (bConsume)
+				pOwner->RemoveAmmo( secondary, m_iSecondaryAmmoType );
+		}
+
+		if ( m_bReloadsSingly )
+		{
+			m_bInReload = false;
+		}
+
+		pOwner->ReadyWeapon();
+	}
 }
 
 void CWeaponSDKBase::SendReloadEvents()
@@ -1035,8 +1135,7 @@ bool CWeaponSDKBase::Deploy( )
 
 	float flSpeedMultiplier = GetSDKWpnData().m_flDrawTimeMultiplier;
 
-	if (pOwner && pOwner->IsStyleSkillActive() && pOwner->m_Shared.m_iStyleSkill == SKILL_ADRENALINE)
-		flSpeedMultiplier *= 0.6f;
+	flSpeedMultiplier = pOwner->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.3f, SKILL_MARKSMAN);
 
 	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
@@ -1052,6 +1151,9 @@ bool CWeaponSDKBase::Deploy( )
 
 		pOwner->m_Shared.SetAimIn(0.0f);
 	}
+
+	if (bDeploy && pOwner)
+		pOwner->ReadyWeapon();
 
 	return bDeploy;
 }
@@ -1071,9 +1173,12 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	// kill any think functions
 	SetThink(NULL);
 
+	// Send holster animation
+	SendWeaponAnim( ACT_VM_HOLSTER );
+
 	// Some weapon's don't have holster anims yet, so detect that
 	float flSequenceDuration = 0;
-	SendWeaponAnim( GetHolsterActivity() );
+	if ( GetActivity() == ACT_VM_HOLSTER )
 	{
 		flSequenceDuration = SequenceDuration();
 	}

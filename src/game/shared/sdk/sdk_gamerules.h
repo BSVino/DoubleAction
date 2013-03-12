@@ -135,6 +135,8 @@ public:
 
 	virtual float FlPlayerFallDamage( CBasePlayer *pPlayer );
 
+	virtual void OverrideSoundParams(const EmitSound_t& ep, CSoundParameters& oParams);
+
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -149,6 +151,7 @@ public:
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
 	virtual void Think();
+	virtual void EndGameFrame();
 
 	void InitTeams( void );
 
@@ -196,7 +199,7 @@ private:
 	int	m_iSpawnPointCount_Red;	//number of red spawns on the map
 #endif // SDK_USE_TEAMS
 
-	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld );
+	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
 
 public:
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );

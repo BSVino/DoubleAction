@@ -80,7 +80,7 @@ void C_SDKRootPanel::PaintBackground()
 //-----------------------------------------------------------------------------
 void C_SDKRootPanel::RenderLetterboxing( void )
 {
-	C_SDKPlayer* pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	C_WeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
 
 	float flLetterbox = 0.0;

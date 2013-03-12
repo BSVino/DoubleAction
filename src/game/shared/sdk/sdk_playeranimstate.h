@@ -39,8 +39,10 @@ public:
 
 	virtual void ClearAnimationState();
 	virtual Activity TranslateActivity( Activity actDesired );
-	virtual void Update( float eyeYaw, float eyePitch );
+	virtual void Update( float eyeYaw, float eyePitch, float flCharacterYaw, float flCharacterPitch );
 	bool	SetupPoseParameters( CStudioHdr *pStudioHdr );
+
+	virtual void GetOuterAbsVelocity( Vector& vel );
 
 	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
@@ -71,8 +73,11 @@ public:
 	virtual void		ComputePoseParam_StuntYaw( CStudioHdr *pStudioHdr );
 
 	virtual void		EstimateYaw( void );
+	void                ConvergeYawAnglesThroughZero( float flGoalYaw, float flYawRate, float flDeltaTime, float &flCurrentYaw );
 
 	virtual Activity CalcMainActivity();	
+
+	virtual bool        ShouldUseAimInAnims();
 
 private:
 	
@@ -85,6 +90,9 @@ private:
 #endif
 
 	bool		m_bFacingForward;
+
+	float       m_flCharacterEyeYaw;
+	float       m_flCharacterEyePitch;
 
 	Activity	m_iDiveActivity;
 	bool		m_bDiveStart;

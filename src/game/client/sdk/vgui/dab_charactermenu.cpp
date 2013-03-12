@@ -7,6 +7,7 @@
 
 #include "cbase.h"
 #include <stdio.h>
+#include <string>
 
 #include <cdll_client_int.h>
 
@@ -48,113 +49,60 @@
 using namespace vgui;
 
 ConVar _cl_charactermenuopen( "_cl_charactermenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "internal cvar used to tell server when character selection menu is open" );
-//ConVar hud_buyautokill("hud_buyautokill", "0");
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-Panel *CDABCharacterInfoPanel::CreateControlByName( const char *controlName )
+CCharacterButton::CCharacterButton(vgui::Panel *parent, const char *panelName)
+	: Button( parent, panelName, "CharacterButton")
 {
-	if ( !Q_stricmp( "CIconPanel", controlName ) )
-	{
-		return new CIconPanel(this, "icon_panel");
-	}
-	else
-	{
-		return BaseClass::CreateControlByName( controlName );
-	}
+	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
+	InvalidateLayout(true, true);
 }
 
-void CDABCharacterInfoPanel::ApplySchemeSettings( IScheme *pScheme )
-{
-	RichText *pCharacterInfo = dynamic_cast<RichText*>(FindChildByName("characterInfo"));
-
-	if ( pCharacterInfo )
-	{
-		pCharacterInfo->SetBorder(pScheme->GetBorder("NoBorder"));
-		pCharacterInfo->SetBgColor(pScheme->GetColor("Blank", Color(0,0,0,0)));
-	}
-
-	BaseClass::ApplySchemeSettings( pScheme );
-}
-
-void CCharacterButton::ShowPage()
-{
-	if( m_pPanel )
-	{
-		m_pPanel->SetVisible( true );
-		m_pPanel->MoveToFront();
-		g_lastPanel = m_pPanel;
-	}
-
-	if (!FStrEq(GetName(), "character_random"))
-	{
-		static_cast<CDABCharacterMenu*>(GetParent())->SetCharacterPreview(GetName(), m_pszSequence, m_pszWeaponModel, m_flBodyYaw, m_flBodyPitch);
-		static_cast<CDABCharacterMenu*>(GetParent())->Update();
-	}
-}
-
-void CCharacterButton::ApplySettings( KeyValues *resourceData ) 
+void CCharacterButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
-	if (m_pszSequence)
-		delete [] m_pszSequence;
+	strcpy(m_szCharacter, resourceData->GetString("character"));
 
-	const char* pszSequence = resourceData->GetString("sequence");
-	if (strlen(pszSequence))
-	{
-		m_pszSequence = new char[strlen(pszSequence)];
-		strcpy(m_pszSequence, pszSequence);
-	}
+	const char* pszSequence = resourceData->GetString("sequence", "");
+	strcpy(m_szSequence, pszSequence);
 
-	if (m_pszWeaponModel)
-		delete [] m_pszWeaponModel;
-
-	const char* pszWeaponModel = resourceData->GetString("weaponmodel");
-	if (strlen(pszWeaponModel))
-	{
-		m_pszWeaponModel = new char[strlen(pszWeaponModel)];
-		strcpy(m_pszWeaponModel, pszWeaponModel);
-	}
+	const char* pszWeaponModel = resourceData->GetString("weaponmodel", "");
+	strcpy(m_szWeaponModel, pszWeaponModel);
 
 	m_flBodyYaw = resourceData->GetFloat("body_yaw");
 	m_flBodyPitch = resourceData->GetFloat("body_pitch");
+}
 
-	// name, position etc of button is set, now load matching
-	// resource file for associated info panel:
-	m_pPanel->LoadControlSettings( GetCharacterPage( GetName() ) );
-}		
+void CCharacterButton::OnCursorEntered()
+{
+	BaseClass::OnCursorEntered();
 
-CDABCharacterMenu::CDABCharacterMenu(IViewPort* pViewPort) : vgui::Frame( NULL, PANEL_CLASS )
+	CDABCharacterMenu* pParent = dynamic_cast<CDABCharacterMenu*>(GetParent());
+	if (!pParent)
+		return;
+
+	pParent->SetCharacterPreview(m_szCharacter, m_szSequence, m_szWeaponModel, m_flBodyYaw, m_flBodyPitch);
+
+	vgui::Label* pInfoLabel = pParent->GetCharacterInfo();
+	if (pInfoLabel)
+	{
+		if (m_szCharacter[0])
+			pInfoLabel->SetText((std::string("#characterinfo_") + m_szCharacter).c_str());
+		else
+			pInfoLabel->SetText(m_szCharacter);
+	}
+}
+
+CDABCharacterMenu::CDABCharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_CLASS )
 {
 	m_pViewPort = pViewPort;
 
-	// initialize dialog
-	SetTitle("", true);
+	m_pszCharacterModel = "";
 
-	// load the new scheme early!!
-	SetScheme("SourceScheme");
-	SetMoveable(false);
-	SetSizeable(false);
-
-	// hide the system buttons
-	SetTitleBarVisible( false );
-	SetProportional(true);
-
-	m_pszCharacterPreview = "playermale";
-
-	// info window about this class
-	m_pPanel = new EditablePanel( this, "CharacterInfo" );
+	m_pCharacterInfo = new CFolderLabel(this, "CharacterInfo");
+	m_pCharacterImage = new CModelPanel(this, "CharacterImage");
 
 	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
-	m_pInitialButton = NULL;
-
-	m_pCharacterInfoPanel = new CDABCharacterInfoPanel( this, "CharacterInfoPanel" );
-	
-	vgui::ivgui()->AddTickSignal( GetVPanel() );
-
-//	m_pSuicideOption = new CheckButton( this, "suicide_option", "Sky is blue?" );
 
 	LoadControlSettings( "Resource/UI/CharacterMenu.res" );
 	InvalidateLayout();
@@ -167,48 +115,15 @@ CDABCharacterMenu::~CDABCharacterMenu()
 
 void CDABCharacterMenu::Reset()
 {
-	for ( int i = 0 ; i < GetChildCount() ; ++i )
-	{
-		// Hide the subpanel for the CCharacterButtons
-		CCharacterButton *pPanel = dynamic_cast<CCharacterButton *>( GetChild( i ) );
-
-		if ( pPanel )
-			pPanel->HidePage();
-	}
-
-	if (m_pInitialButton)
-		m_pInitialButton->ShowPage();
 }
 
 void CDABCharacterMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
-	{
-		engine->CheckPoint( "CharacterMenu" );
-
 		m_iCharacterMenuKey = gameuifuncs->GetButtonCodeForBind( "character" );
 
-		//m_pSuicideOption->SetSelected( hud_buyautokill.GetBool() );
-	}
-
-	for( int i = 0; i< GetChildCount(); i++ ) 
-	{
-		//Tony; using mouse over button for now, later we'll use CModelButton when I get it implemented!!
-		CCharacterButton *button = dynamic_cast<CCharacterButton *>(GetChild(i));
-
-		if ( button )
-		{
-			if( button == m_pInitialButton && bShow == true )
-				button->ShowPage();
-			else
-				button->HidePage();
-		}
-	}
-
-	CCharacterButton *pRandom = dynamic_cast<CCharacterButton *>( FindChildByName("random") );
-
-	if ( pRandom )
-		pRandom->HidePage();
+	m_pCharacterInfo->SetText("");
+	m_pCharacterImage->SwapModel("");
 
 	if ( bShow )
 	{
@@ -220,13 +135,16 @@ void CDABCharacterMenu::ShowPanel( bool bShow )
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-	
-	m_pViewPort->ShowBackGround( bShow );
 }
 
 void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
 {
-	if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+	{
+		engine->ClientCmd("character random");
+		OnCommand("close");
+	}
+	else if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
 	{
 		ShowPanel( false );
 	}
@@ -236,17 +154,12 @@ void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-void CDABCharacterMenu::MoveToCenterOfScreen()
-{
-	int wx, wy, ww, wt;
-	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
-	SetPos((ww - GetWide()) / 2, (wt - GetTall()) / 2);
-}
+static ConVar hud_characterpreview_x("hud_characterpreview_x", "130", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_z("hud_characterpreview_z", "-35", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CDABCharacterMenu::Update()
 {
-	MoveToCenterOfScreen();
-
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)
@@ -278,16 +191,19 @@ void CDABCharacterMenu::Update()
 		"		}\n"
 		"	}";
 
-	CModelPanel *pPlayerPreview = dynamic_cast<CModelPanel *>(FindChildByName("player_preview"));
-
-	if (pPlayerPreview)
+	if (strcmp(m_pszCharacterModel, "random") == 0)
+		m_pCharacterImage->SwapModel("");
+	else if (m_pszCharacterModel[0])
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
 
-		KeyValues* pModel = pValues->FindKey("modelname");
-		if (pModel)
-			pModel->SetStringValue(VarArgs("models/player/%s.mdl", m_pszCharacterPreview));
+		std::string sCharacter = std::string("models/player/") + m_pszCharacterModel + ".mdl";
+		pValues->SetString("modelname", sCharacter.c_str());
+
+		pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
+		pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());
+		pValues->SetFloat("origin_z", hud_characterpreview_z.GetFloat());
 
 		KeyValues* pAnimation = pValues->FindKey("animation");
 		if (pAnimation)
@@ -306,10 +222,12 @@ void CDABCharacterMenu::Update()
 		if (pWeapon)
 			pWeapon->SetString("modelname", m_pszCharacterWeaponModel);
 
-		pPlayerPreview->ParseModelInfo(pValues);
+		m_pCharacterImage->ParseModelInfo(pValues);
 
 		pValues->deleteThis();
 	}
+
+	BaseClass::Update();
 }
 
 //-----------------------------------------------------------------------------
@@ -318,54 +236,11 @@ void CDABCharacterMenu::Update()
 Panel *CDABCharacterMenu::CreateControlByName( const char *controlName )
 {
 	if ( !Q_stricmp( "CharacterButton", controlName ) )
-	{
-		CCharacterButton *newButton = new CCharacterButton( this, NULL, m_pCharacterInfoPanel );
-
-		if( !m_pInitialButton )
-		{
-			m_pInitialButton = newButton;
-		}
-
-		return newButton;
-	}
+		return new CCharacterButton( this, NULL );
 	else if ( !Q_stricmp( "CIconPanel", controlName ) )
-	{
 		return new CIconPanel(this, "icon_panel");
-	}
 	else
-	{
 		return BaseClass::CreateControlByName( controlName );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Catch the mouseover event and set the active class
-//-----------------------------------------------------------------------------
-void CDABCharacterMenu::OnShowPage( const char *pagename )
-{
-	m_pszCharacterPreview = "playermale";
-}
-
-/*void CDABBuyMenu::OnSuicideOptionChanged( vgui::Panel *Panel )
-{
-	hud_buyautokill.SetValue( m_pSuicideOption->IsSelected() );
-}*/
-
-//-----------------------------------------------------------------------------
-// Do things that should be done often, eg number of players in the 
-// selected class
-//-----------------------------------------------------------------------------
-void CDABCharacterMenu::OnTick( void )
-{
-	//When a player changes teams, their class and team values don't get here 
-	//necessarily before the command to update the class menu. This leads to the cancel button 
-	//being visible and people cancelling before they have a class. check for class == PLAYERCLASS_UNASSIGNED and if so
-	//hide the cancel button
-
-	if ( !IsVisible() )
-		return;
-
-	BaseClass::OnTick();
 }
 
 void CDABCharacterMenu::SetVisible( bool state )
@@ -386,7 +261,7 @@ void CDABCharacterMenu::SetVisible( bool state )
 
 void CDABCharacterMenu::OnCommand( const char *command )
 {
-	if ( Q_strncmp( command, "character", 9 ) == 0 )
+	if ( Q_strncmp( command, "character ", 10 ) == 0 )
 	{
 		Close();
 
@@ -394,46 +269,31 @@ void CDABCharacterMenu::OnCommand( const char *command )
 
 		BaseClass::OnCommand( command );
 
-//		if ( hud_Characterautokill.GetBool() )
-//			engine->ClientCmd( "kill" );
-
-		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->SetCharacterPreview(&command[10]);
-
 		engine->ClientCmd( command );
 	}
 	else
-		engine->ClientCmd( command );
+		BaseClass::OnCommand(command);
 }
 
 void CDABCharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
-	m_pszCharacterPreview = pszPreview;
+	m_pszCharacterModel = pszPreview;
 	m_pszCharacterSequence = pszSequence;
 	m_pszCharacterWeaponModel = pszWeaponModel;
 	m_flBodyPitch = flPitch;
 	m_flBodyYaw = flYaw;
+
+	Update();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint background with rounded corners
-//-----------------------------------------------------------------------------
 void CDABCharacterMenu::PaintBackground()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBackground( m_bgColor, wide, tall );
+	// Don't
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint border with rounded corners
-//-----------------------------------------------------------------------------
 void CDABCharacterMenu::PaintBorder()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBorder( m_borderColor, wide, tall );
+	// Don't
 }
 
 //-----------------------------------------------------------------------------
@@ -443,13 +303,12 @@ void CDABCharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	m_bgColor = GetSchemeColor("BgColor", GetBgColor(), pScheme);
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
-
-	SetBgColor( Color(0, 0, 0, 0) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
-
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
+}
+
+Label* CDABCharacterMenu::GetCharacterInfo()
+{
+	return m_pCharacterInfo;
 }
 
 CON_COMMAND(hud_reload_character, "Reload resource for character menu.")

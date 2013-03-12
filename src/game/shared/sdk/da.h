@@ -27,5 +27,37 @@ typedef enum {
 	ANNOUNCEMENT_TACTICOOL,
 	ANNOUNCEMENT_BRAWL,
 	ANNOUNCEMENT_BRAWL_KILL,
+	ANNOUNCEMENT_DIVEPUNCH,
+	ANNOUNCEMENT_SLIDEPUNCH,
+	ANNOUNCEMENT_HEADSHOT,
+	ANNOUNCEMENT_POINT_BLANK,
+	ANNOUNCEMENT_EXECUTION,
 	TOTAL_ANNOUNCEMENTS
 } announcement_t;
+
+typedef enum {
+	NOTICE_MARKSMAN,
+	NOTICE_TROLL,
+	NOTICE_BOUNCER,
+	NOTICE_ATHLETIC,
+	NOTICE_SUPERSLO,
+	NOTICE_RESILIENT,
+	NOTICE_SLOMO,
+	NOTICE_STYLESTREAK,
+	NOTICE_WORTHIT,
+	TOTAL_NOTICES
+} notice_t;
+
+inline const char* WeaponTypeToAlias( weapontype_t id )
+{
+	static const char* aszWeaponTypes[] = {
+		"none",
+		"melee",
+		"rifle",
+		"shotgun",
+		"smg",
+		"pistol",
+	};
+
+	return aszWeaponTypes[id];
+}

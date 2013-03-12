@@ -17,6 +17,7 @@ extern ConVar sv_gravity;
 #else
 
 	#include "soundent.h"
+	#include "particle_parse.h"
 
 	BEGIN_DATADESC( CBaseGrenadeProjectile )
 		DEFINE_THINKFUNC( DangerSoundThink ),
@@ -42,6 +43,11 @@ BEGIN_NETWORK_TABLE( CBaseGrenadeProjectile, DT_BaseGrenadeProjectile )
 	#endif
 END_NETWORK_TABLE()
 
+void CBaseGrenadeProjectile::Precache()
+{
+	PrecacheScriptSound( "BaseGrenade.Explode" );
+	PrecacheParticleSystem( "grenade_exp1" );
+}
 
 #ifdef CLIENT_DLL
 
@@ -113,6 +119,51 @@ END_NETWORK_TABLE()
 		if ( VPhysicsGetObject() )
 			VPhysicsGetObject()->SetMass( 5 );
 	}
+
+	void CBaseGrenadeProjectile::Explode( trace_t *pTrace, int bitsDamageType )
+	{
+		SetModelName( NULL_STRING );//invisible
+		AddSolidFlags( FSOLID_NOT_SOLID );
+
+		m_takedamage = DAMAGE_NO;
+
+		// Pull out of the wall a bit
+		if ( pTrace->fraction != 1.0 )
+		{
+			SetAbsOrigin( pTrace->endpos + (pTrace->plane.normal * 0.6) );
+		}
+
+		Vector vecAbsOrigin = GetAbsOrigin();
+
+		// Since this code only runs on the server, make sure it shows the tempents it creates.
+		// This solves a problem with remote detonating the pipebombs (client wasn't seeing the explosion effect)
+		CDisablePredictionFiltering disabler;
+
+		DispatchParticleEffect("grenade_exp1", vecAbsOrigin, QAngle(0, 0, 0));
+
+		CSoundEnt::InsertSound ( SOUND_COMBAT, vecAbsOrigin, BASEGRENADE_EXPLOSION_VOLUME, 3.0 );
+
+		// Use the thrower's position as the reported position
+		Vector vecReported = GetThrower() ? GetThrower()->GetAbsOrigin() : vec3_origin;
+	
+		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), vecAbsOrigin, m_flDamage, bitsDamageType, 0, &vecReported );
+
+		RadiusDamage( info, vecAbsOrigin, m_DmgRadius, CLASS_NONE, NULL );
+
+		UTIL_DecalTrace( pTrace, "Scorch" );
+
+		EmitSound( "BaseGrenade.Explode" );
+
+		SetThink( &CBaseGrenade::SUB_Remove );
+		SetTouch( NULL );
+		SetSolid( SOLID_NONE );
+	
+		AddEffects( EF_NODRAW );
+		SetAbsVelocity( vec3_origin );
+
+		SetNextThink( gpGlobals->curtime );
+	}
+
 	void CBaseGrenadeProjectile::SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity )
 	{
 		IPhysicsObject *pPhysicsObject = VPhysicsGetObject();

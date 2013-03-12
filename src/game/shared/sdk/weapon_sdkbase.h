@@ -20,6 +20,8 @@
 
 class CSDKPlayer;
 
+inline const char *GetTranslatedWeaponAlias(const char *alias) { return alias; };
+
 // These are the names of the ammo types that the weapon script files reference.
 class CWeaponSDKBase : public CBaseCombatWeapon
 {
@@ -62,6 +64,7 @@ public:
 
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
+	virtual void            FinishReload();
 	virtual	void			CheckReload( void );
 	virtual bool			ReloadOrSwitchWeapons( void );
 	virtual bool			Deploy();
@@ -74,13 +77,13 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
-	virtual void      Swing(bool bIsSecondary);
+	virtual void      Swing(bool bIsSecondary, bool bIsStockAttack = false);
 	virtual void      Hit(trace_t &traceHit, bool bIsSecondary);
 	virtual Activity  ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner );
 	virtual	void      ImpactEffect( trace_t &trace );
 	virtual bool      ImpactWater( const Vector &start, const Vector &end );
 
-	virtual float	GetMeleeRange( void )								{	return	60.0f;	}
+	virtual float	GetMeleeRange( void )								{	return	80.0f;	}
 	virtual float	GetMeleeDamage( bool bSecondary ) const;
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
@@ -101,6 +104,11 @@ public:
 
 	virtual float GetFireRate( void ) { return GetSDKWpnData().m_flCycleTime; };
 	virtual float GetSecondaryFireRate( void ) { return GetSDKWpnData().m_flSecondaryCycleTime; };
+
+	virtual float GetBrawlFireRate( void );
+	virtual float GetBrawlSecondaryFireRate( void );
+
+	virtual bool  IsFullAuto() const { return GetFireMode() == FM_AUTOMATIC; }
 
 	//Tony; by default, burst fire weapons use a max of 3 shots (3 - 1)
 	//weapons with more, ie: a 5 round burst, can override and determine which firemode it's in.
@@ -129,6 +137,7 @@ public:
 	virtual bool HasAimInRecoilBonus();
 
 	virtual weapontype_t GetWeaponType() const;
+	static weapontype_t  GetWeaponType( SDKWeaponID eWeapon );
 
 	virtual bool FullAimIn() { return false; }
 

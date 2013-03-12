@@ -96,6 +96,7 @@
 
 #if defined ( SDK_DLL )
 #include "sdk_gamerules.h"
+#include "bot/bot.h"
 #endif
 
 extern IToolFrameworkServer *g_pToolFrameworkServer;
@@ -683,7 +684,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	// load Mod specific game events ( MUST be before InitAllSystems() so it can pickup the mod specific events)
 	gameeventmanager->LoadEventsFromFile("resource/ModEvents.res");
 
-#ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
+#if defined(CSTRIKE_DLL) || defined(SDK_DLL) // BOTPORT: TODO: move these ifdefs out
 	InstallBotControl();
 #endif
 

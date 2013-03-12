@@ -127,6 +127,9 @@ void CProjectedLightEffect::TurnOff()
 void C_SDKPlayer::GetFlashlightOffset( const Vector &vecForward, const Vector &vecRight, const Vector &vecUp, Vector *pVecOffset ) const
 {
 	*pVecOffset = r_flashlightoffsety.GetFloat() * vecUp + r_flashlightoffsetx.GetFloat() * vecRight + r_flashlightoffsetz.GetFloat() * vecForward;
+
+	if (IsInThirdPerson())
+		*pVecOffset += vecForward * 40;
 }
 
 ConVar r_flashlightmuzzleflashfov( "r_flashlightmuzzleflashfov", "120", FCVAR_CHEAT );

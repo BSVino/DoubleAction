@@ -21,10 +21,6 @@
 class CSDKInput : public CInput
 {
 public:
-	void		GoFirstPerson();
-	void		GoThirdPerson();
-	void		ThirdPersonToggle();
-
 	void		CAM_Think();
 };
 
@@ -38,56 +34,16 @@ CSDKInput* SDKInput()
 	return &g_Input;
 }
 
-void CSDKInput::GoFirstPerson()
-{
-	input->CAM_ToFirstPerson();
-
-	// Let the local player know
-	C_BasePlayer *localPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( localPlayer )
-		localPlayer->ThirdPersonSwitch( false );
-}
-
-void CSDKInput::GoThirdPerson()
-{
-	input->CAM_ToThirdPerson();
-
-	// Let the local player know
-	C_BasePlayer *localPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( localPlayer )
-		localPlayer->ThirdPersonSwitch( true );
-}
-
-void CSDKInput::ThirdPersonToggle(void)
-{
-	if (input->CAM_IsThirdPerson())
-		GoFirstPerson();
-	else
-		GoThirdPerson();
-}
-
-void DA_ThirdPersonToggle(void)
-{
-	SDKInput()->ThirdPersonToggle();
-
-	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	pPlayer->Instructor_LessonLearned("thirdperson");
-}
-
-static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::DA_ThirdPersonToggle, "Toggle third person mode." );
-static ConVar cl_thirdperson( "cl_thirdperson", "0", FCVAR_ARCHIVE, "Choose third person mode." );
+static ConVar cl_thirdperson( "cl_thirdperson", "0", FCVAR_USERINFO|FCVAR_ARCHIVE, "Choose third person mode." );
 
 void AB_Input_LevelInit()
 {
-	if (cl_thirdperson.GetBool())
-		SDKInput()->GoThirdPerson();
-	else
-		SDKInput()->GoFirstPerson();
 }
 
 #define	DIST	 2
 extern float MoveToward( float cur, float goal, float lag );
-#define CAM_HULL_OFFSET		9.0    // the size of the bounding hull used for collision checking
+
+static ConVar da_cam_yaw("da_cam_yaw", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CSDKInput::CAM_Think( void )
 {
@@ -152,75 +108,18 @@ void CSDKInput::CAM_Think( void )
 	// Note: CameraOffset = viewangle + idealAngle
 	CAM_GetCameraOffset( camOffset );
 
-	ConVarRef cam_snapto( "cam_snapto" );
-	if( cam_snapto.GetInt() )
-	{
-		camOffset[ YAW ] = cam_idealyaw.GetFloat() + viewangles[ YAW ];
-		camOffset[ PITCH ] = cam_idealpitch.GetFloat() + viewangles[ PITCH ];
-		camOffset[ DIST ] = cam_idealdist.GetFloat();
-	}
-	else
-	{
-		ConVarRef cam_ideallag( "cam_ideallag" );
-		float lag = max( 1, 1 + cam_ideallag.GetFloat() );
-
-		if( camOffset[ YAW ] - viewangles[ YAW ] != cam_idealyaw.GetFloat() )
-			camOffset[ YAW ] = MoveToward( camOffset[ YAW ], cam_idealyaw.GetFloat() + viewangles[ YAW ], lag );
-		
-		if( camOffset[ PITCH ] - viewangles[ PITCH ] != cam_idealpitch.GetFloat() )
-			camOffset[ PITCH ] = MoveToward( camOffset[ PITCH ], cam_idealpitch.GetFloat() + viewangles[ PITCH ], lag );
-		
-		if( abs( camOffset[ DIST ] - cam_idealdist.GetFloat() ) < 2.0 )
-			camOffset[ DIST ] = cam_idealdist.GetFloat();
-		else
-			camOffset[ DIST ] += ( cam_idealdist.GetFloat() - camOffset[ DIST ] ) / lag;
-	}
-
-	// move the camera closer to the player if it hit something
-	trace_t trace;
-	C_BasePlayer* localPlayer = C_BasePlayer::GetLocalPlayer();
-
-	if ( localPlayer )
-	{
-		Vector camForward;
-
-		// find our player's origin, and from there, the eye position
-		Vector origin = localPlayer->GetLocalOrigin();
-		origin += localPlayer->GetViewOffset();
-
-		// get the forward vector
-		AngleVectors( QAngle(camOffset[ PITCH ], camOffset[ YAW ], 0), &camForward, NULL, NULL );
-
-		// use our previously #defined hull to collision trace
-		CTraceFilterSimple traceFilter( localPlayer, COLLISION_GROUP_NONE );
-		UTIL_TraceHull( origin, origin - (camForward * camOffset[ DIST ]),
-			Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
-			MASK_SOLID, &traceFilter, &trace );
-
-		// move the camera closer if it hit something
-		if( trace.fraction < 1.0 )
-		{
-			camOffset[ DIST ] *= trace.fraction;
-		}
-
-		// For now, I'd rather see the insade of a player model than punch the camera through a wall
-		// might try the fade out trick at some point
-		//if( camOffset[ DIST ] < CAM_MIN_DIST )
-		//    camOffset[ DIST ] = CAM_MIN_DIST; // clamp up to minimum
-	}
-
-	ConVarRef cam_showangles( "cam_showangles" );
-	if ( cam_showangles.GetInt() )
-	{
-		engine->Con_NPrintf( 4, "Pitch: %6.1f   Yaw: %6.1f %38s", viewangles[ PITCH ], viewangles[ YAW ], "view angles" );
-		engine->Con_NPrintf( 6, "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %19s", cam_idealpitch.GetFloat(), cam_idealyaw.GetFloat(), cam_idealdist.GetFloat(), "ideal angles" );
-		engine->Con_NPrintf( 8, "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %16s", camOffset[ PITCH ], camOffset[ YAW ], camOffset[ DIST ], "camera offset" );
-	}
+	camOffset[ YAW ] = viewangles[ YAW ];
+	camOffset[ PITCH ] = viewangles[ PITCH ];
+	camOffset[ DIST ] = 0;
 
 	QAngle angOffset;
 	angOffset.x = camOffset.x;
-	angOffset.y = camOffset.y;
+	angOffset.y = camOffset.y + da_cam_yaw.GetFloat();
 	angOffset.z = camOffset.z;
+
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+	if (pPlayer)
+		angOffset += pPlayer->GetPunchAngle();
 
 	CAM_SetCameraThirdData(NULL, angOffset);
 }

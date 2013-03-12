@@ -887,7 +887,7 @@ public:
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 
-	virtual bool	IsAlive( void );
+	virtual bool	IsAlive( void ) const;
 	// Entity killed (only fired once)
 	virtual void	Event_Killed( const CTakeDamageInfo &info );
 	

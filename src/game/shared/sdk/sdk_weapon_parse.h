@@ -17,10 +17,13 @@
 
 typedef enum {
 	WT_NONE = 0,
+	WT_MELEE,
 	WT_RIFLE,
 	WT_SHOTGUN,
 	WT_SMG,
 	WT_PISTOL,
+
+	WT_MAX
 } weapontype_t;
 
 //--------------------------------------------------------------------------------------------------------
@@ -58,6 +61,8 @@ public:
 	weapontype_t	m_eWeaponType;
 
 	static CSDKWeaponInfo* GetWeaponInfo(SDKWeaponID eWeapon);
+	static weapontype_t    StringToWeaponType( const char* szString );
+	static const char*     WeaponTypeToString( weapontype_t eWeapon );
 };
 
 

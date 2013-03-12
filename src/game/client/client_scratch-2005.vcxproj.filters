@@ -1413,9 +1413,6 @@
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_m3.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1448,6 +1445,21 @@
     </ClCompile>
     <ClCompile Include="sdk\vgui\da_instructor.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_hud_crosshair.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2\C_Func_Monitor.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_notices.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\folder_gui.cpp">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -3251,6 +3263,9 @@
     <ClInclude Include="sdk\vgui\da_instructor.h">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\vgui\folder_gui.h">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">
@@ -3277,16 +3292,10 @@
     <Library Include="..\..\lib\public\tier0.lib">
       <Filter>Link Libraries</Filter>
     </Library>
-    <Library Include="..\..\lib\public\tier1.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
     <Library Include="..\..\lib\public\tier2.lib">
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\tier3.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\..\lib\public\vgui_controls.lib">
       <Filter>Link Libraries</Filter>
     </Library>
     <Library Include="..\..\lib\public\vstdlib.lib">

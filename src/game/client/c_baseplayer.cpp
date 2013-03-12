@@ -1605,6 +1605,7 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 
 }
 
+#ifndef SDK_DLL
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the local player should draw
 //-----------------------------------------------------------------------------
@@ -1612,6 +1613,7 @@ bool C_BasePlayer::ShouldDrawLocalPlayer()
 {
 	return input->CAM_IsThirdPerson() || ( ToolsEnabled() && ToolFramework_IsThirdPersonCamera() );
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 

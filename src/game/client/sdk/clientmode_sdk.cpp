@@ -189,7 +189,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 	QAngle camAngles;
 
 	// Let the player override the view.
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BasePlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if(!pPlayer)
 		return;
 
@@ -219,6 +219,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 
 ConVar m_verticaldamping("m_verticaldamping", "0.85", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen vertical component of mouse movement.", true, 0.1f, true, 1);
 ConVar m_slowmodamping("m_slowmodamping", "0.6", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during slow motion.", true, 0.1f, true, 1);
+ConVar m_aimindamping("m_aimindamping", "0.5", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during slow motion.", true, 0.1f, true, 1);
 
 void ClientModeSDKNormal::OverrideMouseInput( float *x, float *y )
 {
@@ -226,12 +227,46 @@ void ClientModeSDKNormal::OverrideMouseInput( float *x, float *y )
 	if (!pPlayer)
 		return;
 
-	float flMultiplier = RemapValClamped(pPlayer->GetSlowMoMultiplier(), 0.4f, 1, m_slowmodamping.GetFloat(), 1);
+	float flSlowMultiplier = RemapValClamped(pPlayer->GetSlowMoMultiplier(), 0.4f, 1, m_slowmodamping.GetFloat(), 1);
 
-	*x *= flMultiplier;
-	*y *= flMultiplier;
+	*x *= flSlowMultiplier;
+	*y *= flSlowMultiplier;
 
 	*y *= m_verticaldamping.GetFloat();
 
+	C_WeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
+
+	if (pWeapon && !pWeapon->HasAimInFireRateBonus())
+	{
+		float flAimInMultiplier = RemapValClamped(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, m_aimindamping.GetFloat());
+
+		*x *= flAimInMultiplier;
+		*y *= flAimInMultiplier;
+	}
+
 	BaseClass::OverrideMouseInput(x, y);
+}
+
+int ClientModeSDKNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR)
+	{
+		// Override base class for +attack, it respawns us.
+		if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+attack" ) == 0 )
+			return 1;
+	}
+
+	// Default binding is +alt1 on the right mouse. Have this switch players.
+	if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+alt1" ) == 0 )
+	{
+		if (pPlayer && pPlayer->GetTeamNumber() != TEAM_SPECTATOR)
+			engine->ClientCmd( "spec_prev" );
+		else
+			engine->ClientCmd( "spec_next" );
+
+		return 0;
+	}
+
+	return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
 }

@@ -19,6 +19,7 @@
 #include <convar.h>
 
 #include "sdk_backgroundpanel.h"
+#include "folder_gui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,7 +31,7 @@ using namespace vgui;
 CSDKTextWindow::CSDKTextWindow(IViewPort *pViewPort) : CTextWindow( pViewPort )
 {
 	// load the new scheme early!!
-	SetScheme("SourceScheme");
+	SetScheme("FolderScheme");
 }
 
 //-----------------------------------------------------------------------------
@@ -41,12 +42,6 @@ void CSDKTextWindow::ApplySchemeSettings( IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	LoadControlSettings("Resource/UI/TextWindow.res");
-
-	m_bgColor = GetSchemeColor("BgColor", GetBgColor(), pScheme);
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
-
-	SetBgColor( Color(0, 0, 0, 0) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 
@@ -77,27 +72,43 @@ void CSDKTextWindow::Update( void )
 	MoveToCenterOfScreen();
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Paint background with rounded corners
-//-----------------------------------------------------------------------------
 void CSDKTextWindow::PaintBackground()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBackground( m_bgColor, wide, tall );
+	// Don't
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Paint border with rounded corners
-//-----------------------------------------------------------------------------
 void CSDKTextWindow::PaintBorder()
 {
-	int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBorder( m_borderColor, wide, tall );
+	// Don't
 }
 
+Panel *CSDKTextWindow::CreateControlByName( const char *controlName )
+{
+	if (FStrEq(controlName, "FolderLabel"))
+		return new CFolderLabel( this, NULL );
 
+	if (FStrEq(controlName, "PanelTexture"))
+		return new CPanelTexture( this, NULL );
+
+	return BaseClass::CreateControlByName(controlName);
+}
+
+void CSDKTextWindow::OnKeyCodePressed( KeyCode code )
+{
+	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
+		OnCommand("okay");
+	else
+		BaseClass::OnKeyCodePressed( code );
+}
+
+CON_COMMAND(hud_reload_motd, "Reload resource for motd menu.")
+{
+	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( "info" );
+	CSDKTextWindow *pBuy = dynamic_cast<CSDKTextWindow*>(pPanel);
+	if (!pBuy)
+		return;
+
+	pBuy->LoadControlSettings( "Resource/UI/TextWindow.res" );
+	pBuy->InvalidateLayout();
+	pBuy->Update();
+}

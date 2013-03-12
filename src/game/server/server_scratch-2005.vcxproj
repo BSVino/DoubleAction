@@ -67,7 +67,7 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "%SourceSDK%\..\
     <ClCompile>
       <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;sdk\bot;..\shared\sdk\bot;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;fopen=dont_use_fopen;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;SDK_DLL;VERSION_SAFE_STEAM_API_INTERFACES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
@@ -98,7 +98,7 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "%SourceSDK%\..\
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies);../../tier1/Debug/tier1.lib;../../vgui2/vgui_controls/Debug/vgui_controls.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)Server.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -149,7 +149,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\sdk;.\sdk;..\..\game\shared\Multiplayer;sdk\bot;..\shared\sdk\bot;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;fopen=dont_use_fopen;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;SDK_DLL;VERSION_SAFE_STEAM_API_INTERFACES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
@@ -179,7 +179,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies);../../tier1/Release/tier1.lib;../../vgui2/vgui_controls/Release/vgui_controls.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)Server.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -217,11 +217,18 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\achievementmgr.cpp" />
     <ClCompile Include="..\shared\achievements_hlx.cpp" />
     <ClCompile Include="..\shared\activitylist.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\bot.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\bot_hide.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\bot_manager.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\bot_profile.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\bot_util.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\nav_path.cpp" />
+    <ClCompile Include="..\shared\sdk\bot\shared_util.cpp" />
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_m3.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
@@ -456,6 +463,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="globalstate.cpp" />
     <ClCompile Include="grenadethrown.cpp" />
     <ClCompile Include="guntarget.cpp" />
+    <ClCompile Include="hl2\Func_Monitor.cpp" />
     <ClCompile Include="h_ai.cpp" />
     <ClCompile Include="h_cycler.cpp" />
     <ClCompile Include="h_export.cpp">
@@ -635,6 +643,33 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     </ClCompile>
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
+    <ClCompile Include="sdk\bot\da_bot.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_chatter.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_event.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_event_player.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_event_weapon.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_init.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_listen.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_manager.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_nav.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_pathfind.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_radio.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_statemachine.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_update.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_vision.cpp" />
+    <ClCompile Include="sdk\bot\da_bot_weapon.cpp" />
+    <ClCompile Include="sdk\bot\da_gamestate.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_attack.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_buy.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_follow.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_hide.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_hunt.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_idle.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_investigate_noise.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_move_to.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp" />
+    <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp" />
+    <ClCompile Include="sdk\da_ammo_pickup.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">
@@ -805,7 +840,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="sdk\sdk_playermove.cpp" />
-    <ClCompile Include="sdk\sdk_bot_temp.cpp" />
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="playerinfomanager.cpp" />
     <ClCompile Include="entity_tools_server.cpp" />
@@ -816,6 +850,14 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\achievementmgr.h" />
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
+    <ClInclude Include="..\shared\sdk\bot\bot.h" />
+    <ClInclude Include="..\shared\sdk\bot\bot_constants.h" />
+    <ClInclude Include="..\shared\sdk\bot\bot_manager.h" />
+    <ClInclude Include="..\shared\sdk\bot\bot_profile.h" />
+    <ClInclude Include="..\shared\sdk\bot\bot_util.h" />
+    <ClInclude Include="..\shared\sdk\bot\improv_locomotor.h" />
+    <ClInclude Include="..\shared\sdk\bot\nav_path.h" />
+    <ClInclude Include="..\shared\sdk\bot\shared_util.h" />
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="ai_baseactor.h" />
@@ -1051,6 +1093,11 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\scriptevent.h" />
     <ClInclude Include="..\shared\sdk\sdk_player_shared.h" />
     <ClInclude Include="..\..\public\server_class.h" />
+    <ClInclude Include="sdk\bot\da_bot.h" />
+    <ClInclude Include="sdk\bot\da_bot_chatter.h" />
+    <ClInclude Include="sdk\bot\da_bot_manager.h" />
+    <ClInclude Include="sdk\bot\da_gamestate.h" />
+    <ClInclude Include="sdk\da_ammo_pickup.h" />
     <ClInclude Include="ServerNetworkProperty.h" />
     <ClInclude Include="..\..\public\shattersurfacetypes.h" />
     <ClInclude Include="..\shared\sheetsimulator.h" />
@@ -1109,7 +1156,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="sdk\sdk_player_resource.h" />
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h" />
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h" />
-    <ClInclude Include="sdk\sdk_bot_temp.h" />
     <ClInclude Include="..\shared\Multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\shared\ammodef.h" />
@@ -1329,7 +1375,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <Library Include="..\..\lib\public\particles.lib" />
     <Library Include="..\..\lib\public\steam_api.lib" />
     <Library Include="..\..\lib\public\tier0.lib" />
-    <Library Include="..\..\lib\public\tier1.lib" />
     <Library Include="..\..\lib\public\tier2.lib" />
     <Library Include="..\..\lib\public\tier3.lib" />
     <Library Include="..\..\lib\public\vstdlib.lib" />

@@ -39,6 +39,8 @@ public:
 	virtual void	OverrideView( CViewSetup *pSetup );
 	virtual void	OverrideMouseInput( float *x, float *y );
 
+	virtual int     HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
+
 private:
 	
 	//	void	UpdateSpectatorMode( void );

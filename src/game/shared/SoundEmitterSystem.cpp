@@ -26,6 +26,10 @@
 #define CRecipientFilter C_RecipientFilter
 #endif
 
+#ifdef SDK_DLL
+#include "sdk_gamerules.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -427,6 +431,10 @@ public:
 		{
 			params.volume = ep.m_flVolume;
 		}
+
+#ifdef SDK_DLL
+		SDKGameRules()->OverrideSoundParams(ep, params);
+#endif
 
 #if !defined( CLIENT_DLL )
 		bool bSwallowed = CEnvMicrophone::OnSoundPlayed( 

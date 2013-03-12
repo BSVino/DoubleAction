@@ -106,7 +106,7 @@ void CSDKTargetId::Paint()
 	wchar_t sIDString[ MAX_ID_STRING ];
 	sIDString[0] = 0;
 
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	if ( !pPlayer )
 		return;
@@ -160,12 +160,12 @@ void CSDKTargetId::Paint()
 			
 			if ( SDKGameRules()->IsTeamplay() == true && pPlayer->InSameTeam(pLocalPlayer) )
 			{
-				printFormatString = "#SDK_Playerid_sameteam";
+				printFormatString = "#DA_Playerid_sameteam";
 				bShowHealth = true;
 			}
 			else
 			{
-				printFormatString = "#SDK_Playerid_diffteam";
+				printFormatString = "#DA_Playerid_diffteam";
 			}
 		
 

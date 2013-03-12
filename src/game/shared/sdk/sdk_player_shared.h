@@ -94,6 +94,10 @@ public:
 	Vector	StartDiving();
 	void	EndDive();
 	Vector	GetDiveDirection() const { return m_vecDiveDirection; };
+	bool    ShouldRollAfterDiving() const { return m_bRollAfterDive; }
+	float   GetDiveTime() const { return m_flDiveTime; };
+	float   GetDiveLerped() const { return m_flDiveLerped; };
+	void    IncreaseDiveLerped(float flLerped) { m_flDiveLerped += flLerped; };
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -102,16 +106,20 @@ public:
 	void	SetAimIn(bool bAimIn);
 	float	GetAimIn() const { return m_flAimIn; }
 	void	SetAimIn(float flAimIn) { m_flAimIn = flAimIn; }
+	void    RampSlowAimIn(float flGoal);
 
 	Vector	GetRecoil(float flFrameTime);
 	void	SetRecoil(float flRecoil);
 
 	float   GetViewBobRamp() const { return m_flViewBobRamp; }
+	float   GetViewTilt() const { return m_flViewTilt; }
 
 	float   GetRunSpeed() const { return m_flRunSpeed; }
 	float   GetAimInSpeed() const { return m_flAimInSpeed; }
 
 	void	ForceUnzoom( void );
+
+	float   ModifySkillValue(float flValue, float flModify, SkillID eSkill) const;
 
 #ifdef SDK_USE_SPRINTING
 	bool	IsSprinting( void ) { return m_bIsSprinting; }
@@ -154,12 +162,16 @@ private:
 
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
+	CNetworkVar( bool, m_bRollAfterDive );
+	CNetworkVar( float, m_flDiveTime );
+	CNetworkVar( float, m_flDiveLerped );
 	float m_flViewTilt;
 
 	float m_flViewBobRamp;
 
 	CNetworkVar( bool, m_bAimedIn );
 	CNetworkVar( float, m_flAimIn );
+	CNetworkVar( float, m_flSlowAimIn );
 
 	Vector	m_vecRecoilDirection;
 	float	m_flRecoilAccumulator;
@@ -175,11 +187,11 @@ public:
 
 	CNetworkVar( float, m_flUnProneTime );
 	CNetworkVar( float, m_flGoProneTime );
+	CNetworkVar( float, m_flDisallowUnProneTime );
 	CNetworkVar( bool, m_bProneSliding );
 	CNetworkVar( bool, m_bIsTryingUnprone );
 #endif
 
-	CNetworkVar( bool, m_bCanRollInto );
 	CNetworkVar( float, m_flUnSlideTime );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );

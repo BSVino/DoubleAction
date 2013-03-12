@@ -57,6 +57,11 @@ static const char* g_apszAnnouncementTextures[] = {
 	"announcement_tacticool",
 	"announcement_brawl",
 	"announcement_brawl_kill",
+	"announcement_divepunch",
+	"announcement_slidepunch",
+	"announcement_headshot",
+	"announcement_point_blank",
+	"announcement_execution",
 };
 
 class CHudStyleBar : public CHudElement, public vgui::Panel
@@ -82,6 +87,7 @@ private:
 	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
 
 	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
+	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];
 
 	class CAnnouncement
 	{
@@ -100,6 +106,8 @@ DECLARE_HUD_MESSAGE( CHudStyleBar, StyleAnnouncement );
 CHudStyleBar::CHudStyleBar( const char *pElementName )
 	: CHudElement( pElementName ), BaseClass( NULL, "HudStyleBar" )
 {
+	memset(m_apActiveSkillIcons, 0, sizeof(m_apActiveSkillIcons));
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
@@ -128,12 +136,22 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 	oAnnouncement.m_ePointStyle = ePointStyle;
 	oAnnouncement.m_flBarPosition = flBar;
 
+	if (m_aAnnouncements.Count())
+	{
+		// If a few at a time come in off the wire don't throw them all up at once. Subsequent ones should come in with a delay.
+
+		float flDelay = 0.02f;
+		if (gpGlobals->curtime < m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay)
+			oAnnouncement.m_flStartTime = m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay;
+	}
+
 	m_aAnnouncements.AddToTail(oAnnouncement);
 }
 
 void CHudStyleBar::Reset()
 {
 	m_flStyle = 0;
+	m_aAnnouncements.RemoveAll();
 }
 
 void CHudStyleBar::VidInit()
@@ -185,17 +203,38 @@ void CHudStyleBar::Paint()
 			m_apAnnouncements[i] = gHUD.GetIcon(g_apszAnnouncementTextures[i]);
 	}
 
+	if (!m_apActiveSkillIcons[SKILL_BOUNCER])
+	{
+		m_apActiveSkillIcons[SKILL_BOUNCER] = gHUD.GetIcon("bouncer");
+		m_apActiveSkillIcons[SKILL_ATHLETIC] = gHUD.GetIcon("athletic");
+		m_apActiveSkillIcons[SKILL_RESILIENT] = gHUD.GetIcon("resilient");
+		m_apActiveSkillIcons[SKILL_REFLEXES] = gHUD.GetIcon("reflexes");
+		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("marksman");
+		m_apActiveSkillIcons[SKILL_TROLL] = gHUD.GetIcon("troll");
+	}
+
+	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
+
+	float flStyleTextureWidth = 0;
+	float flStyleTextureHeight = 0;
+
+	if (pStyleTexture)
+	{
+		flStyleTextureWidth = pStyleTexture->EffectiveWidth(1);
+		flStyleTextureHeight = pStyleTexture->EffectiveHeight(1);
+	}
+
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
 	surface()->DrawSetColor( Color(0, 0, 0, 100) );
-	surface()->DrawFilledRect( iWidth - m_flBarWidth, 0, iWidth, iHeight );
+	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2, 0, iWidth - flStyleTextureWidth/2 + m_flBarWidth/2, iHeight - flStyleTextureHeight - m_flGap );
 
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
 	{
 		clrBar = gHUD.m_clrCaution;
-		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
+		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.1f, 1)*255);
 	}
 	else
 		clrBar = gHUD.m_clrNormal;
@@ -208,8 +247,33 @@ void CHudStyleBar::Paint()
 	else
 		flPercent = m_flStyle * 4 / 100.0f;
 
-	float flBarHeight = iHeight - m_flGap*2;
-	surface()->DrawFilledRect( iWidth - m_flBarWidth + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - m_flGap, flBarHeight );
+	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
+	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap, flBarHeight );
+
+	if (pStyleTexture)
+	{
+		float flAlpha = 1;
+		float flNonRed = 0;
+		float flRed = 0;
+
+		if (pPlayer->IsStyleSkillActive())
+		{
+			flAlpha = RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.5f, 1);
+			flNonRed = Gain(1-Oscillate(gpGlobals->curtime, 1), 0.7f);
+			flRed = 1;
+		}
+
+		pStyleTexture->DrawSelf(
+				iWidth - flStyleTextureWidth, iHeight - flStyleTextureHeight,
+				flStyleTextureWidth, flStyleTextureHeight,
+				Color(
+					Lerp(flRed, 255, gHUD.m_clrCaution.r()),
+					Lerp(flNonRed, 255, gHUD.m_clrCaution.g()),
+					Lerp(flNonRed, 255, gHUD.m_clrCaution.b()),
+					255*flAlpha
+				)
+			);
+	}
 
 	int iNext;
 	for (int i = m_aAnnouncements.Head(); i != m_aAnnouncements.InvalidIndex(); i = iNext)
@@ -225,6 +289,9 @@ void CHudStyleBar::Paint()
 			continue;
 
 		if (!m_apAnnouncements[pAnnouncement->m_eAnnouncement])
+			continue;
+
+		if (gpGlobals->curtime < pAnnouncement->m_flStartTime)
 			continue;
 
 		auto* pTexture = m_apAnnouncements[pAnnouncement->m_eAnnouncement];

@@ -59,26 +59,28 @@ public:
 
 	virtual void PreThink();
 	virtual void UpdateCurrentTime();
+	virtual void UpdateViewBobRamp();
+	virtual void UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye);
+
+	virtual void StartTouch( CBaseEntity *pOther );
 
 	static C_SDKPlayer* GetLocalSDKPlayer();
+	static C_SDKPlayer* GetLocalOrSpectatedPlayer();
 
 	virtual const QAngle& GetRenderAngles();
 	virtual const Vector& GetRenderOrigin();
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
-	virtual int DrawModel( int flags );
 
 	virtual bool			PlayerUse( void );
-
-	virtual bool	IsOverridingViewmodel( void );
-	virtual int		DrawOverriddenViewmodel( C_BaseViewModel *pViewmodel, int flags );
 
 	virtual void	GetStepSoundVelocities( float *velwalk, float *velrun );
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
+	virtual void CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 
 	virtual Vector  EyePosition();
 
@@ -144,10 +146,13 @@ public:
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();
 
+	virtual void    ReadyWeapon();
+	virtual bool    IsWeaponReady();
+
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
-	bool IsStyleSkillActive() const;
-	void UseStyleCharge(float flCharge);
+	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
+	void UseStyleCharge(SkillID eSkill, float flCharge);
 
 	virtual void SharedSpawn();
 	
@@ -174,6 +179,13 @@ public:
 	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
 
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
+
+	bool IsInThirdPerson() const;
+	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
+	const Vector GetThirdPersonCameraPosition();
+	const Vector GetThirdPersonCameraTarget();
+
+	const char* GetCharacter() const { return m_iszCharacter; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
@@ -241,6 +253,8 @@ public: // Public Variables
 	CNetworkVar( float, m_flFreezeUntil );
 	CNetworkVar( float, m_flFreezeAmount );
 
+	CNetworkVar( float, m_flReadyWeaponUntil );
+
 	CNetworkVar( float, m_flDisarmRedraw );
 
 	EHANDLE	m_hRagdoll;
@@ -291,12 +305,19 @@ private:
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );
+	float m_flLastSlowMoMultiplier;
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 
 	CNetworkVar( float, m_flLastSpawnTime );
 
 	CNetworkVar( bool, m_bHasPlayerDied );
+
+	CNetworkVar( bool, m_bThirdPerson );
+	Vector m_vecThirdCamera; // Where is the third person camera?
+	Vector m_vecThirdTarget; // Where is the third person camera pointing?
+
+	char m_iszCharacter[256];
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;

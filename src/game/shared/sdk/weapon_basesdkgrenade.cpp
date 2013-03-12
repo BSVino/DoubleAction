@@ -136,32 +136,7 @@ void CBaseSDKGrenade::PrimaryAttack()
 //-----------------------------------------------------------------------------
 void CBaseSDKGrenade::SecondaryAttack()
 {
-	if ( m_bRedraw )
-		return;
-
-	CSDKPlayer *pPlayer = GetPlayerOwner();
-	
-	if ( pPlayer == NULL )
-		return;
-
-	//See if we're ducking
-	if ( pPlayer->GetFlags() & FL_DUCKING )
-	{
-		//Send the weapon animation
-		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
-	}
-	else
-	{
-		//Send the weapon animation
-		SendWeaponAnim( ACT_VM_HAULBACK );
-	}
-
-	// Don't let weapon idle interfere in the middle of a throw!
-	SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
-
-	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() + 1.0;
+	BaseClass::SecondaryAttack();
 }
 
 //-----------------------------------------------------------------------------
@@ -207,9 +182,12 @@ void CBaseSDKGrenade::ItemPostFrame()
 //			DropGrenade();
 //		else
 			ThrowGrenade();
-		
-		DecrementAmmo( pPlayer );
-	
+
+		if (!pPlayer->IsStyleSkillActive(SKILL_TROLL))
+			DecrementAmmo( pPlayer );
+
+		pPlayer->UseStyleCharge(SKILL_TROLL, 30);
+
 		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
 		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
@@ -231,12 +209,32 @@ void CBaseSDKGrenade::ItemPostFrame()
 #endif
 				pPlayer->SwitchToNextBestWeapon( NULL ); //Tony; now switch! cuz we rans outs!
 			}
-			else
+			else if (pPlayer->IsStyleSkillActive(SKILL_TROLL))
 			{
 				m_bRedraw = false;
 				m_flNextPrimaryAttack = GetCurrentTime() + 1.2;
 				m_flNextSecondaryAttack = GetCurrentTime() + 1.2;
-				SendWeaponAnim( GetDeployActivity() );			
+				SendWeaponAnim( GetDeployActivity() );	
+			}
+			else
+			{
+				m_bRedraw = false;
+
+				// Only switch to the next best weapon if the next best weapon is not brawl.
+				CBaseCombatWeapon *pNewWeapon = g_pGameRules->GetNextBestWeapon(pPlayer, this);
+				CWeaponSDKBase* pSDKNewWeapon = dynamic_cast<CWeaponSDKBase*>(pNewWeapon);
+
+				bool bSwitch = true;
+
+				if (!pSDKNewWeapon)
+					bSwitch = false;
+
+				// If I'm going to switch to brawl but I have more grenades, don't switch.
+				if (pSDKNewWeapon && pSDKNewWeapon->GetWeaponID() == SDK_WEAPON_BRAWL && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) > 0)
+					bSwitch = false;
+
+				if (bSwitch)
+					pPlayer->SwitchToNextBestWeapon( this );
 			}
 			return;	//don't animate this grenade any more!
 		}	
