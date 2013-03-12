@@ -766,7 +766,7 @@ void CSDKPlayerShared::EndSlide()
 	m_pOuter->ReadyWeapon();
 }
 
-void CSDKPlayerShared::StandUpFromSlide( void )
+void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 {	
 	// If it was long enough to notice what it was, then train the slide.
 	if (gpGlobals->curtime > m_flSlideTime + 1)
@@ -782,6 +782,15 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
+
+	// remove unslide time if we're chaining into a jump from a regular slide
+	if(bJumpUp && !m_bDiveSliding)
+	{
+		//EndRoll();
+		EndSlide();
+		//SetProne(false, true);
+		//SetJumping(false);
+	}
 
 	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 

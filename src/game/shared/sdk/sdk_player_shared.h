@@ -74,7 +74,7 @@ public:
 	bool	IsGettingUpFromSlide() const;	
 	void	StartSliding(bool bDiveSliding = false);
 	void	EndSlide();
-	void	StandUpFromSlide();
+	void	StandUpFromSlide(bool bJumpUp = false);
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 	float	GetSlideFriction() const;

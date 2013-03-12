@@ -1215,6 +1215,9 @@ void CSDKGameMovement::FinishUnSlide( void )
 	
 	SetUnSlideEyeOffset( 1.0 );
 
+	if (m_pSDKPlayer->GetGroundEntity() == NULL)
+		return;
+
 	if (CanUnduck())
 		m_pSDKPlayer->m_Shared.EndSlide();
 	else if (CanUnprone())
@@ -1711,7 +1714,13 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() && CanUnprone())
 		{
-			m_pSDKPlayer->m_Shared.StandUpFromSlide();
+			bool bJumpUp = false;
+
+			//attempt different behavior if you jump out of a slide
+			if ( ((mv->m_nButtons & IN_JUMP) > 0) && CanUnduck() )
+			//	bJumpUp = true;
+
+			m_pSDKPlayer->m_Shared.StandUpFromSlide(bJumpUp);
 
 			SetUnSlideEyeOffset( 0.0 );
 
