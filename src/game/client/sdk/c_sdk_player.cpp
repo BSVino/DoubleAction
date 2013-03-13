@@ -797,6 +797,7 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 		m_pInstructor = new CInstructor();
 
 	Instructor_Respawn();
+	BaseClass::LocalPlayerRespawn();
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
