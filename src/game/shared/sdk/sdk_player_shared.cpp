@@ -305,40 +305,43 @@ void CSDKPlayer::DoMuzzleFlash()
 		dl->decay = dl->radius / flTime;
 	}
 
-	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
+	if (pLocalPlayer)
 	{
-		for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+		if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 		{
-			CBaseViewModel *vm = GetViewModel( i );
-			if ( !vm )
-				continue;
+			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			{
+				CBaseViewModel *vm = GetViewModel( i );
+				if ( !vm )
+					continue;
 
-			vm->DoMuzzleFlash();
+				vm->DoMuzzleFlash();
+			}
 		}
-	}
-	else if (pActiveWeapon)
-	{
-		// Force world model so the attachments work.
-		pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
-
-		switch (pActiveWeapon->GetWeaponType())
+		else if (pActiveWeapon)
 		{
-		case WT_PISTOL:
-		default:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			// Force world model so the attachments work.
+			pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
 
-		case WT_SMG:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			switch (pActiveWeapon->GetWeaponType())
+			{
+			case WT_PISTOL:
+			default:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
 
-		case WT_RIFLE:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			case WT_SMG:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
 
-		case WT_SHOTGUN:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			case WT_RIFLE:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
+
+			case WT_SHOTGUN:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
+			}
 		}
 	}
 #endif
