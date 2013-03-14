@@ -32,7 +32,7 @@ ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLI
 ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 
-ConVar  da_superjump_height ( "da_jk_superjump_height", "550", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  da_superjump_height ( "da_jk_superjump_height", "1000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  da_superjump_duration ( "da_jk_superjump_duration", "1000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  da_walljump_limit ( "da_jk_walljump_limit", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
@@ -353,6 +353,7 @@ CSDKGameMovement::manteltrace (const Vector &start, const Vector &end, const Vec
 	ray.Init (start, end, mins, maxs);
 	UTIL_TraceRay( ray, PlayerSolidMask (), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
 }
+
 bool
 CSDKGameMovement::checkmantel (void)
 {
@@ -374,12 +375,12 @@ CSDKGameMovement::checkmantel (void)
 	/*Ensure player is against a wall. Note the special bbox. 
 	We want to only check walls that are at least at the player's eye level*/
 	mins = GetPlayerMins ();
-	mins[2] = GetPlayerViewOffset (m_pSDKPlayer->IsDucked ()).z;
+	mins[2] = GetPlayerViewOffset (!!(m_pSDKPlayer->GetFlags()&FL_DUCKING)).z;
 	pr = mv->GetAbsOrigin () + forward;
 	manteltrace (mv->GetAbsOrigin (), pr, mins, GetPlayerMaxs (), tr);
 	if (tr.fraction == 1)
 	{
-		Msg ("No wall\n");
+		//Msg ("No wall\n");
 		return false;
 	}
 	/*Ensure there is empty space above the player*/
@@ -388,7 +389,7 @@ CSDKGameMovement::checkmantel (void)
 	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction != 1)
 	{
-		Msg ("No space\n");
+		//Msg ("No space\n");
 		return false;
 	}
 	/*From the last probed position ensure that 
@@ -398,7 +399,7 @@ CSDKGameMovement::checkmantel (void)
 	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction != 1)
 	{
-		Msg ("Too far\n");
+	//	Msg ("Too far\n");
 		return false;
 	}
 	/*From the last probed position ensure that
@@ -408,7 +409,7 @@ CSDKGameMovement::checkmantel (void)
 	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction == 1)
 	{/*This should only happen if ledges are too thin*/
-		Msg ("No ledge\n");
+	//	Msg ("No ledge\n");
 		return false;
 	}
 	/*Now having found a ledge to grab, probe the space above it so
@@ -418,7 +419,7 @@ CSDKGameMovement::checkmantel (void)
 	manteltrace (pr, pr2, GetPlayerMins (true),  GetPlayerMaxs (true), tr);
 	if (tr.allsolid || tr.fraction != 1)
 	{
-		Msg ("No room %i %f\n", tr.allsolid, tr.fraction);
+	//	Msg ("No room %i %f\n", tr.allsolid, tr.fraction);
 		return false;
 	}
 	m_pSDKPlayer->m_Shared.superjump = 0;
@@ -1211,6 +1212,51 @@ void CSDKGameMovement::FullWalkMove( )
 	else
 	// Not fully underwater
 	{
+#if 0
+		if (mv->m_nButtons&IN_ALT1)
+		{
+			trace_t tr;
+			Vector right;
+
+			AngleVectors (mv->m_vecAbsViewAngles, NULL, &right, NULL);
+			TracePlayerBBox (mv->GetAbsOrigin(), 
+							 mv->GetAbsOrigin() + right, 
+							 MASK_PLAYERSOLID, 
+							 COLLISION_GROUP_PLAYER_MOVEMENT, 
+							 tr);
+			if (tr.fraction < 1)
+			{
+				m_pSDKPlayer->m_Shared.iswallrunning = true;
+			}
+		}
+		if (m_pSDKPlayer->m_Shared.iswallrunning)
+		{/*Wall running*/
+			trace_t tr;
+			Vector forward;
+
+			if (!(mv->m_nButtons&IN_ALT1))
+			{
+				m_pSDKPlayer->m_Shared.iswallrunning = false;
+				return;
+			}
+			AngleVectors (mv->m_vecAbsViewAngles, &forward, NULL, NULL);
+			TracePlayerBBox (mv->GetAbsOrigin(), 
+							 mv->GetAbsOrigin() + 320*gpGlobals->frametime*forward, 
+							 MASK_PLAYERSOLID, 
+							 COLLISION_GROUP_PLAYER_MOVEMENT, 
+							 tr);
+			if (tr.fraction < 1)
+			{/*We collided with something, end run*/
+				m_pSDKPlayer->m_Shared.iswallrunning = false;
+			}
+			else
+			{
+				mv->SetAbsOrigin (tr.endpos);
+				return;
+			}
+		}
+#endif
+
 		// Was jump button pressed?
 		if (mv->m_nButtons & IN_JUMP)
 		{
@@ -1224,7 +1270,7 @@ void CSDKGameMovement::FullWalkMove( )
 		{/*Add in Superjump velocity*/
 			trace_t	tr;
 			TracePlayerBBox (mv->GetAbsOrigin (), 
-					mv->GetAbsOrigin () + Vector (0, 0, 1),
+					mv->GetAbsOrigin () + Vector (0, 0, 2),
 					PlayerSolidMask (), 
 					COLLISION_GROUP_PLAYER_MOVEMENT, 
 					tr);
@@ -1241,8 +1287,11 @@ void CSDKGameMovement::FullWalkMove( )
 				FinishGravity();
 			}
 		}
-		if (!m_pSDKPlayer->m_Shared.ismantelling) m_pSDKPlayer->m_Shared.ismantelling = checkmantel ();
-		if (m_pSDKPlayer->m_Shared.ismantelling)
+		if (!m_pSDKPlayer->m_Shared.ismantelling) 
+		{
+			m_pSDKPlayer->m_Shared.ismantelling = checkmantel ();
+		}
+		if (m_pSDKPlayer->m_Shared.ismantelling && (mv->m_nButtons&IN_JUMP))
 		{
 			trace_t tr;
 			Vector forward;
@@ -1953,23 +2002,26 @@ void CSDKGameMovement::Duck( void )
 				Vector vecAbsVelocity = m_pSDKPlayer->GetAbsVelocity();
 				float flVelocity = vecAbsVelocity.Length();
 
-				// Throw in some of the wish velocity into the slide.
-				vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
-				vecAbsVelocity.NormalizeInPlace();
-				vecAbsVelocity *= flVelocity;
+				if (flVelocity > 1e-4)
+				{
+					// Throw in some of the wish velocity into the slide.
+					vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
+					vecAbsVelocity.NormalizeInPlace();
+					vecAbsVelocity *= flVelocity;
 
-				m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
+					m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
 
-				m_pSDKPlayer->m_Shared.StartSliding(true);
+					m_pSDKPlayer->m_Shared.StartSliding(true);
 
-				float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
+					float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
 
-				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
-				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
+					mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
+					mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+					mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+					player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
-				SetSlideEyeOffset( 1.0 );
+					SetSlideEyeOffset( 1.0 );
+				}
 			}
 			else if (bWantsRoll && m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
 			{

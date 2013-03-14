@@ -187,6 +187,7 @@ public:
 	CNetworkVar (float, superjump);
 	CNetworkVar (float, lasttap);
 	CNetworkVar (bool, ismantelling);
+	CNetworkVar (bool, iswallrunning);
 public:
 
 #ifdef SDK_USE_PRONE

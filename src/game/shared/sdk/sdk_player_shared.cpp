@@ -387,9 +387,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.nextjump = 0;
 	m_Shared.lasttap = -1;
 	m_Shared.ismantelling = false;
-
-	//Tony; todo; fix
-
+	m_Shared.iswallrunning = false;
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
 #if defined ( SDK_USE_PRONE )
 //	m_bPlayingProneMoveSound = false;
@@ -1393,7 +1391,13 @@ Vector CSDKPlayer::EyePosition()
 
 #ifdef CLIENT_DLL
 		// It's not filled in for remote clients, so force the local one since it's the same.
-		float flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+		float flSpeedRatio;
+		if (C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed > 1e-4)
+		{
+			flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+		}
+		else flSpeedRatio = 0;
+			
 #else
 		float flSpeedRatio = m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed;
 #endif
