@@ -1624,7 +1624,10 @@ void CSDKGameMovement::Duck( void )
 				{
 					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
 					m_pSDKPlayer->m_bUnProneToDuck = true;
-					FinishDuck();
+
+					//prepare for duck transition
+					player->AddFlag( FL_DUCKING );
+					player->m_Local.m_bDucked = true;
 				}
 				else
 				{
@@ -1711,7 +1714,10 @@ void CSDKGameMovement::Duck( void )
 			if ( m_pSDKPlayer->m_bUnProneToDuck )
 			{
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
-				FinishDuck();
+
+				//prepare for duck transition
+				player->AddFlag( FL_DUCKING );
+				player->m_Local.m_bDucked = true;				
 			}
 			else
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
