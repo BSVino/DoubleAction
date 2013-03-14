@@ -36,8 +36,10 @@ public:
 	CWeaponShotgun();
 
 	virtual void PrimaryAttack();
+	virtual void Swing(bool bIsSecondary, bool bIsStockAttack = false);
 	virtual bool Reload();
 	virtual void WeaponIdle();
+	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
 
 	virtual bool WeaponSpreadFixed() const { return true; }
 	virtual bool FullAimIn() { return true; }
