@@ -692,6 +692,11 @@ bool CSDKPlayerShared::IsGettingUpFromSlide() const
 	return ( m_flUnSlideTime > 0 );
 }
 
+bool CSDKPlayerShared::MustDuckFromSlide() const
+{
+	return ( m_bMustDuckFromSlide );
+}
+
 bool CSDKPlayerShared::IsSliding() const
 {
 	return m_bSliding;
@@ -749,6 +754,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 	m_flSlideTime = m_pOuter->GetCurrentTime();
 	m_flUnSlideTime = 0;
+	m_bMustDuckFromSlide = false;
 }
 
 void CSDKPlayerShared::EndSlide()
@@ -769,7 +775,7 @@ void CSDKPlayerShared::EndSlide()
 	m_pOuter->ReadyWeapon();
 }
 
-void CSDKPlayerShared::StandUpFromSlide( void )
+void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 {	
 	// If it was long enough to notice what it was, then train the slide.
 	if (gpGlobals->curtime > m_flSlideTime + 1)
@@ -780,11 +786,15 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
 
-	m_pOuter->FreezePlayer(0.4f, 0.3f);
-
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
+	
+	// if we're going into a jump: block unwanted slide behavior
+	if (bJumpUp)
+		m_bSliding = false;
+		
+	m_pOuter->FreezePlayer(0.4f, 0.3f);
 
 	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 

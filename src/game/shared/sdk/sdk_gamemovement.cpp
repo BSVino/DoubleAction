@@ -846,7 +846,7 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	}
 #endif
 
-	if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
+	if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
 		return false;
 
 	// See if we are waterjumping.  If so, decrement count and return.
@@ -898,7 +898,10 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	// In the air now.
 	SetGroundEntity( NULL );
 	
-	m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
+	//play end slide sound instead if we're jumping out of a slide
+	if ( !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
+		m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
+
 	m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
 
 //Tony; liek the landing sound, leaving this here if as an example for playing a jump sound.
@@ -1214,21 +1217,19 @@ void CSDKGameMovement::FinishUnSlide( void )
 	m_pSDKPlayer->m_Shared.m_flUnSlideTime = 0.0f;
 	
 	SetUnSlideEyeOffset( 1.0 );
+	m_pSDKPlayer->m_Shared.EndSlide();
 
-	if (CanUnduck())
-		m_pSDKPlayer->m_Shared.EndSlide();
-	else if (CanUnprone())
+	if ( m_pSDKPlayer->m_Shared.MustDuckFromSlide() )
 	{
-		m_pSDKPlayer->m_Shared.EndSlide();
-		FinishDuck();
+		if( CanUnprone() )
+			FinishDuck();
+		else
+		{			
+			m_pSDKPlayer->m_Shared.SetProne(true, true);
+			SetProneEyeOffset( 1.0 );
+		}
 	}
-	else
-	{
-		m_pSDKPlayer->m_Shared.SetProne(true, true);
-		m_pSDKPlayer->m_Shared.EndSlide();
-		SetProneEyeOffset( 1.0 );
-	}
-
+	
 	CategorizePosition();
 }
 
@@ -1265,7 +1266,13 @@ void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
 void CSDKGameMovement::SetUnSlideEyeOffset( float flFraction )
 {
 	Vector vecStartViewOffset = m_pSDKPlayer->m_Shared.m_vecUnSlideEyeStartOffset;
-	Vector vecEndViewOffset = GetPlayerViewOffset( false );
+	Vector vecEndViewOffset;
+
+	// transition to prone view if we have to
+	if( CanUnprone() )
+		 vecEndViewOffset = GetPlayerViewOffset( m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide );
+	else
+		vecEndViewOffset = VEC_PRONE_VIEW;
 
 	Vector temp = player->GetViewOffset();
 
@@ -1445,7 +1452,6 @@ void CSDKGameMovement::Duck( void )
 			// Calc parametric time
 			float fraction = slidetime / TIME_TO_UNSLIDE;
 			SetUnSlideEyeOffset( 1-fraction );
-
 		}
 
 		//don't deal with ducking while we're sliding
@@ -1460,6 +1466,9 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
+			if(!CanUnduck())
+				m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
+			
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 			SetUnSlideEyeOffset( 0.0 );
 		}
@@ -1615,7 +1624,10 @@ void CSDKGameMovement::Duck( void )
 				{
 					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
 					m_pSDKPlayer->m_bUnProneToDuck = true;
-					FinishDuck();
+
+					//prepare for duck transition
+					player->AddFlag( FL_DUCKING );
+					player->m_Local.m_bDucked = true;
 				}
 				else
 				{
@@ -1702,20 +1714,43 @@ void CSDKGameMovement::Duck( void )
 			if ( m_pSDKPlayer->m_bUnProneToDuck )
 			{
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
-				FinishDuck();
+
+				//prepare for duck transition
+				player->AddFlag( FL_DUCKING );
+				player->m_Local.m_bDucked = true;				
 			}
 			else
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
 
 			return;
 		}
-		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() && CanUnprone())
+		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() )
 		{
-			m_pSDKPlayer->m_Shared.StandUpFromSlide();
+			bool bStandingRoom = CanUnduck();
+			bool bCanJumpUp = ( bStandingRoom && !m_pSDKPlayer->m_Shared.IsDiveSliding() );
+			
+			//if there's standing room and we're doing a standard slide we can chain into a jump
+			if ( (mv->m_nButtons & IN_JUMP) > 0 )
+			{
+				//otherwise eat the jump input
+				if ( !bCanJumpUp )
+					mv->m_nOldButtons |= IN_JUMP;
+			}
+			else
+				//if we aren't attempting to jump stand up normally
+				bCanJumpUp = false;
 
-			SetUnSlideEyeOffset( 0.0 );
+			if ( CanUnprone() )
+			{
+				if ( !bStandingRoom )
+					m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
 
-			return;
+				m_pSDKPlayer->m_Shared.StandUpFromSlide( bCanJumpUp );
+
+				SetUnSlideEyeOffset( 0.0 );
+
+				return;
+			}
 		}
 		else if( bRoll && m_pSDKPlayer->m_Shared.CanRoll() )
 		{
