@@ -280,6 +280,9 @@ static const Vector g_meleeMaxs(MELEE_HULL_DIM,MELEE_HULL_DIM,MELEE_HULL_DIM);
 void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 {
 	trace_t traceHit;
+	
+	// cancel reload
+	m_bInReload = false;
 
 	// Try a ray
 	CSDKPlayer *pOwner = ToSDKPlayer( GetOwner() );
