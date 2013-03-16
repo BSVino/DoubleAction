@@ -439,6 +439,13 @@ void C_BasePlayer::Spawn( void )
 	m_bWasFreezeFraming = false;
 }
 
+void C_BasePlayer::LocalPlayerRespawn( void )
+{
+	// clear attack inputs on spawn
+	input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
+	input->GetButtonBits( 0 );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

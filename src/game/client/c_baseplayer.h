@@ -71,6 +71,7 @@ public:
 
 	virtual void	Spawn( void );
 	virtual void	SharedSpawn(); // Shared between client and server.
+	virtual void	LocalPlayerRespawn( void );
 
 	// IClientEntity overrides.
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );

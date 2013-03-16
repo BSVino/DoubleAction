@@ -1548,21 +1548,25 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 			pszFormat = "DAB_Chat_Spec";
 		else
 		{
+			/* only needed in round based play
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
 				pszFormat = "DAB_Chat_Team_Dead";
 			else
+			*/
 				pszFormat = "DAB_Chat_Team";
 		}
 	}
 	else
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
-			pszFormat = "DAB_Chat_AllSpec";
+			pszFormat = "DAB_Chat_All_Spec";
 		else
 		{
+			/* only needed in round based play
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
 				pszFormat = "DAB_Chat_All_Dead";
 			else
+			*/
 				pszFormat = "DAB_Chat_All";
 		}
 	}
