@@ -114,10 +114,17 @@ void CSDKSpectatorGUI::UpdateSpectatorPlayerList()
 		SetLabelText( "RedScoreValue", frags );
 	}
 #else
-	m_pBlueLabel->SetVisible( false );
-	m_pBlueScore->SetVisible( false );
-	m_pRedLabel->SetVisible( false );
-	m_pRedScore->SetVisible( false );
+	if (m_pBlueLabel)
+		m_pBlueLabel->SetVisible( false );
+
+	if (m_pBlueScore)
+		m_pBlueScore->SetVisible( false );
+
+	if (m_pRedLabel)
+		m_pRedLabel->SetVisible( false );
+
+	if (m_pRedScore)
+		m_pRedScore->SetVisible( false );
 #endif
 }
 

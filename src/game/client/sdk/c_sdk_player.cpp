@@ -30,6 +30,7 @@
 #include "voice_status.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
+#include "in_buttons.h"
 
 #include "dab_buymenu.h"
 #include "dab_charactermenu.h"
@@ -122,6 +123,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropVector( RECVINFO(m_vecSlideDirection) ),
 	RecvPropTime( RECVINFO(m_flSlideTime) ),
 	RecvPropTime( RECVINFO( m_flUnSlideTime ) ),
+	RecvPropBool( RECVINFO( m_bMustDuckFromSlide ) ),
 	RecvPropBool( RECVINFO( m_bDiveSliding ) ),
 	RecvPropVector( RECVINFO(m_vecUnSlideEyeStartOffset) ),
 	RecvPropTime( RECVINFO( m_flLastDuckPress ) ),
@@ -225,6 +227,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecUnSlideEyeStartOffset, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bMustDuckFromSlide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDiveSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flLastDuckPress, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bRolling, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -797,6 +800,10 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 		m_pInstructor = new CInstructor();
 
 	Instructor_Respawn();
+
+	// clear attack inputs on spawn
+	::input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
+	::input->GetButtonBits( 0 ); 
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

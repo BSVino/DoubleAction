@@ -72,9 +72,10 @@ public:
 	bool	IsDiveSliding() const;
 	bool	CanSlide() const;
 	bool	IsGettingUpFromSlide() const;	
+	bool	MustDuckFromSlide() const;
 	void	StartSliding(bool bDiveSliding = false);
 	void	EndSlide();
-	void	StandUpFromSlide();
+	void	StandUpFromSlide(bool bJumpUp = false);
 	float	GetSlideTime() const { return m_flSlideTime; };
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 	float	GetSlideFriction() const;
@@ -201,6 +202,7 @@ public:
 #endif
 
 	CNetworkVar( float, m_flUnSlideTime );
+	CNetworkVar( bool, m_bMustDuckFromSlide );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );
 

@@ -185,22 +185,6 @@ void FX_FireBullets(
 #if !defined (CLIENT_DLL)
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
-
-	const int iMaxPlayers = 64;
-	Vector avecMins[iMaxPlayers];
-	Vector avecMaxs[iMaxPlayers];
-
-	for (int i = 1; i <= min(iMaxPlayers, gpGlobals->maxClients); i++)
-	{
-		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPlayer)
-			continue;
-
-		avecMins[i] = pPlayer->CollisionProp()->OBBMins();
-		avecMaxs[i] = pPlayer->CollisionProp()->OBBMaxs();
-
-		pPlayer->SetSize(avecMins[i]*3, avecMaxs[i]*3);
-	}
 #endif
 
 	for ( int iBullet=0; iBullet < pWeaponInfo->m_iBullets; iBullet++ )
@@ -230,15 +214,6 @@ void FX_FireBullets(
 	pPlayer->UseStyleCharge(SKILL_MARKSMAN, pWeaponInfo->m_flCycleTime * 10);
 
 #if !defined (CLIENT_DLL)
-	for (int i = 1; i <= min(iMaxPlayers, gpGlobals->maxClients); i++)
-	{
-		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPlayer)
-			continue;
-
-		pPlayer->SetSize(avecMins[i], avecMaxs[i]);
-	}
-
 	lagcompensation->FinishLagCompensation( pPlayer );
 #endif
 

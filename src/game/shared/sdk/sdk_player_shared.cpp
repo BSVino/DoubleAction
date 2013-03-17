@@ -36,8 +36,6 @@
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
-	#include "r_efx.h"
-	#include "dlight.h"
 
 	#define CRecipientFilter C_RecipientFilter
 #else
@@ -287,58 +285,43 @@ void CSDKPlayer::DoMuzzleFlash()
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
 
-	if (pActiveWeapon)
-	{
-		Vector vecEyeForward;
-		EyeVectors(&vecEyeForward);
-		Vector vecMuzzle = EyePosition() + vecEyeForward * 60;
-
-		float flTime = random->RandomFloat( 0.05f, 0.1f ) * (1/GetSlowMoMultiplier());
-
-		dlight_t *dl = effects->CL_AllocDlight ( entindex() );
-		dl->origin = vecMuzzle;
-		dl->color.r = 255;
-		dl->color.g = 165;
-		dl->color.b = 0;
-		dl->die = gpGlobals->curtime + flTime;
-		dl->radius = random->RandomFloat( 500.0f, 700.0f );
-		dl->decay = dl->radius / flTime;
-	}
-
 	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 	{
-		for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+		if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 		{
-			CBaseViewModel *vm = GetViewModel( i );
-			if ( !vm )
-				continue;
+			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			{
+				CBaseViewModel *vm = GetViewModel( i );
+				if ( !vm )
+					continue;
 
-			vm->DoMuzzleFlash();
+				vm->DoMuzzleFlash();
+			}
 		}
-	}
-	else if (pActiveWeapon)
-	{
-		// Force world model so the attachments work.
-		pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
-
-		switch (pActiveWeapon->GetWeaponType())
+		else if (pActiveWeapon)
 		{
-		case WT_PISTOL:
-		default:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			// Force world model so the attachments work.
+			pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
 
-		case WT_SMG:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			switch (pActiveWeapon->GetWeaponType())
+			{
+			case WT_PISTOL:
+			default:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
 
-		case WT_RIFLE:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			case WT_SMG:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
 
-		case WT_SHOTGUN:
-			pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
-			break;
+			case WT_RIFLE:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
+
+			case WT_SHOTGUN:
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
+				break;
+			}
 		}
 	}
 #endif
@@ -693,6 +676,11 @@ bool CSDKPlayerShared::IsGettingUpFromSlide() const
 	return ( m_flUnSlideTime > 0 );
 }
 
+bool CSDKPlayerShared::MustDuckFromSlide() const
+{
+	return ( m_bMustDuckFromSlide );
+}
+
 bool CSDKPlayerShared::IsSliding() const
 {
 	return m_bSliding;
@@ -750,6 +738,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 	m_flSlideTime = m_pOuter->GetCurrentTime();
 	m_flUnSlideTime = 0;
+	m_bMustDuckFromSlide = false;
 }
 
 void CSDKPlayerShared::EndSlide()
@@ -770,7 +759,7 @@ void CSDKPlayerShared::EndSlide()
 	m_pOuter->ReadyWeapon();
 }
 
-void CSDKPlayerShared::StandUpFromSlide( void )
+void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 {	
 	// If it was long enough to notice what it was, then train the slide.
 	if (gpGlobals->curtime > m_flSlideTime + 1)
@@ -781,11 +770,15 @@ void CSDKPlayerShared::StandUpFromSlide( void )
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
 
-	m_pOuter->FreezePlayer(0.4f, 0.3f);
-
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
 	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
+	
+	// if we're going into a jump: block unwanted slide behavior
+	if (bJumpUp)
+		m_bSliding = false;
+		
+	m_pOuter->FreezePlayer(0.4f, 0.3f);
 
 	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 
