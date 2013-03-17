@@ -146,7 +146,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		flSpeedRatio -= 1; // 0 means unchanged.
 		flSpeedRatio /= 2; // It gets doubled when the skill is on.
 
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, flSpeedRatio, SKILL_ATHLETIC);
+		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(sdk_dive_speed.GetFloat(), flSpeedRatio, SKILL_ATHLETIC);
 	}
 	else
 	{
@@ -208,6 +208,8 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 #endif // SDK_USE_PRONE
 
 	mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, 0.25f, SKILL_ATHLETIC);
+
+	Assert(IsFinite(mv->m_flClientMaxSpeed));
 }
 
 ConVar cl_show_speed( "cl_show_speed", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "spam console with local player speed" );
