@@ -480,7 +480,12 @@ bool CDABot::IsUsingPrimaryMelee( void ) const
  */
 bool CDABot::IsUsingGrenade( void ) const
 {
-	return false;
+	CWeaponSDKBase *weapon = GetActiveSDKWeapon();
+
+	if (weapon == NULL)
+		return false;
+
+	return weapon->GetWeaponID() == SDK_WEAPON_GRENADE;
 }
 
 //--------------------------------------------------------------------------------------------------------------
