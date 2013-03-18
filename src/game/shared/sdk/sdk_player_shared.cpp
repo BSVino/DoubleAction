@@ -572,6 +572,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+	m_flSlideTime = 0;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -749,8 +750,7 @@ void CSDKPlayerShared::EndSlide()
 	}
 
 	m_bSliding = false;
-	m_bDiveSliding = false;
-	m_flSlideTime = 0;
+	m_bDiveSliding = false;;
 
 	m_pOuter->ReadyWeapon();
 }
@@ -772,7 +772,11 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 	
 	// if we're going into a jump: block unwanted slide behavior
 	if (bJumpUp)
+	{
 		m_bSliding = false;
+		// and trigger brief slide cooldown
+		m_flSlideTime = m_pOuter->GetCurrentTime();
+	}
 		
 	m_pOuter->FreezePlayer(0.4f, 0.3f);
 
