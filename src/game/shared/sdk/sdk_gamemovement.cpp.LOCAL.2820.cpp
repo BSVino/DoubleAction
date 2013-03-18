@@ -33,7 +33,7 @@ ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT 
 
 
 ConVar  da_superjump_height ( "da_jk_superjump_height", "1000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  da_superjump_duration ( "da_jk_superjump_duration", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  da_superjump_duration ( "da_jk_superjump_duration", "1000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  da_walljump_limit ( "da_jk_walljump_limit", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 
@@ -161,7 +161,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 		flSpeedRatio -= 1; // 0 means unchanged.
 		flSpeedRatio /= 2; // It gets doubled when the skill is on.
 
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(sdk_dive_speed.GetFloat(), flSpeedRatio, SKILL_ATHLETIC);
+		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, flSpeedRatio, SKILL_ATHLETIC);
 	}
 	else
 	{
@@ -223,8 +223,6 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 #endif // SDK_USE_PRONE
 
 	mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, 0.25f, SKILL_ATHLETIC);
-
-	Assert(IsFinite(mv->m_flClientMaxSpeed));
 }
 
 ConVar cl_show_speed( "cl_show_speed", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "spam console with local player speed" );
@@ -362,7 +360,7 @@ CSDKGameMovement::checkmantel (void)
 	trace_t	tr;
 	Vector pr, pr2;
 	Vector forward;
-	Vector mins, maxs;
+	Vector mins;
 
 	if (!(mv->m_nButtons&(IN_JUMP)))
 	{/*Must have stunt or jump key held*/
@@ -374,41 +372,44 @@ CSDKGameMovement::checkmantel (void)
 		return false;
 	}
 	AngleVectors (mv->m_vecViewAngles, &forward, NULL, NULL);
-	/*Ensure player is facing against a wall. Note the special bbox. 
-	We want to only check walls that are at least waist level.*/
+	/*Ensure player is against a wall. Note the special bbox. 
+	We want to only check walls that are at least at the player's eye level*/
 	mins = GetPlayerMins ();
-	maxs = GetPlayerMaxs ();
-	mins.z = 0.5*GetPlayerMaxs ().z;
-	pr = mv->GetAbsOrigin () + 8*forward;
-	manteltrace (mv->GetAbsOrigin (), pr, mins, maxs, tr);
+	mins[2] = GetPlayerViewOffset (!!(m_pSDKPlayer->GetFlags()&FL_DUCKING)).z;
+	pr = mv->GetAbsOrigin () + forward;
+	manteltrace (mv->GetAbsOrigin (), pr, mins, GetPlayerMaxs (), tr);
 	if (tr.fraction == 1)
 	{
+		//Msg ("No wall\n");
 		return false;
 	}
 	/*Ensure there is empty space above the player*/
 	pr = tr.endpos;
-	pr2 = tr.endpos + Vector (0, 0, mins.z);
-	manteltrace (pr, pr2, mins, maxs, tr);
+	pr2 = tr.endpos + Vector (0, 0, 1+GetPlayerMaxs ().z);
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction != 1)
 	{
+		//Msg ("No space\n");
 		return false;
 	}
 	/*From the last probed position ensure that 
 	there is empty space in front of the player*/
 	pr = tr.endpos;
 	pr2 = pr + forward;
-	manteltrace (pr, pr2, mins, maxs, tr);
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction != 1)
 	{
+	//	Msg ("Too far\n");
 		return false;
 	}
 	/*From the last probed position ensure that
-	there is a space below for the player to stand on*/
+	there is a space for the player to stand on*/
 	pr = tr.endpos;
-	pr2 = pr - Vector (0, 0, tr.endpos.z - mv->GetAbsOrigin ().z);
-	manteltrace (pr, pr2, mins, maxs, tr);
+	pr2 = pr + Vector (0, 0, -128);
+	manteltrace (pr, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
 	if (tr.fraction == 1)
 	{/*This should only happen if ledges are too thin*/
+	//	Msg ("No ledge\n");
 		return false;
 	}
 	/*Now having found a ledge to grab, probe the space above it so
@@ -418,11 +419,10 @@ CSDKGameMovement::checkmantel (void)
 	manteltrace (pr, pr2, GetPlayerMins (true),  GetPlayerMaxs (true), tr);
 	if (tr.allsolid || tr.fraction != 1)
 	{
+	//	Msg ("No room %i %f\n", tr.allsolid, tr.fraction);
 		return false;
 	}
-#ifndef CLIENT_DLL
-	debugoverlay->AddSweptBoxOverlay (pr, pr2, mins, maxs, QAngle (0, 0, 0), 255, 0, 0, 255, 5);
-#endif
+	m_pSDKPlayer->m_Shared.superjump = 0;
 	return true;
 }
 void CSDKGameMovement::CheckFalling( void )
@@ -719,7 +719,7 @@ void CSDKGameMovement::CategorizePosition( void )
 	}
 
 	// Check for a jump.
-	if ( mv->m_vecVelocity.z > 250.0f)
+	if ( mv->m_vecVelocity.z > 250.0f || m_pSDKPlayer->m_Shared.superjump)
 	{
 		SetGroundEntity( NULL );
 		return;
@@ -922,6 +922,22 @@ void CSDKGameMovement::ReduceTimers( void )
 		m_pSDKPlayer->m_Shared.SetStamina( flStamina );	
 	}
 #endif
+	if (m_pSDKPlayer->m_Shared.nextjump > 0)
+	{
+		m_pSDKPlayer->m_Shared.nextjump -= 1000*gpGlobals->frametime;
+		if (m_pSDKPlayer->m_Shared.nextjump < 0)
+		{
+			m_pSDKPlayer->m_Shared.nextjump = 0;
+		}
+	}
+	if (m_pSDKPlayer->m_Shared.superjump > 0)
+	{
+		m_pSDKPlayer->m_Shared.superjump -= 1000*gpGlobals->frametime;
+		if (m_pSDKPlayer->m_Shared.superjump < 0)
+		{
+			m_pSDKPlayer->m_Shared.superjump = 0;
+		}
+	}
 	BaseClass::ReduceTimers();
 }
 
@@ -931,6 +947,7 @@ void CSDKGameMovement::ReduceTimers( void )
 void 
 CSDKGameMovement::SetGroundEntity (trace_t *pm)
 {
+	if (pm != NULL) m_pSDKPlayer->m_Shared.numjumps = 0;
 	BaseClass::SetGroundEntity (pm);
 }
 void
@@ -1003,7 +1020,7 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	}
 #endif
 
-	if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
+	if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
 		return false;
 
 	// See if we are waterjumping.  If so, decrement count and return.
@@ -1044,17 +1061,6 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	if ( mv->m_nOldButtons & IN_JUMP )
 		return false;		// don't pogo stick
 
-	// In the air now.
-	SetGroundEntity( NULL );
-	
-	//play end slide sound instead if we're jumping out of a slide
-	if ( !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
-		m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
-
-	m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-
-//Tony; liek the landing sound, leaving this here if as an example for playing a jump sound.
-	// make the jump sound
 	CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
 	filter.UsePredictionRules();
 
@@ -1067,7 +1073,6 @@ bool CSDKGameMovement::CheckJumpButton( void )
 
  	if (m_pSDKPlayer->GetGroundEntity() == NULL)
 	{/*Wall jumping*/
-#if 0
 		trace_t tr;
 		Vector dir;
 		if (m_pSDKPlayer->m_Shared.IsDiving () || m_pSDKPlayer->m_Shared.IsDiveSliding ())
@@ -1106,7 +1111,6 @@ bool CSDKGameMovement::CheckJumpButton( void )
 			finishjump (mv->m_vecVelocity[2] - z);
 			return true;
 		}
-#endif
 		mv->m_nOldButtons |= IN_JUMP;
 		return false;		// in air, so no effect
 	}
@@ -1120,21 +1124,46 @@ bool CSDKGameMovement::CheckJumpButton( void )
 	
 	// Accelerate upward
 	float startz = mv->m_vecVelocity[2];
-	m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.Jump" );
-	mv->m_vecVelocity[2] += flGroundFactor * flJumpHeight;
-	mv->m_outStepHeight += 0.15f;
+	if ((((mv->m_nButtons&IN_DUCK) || (mv->m_nOldButtons&IN_DUCK)) && 
+		(mv->m_nButtons&IN_JUMP)) ||
+		(m_pSDKPlayer->m_Local.m_bDucking) || 
+		(m_pSDKPlayer->GetFlags() & FL_DUCKING))
+	{/*Super jump*/
+		if (m_pSDKPlayer->m_Shared.superjump == 0)
+		{
+			m_pSDKPlayer->m_Shared.superjump = da_superjump_duration.GetFloat ();
+		}
+		m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex(), "Player.GoDive");
+		m_pSDKPlayer->m_Shared.SetJumping( true );
+		m_pSDKPlayer->ReadyWeapon();
+		mv->m_nOldButtons |= IN_JUMP;
+		return true;
+#if 0
+		/*Regular duckjump behaviour*/
+		m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.Jump" );
+		mv->m_vecVelocity[2] = flGroundFactor * flJumpHeight;
+		mv->m_outStepHeight += 0.15f;
+#endif
+	}
+	else
+	{
+		m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.Jump" );
+		mv->m_vecVelocity[2] += flGroundFactor * flJumpHeight;
+		mv->m_outStepHeight += 0.15f;
+	}
 	finishjump (mv->m_vecVelocity[2] - startz);
 	return true;
 }
 void CSDKGameMovement::FullWalkMove( )
 {
+	if ( !CheckWater() ) 
+	{
+		StartGravity();
+	}
+
 	// If we are leaping out of the water, just update the counters.
 	if (player->m_flWaterJumpTime)
 	{
-		if ( !CheckWater() ) 
-		{
-			StartGravity();
-		}
 		WaterJump();
 		TryPlayerMove();
 		// See if we are still in water?
@@ -1226,6 +1255,17 @@ void CSDKGameMovement::FullWalkMove( )
 				return;
 			}
 		}
+#endif
+
+		// Was jump button pressed?
+		if (mv->m_nButtons & IN_JUMP)
+		{
+ 			CheckJumpButton();
+		}
+		else
+		{
+			mv->m_nOldButtons &= ~IN_JUMP;
+		}
 		if (m_pSDKPlayer->m_Shared.superjump)
 		{/*Add in Superjump velocity*/
 			trace_t	tr;
@@ -1286,155 +1326,44 @@ void CSDKGameMovement::FullWalkMove( )
 			mv->SetAbsOrigin (tr.endpos);
 			return;
 		}
-#endif
-		switch (m_pSDKPlayer->m_Shared.acrostate)
+		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
+		//  we don't slow when standing still, relative to the conveyor.
+		if (player->GetGroundEntity() != NULL)
 		{
-		case ACRO_SUPERJUMP:
-		acro_superjump:
-			if (m_pSDKPlayer->m_Shared.acrotime <= 0)
-			{/*End of move, patch through to default*/
-				m_pSDKPlayer->m_Shared.acrostate = ACRO_NONE;
-				m_pSDKPlayer->m_Shared.acrotime = 0;
-				goto default_move;
-			}
-			if (m_pSDKPlayer->m_Shared.maxsjz < 1e-3)
-			{/*Scan for the highest that we can go*/
-				trace_t tr;
-				float limit;
-				float maxz;
-				TracePlayerBBox (mv->GetAbsOrigin(), 
-								 mv->GetAbsOrigin() + Vector (0, 0, 8192),
-								 MASK_PLAYERSOLID, 
-								 COLLISION_GROUP_PLAYER_MOVEMENT, 
-								 tr);
-				limit = da_superjump_height.GetFloat ();
-				maxz = tr.endpos[2] - tr.startpos[2];
-				if (maxz > limit)
-				{
-					maxz = da_superjump_height.GetFloat ();
-				}
-				m_pSDKPlayer->m_Shared.maxsjz = maxz;
-				m_pSDKPlayer->m_Shared.startz = tr.startpos[2];
-			}
-			else
-			{
-				trace_t tr;
-				Vector org;
-				float lim;
-				float t, d, x;
-
-				org = mv->GetAbsOrigin ();
-				org[2] = m_pSDKPlayer->m_Shared.startz;
-				lim = m_pSDKPlayer->m_Shared.maxsjz;
-				t = m_pSDKPlayer->m_Shared.acrotime;
-				d = da_superjump_duration.GetFloat ();
-				x = t*t/(d*d);
-				x = x*lim;
-				TracePlayerBBox (org, 
-								 org + Vector (0, 0, x),
-								 MASK_PLAYERSOLID, 
-								 COLLISION_GROUP_PLAYER_MOVEMENT, 
-								 tr);
-				if (tr.fraction < 1)
-				{/*Hit something unexpected, so cancel superjump*/
-					m_pSDKPlayer->m_Shared.acrotime = 0;
-				}
-				if (!tr.allsolid)
-				{
-					m_pSDKPlayer->SetAbsOrigin (tr.endpos);
-				}
-				else
-				{/*Seems we got stuck, solve for an escape*/
-					TracePlayerBBox (org, 
-									 org + Vector (0, 0, lim),
-									 MASK_PLAYERSOLID, 
-									 COLLISION_GROUP_PLAYER_MOVEMENT, 
-									 tr);
-					if (!tr.allsolid)
-					{
-						Vector end = tr.endpos;
-						end[2] = tr.fractionleftsolid*lim;
-						m_pSDKPlayer->SetAbsOrigin (end);
-					}
-					else
-					{/*Completely caught in a solid, so just die?
-					 TODO: Could also pop down if possible.*/
-					}
-				}
-				AirMove ();
-				CategorizePosition();
-				CheckVelocity();
-				m_pSDKPlayer->m_Shared.acrotime -= gpGlobals->frametime;
-			}
-			break;
-		case ACRO_WALLCLIMB:
-			Msg ("Unimplemented!\n");
-			break;
-		case ACRO_WALLSTUNT:
-			Msg ("Unimplemented!\n");
-			break;
-		case ACRO_WALLRUN:
-			Msg ("Unimplemented!\n");
-			break;
-		case ACRO_DIVE:
-		case ACRO_NONE:
-		default_move:
-		default:
-			if ( !CheckWater() ) 
-			{
-				StartGravity();
-			}
-			// Was jump button pressed?
-			if (mv->m_nButtons & IN_JUMP)
-			{
-				if ((m_pSDKPlayer->m_Local.m_bDucking) || 
-					(m_pSDKPlayer->GetFlags() & FL_DUCKING))
-				{/*Initialise then execute superjump state*/
-					m_pSDKPlayer->m_Shared.acrostate = ACRO_SUPERJUMP;
-					m_pSDKPlayer->m_Shared.acrotime = da_superjump_duration.GetFloat ();
-					m_pSDKPlayer->m_Shared.maxsjz = 0;
-					FinishGravity ();
-					Msg ("Superjump!\n");
-					goto acro_superjump;
-				}
- 				CheckJumpButton();
-			}
-			else
-			{
-				mv->m_nOldButtons &= ~IN_JUMP;
-			}
-			//Friction is handled before we add in any base velocity. That way, if we are on a conveyor, 
-			//we don't slow when standing still, relative to the conveyor.
-			if (player->GetGroundEntity() != NULL)
-			{
-				mv->m_vecVelocity[2] = 0.0;
-				Friction();
-			}
-			CheckVelocity();
-			if (player->GetGroundEntity() != NULL)
-			{
-				WalkMove();
-			}
-			else
-			{
-				AirMove();
-			}
-			// Set final flags.
-			CategorizePosition();
-			CheckVelocity();
-			// Add any remaining gravitational component.
-			if ( !CheckWater() )
-			{
-				FinishGravity();
-			}
-			// If we are on ground, no downward velocity.
-			if (player->GetGroundEntity() != NULL)
-			{
-				mv->m_vecVelocity[2] = 0;
-			}
-			CheckFalling();
-			break;
+			mv->m_vecVelocity[2] = 0.0;
+			Friction();
 		}
+		
+		// Make sure velocity is valid.
+		CheckVelocity();
+
+		if (player->GetGroundEntity() != NULL)
+		{
+			WalkMove();
+		}
+		else
+		{
+			AirMove();  // Take into account movement when in air.
+		}
+
+		// Set final flags.
+		CategorizePosition();
+
+		// Make sure velocity is valid.
+		CheckVelocity();
+
+		// Add any remaining gravitational component.
+		if ( !CheckWater() )
+		{
+			FinishGravity();
+		}
+
+		// If we are on ground, no downward velocity.
+		if ( player->GetGroundEntity() != NULL )
+		{
+			mv->m_vecVelocity[2] = 0;
+		}
+		CheckFalling();
 	}
 
 	if  ( ( m_nOldWaterLevel == WL_NotInWater && player->GetWaterLevel() != WL_NotInWater ) ||
@@ -1708,19 +1637,21 @@ void CSDKGameMovement::FinishUnSlide( void )
 	m_pSDKPlayer->m_Shared.m_flUnSlideTime = 0.0f;
 	
 	SetUnSlideEyeOffset( 1.0 );
-	m_pSDKPlayer->m_Shared.EndSlide();
 
-	if ( m_pSDKPlayer->m_Shared.MustDuckFromSlide() )
+	if (CanUnduck())
+		m_pSDKPlayer->m_Shared.EndSlide();
+	else if (CanUnprone())
 	{
-		if( CanUnprone() )
-			FinishDuck();
-		else
-		{			
-			m_pSDKPlayer->m_Shared.SetProne(true, true);
-			SetProneEyeOffset( 1.0 );
-		}
+		m_pSDKPlayer->m_Shared.EndSlide();
+		FinishDuck();
 	}
-	
+	else
+	{
+		m_pSDKPlayer->m_Shared.SetProne(true, true);
+		m_pSDKPlayer->m_Shared.EndSlide();
+		SetProneEyeOffset( 1.0 );
+	}
+
 	CategorizePosition();
 }
 
@@ -1757,13 +1688,7 @@ void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
 void CSDKGameMovement::SetUnSlideEyeOffset( float flFraction )
 {
 	Vector vecStartViewOffset = m_pSDKPlayer->m_Shared.m_vecUnSlideEyeStartOffset;
-	Vector vecEndViewOffset;
-
-	// transition to prone view if we have to
-	if( CanUnprone() )
-		 vecEndViewOffset = GetPlayerViewOffset( m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide );
-	else
-		vecEndViewOffset = VEC_PRONE_VIEW;
+	Vector vecEndViewOffset = GetPlayerViewOffset( false );
 
 	Vector temp = player->GetViewOffset();
 
@@ -1943,6 +1868,7 @@ void CSDKGameMovement::Duck( void )
 			// Calc parametric time
 			float fraction = slidetime / TIME_TO_UNSLIDE;
 			SetUnSlideEyeOffset( 1-fraction );
+
 		}
 
 		//don't deal with ducking while we're sliding
@@ -1957,9 +1883,6 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
-			if(!CanUnduck())
-				m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
-			
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 			SetUnSlideEyeOffset( 0.0 );
 		}
@@ -2118,10 +2041,7 @@ void CSDKGameMovement::Duck( void )
 				{
 					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
 					m_pSDKPlayer->m_bUnProneToDuck = true;
-
-					//prepare for duck transition
-					player->AddFlag( FL_DUCKING );
-					player->m_Local.m_bDucked = true;
+					FinishDuck();
 				}
 				else
 				{
@@ -2234,43 +2154,20 @@ void CSDKGameMovement::Duck( void )
 			if ( m_pSDKPlayer->m_bUnProneToDuck )
 			{
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
-
-				//prepare for duck transition
-				player->AddFlag( FL_DUCKING );
-				player->m_Local.m_bDucked = true;				
+				FinishDuck();
 			}
 			else
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_STAND );
 
 			return;
 		}
-		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() )
+		else if (bGetUp && m_pSDKPlayer->m_Shared.IsSliding() && CanUnprone())
 		{
-			bool bStandingRoom = CanUnduck();
-			bool bCanJumpUp = ( bStandingRoom && !m_pSDKPlayer->m_Shared.IsDiveSliding() );
-			
-			//if there's standing room and we're doing a standard slide we can chain into a jump
-			if ( (mv->m_nButtons & IN_JUMP) > 0 )
-			{
-				//otherwise eat the jump input
-				if ( !bCanJumpUp )
-					mv->m_nOldButtons |= IN_JUMP;
-			}
-			else
-				//if we aren't attempting to jump stand up normally
-				bCanJumpUp = false;
+			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 
-			if ( CanUnprone() )
-			{
-				if ( !bStandingRoom )
-					m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
+			SetUnSlideEyeOffset( 0.0 );
 
-				m_pSDKPlayer->m_Shared.StandUpFromSlide( bCanJumpUp );
-
-				SetUnSlideEyeOffset( 0.0 );
-
-				return;
-			}
+			return;
 		}
 		else if( bRoll && m_pSDKPlayer->m_Shared.CanRoll() )
 		{

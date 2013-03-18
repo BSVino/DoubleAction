@@ -365,12 +365,9 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 
-	m_Shared.superjump = 0;
-	m_Shared.numjumps = 0;
-	m_Shared.nextjump = 0;
-	m_Shared.lasttap = -1;
-	m_Shared.ismantelling = false;
-	m_Shared.iswallrunning = false;
+	m_Shared.acrostate = 0;
+	m_Shared.acrotime = 0;
+
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
 #if defined ( SDK_USE_PRONE )
 //	m_bPlayingProneMoveSound = false;
@@ -912,9 +909,6 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_flDiveTime = m_pOuter->GetCurrentTime();
 	m_flDiveLerped = 0;
-
-	/*Dives cancel superjump*/
-	this->superjump = 0;
 
 	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 

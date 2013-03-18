@@ -19,6 +19,15 @@ class C_SDKPlayer;
 class CSDKPlayer;
 #endif
 
+enum
+{/*The acrobatic states*/
+	ACRO_SUPERJUMP = 0,
+	ACRO_WALLCLIMB,
+	ACRO_WALLSTUNT,
+	ACRO_WALLRUN,
+	ACRO_DIVE, /*Just incase we want to work in the stunt code here*/
+	ACRO_NONE
+};
 class CSDKPlayerShared
 {
 public:
@@ -181,14 +190,11 @@ private:
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
-public:
-	/*JK My stuff here*/
-	CNetworkVar (float, nextjump);
-	CNetworkVar (int, numjumps);
-	CNetworkVar (float, superjump);
-	CNetworkVar (float, lasttap);
-	CNetworkVar (bool, ismantelling);
-	CNetworkVar (bool, iswallrunning);
+public: /*Acrobatics*/
+	CNetworkVar (int, acrostate);
+	CNetworkVar (float, acrotime);
+	CNetworkVar (float, maxsjz);
+	CNetworkVar (float, startz);
 public:
 
 #ifdef SDK_USE_PRONE
