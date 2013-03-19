@@ -953,8 +953,6 @@ void CSDKPlayer::Spawn()
 
 	m_flStyleSkillCharge = 0;
 
-	m_flCurrentTime = gpGlobals->curtime;
-
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
 	m_flSlowMoSeconds = 0;
