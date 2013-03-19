@@ -968,6 +968,8 @@ void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
 			pPlayer->SetModel( SDK_PLAYER_MODEL );
 		}
 #else
+		//need hard sync here or baseclass weapon behavior causes problems
+		pPlayer->m_flCurrentTime = gpGlobals->curtime;
 		pPlayer->GiveDefaultItems();
 #endif // SDK_USE_PLAYERCLASSES
 		pPlayer->SetMaxSpeed( 600 );
