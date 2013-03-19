@@ -201,6 +201,9 @@ void CDABot::Upkeep( void )
 	UpdateLookAngles();
 }
 
+ConVar bot_always_dive( "bot_always_dive", "0", FCVAR_CHEAT );
+ConVar bot_always_slowmo( "bot_always_slowmo", "0", FCVAR_CHEAT );
+
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Heavyweight processing, invoked less often
@@ -660,6 +663,12 @@ void CDABot::Update( void )
 
 	// remember our prior safe time status
 	m_wasSafe = IsSafe();
+
+	if (bot_always_dive.GetBool() && m_Shared.CanDive() && GetAbsVelocity().Length2DSqr() > 50*50)
+		Alt1();
+
+	if (bot_always_slowmo.GetBool())
+		ActivateSlowMo();
 }
 
 
