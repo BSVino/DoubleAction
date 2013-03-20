@@ -750,7 +750,11 @@ void CSDKPlayerShared::EndSlide()
 	}
 
 	m_bSliding = false;
-	m_bDiveSliding = false;;
+	m_bDiveSliding = false;
+		
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
 
 	m_pOuter->ReadyWeapon();
 }
@@ -765,10 +769,6 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 		else
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
-
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
 	
 	// if we're going into a jump: block unwanted slide behavior
 	if (bJumpUp)
@@ -1361,7 +1361,7 @@ Vector CSDKPlayer::EyePosition()
 		bIsInThird = false;
 #endif
 
-	if (m_Shared.m_flViewBobRamp && !bIsInThird)
+	if (m_Shared.m_flViewBobRamp && m_Shared.m_flRunSpeed && !bIsInThird)
 	{
 		Vector vecRight, vecUp;
 		AngleVectors(EyeAngles(), NULL, &vecRight, &vecUp);

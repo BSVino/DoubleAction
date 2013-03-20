@@ -1467,16 +1467,22 @@ void CSDKGameMovement::Duck( void )
 		{
 			m_pSDKPlayer->m_Shared.EndSlide();
 			SetSlideEyeOffset( 0.0 );
+
+			// check prone here since we have to stop all slide behavior
+			if(!CanUnprone())
+			{
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset( 1.0 );
+			}
+			
 		}
 		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
-			if( CanUnprone() )
-			{
-				if(!CanUnduck())
-					m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
-			}
-			else
-				// indicate transition to prone
+			if(!CanUnduck())
+				m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
+			
+			// if there's no room to crouch indicate transition to prone
+			if( !CanUnprone() )
 				m_pSDKPlayer->m_Shared.m_flGoProneTime = m_pSDKPlayer->GetCurrentTime();
 			
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
@@ -1498,6 +1504,17 @@ void CSDKGameMovement::Duck( void )
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
+			
+			if (!CanUnduck())
+			{
+				if(CanUnprone())
+					FinishDuck();
+				else
+				{
+					m_pSDKPlayer->m_Shared.SetProne(true, true);
+					SetProneEyeOffset( 1.0 );
+				}
+			}
 		}
 		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
 		{
