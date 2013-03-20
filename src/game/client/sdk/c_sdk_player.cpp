@@ -141,6 +141,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
 	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
+	//RecvPropInt (RECVINFO (acrostate)),
+	//RecvPropFloat (RECVINFO (acrotime)),
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
@@ -247,6 +249,8 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD (acrostate, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	//DEFINE_PRED_FIELD (acrotime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )

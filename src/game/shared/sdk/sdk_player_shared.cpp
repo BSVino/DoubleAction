@@ -365,7 +365,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 
-	m_Shared.acrostate = 0;
+	m_Shared.acrostate = ACRO_NONE;
 	m_Shared.acrotime = 0;
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
@@ -573,6 +573,8 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+	acrostate = ACRO_NONE;
+	acrotime = 0;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
