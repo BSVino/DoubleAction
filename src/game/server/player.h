@@ -156,7 +156,11 @@ enum
 	VPHYS_CROUCH,
 	VPHYS_SLIDE,
 	VPHYS_DIVE,
+<<<<<<< HEAD
 	VPHYS_NOCLIP,
+=======
+	VPHYS_NOCLIP
+>>>>>>> master
 };
 
 
@@ -914,6 +918,8 @@ protected: //used to be private, but need access for portal mod (Dave Kircher)
 	IPhysicsPlayerController	*m_pPhysicsController;
 	IPhysicsObject				*m_pShadowStand;
 	IPhysicsObject				*m_pShadowCrouch;
+	IPhysicsObject				*shadow_slide;
+	IPhysicsObject				*shadow_dive;
 	Vector						m_oldOrigin;
 	Vector						m_vecSmoothedVelocity;
 	bool						m_touchedPhysObject;

@@ -104,6 +104,9 @@
     <CustomBuildStep>
       <Command>if exists "$(TargetDir)"tier1.lib copy "$(TargetDir)"tier1.lib "$(TargetDir)..\..\lib\public"</Command>
     </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>copy $(TARGETPATH) $(SOLUTIONDIR)\lib\public</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
@@ -162,6 +165,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)tier1.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>copy $(TARGETPATH) $(SOLUTIONDIR)\lib\public</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bitbuf.cpp" />

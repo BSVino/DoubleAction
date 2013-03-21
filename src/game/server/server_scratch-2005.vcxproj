@@ -60,10 +60,17 @@
     <CustomBuildStep>
       <Message>
       </Message>
+<<<<<<< HEAD
       <Command>if exist $(SourceSDK)\..\..\SourceMods\dab\bin\server.dll attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll"
 if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..\..\SourceMods\dab\bin"
 </Command>
       <Outputs>%SourceSDK%\..\..\SourceMods\dab\bin\server.dll</Outputs>
+=======
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+>>>>>>> master
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
@@ -127,8 +134,7 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..
       <OutputFile>$(OutDir)Server.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(OutDir)"Server.dll "E:\games\steam\steamapps\SourceMods\dab\bin\Server.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,13 +143,12 @@ if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>Copying to %SourceSDK%\..\..\SourceMods\dab\bin\</Message>
-      <Command>if exist "%SourceSDK%\..\..\SourceMods\dab\bin\server.dll" attrib -r "%SourceSDK%\..\..\SourceMods\dab\bin\server.dll"
-if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "%SourceSDK%\..\..\SourceMods\dab\bin\server.dll"
-if exist "%SourceSDK%\..\..\SourceMods\dab\bin\server.pdb" attrib -r "%SourceSDK%\..\..\SourceMods\dab\bin\server.pdb"
-if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\..\SourceMods\dab\bin"
-</Command>
-      <Outputs>%SourceSDK%\..\..\SourceMods\dab\bin\server.dll;%SourceSDK%\..\..\SourceMods\dab\bin\server.pdb;%(Outputs)</Outputs>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
@@ -210,8 +215,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
       <OutputFile>$(OutDir)Server.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(OutDir)"Server.dll "E:\games\steam\steamapps\SourceMods\dab\bin\Server.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -1377,6 +1381,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <Library Include="..\..\lib\public\particles.lib" />
     <Library Include="..\..\lib\public\steam_api.lib" />
     <Library Include="..\..\lib\public\tier0.lib" />
+    <Library Include="..\..\lib\public\tier1.lib" />
     <Library Include="..\..\lib\public\tier2.lib" />
     <Library Include="..\..\lib\public\tier3.lib" />
     <Library Include="..\..\lib\public\vstdlib.lib" />

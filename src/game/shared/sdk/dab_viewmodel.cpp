@@ -107,8 +107,12 @@ void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QA
 		float flWalkRightBob = sin(pOwner->GetCurrentTime() * flWalkPeriod) * flViewBobMagnitude;
 
 		// 0 is walk, 1 is run.
-		float flRunRamp = RemapValClamped(pOwner->m_Shared.GetViewBobRamp(), pOwner->m_Shared.GetAimInSpeed()/pOwner->m_Shared.GetRunSpeed(), 1.0f, 0.0f, 1.0f);
-
+		float flRunRamp;
+		if (pOwner->m_Shared.GetRunSpeed() > 1e-4)
+		{
+			flRunRamp = RemapValClamped(pOwner->m_Shared.GetViewBobRamp(), pOwner->m_Shared.GetAimInSpeed()/pOwner->m_Shared.GetRunSpeed(), 1.0f, 0.0f, 1.0f);
+		}
+		else flRunRamp = 0;
 		float flRightBob = RemapValClamped(flRunRamp, 0, 1, flWalkRightBob, flRunRightBob);
 		float flUpBob = RemapValClamped(flRunRamp, 0, 1, flWalkUpBob, flRunUpBob);
 

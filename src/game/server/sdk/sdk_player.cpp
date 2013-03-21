@@ -1192,7 +1192,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 
 	m_vecTotalBulletForce += info.GetDamageForce();
-
+	
 	float flArmorBonus = 0.5f;
 	float flArmorRatio = 0.5f;
 	float flDamage = info.GetDamage();
@@ -1904,6 +1904,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
+		Msg ("%f %f %f\n", m_vecTotalBulletForce[0], m_vecTotalBulletForce[1], m_vecTotalBulletForce[2]);
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -1986,6 +1987,7 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 
 void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
 {
+	return;
 	if (gpGlobals->eLoadType == MapLoad_Background)
 		return;
 
@@ -3259,7 +3261,7 @@ bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
 		{
 			char szCharacter[100];
-			Q_strcpy(szCharacter, pszCharacter+14);
+			Q_strcpy (szCharacter, pszCharacter+14);
 			szCharacter[strlen(szCharacter)-4] = '\0';
 			m_iszCharacter = AllocPooledString(szCharacter);
 			return true;
