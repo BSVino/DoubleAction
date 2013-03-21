@@ -21,6 +21,9 @@
 #include "in_buttons.h"
 #include "vprof.h"
 
+#include "vcollide_parse.h"
+#include "vphysics/player_controller.h"
+#include "igamemovement.h"
 #include "da_ammo_pickup.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1189,7 +1192,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 
 	m_vecTotalBulletForce += info.GetDamageForce();
-
+	
 	float flArmorBonus = 0.5f;
 	float flArmorRatio = 0.5f;
 	float flDamage = info.GetDamage();
@@ -1901,6 +1904,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
+		Msg ("%f %f %f\n", m_vecTotalBulletForce[0], m_vecTotalBulletForce[1], m_vecTotalBulletForce[2]);
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -1983,6 +1987,7 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 
 void CSDKPlayer::Instructor_LessonLearned(const char* pszLesson)
 {
+	return;
 	if (gpGlobals->eLoadType == MapLoad_Background)
 		return;
 
@@ -3256,7 +3261,7 @@ bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 		if (FStrEq(pszCharacter, pszPossiblePlayerModels[i]))
 		{
 			char szCharacter[100];
-			Q_strcpy(szCharacter, pszCharacter+14);
+			Q_strcpy (szCharacter, pszCharacter+14);
 			szCharacter[strlen(szCharacter)-4] = '\0';
 			m_iszCharacter = AllocPooledString(szCharacter);
 			return true;
@@ -3271,6 +3276,182 @@ bool CSDKPlayer::SetCharacter(const char* pszCharacter)
 
 	return false;
 }
+extern CMoveData *g_pMoveData;
+extern ConVar sv_maxspeed;
+void CSDKPlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState )
+{
+	IPhysicsObject *hulls[] =
+	{/*TODO: Just put these all into a member table?*/
+		m_pShadowStand,
+		m_pShadowCrouch,
+		shadow_slide,
+		shadow_dive
+	};
+	static const char *hs[] =
+	{
+		"Stand",
+		"Crouch",
+		"Slide",
+		"Dive",
+		"Noclip"
+	};
+	Assert (collisionState <= VPHYS_NOCLIP);
+	if (collisionState != VPHYS_NOCLIP)
+	{
+		
+		IPhysicsObject *o = hulls[collisionState];
+		if (m_vphysicsCollisionState != VPHYS_NOCLIP)
+		{
+			hulls[m_vphysicsCollisionState]->EnableCollisions (false);
+		}
+		o->SetPosition (vecAbsOrigin, vec3_angle, true);
+		o->SetVelocity (&vecAbsVelocity, NULL);
+		o->EnableCollisions (true);
+		m_pPhysicsController->SetObject (o);
+		VPhysicsSwapObject (o);
+		Msg ("%s -> %s\n", hs[m_vphysicsCollisionState], hs[collisionState]);
+	}
+	else
+	{
+		int i;
+		for (i = 0; i < VPHYS_NOCLIP; i++)
+		{
+			hulls[i]->EnableCollisions (false);
+		}
+	}
+	m_vphysicsCollisionState = collisionState;
+}
+void CSDKPlayer::PostThinkVPhysics (void)
+{
+	// Check to see if things are initialized!
+	if ( !m_pPhysicsController )
+		return;
+
+	Vector newPosition = GetAbsOrigin();
+	float frametime = gpGlobals->frametime;
+	if ( frametime <= 0 || frametime > 0.1f )
+		frametime = 0.1f;
+
+	IPhysicsObject *pPhysGround = GetGroundVPhysics();
+	if ( !pPhysGround && m_touchedPhysObject && g_pMoveData->m_outStepHeight <= 0.f && (GetFlags() & FL_ONGROUND) )
+	{
+		newPosition = m_oldOrigin + frametime * g_pMoveData->m_outWishVel;
+		newPosition = (GetAbsOrigin() * 0.5f) + (newPosition * 0.5f);
+	}
+
+	int collisionState = VPHYS_WALK;
+	if (GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER)
+	{
+		collisionState = VPHYS_NOCLIP;
+	}
+	else if (m_Shared.IsSliding () || m_Shared.IsDiveSliding () || m_Shared.IsProne ())
+	{
+		collisionState = VPHYS_SLIDE;
+	}
+	else if (m_Shared.IsDiving ())
+	{
+		collisionState = VPHYS_DIVE;
+	}
+	else if ((GetFlags()&FL_DUCKING))
+	{
+		collisionState = VPHYS_CROUCH;
+	}
+
+	if ( collisionState != m_vphysicsCollisionState )
+	{
+		SetVCollisionState( GetAbsOrigin(), GetAbsVelocity(), collisionState );
+	}
+
+	if ( !(TouchedPhysics() || pPhysGround) )
+	{
+		float maxSpeed = m_Shared.m_flRunSpeed > 0.0f ? m_Shared.m_flRunSpeed : sv_maxspeed.GetFloat();
+		g_pMoveData->m_outWishVel.Init( maxSpeed, maxSpeed, maxSpeed );
+	}
+
+	// teleport the physics object up by stepheight (game code does this - reflect in the physics)
+	if ( g_pMoveData->m_outStepHeight > 0.1f )
+	{
+		if ( g_pMoveData->m_outStepHeight > 4.0f )
+		{
+			VPhysicsGetObject()->SetPosition( GetAbsOrigin(), vec3_angle, true );
+		}
+		else
+		{
+			// don't ever teleport into solid
+			Vector position, end;
+			VPhysicsGetObject()->GetPosition( &position, NULL );
+			end = position;
+			end.z += g_pMoveData->m_outStepHeight;
+			trace_t trace;
+			UTIL_TraceEntity( this, position, end, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+			if ( trace.DidHit() )
+			{
+				g_pMoveData->m_outStepHeight = trace.endpos.z - position.z;
+			}
+			m_pPhysicsController->StepUp( g_pMoveData->m_outStepHeight );
+		}
+		m_pPhysicsController->Jump();
+	}
+	g_pMoveData->m_outStepHeight = 0.0f;
+	
+	// Store these off because after running the usercmds, it'll pass them
+	// to UpdateVPhysicsPosition.	
+	m_vNewVPhysicsPosition = newPosition;
+	m_vNewVPhysicsVelocity = g_pMoveData->m_outWishVel;
+
+	m_oldOrigin = GetAbsOrigin();
+}
+void CSDKPlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName )
+{
+	solid_t solid;
+	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
+	solid.params = g_PhysDefaultObjectParams;
+	solid.params.mass = 85.0f;
+	solid.params.inertia = 1e24f;
+	solid.params.enableCollisions = false;
+	solid.params.dragCoefficient = 0;
+
+	// create standing hull
+	m_pShadowStand = PhysModelCreateCustom( this, pStandModel, GetLocalOrigin(), GetLocalAngles(), pStandHullName, false, &solid );
+	m_pShadowStand->SetCallbackFlags( CALLBACK_GLOBAL_COLLISION | CALLBACK_SHADOW_COLLISION );
+	// create crouchig hull
+	m_pShadowCrouch = PhysModelCreateCustom( this, pCrouchModel, GetLocalOrigin(), GetLocalAngles(), pCrouchHullName, false, &solid );
+	m_pShadowCrouch->SetCallbackFlags( CALLBACK_GLOBAL_COLLISION | CALLBACK_SHADOW_COLLISION );
+#if 1
+	CPhysCollide *box;
+	box = PhysCreateBbox (VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX);
+	shadow_slide = PhysModelCreateCustom (this, box, GetLocalOrigin(), GetLocalAngles(), "player_slide", false, &solid);
+	shadow_slide->SetCallbackFlags (CALLBACK_GLOBAL_COLLISION|CALLBACK_SHADOW_COLLISION);
+
+	box = PhysCreateBbox (VEC_DIVE_HULL_MIN, VEC_DIVE_HULL_MAX);
+	shadow_dive = PhysModelCreateCustom (this, box, GetLocalOrigin(), GetLocalAngles(), "player_dive", false, &solid);
+	shadow_dive->SetCallbackFlags (CALLBACK_GLOBAL_COLLISION|CALLBACK_SHADOW_COLLISION);
+#endif
+	// default to stand
+	VPhysicsSetObject( m_pShadowStand );
+
+	// tell physics lists I'm a shadow controller object
+	PhysAddShadow( this );	
+	m_pPhysicsController = physenv->CreatePlayerController( m_pShadowStand );
+	m_pPhysicsController->SetPushMassLimit( 350.0f );
+	m_pPhysicsController->SetPushSpeedLimit( 50.0f );
+	
+	// Give the controller a valid position so it doesn't do anything rash.
+	UpdatePhysicsShadowToPosition( vecAbsOrigin );
+
+	// init state
+	if ( GetFlags() & FL_DUCKING )
+	{
+		SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_CROUCH );
+	}
+	else
+	{
+		SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_WALK );
+	}
+}
+
+
+
 
 void CC_ActivateSlowmo_f (void)
 {

@@ -1,0 +1,560 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4fe4e305-7a9f-4e36-bb6a-296b3f6c07e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common Files">
+      <UniqueIdentifier>{cededbf7-b23f-4336-8150-1a3729a22a9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Public Files">
+      <UniqueIdentifier>{96f10ade-2bca-4e89-ade4-07ccd9944299}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Link Libraries">
+      <UniqueIdentifier>{01eba286-70fe-4080-bfb6-0bc8f6e81b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{30aca576-f764-4779-977f-4288e2f4f9cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common Header Files">
+      <UniqueIdentifier>{8273e37c-3828-4adb-97ba-4631a84efc4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Public Header Files">
+      <UniqueIdentifier>{4b5b34a6-0806-498b-bcee-9dcf1c2c65e3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\public\bsptreedata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\disp_common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\disp_powerinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="disp_vrad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imagepacker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="incremental.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="leaf_ambient_lighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lightmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\loadcmdline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\lumpfiles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="macro_texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\tier0\memoverride.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\mpi_stats.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mpivrad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\MySqlDatabase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\pacifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\physdll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="radial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="samplehash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="trace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\utilmatlib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vismat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\vmpi_tools_shared.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vrad_dispcoll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vraddetailprops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vraddisps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vraddll.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vradstaticprops.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\zip_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\bsplib.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\builddisp.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\chunkfile.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\cmdlib.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\dispcoll_common.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\map_shared.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\polylib.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\scriplib.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\threads.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\tools_minidump.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\collisionutils.cpp">
+      <Filter>Source Files\Public Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\filesystem_helpers.cpp">
+      <Filter>Source Files\Public Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\scratchpad3d.cpp">
+      <Filter>Source Files\Public Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\public\ScratchPadUtils.cpp">
+      <Filter>Source Files\Public Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\common\vmpi_tools_shared.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\tools_minidump.h">
+      <Filter>Source Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disp_vrad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iincremental.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imagepacker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="incremental.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="leaf_ambient_lighting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lightmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="macro_texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\map_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mpivrad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="radial.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tgawriter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vismat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vrad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vrad_dispcoll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vraddetailprops.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vraddll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\bsplib.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\cmdlib.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\consolewnd.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\ichannel.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\imysqlwrapper.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\iphelpers.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\ISQLDBReplyTarget.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\map_shared.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\messbuf.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\mpi_stats.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\mysql_wrapper.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\MySqlDatabase.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\pacifier.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\polylib.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\scriplib.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\threadhelpers.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\threads.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\utilmatlib.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\vmpi_defs.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\vmpi_dispatch.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\vmpi_distribute_work.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\vmpi_filesystem.h">
+      <Filter>Header Files\Common Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\amd3dx.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\anorms.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\basehandle.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\basetypes.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\bitbuf.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\bitvec.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\bspfile.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\bspflags.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\bsptreedata.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\builddisp.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\bumpvects.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\byteswap.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\characterset.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\checksum_crc.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\checksum_md5.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\chunkfile.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\cmodel.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\collisionutils.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\commonmacros.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\compressed_vector.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\const.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\coordsize.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\dbg.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\disp_common.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\disp_powerinfo.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\disp_vertindex.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\dispcoll_common.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\fasttimer.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\filesystem.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\filesystem_helpers.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\gamebspfile.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\gametrace.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\halton.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\materialsystem\hardwareverts.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\appframework\IAppSystem.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vstdlib\ICommandLine.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\ihandleentity.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\materialsystem\imaterial.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\materialsystem\imaterialsystem.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\materialsystem\imaterialvar.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\interface.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\iscratchpad3d.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\ivraddll.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\materialsystem\materialsystem_config.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\mathlib.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\memdbgon.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\optimize.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\phyfile.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\physdll.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\platform.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\protected_things.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vstdlib\random.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\s3_intrf.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\scratchpad3d.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\ScratchPadUtils.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\string_t.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vstdlib\strtools.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\studio.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\terrainmod.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\tokenreader.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\trace.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlbuffer.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utldict.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlhash.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utllinkedlist.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlmemory.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlrbtree.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlsymbol.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier1\utlvector.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vcollide.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\vector.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\vector2d.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\vector4d.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\vmatrix.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vmpi\vmpi.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vphysics_interface.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\mathlib\vplane.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\tier0\vprof.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vstdlib\vstdlib.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\vtf\vtf.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\wadtypes.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\public\worldsize.h">
+      <Filter>Header Files\Public Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\..\lib\public\bitmap.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\mathlib.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\raytrace.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\tier0.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\tier1.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\tier2.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\vmpi.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\vstdlib.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\lib\public\vtf.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="notes.txt" />
+  </ItemGroup>
+</Project>

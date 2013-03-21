@@ -19,6 +19,15 @@ class C_SDKPlayer;
 class CSDKPlayer;
 #endif
 
+enum
+{/*The acrobatic states*/
+	ACRO_SUPERJUMP = 0,	/*Launch into the air and hang there for a time*/
+	ACRO_WALLCLIMB,		/*Climb up and over vertical surfaces*/
+	ACRO_WALLRUN,		/*Run laterally along a vertical surface*/
+	ACRO_DIVE,			/*Dive across the map (TODO: migrate dive code here)*/
+	ACRO_NONE,			/*Regular movement state*/
+	MAX_ACRO
+};
 class CSDKPlayerShared
 {
 public:
@@ -83,7 +92,10 @@ public:
 	void	SetDuckPress(bool bReset = false);
 	float	GetLastDuckPress() const { return m_flLastDuckPress; };
 	bool	IsRolling() const;
+
+	/*This is not used?*/
 	bool	IsRollingFromDive() const { return m_bRollingFromDive; };
+	
 	bool	CanRoll() const;
 	void	StartRolling(bool bFromDive = false);
 	void	EndRoll();
@@ -181,6 +193,12 @@ private:
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
+public: /*Acrobatics*/
+	//CNetworkVar (int, acrostate);
+	//CNetworkVar (float, acrotime);
+
+	int acrostate;
+	float acrotime;
 public:
 
 #ifdef SDK_USE_PRONE

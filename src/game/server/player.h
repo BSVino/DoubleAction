@@ -154,7 +154,9 @@ enum
 {
 	VPHYS_WALK = 0,
 	VPHYS_CROUCH,
-	VPHYS_NOCLIP,
+	VPHYS_SLIDE,
+	VPHYS_DIVE,
+	VPHYS_NOCLIP
 };
 
 
@@ -595,7 +597,7 @@ public:
 
 public:
 	// Player Physics Shadow
-	void					SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
+	virtual void			SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
 	IPhysicsPlayerController* GetPhysicsController() { return m_pPhysicsController; }
 	virtual void			VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 	void					VPhysicsUpdate( IPhysicsObject *pPhysics );
@@ -611,8 +613,8 @@ public:
 
 	virtual void			InitVCollision( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity );
 	virtual void			VPhysicsDestroyObject();
-	void					SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState );
-	void					PostThinkVPhysics( void );
+	virtual void			SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState );
+	virtual void			PostThinkVPhysics( void );
 	virtual void			UpdatePhysicsShadowToCurrentPosition();
 	void					UpdatePhysicsShadowToPosition( const Vector &vecAbsOrigin );
 	void					UpdateVPhysicsPosition( const Vector &position, const Vector &velocity, float secondsToArrival );
@@ -912,6 +914,8 @@ protected: //used to be private, but need access for portal mod (Dave Kircher)
 	IPhysicsPlayerController	*m_pPhysicsController;
 	IPhysicsObject				*m_pShadowStand;
 	IPhysicsObject				*m_pShadowCrouch;
+	IPhysicsObject				*shadow_slide;
+	IPhysicsObject				*shadow_dive;
 	Vector						m_oldOrigin;
 	Vector						m_vecSmoothedVelocity;
 	bool						m_touchedPhysObject;

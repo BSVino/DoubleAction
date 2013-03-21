@@ -365,7 +365,8 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 
-	//Tony; todo; fix
+	m_Shared.acrostate = ACRO_NONE;
+	m_Shared.acrotime = 0;
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
 #if defined ( SDK_USE_PRONE )
@@ -572,6 +573,8 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+	acrostate = ACRO_NONE;
+	acrotime = 0;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -866,7 +869,6 @@ bool CSDKPlayerShared::IsDiving() const
 {
 	return m_bDiving && m_pOuter->IsAlive();
 }
-
 bool CSDKPlayerShared::CanDive() const
 {
 	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
@@ -937,6 +939,7 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->Instructor_LessonLearned("dive");
 
+	Assert (m_pOuter->m_Shared.m_flRunSpeed);
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
@@ -957,7 +960,11 @@ Vector CSDKPlayerShared::StartDiving()
 	flRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
 	flModifier = (flRatio - 1)/2;
 
-	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
+	float height = flDiveHeight;
+	float pitch = m_pOuter->EyeAngles ().x;
+	if (pitch <= -10) height *= 1.5;
+	else if (pitch >= 10) height *= 0.5;
+	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, height);
 }
 
 void CSDKPlayerShared::EndDive()
@@ -1374,7 +1381,13 @@ Vector CSDKPlayer::EyePosition()
 
 #ifdef CLIENT_DLL
 		// It's not filled in for remote clients, so force the local one since it's the same.
-		float flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+		float flSpeedRatio;
+		if (C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed > 1e-4)
+		{
+			flSpeedRatio = C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flAimInSpeed/C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_flRunSpeed;
+		}
+		else flSpeedRatio = 0;
+			
 #else
 		float flSpeedRatio = m_Shared.m_flAimInSpeed/m_Shared.m_flRunSpeed;
 #endif

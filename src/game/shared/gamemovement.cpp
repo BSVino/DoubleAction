@@ -2352,7 +2352,6 @@ bool CGameMovement::CheckJumpButton( void )
 		mv->m_nOldButtons |= IN_JUMP ;	// don't jump again until released
 		return false;
 	}
-
 	// See if we are waterjumping.  If so, decrement count and return.
 	if (player->m_flWaterJumpTime)
 	{
@@ -2383,6 +2382,24 @@ bool CGameMovement::CheckJumpButton( void )
 		}
 
 		return false;
+	}
+
+	/*Moved this up here for wall jump*/
+	float flMul;
+	if ( g_bMovementOptimizations )
+	{
+#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
+		Assert( sv_gravity.GetFloat() == 600.0f );
+		flMul = 160.0f;	// approx. 21 units.
+#else
+		Assert( sv_gravity.GetFloat() == 800.0f );
+		flMul = 268.3281572999747f;
+#endif
+
+	}
+	else
+	{
+		flMul = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
 	}
 
 	// No more effect
@@ -2421,23 +2438,6 @@ bool CGameMovement::CheckJumpButton( void )
 	if (player->m_pSurfaceData)
 	{
 		flGroundFactor = player->m_pSurfaceData->game.jumpFactor; 
-	}
-
-	float flMul;
-	if ( g_bMovementOptimizations )
-	{
-#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
-		Assert( sv_gravity.GetFloat() == 600.0f );
-		flMul = 160.0f;	// approx. 21 units.
-#else
-		Assert( sv_gravity.GetFloat() == 800.0f );
-		flMul = 268.3281572999747f;
-#endif
-
-	}
-	else
-	{
-		flMul = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
 	}
 
 	// Acclerate upward

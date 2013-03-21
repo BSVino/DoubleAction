@@ -67,6 +67,10 @@
 #include "gameinterface.h"
 #include "hl2orange.spa.h"
 
+/*Added for new hulls*/
+#include "sdk_gamerules.h"
+#include "sdk_shareddefs.h"
+
 #ifdef HL2_DLL
 #include "combine_mine.h"
 #include "weapon_physcannon.h"
@@ -4505,7 +4509,6 @@ void CBasePlayer::PostThinkVPhysics( void )
 		frametime = 0.1f;
 
 	IPhysicsObject *pPhysGround = GetGroundVPhysics();
-
 	if ( !pPhysGround && m_touchedPhysObject && g_pMoveData->m_outStepHeight <= 0.f && (GetFlags() & FL_ONGROUND) )
 	{
 		newPosition = m_oldOrigin + frametime * g_pMoveData->m_outWishVel;
@@ -4578,7 +4581,6 @@ void CBasePlayer::UpdateVPhysicsPosition( const Vector &position, const Vector &
 	{
 		pPhysGround = NULL;
 	}
-
 	m_pPhysicsController->Update( position, velocity, secondsToArrival, onground, pPhysGround );
 }
 
@@ -7813,6 +7815,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName )
 {
 	solid_t solid;
+	/*Any changes here must be reflected in CSDKPlayer::InitVCollision*/
 	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
 	solid.params = g_PhysDefaultObjectParams;
 	solid.params.mass = 85.0f;
@@ -7820,13 +7823,24 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	solid.params.enableCollisions = false;
 	//disable drag
 	solid.params.dragCoefficient = 0;
+
 	// create standing hull
 	m_pShadowStand = PhysModelCreateCustom( this, pStandModel, GetLocalOrigin(), GetLocalAngles(), pStandHullName, false, &solid );
 	m_pShadowStand->SetCallbackFlags( CALLBACK_GLOBAL_COLLISION | CALLBACK_SHADOW_COLLISION );
-
 	// create crouchig hull
 	m_pShadowCrouch = PhysModelCreateCustom( this, pCrouchModel, GetLocalOrigin(), GetLocalAngles(), pCrouchHullName, false, &solid );
 	m_pShadowCrouch->SetCallbackFlags( CALLBACK_GLOBAL_COLLISION | CALLBACK_SHADOW_COLLISION );
+
+	/*Double action hulls.
+	NOTE: If this gets called anywhere else than InitVCollision, 
+	then memory will leak. Create the boxes in InitVCollision in that case.*/
+	CPhysCollide *slidebox = PhysCreateBbox (VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX);
+	shadow_slide = PhysModelCreateCustom (this, slidebox, GetLocalOrigin(), GetLocalAngles(), "player_slide", false, &solid);
+	shadow_slide->SetCallbackFlags (CALLBACK_GLOBAL_COLLISION|CALLBACK_SHADOW_COLLISION);
+
+	CPhysCollide *divebox = PhysCreateBbox (VEC_DIVE_HULL_MIN, VEC_DIVE_HULL_MAX);
+	shadow_dive = PhysModelCreateCustom (this, divebox, GetLocalOrigin(), GetLocalAngles(), "player_dive", false, &solid);
+	shadow_dive->SetCallbackFlags (CALLBACK_GLOBAL_COLLISION|CALLBACK_SHADOW_COLLISION);
 
 	// default to stand
 	VPhysicsSetObject( m_pShadowStand );
@@ -8100,7 +8114,6 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 	
 	CPhysCollide *pModel = PhysCreateBbox( VEC_HULL_MIN, VEC_HULL_MAX );
 	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
-
 	SetupVPhysicsShadow( vecAbsOrigin, vecAbsVelocity, pModel, "player_stand", pCrouchModel, "player_crouch" );
 }
 
@@ -8142,18 +8155,60 @@ void CBasePlayer::VPhysicsDestroyObject()
 //-----------------------------------------------------------------------------
 void CBasePlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState )
 {
+#if 1
+	IPhysicsObject *tbl[] =
+	{/*TODO: Make this table a member of CBasePlayer*/
+		m_pShadowStand,
+		m_pShadowCrouch,
+		shadow_slide,
+		shadow_dive,
+	};
+	static const char *names[] =
+	{
+		"Stand",
+		"Crouch",
+		"Slide",
+		"Dive",
+		"Noclip"
+	};
+	Assert (collisionState <= VPHYS_NOCLIP);
+	if (collisionState != VPHYS_NOCLIP)
+	{/*Disable previous shadow, enable desired one*/
+		IPhysicsObject *o;
+		if (m_vphysicsCollisionState != VPHYS_NOCLIP)
+		{
+			tbl[m_vphysicsCollisionState]->EnableCollisions (false);
+		}
+		o = tbl[collisionState];
+		o->SetPosition (vecAbsOrigin, vec3_angle, true);
+		o->SetVelocity (&vecAbsVelocity, NULL);
+		o->EnableCollisions (true);
+		m_pPhysicsController->SetObject (o);
+		VPhysicsSwapObject (o);
+	}
+	else
+	{
+		int i;
+		for (i = 0; i < VPHYS_NOCLIP; i++) 
+		{
+			tbl[i]->EnableCollisions (false);
+		}
+	}
 	m_vphysicsCollisionState = collisionState;
+#else
+	/*Default version*/
+	m_vphysicsCollisionState = collisionState;
+	Vector test;
 	switch( collisionState )
 	{
 	case VPHYS_WALK:
- 		m_pShadowStand->SetPosition( vecAbsOrigin, vec3_angle, true );
+ 		m_pShadowStand->SetPosition(vecAbsOrigin, vec3_angle, true );
 		m_pShadowStand->SetVelocity( &vecAbsVelocity, NULL );
 		m_pShadowCrouch->EnableCollisions( false );
 		m_pPhysicsController->SetObject( m_pShadowStand );
 		VPhysicsSwapObject( m_pShadowStand );
 		m_pShadowStand->EnableCollisions( true );
 		break;
-
 	case VPHYS_CROUCH:
 		m_pShadowCrouch->SetPosition( vecAbsOrigin, vec3_angle, true );
 		m_pShadowCrouch->SetVelocity( &vecAbsVelocity, NULL );
@@ -8162,12 +8217,12 @@ void CBasePlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &
 		VPhysicsSwapObject( m_pShadowCrouch );
 		m_pShadowCrouch->EnableCollisions( true );
 		break;
-	
 	case VPHYS_NOCLIP:
 		m_pShadowCrouch->EnableCollisions( false );
 		m_pShadowStand->EnableCollisions( false );
 		break;
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
