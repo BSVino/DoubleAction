@@ -2033,11 +2033,7 @@ void CSDKGameMovement::Duck( void )
 				Vector vecAbsVelocity = m_pSDKPlayer->GetAbsVelocity();
 				float flVelocity = vecAbsVelocity.Length();
 
-<<<<<<< HEAD
 				if (fabs (flVelocity) > 1e-5)
-=======
-				if (flVelocity > 1e-4)
->>>>>>> master
 				{
 					// Throw in some of the wish velocity into the slide.
 					vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
