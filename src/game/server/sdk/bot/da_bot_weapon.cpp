@@ -402,6 +402,9 @@ bool CDABot::DoEquip( CWeaponSDKBase *weapon )
 const float minEquipInterval = 5.0f;
 
 
+ConVar bot_always_grenade( "bot_always_grenade", "0", FCVAR_CHEAT );
+
+
 //--------------------------------------------------------------------------------------------------------------
 /**
  * Equip the best weapon we are carrying that has ammo
@@ -446,6 +449,12 @@ void CDABot::EquipBestWeapon( bool mustEquip )
 			pHeaviestWeapon = pWeapon;
 		else
 			pHeaviestWeapon = pWeapon;
+	}
+
+	if (pGrenade && bot_always_grenade.GetBool())
+	{
+		if (DoEquip(pGrenade))
+			return;
 	}
 
 	if (pHeaviestWeapon)
@@ -523,6 +532,13 @@ void CDABot::LookForGrenadeTargets( void )
 	{
 		return;
 	}
+
+	if (bot_always_grenade.GetBool())
+	{
+		ThrowGrenade( GetAbsOrigin() + GetViewVector() * 300 );
+		return;
+	}
+
 
 	const CNavArea *tossArea = GetInitialEncounterArea();
 	if (tossArea == NULL)
