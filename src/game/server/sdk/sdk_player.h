@@ -181,6 +181,15 @@ public:
 
 	void SetStyleSkill(SkillID eSkill);
 
+	/*These 3 were made virtual for Double Action.
+	They enable us to have new shadow hulls.*/
+	virtual void SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
+	virtual void SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState );
+	virtual void PostThinkVPhysics (void);
+	IPhysicsObject *shadow_slide;
+	IPhysicsObject *shadow_dive;
+
+
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
