@@ -3217,12 +3217,14 @@ void CSDKPlayer::ActivateMeter()
 
 void CSDKPlayer::SetSlowMoType(int iType)
 {
+	return;
 	if (iType != m_iSlowMoType)
 		m_iSlowMoType = iType;
 }
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)
 {
+	return;
 	float flMaxSlow = 5;
 
 	if (IsStyleSkillActive(SKILL_REFLEXES))
@@ -3344,11 +3346,11 @@ void CSDKPlayer::PostThinkVPhysics (void)
 	}
 	else if (m_Shared.IsSliding () || m_Shared.IsDiveSliding () || m_Shared.IsProne ())
 	{
-		collisionState = VPHYS_SLIDE;
+	//	collisionState = VPHYS_SLIDE;
 	}
 	else if (m_Shared.IsDiving ())
 	{
-		collisionState = VPHYS_DIVE;
+	//	collisionState = VPHYS_DIVE;
 	}
 	else if ((GetFlags()&FL_DUCKING))
 	{
@@ -3453,6 +3455,7 @@ void CSDKPlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &
 
 void CC_ActivateSlowmo_f (void)
 {
+	return;
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;

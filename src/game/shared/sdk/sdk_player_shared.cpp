@@ -1260,6 +1260,7 @@ float CSDKPlayer::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 
 void CSDKPlayer::ActivateSlowMo()
 {
+	return;
 	if (!m_flSlowMoSeconds)
 		return;
 
