@@ -95,15 +95,14 @@ bool CBaseSDKGrenade::Holster( CBaseCombatWeapon *pSwitchingTo )
 	// If they attempt to switch weapons before the throw animation is done, 
 	// allow it, but kill the weapon if we have to.
 	CSDKPlayer *pPlayer = GetPlayerOwner();
+	
 	if( !pPlayer )
-		return;
-
-	if( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-	{
-		CBaseCombatCharacter *pOwner = (CBaseCombatCharacter *)pPlayer;
-		pOwner->Weapon_Drop( this );
-		UTIL_Remove(this);
-	}
+		if( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+		{
+			CBaseCombatCharacter *pOwner = (CBaseCombatCharacter *)pPlayer;
+			pOwner->Weapon_Drop( this );
+			UTIL_Remove(this);
+		}
 #endif
 
 	return BaseClass::Holster( pSwitchingTo );
