@@ -186,6 +186,7 @@ public:
 	virtual void SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
 	virtual void SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState );
 	virtual void PostThinkVPhysics (void);
+	virtual void VPhysicsDestroyObject (void); 
 	IPhysicsObject *shadow_slide;
 	IPhysicsObject *shadow_dive;
 

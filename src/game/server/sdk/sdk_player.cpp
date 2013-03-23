@@ -3217,14 +3217,12 @@ void CSDKPlayer::ActivateMeter()
 
 void CSDKPlayer::SetSlowMoType(int iType)
 {
-	return;
 	if (iType != m_iSlowMoType)
 		m_iSlowMoType = iType;
 }
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)
 {
-	return;
 	float flMaxSlow = 5;
 
 	if (IsStyleSkillActive(SKILL_REFLEXES))
@@ -3323,6 +3321,7 @@ void CSDKPlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &v
 }
 void CSDKPlayer::PostThinkVPhysics (void)
 {
+	int collisionState;
 	// Check to see if things are initialized!
 	if ( !m_pPhysicsController )
 		return;
@@ -3338,23 +3337,27 @@ void CSDKPlayer::PostThinkVPhysics (void)
 		newPosition = m_oldOrigin + frametime * g_pMoveData->m_outWishVel;
 		newPosition = (GetAbsOrigin() * 0.5f) + (newPosition * 0.5f);
 	}
-
-	int collisionState = VPHYS_WALK;
+	/*Decide what bbox to use*/
 	if (GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER)
 	{
 		collisionState = VPHYS_NOCLIP;
 	}
-	else if (m_Shared.IsSliding () || m_Shared.IsDiveSliding () || m_Shared.IsProne ())
+	else if (GetFlags ()&FL_ONGROUND)
 	{
-	//	collisionState = VPHYS_SLIDE;
+		if (m_Shared.IsSliding () || m_Shared.IsDiveSliding () || m_Shared.IsProne ())
+		{
+			collisionState = VPHYS_SLIDE;
+		}
+		else if ((GetFlags()&FL_DUCKING)) collisionState = VPHYS_CROUCH;
+		else collisionState = VPHYS_WALK;
 	}
 	else if (m_Shared.IsDiving ())
 	{
-	//	collisionState = VPHYS_DIVE;
+		collisionState = VPHYS_DIVE;
 	}
-	else if ((GetFlags()&FL_DUCKING))
-	{
-		collisionState = VPHYS_CROUCH;
+	else 
+	{/*Prevents slide going into stand when flying off edge*/
+		collisionState = m_vphysicsCollisionState;
 	}
 
 	if ( collisionState != m_vphysicsCollisionState )
@@ -3449,13 +3452,49 @@ void CSDKPlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &
 		SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_WALK );
 	}
 }
+void CSDKPlayer::VPhysicsDestroyObject ()
+{
+	IPhysicsObject *hulls[] =
+	{/*TODO: Just put these all into a member table?*/
+		m_pShadowStand,
+		m_pShadowCrouch,
+		shadow_slide,
+		shadow_dive
+	};
+	int i;
+	// Since CBasePlayer aliases its pointer to the physics object, tell CBaseEntity to 
+	// clear out its physics object pointer so we don't wind up deleting one of
+	// the aliased objects twice.
+	VPhysicsSetObject (NULL);
+	PhysRemoveShadow (this);
+	if (m_pPhysicsController)
+	{
+		physenv->DestroyPlayerController (m_pPhysicsController);
+		m_pPhysicsController = NULL;
+	}
+	for (i = 0; i < VPHYS_NOCLIP; i++)
+	{
+		IPhysicsObject *o = hulls[i];
+		if (o)
+		{
+			o->EnableCollisions (false);
+			PhysDestroyObject(o);
+		}
+	}
+	/*FIXME: Are these even needed?
+	Does this function get called many times?*/
+	m_pShadowStand = NULL;
+	m_pShadowCrouch = NULL;
+	shadow_slide = NULL;
+	shadow_dive = NULL;
 
+	BaseClass::VPhysicsDestroyObject();
+}
 
 
 
 void CC_ActivateSlowmo_f (void)
 {
-	return;
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;

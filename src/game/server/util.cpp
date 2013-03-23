@@ -2329,9 +2329,12 @@ CBaseEntity *UTIL_EntitiesInPVS( CBaseEntity *pPVSEntity, CBaseEntity *pStarting
 	static Vector	lastOrg( 0, 0, 0 );
 	static int		lastCluster = -1;
 
+	static int mutex = 0;
+
+	Assert (mutex == 0);
 	if ( !pPVSEntity )
 		return NULL;
-
+	mutex = 1;
 	// NOTE: These used to be caching code here to prevent this from
 	// being called over+over which breaks when you go back + forth
 	// across level transitions
@@ -2359,9 +2362,10 @@ CBaseEntity *UTIL_EntitiesInPVS( CBaseEntity *pPVSEntity, CBaseEntity *pStarting
 		if ( !engine->CheckBoxInPVS( vecSurroundMins, vecSurroundMaxs, pvs, sizeof( pvs ) ) )
 			continue;
 
+		mutex = 0;
 		return pEntity;
 	}
-
+	mutex = 0;
 	return NULL;
 }
 
