@@ -186,6 +186,7 @@ public:
 	virtual void TogglePrimaryAttack( void );
 	virtual void SecondaryAttack( void );
 	virtual void Reload( void );
+	virtual void Alt1( void );
 
 	float GetActiveWeaponAmmoRatio( void ) const;				///< returns ratio of ammo left to max ammo (1 = full clip, 0 = empty)
 	bool IsActiveWeaponClipEmpty( void ) const;					///< return true if active weapon has any empty clip
@@ -672,6 +673,12 @@ template < class PlayerType >
 inline void CBot< PlayerType >::Reload( void )
 {
 	SETBITS( m_buttonFlags, IN_RELOAD );
+}
+
+template < class PlayerType >
+inline void CBot< PlayerType >::Alt1( void )
+{
+	SETBITS( m_buttonFlags, IN_ALT1 );
 }
 
 //--------------------------------------------------------------------------------------------------------------
