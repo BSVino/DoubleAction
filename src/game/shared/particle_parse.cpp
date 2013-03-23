@@ -39,6 +39,7 @@ int GetAttachTypeFromString( const char *pszString )
 		"start_at_customorigin",// PATTACH_CUSTOMORIGIN,
 		"start_at_attachment",	// PATTACH_POINT,
 		"follow_attachment",	// PATTACH_POINT_FOLLOW,
+		"point_to_origin",		// PATTACH_POINT_ORIGIN
 	};
 
 	for ( int i = 0; i < MAX_PATTACH_TYPES; i++ )
@@ -218,6 +219,34 @@ void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t i
 	DispatchEffect( "ParticleEffect", data );
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void DispatchParticleEffect( int iEffectIndex, Vector vecStart, ParticleAttachment_t iAttachType, CBaseEntity *pEntity, int iAttachmentPoint, bool bResetAllParticlesOnEntity )
+{
+	CEffectData	data;
+
+	data.m_nHitBox = iEffectIndex;
+	data.m_vStart = vecStart;
+	if ( pEntity )
+	{
+#ifdef CLIENT_DLL
+		data.m_hEntity = pEntity;
+#else
+		data.m_nEntIndex = pEntity->entindex();
+#endif
+		data.m_fFlags |= PARTICLE_DISPATCH_FROM_ENTITY;
+	}
+	data.m_nDamageType = iAttachType;
+	data.m_nAttachmentIndex = iAttachmentPoint;
+
+	if ( bResetAllParticlesOnEntity )
+	{
+		data.m_fFlags |= PARTICLE_DISPATCH_RESET_PARTICLES;
+	}
+
+	DispatchEffect( "ParticleEffect", data );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

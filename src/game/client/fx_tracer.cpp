@@ -9,6 +9,7 @@
 #include "basecombatweapon_shared.h"
 #include "baseviewmodel_shared.h"
 #include "particles_new.h"
+#include "c_sdk_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -117,26 +118,43 @@ DECLARE_CLIENT_EFFECT( "Tracer", TracerCallback );
 //-----------------------------------------------------------------------------
 void ParticleTracerCallback( const CEffectData &data )
 {
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+	C_SDKPlayer *player = ToSDKPlayer( C_BasePlayer::GetLocalPlayer() );
 	if ( !player )
 		return;
 
 	// Grab the data
-	Vector vecStart = GetTracerOrigin( data );
+	//Vector vecStart = GetTracerOrigin( data ); we'll account for the view model in this function instead
+	Vector vecStart = data.m_vStart;
 	Vector vecEnd = data.m_vOrigin;
+	int iAttachment = data.m_nAttachmentIndex;
 
 	// Adjust view model tracers
 	C_BaseEntity *pEntity = data.GetEntity();
-	if ( data.entindex() && data.entindex() == player->index )
+	if(player)
 	{
-		QAngle	vangles;
-		Vector	vforward, vright, vup;
+		if ( data.entindex() && data.entindex() == player->index )
+		{
+			QAngle	vangles;
+			Vector	vforward, vright, vup;
 
-		engine->GetViewAngles( vangles );
-		AngleVectors( vangles, &vforward, &vright, &vup );
+			engine->GetViewAngles( vangles );
+			AngleVectors( vangles, &vforward, &vright, &vup );
 
-		VectorMA( data.m_vStart, 4, vright, vecStart );
-		vecStart[2] -= 0.5f;
+			VectorMA( data.m_vStart, 4, vright, vecStart );
+			vecStart[2] -= 0.5f;
+		}
+		
+		C_BaseViewModel *pViewModel = NULL;
+		C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>( pEntity );
+		if ( pWpn && pWpn->IsCarriedByLocalPlayer() )
+		{
+			pViewModel = player ? player->GetViewModel( 0 ) : NULL;
+			if ( pViewModel && !player->IsInThirdPerson() )
+			{
+				// Get the viewmodel and use it instead
+				pEntity = pViewModel;
+			}
+		}
 	}
 
 	// Create the particle effect
@@ -144,12 +162,15 @@ void ParticleTracerCallback( const CEffectData &data )
 	Vector vecToEnd = vecEnd - vecStart;
 	VectorNormalize(vecToEnd);
 	VectorAngles( vecToEnd, vecAngles );
-	DispatchParticleEffect( data.m_nHitBox, vecStart, vecEnd, vecAngles, pEntity );
 
+	// if this tracer originates from a gun (in this case whiz is for whizard)
 	if ( data.m_fFlags & TRACER_FLAG_WHIZ )
-	{
-		FX_TracerSound( vecStart, vecEnd, TRACER_TYPE_DEFAULT );	
-	}
+		DispatchParticleEffect( data.m_nHitBox, vecEnd, PATTACH_POINT_ORIGIN, pEntity, iAttachment, false);
+	// if this tracer originates from bullet penetration
+	else
+		DispatchParticleEffect( data.m_nHitBox, vecStart, vecEnd, vecAngles, pEntity );
+
+	FX_TracerSound( vecStart, vecEnd, TRACER_TYPE_DEFAULT );	
 }
 
 DECLARE_CLIENT_EFFECT( "ParticleTracer", ParticleTracerCallback );

@@ -195,6 +195,12 @@ void CSDKPlayer::FireBullet(
 			{
 				//Do Regular hit effects
 
+				// tracer gets attached to weapon model on first pass, subsequent passes will just use vecSrc as a starting point
+				if( i == 0)
+					MakeTracer( vecSrc, tr, TRACER_LINE_AND_WHIZ );
+				else
+					MakeTracer( vecSrc, tr, TRACER_LINE );
+
 				// Don't decal nodraw surfaces
 				if ( !( tr.surface.flags & (SURF_SKY|SURF_NODRAW|SURF_HINT|SURF_SKIP) ) )
 				{

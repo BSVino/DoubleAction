@@ -81,18 +81,24 @@ public:
 		// one second before detonation.
 		pGrenade->SetVelocity( velocity, angVelocity );
 
+		if( pOwner )
+		{
+			pGrenade->ChangeTeam( pOwner->GetTeamNumber() );
+			pGrenade->SetThrower( pOwner ); 
+		}
+
+		if( pWeapon )
+			pGrenade->m_flDamage = pWeapon->GetSDKWpnData().m_iDamage;
+		
 		pGrenade->SetDetonateTimerLength( timer );
 		pGrenade->SetAbsVelocity( velocity );
 		pGrenade->SetupInitialTransmittedGrenadeVelocity( velocity );
-		pGrenade->SetThrower( pOwner ); 
 
 		pGrenade->SetGravity( BaseClass::GetGrenadeGravity() );
 		pGrenade->SetFriction( BaseClass::GetGrenadeFriction() );
 		pGrenade->SetElasticity( BaseClass::GetGrenadeElasticity() );
 
-		pGrenade->m_flDamage = pWeapon->GetSDKWpnData().m_iDamage;
 		pGrenade->m_DmgRadius = pGrenade->m_flDamage * 3.5f;
-		pGrenade->ChangeTeam( pOwner->GetTeamNumber() );
 		pGrenade->ApplyLocalAngularVelocityImpulse( angVelocity );	
 
 		// make NPCs afaid of it while in the air

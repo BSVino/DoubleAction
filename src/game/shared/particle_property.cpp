@@ -494,6 +494,7 @@ void CParticleProperty::UpdateControlPoint( ParticleEffectList_t *pEffect, int i
 	{
 	case PATTACH_POINT:
 	case PATTACH_POINT_FOLLOW:
+	case PATTACH_POINT_ORIGIN:
 		{
 			C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
 

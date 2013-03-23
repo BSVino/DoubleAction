@@ -95,6 +95,8 @@ bool CBaseSDKGrenade::Holster( CBaseCombatWeapon *pSwitchingTo )
 	// If they attempt to switch weapons before the throw animation is done, 
 	// allow it, but kill the weapon if we have to.
 	CSDKPlayer *pPlayer = GetPlayerOwner();
+	if( !pPlayer )
+		return;
 
 	if( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
 	{
@@ -116,7 +118,10 @@ void CBaseSDKGrenade::PrimaryAttack()
 		return;
 
 	CSDKPlayer *pPlayer = GetPlayerOwner();
-	if ( !pPlayer || pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
+	if ( !pPlayer )
+		return;
+
+	if ( pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0 )
 		return;
 
 	// The pull pin animation has to finish, then we wait until they aren't holding the primary
@@ -230,7 +235,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 					bSwitch = false;
 
 				// If I'm going to switch to brawl but I have more grenades, don't switch.
-				if (pSDKNewWeapon && pSDKNewWeapon->GetWeaponID() == SDK_WEAPON_BRAWL && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) > 0)
+				else if (pSDKNewWeapon && pSDKNewWeapon->GetWeaponID() == SDK_WEAPON_BRAWL && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) > 0)
 					bSwitch = false;
 
 				if (bSwitch)
@@ -293,7 +298,8 @@ void CBaseSDKGrenade::ItemPostFrame()
 	//-----------------------------------------------------------------------------
 	void CBaseSDKGrenade::DecrementAmmo( CBaseCombatCharacter *pOwner )
 	{
-		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		if( pOwner )
+			pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
 	}
 
 	void CBaseSDKGrenade::StartGrenadeThrow()
@@ -305,8 +311,9 @@ void CBaseSDKGrenade::ItemPostFrame()
 	{
 		trace_t tr;
 
-		UTIL_TraceHull( vecEye, vecSrc, -Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), 
-			pPlayer->PhysicsSolidMaskForEntity(), pPlayer, pPlayer->GetCollisionGroup(), &tr );
+		if( pPlayer )
+			UTIL_TraceHull( vecEye, vecSrc, -Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), 
+				pPlayer->PhysicsSolidMaskForEntity(), pPlayer, pPlayer->GetCollisionGroup(), &tr );
 
 		if ( tr.DidHit() )
 		{
