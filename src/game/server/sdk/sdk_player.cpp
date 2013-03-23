@@ -1775,11 +1775,10 @@ int CSDKPlayer::GetMaxHealth() const
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
-
-	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
-		return false;
-
-	if( pWeapon && pWeapon->CanWeaponBeDropped() )
+	/*Fixes an occasional server crash when pWeapon is NULL*/
+	if (pWeapon == NULL) return false;
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL) return false;
+	if (pWeapon->CanWeaponBeDropped())
 	{
 		QAngle gunAngles;
 		VectorAngles( BodyDirection2D(), gunAngles );
