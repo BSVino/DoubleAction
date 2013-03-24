@@ -192,10 +192,6 @@ void ParticleEffectCallback( const CEffectData &data )
 						AngleVectors( data.m_vAngles, &vecForward, &vecRight, &vecUp );
 						pEffect->SetControlPointOrientation( 0, vecForward, vecRight, vecUp );
 					}
-					else if ( (ParticleAttachment_t)data.m_nDamageType == PATTACH_POINT_ORIGIN )
-					{			
-						pEffect->SetControlPoint( 1, data.m_vStart );
-					}
 				}
 			}
 		}

@@ -915,26 +915,6 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	}
 #endif
 }
-void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
-{
-	CBaseEntity *pOwner = GetOwner();
-	Vector vNewSrc = vecTracerSrc;
-	int iAttachment = GetTracerAttachment();
-
-	if ( pOwner == NULL )
-		iTracerType = TRACER_LINE;
-	
-	switch ( iTracerType )
-	{
-	case TRACER_LINE_AND_WHIZ:
-		UTIL_ParticleTracer("tracer_bullet", vNewSrc, tr.endpos, entindex(), iAttachment, true);
-		break;
-
-	case TRACER_LINE:
-		UTIL_ParticleTracer("tracer_bullet", vNewSrc, tr.endpos, entindex(), iAttachment, false);
-		break;
-	}
-}
 
 void CWeaponSDKBase::WeaponIdle( void )
 {

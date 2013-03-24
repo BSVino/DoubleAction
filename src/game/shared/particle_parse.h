@@ -23,7 +23,6 @@ enum ParticleAttachment_t
 	PATTACH_CUSTOMORIGIN,			// Create at a custom origin, but don't follow
 	PATTACH_POINT,					// Create on attachment point, but don't follow
 	PATTACH_POINT_FOLLOW,			// Create on attachment point, and update to follow the entity
-	PATTACH_POINT_ORIGIN,			// Create on attachment point, orient towards custom coordinates
 
 	PATTACH_WORLDORIGIN,			// Used for control points that don't attach to an entity
 
@@ -54,7 +53,6 @@ void PrecacheStandardParticleSystems( );
 // Particle spawning methods
 //-----------------------------------------------------------------------------
 void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t iAttachType, CBaseEntity *pEntity, const char *pszAttachmentName, bool bResetAllParticlesOnEntity = false );
-void DispatchParticleEffect( int iEffectIndex, Vector vecStart, ParticleAttachment_t iAttachType, CBaseEntity *pEntity = NULL, int iAttachmentPoint = -1, bool bResetAllParticlesOnEntity = false );
 void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t iAttachType, CBaseEntity *pEntity = NULL, int iAttachmentPoint = -1, bool bResetAllParticlesOnEntity = false );
 void DispatchParticleEffect( const char *pszParticleName, Vector vecOrigin, QAngle vecAngles, CBaseEntity *pEntity = NULL );
 void DispatchParticleEffect( const char *pszParticleName, Vector vecOrigin, Vector vecStart, QAngle vecAngles, CBaseEntity *pEntity = NULL );

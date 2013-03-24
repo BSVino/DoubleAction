@@ -62,7 +62,6 @@ public:
 	void					Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	int						ObjectCaps( void ) { return (BaseClass::ObjectCaps() | (FCAP_IMPULSE_USE|FCAP_USE_IN_RADIUS)); };
 
-	virtual void			MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
 	virtual void            FinishReload();

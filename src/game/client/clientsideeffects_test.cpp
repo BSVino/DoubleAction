@@ -177,7 +177,7 @@ FX_Tracer
 ==================================================
 */
 // Tracer must be this close to be considered for hearing
-#define	TRACER_MAX_HEAR_DIST	(8*12)
+#define	TRACER_MAX_HEAR_DIST	(6*12)
 #define TRACER_SOUND_TIME_MIN	0.1f
 #define TRACER_SOUND_TIME_MAX	0.1f
 
@@ -220,7 +220,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 	case TRACER_TYPE_DEFAULT:
 		{
 			pszSoundName = "Bullets.DefaultNearmiss";
-			//flWhizDist = 24;
+			flWhizDist = 24;
 
 			Ray_t bullet, listener;
 			bullet.Init( start, end );
