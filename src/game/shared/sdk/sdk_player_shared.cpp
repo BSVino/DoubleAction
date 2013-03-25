@@ -80,14 +80,17 @@ void CSDKPlayer::FireBullet(
 	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
 	CBaseEntity* pIgnore = this;
 
+	// initialize these before the penetration loop, we'll need them to make our tracer after
+	Vector vecTracerSrc = vecSrc;
+	trace_t tr; // main enter bullet trace
+
 	for (size_t i = 0; i < 5; i++)
 	{
-		trace_t tr; // main enter bullet trace
 
 		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pIgnore, COLLISION_GROUP_NONE, &tr );
 
 		if ( tr.fraction == 1.0f )
-			return; // we didn't hit anything, stop tracing shoot
+			break; // we didn't hit anything, stop tracing shoot
 
 		if ( sv_showimpacts.GetBool() )
 		{
@@ -174,7 +177,7 @@ void CSDKPlayer::FireBullet(
 			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
 			{	
 				trace_t waterTrace;
-				UTIL_TraceLine( vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &waterTrace );
+				UTIL_TraceLine( vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), pIgnore, COLLISION_GROUP_NONE, &waterTrace );
 
 				if( waterTrace.allsolid != 1 )
 				{
@@ -270,10 +273,24 @@ void CSDKPlayer::FireBullet(
 
 		if (tr.startsolid)
 			break;
+		
+		if (tr.m_pEnt)
+		{
+			// let's have a bullet exit effect if we penetrated a solid surface
+			if (tr.m_pEnt->IsBSPModel())
+				UTIL_ImpactTrace( &tr, iDamageType );
+
+			// ignore the entity we just hit for the next trace to avoid weird impact behaviors
+			pIgnore = tr.m_pEnt;
+		}
 
 		// Set up the next trace.
 		vecSrc = tr.endpos + vecDir;	// One unit in the direction of fire so that we firmly embed ourselves in whatever solid was hit.
 	}
+	
+	// the bullet's done penetrating, let's spawn our particle system
+	if (bDoEffects)
+		MakeTracer( vecTracerSrc, tr, TRACER_TYPE_DEFAULT );
 }
 
 void CSDKPlayer::DoMuzzleFlash()
