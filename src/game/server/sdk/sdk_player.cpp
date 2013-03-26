@@ -815,6 +815,7 @@ void CSDKPlayer::Precache()
 	PrecacheParticleSystem( "muzzleflash_smg" );
 	PrecacheParticleSystem( "muzzleflash_rifle" );
 	PrecacheParticleSystem( "muzzleflash_shotgun" );
+	PrecacheParticleSystem( "tracer_bullet" );
 
 	BaseClass::Precache();
 }
@@ -909,8 +910,6 @@ void CSDKPlayer::Spawn()
 
 	m_nRenderFX = kRenderNormal;
 
-	AddFlag(FL_ONGROUND);
-
 	//Tony; if we're spawning in active state, equip the suit so the hud works. -- Gotta love base code !
 	if ( State_Get() == STATE_ACTIVE )
 	{
@@ -952,8 +951,6 @@ void CSDKPlayer::Spawn()
 	pl.deadflag = false;
 
 	m_flStyleSkillCharge = 0;
-
-	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
@@ -2804,6 +2801,9 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 
 		if ( GetMoveType() != MOVETYPE_NONE && (GetFlags() & FL_ONGROUND) )
 			SetMoveType( MOVETYPE_NONE );
+
+		// make sure we don't have slide friction stuck on
+		m_surfaceFriction = 1.0f;
 	}
 
 	//Tony; if we're now dead, and not changing classes, spawn

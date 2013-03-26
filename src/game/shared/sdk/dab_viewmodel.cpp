@@ -94,7 +94,7 @@ void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QA
 	float flViewVelocityDot = fabs(vecPlayerVelocityLerp.Dot(vecViewRight));
 	eyePosition += m_vecPlayerVelocityLerp * da_weaponlag.GetFloat() * flViewVelocityDot;
 
-	if (pOwner->m_Shared.GetViewBobRamp())
+	if (pOwner->m_Shared.GetViewBobRamp() && pOwner->m_Shared.GetRunSpeed())
 	{
 		float flViewBobMagnitude = pOwner->m_Shared.GetViewBobRamp() * da_weaponbob.GetFloat();
 
