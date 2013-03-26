@@ -364,6 +364,9 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bAimedIn = false;
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
+	//m_Shared.tapkey = 0;
+	//m_Shared.taptime = 0;
+	m_Shared.somersault = false;
 
 	//Tony; todo; fix
 
@@ -572,6 +575,9 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+	//taptime = 0;
+	//tapkey = 0;
+	somersault = false;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()

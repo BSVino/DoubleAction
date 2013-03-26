@@ -182,6 +182,15 @@ private:
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
 public:
+#if 0
+	int		tapkey;
+	float	taptime;
+#endif
+	float		runtime;
+	float		wallscalar;
+	Vector		rundir;
+	bool		somersault;
+public:
 
 #ifdef SDK_USE_PRONE
 	float m_flNextProneCheck; // Prevent it switching their prone state constantly.
