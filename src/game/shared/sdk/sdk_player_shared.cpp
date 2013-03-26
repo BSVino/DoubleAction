@@ -697,7 +697,7 @@ bool CSDKPlayerShared::MustDuckFromSlide() const
 
 bool CSDKPlayerShared::IsSliding() const
 {
-	return m_bSliding;
+	return m_bSliding && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::IsDiveSliding() const
@@ -830,7 +830,7 @@ void CSDKPlayerShared::SetDuckPress(bool bReset)
 
 bool CSDKPlayerShared::IsRolling() const
 {
-	return m_bRolling;
+	return m_bRolling && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::CanRoll() const
@@ -885,7 +885,7 @@ void CSDKPlayerShared::EndRoll()
 
 bool CSDKPlayerShared::IsDiving() const
 {
-	return m_bDiving && m_pOuter->IsAlive();
+	return m_bDiving && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::CanDive() const
