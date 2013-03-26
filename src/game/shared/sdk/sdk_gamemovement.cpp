@@ -33,7 +33,24 @@ ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT 
 
 #ifdef CLIENT_DLL
 ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVAR_USERINFO );
+ConVar da_user_taptime ("da_user_taptime", "250", FCVAR_ARCHIVE|FCVAR_USERINFO);
 #endif
+
+ConVar  da_acro_kong_minz ("da_acro_kong_minz", "8", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_kong_limit ("da_acro_kong_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_jump_height ("da_acro_jump_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_superjump_duration ("da_acro_superjump_duration", "1000", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_superjump_speed ("da_acro_superjump_height", "320", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_climb_frequency ("da_acro_climb_frequency", "500", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_climb_limit ("da_acro_climb_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_climb_gain ("da_acro_climb_gain", "350", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "2000", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_gain ("da_acro_wallrun_gain", "160", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 extern bool g_bMovementOptimizations;
 
@@ -90,6 +107,9 @@ public:
 
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );
 
+	/*I hate classes*/
+	inline void TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
+	virtual void FullWalkMove ();
 protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
@@ -114,7 +134,6 @@ EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CGameMovement, IGameMovement,INTERFACENAME_GAM
 // ---------------------------------------------------------------------------------------- //
 // CSDKGameMovement.
 // ---------------------------------------------------------------------------------------- //
-
 CSDKGameMovement::CSDKGameMovement()
 {
 }
@@ -337,6 +356,10 @@ void CSDKGameMovement::CheckParameters( void )
 }
 void CSDKGameMovement::CheckFalling( void )
 {
+	if (m_pSDKPlayer->m_Shared.runtime > 0)
+	{
+		return;
+	}
 	// if we landed on the ground
 	if ( player->GetGroundEntity() != NULL && !IsDead() )
 	{
@@ -545,8 +568,9 @@ void CSDKGameMovement::WalkMove( void )
 	// StayOnGround();
 }
 
-void CSDKGameMovement::PlayerMove( void )
+void CSDKGameMovement::PlayerMove (void)
 {
+	VPROF( "CSDKGameMovement::PlayerMove" );
 	if (m_pSDKPlayer->PlayerFrozen())
 	{
 		mv->m_flForwardMove *= m_pSDKPlayer->m_flFreezeAmount;
@@ -555,44 +579,94 @@ void CSDKGameMovement::PlayerMove( void )
 		mv->m_nImpulseCommand = 0;
 	}
 
-	BaseClass::PlayerMove();
+	CheckParameters();
+	
+	// clear output applied velocity
+	mv->m_outWishVel.Init();
+	mv->m_outJumpVel.Init();
 
-	if (m_pSDKPlayer->m_Shared.IsDiving())
+	MoveHelper( )->ResetTouchList();                    // Assume we don't touch anything
+	ReduceTimers();
+
+	AngleVectors (mv->m_vecViewAngles, &m_vecForward, &m_vecRight, &m_vecUp );  // Determine movement angles
+
+	// Always try and unstick us unless we are using a couple of the movement modes
+	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
+		 player->GetMoveType() != MOVETYPE_NONE && 		 
+		 player->GetMoveType() != MOVETYPE_ISOMETRIC && 
+		 player->GetMoveType() != MOVETYPE_OBSERVER && 
+		 !player->pl.deadflag )
 	{
-		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
+		if ( CheckInterval( STUCK ) )
 		{
-			float flDiveLerpTime = DIVE_RISE_TIME;
-
-			float flBiasAmount = 0.7f;
-
-			float flCurrentLerp = RemapValClamped(m_pSDKPlayer->GetCurrentTime(), m_pSDKPlayer->m_Shared.GetDiveTime(), m_pSDKPlayer->m_Shared.GetDiveTime() + flDiveLerpTime, 0, 1);
-			float flCurrentBias = Bias(flCurrentLerp, flBiasAmount);
-			float flLastTimeBias = Bias(m_pSDKPlayer->m_Shared.GetDiveLerped(), flBiasAmount);
-
-			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
-			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
-
-			float flMoveUpHeight = flHullHeightNormal-flHullHeightDive;
-
-			float flCurrentHeight = flMoveUpHeight*flCurrentBias;
-			float flLastTimeHeight = flMoveUpHeight*flLastTimeBias;
-
-			float flHeightToMoveUp = flCurrentHeight - flLastTimeHeight;
-
-			Vector vecNewPosition = mv->GetAbsOrigin() + Vector(0, 0, flHeightToMoveUp);
-
-			trace_t trace;
-			TracePlayerBBoxWithStep( mv->GetAbsOrigin(), vecNewPosition, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
-
-			mv->SetAbsOrigin( trace.endpos );
-
-			m_pSDKPlayer->m_Shared.IncreaseDiveLerped(flCurrentLerp - m_pSDKPlayer->m_Shared.GetDiveLerped());
-
-			Vector vecViewOffset = Lerp(flCurrentBias, GetPlayerViewOffset(false), VEC_DIVE_VIEW);
-			m_pSDKPlayer->SetViewOffset( vecViewOffset );
+			if ( CheckStuck() )
+			{
+				// Can't move, we're stuck
+				return;  
+			}
 		}
-		else
-			m_pSDKPlayer->SetViewOffset( VEC_DIVE_VIEW );
+	}
+
+	// Now that we are "unstuck", see where we are (player->GetWaterLevel() and type, player->GetGroundEntity()).
+	if (player->GetMoveType () != MOVETYPE_WALK || mv->m_bGameCodeMovedPlayer)
+	{
+		CategorizePosition();
+	}
+	else
+	{
+		if ( mv->m_vecVelocity.z > 250.0f )
+		{
+			SetGroundEntity( NULL );
+		}
+	}
+
+	m_nOnLadder = 0;
+	// Don't run ladder code if dead on on a train
+	if ( !player->pl.deadflag && !(player->GetFlags() & FL_ONTRAIN) )
+	{
+		// If was not on a ladder now, but was on one before, 
+		//  get off of the ladder
+		
+		// TODO: this causes lots of weirdness.
+		//bool bCheckLadder = CheckInterval( LADDER );
+		//if ( bCheckLadder || player->GetMoveType() == MOVETYPE_LADDER )
+		{
+			if ( !LadderMove() && 
+				( player->GetMoveType() == MOVETYPE_LADDER ) )
+			{
+				// Clear ladder stuff unless player is dead or riding a train
+				// It will be reset immediately again next frame if necessary
+				player->SetMoveType( MOVETYPE_WALK );
+				player->SetMoveCollide( MOVECOLLIDE_DEFAULT );
+			}
+		}
+	}
+
+	// Handle movement modes.
+	switch (player->GetMoveType())
+	{
+		case MOVETYPE_NONE:
+			break;
+		case MOVETYPE_NOCLIP:
+			FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
+			break;
+		case MOVETYPE_FLY:
+		case MOVETYPE_FLYGRAVITY:
+			FullTossMove();
+			break;
+		case MOVETYPE_LADDER:
+			FullLadderMove();
+			break;
+		case MOVETYPE_WALK:
+		case MOVETYPE_ISOMETRIC:
+			FullWalkMove();
+			break;
+		case MOVETYPE_OBSERVER:
+			FullObserverMove(); // clips against world&players
+			break;
+		default:
+			DevMsg( 1, "Bogus pmove player movetype %i on (%i) 0=cl 1=sv\n", player->GetMoveType(), player->IsServer());
+			break;
 	}
 }
 
@@ -620,6 +694,12 @@ void CSDKGameMovement::CategorizePosition( void )
 	if ( player->GetMoveType() == MOVETYPE_LADDER )
 	{
 		SetGroundEntity( NULL );
+		return;
+	}
+
+	if (m_pSDKPlayer->m_Shared.runtime > 0)
+	{
+		SetGroundEntity (NULL);
 		return;
 	}
 
@@ -826,7 +906,18 @@ void CSDKGameMovement::ReduceTimers( void )
 
 		m_pSDKPlayer->m_Shared.SetStamina( flStamina );	
 	}
-#endif 
+#endif
+
+#if 0
+	if (m_pSDKPlayer->m_Shared.taptime > 0)
+	{/*TODO: Don't use milliseconds?*/
+		m_pSDKPlayer->m_Shared.taptime -= 1000*gpGlobals->frametime;
+		if (m_pSDKPlayer->m_Shared.taptime <= 0)
+		{
+			m_pSDKPlayer->m_Shared.taptime = 0;
+		}
+	}
+#endif
 	BaseClass::ReduceTimers();
 }
 
@@ -1572,7 +1663,7 @@ void CSDKGameMovement::Duck( void )
 				// If holding the movement key forward, roll
 				bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
 				// Otherwise, prone
-				bWantsProne = !bWantsRoll && !bWantsSlide;
+				bWantsProne =  !bWantsRoll && !bWantsSlide;
 			}
 			else
 			{
@@ -1665,7 +1756,7 @@ void CSDKGameMovement::Duck( void )
 	{
 		bool bStunt = !!(buttonsPressed & IN_ALT1);
 
-		bool bGoProne = bStunt;
+		bool bGoProne = false;
 		if (m_pSDKPlayer->GetAbsVelocity().Length() > 0.1f)
 			bGoProne = false;
 		if (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT))
@@ -2043,4 +2134,353 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 const Vector& CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 {
 	return BaseClass::GetPlayerViewOffset(ducked);
+}
+inline void
+CSDKGameMovement::TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+{
+	Ray_t ray;
+	ray.Init (start, end, mins, maxs);
+	UTIL_TraceRay (ray, PlayerSolidMask (), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+}
+void CSDKGameMovement::FullWalkMove ()
+{
+	m_nOldWaterLevel = player->GetWaterLevel();
+	if (!CheckWater ()) 
+	{
+		StartGravity();
+	}
+	if (player->m_flWaterJumpTime)
+	{// If we are leaping out of the water, just update the counters.
+		WaterJump();
+		TryPlayerMove();
+		CheckWater();
+		return;
+	}
+	if ( player->GetWaterLevel() >= WL_Waist ) 
+	{/*Do swimming controls*/
+		if ( player->GetWaterLevel() == WL_Waist )
+		{
+			CheckWaterJump();
+		}
+		if (mv->m_vecVelocity[2] < 0 && player->m_flWaterJumpTime)
+		{//If we are falling again, then we must not be trying to jump out of water any more.
+			player->m_flWaterJumpTime = 0;
+		}
+		if (mv->m_nButtons & IN_JUMP)
+		{
+			CheckJumpButton();
+		}
+		else
+		{
+			mv->m_nOldButtons &= ~IN_JUMP;
+		}
+		WaterMove();
+		CategorizePosition();
+		if ( player->GetGroundEntity() != NULL )
+		{
+			mv->m_vecVelocity[2] = 0;			
+		}
+		return;
+	}
+	UpdateDuckJumpEyeOffset();
+	Duck();
+	if (m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity ())
+	{/*Raise player off the ground*/
+		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
+		{
+			trace_t trace;
+			float flDiveLerpTime = DIVE_RISE_TIME;
+			float flBiasAmount = 0.7f;
+			float flCurrentLerp = RemapValClamped(m_pSDKPlayer->GetCurrentTime(), m_pSDKPlayer->m_Shared.GetDiveTime(), m_pSDKPlayer->m_Shared.GetDiveTime() + flDiveLerpTime, 0, 1);
+			float flCurrentBias = Bias(flCurrentLerp, flBiasAmount);
+			float flLastTimeBias = Bias(m_pSDKPlayer->m_Shared.GetDiveLerped(), flBiasAmount);
+			float flHullHeightNormal = VEC_HULL_MAX.z - VEC_HULL_MIN.z;
+			float flHullHeightDive = VEC_DIVE_HULL_MAX.z - VEC_DIVE_HULL_MIN.z;
+			float flMoveUpHeight = flHullHeightNormal-flHullHeightDive;
+			float flCurrentHeight = flMoveUpHeight*flCurrentBias;
+			float flLastTimeHeight = flMoveUpHeight*flLastTimeBias;
+			float flHeightToMoveUp = flCurrentHeight - flLastTimeHeight;
+
+			Vector vecNewPosition = mv->GetAbsOrigin() + Vector(0, 0, flHeightToMoveUp);
+			TracePlayerBBoxWithStep (mv->GetAbsOrigin(), vecNewPosition, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+			mv->SetAbsOrigin( trace.endpos );
+
+			m_pSDKPlayer->m_Shared.IncreaseDiveLerped(flCurrentLerp - m_pSDKPlayer->m_Shared.GetDiveLerped());
+			Vector vecViewOffset = Lerp(flCurrentBias, GetPlayerViewOffset(false), VEC_DIVE_VIEW);
+			m_pSDKPlayer->SetViewOffset( vecViewOffset );
+		}
+		else m_pSDKPlayer->SetViewOffset( VEC_DIVE_VIEW );
+	}
+	if (player->GetGroundEntity() != NULL)
+	{/*Reenable acrobatics once on ground*/
+		m_pSDKPlayer->m_Shared.somersault = false;
+		m_pSDKPlayer->m_Shared.runtime = 0;
+	}
+	if ((mv->m_nButtons&IN_JUMP) && m_pSDKPlayer->m_Shared.runtime == 0)
+	{/*Wallrun check*/
+		trace_t tr;
+		TracePlayerBBoxWithStep (mv->GetAbsOrigin (),
+								 mv->GetAbsOrigin () + 2*m_vecForward,
+								 MASK_PLAYERSOLID,
+								 COLLISION_GROUP_PLAYER_MOVEMENT,
+								 tr);
+		if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7)
+		{
+			Vector2D right = m_vecRight.AsVector2D ();
+			Vector2D normal = tr.plane.normal.AsVector2D ();
+			float angle = DotProduct2D (normal, right);
+			if (fabs (angle) >= 0.3)
+			{/*Use some voodoo to compute run direction*/
+				float s = (angle > 0) ? 1 : -1;
+				m_pSDKPlayer->m_Shared.rundir[0] = -s*tr.plane.normal[1];
+				m_pSDKPlayer->m_Shared.rundir[1] =  s*tr.plane.normal[0];
+				m_pSDKPlayer->m_Shared.rundir[2] = 0;
+				m_pSDKPlayer->m_Shared.wallscalar = -s;
+				/*We're now primed*/
+				CPASFilter filter (mv->GetAbsOrigin ());
+				filter.UsePredictionRules ();
+				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoSlide");
+				m_pSDKPlayer->m_Shared.runtime = da_acro_wallrun_duration.GetFloat ();
+				mv->m_vecVelocity[2] = 0;
+				mv->m_outWishVel[2] = 0;
+				mv->m_outJumpVel[2] = 0;
+				mv->m_nOldButtons |= IN_JUMP;
+			}
+		}
+	}
+	if (m_pSDKPlayer->m_Shared.runtime > 0)
+	{/*Wallrunning*/
+		trace_t tr;
+		Vector right;
+
+		right = m_pSDKPlayer->m_Shared.wallscalar*m_vecRight;
+		TraceBBox (mv->GetAbsOrigin (),
+				   mv->GetAbsOrigin () + right,
+				   GetPlayerMins (),
+				   GetPlayerMaxs (),
+				   tr);
+		if (tr.fraction >= 0.99)
+		{/*Wall no longer at side*/
+			m_pSDKPlayer->m_Shared.runtime = -1;
+		}
+		else if (((mv->m_nOldButtons^mv->m_nButtons)&mv->m_nOldButtons)&IN_JUMP)
+		{/*Let go of jump button, so kick off the wall*/
+			CPASFilter filter (mv->GetAbsOrigin ());
+			filter.UsePredictionRules ();
+			mv->m_vecVelocity[0] = 135*tr.plane.normal[0];
+			mv->m_vecVelocity[1] = 135*tr.plane.normal[1];
+			/*TODO: Cool running sound*/
+			m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
+			m_pSDKPlayer->m_Shared.runtime = -1;
+		}
+		else
+		{/*Run right up along the wall*/
+			Vector forward;
+			float r = m_pSDKPlayer->m_Shared.runtime;
+			float t = r*r*r + 3*r + 1;
+			float d = da_acro_wallrun_duration.GetFloat ();
+			t = 1 - t/(d*d*d);
+			forward = da_acro_wallrun_thrust.GetFloat ()*m_pSDKPlayer->m_Shared.rundir;
+			mv->m_vecVelocity[0] = forward[0];
+			mv->m_vecVelocity[1] = forward[1];
+			mv->m_vecVelocity[2] = t*da_acro_wallrun_gain.GetFloat ();
+			FinishGravity ();
+
+			m_pSDKPlayer->m_Shared.runtime -= 1000*gpGlobals->frametime;
+			if (m_pSDKPlayer->m_Shared.runtime < 0)
+			{/*Don't wallrun again until we've landed*/
+				m_pSDKPlayer->m_Shared.runtime = -1;
+			}
+		}
+	}
+#if 0
+	int tapped = 0;
+	if (m_pSDKPlayer->m_Shared.taptime == 0)
+	{/*Check for double tapped keys*/
+		int buttons = mv->m_nButtons;
+		if (buttons&IN_FORWARD) m_pSDKPlayer->m_Shared.tapkey = IN_FORWARD;
+		if (buttons&IN_BACK) m_pSDKPlayer->m_Shared.tapkey = IN_BACK;
+		if (buttons&IN_MOVELEFT) m_pSDKPlayer->m_Shared.tapkey = IN_MOVELEFT;
+		if (buttons&IN_MOVERIGHT) m_pSDKPlayer->m_Shared.tapkey = IN_MOVERIGHT;
+		if (m_pSDKPlayer->m_Shared.tapkey)
+		{
+#ifdef GAME_DLL
+			m_pSDKPlayer->m_Shared.taptime = atof (engine->GetClientConVarValue (m_pSDKPlayer->entindex (), "da_user_taptime"));
+#else
+			m_pSDKPlayer->m_Shared.taptime = da_user_taptime.GetFloat ();
+#endif
+		}
+	}
+	else
+	{
+		int changed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
+		changed &= (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT);
+		if (changed == m_pSDKPlayer->m_Shared.tapkey)
+		{
+			tapped = m_pSDKPlayer->m_Shared.tapkey;
+			m_pSDKPlayer->m_Shared.tapkey = 0;
+			m_pSDKPlayer->m_Shared.taptime = 0;
+		}
+		else if (changed != 0)
+		{
+			m_pSDKPlayer->m_Shared.tapkey = 0;
+			m_pSDKPlayer->m_Shared.taptime = 0;
+		}
+	}
+#endif
+	if (mv->m_nButtons & IN_JUMP) 
+	{
+		float jumpheight, jumpspeed;
+		float flGroundFactor;
+		float startz;
+
+		if (m_pSDKPlayer->m_Shared.runtime != 0)
+		{
+			goto nojump;
+		}
+		if ( mv->m_nOldButtons & IN_JUMP )
+		{
+			goto nojump;
+		}
+		if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
+		{
+			goto nojump;
+		}
+		flGroundFactor = 1.0;
+		startz = mv->m_vecVelocity[2];
+		if (!m_pSDKPlayer->GetGroundEntity ())
+		{
+			if (!m_pSDKPlayer->m_Shared.somersault)
+			{/*Do somersault*/
+				float forward, side, speed;
+				CPASFilter filter (mv->GetAbsOrigin ());
+				filter.UsePredictionRules ();
+				
+				forward = mv->m_flForwardMove;
+				side = mv->m_flSideMove;
+				speed = forward*forward + side*side;
+				if (fabs (speed) > 1)
+				{/*Valve scales these in place, so now I have to rescale them here*/
+					speed = 1.0/sqrt (speed);
+					forward = 400*(speed*forward);
+					side = 400*(speed*side);
+				}
+				else
+				{
+					forward = 0;
+					side = 0;
+				}
+				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+				m_pSDKPlayer->m_Shared.somersault = true;
+				mv->m_vecVelocity[0] = m_vecForward[0]*forward +  m_vecRight[0]*side;
+				mv->m_vecVelocity[1] = m_vecForward[1]*forward +  m_vecRight[1]*side;
+				mv->m_nOldButtons |= IN_JUMP;
+				jumpheight = 80;
+			}
+			else
+			{
+				goto nojump;
+			}
+		}
+		else
+		{
+			if (player->GetSurfaceData ())
+			{
+				flGroundFactor = player->GetSurfaceData()->game.jumpFactor; 
+			}
+			if (!m_pSDKPlayer->m_Shared.IsGettingUpFromSlide ())
+			{//play end slide sound instead if we're jumping out of a slide
+				m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
+			}
+			jumpheight = da_acro_jump_height.GetFloat ();
+		}
+		/*TODO: cache me*/
+		jumpspeed = sqrt (2.0*sv_gravity.GetFloat ()*jumpheight);
+		if ((m_pSDKPlayer->m_Local.m_bDucking) || (m_pSDKPlayer->GetFlags() & FL_DUCKING))
+		{					
+			mv->m_vecVelocity[2] = flGroundFactor*jumpspeed;
+		}
+		else
+		{
+			mv->m_vecVelocity[2] += flGroundFactor*jumpspeed;
+		}
+		SetGroundEntity (NULL);
+		FinishGravity();
+
+		m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
+		m_pSDKPlayer->m_Shared.SetJumping (true);
+		m_pSDKPlayer->ReadyWeapon ();
+		mv->m_outWishVel.z += mv->m_vecVelocity[2] - startz;
+		mv->m_outStepHeight += 0.1f;
+		mv->m_nOldButtons |= IN_JUMP;
+	}
+	else
+	{
+		mv->m_nOldButtons &= ~IN_JUMP;
+	}
+nojump:
+	if ((mv->m_nButtons&IN_ALT1) && !(mv->m_nOldButtons&IN_ALT1))
+	{/*Kong*/
+		trace_t tr;
+		TraceBBox (mv->GetAbsOrigin (),
+					mv->GetAbsOrigin () - Vector (0, 0, da_acro_kong_minz.GetFloat ()),
+					GetPlayerMins (),
+					GetPlayerMaxs (),
+					tr);
+		if (tr.fraction == 1)
+		{
+			TraceBBox (mv->GetAbsOrigin (),
+						mv->GetAbsOrigin () + 4*m_vecForward,
+						GetPlayerMins (),
+						GetPlayerMaxs (),
+						tr);
+			if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7)
+			{
+				CPASFilter filter (mv->GetAbsOrigin ());
+
+				filter.UsePredictionRules ();
+				mv->m_vecVelocity[0] = 270*tr.plane.normal[0];
+				mv->m_vecVelocity[1] = 270*tr.plane.normal[1];
+				mv->m_vecVelocity[2] = 300;
+				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
+			}
+		}
+	}
+	if (player->GetGroundEntity() != NULL)
+	{
+		mv->m_vecVelocity[2] = 0.0;
+		Friction();
+	}
+	CheckVelocity();
+	if (player->GetGroundEntity() != NULL)
+	{
+		player->UpdateStepSound(player->m_pSurfaceData, mv->GetAbsOrigin (), mv->m_vecVelocity);
+		WalkMove();
+	}
+	else
+	{	
+		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[ 2 ];
+		AirMove ();
+	}
+	CategorizePosition();
+	CheckVelocity();
+	if ( !CheckWater() )
+	{
+		FinishGravity();
+	}
+	if ( player->GetGroundEntity() != NULL )
+	{
+		mv->m_vecVelocity[2] = 0;
+	}
+	CheckFalling();
+	if ((m_nOldWaterLevel == WL_NotInWater && player->GetWaterLevel() != WL_NotInWater) ||
+		( m_nOldWaterLevel != WL_NotInWater && player->GetWaterLevel() == WL_NotInWater))
+	{/*Water enter/exit sound*/
+#if !defined (CLIENT_DLL)
+		player->Splash();
+#endif
+		PlaySwimSound();
+	}
 }
