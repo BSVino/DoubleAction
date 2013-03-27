@@ -392,7 +392,14 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnduck = false;
 	//m_Shared.tapkey = 0;
 	//m_Shared.taptime = 0;
+	m_Shared.climbcnt = 0;
+	m_Shared.climbtime = 0;
+	m_Shared.kongcnt = 0;
+	m_Shared.kongtime = 0;
+	m_Shared.runtime = 0;
+	m_Shared.wallscalar = 0;
 	m_Shared.somersault = false;
+
 
 	//Tony; todo; fix
 

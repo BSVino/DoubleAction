@@ -190,13 +190,16 @@ private:
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
 public:
-#if 0
-	int		tapkey;
-	float	taptime;
-#endif
+	/*Stuff for new controls*/
+	int			tapkey;
+	float		taptime;
+	int			climbcnt;
+	float		climbtime;
+	int			kongcnt;
+	float		kongtime;
 	float		runtime;
-	float		wallscalar;
 	Vector		rundir;
+	float		wallscalar; /*TODO: Make into a bool?*/
 	bool		somersault;
 public:
 
