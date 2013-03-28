@@ -390,8 +390,10 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bAimedIn = false;
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
-	//m_Shared.tapkey = 0;
-	//m_Shared.taptime = 0;
+
+
+	m_Shared.tapkey = 0;
+	m_Shared.taptime = 0;
 	m_Shared.climbcnt = 0;
 	m_Shared.climbtime = 0;
 	m_Shared.kongcnt = 0;
