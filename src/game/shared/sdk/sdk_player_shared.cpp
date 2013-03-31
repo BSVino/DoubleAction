@@ -375,7 +375,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.runtime = 0;
 	m_Shared.wallscalar = 0;
 	m_Shared.somersault = false;
-
+	m_Shared.manteldist = 0;
 
 	//Tony; todo; fix
 
@@ -955,13 +955,17 @@ Vector CSDKPlayerShared::StartDiving()
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
+	float y = m_pOuter->EyeAngles ().x;
+	if (y > 5) flDiveHeight *= 0.33;
+	else if (y < -5) flDiveHeight *= 1.66;
+
 	if (!bWasOnGround)
 		flDiveHeight = sdk_dive_height_high.GetFloat();
 
 	float flRatio = sdk_dive_height_adrenaline.GetFloat()/flDiveHeight;
 	float flModifier = (flRatio - 1)/2;
 
-	flDiveHeight = ModifySkillValue(flDiveHeight, flModifier, SKILL_ATHLETIC);
+	flDiveHeight = ModifySkillValue (flDiveHeight, flModifier, SKILL_ATHLETIC);
 
 	flRatio = sdk_dive_gravity_adrenaline.GetFloat()/sdk_dive_gravity.GetFloat();
 	flModifier = (flRatio - 1)/2;

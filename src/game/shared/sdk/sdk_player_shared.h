@@ -203,6 +203,7 @@ public:
 	float		wallscalar; /*TODO: Make into a bool?*/
 	bool		somersault;
 	int			daflags;
+	float		manteldist;
 public:
 
 #ifdef SDK_USE_PRONE
