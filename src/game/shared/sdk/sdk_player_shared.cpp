@@ -958,6 +958,7 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->Instructor_LessonLearned("dive");
 
+	Assert (m_pOuter->m_Shared.m_flRunSpeed);
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
