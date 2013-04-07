@@ -843,10 +843,9 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 {
-	if (BaseClass::HandleSwimming( idealActivity ))
-		return HandleMoving(idealActivity);
-	else
-		return false;
+	// for now return false to just use the standard movement animstate
+	// if we get swim anims this will need updating
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1121,12 +1120,9 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			else
 				idealActivity = ACT_DAB_JUMP_START;
 		}
-	}	
+	}
 
-	if ( m_pSDKPlayer->GetWaterLevel() >= WL_Waist )
-		return false;
-
-	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND))
+	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) && (m_pSDKPlayer->GetWaterLevel() < WL_Waist))
 	{
 		idealActivity = ACT_DAB_JUMP_FLOAT;
 		return true;
