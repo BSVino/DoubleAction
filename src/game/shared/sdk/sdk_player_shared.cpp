@@ -403,6 +403,8 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.somersault = false;
 	m_Shared.manteldist = 0;
 
+	m_Shared.fliptime = 0;
+
 	//Tony; todo; fix
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
@@ -968,6 +970,8 @@ ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REP
 ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
+ConVar  da_acro_dive_arc ("da_acro_dive_arc", "15", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
 Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
@@ -1008,8 +1012,9 @@ Vector CSDKPlayerShared::StartDiving()
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
 	float y = m_pOuter->EyeAngles ().x;
-	if (y > 5) flDiveHeight *= 0.33;
-	else if (y < -5) flDiveHeight *= 1.66;
+	float arc = da_acro_dive_arc.GetFloat ();
+	if (y > arc) flDiveHeight *= 0.33;
+	else if (y < -arc) flDiveHeight *= 1.66;
 
 	if (!bWasOnGround)
 		flDiveHeight = sdk_dive_height_high.GetFloat();

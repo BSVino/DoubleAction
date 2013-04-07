@@ -36,23 +36,30 @@ ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVA
 ConVar da_user_taptime ("da_user_taptime", "0", FCVAR_ARCHIVE|FCVAR_USERINFO);
 #endif
 
-ConVar  da_acro_kong_dist ("da_acro_kong_dist", "4", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+
+ConVar  da_acro_kong_dist ("da_acro_kong_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_limit ("da_acro_kong_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_delay ("da_acro_kong_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_speed ("da_acro_kong_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_gain ("da_acro_kong_gain", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_jump_height ("da_acro_jump_height", "270", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_somersault_gain ("da_acro_somersault_gain", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_somersault_speed ("da_acro_somersault_speed", "270", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_mantel_height ("da_acro_mantel_height", "72", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
-ConVar  da_acro_climb_frequency ("da_acro_climb_frequency", "160", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_climb_limit ("da_acro_climb_limit", "2", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_somersault_gain ("da_acro_somersault_gain", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_somersault_speed ("da_acro_somersault_speed", "1.5", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_somersault_duration ("da_acro_somersault_duration", "500", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_acro_climb_frequency ("da_acro_climb_frequency", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_climb_limit ("da_acro_climb_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_climb_gain ("da_acro_climb_gain", "320", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "1400", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "310", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_wallrun_gain ("da_acro_wallrun_gain", "140", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 extern bool g_bMovementOptimizations;
@@ -114,6 +121,9 @@ public:
 	inline void TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
 	virtual void FullWalkMove ();
 	virtual void StepMove (Vector &vecDestination, trace_t &trace);
+
+	virtual void StartGravity (void);
+	virtual void FinishGravity (void);
 protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
@@ -364,6 +374,10 @@ void CSDKGameMovement::CheckFalling( void )
 	{
 		return;
 	}
+	if (m_pSDKPlayer->m_Shared.fliptime > 0)
+	{
+		return;
+	}
 	// if we landed on the ground
 	if ( player->GetGroundEntity() != NULL && !IsDead() )
 	{
@@ -470,8 +484,9 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	mv->m_outWishVel[0] += accelspeed * wishdir[0];
 	mv->m_vecVelocity[1] += accelspeed * wishdir[1];
 	mv->m_outWishVel[1] += accelspeed * wishdir[1];
-	if (m_pSDKPlayer->m_Shared.runtime <= 0)
-	{/*This is a hack, really. I didn't feel like dealing with this.*/
+	if (m_pSDKPlayer->m_Shared.runtime <= 0 ||
+		m_pSDKPlayer->m_Shared.fliptime <= 0)
+	{/*Disabling physics here makes stunts easier to model*/
 		mv->m_vecVelocity[2] += accelspeed * wishdir[2];
 		mv->m_outWishVel[2] += accelspeed * wishdir[2];
 	}
@@ -506,14 +521,14 @@ void CSDKGameMovement::WalkMove( void )
 	if (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		vecWishDirection = Vector(0,0,0);
 
-	else if (m_pSDKPlayer->m_Shared.IsRolling())
+	/*else if (m_pSDKPlayer->m_Shared.IsRolling())
 	{
 		if (vecWishDirection.LengthSqr() > 0)
 			vecWishDirection = (m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed + vecWishDirection)/2;
 		else
 			vecWishDirection = m_pSDKPlayer->m_Shared.GetRollDirection() * mv->m_flMaxSpeed;
 		vecWishDirection.z = 0;
-	}
+	}*/
 
 	// Calculate the speed and direction of movement, then clamp the speed.
 	float flWishSpeed = VectorNormalize( vecWishDirection );
@@ -818,6 +833,10 @@ void CSDKGameMovement::CategorizePosition( void )
 
 	if (m_pSDKPlayer->m_Shared.IsSliding() || m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
 		player->m_surfaceFriction *= m_pSDKPlayer->m_Shared.GetSlideFriction();
+	else if (m_pSDKPlayer->m_Shared.IsRolling ())
+	{
+		player->m_surfaceFriction *= da_acro_roll_friction.GetFloat ();
+	}
 }
 
 inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, 
@@ -2344,11 +2363,6 @@ void CSDKGameMovement::FullWalkMove ()
 		{
 			m_pSDKPlayer->m_Shared.climbtime = 0;
 		}
-		else
-		{/*Disable all but vertical movement while climbing*/
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = 0;
-		}
 	}
 	if (m_pSDKPlayer->m_Shared.kongtime > 0)
 	{
@@ -2391,6 +2405,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		return;
 	}
+#if 1
 	if (m_pSDKPlayer->m_Shared.manteldist > 0)
 	{/*Player is climbing up a ledge*/
 		Vector org;
@@ -2409,34 +2424,36 @@ void CSDKGameMovement::FullWalkMove ()
 		m_pSDKPlayer->m_Shared.manteldist -= d;
 		if (m_pSDKPlayer->m_Shared.manteldist < 0)
 		{/*Roll over onto the ledge*/
+
 			trace_t tr;
+			Vector mins, maxs;
 			Vector pr1, pr2;
-			
+			Vector dir;
+
+			VectorCopy (m_pSDKPlayer->m_Shared.wallnormal, dir);
+			VectorCopy (GetPlayerMins (), mins);
+			VectorCopy (GetPlayerMaxs (), maxs);
+			dir.Negate ();
 			/*Place on the ledge.
-			TODO: Improve this so it scans to see if we can stand*/
-			pr2 = m_vecForward;
-			pr2[2] = 0;
-			VectorAdd (mv->GetAbsOrigin (), pr2, pr1);
+			TODO: Make this less of a hack*/
+			VectorAdd (mv->GetAbsOrigin (), dir, pr1);
 			pr1[2] += 100;
 			VectorCopy (pr1, pr2);
 			pr2[2] -= 101;
-			TraceBBox (pr1, pr2, GetPlayerMins (), GetPlayerMaxs (), tr);
+			TraceBBox (pr1, pr2, mins, maxs, tr);
 			mv->SetAbsOrigin (tr.endpos);
 			player->AddFlag (FL_ONGROUND);
-
-			/*Do the roll bit
-			TODO: Added check so we don't roll over thin walls?*/
+			/*Give a little push forward*/
 			mv->m_vecVelocity = m_vecForward*135;
 			mv->m_vecVelocity[2] = 0;
 			m_pSDKPlayer->SetAbsVelocity (mv->m_vecVelocity);
-			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
-			m_pSDKPlayer->m_Shared.StartRolling ();
 			m_pSDKPlayer->m_Shared.manteldist = 0;
 			goto nokong;
 		}
 		else return;
 	}
 cancelmantel:
+#endif
 #if 1
 	int tapped = 0;
 	if ((player->GetFlags ()&FL_ONGROUND) &&
@@ -2537,8 +2554,9 @@ cancelmantel:
 	if (player->GetGroundEntity() != NULL)
 	{
 		if (!(mv->m_nButtons&IN_JUMP))
-		{/*Only clear if jump button isn't held*/
+		{
 			m_pSDKPlayer->m_Shared.daflags &= ~DA_WRLOCK;
+			m_pSDKPlayer->m_Shared.daflags &= ~DA_CLIMB;
 		}
 		m_pSDKPlayer->m_Shared.somersault = false;
 		m_pSDKPlayer->m_Shared.climbcnt = 0;
@@ -2552,16 +2570,20 @@ cancelmantel:
 		if (m_pSDKPlayer->m_Shared.IsRolling() || 
 			(m_pSDKPlayer->m_Shared.IsSliding() && 
 			 m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
-		{
+		{/*Must be upright*/
 			goto nowallrun;
 		}
 		if (m_pSDKPlayer->m_Shared.climbcnt != 0)
-		{
+		{/*Must not be climbing*/
 			goto nowallrun;
 		}
-		VectorScale (m_vecRight, mv->m_flSideMove, dir);
-		dir.NormalizeInPlace ();
+		dir[0] = m_vecForward[0];
+		dir[1] = m_vecForward[1];
 		dir[2] = 0;
+		if (DotProduct (player->GetAbsVelocity (), dir) <= 0)
+		{/*Must be moving forward*/
+			goto nowallrun;
+		}
 		TraceBBox (mv->GetAbsOrigin (),
 				   mv->GetAbsOrigin () + dir,
 				   GetPlayerMins () + Vector (0, 0, 0.5*GetPlayerMaxs ().z),
@@ -2575,9 +2597,10 @@ cancelmantel:
 			if (fabs (angle) >= 0.8)
 			{/*Use some voodoo to compute run direction*/
 				float s = (angle > 0) ? 1 : -1;
-				m_pSDKPlayer->m_Shared.rundir[0] = -s*tr.plane.normal[1];
-				m_pSDKPlayer->m_Shared.rundir[1] =  s*tr.plane.normal[0];
-				m_pSDKPlayer->m_Shared.rundir[2] = 0;
+				Vector &dumb = m_pSDKPlayer->m_Shared.rundir.GetForModify ();
+				dumb[0] = -s*tr.plane.normal[1];
+				dumb[1] =  s*tr.plane.normal[0];
+				dumb[2] = 0;
 				m_pSDKPlayer->m_Shared.wallscalar = -s;
 				/*We're now primed*/
 				CPASFilter filter (mv->GetAbsOrigin ());
@@ -2614,6 +2637,12 @@ nowallrun:
 			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
 			m_pSDKPlayer->m_Shared.runtime = -1;
 		}
+		else if (mv->m_nButtons&IN_ALT1)
+		{
+			VectorScale (m_vecForward, player->GetAbsVelocity ().Length (), mv->m_vecVelocity);
+			player->SetAbsVelocity (mv->m_vecVelocity);
+			m_pSDKPlayer->m_Shared.StartDiving ();
+		}
 		else
 		{/*Run right up along the wall*/
 			Vector forward;
@@ -2643,6 +2672,7 @@ nowallrun:
 		{
 			goto nojump;
 		}
+
 		if (m_pSDKPlayer->m_Shared.runtime == 0)
 		{/*Mantel*/
 			trace_t tr;
@@ -2650,7 +2680,7 @@ nowallrun:
 			Vector pr1, pr2;
 			Vector dir;
 			float ofs;
-
+#if 1
 			VectorCopy (VEC_HULL_MIN, mins);
 			VectorCopy (VEC_HULL_MAX, maxs);
 			VectorCopy (m_vecForward, dir);
@@ -2670,7 +2700,6 @@ nowallrun:
 			VectorCopy (pr2, pr1);
 			VectorMA (pr1, 8, dir, pr2);
 			TraceBBox (pr1, pr2, mins, maxs, tr);
-
 			if (tr.fraction < 1)
 			{/*Not enough space to stand on for potential ledge,
 			   or too far down wall*/
@@ -2687,38 +2716,50 @@ nowallrun:
 			}
 			/*Move up the wall next frame*/
 			float dist = tr.endpos.z - mv->GetAbsOrigin ().z;
-			if (dist > 0)
+			if (dist > 32) /*actually be some distance down*/
 			{
-				m_pSDKPlayer->m_Shared.manteldist = dist;
+				VectorCopy (mv->GetAbsOrigin (), pr1);
+				VectorMA (pr1, 16, dir, pr2);
+				TraceBBox (pr1, pr2, mins, maxs, tr);
+				VectorCopy (tr.plane.normal, m_pSDKPlayer->m_Shared.wallnormal.GetForModify ());
 				if (m_pSDKPlayer->m_Shared.IsDiving ())
-				{/*Cancel any dive that we're in*/
+				{
 					m_pSDKPlayer->m_Shared.EndDive ();
 				}
+				m_pSDKPlayer->m_Shared.manteldist = dist;
 				return;
 			}
 nomantel:
+#endif
 			if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
 			{
 				goto nojump;
 			}
-			if (!m_pSDKPlayer->m_Shared.IsProne () &&
+			if ((((mv->m_nButtons^mv->m_nOldButtons)&mv->m_nButtons)&IN_JUMP) &&
+				!(player->GetFlags ()&FL_ONGROUND))
+			{
+				m_pSDKPlayer->m_Shared.daflags |= DA_CLIMB;
+			}
+			if ((m_pSDKPlayer->m_Shared.daflags&DA_CLIMB) &&
+				!m_pSDKPlayer->m_Shared.IsProne () &&
 				!m_pSDKPlayer->m_Shared.IsRolling () &&
 				!m_pSDKPlayer->m_Shared.IsSliding () &&
 				!m_pSDKPlayer->m_Shared.IsDiving () &&
 				 m_pSDKPlayer->m_Shared.climbtime == 0 && 
 				 m_pSDKPlayer->m_Shared.climbcnt < da_acro_climb_limit.GetInt ())
 			{/*Mantel -> Climb*/
+				VectorCopy (GetPlayerMins (true), mins);
+				VectorCopy (GetPlayerMaxs (true), maxs);
+				player->SetCollisionBounds (mins, maxs);
 				TraceBBox (mv->GetAbsOrigin (),
-						   mv->GetAbsOrigin () + m_vecForward,
-						   GetPlayerMins () + Vector (0, 0, 0.5*GetPlayerMaxs ().z),
-						   GetPlayerMaxs (),
+						   mv->GetAbsOrigin () + 4*m_vecForward,
+						   mins + Vector (0, 0, 0.5*maxs[2]),
+						   maxs,
 						   tr);
 				if (tr.fraction < 1)
 				{
 					startz = mv->m_vecVelocity[2];
-					/*FIXME: Actually project velocity vertically onto the wall's normal.*/
-					mv->m_flForwardMove = 0;
-					mv->m_flSideMove = 0;
+					/*FIXME: Actually project velocity vertically onto the wall's plane.*/
 					mv->m_vecVelocity[0] = 0;
 					mv->m_vecVelocity[1] = 0;
 					mv->m_vecVelocity[2] = da_acro_climb_gain.GetFloat ();
@@ -2726,7 +2767,6 @@ nomantel:
 					FinishGravity();
 
 					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
-					m_pSDKPlayer->ReadyWeapon ();
 					m_pSDKPlayer->m_Shared.climbtime = da_acro_climb_frequency.GetFloat ();
 					m_pSDKPlayer->m_Shared.climbcnt++;
 					goto nojump;
@@ -2746,31 +2786,27 @@ nomantel:
 		if (!m_pSDKPlayer->GetGroundEntity ())
 		{
 			if (!m_pSDKPlayer->m_Shared.somersault && 
-				!m_pSDKPlayer->m_Shared.IsDiving ())
+				!m_pSDKPlayer->m_Shared.IsDiving () &&
+				player->GetAbsVelocity ().z > 0)
 			{/*Do somersault*/
-				float forward, side, speed;
+				float forward, side;
 				CPASFilter filter (mv->GetAbsOrigin ());
+
 				filter.UsePredictionRules ();
-				
+				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+				m_pSDKPlayer->m_Shared.somersault = true;
 				forward = mv->m_flForwardMove;
 				side = mv->m_flSideMove;
-				speed = forward*forward + side*side;
-				if (fabs (speed) > 1)
-				{/*Valve scales these in place, so now I have to rescale them here*/
-					speed = 1.0/sqrt (speed);
-					forward = da_acro_somersault_speed.GetFloat ()*(speed*forward);
-					side = da_acro_somersault_speed.GetFloat ()*(speed*side);
-				}
-				else
+				if (forward*forward + side*side > 100)
 				{
-					forward = 0;
-					side = 0;
+					Vector &ihatereferences = m_pSDKPlayer->m_Shared.flipdir.GetForModify ();
+					ihatereferences[0] = da_acro_somersault_speed.GetFloat ()*forward;
+					ihatereferences[1] = da_acro_somersault_speed.GetFloat ()*side;
+					ihatereferences[2] = 0;
+					m_pSDKPlayer->m_Shared.fliptime = da_acro_somersault_duration.GetFloat ();
+					player->SetGravity (1);
+					goto nojump;
 				}
-				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
-				mv->m_vecVelocity[0] = m_vecForward[0]*forward +  m_vecRight[0]*side;
-				mv->m_vecVelocity[1] = m_vecForward[1]*forward +  m_vecRight[1]*side;
-				mv->m_nOldButtons |= IN_JUMP;
-				m_pSDKPlayer->m_Shared.somersault = true;
 				jumpheight = da_acro_somersault_gain.GetFloat ();
 			}
 			else
@@ -2816,6 +2852,33 @@ nomantel:
 		mv->m_nOldButtons &= ~IN_JUMP;
 	}
 nojump:
+	if (m_pSDKPlayer->m_Shared.fliptime > 0)
+	{/*Move player gradually in the direction that they flipped*/
+		float forward = m_pSDKPlayer->m_Shared.flipdir.Get ().x;
+		float side = m_pSDKPlayer->m_Shared.flipdir.Get ().y;
+		float d = 0.5*da_acro_somersault_duration.GetFloat ();
+		float t = (m_pSDKPlayer->m_Shared.fliptime - d)/d;
+		float s = t;
+
+		mv->m_vecVelocity[0] = m_vecForward[0]*forward +  m_vecRight[0]*side;
+		mv->m_vecVelocity[1] = m_vecForward[1]*forward +  m_vecRight[1]*side;
+		mv->m_vecVelocity[2] = s*da_acro_somersault_gain.GetFloat ();
+
+		m_pSDKPlayer->m_Shared.fliptime -= 1000*gpGlobals->frametime;
+		if (m_pSDKPlayer->m_Shared.fliptime <= 0 ||
+			m_pSDKPlayer->m_Shared.IsDiving () ||
+			m_pSDKPlayer->m_Shared.IsRolling () ||
+			(player->GetFlags ()&FL_ONGROUND))
+		{
+			m_pSDKPlayer->m_Shared.fliptime = 0;
+			player->SetGravity (1);
+		}
+	}
+	else
+	{
+		/*FIXME: Needs to be moved lower, but screen shakes from flip landing*/
+		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
+	}
 	if ((mv->m_nButtons&IN_ALT1) && !(mv->m_nOldButtons&IN_ALT1))
 	{/*Kong*/
 		trace_t tr;
@@ -2868,7 +2931,6 @@ nokong:
 	}
 	else
 	{	
-		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity [2];
 		AirMove ();
 	}
 	CategorizePosition();
@@ -2938,55 +3000,84 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		vecEndPos.z -= player->m_Local.m_flStepSize + DIST_EPSILON;
 	}
 		
-	TracePlayerBBox( mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
 	if (trace.plane.normal[2] < 0.7)
-	{
-		if (!(player->GetFlags ()&FL_DUCKING))
-		{/*Try to vault over the wall then*/
-			mv->SetAbsOrigin (vecPos);
-			VectorCopy (vecVel, mv->m_vecVelocity);
+	{/*Try to vault over the wall*/
+		float vault_height = da_acro_vault_height.GetFloat ();
+		Vector forward, normal;
+		Vector mins, maxs;
+		bool slide;
 
-			VectorCopy (mv->GetAbsOrigin(), vecEndPos);
-			vecEndPos.z += 42 + DIST_EPSILON;
-			TracePlayerBBox (mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-			if (!trace.startsolid && !trace.allsolid)
-			{
-				mv->SetAbsOrigin (trace.endpos);
+		VectorCopy (GetPlayerMins (), mins);
+		VectorCopy (GetPlayerMaxs (), maxs);
+		if (m_pSDKPlayer->m_Shared.IsSliding () ||
+			m_pSDKPlayer->m_Shared.IsDiveSliding () ||
+			m_pSDKPlayer->m_Shared.IsRolling () ||
+			(player->GetFlags ()&FL_DUCKING))
+		{/*Must be upright*/
+			goto novault;
+		}
+		if (mv->m_flForwardMove < 100 + 1e-2)
+		{/*Must be moving forward, must be running*/
+			goto novault;
+		}
+		forward[0] = m_vecForward[0];
+		forward[1] = m_vecForward[1];
+		forward[2] = 0;
+		VectorMA (mv->GetAbsOrigin (), 16, forward, vecEndPos);
+		TracePlayerBBox (mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+		VectorCopy (trace.plane.normal, normal);
+		if (fabs (DotProduct (forward, normal)) < 0.7)
+		{/*Must be facing toward wall*/
+			goto novault;
+		}
+		/*Test for slide*/
+		mv->SetAbsOrigin (vecPos);
+		VectorCopy (vecVel, mv->m_vecVelocity);
+		VectorMA (mv->GetAbsOrigin (), 16, forward, vecEndPos);
+		TraceBBox (mv->GetAbsOrigin (), vecEndPos, VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX, trace);
+		if (trace.fraction == 1) slide = true;
+		else 
+		{/*Nothing to go under*/
+			slide = false;
+		}
+		
+		VectorCopy (mv->GetAbsOrigin(), vecEndPos);
+		vecEndPos.z += vault_height;
+		TracePlayerBBox (mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+		if (!trace.startsolid && !trace.allsolid)
+		{
+			mv->SetAbsOrigin (trace.endpos);
+		}
+		if (TryPlayerMove () == 0)
+		{/*Can move onto the ledge*/
+			Vector end;
+			bool passable;
+			
+			passable = false;
+			VectorMA (mv->GetAbsOrigin (), -64, normal, vecEndPos);
+			TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+			if (trace.fraction == 1 && !trace.allsolid)
+			{/*Roll over*/
+				passable = true;
 			}
-			if (TryPlayerMove () == 0)
+			VectorCopy (trace.endpos, end);
+			vecEndPos.z -= 4*vault_height;
+			TracePlayerBBox (end, vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+			if (trace.fraction <= 0.25 && !trace.allsolid)
+			{/*Vault over if we won't fall to our death*/
+				passable = true;
+			}
+			else passable = false;
+			if (passable)
 			{
-				Vector dir, end;
-				bool passable;
-			
-				passable = false;
-				VectorCopy (mv->m_vecVelocity, dir);
-				dir.NormalizeInPlace ();
-			
-				VectorMA (mv->GetAbsOrigin (), 50, dir, vecEndPos);
-				TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-				if (trace.fraction == 1 && !trace.allsolid)
-				{/*Roll over*/
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
-					m_pSDKPlayer->m_Shared.StartRolling();
-					passable = true;
-				}
-
-				VectorCopy (trace.endpos, end);
-				vecEndPos.z -= 42 + DIST_EPSILON;
-				TracePlayerBBox (end, vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-				if (trace.fraction == 1 && !trace.allsolid)
-				{/*Vault over*/
-					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
-					m_pSDKPlayer->m_Shared.StartRolling();
-					passable = true;
-				}
-				if (passable)
-				{
-					return;
-				}
+				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
+				m_pSDKPlayer->m_Shared.StartRolling ();
+				mv->m_outStepHeight += vault_height;
+				return;
 			}
 		}
-
+novault:
 		mv->SetAbsOrigin( vecDownPos );
 		VectorCopy( vecDownVel, mv->m_vecVelocity );
 		float flStepDist = mv->GetAbsOrigin().z - vecPos.z;
@@ -3026,4 +3117,28 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 	{
 		mv->m_outStepHeight += flStepDist;
 	}
+}
+void CSDKGameMovement::StartGravity (void)
+{
+	float ent_gravity = player->GetGravity();
+
+	// Add gravity so they'll be in the correct position during movement
+	// yes, this 0.5 looks wrong, but it's not.  
+	if (ent_gravity > 0) mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * 0.5 * gpGlobals->frametime );
+	mv->m_vecVelocity[2] += player->GetBaseVelocity()[2] * gpGlobals->frametime;
+
+	Vector temp = player->GetBaseVelocity();
+	temp[ 2 ] = 0;
+	player->SetBaseVelocity( temp );
+
+	CheckVelocity();
+}
+void CSDKGameMovement::FinishGravity( void )
+{
+	float ent_gravity = player->GetGravity();
+	if ( player->m_flWaterJumpTime )
+		return;
+	// Get the correct velocity for the end of the dt
+	if (ent_gravity > 0) mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * gpGlobals->frametime * 0.5);
+	CheckVelocity();
 }
