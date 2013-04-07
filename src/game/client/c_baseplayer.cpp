@@ -1767,7 +1767,6 @@ void C_BasePlayer::Simulate()
 	//Frame updates
 	if ( this == C_BasePlayer::GetLocalPlayer() )
 	{
-		//Update the flashlight
 		Flashlight();
 
 		// Update the player's fog data if necessary.
