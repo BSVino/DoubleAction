@@ -59,9 +59,10 @@
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>Copying to %SourceSDK%\..\..\SourceMods\dab\bin\</Message>
-      <Command>if exist "%SourceSDK%\..\..\SourceMods\dab\bin\server.dll" attrib -r "%SourceSDK%\..\..\SourceMods\dab\bin\server.dll"
-if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "%SourceSDK%\..\..\SourceMods\dab\bin"</Command>
-      <Outputs>%SourceSDK%\..\..\SourceMods\dab\bin\server.dll;%(Outputs)</Outputs>
+      <Command>if exist "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll" attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll"
+if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..\..\SourceMods\dab\bin"
+</Command>
+      <Outputs>$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll;%(Outputs)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
