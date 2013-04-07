@@ -1288,7 +1288,7 @@ void CSDKGameMovement::SetRollEyeOffset( float flFraction )
 	if (flFraction < 0.5f)
 	{
 		Vector vecStartViewOffset = GetPlayerViewOffset( false );
-		if (m_pSDKPlayer->m_Shared.IsRolling() /*&& m_pSDKPlayer->m_Shared.IsRollingFromDive()*/)
+		if (m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->m_Shared.IsRollingFromDive())
 			vecStartViewOffset = VEC_DIVE_VIEW;
 
 		Vector vecSlideViewOffset = VEC_SLIDE_VIEW;

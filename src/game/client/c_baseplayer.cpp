@@ -1767,8 +1767,7 @@ void C_BasePlayer::Simulate()
 	//Frame updates
 	if ( this == C_BasePlayer::GetLocalPlayer() )
 	{
-		/*Disabled this, since Double Action doesn't have a flashlight*/
-		//Flashlight();
+		Flashlight();
 
 		// Update the player's fog data if necessary.
 		UpdateFogController();
