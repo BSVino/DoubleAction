@@ -51,7 +51,7 @@ ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_R
 ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_somersault_gain ("da_acro_somersault_gain", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_somersault_speed ("da_acro_somersault_speed", "1.5", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_somersault_speed ("da_acro_somersault_speed", "1.0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_somersault_duration ("da_acro_somersault_duration", "500", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_climb_frequency ("da_acro_climb_frequency", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -482,9 +482,9 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	mv->m_outWishVel[0] += accelspeed * wishdir[0];
 	mv->m_vecVelocity[1] += accelspeed * wishdir[1];
 	mv->m_outWishVel[1] += accelspeed * wishdir[1];
-	if (m_pSDKPlayer->m_Shared.runtime <= 0 ||
-		m_pSDKPlayer->m_Shared.fliptime <= 0)
-	{/*Disabling physics here makes stunts easier to model*/
+	if (m_pSDKPlayer->m_Shared.runtime <= 0 /*||
+		m_pSDKPlayer->m_Shared.fliptime <= 0*/)
+	{
 		mv->m_vecVelocity[2] += accelspeed * wishdir[2];
 		mv->m_outWishVel[2] += accelspeed * wishdir[2];
 	}
@@ -2844,14 +2844,9 @@ nojump:
 			m_pSDKPlayer->m_Shared.IsRolling () ||
 			(player->GetFlags ()&FL_ONGROUND))
 		{
-			m_pSDKPlayer->m_Shared.fliptime = 0;
+			m_pSDKPlayer->m_Shared.fliptime = -1;
 			player->SetGravity (1);
 		}
-	}
-	else
-	{
-		/*FIXME: Needs to be moved lower, but screen shakes from flip landing*/
-		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
 	}
 	if ((mv->m_nButtons&IN_ALT1) && !(mv->m_nOldButtons&IN_ALT1))
 	{/*Kong*/
@@ -2901,10 +2896,20 @@ nokong:
 	if (player->GetGroundEntity() != NULL)
 	{
 		player->UpdateStepSound(player->m_pSurfaceData, mv->GetAbsOrigin (), mv->m_vecVelocity);
+		if (m_pSDKPlayer->m_Shared.fliptime < 0)
+		{
+			m_pSDKPlayer->m_Shared.fliptime = 0;
+		}
 		WalkMove();
 	}
 	else
-	{	
+	{
+		if (m_pSDKPlayer->m_Shared.fliptime == 0) 
+		{/*Sort of a hack--
+			We don't want the camera to get punched when the player lands*/
+			player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
+		}
+		else player->m_Local.m_flFallVelocity = 0;
 		AirMove ();
 	}
 	CategorizePosition();
