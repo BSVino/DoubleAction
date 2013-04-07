@@ -83,7 +83,10 @@ public:
 	void	SetDuckPress(bool bReset = false);
 	float	GetLastDuckPress() const { return m_flLastDuckPress; };
 	bool	IsRolling() const;
+
+	/*This is not used?*/
 	bool	IsRollingFromDive() const { return m_bRollingFromDive; };
+	
 	bool	CanRoll() const;
 	void	StartRolling(bool bFromDive = false);
 	void	EndRoll();

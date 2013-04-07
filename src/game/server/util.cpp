@@ -2328,10 +2328,9 @@ CBaseEntity *UTIL_EntitiesInPVS( CBaseEntity *pPVSEntity, CBaseEntity *pStarting
 	static byte		pvs[ MAX_MAP_CLUSTERS/8 ];
 	static Vector	lastOrg( 0, 0, 0 );
 	static int		lastCluster = -1;
-
+	
 	if ( !pPVSEntity )
 		return NULL;
-
 	// NOTE: These used to be caching code here to prevent this from
 	// being called over+over which breaks when you go back + forth
 	// across level transitions
@@ -2361,7 +2360,6 @@ CBaseEntity *UTIL_EntitiesInPVS( CBaseEntity *pPVSEntity, CBaseEntity *pStarting
 
 		return pEntity;
 	}
-
 	return NULL;
 }
 
