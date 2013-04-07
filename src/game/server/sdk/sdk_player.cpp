@@ -1808,6 +1808,9 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 	if (pWeapon == NULL)
 		return false;
 
+	if (pWeapon == NULL)
+		return false;
+
 	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
 		return false;
 
