@@ -916,6 +916,46 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 #endif
 }
 
+extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType );
+void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+{
+#ifdef CLIENT_DLL
+	CNewParticleEffect *pTracer = NULL;
+	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (pLocalPlayer)
+	{
+		bool bPovObs = pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
+
+		if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
+		{
+			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			{
+				CBaseViewModel *vm = pLocalPlayer->GetViewModel( i );
+				if ( !vm )
+					continue;
+
+				pTracer = vm->ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+			}
+		}
+		else
+			pTracer = ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+
+		// just in case we couldn't get a view model
+		if( pTracer == NULL )
+			return;
+		
+		// Set the particle effect's destination to our bullet's termination point
+		pTracer->SetControlPoint( 1, tr.endpos );
+		pTracer->SetSortOrigin( vecTracerSrc );
+		
+		//whiz (but don't whiz yourself)
+		if( pLocalPlayer != GetOwner() && !bPovObs )
+			FX_TracerSound( vecTracerSrc, tr.endpos, iTracerType );
+	}
+#endif
+}
+
 void CWeaponSDKBase::WeaponIdle( void )
 {
 	//Idle again if we've finished
