@@ -306,10 +306,10 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		QAngle angDir;
 		VectorAngles(vecVelocity, angDir);
 
-		if (m_bFacingForward)
-			m_flGoalFeetYaw = angDir[YAW];
-		else
-			m_flGoalFeetYaw = AngleNormalize(angDir[YAW] + 180);
+		//if (m_bFacingForward)
+		m_flGoalFeetYaw = angDir[YAW];
+		//else
+		//	m_flGoalFeetYaw = AngleNormalize(angDir[YAW] + 180);
 
 		m_flGoalFeetYaw = AngleNormalize( m_flGoalFeetYaw );
 		if ( m_flGoalFeetYaw != m_flCurrentFeetYaw )
@@ -843,9 +843,10 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 {
-	bool bInWater = BaseClass::HandleSwimming( idealActivity );
-
-	return bInWater;
+	if (BaseClass::HandleSwimming( idealActivity ))
+		return HandleMoving(idealActivity);
+	else
+		return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1121,6 +1122,9 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 				idealActivity = ACT_DAB_JUMP_START;
 		}
 	}	
+
+	if ( m_pSDKPlayer->GetWaterLevel() >= WL_Waist )
+		return false;
 
 	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND))
 	{

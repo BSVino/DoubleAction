@@ -397,7 +397,7 @@ void CSDKPlayer::StartTouch(CBaseEntity *pOther)
 	CGameTrace tr;
 	tr = GetTouchTrace();
 
-	// If I'm diving and I hit a wall at a blunt angle, don't dive afterwards.
+	// If I'm diving and I hit a wall at a blunt angle, don't roll afterwards.
 	if (m_Shared.IsDiving() && tr.plane.normal.Dot(m_Shared.m_vecDiveDirection) < -0.95f)
 		m_Shared.m_bRollAfterDive = false;
 }
@@ -1196,8 +1196,8 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flRollSpeed = SDK_DEFAULT_PLAYER_ROLLSPEED;
 	m_Shared.m_flAimInSpeed = 100;
 
-	// Set the absolute max to sprint speed
-	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
+	// Set the absolute max to sprint speed (but we don't use sprint so now it's runspeed)
+	SetMaxSpeed( m_Shared.ModifySkillValue(m_Shared.m_flRunSpeed, 0.25f, SKILL_ATHLETIC) );
 }
 
 //-----------------------------------------------------------------------------
