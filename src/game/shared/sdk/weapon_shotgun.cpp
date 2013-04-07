@@ -56,12 +56,12 @@ void CWeaponShotgun::PrimaryAttack()
 		m_iInSpecialReload = 0;
 }
 
-void CWeaponShotgun::Swing(bool bIsSecondary, bool bIsStockAttack)
+void CWeaponShotgun::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 {
 	//cancel reload loop
 	m_iInSpecialReload = 0;
 
-	BaseClass::Swing( bIsSecondary, bIsStockAttack );
+	BaseClass::StartSwing( bIsSecondary, bIsStockAttack );
 }
 
 bool CWeaponShotgun::Reload()
