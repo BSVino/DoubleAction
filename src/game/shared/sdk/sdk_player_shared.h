@@ -26,6 +26,7 @@ class CSDKPlayer;
 #define DA_ROLL			0x08
 #define DA_WRLOCK		0x10	/*Don't refill wall run timer until grounded*/
 #define DA_KONGLOCK		0x20	/*Don't refill kong timer until grounded*/
+#define DA_CLIMB		0x40
 class CSDKPlayerShared
 {
 public:
@@ -192,18 +193,21 @@ private:
 
 public:
 	/*Stuff for new controls*/
-	int			tapkey;
-	float		taptime;
-	int			climbcnt;
-	float		climbtime;
-	int			kongcnt;
-	float		kongtime;
-	float		runtime;
-	Vector		rundir;
-	float		wallscalar; /*TODO: Make into a bool?*/
-	bool		somersault;
-	int			daflags;
-	float		manteldist;
+	CNetworkVar (int,		tapkey);
+	CNetworkVar (float,		taptime);
+	CNetworkVar (int,		climbcnt);
+	CNetworkVar (float,		climbtime);
+	CNetworkVar (int,		kongcnt);
+	CNetworkVar (float,		kongtime);
+	CNetworkVar (float,		runtime);
+	CNetworkVar (Vector,	rundir);
+	CNetworkVar (float,		wallscalar);
+	CNetworkVar (bool,		somersault);
+	CNetworkVar (int,		daflags);
+	CNetworkVar (float,		manteldist);
+	CNetworkVar (Vector,	wallnormal);
+	CNetworkVar (float,		fliptime);
+	CNetworkVar (Vector,	flipdir);
 public:
 
 #ifdef SDK_USE_PRONE

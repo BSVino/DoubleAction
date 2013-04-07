@@ -139,6 +139,22 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+
+	SendPropInt (SENDINFO (tapkey)),
+	SendPropFloat (SENDINFO (taptime)),
+	SendPropInt (SENDINFO (climbcnt)),
+	SendPropFloat (SENDINFO (climbtime)),
+	SendPropInt (SENDINFO (kongcnt)),
+	SendPropFloat (SENDINFO (kongtime)),
+	SendPropFloat (SENDINFO (runtime)),
+	SendPropVector (SENDINFO (rundir)),
+	SendPropFloat (SENDINFO (wallscalar)),
+	SendPropBool (SENDINFO (somersault)),
+	SendPropInt (SENDINFO (daflags)),
+	SendPropFloat (SENDINFO (manteldist)),
+	SendPropVector (SENDINFO (wallnormal)),
+	SendPropTime (SENDINFO (fliptime)),
+	SendPropVector (SENDINFO (flipdir)),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 

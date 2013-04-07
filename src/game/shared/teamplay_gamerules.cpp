@@ -268,14 +268,15 @@ void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	ChangePlayerTeam( pPlayer, mdls, true, true );
 	// recound stuff
 	RecountTeams(); */
+	
+	const char *pszName = engine->GetClientConVarValue (pPlayer->entindex (), "name");
+	const char *pszOldName = pPlayer->GetPlayerName ();
 
-	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
 
-	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
-	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
+	if ( pszOldName[0] != 0 && pszName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
 	{
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
 		if ( event )
