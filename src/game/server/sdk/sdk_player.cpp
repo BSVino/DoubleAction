@@ -634,6 +634,8 @@ void CSDKPlayer::PreThink(void)
 
 	if (IsInThirdPerson())
 		UpdateThirdCamera(Weapon_ShootPosition(), EyeAngles() + GetPunchAngle());
+	else
+		m_flCameraLerp = 0;
 
 	UpdateCurrentTime();
 

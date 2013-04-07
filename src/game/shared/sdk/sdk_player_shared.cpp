@@ -1449,6 +1449,8 @@ bool CSDKPlayer::IsInThirdPerson() const
 	return m_bThirdPerson;
 }
 
+ConVar da_cambacklerp( "da_cambacklerp", "4", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Speed of camera lerp." );
+
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
 #ifdef GAME_DLL
@@ -1494,7 +1496,9 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
 		MASK_SOLID, &traceFilter, &trace );
 
-	return vecEye + vecCameraOffset * trace.fraction;
+	m_flCameraLerp = Approach(trace.fraction, m_flCameraLerp, da_cambacklerp.GetFloat()*gpGlobals->frametime);
+
+	return vecEye + vecCameraOffset * m_flCameraLerp;
 }
 
 const Vector CSDKPlayer::GetThirdPersonCameraPosition()

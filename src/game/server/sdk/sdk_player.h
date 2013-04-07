@@ -434,6 +434,7 @@ public:
 	CNetworkVar( bool, m_bThirdPerson );
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
+	float  m_flCameraLerp;
 
 	int    m_iStyleKillStreak;
 
