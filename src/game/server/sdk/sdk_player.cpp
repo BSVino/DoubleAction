@@ -1231,6 +1231,14 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					// since we're being cool anyway give us a little push
 					Vector vecPush = ( info.GetDamageForce() / 140.0f );
 					SetBaseVelocity( vecPush );
+
+					// award style points
+					float flPoints = 10.0f;
+
+					if (m_iSlowMoType != SLOWMO_NONE)
+						flPoints *= 1.3f;
+
+					AddStylePoints(flPoints, STYLE_POINT_STYLISH);
 				}
 			}
 		}
