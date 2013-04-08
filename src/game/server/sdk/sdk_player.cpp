@@ -1239,6 +1239,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 						flPoints *= 1.3f;
 
 					AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+					SendAnnouncement(ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 				}
 			}
 		}
