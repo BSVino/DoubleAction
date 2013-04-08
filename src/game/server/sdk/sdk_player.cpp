@@ -1218,6 +1218,34 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
+		if ( info.GetDamageType() & DMG_BLAST )
+		{
+			if ( m_Shared.IsDiving() )
+			{
+				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
+				VectorNormalize( vecToPlayer );
+
+				// diving away from explosions reduces 30% damage
+				if ( vecToPlayer.Dot( m_Shared.GetDiveDirection() ) > 0.5f )
+				{
+					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
+
+					// since we're being cool anyway give us a little push
+					Vector vecPush = ( info.GetDamageForce() / 140.0f );
+					SetBaseVelocity( vecPush );
+
+					// award style points
+					float flPoints = 10.0f;
+
+					if (m_iSlowMoType != SLOWMO_NONE)
+						flPoints *= 1.3f;
+
+					AddStylePoints(flPoints, STYLE_POINT_STYLISH);
+					SendAnnouncement(ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
+				}
+			}
+		}
+
 		// keep track of amount of damage last sustained
 		m_lastDamageAmount = flDamage;
 		// Deal with Armour
