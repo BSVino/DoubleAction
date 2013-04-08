@@ -17,6 +17,7 @@
 #include "fx_impact.h"
 #include "c_sdk_player.h"
 #include "projectedlighteffect.h"
+#include "prediction.h"
 
 	// this is a cheap ripoff from CBaseCombatWeapon::WeaponSound():
 	void FX_WeaponSound(
@@ -120,6 +121,8 @@ void FX_FireBullets(
 
 #ifdef CLIENT_DLL
 	C_SDKPlayer *pPlayer = ToSDKPlayer( ClientEntityList().GetBaseEntity( iPlayerIndex ) );
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		bDoEffects = false;
 #else
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( iPlayerIndex) );
 #endif

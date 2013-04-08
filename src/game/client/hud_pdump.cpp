@@ -60,6 +60,7 @@ void CPDumpPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
+	SetSize(ScreenWidth(), ScreenHeight());
 	SetProportional( false );
 	SetPaintBackgroundEnabled( false );
 }

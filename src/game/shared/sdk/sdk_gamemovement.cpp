@@ -1610,12 +1610,12 @@ void CSDKGameMovement::Duck( void )
 
 				m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime = m_pSDKPlayer->GetCurrentTime() + 0.4f;
 			}
-			else if (bWantsSlide)
+			else if (bWantsSlide && m_pSDKPlayer->m_Shared.CanRoll())
 			{
 				Vector vecAbsVelocity = m_pSDKPlayer->GetAbsVelocity();
 				float flVelocity = vecAbsVelocity.Length();
 
-				if (fabs (flVelocity) > 1e-5)
+				if (fabs(flVelocity) > 1e-5)
 				{
 					// Throw in some of the wish velocity into the slide.
 					vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
@@ -1623,18 +1623,18 @@ void CSDKGameMovement::Duck( void )
 					vecAbsVelocity *= flVelocity;
 
 					m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
-
-					m_pSDKPlayer->m_Shared.StartSliding(true);
-
-					float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
-
-					mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
-					mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-					mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-					player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
-
-					SetSlideEyeOffset( 1.0 );
 				}
+
+				m_pSDKPlayer->m_Shared.StartSliding(true);
+
+				float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
+
+				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
+				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
+
+				SetSlideEyeOffset( 1.0 );
 			}
 			else if (bWantsRoll && m_pSDKPlayer->m_Shared.ShouldRollAfterDiving() && m_pSDKPlayer->m_Shared.CanRoll())
 			{
