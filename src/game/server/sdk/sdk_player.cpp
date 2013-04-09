@@ -121,6 +121,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
 #endif
 	SendPropBool( SENDINFO( m_bSliding ) ),
+	SendPropBool( SENDINFO( m_bInAirSlide ) ),
 	SendPropVector( SENDINFO(m_vecSlideDirection) ),
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
 	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
@@ -727,6 +728,7 @@ void CSDKPlayer::PreThink(void)
 }
 
 ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does the style meter remain active after activation?" );
+ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
 
 void CSDKPlayer::PostThink()
 {
@@ -767,6 +769,9 @@ void CSDKPlayer::PostThink()
 	}
 
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
+
+	if ( sv_drawserverhitbox.GetBool() )
+		DrawServerHitboxes( 2*gpGlobals->frametime, true );
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
