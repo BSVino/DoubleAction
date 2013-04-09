@@ -44,23 +44,16 @@ ConVar  da_acro_kong_delay ("da_acro_kong_delay", "100", FCVAR_NOTIFY|FCVAR_REPL
 ConVar  da_acro_kong_speed ("da_acro_kong_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_gain ("da_acro_kong_gain", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
-ConVar  da_acro_jump_height ("da_acro_jump_height", "270", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_mantel_height ("da_acro_mantel_height", "72", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_jump_height ("da_acro_jump_height", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_mantel_height ("da_acro_mantel_height", "92", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED);
-
 ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
-ConVar  da_acro_somersault_gain ("da_acro_somersault_gain", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_somersault_speed ("da_acro_somersault_speed", "1.0", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_somersault_duration ("da_acro_somersault_duration", "500", FCVAR_NOTIFY|FCVAR_REPLICATED);
-
-ConVar  da_acro_climb_frequency ("da_acro_climb_frequency", "300", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_climb_limit ("da_acro_climb_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_climb_gain ("da_acro_climb_gain", "320", FCVAR_NOTIFY|FCVAR_REPLICATED);
-
-ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "1400", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "2000", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_wallrun_gain ("da_acro_wallrun_gain", "140", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_gain ("da_acro_wallrun_gain", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar  da_hackrobatics ("da_hackrobatics", "5", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 extern bool g_bMovementOptimizations;
 
@@ -482,8 +475,7 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	mv->m_outWishVel[0] += accelspeed * wishdir[0];
 	mv->m_vecVelocity[1] += accelspeed * wishdir[1];
 	mv->m_outWishVel[1] += accelspeed * wishdir[1];
-	if (m_pSDKPlayer->m_Shared.runtime <= 0 /*||
-		m_pSDKPlayer->m_Shared.fliptime <= 0*/)
+	if (m_pSDKPlayer->m_Shared.runtime <= 0)
 	{
 		mv->m_vecVelocity[2] += accelspeed * wishdir[2];
 		mv->m_outWishVel[2] += accelspeed * wishdir[2];
@@ -2563,7 +2555,8 @@ cancelmantel:
 				   GetPlayerMins () + Vector (0, 0, 0.5*GetPlayerMaxs ().z),
 				   GetPlayerMaxs (),
 				   tr);
-		if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7)
+		if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7 &&
+			!(tr.surface.flags&SURF_SKY))
 		{
 			Vector2D right = m_vecRight.AsVector2D ();
 			Vector2D normal = tr.plane.normal.AsVector2D ();
@@ -2571,12 +2564,17 @@ cancelmantel:
 			if (fabs (angle) >= 0.8)
 			{/*Use some voodoo to compute run direction*/
 				float s = (angle > 0) ? 1 : -1;
+
 				Vector &dumb = m_pSDKPlayer->m_Shared.rundir.GetForModify ();
 				dumb[0] = -s*tr.plane.normal[1];
 				dumb[1] =  s*tr.plane.normal[0];
-				dumb[2] = 0;
-				m_pSDKPlayer->m_Shared.wallscalar = -s;
-				/*We're now primed*/
+				/*if (m_pSDKPlayer->EyeAngles ().x < -10) dumb[2] = 0.2;
+				if (m_pSDKPlayer->EyeAngles ().x < -15) dumb[2] = 0.4;
+				else */dumb[2] = m_vecForward[2];
+
+				Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
+				VectorCopy (tr.plane.normal, n);
+
 				CPASFilter filter (mv->GetAbsOrigin ());
 				filter.UsePredictionRules ();
 				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoSlide");
@@ -2590,43 +2588,55 @@ nowallrun:
 	{/*Wallrunning*/
 		trace_t tr;
 		Vector right;
+		Vector mins, maxs, org;
 
-		right = m_pSDKPlayer->m_Shared.wallscalar*m_vecRight;
-		TraceBBox (mv->GetAbsOrigin (),
-				   mv->GetAbsOrigin () + 4*right,
-				   GetPlayerMins () + Vector (0, 0, 0.5*GetPlayerMaxs ().z),
-				   GetPlayerMaxs (),
+		VectorCopy (GetPlayerMins (), mins);
+		VectorCopy (GetPlayerMaxs (), maxs);
+		VectorCopy (mv->GetAbsOrigin (), org);
+		TraceBBox (org,
+				   org + m_pSDKPlayer->m_Shared.rundir,
+				   mins,
+				   maxs,
 				   tr);
-		if (tr.fraction >= 0.99)
+		if (tr.fraction != 1 || tr.allsolid)
+		{
+			m_pSDKPlayer->m_Shared.runtime = -1;
+			goto cancelrun;
+		}
+
+		VectorScale (m_pSDKPlayer->m_Shared.wallnormal, 4, right);
+		TraceBBox (org, org - right, mins, maxs, tr);
+		if (tr.fraction >= 0.99 || tr.surface.flags&SURF_SKY)
 		{/*Wall no longer at side*/
 			m_pSDKPlayer->m_Shared.runtime = -1;
 		}
 		else if (((mv->m_nOldButtons^mv->m_nButtons)&mv->m_nOldButtons)&IN_JUMP)
-		{/*Let go of jump button, so kick off the wall*/
-			CPASFilter filter (mv->GetAbsOrigin ());
-			filter.UsePredictionRules ();
-			mv->m_vecVelocity[0] = 50*tr.plane.normal[0];
-			mv->m_vecVelocity[1] = 50*tr.plane.normal[1];
-			m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
-			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
+		{/*Drop out of run if space is let go*/
 			m_pSDKPlayer->m_Shared.runtime = -1;
 		}
 		else if (mv->m_nButtons&IN_ALT1)
-		{
+		{/*Stunt out of the run*/
 			VectorScale (m_vecForward, player->GetAbsVelocity ().Length (), mv->m_vecVelocity);
 			player->SetAbsVelocity (mv->m_vecVelocity);
 			m_pSDKPlayer->m_Shared.StartDiving ();
+			m_pSDKPlayer->m_Shared.runtime = -1;
 		}
 		else
 		{/*Run right up along the wall*/
 			Vector forward;
-			float d = 0.5*da_acro_wallrun_duration.GetFloat ();
-			float r = (m_pSDKPlayer->m_Shared.runtime - d)/d;
-			float t = r;
+
 			forward = da_acro_wallrun_thrust.GetFloat ()*m_pSDKPlayer->m_Shared.rundir;
 			mv->m_vecVelocity[0] = forward[0];
 			mv->m_vecVelocity[1] = forward[1];
-			mv->m_vecVelocity[2] = t*da_acro_wallrun_gain.GetFloat ();
+			mv->m_vecVelocity[2] = forward[2];
+
+			Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
+			VectorCopy (tr.plane.normal, n);
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+
+			SetGroundEntity (NULL);
 			FinishGravity ();
 
 			m_pSDKPlayer->m_Shared.runtime -= 1000*gpGlobals->frametime;
@@ -2636,6 +2646,7 @@ nowallrun:
 			}
 		}
 	}
+cancelrun:
 	if (mv->m_nButtons & IN_JUMP) 
 	{
 		float jumpheight, jumpspeed;
@@ -2654,7 +2665,7 @@ nowallrun:
 			Vector pr1, pr2;
 			Vector dir;
 			float ofs;
-#if 1
+
 			VectorCopy (VEC_HULL_MIN, mins);
 			VectorCopy (VEC_HULL_MAX, maxs);
 			VectorCopy (m_vecForward, dir);
@@ -2703,50 +2714,8 @@ nowallrun:
 				m_pSDKPlayer->m_Shared.manteldist = dist;
 				return;
 			}
-nomantel:
-#endif
-			if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
-			{
-				goto nojump;
-			}
-			if ((((mv->m_nButtons^mv->m_nOldButtons)&mv->m_nButtons)&IN_JUMP) &&
-				!(player->GetFlags ()&FL_ONGROUND))
-			{
-				m_pSDKPlayer->m_Shared.daflags |= DA_CLIMB;
-			}
-			if ((m_pSDKPlayer->m_Shared.daflags&DA_CLIMB) &&
-				!m_pSDKPlayer->m_Shared.IsProne () &&
-				!m_pSDKPlayer->m_Shared.IsRolling () &&
-				!m_pSDKPlayer->m_Shared.IsSliding () &&
-				!m_pSDKPlayer->m_Shared.IsDiving () &&
-				 m_pSDKPlayer->m_Shared.climbtime == 0 && 
-				 m_pSDKPlayer->m_Shared.climbcnt < da_acro_climb_limit.GetInt ())
-			{/*Mantel -> Climb*/
-				VectorCopy (GetPlayerMins (true), mins);
-				VectorCopy (GetPlayerMaxs (true), maxs);
-				player->SetCollisionBounds (mins, maxs);
-				TraceBBox (mv->GetAbsOrigin (),
-						   mv->GetAbsOrigin () + 4*m_vecForward,
-						   mins + Vector (0, 0, 0.5*maxs[2]),
-						   maxs,
-						   tr);
-				if (tr.fraction < 1)
-				{
-					startz = mv->m_vecVelocity[2];
-					/*FIXME: Actually project velocity vertically onto the wall's plane.*/
-					mv->m_vecVelocity[0] = 0;
-					mv->m_vecVelocity[1] = 0;
-					mv->m_vecVelocity[2] = da_acro_climb_gain.GetFloat ();
-					SetGroundEntity (NULL);
-					FinishGravity();
-
-					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
-					m_pSDKPlayer->m_Shared.climbtime = da_acro_climb_frequency.GetFloat ();
-					m_pSDKPlayer->m_Shared.climbcnt++;
-					goto nojump;
-				}
-			}
 		}
+nomantel:
 		if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
 		{
 			goto nojump;
@@ -2759,34 +2728,7 @@ nomantel:
 		startz = mv->m_vecVelocity[2];
 		if (!m_pSDKPlayer->GetGroundEntity ())
 		{
-			if (!m_pSDKPlayer->m_Shared.somersault && 
-				!m_pSDKPlayer->m_Shared.IsDiving () &&
-				player->GetAbsVelocity ().z > 0)
-			{/*Do somersault*/
-				float forward, side;
-				CPASFilter filter (mv->GetAbsOrigin ());
-
-				filter.UsePredictionRules ();
-				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
-				m_pSDKPlayer->m_Shared.somersault = true;
-				forward = mv->m_flForwardMove;
-				side = mv->m_flSideMove;
-				if (forward*forward + side*side > 100)
-				{
-					Vector &ihatereferences = m_pSDKPlayer->m_Shared.flipdir.GetForModify ();
-					ihatereferences[0] = da_acro_somersault_speed.GetFloat ()*forward;
-					ihatereferences[1] = da_acro_somersault_speed.GetFloat ()*side;
-					ihatereferences[2] = 0;
-					m_pSDKPlayer->m_Shared.fliptime = da_acro_somersault_duration.GetFloat ();
-					player->SetGravity (1);
-					goto nojump;
-				}
-				jumpheight = da_acro_somersault_gain.GetFloat ();
-			}
-			else
-			{
-				goto nojump;
-			}
+			goto nojump;
 		}
 		else
 		{
@@ -2802,8 +2744,7 @@ nomantel:
 		}
 		jumpspeed = jumpheight;
 		if ((m_pSDKPlayer->m_Local.m_bDucking) || 
-			(m_pSDKPlayer->GetFlags() & FL_DUCKING) || 
-			m_pSDKPlayer->m_Shared.somersault)
+			(m_pSDKPlayer->GetFlags() & FL_DUCKING))
 		{					
 			mv->m_vecVelocity[2] = flGroundFactor*jumpspeed;
 		}
@@ -2826,28 +2767,6 @@ nomantel:
 		mv->m_nOldButtons &= ~IN_JUMP;
 	}
 nojump:
-	if (m_pSDKPlayer->m_Shared.fliptime > 0)
-	{/*Move player gradually in the direction that they flipped*/
-		float forward = m_pSDKPlayer->m_Shared.flipdir.Get ().x;
-		float side = m_pSDKPlayer->m_Shared.flipdir.Get ().y;
-		float d = 0.5*da_acro_somersault_duration.GetFloat ();
-		float t = (m_pSDKPlayer->m_Shared.fliptime - d)/d;
-		float s = t;
-
-		mv->m_vecVelocity[0] = m_vecForward[0]*forward +  m_vecRight[0]*side;
-		mv->m_vecVelocity[1] = m_vecForward[1]*forward +  m_vecRight[1]*side;
-		mv->m_vecVelocity[2] = s*da_acro_somersault_gain.GetFloat ();
-
-		m_pSDKPlayer->m_Shared.fliptime -= 1000*gpGlobals->frametime;
-		if (m_pSDKPlayer->m_Shared.fliptime <= 0 ||
-			m_pSDKPlayer->m_Shared.IsDiving () ||
-			m_pSDKPlayer->m_Shared.IsRolling () ||
-			(player->GetFlags ()&FL_ONGROUND))
-		{
-			m_pSDKPlayer->m_Shared.fliptime = -1;
-			player->SetGravity (1);
-		}
-	}
 	if ((mv->m_nButtons&IN_ALT1) && !(mv->m_nOldButtons&IN_ALT1))
 	{/*Kong*/
 		trace_t tr;
@@ -2896,20 +2815,11 @@ nokong:
 	if (player->GetGroundEntity() != NULL)
 	{
 		player->UpdateStepSound(player->m_pSurfaceData, mv->GetAbsOrigin (), mv->m_vecVelocity);
-		if (m_pSDKPlayer->m_Shared.fliptime < 0)
-		{
-			m_pSDKPlayer->m_Shared.fliptime = 0;
-		}
 		WalkMove();
 	}
 	else
 	{
-		if (m_pSDKPlayer->m_Shared.fliptime == 0) 
-		{/*Sort of a hack--
-			We don't want the camera to get punched when the player lands*/
-			player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
-		}
-		else player->m_Local.m_flFallVelocity = 0;
+		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
 		AirMove ();
 	}
 	CategorizePosition();
@@ -2923,6 +2833,19 @@ nokong:
 		mv->m_vecVelocity[2] = 0;
 	}
 	CheckFalling();
+#ifdef GAME_DLL
+	trace_t tr;
+	int msec, loss;
+	float dt;
+
+	UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);
+	dt = da_hackrobatics.GetFloat ();
+	TraceBBox (mv->GetAbsOrigin (), mv->GetAbsOrigin () + dt*mv->m_vecVelocity, GetPlayerMins (), GetPlayerMaxs (), tr);
+	if (tr.fraction < 1 && tr.DidHitNonWorldEntity ())
+	{
+		tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);
+	}
+#endif
 	if ((m_nOldWaterLevel == WL_NotInWater && player->GetWaterLevel() != WL_NotInWater) ||
 		( m_nOldWaterLevel != WL_NotInWater && player->GetWaterLevel() == WL_NotInWater))
 	{/*Water enter/exit sound*/
