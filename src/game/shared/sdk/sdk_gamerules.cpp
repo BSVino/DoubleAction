@@ -775,13 +775,17 @@ CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
 	// get valid spawn point
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
+	Assert( pSpawnSpot );
 
-	// drop down to ground
-	Vector GroundPos = DropToGround( pPlayer, pSpawnSpot->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX );
+	// let us fall to the ground so our movement state gets initialized properly
+	pPlayer->SetLocalOrigin( pSpawnSpot->GetAbsOrigin() + Vector(0,0,2) );
+	pPlayer->SetAbsVelocity( vec3_origin );
 
-	// Move the player to the place it said.
-	pPlayer->Teleport( &GroundPos, &pSpawnSpot->GetLocalAngles(), &vec3_origin );
+	// reset view punch and let spawnpoint dictate our direction on spawn
+	pPlayer->SetLocalAngles( pSpawnSpot->GetLocalAngles() );
 	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
+	pPlayer->m_Local.m_vecPunchAngleVel = vec3_angle;
+	pPlayer->SnapEyeAngles( pSpawnSpot->GetLocalAngles() );
 
 	return pSpawnSpot;
 }

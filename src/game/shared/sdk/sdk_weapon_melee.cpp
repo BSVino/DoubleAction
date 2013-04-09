@@ -74,7 +74,11 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 	if ( pPlayer == NULL )
 		return;
 
-	if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->CanAttack() )
+	if (GetSwingTime() > 0 && GetSwingTime() <= GetCurrentTime())
+	{
+		Swing();
+	}
+	else if ( (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->CanAttack() )
 	{
 		PrimaryAttack();
 	} 
@@ -97,7 +101,7 @@ void CWeaponSDKMelee::PrimaryAttack()
 	// Move other players back to history positions based on local player's lag
 	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
 #endif
-	Swing( false );
+	StartSwing( false );
 
 #ifndef CLIENT_DLL
 	// Move other players back to history positions based on local player's lag
@@ -108,7 +112,7 @@ void CWeaponSDKMelee::PrimaryAttack()
 
 void CWeaponSDKMelee::SecondaryAttack()
 {
-	Swing( true );
+	StartSwing( true );
 }
 
 float CWeaponSDKMelee::GetMeleeDamage( bool bIsSecondary ) const

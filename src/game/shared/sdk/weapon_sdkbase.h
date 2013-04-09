@@ -62,6 +62,7 @@ public:
 	void					Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
 	int						ObjectCaps( void ) { return (BaseClass::ObjectCaps() | (FCAP_IMPULSE_USE|FCAP_USE_IN_RADIUS)); };
 
+	virtual void			MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 	virtual void			WeaponIdle( void );
 	virtual bool			Reload( void );
 	virtual void            FinishReload();
@@ -77,7 +78,8 @@ public:
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
 
-	virtual void      Swing(bool bIsSecondary, bool bIsStockAttack = false);
+	virtual void      StartSwing(bool bIsSecondary, bool bIsStockAttack = false);
+	virtual void      Swing();
 	virtual void      Hit(trace_t &traceHit, bool bIsSecondary);
 	virtual Activity  ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner );
 	virtual	void      ImpactEffect( trace_t &trace );
@@ -143,6 +145,8 @@ public:
 
 	float	GetCurrentTime() const;
 
+	float GetSwingTime() const { return m_flSwingTime; }
+
 private:
 
 	CNetworkVar(float, m_flDecreaseShotsFired);
@@ -150,6 +154,9 @@ private:
 	CWeaponSDKBase( const CWeaponSDKBase & );
 
 	CNetworkVar(float, m_flAccuracyDecay);
+
+	CNetworkVar(float, m_flSwingTime);
+	CNetworkVar(bool, m_bSwingSecondary);
 };
 
 

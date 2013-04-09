@@ -36,7 +36,7 @@ public:
 	CWeaponShotgun();
 
 	virtual void PrimaryAttack();
-	virtual void Swing(bool bIsSecondary, bool bIsStockAttack = false);
+	virtual void StartSwing(bool bIsSecondary, bool bIsStockAttack = false);
 	virtual bool Reload();
 	virtual void WeaponIdle();
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );

@@ -35,11 +35,15 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 #ifdef CLIENT_DLL
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
+  	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
+  	RecvPropBool( RECVINFO( m_bSwingSecondary ) ),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
 	SendPropFloat( SENDINFO( m_flDecreaseShotsFired ) ),
 	SendPropFloat( SENDINFO( m_flAccuracyDecay ) ),
+	SendPropFloat( SENDINFO( m_flSwingTime ) ),
+	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -47,6 +51,8 @@ END_NETWORK_TABLE()
 BEGIN_PREDICTION_DATA( CWeaponSDKBase )
 	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bSwingSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 #endif
 
@@ -82,6 +88,7 @@ CWeaponSDKBase::CWeaponSDKBase()
 	AddSolidFlags( FSOLID_TRIGGER ); // Nothing collides with these but it gets touches.
 
 	m_flAccuracyDecay = 0;
+	m_flSwingTime = 0;
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -269,7 +276,7 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 void CWeaponSDKBase::SecondaryAttack()
 {
-	Swing(true, true);
+	StartSwing(true, true);
 }
 
 #define MELEE_HULL_DIM		16
@@ -277,13 +284,8 @@ void CWeaponSDKBase::SecondaryAttack()
 static const Vector g_meleeMins(-MELEE_HULL_DIM,-MELEE_HULL_DIM,-MELEE_HULL_DIM);
 static const Vector g_meleeMaxs(MELEE_HULL_DIM,MELEE_HULL_DIM,MELEE_HULL_DIM);
 
-void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
+void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 {
-	trace_t traceHit;
-	
-	// cancel reload
-	m_bInReload = false;
-
 	// Try a ray
 	CSDKPlayer *pOwner = ToSDKPlayer( GetOwner() );
 	if ( !pOwner )
@@ -295,9 +297,56 @@ void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
+	// cancel reload
+	m_bInReload = false;
+
 	pOwner->Instructor_LessonLearned("brawl");
 
 	pOwner->ReadyWeapon();
+
+	// Send the anim
+	if (!SendWeaponAnim( ACT_VM_HITCENTER ))
+		SendWeaponAnim( ACT_VM_DRAW );	// If the animation is missing, play the draw animation instead as a placeholder.
+
+	// Cancel it quickly before attacking again so that it doesn't just restart the gesture.
+	pOwner->DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
+	if (bIsSecondary)
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
+	else
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+
+	AddMeleeViewKick();
+
+	float flFireRate;
+	if (bIsSecondary)
+		flFireRate = GetBrawlSecondaryFireRate();
+	else
+		flFireRate = GetBrawlFireRate();
+
+	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
+
+	//Setup our next attack times
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
+
+	m_flSwingTime = GetCurrentTime() + flFireRate * 0.3f;
+	m_bSwingSecondary = bIsSecondary;
+
+	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
+}
+
+void CWeaponSDKBase::Swing()
+{
+	// Try a ray
+	CSDKPlayer *pOwner = ToSDKPlayer( GetOwner() );
+	if ( !pOwner )
+		return;
+
+	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
+		return;
+
+	m_flSwingTime = 0;
+
+	trace_t traceHit;
 
 	Vector swingStart = pOwner->Weapon_ShootPosition( );
 	Vector forward;
@@ -309,7 +358,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 
 #ifndef CLIENT_DLL
 	// Like bullets, melee traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetMeleeDamage( bIsSecondary ), DMG_CLUB );
+	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetMeleeDamage( m_bSwingSecondary ), DMG_CLUB );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
 #endif
 
@@ -341,7 +390,7 @@ void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 		}
 	}
 
-	if (bIsSecondary)
+	if (m_bSwingSecondary)
 		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
 	else
 		pOwner->UseStyleCharge(SKILL_BOUNCER, 2.5f);
@@ -361,34 +410,8 @@ void CWeaponSDKBase::Swing(bool bIsSecondary, bool bIsStockAttack)
 	}
 	else
 	{
-		Hit( traceHit, bIsSecondary );
+		Hit( traceHit, m_bSwingSecondary );
 	}
-
-	// Send the anim
-	if (!SendWeaponAnim( ACT_VM_HITCENTER ))
-		SendWeaponAnim( ACT_VM_DRAW );	// If the animation is missing, play the draw animation instead as a placeholder.
-
-	// Cancel it quickly before attacking again so that it doesn't just restart the gesture.
-	pOwner->DoAnimationEvent( PLAYERANIMEVENT_CANCEL );
-	if (bIsSecondary)
-		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
-	else
-		pOwner->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-
-	AddMeleeViewKick();
-
-	float flFireRate;
-	if (bIsSecondary)
-		flFireRate = GetBrawlSecondaryFireRate();
-	else
-		flFireRate = GetBrawlFireRate();
-
-	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
-
-	//Setup our next attack times
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
-
-	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
 }
 
 Activity CWeaponSDKBase::ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner )
@@ -732,7 +755,12 @@ void CWeaponSDKBase::ItemPostFrame( void )
 	bool bFired = false;
 
 	// Secondary attack has priority
-	if ((pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= GetCurrentTime()) && pPlayer->CanAttack())
+	if (m_flSwingTime > 0 && m_flSwingTime <= GetCurrentTime())
+	{
+		m_flSwingTime = 0;
+		Swing();
+	}
+	else if ((pPlayer->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= GetCurrentTime()) && pPlayer->CanAttack())
 	{
 		if (UsesSecondaryAmmo() && pPlayer->GetAmmoCount(m_iSecondaryAmmoType)<=0 )
 		{
@@ -912,6 +940,46 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		}
 
 		OnPickedUp( pPlayer );
+	}
+#endif
+}
+
+extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType );
+void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+{
+#ifdef CLIENT_DLL
+	CNewParticleEffect *pTracer = NULL;
+	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (pLocalPlayer)
+	{
+		bool bPovObs = pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
+
+		if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
+		{
+			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			{
+				CBaseViewModel *vm = pLocalPlayer->GetViewModel( i );
+				if ( !vm )
+					continue;
+
+				pTracer = vm->ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+			}
+		}
+		else
+			pTracer = ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+
+		// just in case we couldn't get a view model
+		if( pTracer == NULL )
+			return;
+		
+		// Set the particle effect's destination to our bullet's termination point
+		pTracer->SetControlPoint( 1, tr.endpos );
+		pTracer->SetSortOrigin( vecTracerSrc );
+		
+		//whiz (but don't whiz yourself)
+		if( pLocalPlayer != GetOwner() && !bPovObs )
+			FX_TracerSound( vecTracerSrc, tr.endpos, iTracerType );
 	}
 #endif
 }
@@ -1158,6 +1226,8 @@ bool CWeaponSDKBase::Deploy( )
 	if (bDeploy && pOwner)
 		pOwner->ReadyWeapon();
 
+	m_flSwingTime = 0;
+
 	return bDeploy;
 }
 
@@ -1202,6 +1272,8 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 		// Hide the weapon when the holster animation's finished
 		SetContextThink( &CBaseCombatWeapon::HideThink, GetCurrentTime() + flSequenceDuration, SDK_HIDEWEAPON_THINK_CONTEXT );
 	}
+
+	m_flSwingTime = 0;
 
 	return true;
 }

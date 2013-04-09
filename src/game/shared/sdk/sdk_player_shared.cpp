@@ -80,14 +80,17 @@ void CSDKPlayer::FireBullet(
 	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
 	CBaseEntity* pIgnore = this;
 
+	// initialize these before the penetration loop, we'll need them to make our tracer after
+	Vector vecTracerSrc = vecSrc;
+	trace_t tr; // main enter bullet trace
+
 	for (size_t i = 0; i < 5; i++)
 	{
-		trace_t tr; // main enter bullet trace
 
 		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pIgnore, COLLISION_GROUP_NONE, &tr );
 
 		if ( tr.fraction == 1.0f )
-			return; // we didn't hit anything, stop tracing shoot
+			break; // we didn't hit anything, stop tracing shoot
 
 		if ( sv_showimpacts.GetBool() )
 		{
@@ -174,7 +177,7 @@ void CSDKPlayer::FireBullet(
 			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
 			{	
 				trace_t waterTrace;
-				UTIL_TraceLine( vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), this, COLLISION_GROUP_NONE, &waterTrace );
+				UTIL_TraceLine( vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), pIgnore, COLLISION_GROUP_NONE, &waterTrace );
 
 				if( waterTrace.allsolid != 1 )
 				{
@@ -270,10 +273,24 @@ void CSDKPlayer::FireBullet(
 
 		if (tr.startsolid)
 			break;
+		
+		if (tr.m_pEnt)
+		{
+			// let's have a bullet exit effect if we penetrated a solid surface
+			if (tr.m_pEnt->IsBSPModel())
+				UTIL_ImpactTrace( &tr, iDamageType );
+
+			// ignore the entity we just hit for the next trace to avoid weird impact behaviors
+			pIgnore = tr.m_pEnt;
+		}
 
 		// Set up the next trace.
 		vecSrc = tr.endpos + vecDir;	// One unit in the direction of fire so that we firmly embed ourselves in whatever solid was hit.
 	}
+	
+	// the bullet's done penetrating, let's spawn our particle system
+	if (bDoEffects)
+		MakeTracer( vecTracerSrc, tr, TRACER_TYPE_DEFAULT );
 }
 
 void CSDKPlayer::DoMuzzleFlash()
@@ -380,7 +397,7 @@ void CSDKPlayer::StartTouch(CBaseEntity *pOther)
 	CGameTrace tr;
 	tr = GetTouchTrace();
 
-	// If I'm diving and I hit a wall at a blunt angle, don't dive afterwards.
+	// If I'm diving and I hit a wall at a blunt angle, don't roll afterwards.
 	if (m_Shared.IsDiving() && tr.plane.normal.Dot(m_Shared.m_vecDiveDirection) < -0.95f)
 		m_Shared.m_bRollAfterDive = false;
 }
@@ -572,6 +589,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+	m_flSlideTime = 0;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -679,7 +697,7 @@ bool CSDKPlayerShared::MustDuckFromSlide() const
 
 bool CSDKPlayerShared::IsSliding() const
 {
-	return m_bSliding;
+	return m_bSliding && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::IsDiveSliding() const
@@ -750,7 +768,10 @@ void CSDKPlayerShared::EndSlide()
 
 	m_bSliding = false;
 	m_bDiveSliding = false;
-	m_flSlideTime = 0;
+		
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
 
 	m_pOuter->ReadyWeapon();
 }
@@ -765,14 +786,14 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 		else
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
-
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
 	
 	// if we're going into a jump: block unwanted slide behavior
 	if (bJumpUp)
+	{
 		m_bSliding = false;
+		// and trigger brief slide cooldown
+		m_flSlideTime = m_pOuter->GetCurrentTime();
+	}
 		
 	m_pOuter->FreezePlayer(0.4f, 0.3f);
 
@@ -809,7 +830,7 @@ void CSDKPlayerShared::SetDuckPress(bool bReset)
 
 bool CSDKPlayerShared::IsRolling() const
 {
-	return m_bRolling;
+	return m_bRolling && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::CanRoll() const
@@ -864,7 +885,7 @@ void CSDKPlayerShared::EndRoll()
 
 bool CSDKPlayerShared::IsDiving() const
 {
-	return m_bDiving && m_pOuter->IsAlive();
+	return m_bDiving && m_pOuter->m_lifeState != LIFE_DEAD;
 }
 
 bool CSDKPlayerShared::CanDive() const
@@ -937,6 +958,7 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_pOuter->Instructor_LessonLearned("dive");
 
+	Assert (m_pOuter->m_Shared.m_flRunSpeed);
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
@@ -1174,8 +1196,8 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flRollSpeed = SDK_DEFAULT_PLAYER_ROLLSPEED;
 	m_Shared.m_flAimInSpeed = 100;
 
-	// Set the absolute max to sprint speed
-	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
+	// Set the absolute max to sprint speed (but we don't use sprint so now it's runspeed)
+	SetMaxSpeed( m_Shared.ModifySkillValue(m_Shared.m_flRunSpeed, 0.25f, SKILL_ATHLETIC) );
 }
 
 //-----------------------------------------------------------------------------
@@ -1357,7 +1379,7 @@ Vector CSDKPlayer::EyePosition()
 		bIsInThird = false;
 #endif
 
-	if (m_Shared.m_flViewBobRamp && !bIsInThird)
+	if (m_Shared.m_flViewBobRamp && m_Shared.m_flRunSpeed && !bIsInThird)
 	{
 		Vector vecRight, vecUp;
 		AngleVectors(EyeAngles(), NULL, &vecRight, &vecUp);
@@ -1427,6 +1449,8 @@ bool CSDKPlayer::IsInThirdPerson() const
 	return m_bThirdPerson;
 }
 
+ConVar da_cambacklerp( "da_cambacklerp", "4", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Speed of camera lerp." );
+
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
 #ifdef GAME_DLL
@@ -1472,7 +1496,9 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
 		MASK_SOLID, &traceFilter, &trace );
 
-	return vecEye + vecCameraOffset * trace.fraction;
+	m_flCameraLerp = Approach(trace.fraction, m_flCameraLerp, da_cambacklerp.GetFloat()*gpGlobals->frametime);
+
+	return vecEye + vecCameraOffset * m_flCameraLerp;
 }
 
 const Vector CSDKPlayer::GetThirdPersonCameraPosition()

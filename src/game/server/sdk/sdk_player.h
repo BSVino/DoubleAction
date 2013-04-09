@@ -181,6 +181,16 @@ public:
 
 	void SetStyleSkill(SkillID eSkill);
 
+	/*These 3 were made virtual for Double Action.
+	They enable us to have new shadow hulls.*/
+	virtual void SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName );
+	virtual void SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState );
+	virtual void PostThinkVPhysics (void);
+	virtual void VPhysicsDestroyObject (void); 
+	IPhysicsObject *shadow_slide;
+	IPhysicsObject *shadow_dive;
+
+
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
@@ -424,6 +434,7 @@ public:
 	CNetworkVar( bool, m_bThirdPerson );
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
+	float  m_flCameraLerp;
 
 	int    m_iStyleKillStreak;
 

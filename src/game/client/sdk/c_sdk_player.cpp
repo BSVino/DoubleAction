@@ -1467,6 +1467,8 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 
 		pSetup->origin = GetThirdPersonCameraPosition();
 	}
+	else
+		m_flCameraLerp = 0;
 
 	BaseClass::OverrideView(pSetup);
 
