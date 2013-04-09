@@ -953,7 +953,8 @@ void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, 
 
 	if (pLocalPlayer)
 	{
-		bool bPovObs = pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
+		int iObsMode = pLocalPlayer->GetObserverMode();
+		bool bPovObs = iObsMode == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
 
 		if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
 		{
@@ -977,8 +978,8 @@ void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, 
 		pTracer->SetControlPoint( 1, tr.endpos );
 		pTracer->SetSortOrigin( vecTracerSrc );
 		
-		//whiz (but don't whiz yourself)
-		if( pLocalPlayer != GetOwner() && !bPovObs )
+		//whiz (but don't whiz yourself) (also don't whiz in obs mode unless we're in POV)
+		if( pLocalPlayer != GetOwner() && !bPovObs && !(iObsMode > 0 && iObsMode != OBS_MODE_IN_EYE) )
 			FX_TracerSound( vecTracerSrc, tr.endpos, iTracerType );
 	}
 #endif
