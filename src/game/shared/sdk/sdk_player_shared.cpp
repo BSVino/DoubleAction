@@ -731,6 +731,20 @@ bool CSDKPlayerShared::CanSlide() const
 	return true;
 }
 
+void CSDKPlayerShared::PlayStartSlideSound()
+{
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
+}
+
+void CSDKPlayerShared::PlayEndSlideSound()
+{
+	CPASFilter filter( m_pOuter->GetAbsOrigin() );
+	filter.UsePredictionRules();
+	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
+}
+
 void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 {
 	if (!CanSlide())
@@ -738,12 +752,11 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.GoSlide" );
+	PlayStartSlideSound();
 
 	m_bSliding = true;
 	m_bDiveSliding = bDiveSliding;
+	SetAirSliding(false);
 
 	ForceUnzoom();
 
@@ -768,11 +781,7 @@ void CSDKPlayerShared::EndSlide()
 
 	m_bSliding = false;
 	m_bDiveSliding = false;
-		
-	CPASFilter filter( m_pOuter->GetAbsOrigin() );
-	filter.UsePredictionRules();
-	m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Player.UnSlide" );
-
+	
 	m_pOuter->ReadyWeapon();
 }
 
@@ -786,16 +795,28 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 		else
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
-	
-	// if we're going into a jump: block unwanted slide behavior
-	if (bJumpUp)
+
+	// if we're in the air we've already played the end slide sound
+	if ( !IsAirSliding() )
 	{
-		m_bSliding = false;
-		// and trigger brief slide cooldown
-		m_flSlideTime = m_pOuter->GetCurrentTime();
+		PlayEndSlideSound();
+
+		// if we're going into a jump: block unwanted slide behavior
+		if (bJumpUp)
+		{
+			m_bSliding = false;
+			// and trigger brief slide cooldown
+			m_flSlideTime = m_pOuter->GetCurrentTime();
+		}
+		else
+			m_pOuter->FreezePlayer(0.4f, 0.3f);
 	}
-		
-	m_pOuter->FreezePlayer(0.4f, 0.3f);
+	else
+	{
+		// we're in the air so just end the slide
+		m_bSliding = false;
+		SetAirSliding(false);
+	}
 
 	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 
