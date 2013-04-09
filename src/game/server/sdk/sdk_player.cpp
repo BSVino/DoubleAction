@@ -20,6 +20,7 @@
 #include "obstacle_pushaway.h"
 #include "in_buttons.h"
 #include "vprof.h"
+#include "engine/IEngineSound.h"
 
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -2847,6 +2848,9 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 
 		// make sure we don't have slide friction stuck on
 		m_surfaceFriction = 1.0f;
+
+		CSingleUserRecipientFilter user( this );
+		enginesound->SetPlayerDSP( user, 0, false );
 	}
 
 	//Tony; if we're now dead, and not changing classes, spawn

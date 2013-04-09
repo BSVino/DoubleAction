@@ -1475,14 +1475,18 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	BaseClass::OverrideView(pSetup);
 
 	float flTiltGoal;
-	if (m_Shared.IsDiving())
+	// only tilt first person view
+	if (m_Shared.IsDiving() && !IsInThirdPerson())
 		flTiltGoal = 1;
 	else
 		flTiltGoal = 0;
 
 	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10*GetSlowMoMultiplier());
 
-	if (m_Shared.m_flViewTilt > 0)
+	// untilt the view if we die
+	if (!IsAlive())
+		pSetup->angles.z = 0.0f;
+	else if (m_Shared.m_flViewTilt > 0)
 	{
 		Vector vecViewDirection;
 		AngleVectors(pSetup->angles, &vecViewDirection);
