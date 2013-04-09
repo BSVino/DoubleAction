@@ -1355,8 +1355,8 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 // Input  : &info - 
 //			damageAmount - 
 //-----------------------------------------------------------------------------
-#define MIN_SHOCK_AND_CONFUSION_DAMAGE	30.0f
-#define MIN_EAR_RINGING_DISTANCE		240.0f  // 20 feet
+#define MIN_SHOCK_AND_CONFUSION_DAMAGE	75.0f
+#define MIN_EAR_RINGING_DISTANCE		180.0f  // 15 feet
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1381,7 +1381,7 @@ void CBasePlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 	if ( !shock && !ear_ringing )
 		return;
 
-	int effect = shock ? 
+	int effect = ear_ringing ? 
 		random->RandomInt( 35, 37 ) : 
 		random->RandomInt( 32, 34 );
 
