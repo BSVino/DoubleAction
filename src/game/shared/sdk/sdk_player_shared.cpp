@@ -302,7 +302,7 @@ void CSDKPlayer::DoMuzzleFlash()
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	C_WeaponSDKBase* pActiveWeapon = GetActiveSDKWeapon();
 
-	if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
+	if (pLocalPlayer)
 	{
 		if (pLocalPlayer == this && !::input->CAM_IsThirdPerson() || pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == this)
 		{
