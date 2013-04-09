@@ -1824,6 +1824,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
+		pWeapon->SetPrevOwner(this);
 
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
 

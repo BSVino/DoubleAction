@@ -47,6 +47,8 @@ public:
 
 	// Get a pointer to the player that owns this weapon
 	CSDKPlayer* GetPlayerOwner() const;
+	CSDKPlayer*	GetPrevOwner( void ) const { return m_pPrevOwner; }
+	void		SetPrevOwner( CSDKPlayer *pOwner ) { m_pPrevOwner = pOwner; }
 
 	// override to play custom empty sounds
 	virtual bool PlayEmptySound();
@@ -151,6 +153,8 @@ private:
 	CWeaponSDKBase( const CWeaponSDKBase & );
 
 	CNetworkVar(float, m_flAccuracyDecay);
+
+	CSDKPlayer *m_pPrevOwner;
 };
 
 

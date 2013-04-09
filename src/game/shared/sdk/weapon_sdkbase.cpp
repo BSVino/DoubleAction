@@ -902,8 +902,10 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		}
 		else
 		{
-			// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
-			if ( UsesClipsForAmmo1() )
+			bool bFirstPickup = !(pPlayer == GetPrevOwner());
+
+			// If it uses clips, load it full. (if this is the first time you've picked up this weapon)
+			if ( UsesClipsForAmmo1() && bFirstPickup )
 			{
 				m_iClip1 = GetMaxClip1();
 			}
