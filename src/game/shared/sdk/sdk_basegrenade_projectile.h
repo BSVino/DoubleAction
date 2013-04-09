@@ -53,6 +53,7 @@ public:
 	bool	CreateVPhysics( void );
 	void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
 	void	VPhysicsUpdate( IPhysicsObject *pPhysics );
+	void	VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
 	//Constants for all CS Grenades
 	static inline float GetGrenadeGravity() { return 0.4f; }
@@ -83,6 +84,8 @@ private:
 	Vector		vecLastOrigin;
 
 	bool	m_inSolid;
+
+	float m_flNextBounceSound;
 #endif
 };
 
