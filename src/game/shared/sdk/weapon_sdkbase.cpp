@@ -17,6 +17,7 @@
 #if defined( CLIENT_DLL )
 
 	#include "c_sdk_player.h"
+	#include "prediction.h"
 
 #else
 
@@ -922,6 +923,9 @@ extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerT
 void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
 {
 #ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	CNewParticleEffect *pTracer = NULL;
 	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
