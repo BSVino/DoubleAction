@@ -76,8 +76,10 @@ void CSkillButton::OnCursorEntered()
 		return;
 
 	vgui::Label* pInfoLabel = pParent->GetSkillInfo();
-	if (pInfoLabel)
+	if (pInfoLabel && m_szSkillName[0])
 		pInfoLabel->SetText((std::string("#skillinfo_") + m_szSkillName).c_str());
+	else
+		pInfoLabel->SetText("");
 
 	CPanelTexture* pInfoTexture = pParent->GetSkillIcon();
 	if (pInfoTexture)
@@ -117,6 +119,15 @@ CDABSkillMenu::~CDABSkillMenu()
 void CDABSkillMenu::Update()
 {
 	BaseClass::Update();
+
+	CSkillButton* pCancel = dynamic_cast<CSkillButton*>(FindChildByName("skill_cancel"));
+	if (pCancel)
+	{
+		if (C_SDKPlayer::GetLocalSDKPlayer() && C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_iStyleSkill != SKILL_NONE)
+			pCancel->SetVisible(true);
+		else
+			pCancel->SetVisible(false);
+	}
 }
 
 void CDABSkillMenu::ShowPanel( bool bShow )
@@ -141,6 +152,7 @@ void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
 		engine->ClientCmd("setskill random");
+		ShowPanel(false);
 	}
 	else if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
 	{

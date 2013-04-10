@@ -636,6 +636,8 @@ void CSDKPlayer::PreThink(void)
 
 	if (IsInThirdPerson())
 		UpdateThirdCamera(Weapon_ShootPosition(), EyeAngles() + GetPunchAngle());
+	else
+		m_flCameraLerp = 0;
 
 	UpdateCurrentTime();
 
@@ -670,7 +672,7 @@ void CSDKPlayer::PreThink(void)
 			if (GetHealth() < iMaxHealth)
 				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
 
-			UseStyleCharge(SKILL_RESILIENT, iHealthTaken*2/3);
+			UseStyleCharge(SKILL_RESILIENT, iHealthTaken*3/2);
 		}
 	}
 
@@ -1408,7 +1410,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	else if (!IsStyleSkillActive())
 		m_flNextRegen = m_flCurrentTime + 6;
 	else
-		m_flNextRegen = m_flCurrentTime + 3;
+		m_flNextRegen = m_flCurrentTime + 4;
 
 	return 1;
 }
@@ -1810,10 +1812,13 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
 
+	if (pWeapon == NULL)
+		return false;
+
 	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
 		return false;
 
-	if( pWeapon && pWeapon->CanWeaponBeDropped() )
+	if (pWeapon->CanWeaponBeDropped()) 
 	{
 		QAngle gunAngles;
 		VectorAngles( BodyDirection2D(), gunAngles );
