@@ -622,6 +622,10 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 
 void CWeaponSDKBase::AddViewKick()
 {
+#ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+#endif
 	CSDKPlayer *pPlayer = GetPlayerOwner();
 
 	if ( pPlayer )
@@ -679,7 +683,10 @@ float CWeaponSDKBase::GetWeaponSpread()
 
 #ifdef CLIENT_DLL
 void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
-{
+{	
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	BaseClass::CreateMove(flInputSampleTime, pCmd, vecOldViewAngles);
 
 	if (!GetPlayerOwner())
