@@ -41,6 +41,7 @@ public:
 	// All predicted weapons need to implement and return true
 	virtual bool	IsPredicted() const { return true; }
 	virtual SDKWeaponID GetWeaponID( void ) const { return WEAPON_NONE; }
+	virtual void	Precache( void );
 	
 	// Get SDK weapon specific weapon data.
 	CSDKWeaponInfo const	&GetSDKWpnData() const;
@@ -106,7 +107,7 @@ public:
 	//If you add code to switch firemodes, this function would need to be overridden to return the correct current mode.
 	virtual int GetFireMode() const { return FM_AUTOMATIC; }
 
-	virtual float GetFireRate( void ) { return GetSDKWpnData().m_flCycleTime; };
+	virtual float GetFireRate( void ) { return m_flCycleTime; };
 	virtual float GetSecondaryFireRate( void ) { return GetSDKWpnData().m_flSecondaryCycleTime; };
 
 	virtual float GetBrawlFireRate( void );
@@ -156,6 +157,12 @@ private:
 	CWeaponSDKBase( const CWeaponSDKBase & );
 
 	CNetworkVar(float, m_flAccuracyDecay);
+	
+	// server must enforce these values
+	CNetworkVar(float, m_flCycleTime);
+	CNetworkVar(float, m_flViewPunchMultiplier);
+	CNetworkVar(float, m_flRecoil);
+	CNetworkVar(float, m_flSpread);
 
 	CNetworkVar(float, m_flSwingTime);
 	CNetworkVar(bool, m_bSwingSecondary);

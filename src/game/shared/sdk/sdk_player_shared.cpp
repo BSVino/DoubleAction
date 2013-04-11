@@ -289,7 +289,7 @@ void CSDKPlayer::FireBullet(
 	}
 	
 	// the bullet's done penetrating, let's spawn our particle system
-	if (bDoEffects)
+	if (bDoEffects && (pevAttacker == this))
 		MakeTracer( vecTracerSrc, tr, TRACER_TYPE_DEFAULT );
 }
 
@@ -341,6 +341,15 @@ void CSDKPlayer::DoMuzzleFlash()
 			}
 		}
 	}
+#endif
+}
+
+void CSDKPlayer::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+{
+#ifdef CLIENT_DLL
+	CWeaponSDKBase *pWeapon = GetActiveSDKWeapon();
+	if (pWeapon)
+		pWeapon->MakeTracer( vecTracerSrc, tr, iTracerType );
 #endif
 }
 
