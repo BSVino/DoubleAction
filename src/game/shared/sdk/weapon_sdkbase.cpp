@@ -37,12 +37,20 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
   	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
+	RecvPropFloat( RECVINFO( m_flCycleTime ) ),
+	RecvPropFloat( RECVINFO( m_flViewPunchMultiplier ) ),
+	RecvPropFloat( RECVINFO( m_flRecoil ) ),
+	RecvPropFloat( RECVINFO( m_flSpread ) ),
   	RecvPropBool( RECVINFO( m_bSwingSecondary ) ),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
 	SendPropFloat( SENDINFO( m_flDecreaseShotsFired ) ),
 	SendPropFloat( SENDINFO( m_flAccuracyDecay ) ),
+	SendPropFloat( SENDINFO( m_flCycleTime ) ),
+	SendPropFloat( SENDINFO( m_flViewPunchMultiplier ) ),
+	SendPropFloat( SENDINFO( m_flRecoil ) ),
+	SendPropFloat( SENDINFO( m_flSpread ) ),
 	SendPropFloat( SENDINFO( m_flSwingTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 #endif
@@ -90,6 +98,19 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+}
+
+void CWeaponSDKBase::Precache()
+{
+	BaseClass::Precache();
+
+#ifdef GAME_DLL
+	// server must enforce these values
+	m_flCycleTime = GetSDKWpnData().m_flCycleTime;
+	m_flViewPunchMultiplier = GetSDKWpnData().m_flViewPunchMultiplier;
+	m_flRecoil = GetSDKWpnData().m_flRecoil;
+	m_flSpread = GetSDKWpnData().m_flSpread;
+#endif
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -678,7 +699,7 @@ void CWeaponSDKBase::AddMeleeViewKick()
 
 float CWeaponSDKBase::GetWeaponSpread()
 {
-	return GetSDKWpnData().m_flSpread;
+	return m_flSpread;
 }
 
 #ifdef CLIENT_DLL
@@ -700,12 +721,12 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 
 float CWeaponSDKBase::GetViewPunchMultiplier()
 {
-	return GetSDKWpnData().m_flViewPunchMultiplier;
+	return m_flViewPunchMultiplier;
 }
 
 float CWeaponSDKBase::GetRecoil()
 {
-	return GetSDKWpnData().m_flRecoil;
+	return m_flRecoil;
 }
 
 bool CWeaponSDKBase::HasAimInSpeedPenalty()
