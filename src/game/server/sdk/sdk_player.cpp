@@ -2185,6 +2185,11 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 // can be closed...false if the menu should be displayed again
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
+// FIXME: TEMPORARY HACK TO NOT LET PEOPLE JOIN BLUE TEAM IN DEATHMATCH (shmopaloppa)
+#if !defined ( SDK_USE_TEAMS )
+	if (team == 2)
+		team = 0;
+#endif
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{

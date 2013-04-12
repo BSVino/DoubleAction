@@ -1151,6 +1151,7 @@ void CSDKGameRules::InitTeams( void )
 	pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
 	g_Teams.AddToTail( pRed );
 #else
+	// clean this up later.. anyone who's in the game and playing should be on SDK_TEAM_DEATHMATCH
 	CTeam *pDeathmatch = static_cast<CTeam*>(CreateEntityByName( "sdk_team_deathmatch" ));
 	Assert( pDeathmatch );
 	pDeathmatch->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
