@@ -854,7 +854,13 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
-{
+{	
+	if ( !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) )
+	{
+		idealActivity = ACT_DAB_JUMP_FLOAT;
+		return true;
+	}
+
 	float flSpeed = GetOuterXYSpeed();
 
 	if ( flSpeed > 150 )
@@ -888,7 +894,17 @@ bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
 {
 	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
 	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
+		// falling crouch anims go here
+		if ( !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) )
+		{
+			if (ShouldUseAimInAnims())
+				idealActivity = ACT_DAB_CROUCH_AIM;
+			else if (m_pSDKPlayer->IsWeaponReady())
+				idealActivity = ACT_DAB_CROUCH_READY;
+			else
+				idealActivity = ACT_DAB_CROUCH_IDLE;		
+		}
+		else if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
 		{
 			if (ShouldUseAimInAnims())
 				idealActivity = ACT_DAB_CROUCH_AIM;
@@ -1120,12 +1136,6 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			else
 				idealActivity = ACT_DAB_JUMP_START;
 		}
-	}
-
-	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) && (m_pSDKPlayer->GetWaterLevel() < WL_Waist))
-	{
-		idealActivity = ACT_DAB_JUMP_FLOAT;
-		return true;
 	}
 
 	if ( m_bJumping )

@@ -46,6 +46,7 @@ END_NETWORK_TABLE()
 void CBaseGrenadeProjectile::Precache()
 {
 	PrecacheScriptSound( "BaseGrenade.Explode" );
+	PrecacheScriptSound( "Grenade.Bounce" );
 	PrecacheParticleSystem( "grenade_exp1" );
 }
 
@@ -206,6 +207,17 @@ void CBaseGrenadeProjectile::Precache()
 		int		m_collisionGroupAlreadyChecked;
 		int		m_newCollisionGroup;
 	};
+
+	void CBaseGrenadeProjectile::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
+	{
+		if ( m_flNextBounceSound <= gpGlobals->curtime )
+		{
+			EmitSound( "Grenade.Bounce" );
+			// default physics stuff will collide many times with the ground.. give this some randomness
+			m_flNextBounceSound = gpGlobals->curtime + random->RandomFloat( 0.15f, 0.45f );
+		}
+		BaseClass::VPhysicsCollision( index, pEvent );
+	}
 
 	void CBaseGrenadeProjectile::VPhysicsUpdate( IPhysicsObject *pPhysics )
 	{
