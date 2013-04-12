@@ -676,13 +676,17 @@ void CSDKPlayer::PreThink(void)
 		}
 	}
 
-	if (IsAlive() && (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || !GetGroundEntity()))
+	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && GetAbsVelocity().z < -280.0f) ))
 	{
 		Vector vecNormalizedVelocity = GetAbsVelocity();
 		vecNormalizedVelocity.NormalizeInPlace();
 
 		trace_t	tr;
-		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+		// we need to start from a higher offset if we're not diving (18 works!)
+		int iOffset = 13*!m_Shared.IsDiving();
+
+		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5+iOffset), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 10), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
 		CBaseEntity* pHit = NULL;
 
@@ -697,7 +701,8 @@ void CSDKPlayer::PreThink(void)
 		if (tr.fraction < 1.0f && bIsBreakable)
 			pHit = tr.m_pEnt;
 
-		if (!pHit && vecNormalizedVelocity.z < 0 && (m_Shared.IsDiving() || !GetGroundEntity()))
+		// if we're falling break anything under us
+		if (!pHit && vecNormalizedVelocity.z < 0)
 		{
 			UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() - Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
