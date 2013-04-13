@@ -42,7 +42,7 @@ ConVar  da_acro_kong_dist ("da_acro_kong_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICAT
 ConVar  da_acro_kong_limit ("da_acro_kong_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_delay ("da_acro_kong_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_kong_speed ("da_acro_kong_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_kong_gain ("da_acro_kong_gain", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_kong_gain ("da_acro_kong_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_jump_height ("da_acro_jump_height", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar  da_acro_mantel_height ("da_acro_mantel_height", "92", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -50,10 +50,9 @@ ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_R
 ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "2000", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_wallrun_gain ("da_acro_wallrun_gain", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "400", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
-ConVar  da_hackrobatics ("da_hackrobatics", "5", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_hackrobatics ("da_hackrobatics", "0.2", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 extern bool g_bMovementOptimizations;
 
@@ -117,6 +116,11 @@ public:
 
 	virtual void StartGravity (void);
 	virtual void FinishGravity (void);
+
+	bool checkrun (void);
+	bool checkmantel (void);
+	bool jump (void);
+	bool checkvault (void);
 protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
@@ -475,7 +479,7 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	mv->m_outWishVel[0] += accelspeed * wishdir[0];
 	mv->m_vecVelocity[1] += accelspeed * wishdir[1];
 	mv->m_outWishVel[1] += accelspeed * wishdir[1];
-	if (m_pSDKPlayer->m_Shared.runtime <= 0)
+	//if (m_pSDKPlayer->m_Shared.runtime <= 0)
 	{
 		mv->m_vecVelocity[2] += accelspeed * wishdir[2];
 		mv->m_outWishVel[2] += accelspeed * wishdir[2];
@@ -1731,12 +1735,12 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsSliding() )
 	{
-		if (!m_pSDKPlayer->GetGroundEntity())
+		/*if (!m_pSDKPlayer->GetGroundEntity())
 		{
 			m_pSDKPlayer->m_Shared.EndSlide();
 			SetSlideEyeOffset( 0.0 );
 		}
-		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
+		else */if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
 			if(!CanUnduck())
 				m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;
@@ -1756,12 +1760,12 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsRolling() )
 	{
-		if (!m_pSDKPlayer->GetGroundEntity())
+		/*if (!m_pSDKPlayer->GetGroundEntity())
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
 		}
-		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+		else */if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
@@ -1934,7 +1938,7 @@ void CSDKGameMovement::Duck( void )
 
 		bool bSlide = false;
 		bool bRoll = false;
-		bool bDive = false;
+		bool bDive = false;	
 
 		if (buttonsPressed & (IN_DUCK))
 		{
@@ -1950,6 +1954,38 @@ void CSDKGameMovement::Duck( void )
 				}
 				else
 					m_pSDKPlayer->m_Shared.SetDuckPress();
+			}
+		}
+		/*Double tap*/
+		int mask = buttonsPressed&(IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT);
+		if (mask != 0)
+		{
+			if (m_pSDKPlayer->m_Shared.taptime < 0)
+			{
+				m_pSDKPlayer->m_Shared.taptime = gpGlobals->curtime;
+				m_pSDKPlayer->m_Shared.tapkey = mask;
+			}
+			else
+			{
+				float delta = gpGlobals->curtime - m_pSDKPlayer->m_Shared.taptime;
+				if (m_pSDKPlayer->m_Shared.tapkey != mask)
+				{
+					m_pSDKPlayer->m_Shared.taptime = -1;
+				}
+				else
+				{
+#ifdef GAME_DLL
+					float time = atof (engine->GetClientConVarValue (m_pSDKPlayer->entindex (), "da_user_taptime"));
+#else
+					float time = da_user_taptime.GetFloat ();
+#endif
+					if (delta < time)
+					{
+						m_pSDKPlayer->m_Shared.taptime = -1;
+						bRoll = true;
+					}
+					else m_pSDKPlayer->m_Shared.taptime = gpGlobals->curtime;
+				}
 			}
 		}
 
@@ -2052,10 +2088,6 @@ void CSDKGameMovement::Duck( void )
 			SetSlideEyeOffset( 0.0 );
 
 			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
-		}
-		else if( bDive && m_pSDKPlayer->m_Shared.CanDive() )
-		{
-			mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
 		}
 	}
 
@@ -2302,6 +2334,190 @@ CSDKGameMovement::TraceBBox (const Vector& start, const Vector& end, const Vecto
 	ray.Init (start, end, mins, maxs);
 	UTIL_TraceRay (ray, PlayerSolidMask (), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
 }
+bool
+CSDKGameMovement::checkrun (void)
+{
+	trace_t tr;
+	Vector dir;
+	Vector org, mins, maxs;
+
+	if (m_pSDKPlayer->m_Shared.runtime != 0)
+	{/*Must not already be wallrunning*/
+		if (m_pSDKPlayer->m_Shared.runtime > 0) return true;
+		else return false;
+	}
+	if (!(mv->m_nButtons&IN_JUMP))
+	{/*Must be holding jump*/
+		return false;
+	}
+	if (m_pSDKPlayer->m_Shared.IsRolling () || 
+	   (m_pSDKPlayer->m_Shared.IsSliding () && 
+		m_pSDKPlayer->m_Shared.IsGettingUpFromSlide ()))
+	{/*Must be upright*/
+		return false;
+	}
+	dir[0] = m_vecForward[0];
+	dir[1] = m_vecForward[1];
+	dir[2] = 0;
+	if (DotProduct (player->GetAbsVelocity (), dir) <= 0)
+	{/*Must be moving forward*/
+		return false;
+	}
+	VectorCopy (mv->GetAbsOrigin (), org);
+	VectorCopy (GetPlayerMins (), mins);
+	VectorCopy (GetPlayerMaxs (), maxs);
+	mins[2] += 0.5*maxs[2];
+	TraceBBox (org, org + dir, mins, maxs, tr);
+	if (!tr.DidHitWorld () || 
+		tr.surface.flags&SURF_SKY || 
+		fabs (tr.plane.normal[2]) >= 0.7)
+	{/*Must be next to a wall*/
+		return false;
+	}
+	Vector2D right = m_vecRight.AsVector2D ();
+	Vector2D normal = tr.plane.normal.AsVector2D ();
+	float angle = DotProduct2D (normal, right);
+	if (fabs (angle) >= 0.8)
+	{
+		Vector up;
+		float s = (angle > 0) ? 1 : -1;
+
+		up[0] = 0;
+		up[1] = 0;
+		up[2] = s;
+		CrossProduct (up, tr.plane.normal, dir);
+
+		Vector &run = m_pSDKPlayer->m_Shared.rundir.GetForModify ();
+		run[0] = dir[0];
+		run[1] = dir[1];
+		run[2] = m_vecForward[2];
+
+		Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
+		VectorCopy (tr.plane.normal, n);
+
+		CPASFilter filter (mv->GetAbsOrigin ());
+		filter.UsePredictionRules ();
+		m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoSlide");
+		m_pSDKPlayer->m_Shared.runtime = da_acro_wallrun_duration.GetFloat ();
+		m_pSDKPlayer->m_Shared.daflags |= DA_WRLOCK;
+		return true;
+	}
+	return false;
+}
+bool
+CSDKGameMovement::checkmantel (void)
+{
+	trace_t tr;
+	Vector mins, maxs;
+	Vector pr1, pr2;
+	Vector dir;
+	float ofs;
+
+	if (m_pSDKPlayer->m_Shared.manteldist > 0)
+	{
+		return true;
+	}
+	if (!(mv->m_nButtons&IN_JUMP))
+	{
+		return false;
+	}
+	if (m_pSDKPlayer->m_Shared.runtime > 0)
+	{
+		return false;
+	}
+	VectorCopy (GetPlayerMins (), mins);
+	VectorCopy (GetPlayerMaxs (), maxs);
+	VectorCopy (m_vecForward, dir);
+	ofs = 0.5*maxs[2];
+	dir[2] = 0;
+	//mins[2] += ofs;
+	/*Probe up for free space*/
+	VectorCopy (mv->GetAbsOrigin (), pr1);
+	VectorCopy (pr1, pr2);
+	pr2[2] += da_acro_mantel_height.GetFloat ();
+	TraceBBox (pr1, pr2, mins, maxs, tr);
+	if (tr.fraction < 1 || tr.allsolid || tr.startsolid)
+	{/*Blocked by ceiling*/
+		return false;
+	}
+	/*Then probe forward for free space*/
+	VectorCopy (pr2, pr1);
+	VectorMA (pr1, 8, dir, pr2);
+	TraceBBox (pr1, pr2, mins, maxs, tr);
+	if (tr.fraction < 1)
+	{/*Not enough space to stand on for potential ledge,
+		or too far down wall*/
+		return false;
+	}
+	/*Find ground to stand on*/
+	VectorCopy (pr2, pr1);
+	VectorCopy (pr1, pr2);
+	pr2[2] -= 0.5*da_acro_mantel_height.GetFloat ();
+	TraceBBox (pr1, pr2, mins, maxs, tr);
+	if (tr.fraction == 1)
+	{/*No ground to stand on, this may happen if ledge is too thin?*/
+		return false;
+	}
+	/*Move up the wall next frame*/
+	float dist = tr.endpos.z - mv->GetAbsOrigin ().z;
+	if (dist <= 0)
+	{
+		return false;
+	}
+	VectorCopy (mv->GetAbsOrigin (), pr1);
+	VectorMA (pr1, 16, dir, pr2);
+	TraceBBox (pr1, pr2, mins, maxs, tr);
+	VectorCopy (tr.plane.normal, m_pSDKPlayer->m_Shared.wallnormal.GetForModify ());
+	m_pSDKPlayer->m_Shared.manteldist = dist;
+	return true;
+}
+bool
+CSDKGameMovement::jump (void)
+{
+	float jumpheight;
+	float flGroundFactor;
+	float startz;
+		
+	flGroundFactor = 1.0;
+	startz = mv->m_vecVelocity[2];
+	if (mv->m_nOldButtons&IN_JUMP ||
+		m_pSDKPlayer->m_Shared.runtime > 0 ||
+		m_pSDKPlayer->m_Shared.IsRolling() || 
+		(m_pSDKPlayer->m_Shared.IsSliding() && 
+		 m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()) ||
+		!m_pSDKPlayer->GetGroundEntity ())
+	{
+		return false;
+	}
+	if (player->GetSurfaceData ())
+	{
+		flGroundFactor = player->GetSurfaceData()->game.jumpFactor; 
+	}
+	if (!m_pSDKPlayer->m_Shared.IsGettingUpFromSlide ())
+	{//play end slide sound instead if we're jumping out of a slide
+		m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
+	}		
+	jumpheight = da_acro_jump_height.GetFloat ();
+	if ((m_pSDKPlayer->m_Local.m_bDucking) || 
+		(m_pSDKPlayer->GetFlags() & FL_DUCKING))
+	{					
+		mv->m_vecVelocity[2] = flGroundFactor*jumpheight;
+	}
+	else
+	{
+		mv->m_vecVelocity[2] += flGroundFactor*jumpheight;
+	}
+	SetGroundEntity (NULL);
+	FinishGravity();
+
+	m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
+	m_pSDKPlayer->m_Shared.SetJumping (true);
+	m_pSDKPlayer->ReadyWeapon ();
+	mv->m_outWishVel.z += mv->m_vecVelocity[2] - startz;
+	mv->m_outStepHeight += 0.1f;
+	mv->m_nOldButtons |= IN_JUMP;
+	return true;
+}
 void CSDKGameMovement::FullWalkMove ()
 {
 	m_nOldWaterLevel = player->GetWaterLevel();
@@ -2309,8 +2525,6 @@ void CSDKGameMovement::FullWalkMove ()
 	{
 		StartGravity();
 	}
-	/*Drop timers
-	*/
 	if (m_pSDKPlayer->m_Shared.runtime < 0)
 	{
 		if (!(m_pSDKPlayer->m_Shared.daflags&DA_WRLOCK))
@@ -2322,16 +2536,10 @@ void CSDKGameMovement::FullWalkMove ()
 			}
 		}
 	}
-	if (m_pSDKPlayer->m_Shared.climbtime > 0)
-	{
-		m_pSDKPlayer->m_Shared.climbtime -= 1000*gpGlobals->frametime;
-		if (m_pSDKPlayer->m_Shared.climbtime < 0)
-		{
-			m_pSDKPlayer->m_Shared.climbtime = 0;
-		}
-	}
 	if (m_pSDKPlayer->m_Shared.kongtime > 0)
 	{
+		mv->m_flForwardMove = 0;
+		mv->m_flSideMove = 0;
 		m_pSDKPlayer->m_Shared.kongtime -= 1000*gpGlobals->frametime;
 		if (m_pSDKPlayer->m_Shared.kongtime < 0)
 		{
@@ -2371,125 +2579,194 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		return;
 	}
-#if 1
-	if (m_pSDKPlayer->m_Shared.manteldist > 0)
-	{/*Player is climbing up a ledge*/
-		Vector org;
-		float d;
-		if (!(mv->m_nButtons&IN_JUMP))
-		{
-			m_pSDKPlayer->m_Shared.manteldist = 0;
-			goto cancelmantel;
-		}
-
-		d = gpGlobals->frametime*270;
-		VectorCopy (mv->GetAbsOrigin (), org);
-		org[2] += d;
-		mv->SetAbsOrigin (org);
-
-		m_pSDKPlayer->m_Shared.manteldist -= d;
-		if (m_pSDKPlayer->m_Shared.manteldist < 0)
-		{/*Roll over onto the ledge*/
-
-			trace_t tr;
-			Vector mins, maxs;
-			Vector pr1, pr2;
-			Vector dir;
-
-			VectorCopy (m_pSDKPlayer->m_Shared.wallnormal, dir);
-			VectorCopy (GetPlayerMins (), mins);
-			VectorCopy (GetPlayerMaxs (), maxs);
-			dir.Negate ();
-			/*Place on the ledge.
-			TODO: Make this less of a hack*/
-			VectorAdd (mv->GetAbsOrigin (), dir, pr1);
-			pr1[2] += 100;
-			VectorCopy (pr1, pr2);
-			pr2[2] -= 101;
-			TraceBBox (pr1, pr2, mins, maxs, tr);
-			mv->SetAbsOrigin (tr.endpos);
-			player->AddFlag (FL_ONGROUND);
-			/*Give a little push forward*/
-			mv->m_vecVelocity = m_vecForward*135;
-			mv->m_vecVelocity[2] = 0;
-			m_pSDKPlayer->SetAbsVelocity (mv->m_vecVelocity);
-			m_pSDKPlayer->m_Shared.manteldist = 0;
-			goto nokong;
-		}
-		else return;
-	}
-cancelmantel:
-#endif
-#if 1
-	int tapped = 0;
-	if ((player->GetFlags ()&FL_ONGROUND) &&
-		m_pSDKPlayer->m_Shared.taptime == 0)
-	{/*Check for double tapped keys*/
-		int buttons = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
-		if (buttons&IN_FORWARD) m_pSDKPlayer->m_Shared.tapkey = IN_FORWARD;
-		if (buttons&IN_BACK) m_pSDKPlayer->m_Shared.tapkey = IN_BACK;
-		if (buttons&IN_MOVELEFT) m_pSDKPlayer->m_Shared.tapkey = IN_MOVELEFT;
-		if (buttons&IN_MOVERIGHT) m_pSDKPlayer->m_Shared.tapkey = IN_MOVERIGHT;
-		if (m_pSDKPlayer->m_Shared.tapkey)
-		{
-#ifdef GAME_DLL
-			m_pSDKPlayer->m_Shared.taptime = atof (engine->GetClientConVarValue (m_pSDKPlayer->entindex (), "da_user_taptime"));
-#else
-			m_pSDKPlayer->m_Shared.taptime = da_user_taptime.GetFloat ();
-#endif
-		}
-	}
-	else if (player->GetFlags ()&FL_ONGROUND)
-	{
-		int changed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
-		changed &= (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT);
-		if (changed&m_pSDKPlayer->m_Shared.tapkey)
-		{
-			tapped = m_pSDKPlayer->m_Shared.tapkey;
-			m_pSDKPlayer->m_Shared.tapkey = 0;
-			m_pSDKPlayer->m_Shared.taptime = 0;
-		}
-		else if (changed != 0)
-		{
-			m_pSDKPlayer->m_Shared.tapkey = 0;
-			m_pSDKPlayer->m_Shared.taptime = 0;
-		}
-	}
-	else
-	{
-		m_pSDKPlayer->m_Shared.tapkey = 0;
-		m_pSDKPlayer->m_Shared.taptime = 0;
-	}
-	if (m_pSDKPlayer->m_Shared.IsDiving () ||
-		m_pSDKPlayer->m_Shared.IsSliding () ||
-		m_pSDKPlayer->m_Shared.IsRolling () ||
-		m_pSDKPlayer->m_Shared.runtime ||
-		m_pSDKPlayer->m_Shared.manteldist)
-	{/*Reset if in a stunt*/
-		m_pSDKPlayer->m_Shared.taptime = 0;
-		m_pSDKPlayer->m_Shared.tapkey = 0;
-	}
-	if (tapped && m_pSDKPlayer->m_Shared.CanRoll ())
-	{
-		Vector dir;
-
-		m_pSDKPlayer->m_Shared.StartRolling();
-		dir[0] = mv->m_flForwardMove*m_vecForward[0] + mv->m_flSideMove*m_vecRight[0];
-		dir[1] = mv->m_flForwardMove*m_vecForward[1] + mv->m_flSideMove*m_vecRight[1];
-		dir[2] = 0;
-		dir.NormalizeInPlace ();
-		m_pSDKPlayer->m_Shared.m_vecRollDirection = dir;
-
-		SetRollEyeOffset( 0.0 );
-		m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
-
-		CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
-		filter.UsePredictionRules();
-		m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.GoRoll" );
-	}
-#endif
 	UpdateDuckJumpEyeOffset();
 	Duck();
+	if (m_pSDKPlayer->m_Shared.CanChangePosition ())
+	{
+		int pressed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
+		if (pressed&IN_ALT1)
+		{/*Stunt button behaviour*/
+			if (m_pSDKPlayer->m_Shared.kongtime == 0 &&
+				m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt ())
+			{/*Kong (wallflip)*/
+				trace_t tr;
+				Vector org, mins, maxs;
+				Vector dir;
+				float dist;
+
+				dist = da_acro_kong_dist.GetFloat ();
+				VectorCopy (mv->GetAbsOrigin (), org);
+				VectorCopy (GetPlayerMins (), mins);
+				VectorCopy (GetPlayerMaxs (), maxs);
+				mins[2] += player->m_Local.m_flStepSize + 1e-3;
+				dir[0] = m_vecForward[0];
+				dir[1] = m_vecForward[1];
+				dir[2] = 0;
+				TraceBBox (org, org + dist*dir, mins, maxs, tr);
+				if (tr.fraction < 1 && 
+					!(tr.surface.flags&SURF_SKY) &&
+					fabs (tr.plane.normal[2]) < 0.7)
+				{
+					float speed = da_acro_kong_speed.GetFloat ();
+					float delay = da_acro_kong_delay.GetFloat ();
+					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
+					mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
+					mv->m_vecVelocity[2] = da_acro_kong_gain.GetFloat ();
+					SetGroundEntity (NULL);
+					FinishGravity ();
+					
+					CPASFilter filter (org);
+					filter.UsePredictionRules ();
+					m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+
+					if (m_pSDKPlayer->m_Shared.runtime > 0)
+					{
+						m_pSDKPlayer->m_Shared.runtime = -1;
+					}
+					m_pSDKPlayer->m_Shared.kongtime = delay;
+					m_pSDKPlayer->m_Shared.kongcnt++;
+				}
+			}
+			if (m_pSDKPlayer->m_Shared.kongtime <= 0 &&
+				m_pSDKPlayer->m_Shared.CanDive ())
+			{
+				if (m_pSDKPlayer->m_Shared.runtime > 0)
+				{/*Project speed onto forward axis before dive, 
+					else dive gets affected by the run velocity*/
+					Vector velo;
+					float speed;
+
+					speed = player->GetAbsVelocity ().Length ();
+					VectorScale (m_vecForward, speed, velo);
+					player->SetAbsVelocity (velo);
+					m_pSDKPlayer->m_Shared.runtime = -1;
+				}
+				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
+			}
+		}
+	}
+	if (checkrun ())
+	{/*Wallrunning*/
+		trace_t tr;
+		Vector right;
+		Vector mins, maxs, org;
+		Vector dir;
+
+		VectorCopy (GetPlayerMins (), mins);
+		VectorCopy (GetPlayerMaxs (), maxs);
+		VectorCopy (mv->GetAbsOrigin (), org);
+		VectorCopy (m_pSDKPlayer->m_Shared.rundir, dir);
+		TraceBBox (org, org + dir, mins, maxs, tr);
+		if (tr.fraction == 1 || fabs (DotProduct (tr.plane.normal, dir)) < 1 - 1e-4)
+		{/*Must have no obstructions*/
+			int released;
+			released = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nOldButtons;
+			VectorScale (m_pSDKPlayer->m_Shared.wallnormal, 8, right);
+			TraceBBox (org, org - right, mins, maxs, tr);
+			if (tr.fraction >= 1 - 1e-2 || tr.surface.flags&SURF_SKY)
+			{/*Wall no longer at side*/
+				m_pSDKPlayer->m_Shared.runtime = -1;
+			}
+			else if (released&IN_JUMP)
+			{/*Drop out of run if space is let go*/
+				m_pSDKPlayer->m_Shared.runtime = -1;
+			}
+			else
+			{/*Run right up along the wall*/
+				Vector forward, up, run;
+				float d, t, a, s;
+
+				forward = m_pSDKPlayer->m_Shared.rundir;
+				d = da_acro_wallrun_duration.GetFloat ();
+				t = m_pSDKPlayer->m_Shared.runtime/d;
+				a = da_acro_wallrun_thrust.GetFloat ();
+				mv->m_vecVelocity[0] = a*forward[0];
+				mv->m_vecVelocity[1] = a*forward[1];
+				mv->m_vecVelocity[2] = (t*t/d*d)*a*forward[2];
+				mv->m_flForwardMove = 0;
+				mv->m_flSideMove = 0;
+				mv->m_flUpMove = 0;
+				SetGroundEntity (NULL);
+				FinishGravity ();
+				/*Resave wall normal since it may change*/
+				Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
+				VectorCopy (tr.plane.normal, n);
+				/*Recompute run direction in case normal has changed*/
+				up[0] = 0;
+				up[1] = 0;
+				up[2] = 1; /*This is approximate*/
+				CrossProduct (tr.plane.normal, up, run);
+				s = (DotProduct (forward, run) > 0) ? 1 : -1;
+				Vector &nr = m_pSDKPlayer->m_Shared.rundir.GetForModify ();
+				nr[0] = s*run[0];
+				nr[1] = s*run[1];
+				nr[2] = nr[2];
+
+				m_pSDKPlayer->m_Shared.runtime -= 1000*gpGlobals->frametime;
+				if (m_pSDKPlayer->m_Shared.runtime < 0)
+				{/*Don't wallrun again until we've landed*/
+					m_pSDKPlayer->m_Shared.runtime = -1;
+				}
+			}
+		}
+		else
+		{
+			m_pSDKPlayer->m_Shared.runtime = -1;
+		}
+	}
+	if (checkmantel ())
+	{/*Player is climbing up a ledge
+		TODO: This is still fairly prelimenary...
+		TRP wants two manteling animations.
+		One from run and one from standing,
+		and both end up having the player in a crouch.
+		Make view interpolate up nicely.*/
+		trace_t tr;
+		Vector mins, maxs;
+		Vector pr1, pr2;
+		float d;
+
+		VectorCopy (GetPlayerMins (), mins);
+		VectorCopy (GetPlayerMaxs (), maxs);
+		mv->m_flForwardMove = 0;
+		mv->m_flSideMove = 0;
+		mv->m_flUpMove = 0;
+
+		d = gpGlobals->frametime*280;
+		VectorCopy (mv->GetAbsOrigin (), pr1);
+		VectorCopy (pr1, pr2);
+		pr2[2] += d;
+
+		TraceBBox (pr1, pr2, mins, maxs, tr);
+		if (tr.fraction == 1 && !tr.startsolid && !tr.allsolid)
+		{/*Don't pass through any solids*/
+			mv->SetAbsOrigin (tr.endpos);
+			m_pSDKPlayer->m_Shared.manteldist -= d;
+			if (m_pSDKPlayer->m_Shared.manteldist <= 0)
+			{
+				Vector dir;
+				VectorCopy (m_pSDKPlayer->m_Shared.wallnormal, dir);
+				dir.Negate ();
+				/*Place on the ledge*/
+				VectorCopy (mv->GetAbsOrigin (), pr1);
+				VectorAdd (pr1, 16*dir, pr2);
+				pr1[2] += 1e-3;
+				pr2[2] += 1e-3;
+				TraceBBox (pr1, pr2, mins, maxs, tr);
+				mv->SetAbsOrigin (tr.endpos);
+				player->AddFlag (FL_ONGROUND);
+				m_pSDKPlayer->m_Shared.manteldist = 0;
+				m_pSDKPlayer->SetViewOffset (VEC_VIEW);
+				m_pSDKPlayer->m_Shared.EndDive ();
+				m_pSDKPlayer->m_Shared.EndSlide ();
+			}
+		}
+		else
+		{
+			m_pSDKPlayer->m_Shared.manteldist = 0;
+		}
+		return;
+	}
 	if (m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity ())
 	{/*Raise player off the ground*/
 		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
@@ -2509,7 +2786,7 @@ cancelmantel:
 
 			Vector vecNewPosition = mv->GetAbsOrigin() + Vector(0, 0, flHeightToMoveUp);
 			TracePlayerBBoxWithStep (mv->GetAbsOrigin(), vecNewPosition, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-			mv->SetAbsOrigin( trace.endpos );
+			mv->SetAbsOrigin (trace.endpos);
 
 			m_pSDKPlayer->m_Shared.IncreaseDiveLerped(flCurrentLerp - m_pSDKPlayer->m_Shared.GetDiveLerped());
 			Vector vecViewOffset = Lerp(flCurrentBias, GetPlayerViewOffset(false), VEC_DIVE_VIEW);
@@ -2524,288 +2801,10 @@ cancelmantel:
 			m_pSDKPlayer->m_Shared.daflags &= ~DA_WRLOCK;
 			m_pSDKPlayer->m_Shared.daflags &= ~DA_CLIMB;
 		}
-		m_pSDKPlayer->m_Shared.somersault = false;
-		m_pSDKPlayer->m_Shared.climbcnt = 0;
 		m_pSDKPlayer->m_Shared.kongcnt = 0;
 	}
-	if (m_pSDKPlayer->m_Shared.runtime == 0 && (mv->m_nButtons&IN_JUMP))
-	{/*Wallrun check*/
-		trace_t tr;
-		Vector dir;
-
-		if (m_pSDKPlayer->m_Shared.IsRolling() || 
-			(m_pSDKPlayer->m_Shared.IsSliding() && 
-			 m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
-		{/*Must be upright*/
-			goto nowallrun;
-		}
-		if (m_pSDKPlayer->m_Shared.climbcnt != 0)
-		{/*Must not be climbing*/
-			goto nowallrun;
-		}
-		dir[0] = m_vecForward[0];
-		dir[1] = m_vecForward[1];
-		dir[2] = 0;
-		if (DotProduct (player->GetAbsVelocity (), dir) <= 0)
-		{/*Must be moving forward*/
-			goto nowallrun;
-		}
-		TraceBBox (mv->GetAbsOrigin (),
-				   mv->GetAbsOrigin () + dir,
-				   GetPlayerMins () + Vector (0, 0, 0.5*GetPlayerMaxs ().z),
-				   GetPlayerMaxs (),
-				   tr);
-		if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7 &&
-			!(tr.surface.flags&SURF_SKY))
-		{
-			Vector2D right = m_vecRight.AsVector2D ();
-			Vector2D normal = tr.plane.normal.AsVector2D ();
-			float angle = DotProduct2D (normal, right);
-			if (fabs (angle) >= 0.8)
-			{/*Use some voodoo to compute run direction*/
-				float s = (angle > 0) ? 1 : -1;
-
-				Vector &dumb = m_pSDKPlayer->m_Shared.rundir.GetForModify ();
-				dumb[0] = -s*tr.plane.normal[1];
-				dumb[1] =  s*tr.plane.normal[0];
-				/*if (m_pSDKPlayer->EyeAngles ().x < -10) dumb[2] = 0.2;
-				if (m_pSDKPlayer->EyeAngles ().x < -15) dumb[2] = 0.4;
-				else */dumb[2] = m_vecForward[2];
-
-				Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
-				VectorCopy (tr.plane.normal, n);
-
-				CPASFilter filter (mv->GetAbsOrigin ());
-				filter.UsePredictionRules ();
-				m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoSlide");
-				m_pSDKPlayer->m_Shared.runtime = da_acro_wallrun_duration.GetFloat ();
-				m_pSDKPlayer->m_Shared.daflags |= DA_WRLOCK;
-			}
-		}
-	}
-nowallrun:
-	if (m_pSDKPlayer->m_Shared.runtime > 0)
-	{/*Wallrunning*/
-		trace_t tr;
-		Vector right;
-		Vector mins, maxs, org;
-
-		VectorCopy (GetPlayerMins (), mins);
-		VectorCopy (GetPlayerMaxs (), maxs);
-		VectorCopy (mv->GetAbsOrigin (), org);
-		TraceBBox (org,
-				   org + m_pSDKPlayer->m_Shared.rundir,
-				   mins,
-				   maxs,
-				   tr);
-		if (tr.fraction != 1 || tr.allsolid)
-		{
-			m_pSDKPlayer->m_Shared.runtime = -1;
-			goto cancelrun;
-		}
-
-		VectorScale (m_pSDKPlayer->m_Shared.wallnormal, 4, right);
-		TraceBBox (org, org - right, mins, maxs, tr);
-		if (tr.fraction >= 0.99 || tr.surface.flags&SURF_SKY)
-		{/*Wall no longer at side*/
-			m_pSDKPlayer->m_Shared.runtime = -1;
-		}
-		else if (((mv->m_nOldButtons^mv->m_nButtons)&mv->m_nOldButtons)&IN_JUMP)
-		{/*Drop out of run if space is let go*/
-			m_pSDKPlayer->m_Shared.runtime = -1;
-		}
-		else if (mv->m_nButtons&IN_ALT1)
-		{/*Stunt out of the run*/
-			VectorScale (m_vecForward, player->GetAbsVelocity ().Length (), mv->m_vecVelocity);
-			player->SetAbsVelocity (mv->m_vecVelocity);
-			m_pSDKPlayer->m_Shared.StartDiving ();
-			m_pSDKPlayer->m_Shared.runtime = -1;
-		}
-		else
-		{/*Run right up along the wall*/
-			Vector forward;
-
-			forward = da_acro_wallrun_thrust.GetFloat ()*m_pSDKPlayer->m_Shared.rundir;
-			mv->m_vecVelocity[0] = forward[0];
-			mv->m_vecVelocity[1] = forward[1];
-			mv->m_vecVelocity[2] = forward[2];
-
-			Vector &n = m_pSDKPlayer->m_Shared.wallnormal.GetForModify ();
-			VectorCopy (tr.plane.normal, n);
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
-
-			SetGroundEntity (NULL);
-			FinishGravity ();
-
-			m_pSDKPlayer->m_Shared.runtime -= 1000*gpGlobals->frametime;
-			if (m_pSDKPlayer->m_Shared.runtime < 0)
-			{/*Don't wallrun again until we've landed*/
-				m_pSDKPlayer->m_Shared.runtime = -1;
-			}
-		}
-	}
-cancelrun:
-	if (mv->m_nButtons & IN_JUMP) 
-	{
-		float jumpheight, jumpspeed;
-		float flGroundFactor;
-		float startz;
-		
-		if (m_pSDKPlayer->m_Shared.runtime > 0)
-		{
-			goto nojump;
-		}
-
-		if (m_pSDKPlayer->m_Shared.runtime == 0)
-		{/*Mantel*/
-			trace_t tr;
-			Vector mins, maxs;
-			Vector pr1, pr2;
-			Vector dir;
-			float ofs;
-
-			VectorCopy (VEC_HULL_MIN, mins);
-			VectorCopy (VEC_HULL_MAX, maxs);
-			VectorCopy (m_vecForward, dir);
-			ofs = 0.5*maxs[2];
-			mins[2] += ofs;
-			/*Probe up for free space*/
-			VectorCopy (VEC_HULL_MIN, mins);
-			VectorCopy (mv->GetAbsOrigin (), pr1);
-			VectorCopy (pr1, pr2);
-			pr2[2] += da_acro_mantel_height.GetFloat ();
-			TraceBBox (pr1, pr2, mins, maxs, tr);
-			if (tr.fraction < 1)
-			{/*Blocked by ceiling*/
-				goto nomantel;
-			}
-			/*Then probe forward for free space*/
-			VectorCopy (pr2, pr1);
-			VectorMA (pr1, 8, dir, pr2);
-			TraceBBox (pr1, pr2, mins, maxs, tr);
-			if (tr.fraction < 1)
-			{/*Not enough space to stand on for potential ledge,
-			   or too far down wall*/
-				goto nomantel;
-			}
-			/*Find ground to stand on*/
-			VectorCopy (pr2, pr1);
-			VectorCopy (pr1, pr2);
-			pr2[2] -= 0.5*da_acro_mantel_height.GetFloat ();
-			TraceBBox (pr1, pr2, mins, maxs, tr);
-			if (tr.fraction == 1)
-			{/*No ground to stand on, this may happen if ledge is too thin?*/
-				goto nomantel;
-			}
-			/*Move up the wall next frame*/
-			float dist = tr.endpos.z - mv->GetAbsOrigin ().z;
-			if (dist > 32) /*actually be some distance down*/
-			{
-				VectorCopy (mv->GetAbsOrigin (), pr1);
-				VectorMA (pr1, 16, dir, pr2);
-				TraceBBox (pr1, pr2, mins, maxs, tr);
-				VectorCopy (tr.plane.normal, m_pSDKPlayer->m_Shared.wallnormal.GetForModify ());
-				if (m_pSDKPlayer->m_Shared.IsDiving ())
-				{
-					m_pSDKPlayer->m_Shared.EndDive ();
-				}
-				m_pSDKPlayer->m_Shared.manteldist = dist;
-				return;
-			}
-		}
-nomantel:
-		if (m_pSDKPlayer->m_Shared.IsRolling() || (m_pSDKPlayer->m_Shared.IsSliding() && m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()))
-		{
-			goto nojump;
-		}
-		if (mv->m_nOldButtons&IN_JUMP)
-		{
-			goto nojump;
-		}
-		flGroundFactor = 1.0;
-		startz = mv->m_vecVelocity[2];
-		if (!m_pSDKPlayer->GetGroundEntity ())
-		{
-			goto nojump;
-		}
-		else
-		{
-			if (player->GetSurfaceData ())
-			{
-				flGroundFactor = player->GetSurfaceData()->game.jumpFactor; 
-			}
-			if (!m_pSDKPlayer->m_Shared.IsGettingUpFromSlide ())
-			{//play end slide sound instead if we're jumping out of a slide
-				m_pSDKPlayer->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->GetSurfaceData(), 1.0, true );
-			}
-			jumpheight = da_acro_jump_height.GetFloat ();
-		}
-		jumpspeed = jumpheight;
-		if ((m_pSDKPlayer->m_Local.m_bDucking) || 
-			(m_pSDKPlayer->GetFlags() & FL_DUCKING))
-		{					
-			mv->m_vecVelocity[2] = flGroundFactor*jumpspeed;
-		}
-		else
-		{
-			mv->m_vecVelocity[2] += flGroundFactor*jumpspeed;
-		}
-		SetGroundEntity (NULL);
-		FinishGravity();
-
-		m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
-		m_pSDKPlayer->m_Shared.SetJumping (true);
-		m_pSDKPlayer->ReadyWeapon ();
-		mv->m_outWishVel.z += mv->m_vecVelocity[2] - startz;
-		mv->m_outStepHeight += 0.1f;
-		mv->m_nOldButtons |= IN_JUMP;
-	}
-	else
-	{
-		mv->m_nOldButtons &= ~IN_JUMP;
-	}
-nojump:
-	if ((mv->m_nButtons&IN_ALT1) && !(mv->m_nOldButtons&IN_ALT1))
-	{/*Kong*/
-		trace_t tr;
-		Vector dir;
-		float dist;
-		
-		if (m_pSDKPlayer->m_Shared.kongcnt >= da_acro_kong_limit.GetInt ())
-		{
-			goto nokong;
-		}
-		if (m_pSDKPlayer->m_Shared.kongtime > 0)
-		{
-			goto nokong;
-		}
-		dist = da_acro_kong_dist.GetFloat ();
-		VectorCopy (m_vecForward, dir);
-		dir[2] = 0;
-		TraceBBox (mv->GetAbsOrigin (),
-				   mv->GetAbsOrigin () + dist*dir,
-				   GetPlayerMins (),
-				   GetPlayerMaxs (),
-				   tr);
-		if (tr.fraction < 1 && fabs (tr.plane.normal[2]) < 0.7)
-		{
-			CPASFilter filter (mv->GetAbsOrigin ());
-
-			filter.UsePredictionRules ();
-			float speed = da_acro_kong_speed.GetFloat ();
-			mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
-			mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
-			mv->m_vecVelocity[2] = da_acro_kong_gain.GetFloat ();
-			m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
-			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_JUMP);
-	
-			m_pSDKPlayer->m_Shared.kongcnt++;
-			m_pSDKPlayer->m_Shared.kongtime = da_acro_kong_delay.GetFloat ();
-		}
-	}
-nokong:
+	if (mv->m_nButtons&IN_JUMP) jump ();
+	else mv->m_nOldButtons &= ~IN_JUMP;
 	if (player->GetGroundEntity() != NULL)
 	{
 		mv->m_vecVelocity[2] = 0.0;
@@ -2834,16 +2833,21 @@ nokong:
 	}
 	CheckFalling();
 #ifdef GAME_DLL
-	trace_t tr;
-	int msec, loss;
-	float dt;
-
-	UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);
-	dt = da_hackrobatics.GetFloat ();
-	TraceBBox (mv->GetAbsOrigin (), mv->GetAbsOrigin () + dt*mv->m_vecVelocity, GetPlayerMins (), GetPlayerMaxs (), tr);
-	if (tr.fraction < 1 && tr.DidHitNonWorldEntity ())
+	if (m_pSDKPlayer->m_Shared.IsDiving () || 
+		m_pSDKPlayer->m_Shared.IsRolling ())
 	{
-		tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);
+		trace_t tr;
+		float dt;
+#if 0
+		int msec, loss;
+		UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);
+#endif
+		dt = da_hackrobatics.GetFloat ()*gpGlobals->frametime;
+		TraceBBox (mv->GetAbsOrigin (), mv->GetAbsOrigin () + dt*mv->m_vecVelocity, GetPlayerMins (), GetPlayerMaxs (), tr);
+		if (tr.fraction < 1 && tr.DidHitNonWorldEntity ())
+		{
+			tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);
+		}
 	}
 #endif
 	if ((m_nOldWaterLevel == WL_NotInWater && player->GetWaterLevel() != WL_NotInWater) ||
@@ -2855,6 +2859,91 @@ nokong:
 		PlaySwimSound();
 	}
 }
+bool
+CSDKGameMovement::checkvault (void)
+{
+	trace_t tr;
+	float vault_height = da_acro_vault_height.GetFloat ();
+	Vector forward, normal;
+	Vector mins, maxs;
+	Vector org, end;
+	Vector velo;
+
+	VectorCopy (mv->m_vecVelocity, velo);
+	VectorCopy (GetPlayerMins (), mins);
+	VectorCopy (GetPlayerMaxs (), maxs);
+	if (m_pSDKPlayer->m_Shared.IsSliding () ||
+		m_pSDKPlayer->m_Shared.IsDiveSliding () ||
+		m_pSDKPlayer->m_Shared.IsRolling () ||
+		(player->GetFlags ()&FL_DUCKING))
+	{/*Must be upright*/
+		return false;
+	}
+	if (mv->m_flForwardMove < 100 + 1e-2)
+	{/*Must be moving forward, must be running*/
+		return false;
+	}
+	forward[0] = m_vecForward[0];
+	forward[1] = m_vecForward[1];
+	forward[2] = 0;
+	VectorMA (mv->GetAbsOrigin (), 16, forward, end);
+	TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+	VectorCopy (tr.plane.normal, normal);
+	if (fabs (DotProduct (forward, normal)) < 0.7)
+	{/*Must be facing toward wall*/
+		return false;
+	}
+	VectorCopy (mv->GetAbsOrigin(), end);
+	end.z += vault_height;
+	TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+	if (!tr.startsolid && !tr.allsolid)
+	{/*Pop up into the air*/
+		mv->SetAbsOrigin (tr.endpos);
+	}
+	else return false;
+	if (TryPlayerMove () == 0)
+	{/*Can move forward over the ledge*/
+		Vector end;
+		float startz;
+		bool passable;
+
+		passable = false;
+		VectorCopy (mv->GetAbsOrigin(), end);
+		end.z -= vault_height - player->m_Local.m_flStepSize + 1e-4;
+		startz = mv->GetAbsOrigin ().z;
+		TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+		if (tr.fraction < 1 && !tr.startsolid && !tr.allsolid)
+		{/*Place player flush onto the ledge*/
+			mv->SetAbsOrigin (tr.endpos);
+		}
+		else return false;
+		VectorMA (mv->GetAbsOrigin (), -64, normal, end);
+		TracePlayerBBox (mv->GetAbsOrigin (), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+		if (tr.fraction == 1 && !tr.allsolid)
+		{/*We know that we can at least roll over the ledge*/
+			passable = true;
+		}
+		VectorCopy (tr.endpos, org);
+		VectorCopy (org, end);
+		end.z -= 512; /*Make this a user variable?*/
+		TracePlayerBBox (org, end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+		if (1e-4 < tr.fraction)
+		{/*Vault over if we won't fall to our death*/
+			if (tr.fraction < 1) passable = true;
+			else passable = false;
+		}
+		if (passable)
+		{/*Retry move once more with original velocity. No discontinuty*/
+			VectorCopy (velo, mv->m_vecVelocity);
+			TryPlayerMove ();
+			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
+			m_pSDKPlayer->m_Shared.StartRolling ();
+			mv->m_outStepHeight += mv->GetAbsOrigin ().z - startz;
+			return true;
+		}
+	}
+	return false;
+}
 void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 {
 	Vector vecEndPos;
@@ -2865,6 +2954,13 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 	Vector vecPos, vecVel;
 	VectorCopy( mv->GetAbsOrigin(), vecPos );
 	VectorCopy( mv->m_vecVelocity, vecVel );
+
+	if (checkvault ())
+	{/*Vaulted OK, so early out*/
+		return;
+	}
+	mv->SetAbsOrigin( vecPos );
+	VectorCopy( vecVel, mv->m_vecVelocity );
 
 	// Slide move down.
 	TryPlayerMove( &vecEndPos, &trace );
@@ -2903,82 +2999,7 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		
 	TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
 	if (trace.plane.normal[2] < 0.7)
-	{/*Try to vault over the wall*/
-		float vault_height = da_acro_vault_height.GetFloat ();
-		Vector forward, normal;
-		Vector mins, maxs;
-		bool slide;
-
-		VectorCopy (GetPlayerMins (), mins);
-		VectorCopy (GetPlayerMaxs (), maxs);
-		if (m_pSDKPlayer->m_Shared.IsSliding () ||
-			m_pSDKPlayer->m_Shared.IsDiveSliding () ||
-			m_pSDKPlayer->m_Shared.IsRolling () ||
-			(player->GetFlags ()&FL_DUCKING))
-		{/*Must be upright*/
-			goto novault;
-		}
-		if (mv->m_flForwardMove < 100 + 1e-2)
-		{/*Must be moving forward, must be running*/
-			goto novault;
-		}
-		forward[0] = m_vecForward[0];
-		forward[1] = m_vecForward[1];
-		forward[2] = 0;
-		VectorMA (mv->GetAbsOrigin (), 16, forward, vecEndPos);
-		TracePlayerBBox (mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-		VectorCopy (trace.plane.normal, normal);
-		if (fabs (DotProduct (forward, normal)) < 0.7)
-		{/*Must be facing toward wall*/
-			goto novault;
-		}
-		/*Test for slide*/
-		mv->SetAbsOrigin (vecPos);
-		VectorCopy (vecVel, mv->m_vecVelocity);
-		VectorMA (mv->GetAbsOrigin (), 16, forward, vecEndPos);
-		TraceBBox (mv->GetAbsOrigin (), vecEndPos, VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX, trace);
-		if (trace.fraction == 1) slide = true;
-		else 
-		{/*Nothing to go under*/
-			slide = false;
-		}
-		
-		VectorCopy (mv->GetAbsOrigin(), vecEndPos);
-		vecEndPos.z += vault_height;
-		TracePlayerBBox (mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-		if (!trace.startsolid && !trace.allsolid)
-		{
-			mv->SetAbsOrigin (trace.endpos);
-		}
-		if (TryPlayerMove () == 0)
-		{/*Can move onto the ledge*/
-			Vector end;
-			bool passable;
-			
-			passable = false;
-			VectorMA (mv->GetAbsOrigin (), -64, normal, vecEndPos);
-			TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-			if (trace.fraction == 1 && !trace.allsolid)
-			{/*Roll over*/
-				passable = true;
-			}
-			VectorCopy (trace.endpos, end);
-			vecEndPos.z -= 4*vault_height;
-			TracePlayerBBox (end, vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
-			if (trace.fraction <= 0.25 && !trace.allsolid)
-			{/*Vault over if we won't fall to our death*/
-				passable = true;
-			}
-			else passable = false;
-			if (passable)
-			{
-				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
-				m_pSDKPlayer->m_Shared.StartRolling ();
-				mv->m_outStepHeight += vault_height;
-				return;
-			}
-		}
-novault:
+	{
 		mv->SetAbsOrigin( vecDownPos );
 		VectorCopy( vecDownVel, mv->m_vecVelocity );
 		float flStepDist = mv->GetAbsOrigin().z - vecPos.z;

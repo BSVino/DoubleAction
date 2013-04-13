@@ -170,7 +170,8 @@ public:
 	/*For double tapping.*/
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
-private:
+public:
+	/*Privacy be damned, we're all adults here!*/
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
 	CNetworkVar( bool, m_bRollAfterDive );
