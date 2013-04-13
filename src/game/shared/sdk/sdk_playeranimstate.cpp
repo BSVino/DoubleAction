@@ -1072,7 +1072,6 @@ bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
 		else
 			idealActivity = m_iRollActivity;
 	}
-
 	return m_bRollTransition;
 }
 
@@ -1136,6 +1135,14 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			else
 				idealActivity = ACT_DAB_JUMP_START;
 		}
+	}	
+
+	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
+		!m_pSDKPlayer->m_Shared.IsSliding () &&
+		!m_pSDKPlayer->m_Shared.IsRolling ())
+	{
+		idealActivity = ACT_DAB_JUMP_FLOAT;
+		return true;
 	}
 
 	if ( m_bJumping )

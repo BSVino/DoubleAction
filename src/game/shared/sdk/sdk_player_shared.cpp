@@ -393,7 +393,7 @@ void CSDKPlayer::SharedSpawn()
 
 
 	m_Shared.tapkey = 0;
-	m_Shared.taptime = 0;
+	m_Shared.taptime = -1;
 	m_Shared.climbcnt = 0;
 	m_Shared.climbtime = 0;
 	m_Shared.kongcnt = 0;
@@ -613,8 +613,6 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bDiveSliding = false;
 	m_bRolling = false;
 	m_flSlideTime = 0;
-	//taptime = 0;
-	//tapkey = 0;
 	somersault = false;
 }
 
