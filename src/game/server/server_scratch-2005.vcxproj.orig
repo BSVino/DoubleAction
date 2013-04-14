@@ -58,11 +58,20 @@
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
+<<<<<<< HEAD
+      <Message>
+      </Message>
+      <Command>if exist $(SourceSDK)\..\..\SourceMods\dab\bin\server.dll attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll"
+if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..\..\SourceMods\dab\bin"
+</Command>
+      <Outputs>%SourceSDK%\..\..\SourceMods\dab\bin\server.dll</Outputs>
+=======
       <Message>Copying to %SourceSDK%\..\..\SourceMods\dab\bin\</Message>
       <Command>if exist "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll" attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll"
 if exist "$(TargetDir)"server.dll copy "$(TargetDir)"server.dll "$(SourceSDK)\..\..\SourceMods\dab\bin"
 </Command>
       <Outputs>$(SourceSDK)\..\..\SourceMods\dab\bin\server.dll;%(Outputs)</Outputs>
+>>>>>>> stunts
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>

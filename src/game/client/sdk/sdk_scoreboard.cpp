@@ -153,14 +153,23 @@ void CSDKScoreboard::UpdateTeamInfo()
 			wchar_t string1[1024];
 			wchar_t wNumPlayers[6];
 
-			if ( SDKGameRules()->IsTeamplay() == false )
+			if ( i != TEAM_SPECTATOR && SDKGameRules()->IsTeamplay() == false )
 			{
-				_snwprintf(wNumPlayers, 6, L"%i", iNumPlayersInGame );
+				// after sdk_team_deathmatch is used just get team->get_number_players
+				C_Team *spec = GetGlobalTeam(TEAM_SPECTATOR);
+				int iActivePlayers;
+
+				if(spec)
+					iActivePlayers = iNumPlayersInGame - spec->Get_Number_Players();
+				else
+					iActivePlayers = iNumPlayersInGame;
+
+				_snwprintf(wNumPlayers, 6, L"%i", iActivePlayers );
 				_snwprintf( name, sizeof(name), L"%s", g_pVGuiLocalize->Find("#SDK_ScoreBoard_Deathmatch") );
 				
 				teamName = name;
 
-				if ( iNumPlayersInGame == 1)
+				if ( iActivePlayers == 1)
 				{
 					g_pVGuiLocalize->ConstructString( string1, sizeof(string1), g_pVGuiLocalize->Find("#SDK_ScoreBoard_Player"), 2, teamName, wNumPlayers );
 				}

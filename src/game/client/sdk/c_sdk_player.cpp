@@ -120,6 +120,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
 #endif
 	RecvPropBool( RECVINFO( m_bSliding ) ),
+	RecvPropBool( RECVINFO( m_bInAirSlide ) ),
 	RecvPropVector( RECVINFO(m_vecSlideDirection) ),
 	RecvPropTime( RECVINFO(m_flSlideTime) ),
 	RecvPropTime( RECVINFO( m_flUnSlideTime ) ),
@@ -141,6 +142,16 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
 	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
+
+	RecvPropInt (RECVINFO (tapkey)),
+	RecvPropFloat (RECVINFO (taptime)),
+	RecvPropInt (RECVINFO (kongcnt)),
+	RecvPropFloat (RECVINFO (kongtime)),
+	RecvPropFloat (RECVINFO (runtime)),
+	RecvPropVector (RECVINFO (rundir)),
+	RecvPropInt (RECVINFO (daflags)),
+	RecvPropFloat (RECVINFO (manteldist)),
+	RecvPropVector (RECVINFO (wallnormal)),
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
@@ -223,6 +234,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 	DEFINE_PRED_FIELD( m_bSliding, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bInAirSlide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_vecSlideDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnSlideTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
@@ -247,6 +259,16 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD (tapkey, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (taptime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (kongcnt, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (kongtime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (runtime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (rundir, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (daflags, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (manteldist, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (wallnormal, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
@@ -1473,14 +1495,18 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	BaseClass::OverrideView(pSetup);
 
 	float flTiltGoal;
-	if (m_Shared.IsDiving())
+	// only tilt first person view
+	if (m_Shared.IsDiving() && !IsInThirdPerson())
 		flTiltGoal = 1;
 	else
 		flTiltGoal = 0;
 
 	m_Shared.m_flViewTilt = Approach(flTiltGoal, m_Shared.m_flViewTilt, gpGlobals->frametime*10*GetSlowMoMultiplier());
 
-	if (m_Shared.m_flViewTilt > 0)
+	// untilt the view if we die
+	if (!IsAlive())
+		pSetup->angles.z = 0.0f;
+	else if (m_Shared.m_flViewTilt > 0)
 	{
 		Vector vecViewDirection;
 		AngleVectors(pSetup->angles, &vecViewDirection);

@@ -17,6 +17,7 @@
 #if defined( CLIENT_DLL )
 
 	#include "c_sdk_player.h"
+	#include "prediction.h"
 
 #else
 
@@ -36,12 +37,20 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
   	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
+	RecvPropFloat( RECVINFO( m_flCycleTime ) ),
+	RecvPropFloat( RECVINFO( m_flViewPunchMultiplier ) ),
+	RecvPropFloat( RECVINFO( m_flRecoil ) ),
+	RecvPropFloat( RECVINFO( m_flSpread ) ),
   	RecvPropBool( RECVINFO( m_bSwingSecondary ) ),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
 	SendPropFloat( SENDINFO( m_flDecreaseShotsFired ) ),
 	SendPropFloat( SENDINFO( m_flAccuracyDecay ) ),
+	SendPropFloat( SENDINFO( m_flCycleTime ) ),
+	SendPropFloat( SENDINFO( m_flViewPunchMultiplier ) ),
+	SendPropFloat( SENDINFO( m_flRecoil ) ),
+	SendPropFloat( SENDINFO( m_flSpread ) ),
 	SendPropFloat( SENDINFO( m_flSwingTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 #endif
@@ -89,6 +98,19 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+}
+
+void CWeaponSDKBase::Precache()
+{
+	BaseClass::Precache();
+
+#ifdef GAME_DLL
+	// server must enforce these values
+	m_flCycleTime = GetSDKWpnData().m_flCycleTime;
+	m_flViewPunchMultiplier = GetSDKWpnData().m_flViewPunchMultiplier;
+	m_flRecoil = GetSDKWpnData().m_flRecoil;
+	m_flSpread = GetSDKWpnData().m_flSpread;
+#endif
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -621,6 +643,10 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 
 void CWeaponSDKBase::AddViewKick()
 {
+#ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+#endif
 	CSDKPlayer *pPlayer = GetPlayerOwner();
 
 	if ( pPlayer )
@@ -673,12 +699,15 @@ void CWeaponSDKBase::AddMeleeViewKick()
 
 float CWeaponSDKBase::GetWeaponSpread()
 {
-	return GetSDKWpnData().m_flSpread;
+	return m_flSpread;
 }
 
 #ifdef CLIENT_DLL
 void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
-{
+{	
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	BaseClass::CreateMove(flInputSampleTime, pCmd, vecOldViewAngles);
 
 	if (!GetPlayerOwner())
@@ -692,12 +721,12 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 
 float CWeaponSDKBase::GetViewPunchMultiplier()
 {
-	return GetSDKWpnData().m_flViewPunchMultiplier;
+	return m_flViewPunchMultiplier;
 }
 
 float CWeaponSDKBase::GetRecoil()
 {
-	return GetSDKWpnData().m_flRecoil;
+	return m_flRecoil;
 }
 
 bool CWeaponSDKBase::HasAimInSpeedPenalty()
@@ -930,8 +959,10 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		}
 		else
 		{
-			// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
-			if ( UsesClipsForAmmo1() )
+			bool bFirstPickup = !(pPlayer == GetPrevOwner());
+
+			// If it uses clips, load it full. (if this is the first time you've picked up this weapon)
+			if ( UsesClipsForAmmo1() && bFirstPickup )
 			{
 				m_iClip1 = GetMaxClip1();
 			}
@@ -948,12 +979,16 @@ extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerT
 void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
 {
 #ifdef CLIENT_DLL
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		return;
+
 	CNewParticleEffect *pTracer = NULL;
 	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (pLocalPlayer)
 	{
-		bool bPovObs = pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
+		int iObsMode = pLocalPlayer->GetObserverMode();
+		bool bPovObs = iObsMode == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
 
 		if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
 		{
@@ -977,8 +1012,8 @@ void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, 
 		pTracer->SetControlPoint( 1, tr.endpos );
 		pTracer->SetSortOrigin( vecTracerSrc );
 		
-		//whiz (but don't whiz yourself)
-		if( pLocalPlayer != GetOwner() && !bPovObs )
+		//whiz (but don't whiz yourself) (also don't whiz in obs mode unless we're in POV)
+		if( pLocalPlayer != GetOwner() && !bPovObs && !(iObsMode > 0 && iObsMode != OBS_MODE_IN_EYE) )
 			FX_TracerSound( vecTracerSrc, tr.endpos, iTracerType );
 	}
 #endif
