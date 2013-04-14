@@ -204,19 +204,13 @@ public:
 	/*Stuff for new controls*/
 	CNetworkVar (int,		tapkey);
 	CNetworkVar (float,		taptime);
-	CNetworkVar (int,		climbcnt);
-	CNetworkVar (float,		climbtime);
 	CNetworkVar (int,		kongcnt);
 	CNetworkVar (float,		kongtime);
 	CNetworkVar (float,		runtime);
 	CNetworkVar (Vector,	rundir);
-	CNetworkVar (float,		wallscalar);
-	CNetworkVar (bool,		somersault);
 	CNetworkVar (int,		daflags);
 	CNetworkVar (float,		manteldist);
 	CNetworkVar (Vector,	wallnormal);
-	CNetworkVar (float,		fliptime);
-	CNetworkVar (Vector,	flipdir);
 public:
 
 #ifdef SDK_USE_PRONE

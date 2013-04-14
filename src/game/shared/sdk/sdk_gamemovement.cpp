@@ -371,10 +371,6 @@ void CSDKGameMovement::CheckFalling( void )
 	{
 		return;
 	}
-	if (m_pSDKPlayer->m_Shared.fliptime > 0)
-	{
-		return;
-	}
 	// if we landed on the ground
 	if ( player->GetGroundEntity() != NULL && !IsDead() )
 	{
@@ -1808,7 +1804,14 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsDiving() )
 	{
-		if (m_pSDKPlayer->GetGroundEntity() && m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetDiveTime() + DIVE_RISE_TIME)
+		trace_t	tr;
+		Vector start, end;
+
+		VectorCopy (mv->GetAbsOrigin (), start);
+		VectorAdd (start, Vector (0, 0, -128), end);
+		TraceBBox (start, end, GetPlayerMins (), GetPlayerMaxs (), tr);
+		if (m_pSDKPlayer->GetGroundEntity() &&
+			m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetDiveTime() + DIVE_RISE_TIME)
 		{
 			m_pSDKPlayer->m_Shared.EndDive();
 			m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
@@ -2653,7 +2656,8 @@ void CSDKGameMovement::FullWalkMove ()
 					m_pSDKPlayer->m_Shared.kongcnt++;
 				}
 			}
-			if (m_pSDKPlayer->m_Shared.kongtime <= 0 &&
+			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
+				m_pSDKPlayer->m_Shared.kongtime <= 0 &&
 				m_pSDKPlayer->m_Shared.CanDive ())
 			{
 				if (m_pSDKPlayer->m_Shared.runtime > 0)
