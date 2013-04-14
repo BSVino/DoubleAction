@@ -1776,7 +1776,16 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsRolling() )
 	{
+<<<<<<< HEAD
 		if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+=======
+		/*if (!m_pSDKPlayer->GetGroundEntity())
+		{
+			m_pSDKPlayer->m_Shared.EndRoll();
+			SetRollEyeOffset( 0.0 );
+		}
+		else */if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+>>>>>>> stunts
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
@@ -1881,6 +1890,7 @@ void CSDKGameMovement::Duck( void )
 					vecAbsVelocity.NormalizeInPlace();
 					vecAbsVelocity *= flVelocity;
 
+<<<<<<< HEAD
 				if (fabs(flVelocity) > 1e-5)
 				{
 					// Throw in some of the wish velocity into the slide.
@@ -1890,6 +1900,9 @@ void CSDKGameMovement::Duck( void )
 
 					m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
 				}
+=======
+					m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
+>>>>>>> stunts
 
 					m_pSDKPlayer->m_Shared.StartSliding(true);
 

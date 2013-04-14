@@ -61,6 +61,7 @@
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>Copying to %SourceSDK%\..\..\SourceMods\dab\bin\</Message>
+<<<<<<< HEAD
       <Command>if exist $(SourceSDK)\..\..\SourceMods\dab\bin\client.dll attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll"
 =======
       <Command>if exist "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll" attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll"

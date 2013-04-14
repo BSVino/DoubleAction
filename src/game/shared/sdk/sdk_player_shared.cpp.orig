@@ -612,7 +612,11 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
+<<<<<<< HEAD
 	m_flSlideTime = 0;
+=======
+	somersault = false;
+>>>>>>> stunts
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
