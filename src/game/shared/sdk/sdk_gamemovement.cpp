@@ -1950,7 +1950,7 @@ void CSDKGameMovement::Duck( void )
 							// Calc parametric time
 							float duckFraction = SimpleSpline( 1.0f - ( duckseconds / TIME_TO_UNDUCK ) );
 							SetSDKDuckedEyeOffset( duckFraction );
-						}
+					9	}
 					}
 				}
 				else
