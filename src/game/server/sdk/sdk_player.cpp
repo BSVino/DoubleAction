@@ -3746,5 +3746,4 @@ void CC_HealMe_f(const CCommand &args)
 
 	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
 }
-
 static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);

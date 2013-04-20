@@ -671,6 +671,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp" />
     <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp" />
     <ClCompile Include="sdk\da_ammo_pickup.cpp" />
+    <ClCompile Include="sdk\da_powerup.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">
