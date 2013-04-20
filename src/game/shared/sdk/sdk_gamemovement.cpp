@@ -2872,13 +2872,17 @@ void CSDKGameMovement::FullWalkMove ()
 		m_pSDKPlayer->m_Shared.IsRolling ())
 	{
 		trace_t tr;
-		float dt;
-#if 0
+		float dt, slop;
 		int msec, loss;
+		
 		UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);
-#endif
-		dt = da_hackrobatics.GetFloat ()*gpGlobals->frametime;
-		TraceBBox (mv->GetAbsOrigin (), mv->GetAbsOrigin () + dt*mv->m_vecVelocity, GetPlayerMins (), GetPlayerMaxs (), tr);
+		slop = msec/1000.0 + da_hackrobatics.GetFloat ();
+		dt = slop*m_pSDKPlayer->GetSlowMoMultiplier ();
+		TraceBBox (mv->GetAbsOrigin (), 
+				   mv->GetAbsOrigin () + dt*mv->m_vecVelocity, 
+				   GetPlayerMins (), 
+				   GetPlayerMaxs (), 
+				   tr);
 		if (tr.fraction < 1 && tr.DidHitNonWorldEntity ())
 		{
 			tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);

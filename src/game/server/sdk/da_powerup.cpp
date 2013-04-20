@@ -8,10 +8,12 @@ enum powerup_e
 	POWERUP_RAMBO,
 	POWERUP_SLOWMO,
 	POWERUP_GRENADE,
+	POWERUP_DOUBLEACTION,
 	MAX_POWERUP
 };
 static const char *models[] =
 {/*Must be given in the same order as powerup_e*/
+	"models/gibs/airboat_broken_engine.mdl",
 	"models/gibs/airboat_broken_engine.mdl",
 	"models/gibs/airboat_broken_engine.mdl",
 	"models/gibs/airboat_broken_engine.mdl",
@@ -29,11 +31,13 @@ public:
 	void pickup (CBaseEntity *other);
 	void manifest (void);
 public:
+	bool random;
 	int type;
 	float delay;
 };
 LINK_ENTITY_TO_CLASS(da_powerup, Powerup);
 BEGIN_DATADESC(Powerup)
+	DEFINE_KEYFIELD(random, FIELD_BOOLEAN, "random"),
 	DEFINE_KEYFIELD(type, FIELD_INTEGER, "type"),
 	DEFINE_KEYFIELD(delay, FIELD_FLOAT, "delay"),
 	DEFINE_ENTITYFUNC(pickup),
@@ -43,6 +47,12 @@ END_DATADESC()
 void 
 Powerup::Precache (void)
 {
+	if (random)
+	{
+		int i;
+		for (i = 0; i < MAX_POWERUP; i++) PrecacheModel (models[i]);
+		return;
+	}
 	Assert (0 <= type && type < MAX_POWERUP);
 	PrecacheModel (models[type]);
 }
@@ -60,14 +70,23 @@ Powerup::Spawn (void)
 void
 Powerup::manifest (void)
 {
+	if (random)
+	{
+		type = RandomInt (0, MAX_POWERUP);
+	}
 	SetModel (models[type]);
 	RemoveEffects (EF_NODRAW);
 	SetSolid (SOLID_BBOX);
 	AddSolidFlags (FSOLID_TRIGGER);
+	SetMoveType (MOVETYPE_NONE);
 	UTIL_SetSize (this, -Vector (32,32,32), Vector (32,32,32));
 
 	SetThink (NULL);
 	SetTouch (&Powerup::pickup);
+
+	CPASFilter filter (GetAbsOrigin ());
+	filter.UsePredictionRules ();
+	EmitSound (filter, entindex (), "Item.Materialize");
 }
 void
 Powerup::pickup (CBaseEntity *other)
@@ -82,6 +101,7 @@ Powerup::pickup (CBaseEntity *other)
 	{
 		return;
 	}
+	/*Fire off 'Denied!' to relevant players; award taker style for it*/
 	taker = (CSDKPlayer *)other;
 	len = UTIL_EntitiesInSphere ((CBaseEntity **)ents, 
 								 MAXENTS, 
@@ -89,18 +109,25 @@ Powerup::pickup (CBaseEntity *other)
 								 96, 
 								 FL_CLIENT);
 	for (i = 0; i < len; i++)
-	{/*Fire off 'Denied!' to relevant players; award taker style for it*/
+	{
 		if (ents[i] != taker) /*ents[i]->SendNotice (NOTICE_DENIED)*/;
-		else taker->SendAnnouncement (ANNOUNCEMENT_COOL, STYLE_POINT_STYLISH);
+		else if (len != 1) 
+		{
+			taker->SendAnnouncement (ANNOUNCEMENT_COOL, STYLE_POINT_STYLISH);
+		}
 	}
+	CPASFilter filter (GetAbsOrigin ());
+	filter.UsePredictionRules ();
+	EmitSound (filter, entindex (), "HealthVial.Touch");
 	/*Impart pickup bonus*/
 	switch (type)
 	{
 	case POWERUP_HEALTH: taker->TakeHealth (100, DMG_GENERIC); break;
 	case POWERUP_REGEN: Msg ("Regen\n"); break;
-	case POWERUP_RAMBO: Msg ("Sambo mode\n"); break;
+	case POWERUP_RAMBO: Msg ("Rambo mode\n"); break;
 	case POWERUP_SLOWMO: taker->GiveSlowMo (5); break;
 	case POWERUP_GRENADE: taker->GiveAmmo (1, "grenade", true); break;
+	case POWERUP_DOUBLEACTION: Msg ("Double action\n"); break;
 	default: /*Shouldn't get here*/ break;
 	}
 	/*Go inactive until respawn timer expires*/
@@ -121,11 +148,12 @@ void powerup(const CCommand &args)
 	Vector forward;
 
 	AngleVectors (player->EyeAngles (), &forward);
-	VectorMA (player->GetAbsOrigin (), 64, forward, org);
+	VectorMA (player->GetAbsOrigin () + Vector (0, 0, 36), 80, forward, org);
 
 	Powerup *p = (Powerup *)CreateEntityByName ("da_powerup");
+	p->random = true;
 	p->type = 0;
-	p->delay = 2;
+	p->delay = 10;
 	p->Spawn ();
 	p->SetAbsOrigin (org);
 }
