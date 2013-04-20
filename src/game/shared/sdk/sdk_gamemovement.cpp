@@ -358,7 +358,7 @@ void CSDKGameMovement::CheckFalling( void )
 	{
 		if ( player->GetWaterLevel() == 0 )
 		{
-			if (!m_pSDKPlayer->m_Shared.IsDiving())
+			if (!m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->m_Shared.IsSliding())
 			{
 				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
 				m_pSDKPlayer->m_Shared.StartRolling();
@@ -1465,16 +1465,12 @@ void CSDKGameMovement::Duck( void )
 	{
 		if (!m_pSDKPlayer->GetGroundEntity())
 		{
-			m_pSDKPlayer->m_Shared.EndSlide();
-			SetSlideEyeOffset( 0.0 );
-
-			// check prone here since we have to stop all slide behavior
-			if(!CanUnprone())
+			// if we just left the ground
+			if (!m_pSDKPlayer->m_Shared.IsAirSliding())
 			{
-				m_pSDKPlayer->m_Shared.SetProne(true, true);
-				SetProneEyeOffset( 1.0 );
+				m_pSDKPlayer->m_Shared.PlayEndSlideSound();
+				m_pSDKPlayer->m_Shared.SetAirSliding( true );
 			}
-			
 		}
 		else if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
@@ -1488,6 +1484,12 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.StandUpFromSlide();
 			SetUnSlideEyeOffset( 0.0 );
 		}
+		else if (m_pSDKPlayer->m_Shared.IsAirSliding())
+		{
+			// if we hit the ground from the air while sliding start slide sound
+			m_pSDKPlayer->m_Shared.PlayStartSlideSound();
+			m_pSDKPlayer->m_Shared.SetAirSliding( false );
+		}
 		else if (m_pSDKPlayer->m_Shared.IsDiveSliding())
 		{
 			SetSlideEyeOffset(1);
@@ -1500,23 +1502,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsRolling() )
 	{
-		if (!m_pSDKPlayer->GetGroundEntity())
-		{
-			m_pSDKPlayer->m_Shared.EndRoll();
-			SetRollEyeOffset( 0.0 );
-			
-			if (!CanUnduck())
-			{
-				if(CanUnprone())
-					FinishDuck();
-				else
-				{
-					m_pSDKPlayer->m_Shared.SetProne(true, true);
-					SetProneEyeOffset( 1.0 );
-				}
-			}
-		}
-		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
+		if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME + ROLLFINISH_TIME )
 		{
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );

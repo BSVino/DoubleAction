@@ -70,9 +70,13 @@ public:
 
 	bool	IsSliding() const;
 	bool	IsDiveSliding() const;
+	bool	IsAirSliding() const { return m_bInAirSlide; }
 	bool	CanSlide() const;
 	bool	IsGettingUpFromSlide() const;	
 	bool	MustDuckFromSlide() const;
+	void	SetAirSliding( bool bInAir) { m_bInAirSlide = bInAir; }
+	void	PlayStartSlideSound();
+	void	PlayEndSlideSound();
 	void	StartSliding(bool bDiveSliding = false);
 	void	EndSlide();
 	void	StandUpFromSlide(bool bJumpUp = false);
@@ -154,6 +158,7 @@ private:
 #endif
 
 	CNetworkVar( bool, m_bSliding );
+	CNetworkVar( bool, m_bInAirSlide );
 	CNetworkVar( Vector, m_vecSlideDirection );
 	CNetworkVar( float, m_flSlideTime );
 	CNetworkVar( bool, m_bDiveSliding );

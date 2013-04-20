@@ -20,6 +20,7 @@
 #include "obstacle_pushaway.h"
 #include "in_buttons.h"
 #include "vprof.h"
+#include "engine/IEngineSound.h"
 
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -121,6 +122,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
 #endif
 	SendPropBool( SENDINFO( m_bSliding ) ),
+	SendPropBool( SENDINFO( m_bInAirSlide ) ),
 	SendPropVector( SENDINFO(m_vecSlideDirection) ),
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
 	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
@@ -674,13 +676,17 @@ void CSDKPlayer::PreThink(void)
 		}
 	}
 
-	if (IsAlive() && (m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || !GetGroundEntity()))
+	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && GetAbsVelocity().z < -280.0f) ))
 	{
 		Vector vecNormalizedVelocity = GetAbsVelocity();
 		vecNormalizedVelocity.NormalizeInPlace();
 
 		trace_t	tr;
-		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+		// we need to start from a higher offset if we're not diving (18 works!)
+		int iOffset = 13*!m_Shared.IsDiving();
+
+		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5+iOffset), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 10), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
 		CBaseEntity* pHit = NULL;
 
@@ -695,7 +701,8 @@ void CSDKPlayer::PreThink(void)
 		if (tr.fraction < 1.0f && bIsBreakable)
 			pHit = tr.m_pEnt;
 
-		if (!pHit && vecNormalizedVelocity.z < 0 && (m_Shared.IsDiving() || !GetGroundEntity()))
+		// if we're falling break anything under us
+		if (!pHit && vecNormalizedVelocity.z < 0)
 		{
 			UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5), GetAbsOrigin() - Vector(0, 0, 5), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
@@ -727,6 +734,7 @@ void CSDKPlayer::PreThink(void)
 }
 
 ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does the style meter remain active after activation?" );
+ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
 
 void CSDKPlayer::PostThink()
 {
@@ -767,6 +775,9 @@ void CSDKPlayer::PostThink()
 	}
 
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
+
+	if ( sv_drawserverhitbox.GetBool() )
+		DrawServerHitboxes( 2*gpGlobals->frametime, true );
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
@@ -1824,6 +1835,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
+		pWeapon->SetPrevOwner(this);
 
 		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
 
@@ -2172,6 +2184,11 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 // can be closed...false if the menu should be displayed again
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
+// FIXME: TEMPORARY HACK TO NOT LET PEOPLE JOIN BLUE TEAM IN DEATHMATCH (shmopaloppa)
+#if !defined ( SDK_USE_TEAMS )
+	if (team == 2)
+		team = 0;
+#endif
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{
@@ -2840,6 +2857,9 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 
 		// make sure we don't have slide friction stuck on
 		m_surfaceFriction = 1.0f;
+
+		CSingleUserRecipientFilter user( this );
+		enginesound->SetPlayerDSP( user, 0, false );
 	}
 
 	//Tony; if we're now dead, and not changing classes, spawn
