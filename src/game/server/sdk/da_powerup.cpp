@@ -110,7 +110,18 @@ Powerup::pickup (CBaseEntity *other)
 								 FL_CLIENT);
 	for (i = 0; i < len; i++)
 	{
-		if (ents[i] != taker) /*ents[i]->SendNotice (NOTICE_DENIED)*/;
+		if (ents[i] != taker) 
+		{
+			Vector org, forward;
+
+			AngleVectors (ents[i]->EyeAngles (), &forward);
+			VectorSubtract (ents[i]->GetAbsOrigin (), GetAbsOrigin (), org);
+			VectorNormalize (org);
+			if (fabs (DotProduct (forward, org)) < 0.7)
+			{
+				/*ents[i]->SendNotice (NOTICE_DENIED);*/
+			}
+		}
 		else if (len != 1) 
 		{
 			taker->SendAnnouncement (ANNOUNCEMENT_COOL, STYLE_POINT_STYLISH);
