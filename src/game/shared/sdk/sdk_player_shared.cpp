@@ -607,7 +607,6 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bDiveSliding = false;
 	m_bRolling = false;
 	m_flSlideTime = 0;
-	somersault = false;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
