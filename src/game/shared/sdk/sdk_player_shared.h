@@ -19,6 +19,14 @@ class C_SDKPlayer;
 class CSDKPlayer;
 #endif
 
+#define DA_NONE			0x00
+#define DA_STUNT		0x01
+#define DA_SLIDE		0x02
+#define DA_PRONE		0x04
+#define DA_ROLL			0x08
+#define DA_WRLOCK		0x10	/*Don't refill wall run timer until grounded*/
+#define DA_KONGLOCK		0x20	/*Don't refill kong timer until grounded*/
+#define DA_CLIMB		0x40
 class CSDKPlayerShared
 {
 public:
@@ -166,9 +174,12 @@ private:
 	CNetworkVar( float, m_flLastDuckPress );
 	CNetworkVar( bool, m_bRolling );
 	CNetworkVar( bool, m_bRollingFromDive );
+public:
+	/*For double tapping.*/
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
-
+public:
+	/*Privacy be damned, we're all adults here!*/
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
 	CNetworkVar( bool, m_bRollAfterDive );
@@ -189,6 +200,17 @@ private:
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
+public:
+	/*Stuff for new controls*/
+	CNetworkVar (int,		tapkey);
+	CNetworkVar (float,		taptime);
+	CNetworkVar (int,		kongcnt);
+	CNetworkVar (float,		kongtime);
+	CNetworkVar (float,		runtime);
+	CNetworkVar (Vector,	rundir);
+	CNetworkVar (int,		daflags);
+	CNetworkVar (float,		manteldist);
+	CNetworkVar (Vector,	wallnormal);
 public:
 
 #ifdef SDK_USE_PRONE

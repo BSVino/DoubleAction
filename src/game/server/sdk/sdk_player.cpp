@@ -144,6 +144,16 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+
+	SendPropInt (SENDINFO (tapkey)),
+	SendPropFloat (SENDINFO (taptime)),
+	SendPropInt (SENDINFO (kongcnt)),
+	SendPropFloat (SENDINFO (kongtime)),
+	SendPropFloat (SENDINFO (runtime)),
+	SendPropVector (SENDINFO (rundir)),
+	SendPropInt (SENDINFO (daflags)),
+	SendPropFloat (SENDINFO (manteldist)),
+	SendPropVector (SENDINFO (wallnormal)),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
@@ -1816,14 +1826,9 @@ int CSDKPlayer::GetMaxHealth() const
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
-
-	if (pWeapon == NULL)
-		return false;
-
-	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
-		return false;
-
-	if (pWeapon->CanWeaponBeDropped()) 
+	/*Fixes an occasional server crash when pWeapon is NULL*/
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL) return false;
+	if (pWeapon->CanWeaponBeDropped())
 	{
 		QAngle gunAngles;
 		VectorAngles( BodyDirection2D(), gunAngles );
@@ -3741,5 +3746,4 @@ void CC_HealMe_f(const CCommand &args)
 
 	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
 }
-
 static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);

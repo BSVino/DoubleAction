@@ -391,6 +391,14 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 
+
+	m_Shared.tapkey = 0;
+	m_Shared.taptime = -1;
+	m_Shared.kongcnt = 0;
+	m_Shared.kongtime = 0;
+	m_Shared.runtime = 0;
+	m_Shared.manteldist = 0;
+
 	//Tony; todo; fix
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
@@ -953,6 +961,8 @@ ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REP
 ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
+ConVar  da_acro_dive_arc ("da_acro_dive_arc", "15", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
 Vector CSDKPlayerShared::StartDiving()
 {
 	if (!CanDive())
@@ -992,13 +1002,18 @@ Vector CSDKPlayerShared::StartDiving()
 	float flSpeedFraction = RemapValClamped(m_pOuter->GetAbsVelocity().Length()/m_pOuter->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
 	float flDiveHeight = sdk_dive_height.GetFloat();
+	float y = m_pOuter->EyeAngles ().x;
+	float arc = da_acro_dive_arc.GetFloat ();
+	if (y > arc) flDiveHeight *= 0.33;
+	else if (y < -arc) flDiveHeight *= 1.66;
+
 	if (!bWasOnGround)
 		flDiveHeight = sdk_dive_height_high.GetFloat();
 
 	float flRatio = sdk_dive_height_adrenaline.GetFloat()/flDiveHeight;
 	float flModifier = (flRatio - 1)/2;
 
-	flDiveHeight = ModifySkillValue(flDiveHeight, flModifier, SKILL_ATHLETIC);
+	flDiveHeight = ModifySkillValue (flDiveHeight, flModifier, SKILL_ATHLETIC);
 
 	flRatio = sdk_dive_gravity_adrenaline.GetFloat()/sdk_dive_gravity.GetFloat();
 	flModifier = (flRatio - 1)/2;

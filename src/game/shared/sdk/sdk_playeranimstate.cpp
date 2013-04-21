@@ -1072,7 +1072,6 @@ bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
 		else
 			idealActivity = m_iRollActivity;
 	}
-
 	return m_bRollTransition;
 }
 
