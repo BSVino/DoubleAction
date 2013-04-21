@@ -1432,8 +1432,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_Shared.IsDiving() && m_bDamagedEnemyDuringDive)
 	{
-		SendNotice(NOTICE_WORTHIT);
 		AddStylePoints(10, STYLE_POINT_STYLISH);
+		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
+		SendNotice(NOTICE_WORTHIT);
 	}
 
 	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
