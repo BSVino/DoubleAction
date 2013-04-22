@@ -128,6 +128,7 @@ public:
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
 	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
+	virtual CBaseCombatWeapon* GetLastWeapon( void );
 
 	virtual Vector  EyePosition();
 

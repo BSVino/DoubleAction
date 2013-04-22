@@ -1484,6 +1484,54 @@ bool CSDKPlayer::Weapon_CanSwitchTo( CBaseCombatWeapon *pWeapon )
 	return true;
 }
 
+CBaseCombatWeapon* CSDKPlayer::GetLastWeapon()
+{
+	// This is pretty silly, but I'd rather mess around with stock Valve code as little as possible.
+#ifdef CLIENT_DLL
+	CBaseCombatWeapon* pLastWeapon = BaseClass::GetLastWeapon();
+#else
+	CBaseCombatWeapon* pLastWeapon = BaseClass::Weapon_GetLast();
+#endif
+
+	if (pLastWeapon && pLastWeapon != GetActiveWeapon())
+		return pLastWeapon;
+
+	CWeaponSDKBase* pHeaviest = nullptr;
+	CWeaponSDKBase* pBrawl = nullptr;
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		if (!GetWeapon(i))
+			continue;
+
+		if (GetWeapon(i) == GetActiveWeapon())
+			continue;
+
+		CWeaponSDKBase* pSDKWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
+		if (!pSDKWeapon)
+			continue;
+
+		if (pSDKWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		{
+			pBrawl = pSDKWeapon;
+			continue;
+		}
+
+		if (!pHeaviest)
+		{
+			pHeaviest = pSDKWeapon;
+			continue;
+		}
+
+		if (pHeaviest->GetWeight() < pSDKWeapon->GetWeight())
+			pHeaviest = pSDKWeapon;
+	}
+
+	if (!pHeaviest)
+		pHeaviest = pBrawl;
+
+	return pHeaviest;
+}
+
 #define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
 
 bool CSDKPlayer::IsInThirdPerson() const

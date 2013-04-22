@@ -120,6 +120,7 @@ public:
 	CWeaponSDKBase *GetActiveSDKWeapon() const;
 
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
+	virtual C_BaseCombatWeapon* GetLastWeapon( void );
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
