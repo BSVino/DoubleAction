@@ -114,10 +114,10 @@ public:
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
 	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
-	virtual bool	IsTeamplay( void ) 
+	virtual bool	IsTeamplay( void )
 	{ 
 #if defined ( SDK_USE_TEAMS )
-		return true;
+		return m_bIsTeamplay;
 #else
 		return false;	
 #endif
@@ -214,6 +214,7 @@ public:
 
 private:
 	CNetworkVar( float, m_flGameStartTime );
+	CNetworkVar( bool, m_bIsTeamplay );
 
 	float	m_flNextSlowMoUpdate;
 };

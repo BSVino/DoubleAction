@@ -1080,7 +1080,8 @@ bool BotStatement::Update( void )
 					else if (enemyCount > 1)
 					{
 						phrase = TheBotPhrases->GetPhrase( "EnemySpotted" );
-						phrase->SetCountCriteria( enemyCount );
+						if (phrase)
+							phrase->SetCountCriteria( enemyCount );
 					}
 					break;
 				}

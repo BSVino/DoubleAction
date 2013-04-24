@@ -13,6 +13,7 @@
 
 #include "c_team.h"
 #include "shareddefs.h"
+#include "sdk_shareddefs.h"
 #include "sdk_playerclass_info_parse.h"
 
 class C_BaseEntity;

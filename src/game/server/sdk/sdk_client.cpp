@@ -154,15 +154,6 @@ void GameStartFrame( void )
 
 	if ( g_pGameRules )
 		g_pGameRules->Think();
-
-	if ( g_fGameOver )
-		return;
-
-#if defined ( SDK_USE_TEAMS )
-	gpGlobals->teamplay = true;
-#else
-	gpGlobals->teamplay = false;
-#endif
 }
 
 //=========================================================

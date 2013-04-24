@@ -77,8 +77,10 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
+		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
 #else
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
+		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -258,17 +260,22 @@ void InitBodyQue()
 // --------------------------------------------------------------------------------------------------- //
 // CSDKGameRules implementation.
 // --------------------------------------------------------------------------------------------------- //
+extern ConVar teamplay;
 
 CSDKGameRules::CSDKGameRules()
 {
-	InitTeams();
-
 	m_bLevelInitialized = false;
 
 #if defined ( SDK_USE_TEAMS )
 	m_iSpawnPointCount_Blue = 0;
 	m_iSpawnPointCount_Red = 0;
+	m_bIsTeamplay = teamplay.GetBool();
+#ifdef GAME_DLL
+	gpGlobals->teamplay = m_bIsTeamplay;
+#endif
 #endif // SDK_USE_TEAMS
+
+	InitTeams();
 
 	m_flGameStartTime = 0;
 
@@ -1159,24 +1166,26 @@ void CSDKGameRules::InitTeams( void )
 
 	//Tony; don't create these two managers unless teams are being used!
 #if defined ( SDK_USE_TEAMS )
-	//Tony; create the blue team
-	CTeam *pBlue = static_cast<CTeam*>(CreateEntityByName( "sdk_team_blue" ));
-	Assert( pBlue );
-	pBlue->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
-	g_Teams.AddToTail( pBlue );
+	if( IsTeamplay() )
+	{
+		//Tony; create the blue team
+		CTeam *pBlue = static_cast<CTeam*>(CreateEntityByName( "sdk_team_blue" ));
+		Assert( pBlue );
+		pBlue->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
+		g_Teams.AddToTail( pBlue );
 
-	//Tony; create the red team
-	CTeam *pRed = static_cast<CTeam*>(CreateEntityByName( "sdk_team_red" ));
-	Assert( pRed );
-	pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
-	g_Teams.AddToTail( pRed );
-#else
+		//Tony; create the red team
+		CTeam *pRed = static_cast<CTeam*>(CreateEntityByName( "sdk_team_red" ));
+		Assert( pRed );
+		pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
+		g_Teams.AddToTail( pRed );
+	}
+#endif
 	// clean this up later.. anyone who's in the game and playing should be on SDK_TEAM_DEATHMATCH
 	CTeam *pDeathmatch = static_cast<CTeam*>(CreateEntityByName( "sdk_team_deathmatch" ));
 	Assert( pDeathmatch );
 	pDeathmatch->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
 	g_Teams.AddToTail( pDeathmatch );
-#endif
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1197,54 +1206,57 @@ int CSDKGameRules::SelectDefaultTeam()
 	int team = TEAM_UNASSIGNED;
 
 #if defined ( SDK_USE_TEAMS )
-	CSDKTeam *pBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE);
-	CSDKTeam *pRed = GetGlobalSDKTeam(SDK_TEAM_RED);
+	if (gpGlobals->teamplay)
+	{
+		CSDKTeam *pBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE);
+		CSDKTeam *pRed = GetGlobalSDKTeam(SDK_TEAM_RED);
 
-	int iNumBlue = pBlue->GetNumPlayers();
-	int iNumRed = pRed->GetNumPlayers();
+		int iNumBlue = pBlue->GetNumPlayers();
+		int iNumRed = pRed->GetNumPlayers();
 
-	int iBluePoints = pBlue->GetScore();
-	int iRedPoints  = pRed->GetScore();
+		int iBluePoints = pBlue->GetScore();
+		int iRedPoints  = pRed->GetScore();
 
-	// Choose the team that's lacking players
-	if ( iNumBlue < iNumRed )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iNumBlue > iNumRed )
-	{
-		team = SDK_TEAM_RED;
-	}
-	// choose the team with fewer points
-	else if ( iBluePoints < iRedPoints )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iBluePoints > iRedPoints )
-	{
-		team = SDK_TEAM_RED;
-	}
-	else
-	{
-		// Teams and scores are equal, pick a random team
-		team = ( random->RandomInt(0,1) == 0 ) ? SDK_TEAM_BLUE : SDK_TEAM_RED;		
-	}
-
-	if ( TeamFull( team ) )
-	{
-		// Pick the opposite team
-		if ( team == SDK_TEAM_BLUE )
+		// Choose the team that's lacking players
+		if ( iNumBlue < iNumRed )
+		{
+			team = SDK_TEAM_BLUE;
+		}
+		else if ( iNumBlue > iNumRed )
+		{
+			team = SDK_TEAM_RED;
+		}
+		// choose the team with fewer points
+		else if ( iBluePoints < iRedPoints )
+		{
+			team = SDK_TEAM_BLUE;
+		}
+		else if ( iBluePoints > iRedPoints )
 		{
 			team = SDK_TEAM_RED;
 		}
 		else
 		{
-			team = SDK_TEAM_BLUE;
+			// Teams and scores are equal, pick a random team
+			team = ( random->RandomInt(0,1) == 0 ) ? SDK_TEAM_BLUE : SDK_TEAM_RED;		
 		}
 
-		// No choices left
 		if ( TeamFull( team ) )
-			return TEAM_UNASSIGNED;
+		{
+			// Pick the opposite team
+			if ( team == SDK_TEAM_BLUE )
+			{
+				team = SDK_TEAM_RED;
+			}
+			else
+			{
+				team = SDK_TEAM_BLUE;
+			}
+
+			// No choices left
+			if ( TeamFull( team ) )
+				return TEAM_UNASSIGNED;
+		}
 	}
 #endif // SDK_USE_TEAMS
 	return team;
@@ -1257,13 +1269,13 @@ bool CSDKGameRules::TeamFull( int team_id )
 	{
 	case SDK_TEAM_BLUE:
 		{
-			int iNumBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE)->GetNumPlayers();
-			return iNumBlue >= m_iSpawnPointCount_Blue;
+			//int iNumBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE)->GetNumPlayers();
+			return false;//iNumBlue >= m_iSpawnPointCount_Blue;
 		}
 	case SDK_TEAM_RED:
 		{
-			int iNumRed = GetGlobalSDKTeam(SDK_TEAM_RED)->GetNumPlayers();
-			return iNumRed >= m_iSpawnPointCount_Red;
+			//int iNumRed = GetGlobalSDKTeam(SDK_TEAM_RED)->GetNumPlayers();
+			return false;//iNumRed >= m_iSpawnPointCount_Red;
 		}
 	}
 	return false;
@@ -1277,6 +1289,9 @@ bool CSDKGameRules::TeamStacked( int iNewTeam, int iCurTeam  )
 		return false;
 
 #if defined ( SDK_USE_TEAMS )
+	if (!IsTeamplay())
+		return false;
+
 	int iTeamLimit = mp_limitteams.GetInt();
 
 	// Tabulate the number of players on each team.

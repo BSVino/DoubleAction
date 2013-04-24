@@ -7,8 +7,8 @@
 
 #include "cbase.h"
 #include "hud.h"
-#include "sdk_scoreboard.h"
 #include "c_sdk_team.h"
+#include "sdk_scoreboard.h"
 #include "c_sdk_player_resource.h"
 #include "sdk_gamerules.h"
 #include "sdk_backgroundpanel.h"
@@ -269,7 +269,7 @@ void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 
 		//Tony; don't make unassigned always visible when using teams.
 #if defined ( SDK_USE_TEAMS )
-		if ( teamNumber != TEAM_UNASSIGNED )
+		if ( !SDKGameRules()->IsTeamplay() || teamNumber != TEAM_UNASSIGNED )
 			m_pPlayerList->SetSectionAlwaysVisible(sectionID);
 #else
 			m_pPlayerList->SetSectionAlwaysVisible(sectionID);
@@ -285,20 +285,27 @@ void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 
 int CSDKScoreboard::GetSectionFromTeamNumber( int teamNumber )
 {
-	switch ( teamNumber )
+	if (SDKGameRules()->IsTeamplay())
 	{
+		switch ( teamNumber )
+		{
 #if defined ( SDK_USE_TEAMS )
-	case SDK_TEAM_BLUE:
-		return SCORESECTION_TEAM1;
-	case SDK_TEAM_RED:
-		return SCORESECTION_TEAM2;
+		case SDK_TEAM_BLUE:
+			return SCORESECTION_TEAM1;
+		case SDK_TEAM_RED:
+			return SCORESECTION_TEAM2;
 #endif
-	case TEAM_SPECTATOR:
-		return SCORESECTION_SPECTATOR;
-	default:
-		return SCORESECTION_FREEFORALL;
+		case TEAM_SPECTATOR:
+			return SCORESECTION_SPECTATOR;
+		default:
+			return SCORESECTION_FREEFORALL;
+		}
 	}
-	return SCORESECTION_FREEFORALL;
+	if (teamNumber == TEAM_SPECTATOR)
+		return SCORESECTION_SPECTATOR;
+	else
+		return SCORESECTION_TEAM1;
+		//return SCORESECTION_FREEFORALL;
 }
 
 //-----------------------------------------------------------------------------

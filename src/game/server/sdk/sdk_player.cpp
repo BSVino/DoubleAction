@@ -1031,7 +1031,7 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 	{
 #if defined ( SDK_USE_TEAMS )
 	case SDK_TEAM_BLUE:
-		{
+		/*{
 			pSpawnPointName = "info_player_blue";
 			pSpot = g_pLastBlueSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1039,9 +1039,9 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 				g_pLastBlueSpawn = pSpot;
 			}
 		}
-		break;
+		break;*/
 	case SDK_TEAM_RED:
-		{
+		/*{
 			pSpawnPointName = "info_player_red";
 			pSpot = g_pLastRedSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1049,7 +1049,7 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 				g_pLastRedSpawn = pSpot;
 			}
 		}		
-		break;
+		break;*/
 #endif // SDK_USE_TEAMS
 	case TEAM_UNASSIGNED:
 		{
@@ -1129,7 +1129,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		// Put up the class selection menu.
 		State_Transition( STATE_PICKINGCLASS );
 #else
-		State_Transition( STATE_ACTIVE );
+		State_Transition( STATE_PICKINGCHARACTER );
 #endif
 	}
 }
@@ -1219,7 +1219,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		flDamage = m_Shared.ModifySkillValue(flDamage, 0.3f, SKILL_IMPERVIOUS);
 	}*/
 
-	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
+	if ( !(bCheckFriendlyFire && pInflictor->GetTeamNumber() == GetTeamNumber() ) || bFriendlyFire /*|| pInflictor == this ||	info.GetAttacker() == this*/ )
 	{
 		if ( bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
 		{
@@ -1401,13 +1401,17 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		pAttackerSDK->AwardStylePoints(this, false, info);
+		// friendly fire is never stylish!
+		if ( !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+			pAttackerSDK->AwardStylePoints(this, false, info);
 
 		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
 		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 
-		pAttackerSDK->m_bDamagedEnemyDuringDive = true;
+		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
+		if ( pAttackerSDK->m_Shared.IsDiving() && !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+			pAttackerSDK->m_bDamagedEnemyDuringDive = true;
 	}
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
@@ -1478,10 +1482,13 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		if (pAttacker != this)
+		if ( pAttacker != this && !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
 		{
 			pAttackerSDK->AwardStylePoints(this, true, info);
 			pAttackerSDK->GiveSlowMo(1);
+
+			if (gpGlobals->teamplay && pAttackerSDK->GetTeam())
+				pAttackerSDK->GetTeam()->AddScore(1);
 		}
 	}
 	else
@@ -2104,14 +2111,15 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		{
 //Tony; using teams, go to picking team.
 #if defined( SDK_USE_TEAMS )
-			State_Transition( STATE_PICKINGTEAM );
+			if (gpGlobals->teamplay)
+				State_Transition( STATE_PICKINGTEAM );
+			else
 //Tony; not using teams, but we are using classes, so go straight to class picking.
 #elif !defined ( SDK_USE_TEAMS ) && defined ( SDK_USE_PLAYERCLASSES )
 			State_Transition( STATE_PICKINGCLASS );
 //Tony; not using teams or classes, go straight to active.
-#else
-			State_Transition( STATE_PICKINGCHARACTER );
 #endif
+			State_Transition( STATE_PICKINGCHARACTER );
 		}
 		
 		return true;
@@ -2185,10 +2193,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
 // FIXME: TEMPORARY HACK TO NOT LET PEOPLE JOIN BLUE TEAM IN DEATHMATCH (shmopaloppa)
-#if !defined ( SDK_USE_TEAMS )
-	if (team == 2)
+	if (!gpGlobals->teamplay && team == 2)
 		team = 0;
-#endif
+
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{
@@ -2197,26 +2204,30 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 	}
 
 #if defined ( SDK_USE_TEAMS )
-	// If we already died and changed teams once, deny
-	if( m_bTeamChanged && team != TEAM_SPECTATOR && iOldTeam != TEAM_SPECTATOR )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
-		return true;
-	}
-
 	CSDKGameRules *mp = SDKGameRules();
-	if ( team == TEAM_UNASSIGNED )
+
+	if ( mp->IsTeamplay() )
 	{
-		// Attempt to auto-select a team, may set team to T, CT or SPEC
-		team = mp->SelectDefaultTeam();
+		// If we already died and changed teams once, deny
+		if( m_bTeamChanged && team != TEAM_SPECTATOR && iOldTeam != TEAM_SPECTATOR )
+		{
+			ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
+			return true;
+		}
 
 		if ( team == TEAM_UNASSIGNED )
 		{
-			// still team unassigned, try to kick a bot if possible	
-			 
-			ClientPrint( this, HUD_PRINTTALK, "#All_Teams_Full" );
+			// Attempt to auto-select a team, may set team to T, CT or SPEC
+			team = mp->SelectDefaultTeam();
 
-			team = TEAM_SPECTATOR;
+			if ( team == TEAM_UNASSIGNED )
+			{
+				// still team unassigned, try to kick a bot if possible	
+			 
+				ClientPrint( this, HUD_PRINTTALK, "#All_Teams_Full" );
+
+				team = TEAM_SPECTATOR;
+			}
 		}
 	}
 #endif

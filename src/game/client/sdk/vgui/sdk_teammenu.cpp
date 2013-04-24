@@ -27,9 +27,9 @@
 
 #include "sdk_backgroundpanel.h"
 
-#include "sdk_teammenu.h"
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
+#include "sdk_teammenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

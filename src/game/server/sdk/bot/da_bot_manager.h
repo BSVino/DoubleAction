@@ -26,9 +26,9 @@ class CBasePlayerWeapon;
  */
 inline int OtherTeam( int team )
 {
-	Assert(!"No teams");
-	return TEAM_UNASSIGNED;
-	//return (team == TEAM_MACHINDO) ? TEAM_NUMENI : TEAM_MACHINDO;
+	//Assert(!"No teams");
+	//return TEAM_UNASSIGNED;
+	return (team == SDK_TEAM_BLUE) ? SDK_TEAM_RED : SDK_TEAM_BLUE;
 }
 
 class CDABotManager;
