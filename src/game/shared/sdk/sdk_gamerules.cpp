@@ -182,15 +182,18 @@ public:
 	virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 	{
 		// Dead players can only be heard by other dead team mates
+		/* ROUNDS PLAY ONLY
 		if ( pTalker->IsAlive() == false )
 		{
 			if ( pListener->IsAlive() == false )
 				return ( pListener->InSameTeam( pTalker ) );
 
 			return false;
-		}
-
-		return ( pListener->InSameTeam( pTalker ) );
+		}*/
+		if ( gpGlobals->teamplay )
+			return ( pListener->InSameTeam( pTalker ) );
+		else
+			return true;
 	}
 };
 CVoiceGameMgrHelper g_VoiceGameMgrHelper;
@@ -451,6 +454,22 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 
 		pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
 		GiveSlowMoToNearbyPlayers(pOtherPlayer);
+	}
+}
+
+void CSDKGameRules::GoToIntermission( void )
+{
+	BaseClass::GoToIntermission();
+
+	// set all players to FL_FROZEN
+	for ( int i = 1; i <= MAX_PLAYERS; i++ )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+
+		if ( pPlayer )
+		{
+			pPlayer->AddFlag( FL_FROZEN );
+		}
 	}
 }
 
@@ -823,18 +842,19 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
 
 		trace_t tr;
+		// FIX THIS:
 		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
 		if (tr.m_pEnt == pOtherPlayer)
 			return false;
 	}
 
-	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "weapon_grenade" );
+	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "sdk_basegrenade_projectile" );
 	while (pGrenade)
 	{
 		if ((pSpot->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
 			return false;
 
-		pGrenade = gEntList.FindEntityByClassname( pGrenade, "weapon_grenade" );
+		pGrenade = gEntList.FindEntityByClassname( pGrenade, "sdk_basegrenade_projectile" );
 	}
 
 	Vector mins = GetViewVectors()->m_vHullMin;

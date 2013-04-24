@@ -151,6 +151,7 @@ public:
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
 	virtual void Think();
+	virtual void GoToIntermission( void );
 	virtual void EndGameFrame();
 
 	void InitTeams( void );
