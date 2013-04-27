@@ -613,7 +613,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	// The heavier the damage the more it hurts.
-	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
+	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 35, 60);
 
 	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
 
