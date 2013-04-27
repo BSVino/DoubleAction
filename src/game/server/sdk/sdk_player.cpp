@@ -3702,6 +3702,7 @@ static ConCommand character("character", CC_Character, "Choose a character.", FC
 void CC_Buy(const CCommand& args)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+	SDKWeaponID eWeapon;
 
 	if (!pPlayer)
 		return;
@@ -3734,16 +3735,23 @@ void CC_Buy(const CCommand& args)
 
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
+		eWeapon = AliasToWeaponID(args[2]);
 		pPlayer->StopObserverMode();
-		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));
+		pPlayer->RemoveFromLoadout(eWeapon);
+		if (SDK_WEAPON_M1911 == eWeapon)
+			pPlayer->RemoveFromLoadout(SDK_WEAPON_AKIMBO_M1911);
 		return;
 	}
 
-	SDKWeaponID eWeapon = AliasToWeaponID(args[1]);
+	eWeapon = AliasToWeaponID(args[1]);
 	if (eWeapon)
 	{
 		pPlayer->StopObserverMode();
 		pPlayer->AddToLoadout(eWeapon);
+		if (SDK_WEAPON_M1911 == eWeapon) 
+			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_M1911);
+		else if (SDK_WEAPON_P99 == eWeapon) 
+			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_P99);
 		return;
 	}
 }

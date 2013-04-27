@@ -1461,6 +1461,15 @@
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_p99.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3265,6 +3274,9 @@
     </ClInclude>
     <ClInclude Include="sdk\vgui\folder_gui.h">
       <Filter>Source Files\SDK\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

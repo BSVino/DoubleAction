@@ -1524,6 +1524,15 @@
     <ClCompile Include="sdk\da_powerup.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_p99.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3087,6 +3096,9 @@
       <Filter>Source Files\SDK\Bots</Filter>
     </ClInclude>
     <ClInclude Include="sdk\da_ammo_pickup.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
