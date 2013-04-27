@@ -227,6 +227,9 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\bot\nav_path.cpp" />
     <ClCompile Include="..\shared\sdk\bot\shared_util.cpp" />
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
@@ -862,6 +865,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\sdk\bot\nav_path.h" />
     <ClInclude Include="..\shared\sdk\bot\shared_util.h" />
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="ai_baseactor.h" />
     <ClInclude Include="ai_basehumanoid.h" />
