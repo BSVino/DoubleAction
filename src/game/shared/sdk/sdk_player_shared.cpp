@@ -89,8 +89,11 @@ void CSDKPlayer::FireBullet(
 
 	for (size_t i = 0; i < 5; i++)
 	{
+		CTraceFilterSimpleList tf(COLLISION_GROUP_NONE);
+		tf.AddEntityToIgnore(this);
+		tf.AddEntityToIgnore(pIgnore);
 
-		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pIgnore, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, &tf, &tr );
 
 		if ( tr.fraction == 1.0f )
 			break; // we didn't hit anything, stop tracing shoot
