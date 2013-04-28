@@ -103,6 +103,7 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+	virtual void        OnDamagedByExplosion( const CTakeDamageInfo &info );
 
 	virtual bool        FVisible(CBaseEntity* pEntity, int iTraceMask = MASK_OPAQUE, CBaseEntity** ppBlocker = NULL);
 	virtual bool        IsVisible(const Vector &pos, bool testFOV = false, const CBaseEntity *ignore = NULL) const;	///< return true if we can see the point

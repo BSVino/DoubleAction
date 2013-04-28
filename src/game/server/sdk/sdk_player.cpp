@@ -1547,6 +1547,11 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 }
 
+void CSDKPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
+{
+	UTIL_ScreenShake( info.GetInflictor()->GetAbsOrigin(), 10.0, 1.0, 0.5, 2000, SHAKE_START, false );
+}
+
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
