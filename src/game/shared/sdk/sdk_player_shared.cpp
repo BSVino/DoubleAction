@@ -160,7 +160,11 @@ void CSDKPlayer::FireBullet(
 		flCurrentDistance += tr.fraction * flMaxRange;
 
 		// First 500 units, no decrease in damage.
-		flCurrentDistance -= 500;
+		if (eWeaponType == WT_SHOTGUN)
+			flCurrentDistance -= 350;
+		else
+			flCurrentDistance -= 500;
+
 		if (flCurrentDistance < 0)
 			flCurrentDistance = 0;
 
