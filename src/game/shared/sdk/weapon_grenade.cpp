@@ -23,7 +23,7 @@
 #endif
 
 
-#define GRENADE_TIMER	2.0f //Seconds
+#define GRENADE_TIMER	1.5f //Seconds
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponGrenade, DT_WeaponGrenade )
 
