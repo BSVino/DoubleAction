@@ -258,6 +258,9 @@ public:
 	void NoteWeaponFired();
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 
+	float GetUserInfoFloat(const char* pszCVar, float flBotDefault = 0);
+	int GetUserInfoInt(const char* pszCVar, int iBotDefault = 0);
+
 // ------------------------------------------------------------------------------------------------ //
 // Player state management.
 // ------------------------------------------------------------------------------------------------ //

@@ -1982,11 +1982,7 @@ void CSDKGameMovement::Duck( void )
 				}
 				else
 				{
-#ifdef GAME_DLL
-					float time = atof (engine->GetClientConVarValue (m_pSDKPlayer->entindex (), "da_user_taptime"));
-#else
-					float time = da_user_taptime.GetFloat ();
-#endif
+					float time = m_pSDKPlayer->GetUserInfoFloat("da_user_taptime", 0);
 					if (delta < time)
 					{
 						m_pSDKPlayer->m_Shared.taptime = -1;

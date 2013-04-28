@@ -196,6 +196,9 @@ public:
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
+	float GetUserInfoFloat(const char* pszCVar, float flBotDefault = 0);
+	int GetUserInfoInt(const char* pszCVar, int iBotDefault = 0);
+
 // Not Shared, but public.
 public:
 

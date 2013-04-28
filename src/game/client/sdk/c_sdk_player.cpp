@@ -1701,3 +1701,17 @@ void C_SDKPlayer::TurnOffFlashlight( void )
 		m_bFlashlightEnabled = false;
 	}
 }
+
+float C_SDKPlayer::GetUserInfoFloat(const char* pszCVar, float flBotDefault)
+{
+	ConVarRef UserInfoVar(pszCVar);
+
+	return UserInfoVar.GetFloat();
+}
+
+int C_SDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
+{
+	ConVarRef UserInfoVar(pszCVar);
+
+	return UserInfoVar.GetInt();
+}

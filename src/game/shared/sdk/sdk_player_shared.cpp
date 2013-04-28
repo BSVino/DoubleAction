@@ -1556,31 +1556,13 @@ ConVar da_cambacklerp( "da_cambacklerp", "4", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR
 
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
-#ifdef GAME_DLL
-	float flCamBackIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_back" ));
-	float flCamUpIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_up" ));
-	float flCamRightIdle = atof(engine->GetClientConVarValue( entindex(), "da_cam_right" ));
+	float flCamBackIdle = GetUserInfoFloat("da_cam_back");
+	float flCamUpIdle = GetUserInfoFloat("da_cam_up");
+	float flCamRightIdle = GetUserInfoFloat("da_cam_right");
 
-	float flCamBackAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_back_aim" ));
-	float flCamUpAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_up_aim" ));
-	float flCamRightAim = atof(engine->GetClientConVarValue( entindex(), "da_cam_right_aim" ));
-#else
-	ConVarRef da_cam_back("da_cam_back");
-	ConVarRef da_cam_up("da_cam_up");
-	ConVarRef da_cam_right("da_cam_right");
-
-	ConVarRef da_cam_back_aim("da_cam_back_aim");
-	ConVarRef da_cam_up_aim("da_cam_up_aim");
-	ConVarRef da_cam_right_aim("da_cam_right_aim");
-
-	float flCamBackIdle = da_cam_back.GetFloat();
-	float flCamUpIdle = da_cam_up.GetFloat();
-	float flCamRightIdle = da_cam_right.GetFloat();
-
-	float flCamBackAim = da_cam_back_aim.GetFloat();
-	float flCamUpAim = da_cam_up_aim.GetFloat();
-	float flCamRightAim = da_cam_right_aim.GetFloat();
-#endif
+	float flCamBackAim = GetUserInfoFloat("da_cam_back_aim");
+	float flCamUpAim = GetUserInfoFloat("da_cam_up_aim");
+	float flCamRightAim = GetUserInfoFloat("da_cam_right_aim");
 
 	float flCamBack = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamBackIdle, flCamBackAim);
 	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);

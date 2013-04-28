@@ -1165,7 +1165,7 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 void CSDKPlayer::InitialSpawn( void )
 {
-	m_bThirdPerson = !!atoi(engine->GetClientConVarValue( entindex(), "cl_thirdperson" ));
+	m_bThirdPerson = !!GetUserInfoInt("cl_thirdperson", 0);
 
 	BaseClass::InitialSpawn();
 
@@ -3557,7 +3557,25 @@ void CSDKPlayer::VPhysicsDestroyObject ()
 	BaseClass::VPhysicsDestroyObject();
 }
 
+float CSDKPlayer::GetUserInfoFloat(const char* pszCVar, float flBotDefault)
+{
+	if (IsBot())
+		return flBotDefault;
 
+	float flCVarValue = atof(engine->GetClientConVarValue( entindex(), pszCVar ));
+
+	return flCVarValue;
+}
+
+int CSDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
+{
+	if (IsBot())
+		return iBotDefault;
+
+	int iCVarValue = atoi(engine->GetClientConVarValue( entindex(), pszCVar ));
+
+	return iCVarValue;
+}
 
 void CC_ActivateSlowmo_f (void)
 {
