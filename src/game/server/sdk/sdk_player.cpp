@@ -743,7 +743,6 @@ void CSDKPlayer::PreThink(void)
 	BaseClass::PreThink();
 }
 
-ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does the style meter remain active after activation?" );
 ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
 
 void CSDKPlayer::PostThink()
@@ -1430,8 +1429,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return 1;
 }
 
-ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
+extern ConVar dab_stylemeteractivationcost;
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1526,11 +1525,13 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// This way, running around with your bar full you run a high risk.
 	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
 
+	float flLostPoints = RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/4);
+
 	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling())
 		// Lose less bar if you die during a stunt. Going out with style is never a bad thing!
-		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/16, flActivationCost/4));
-	else
-		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
+		flLostPoints /= 2;
+
+	SetStylePoints(m_flStylePoints - flLostPoints);
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
@@ -1563,14 +1564,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	if (bKilledVictim)
 	{
-		// Give me half of the activation cost. The other half I'll get from damaging.
-		flPoints = dab_stylemeteractivationcost.GetFloat()/2;
+		// Give me a quarter of the activation cost. I'll get another quarter from damaging.
+		flPoints = dab_stylemeteractivationcost.GetFloat()/4;
 	}
 	else
 	{
-		// Damaging someone stylishly for 100% of their health is enough to get one bar.
-		// The player will get half the points from damaging and the other half from killing.
-		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/2);
+		// Damaging someone stylishly for 100% of their health is enough to get one quarter bar.
+		// The player will double their points from from killing. Need to kill two enemies to fill the bar.
+		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/4);
 	}
 
 	if (m_Shared.IsAimedIn())
@@ -3164,7 +3165,7 @@ void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > dab_stylemetertotalcharge.GetFloat()) ? dab_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
 	}
 	else
-		m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
+		m_flStylePoints += points;
 
 	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
 	{
