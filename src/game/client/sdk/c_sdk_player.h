@@ -322,6 +322,7 @@ private:
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
+	float  m_flStuntLerp;
 
 	char m_iszCharacter[256];
 

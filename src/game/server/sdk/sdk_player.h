@@ -440,6 +440,7 @@ public:
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
+	float  m_flStuntLerp;
 
 	int    m_iStyleKillStreak;
 

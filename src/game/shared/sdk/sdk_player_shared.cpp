@@ -1553,6 +1553,7 @@ bool CSDKPlayer::IsInThirdPerson() const
 }
 
 ConVar da_cambacklerp( "da_cambacklerp", "4", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Speed of camera lerp." );
+ConVar da_cam_stunt_up( "da_cam_stunt_up", "20", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Height to raise the camera during stunts." );
 
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
@@ -1572,6 +1573,12 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	AngleVectors( angCamera, &camForward, &camRight, &camUp );
 
 	Vector vecCameraOffset = -camForward*flCamBack + camRight*flCamRight + camUp*flCamUp;
+
+	m_flStuntLerp = Approach((m_Shared.IsDiving()||m_Shared.IsRolling())?1:0, m_flStuntLerp, gpGlobals->frametime*2);
+
+	if (m_flStuntLerp)
+		vecCameraOffset += camUp * (m_flStuntLerp * da_cam_stunt_up.GetFloat());
+
 	Vector vecNewOrigin = vecEye + vecCameraOffset;
 
 	trace_t trace;
