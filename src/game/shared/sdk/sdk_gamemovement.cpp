@@ -36,6 +36,8 @@ ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVA
 ConVar da_user_taptime ("da_user_taptime", "0", FCVAR_ARCHIVE|FCVAR_USERINFO);
 #endif
 
+ConVar	da_d2p_stunt_forgiveness( "da_d2p_stunt_forgiveness", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+
 
 
 ConVar  da_acro_kong_dist ("da_acro_kong_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -823,12 +825,12 @@ void CSDKGameMovement::CategorizePosition( void )
 		SetGroundEntity( &trace );
 	}
 
-	if (m_pSDKPlayer->m_Shared.IsSliding() || m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
+	if (m_pSDKPlayer->m_Shared.IsSliding())
 		player->m_surfaceFriction *= m_pSDKPlayer->m_Shared.GetSlideFriction();
+	else if (m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.m_bProneSliding)
+		player->m_surfaceFriction *= 0.2f;
 	else if (m_pSDKPlayer->m_Shared.IsRolling ())
-	{
 		player->m_surfaceFriction *= da_acro_roll_friction.GetFloat ();
-	}
 }
 
 inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, 
@@ -1661,6 +1663,9 @@ void CSDKGameMovement::Duck( void )
 	{
 		if (mv->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT))
 			m_pSDKPlayer->m_Shared.m_bProneSliding = false;
+
+		if (gpGlobals->curtime - m_pSDKPlayer->m_Shared.m_flDiveToProneLandTime > da_d2p_stunt_forgiveness.GetFloat())
+			m_pSDKPlayer->m_Shared.m_bProneSliding = false;
 	}
 
 	// Prone / UnProne - we don't duck if this is happening
@@ -1839,32 +1844,14 @@ void CSDKGameMovement::Duck( void )
 
 			bool bPlayerHoldingMoveKeys = !!(mv->m_nButtons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT));
 
-#ifdef GAME_DLL
-			bool bDiveToProne = !!atoi(engine->GetClientConVarValue( m_pSDKPlayer->entindex(), "da_dive_land_behavior" ));
-#else
-			bool bDiveToProne = da_dive_land_behavior.GetBool();
-#endif
-
 			bool bWantsProne, bWantsSlide, bWantsRoll;
 
-			if (bDiveToProne)
-			{
-				// If holding the stunt button, slide
-				bWantsSlide = !!(mv->m_nButtons & IN_ALT1);
-				// If holding the movement key forward, roll
-				bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
-				// Otherwise, prone
-				bWantsProne =  !bWantsRoll && !bWantsSlide;
-			}
-			else
-			{
-				// If pulling back on the movement button, land prone
-				bWantsProne = mv->m_nButtons & IN_DUCK || (bPlayerHoldingMoveKeys && flWishDotLocal < -0.7f);
-				// If pushing forward on the movement button or holding stunt, slide
-				bWantsSlide = mv->m_nButtons & IN_ALT1 || (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
-				// Otherwise roll
-				bWantsRoll = true;
-			}
+			// If holding the stunt button, slide
+			bWantsSlide = !!(mv->m_nButtons & IN_ALT1);
+			// If holding the movement key forward, roll
+			bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
+			// Otherwise, prone
+			bWantsProne =  !bWantsRoll && !bWantsSlide;
 
 			if (!CanUnprone() || bWantsProne)
 			{
@@ -1877,6 +1864,7 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->EmitSound( filter, m_pSDKPlayer->entindex(), "Player.DiveLand" );
 
 				m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime = m_pSDKPlayer->GetCurrentTime() + 0.4f;
+				m_pSDKPlayer->m_Shared.m_flDiveToProneLandTime = m_pSDKPlayer->GetCurrentTime();
 			}
 			else if (bWantsSlide && m_pSDKPlayer->m_Shared.CanRoll())
 			{
@@ -1889,15 +1877,7 @@ void CSDKGameMovement::Duck( void )
 					vecAbsVelocity.NormalizeInPlace();
 					vecAbsVelocity *= flVelocity;
 
-					if (fabs(flVelocity) > 1e-5)
-					{
-						// Throw in some of the wish velocity into the slide.
-						vecAbsVelocity = (vecAbsVelocity/flVelocity) + vecWishDirection;
-						vecAbsVelocity.NormalizeInPlace();
-						vecAbsVelocity *= flVelocity;
-
-						m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
-					}
+					m_pSDKPlayer->SetAbsVelocity(vecAbsVelocity);
 
 					m_pSDKPlayer->m_Shared.StartSliding(true);
 
@@ -1965,6 +1945,7 @@ void CSDKGameMovement::Duck( void )
 
 		bool bSlide = false;
 		bool bRoll = false;
+		bool bFromDive = false;
 		bool bDive = false;	
 
 		if (buttonsPressed & (IN_DUCK))
@@ -2023,6 +2004,48 @@ void CSDKGameMovement::Duck( void )
 				(m_pSDKPlayer->m_Shared.GetSlideTime() < (m_pSDKPlayer->GetCurrentTime() - TIME_TO_RESLIDE));
 
 			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
+		}
+
+		if (!bRoll && m_pSDKPlayer->m_Shared.IsProne())
+		{
+			if (buttonsPressed&(IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT|IN_ALT1))
+			{
+				if (m_pSDKPlayer->m_Shared.m_flDiveToProneLandTime > 0 && m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.m_flDiveToProneLandTime < da_d2p_stunt_forgiveness.GetFloat())
+				{
+					// If the player presses a stunt button just after she lands from a dive,
+					// give her the benefit of the doubt and transition to a dive as if the
+					// button was down the whole time.
+					if (buttonsPressed&IN_ALT1)
+					{
+						bSlide = true;
+						bFromDive = true;
+					}
+					else
+					{
+						Vector vecForward, vecRight, vecUp;
+						AngleVectors( mv->m_vecViewAngles, &vecForward, &vecRight, &vecUp );
+						vecForward.z = 0.0f;
+						vecRight.z = 0.0f;		
+						VectorNormalize( vecForward );
+						VectorNormalize( vecRight );
+
+						Vector vecWishDirection( vecForward.x*mv->m_flForwardMove + vecRight.x*mv->m_flSideMove, vecForward.y*mv->m_flForwardMove + vecRight.y*mv->m_flSideMove, 0.0f );
+						vecWishDirection.NormalizeInPlace();
+
+						Vector vecLocalVelocity = m_pSDKPlayer->GetLocalVelocity();
+						vecLocalVelocity.NormalizeInPlace();
+
+						float flWishDotLocal = vecWishDirection.Dot(vecLocalVelocity);
+
+						// Only if the direction of the movement keys is the same as the velocity.
+						if (flWishDotLocal > 0.5f)
+						{
+							bRoll = true;
+							bFromDive = true;
+						}
+					}
+				}
+			}
 		}
 
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false && m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false &&
@@ -2094,11 +2117,12 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if( bRoll && m_pSDKPlayer->m_Shared.CanRoll() )
 		{
-			m_pSDKPlayer->m_Shared.StartRolling();
+			m_pSDKPlayer->m_Shared.SetProne( false );
+			m_pSDKPlayer->m_Shared.StartRolling(bFromDive);
 
 			SetRollEyeOffset( 0.0 );
 
-			m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_ROLL );
+			m_pSDKPlayer->DoAnimationEvent( bFromDive?PLAYERANIMEVENT_DIVE_TO_ROLL:PLAYERANIMEVENT_STAND_TO_ROLL );
 
 			CPASFilter filter( m_pSDKPlayer->GetAbsOrigin() );
 			filter.UsePredictionRules();
@@ -2106,21 +2130,33 @@ void CSDKGameMovement::Duck( void )
 		}
 		else if( bSlide && m_pSDKPlayer->m_Shared.CanSlide() )
 		{
+			m_pSDKPlayer->m_Shared.SetProne( false );
+
 			Assert (m_pSDKPlayer->m_Shared.m_flRunSpeed);
 			if (fabs (m_pSDKPlayer->m_Shared.m_flRunSpeed) > 1e-5)
 			{
 				float flSpeedFraction = RemapValClamped(m_pSDKPlayer->GetAbsVelocity().Length()/m_pSDKPlayer->m_Shared.m_flRunSpeed, 0, 1, 0.2f, 1);
 
-				m_pSDKPlayer->m_Shared.StartSliding();
+				if (bFromDive)
+				{
+					flSpeedFraction = RemapValClamped(m_pSDKPlayer->GetAbsVelocity().Length()/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
+
+					// Give the player the benefit of the doubt that he probably just lost some velocity while not sliding.
+					if (flSpeedFraction < 0.8f)
+						flSpeedFraction = 0.8f;
+				}
+
+				m_pSDKPlayer->m_Shared.StartSliding(bFromDive);
 
 				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
 				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
 				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
-				SetSlideEyeOffset( 0.0 );
+				SetSlideEyeOffset( bFromDive?1.0:0.0 );
 
-				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
+				if (!bFromDive)
+					m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_STAND_TO_SLIDE );
 			}
 		}
 	}

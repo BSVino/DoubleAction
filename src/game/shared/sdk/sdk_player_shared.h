@@ -185,6 +185,7 @@ public:
 	CNetworkVar( bool, m_bRollAfterDive );
 	CNetworkVar( float, m_flDiveTime );
 	CNetworkVar( float, m_flDiveLerped );
+	CNetworkVar( float, m_flDiveToProneLandTime );
 	float m_flViewTilt;
 
 	float m_flViewBobRamp;

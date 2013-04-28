@@ -43,6 +43,8 @@
 	#include "sdk_team.h"
 #endif
 
+#include "da.h"
+
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet impact point" );
 ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 
@@ -387,6 +389,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bRolling = false;
 	m_Shared.m_bSliding = false;
 	m_Shared.m_bDiveSliding = false;
+	m_Shared.m_flDiveToProneLandTime = -1;
 	m_Shared.m_bProne = false;
 	m_Shared.m_bAimedIn = false;
 	m_Shared.m_bIsTryingUnprone = false;
@@ -723,12 +726,14 @@ bool CSDKPlayerShared::IsDiveSliding() const
 	return IsSliding() && m_bDiveSliding;
 }
 
+extern ConVar da_d2p_stunt_forgiveness;
+
 bool CSDKPlayerShared::CanSlide() const
 {
 	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
 		return false;
 
-	if (IsProne())
+	if (IsProne() && m_pOuter->GetCurrentTime() - m_flDiveToProneLandTime > da_d2p_stunt_forgiveness.GetFloat())
 		return false;
 
 	if (IsSliding())
@@ -877,7 +882,7 @@ bool CSDKPlayerShared::CanRoll() const
 	if (m_pOuter->GetLocalVelocity().Length2D() < 10)
 		return false;
 
-	if (IsProne())
+	if (IsProne() && m_pOuter->GetCurrentTime() - m_flDiveToProneLandTime > da_d2p_stunt_forgiveness.GetFloat())
 		return false;
 
 	if (IsSliding())
@@ -971,6 +976,7 @@ Vector CSDKPlayerShared::StartDiving()
 
 	m_flDiveTime = m_pOuter->GetCurrentTime();
 	m_flDiveLerped = 0;
+	m_flDiveToProneLandTime = -1;
 
 	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
 

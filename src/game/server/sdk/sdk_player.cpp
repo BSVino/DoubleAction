@@ -139,6 +139,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bRollAfterDive ) ),
 	SendPropTime( SENDINFO( m_flDiveTime ) ),
 	SendPropFloat( SENDINFO( m_flDiveLerped ) ),
+	SendPropFloat( SENDINFO( m_flDiveToProneLandTime ) ),
 	SendPropBool( SENDINFO( m_bAimedIn ) ),
 	SendPropFloat( SENDINFO( m_flAimIn ) ),
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
