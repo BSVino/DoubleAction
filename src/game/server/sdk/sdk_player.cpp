@@ -1721,6 +1721,21 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
+	else if (m_Shared.IsAimedIn())
+	{
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
+	}
+	else if (bKilledVictim && m_flSlowMoMultiplier < 1)
+	{
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		SendAnnouncement(ANNOUNCEMENT_SLOWMO_KILL, STYLE_POINT_LARGE);
+	}
 	else
 	{
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
@@ -1729,7 +1744,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
 
-		// Only some chance of sending a message at all.
 		if (bKilledVictim)
 		{
 			int iRandom = random->RandomInt(0, 1);
@@ -1746,16 +1760,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				break;
 			}
 
-			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
-				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
-
-			if (bKilledVictim && m_flSlowMoMultiplier < 1)
-				eAnnouncement = ANNOUNCEMENT_SLOWMO_KILL;
-
-			if (bKilledVictim)
-				SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
-			else
-				SendAnnouncement(eAnnouncement, STYLE_POINT_SMALL);
+			SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
 		}
 	}
 }
