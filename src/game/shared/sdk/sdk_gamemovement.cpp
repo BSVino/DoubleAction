@@ -2584,6 +2584,9 @@ CSDKGameMovement::jump (void)
 	mv->m_nOldButtons |= IN_JUMP;
 	return true;
 }
+
+static ConVar da_terminal_velocity("da_terminal_velocity", "1600", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CSDKGameMovement::FullWalkMove ()
 {
 	m_nOldWaterLevel = player->GetWaterLevel();
@@ -2877,6 +2880,10 @@ void CSDKGameMovement::FullWalkMove ()
 		mv->m_vecVelocity[2] = 0.0;
 		Friction();
 	}
+
+	if (mv->m_vecVelocity.z < -da_terminal_velocity.GetFloat())
+		mv->m_vecVelocity.z = -da_terminal_velocity.GetFloat();
+
 	CheckVelocity();
 	if (player->GetGroundEntity() != NULL)
 	{
