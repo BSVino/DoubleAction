@@ -233,6 +233,9 @@ bool PlayerOutOfAmmoAndMultipleWeaponsConditions( C_SDKPlayer *pPlayer, class CL
 	if (!pWeapon)
 		return false;
 
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		return false;
+
 	return !pWeapon->HasPrimaryAmmo();
 }
 

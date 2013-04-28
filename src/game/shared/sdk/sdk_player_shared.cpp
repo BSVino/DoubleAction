@@ -797,7 +797,7 @@ void CSDKPlayerShared::EndSlide()
 	if (gpGlobals->curtime > m_flSlideTime + 1)
 	{
 		if (m_bDiveSliding)
-			m_pOuter->Instructor_LessonLearned("diveafterslide");
+			m_pOuter->Instructor_LessonLearned("slideafterdive");
 		else
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
@@ -814,7 +814,7 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 	if (gpGlobals->curtime > m_flSlideTime + 1)
 	{
 		if (m_bDiveSliding)
-			m_pOuter->Instructor_LessonLearned("diveafterslide");
+			m_pOuter->Instructor_LessonLearned("slideafterdive");
 		else
 			m_pOuter->Instructor_LessonLearned("slide");
 	}
@@ -907,6 +907,9 @@ void CSDKPlayerShared::StartRolling(bool bFromDive)
 {
 	if (!CanRoll())
 		return;
+
+	if (bFromDive)
+		m_pOuter->Instructor_LessonLearned("rollafterdive");
 
 	m_bRolling = true;
 	m_bRollingFromDive = bFromDive;
