@@ -114,6 +114,7 @@ public:
 	float   GetDiveTime() const { return m_flDiveTime; };
 	float   GetDiveLerped() const { return m_flDiveLerped; };
 	void    IncreaseDiveLerped(float flLerped) { m_flDiveLerped += flLerped; };
+	float   GetTimeLeftGround() const { return m_flTimeLeftGround; };
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -184,6 +185,7 @@ public:
 	CNetworkVar( Vector, m_vecDiveDirection );
 	CNetworkVar( bool, m_bRollAfterDive );
 	CNetworkVar( float, m_flDiveTime );
+	CNetworkVar( float, m_flTimeLeftGround );
 	CNetworkVar( float, m_flDiveLerped );
 	CNetworkVar( float, m_flDiveToProneLandTime );
 	float m_flViewTilt;

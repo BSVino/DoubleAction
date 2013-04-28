@@ -965,6 +965,9 @@ bool CSDKPlayerShared::CanDive() const
 	if (!CanChangePosition())
 		return false;
 
+	if (m_pOuter->GetCurrentTime() - m_flTimeLeftGround > 2)
+		return false;
+
 	return true;
 }
 

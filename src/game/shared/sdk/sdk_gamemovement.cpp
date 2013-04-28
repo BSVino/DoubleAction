@@ -2594,6 +2594,10 @@ void CSDKGameMovement::FullWalkMove ()
 	{
 		StartGravity();
 	}
+
+	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND)
+		m_pSDKPlayer->m_Shared.m_flTimeLeftGround = m_pSDKPlayer->GetCurrentTime();
+
 	if (m_pSDKPlayer->m_Shared.runtime < 0)
 	{
 		if (!(m_pSDKPlayer->m_Shared.daflags&DA_WRLOCK))
