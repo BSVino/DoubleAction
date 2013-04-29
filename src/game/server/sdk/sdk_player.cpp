@@ -243,6 +243,12 @@ public:
 	DECLARE_CLASS( CSDKRagdoll, CBaseAnimatingOverlay );
 	DECLARE_SERVERCLASS();
 
+	void Spawn();
+
+	bool IsRagdollVisible();
+
+	void DisappearThink();
+
 	// Transmit ragdolls to everyone.
 	virtual int UpdateTransmitState()
 	{
@@ -269,6 +275,50 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CSDKRagdoll, DT_SDKRagdoll )
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) )
 END_SEND_TABLE()
 
+void CSDKRagdoll::Spawn()
+{
+	BaseClass::Spawn();
+
+	SetThink(&CSDKRagdoll::DisappearThink);
+	SetNextThink(gpGlobals->curtime + 15);
+}
+
+void CSDKRagdoll::DisappearThink()
+{
+	if (IsRagdollVisible())
+	{
+		SetNextThink(gpGlobals->curtime + 5);
+		return;
+	}
+
+	UTIL_Remove(this);
+}
+
+bool CSDKRagdoll::IsRagdollVisible()
+{
+	Vector vecOrigin = m_vecRagdollOrigin; // Ragdoll may have moved but it all happens client-side so this is close enough.
+
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		Vector vecToRagdoll = vecOrigin - pPlayer->GetAbsOrigin();
+		vecToRagdoll.NormalizeInPlace();
+		Vector vecForward;
+		pPlayer->GetVectors(&vecForward, NULL, NULL);
+
+		if (vecForward.Dot(vecToRagdoll) < 0.4)
+			continue;
+
+		if (pPlayer->IsVisible(GetAbsOrigin()))
+			return true;
+	}
+
+	return false;
+}
 
 // -------------------------------------------------------------------------------- //
 
@@ -1973,6 +2023,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
+		pRagdoll->Spawn();
 	}
 
 	// ragdolls will be removed on round restart automatically
