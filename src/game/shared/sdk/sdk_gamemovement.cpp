@@ -40,21 +40,21 @@ ConVar	da_d2p_stunt_forgiveness( "da_d2p_stunt_forgiveness", "0.4", FCVAR_REPLIC
 
 
 
-ConVar  da_acro_kong_dist ("da_acro_kong_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_kong_limit ("da_acro_kong_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_kong_delay ("da_acro_kong_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_kong_speed ("da_acro_kong_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_kong_gain ("da_acro_kong_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_kong_dist ("da_acro_kong_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_kong_limit ("da_acro_kong_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_kong_delay ("da_acro_kong_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_kong_speed ("da_acro_kong_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_kong_gain ("da_acro_kong_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-ConVar  da_acro_jump_height ("da_acro_jump_height", "280", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_mantel_height ("da_acro_mantel_height", "92", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_jump_height ("da_acro_jump_height", "280", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_mantel_height ("da_acro_mantel_height", "92", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "2000", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "400", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_wallrun_duration ("da_acro_wallrun_duration", "2000", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_wallrun_thrust ("da_acro_wallrun_thrust", "400", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-ConVar  da_hackrobatics ("da_hackrobatics", "0.2", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_hackrobatics ("da_hackrobatics", "0.2", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 extern bool g_bMovementOptimizations;
 
