@@ -234,6 +234,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
+	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 END_SEND_TABLE()
 
@@ -3371,6 +3372,12 @@ void CSDKPlayer::ThirdPersonToggle()
 	Instructor_LessonLearned("thirdperson");
 }
 
+void CSDKPlayer::ThirdPersonSwitchSide()
+{
+	m_bThirdPersonCamSide = !m_bThirdPersonCamSide;
+	Instructor_LessonLearned("thirdpersonswitch");
+}
+
 bool CSDKPlayer::InSameTeam( CBaseEntity *pEntity ) const
 {
 	if (SDKGameRules()->IsTeamplay())
@@ -3819,6 +3826,18 @@ void CC_ThirdPersonToggle(const CCommand& args)
 }
 
 static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::CC_ThirdPersonToggle, "Toggle third person mode.", FCVAR_GAMEDLL );
+
+void CC_ThirdPersonSwitchSide(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->ThirdPersonSwitchSide();
+}
+
+static ConCommand cam_thirdperson_switchside( "cam_thirdperson_switch", ::CC_ThirdPersonSwitchSide, "Switch third person camera position.", FCVAR_GAMEDLL );
 
 void CC_HealMe_f(const CCommand &args)
 {

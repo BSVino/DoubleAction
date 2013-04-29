@@ -386,6 +386,8 @@ void CSDKPlayer::SharedSpawn()
 	SetGravity(1);
 
 	m_flReadyWeaponUntil = -1;
+	m_bThirdPersonCamSide = true;
+	m_flSideLerp = m_bThirdPersonCamSide?1:-1;
 
 	m_Shared.SetJumping( false );
 
@@ -1578,6 +1580,9 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	float flCamBack = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamBackIdle, flCamBackAim);
 	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);
 	float flCamRight = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamRightIdle, flCamRightAim);
+
+	m_flSideLerp = Approach(m_bThirdPersonCamSide?1:-1, m_flSideLerp, gpGlobals->frametime*15);
+	flCamRight *= m_flSideLerp;
 
 	Vector camForward, camRight, camUp;
 	AngleVectors( angCamera, &camForward, &camRight, &camUp );

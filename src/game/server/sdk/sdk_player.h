@@ -208,6 +208,7 @@ public:
 	virtual void Disarm();
 
 	virtual void ThirdPersonToggle();
+	virtual void ThirdPersonSwitchSide();
 	virtual bool IsInThirdPerson() const;
 	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
 	const Vector GetThirdPersonCameraPosition();
@@ -438,10 +439,12 @@ public:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+	CNetworkVar( bool, m_bThirdPersonCamSide );
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
 	float  m_flStuntLerp;
+	float  m_flSideLerp;
 
 	int    m_iStyleKillStreak;
 

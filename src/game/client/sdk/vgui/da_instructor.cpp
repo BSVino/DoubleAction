@@ -263,6 +263,17 @@ bool PlayerHasSlowMoConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	return pPlayer->GetSlowMoSeconds() > 0;
 }
 
+bool PlayerInThirdPersonConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
+{
+	if (!PlayerAliveConditions(pPlayer, pLesson))
+		return false;
+
+	if (!pPlayer->IsInThirdPerson())
+		return false;
+
+	return true;
+}
+
 pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 {
 	if (sConditions == "WhoCares")
@@ -283,6 +294,8 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 		return PlayerActiveWeaponHasAimInConditions;
 	else if (sConditions == "PlayerHasSlowMo")
 		return PlayerHasSlowMoConditions;
+	else if (sConditions == "PlayerInThirdPerson")
+		return PlayerInThirdPersonConditions;
 
 	Assert(false);
 	Error(std::string("Couldn't find lesson condition '").append(sConditions.Get()).append("'\n").c_str());
