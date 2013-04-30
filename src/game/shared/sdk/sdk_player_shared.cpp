@@ -961,7 +961,7 @@ ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REP
 ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-ConVar  da_acro_dive_arc ("da_acro_dive_arc", "15", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 Vector CSDKPlayerShared::StartDiving()
 {
@@ -1613,4 +1613,19 @@ float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID 
 		flModify *= 2;
 
 	return flValue * (flModify+1);
+}
+CWeaponSDKBase *
+CSDKPlayer::findweapon (SDKWeaponID id)
+{
+	int i;
+	for (i = 0; i < WeaponCount (); i++)
+	{
+		CWeaponSDKBase *wpn = (CWeaponSDKBase *)GetWeapon (i);
+		if (wpn)
+		{/*Do nulls terminal the list?*/
+			if (wpn->GetWeaponID () != id) continue; 
+			else return wpn;
+		}
+	}
+	return NULL;
 }

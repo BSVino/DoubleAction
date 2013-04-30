@@ -80,12 +80,12 @@ static const char * s_WeaponAliasInfo[] =
 	"vector",	// SDK_WEAPON_VECTOR
 	"mp5k",		// SDK_WEAPON_MP5
 	"m1911",	// SDK_WEAPON_M1911
-	"p99",		// SDK_WEAPON_P99
+	"beretta",		// SDK_WEAPON_P99
 	"crowbar",	// SDK_WEAPON_CROWBAR
 	"grenade",	// SDK_WEAPON_GRENADE
 	"brawl",	// SDK_WEAPON_BRAWL
 	"akimbo_m1911",
-	"akimbo_p99",
+	"akimbo_beretta",
 	NULL,		// WEAPON_NONE
 };
 

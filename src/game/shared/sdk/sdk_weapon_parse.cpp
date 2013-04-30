@@ -60,6 +60,10 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 		m_eWeaponType = WT_MELEE;
 	else
 		m_eWeaponType = WT_NONE;
+
+	Q_strncpy (akimbo, 
+			   pKeyValuesData->GetString ("akimbo", ""), 
+			   sizeof (akimbo));
 }
 
 CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)

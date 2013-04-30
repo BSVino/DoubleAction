@@ -1401,9 +1401,6 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_p99.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1527,10 +1524,13 @@
     <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_akimbo_p99.cpp">
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>

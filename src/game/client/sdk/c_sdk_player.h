@@ -151,6 +151,8 @@ public:
 	virtual void    ReadyWeapon();
 	virtual bool    IsWeaponReady();
 
+	CWeaponSDKBase *findweapon (SDKWeaponID id);
+
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
@@ -333,6 +335,8 @@ private:
 	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
 	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
 	float                                  m_flLastLesson;
+public:
+	CWeaponSDKBase *switchfrom;
 };
 
 
