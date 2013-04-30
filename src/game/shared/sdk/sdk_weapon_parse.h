@@ -58,6 +58,8 @@ public:
 	bool	m_bAimInRecoilBonus;
 	bool	m_bAimInSpreadBonus;
 
+	char	akimbo[32];
+
 	weapontype_t	m_eWeaponType;
 
 	static CSDKWeaponInfo* GetWeaponInfo(SDKWeaponID eWeapon);

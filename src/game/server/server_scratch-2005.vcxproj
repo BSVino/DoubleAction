@@ -229,13 +229,13 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_akimbo_p99.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="ai_activity.cpp" />

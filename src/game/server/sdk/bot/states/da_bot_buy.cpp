@@ -81,7 +81,7 @@ static BuyInfo primaryWeaponBuyInfo[ PRIMARY_WEAPON_BUY_COUNT ] =
 	{ WT_SHOTGUN,   "mossberg", SDK_WEAPON_MOSSBERG },
 	{ WT_RIFLE,     "fal",      SDK_WEAPON_FAL },
 	{ WT_PISTOL,    "m1911",    SDK_WEAPON_M1911 },
-	{ WT_PISTOL,    "p99",      SDK_WEAPON_P99 },
+	{ WT_PISTOL,    "beretta",	SDK_WEAPON_BERETTA },
 	{ WT_SMG,       "mp5k",     SDK_WEAPON_MP5K },
 	{ WT_SMG,       "vector",   SDK_WEAPON_VECTOR },
 };

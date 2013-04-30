@@ -114,6 +114,12 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_iRollActivity = ACT_DAB_ROLL;
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
+
+	wallflip = ACT_DAB_WALLFLIP;
+	flipping = false;
+	wallrun = ACT_DAB_WALLRUN;
+	wallclimb = ACT_DAB_WALLCLIMB;
+	vault = ACT_DAB_VAULT;
 }
 
 //-----------------------------------------------------------------------------
@@ -795,6 +801,25 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		}
 		break;
 
+	case PLAYERANIMEVENT_STAND_TO_VAULT:
+		m_bRollTransition = true;
+		m_bRollTransitionFirstFrame = true;
+		m_iRollActivity = ACT_DAB_ROLL;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_STAND_TO_WALLRUN:
+		m_bRollTransition = true;
+		m_bRollTransitionFirstFrame = true;
+		m_iRollActivity = ACT_DAB_ROLL;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_WALLFLIP:
+		wallflip = ACT_DAB_WALLFLIP;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
 	case PLAYERANIMEVENT_JUMP:
 		{
 			// Jump.
@@ -855,7 +880,8 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 {	
-	if ( !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) )
+	if (!(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
+		 m_pSDKPlayer->GetAbsVelocity ().z < -270)
 	{
 		idealActivity = ACT_DAB_JUMP_FLOAT;
 		return true;
@@ -995,6 +1021,10 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 
 	if ( m_bDiveStart )
 	{
+		if (flipping) 
+		{/*Cancel flipping*/
+			flipping = false;
+		}
 		if (m_bDiveStartFirstFrame)
 		{
 			m_bDiveStartFirstFrame = false;
@@ -1137,9 +1167,11 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		}
 	}	
 
-	if (!m_bJumping && !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
+	if (!m_bJumping && 
+		!(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
 		!m_pSDKPlayer->m_Shared.IsSliding () &&
-		!m_pSDKPlayer->m_Shared.IsRolling ())
+		!m_pSDKPlayer->m_Shared.IsRolling () &&
+		m_pSDKPlayer->GetAbsVelocity ().z < -270)
 	{
 		idealActivity = ACT_DAB_JUMP_FLOAT;
 		return true;
@@ -1150,6 +1182,42 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 
 	return false;
 }
+
+bool 
+CSDKPlayerAnimState::handlevault (Activity &idealActivity)
+{/*TODO: implement*/
+	return false;
+}
+bool 
+CSDKPlayerAnimState::handlewallrun (Activity &idealActivity)
+{/*TODO: implement*/
+	return false;
+}
+bool 
+CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
+{
+	if (!flipping)
+	{
+		if (m_pSDKPlayer->m_Shared.kongtime <= 0) 
+		{/*Not in the stunt*/
+			return false;
+		}
+		flipping = true;
+	}
+	if (m_pSDKPlayer->GetFlags()&FL_ONGROUND)
+	{/*Exit if we land on something*/
+		flipping = false;
+		return false;
+	}
+	if (GetBasePlayer()->GetCycle () >= 0.99) 
+	{/*Exit once the flip animation finished once*/
+		flipping = false;
+		return false;
+	}
+	idealActivity = ACT_DAB_WALLFLIP;
+	return true;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Overriding CMultiplayerAnimState to add prone and sprinting checks as necessary.
@@ -1171,6 +1239,11 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	if (
 		HandleDiving( idealActivity ) ||
+		
+		handlevault (idealActivity) ||
+		handlewallrun (idealActivity)||
+		handlewallflip (idealActivity) ||
+
 		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
 		//Tony; handle these before ducking !!

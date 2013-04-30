@@ -2412,6 +2412,13 @@ CSDKGameMovement::checkrun (void)
 		if (m_pSDKPlayer->m_Shared.runtime > 0) return true;
 		else return false;
 	}
+	if (m_pSDKPlayer->m_Shared.IsDiveSliding () ||
+		m_pSDKPlayer->m_Shared.IsSliding () ||
+		m_pSDKPlayer->m_Shared.IsRolling () ||
+		m_pSDKPlayer->m_Shared.IsRollingFromDive ())
+	{/*Must be upright*/
+		return false;
+	}
 	if (!(mv->m_nButtons&IN_JUMP))
 	{/*Must be holding jump*/
 		return false;
@@ -2660,7 +2667,11 @@ void CSDKGameMovement::FullWalkMove ()
 		if (pressed&IN_ALT1)
 		{/*Stunt button behaviour*/
 			if (m_pSDKPlayer->m_Shared.kongtime == 0 &&
-				m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt ())
+				m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt () &&
+				!m_pSDKPlayer->m_Shared.IsDiveSliding () &&
+				!m_pSDKPlayer->m_Shared.IsSliding () &&
+				!m_pSDKPlayer->m_Shared.IsRolling () &&
+				!m_pSDKPlayer->m_Shared.IsRollingFromDive ())
 			{/*Kong (wallflip)*/
 				trace_t tr;
 				Vector org, mins, maxs;
@@ -2696,6 +2707,7 @@ void CSDKGameMovement::FullWalkMove ()
 					{
 						m_pSDKPlayer->m_Shared.runtime = -1;
 					}
+					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.kongtime = delay;
 					m_pSDKPlayer->m_Shared.kongcnt++;
 				}
@@ -2989,7 +3001,9 @@ CSDKGameMovement::checkvault (void)
 		Vector end;
 		float startz;
 		bool passable;
+		bool vault;
 
+		vault = false;
 		passable = false;
 		VectorCopy (mv->GetAbsOrigin(), end);
 		end.z -= vault_height - player->m_Local.m_flStepSize + 1e-4;
@@ -3012,15 +3026,26 @@ CSDKGameMovement::checkvault (void)
 		TracePlayerBBox (org, end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
 		if (1e-4 < tr.fraction)
 		{/*Vault over if we won't fall to our death*/
-			if (tr.fraction < 1) passable = true;
+			if (tr.fraction < 1) 
+			{
+				vault = true;
+				passable = true;
+			}
 			else passable = false;
 		}
 		if (passable)
-		{/*Retry move once more with original velocity. No discontinuty*/
+		{/*Retry move once more with original velocity. No discontinuity*/
 			VectorCopy (velo, mv->m_vecVelocity);
 			TryPlayerMove ();
-			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
-			m_pSDKPlayer->m_Shared.StartRolling ();
+			if (vault)
+			{
+				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_VAULT);
+			}
+			else
+			{
+				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
+				m_pSDKPlayer->m_Shared.StartRolling ();
+			}
 			mv->m_outStepHeight += mv->GetAbsOrigin ().z - startz;
 			return true;
 		}

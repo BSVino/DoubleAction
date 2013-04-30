@@ -21,6 +21,7 @@
 #include "in_buttons.h"
 #include "vprof.h"
 #include "engine/IEngineSound.h"
+#include "weapon_akimbobase.h"
 
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -1890,7 +1891,6 @@ int CSDKPlayer::GetMaxHealth() const
 
 	return BaseClass::GetMaxHealth();
 }
-
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
@@ -1910,16 +1910,63 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		AngleVectors( gunAngles, &vecForward, NULL, NULL );
 
 		float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
-
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
 		pWeapon->SetPrevOwner(this);
+		/*HACK: Pay attention now, this is where it gets tricky.
+		We want to ensure:
+			1. Akimbos are moved if a single is tossed
+			2. Single is removed if akimbos are tossed
+		It's either this or a rewrite of the weapon code*/
+		if (pWeapon->GetSDKWpnData ().akimbo[0] == '\0')
+		{/*Single toss*/
+			const char *cls = pWeapon->GetClassname ();
+			weapontype_t type = pWeapon->GetWeaponType ();
+			SDKWeaponID id = pWeapon->GetWeaponID ();
 
-		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
-
-		if (bAutoSwitch)
-			SwitchToNextBestWeapon( NULL );
-
+			SDKThrowWeapon (pWeapon, vecForward, gunAngles, flDiameter);
+			if (WT_PISTOL == type)
+			{
+				char name[32];
+				Q_snprintf (name, sizeof (name), "akimbo_%s", WeaponIDToAlias (id));
+				CAkimbobase *akb = (CAkimbobase *)findweapon (AliasToWeaponID (name));
+				if (akb)
+				{/*Keep left pistol if we have akimbos*/
+					CWeaponSDKBase *left = (CWeaponSDKBase *)GiveNamedItem (cls);
+					left->m_iClip1 = akb->leftclip;
+					SetActiveWeapon (left);
+					RemovePlayerItem (akb); /*Ensure 1.*/
+				}
+			}
+		}
+		else
+		{/*Akimbo toss*/
+			CAkimbobase *akb = (CAkimbobase *)pWeapon;
+			const char *alias = pWeapon->GetSDKWpnData ().akimbo;
+			char name[32];
+			int i;
+			/*Throw two singles instead of pmodel (rule of style)*/
+			Q_snprintf (name, sizeof (name), "weapon_%s", alias);
+			for (i = 0; i < 2; i++)
+			{/*I have to redo vphysics here else source cries.
+			 This doesn't really make sense, but it seems to work.*/
+				CWeaponSDKBase *wpn = (CWeaponSDKBase *)Weapon_Create (name);
+				wpn->VPhysicsDestroyObject (); 
+				wpn->VPhysicsInitShadow (true, true);
+				if (i == 0) wpn->m_iClip1 = akb->rightclip;
+				else wpn->m_iClip1 = akb->leftclip;
+				SDKThrowWeapon (wpn, vecForward, gunAngles, flDiameter);
+			}
+			RemovePlayerItem (akb);
+			/*Ensure 2.*/
+			CWeaponSDKBase *wpn = findweapon (AliasToWeaponID (alias));
+			AssertMsg (wpn != NULL, "How do you have akimbos without a single?");
+			if (wpn) 
+			{
+				RemovePlayerItem (wpn);
+			}
+		}
+		if (bAutoSwitch) SwitchToNextBestWeapon( NULL );
 		return true;
 	}
 
@@ -1931,6 +1978,7 @@ bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 	if (GetCurrentTime() < m_flDisarmRedraw)
 		return false;
 
+	switchfrom = GetActiveSDKWeapon (); 
 	bool bSwitched = BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
 
 	if (bSwitched)
@@ -3750,8 +3798,8 @@ void CC_Buy(const CCommand& args)
 		pPlayer->AddToLoadout(eWeapon);
 		if (SDK_WEAPON_M1911 == eWeapon) 
 			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_M1911);
-		else if (SDK_WEAPON_P99 == eWeapon) 
-			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_P99);
+		else if (SDK_WEAPON_BERETTA == eWeapon) 
+			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_BERETTA);
 		return;
 	}
 }

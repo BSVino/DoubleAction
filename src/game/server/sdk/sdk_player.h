@@ -145,6 +145,8 @@ public:
 
 	virtual void	Instructor_LessonLearned(const char* pszLesson);
 
+	CWeaponSDKBase *findweapon (SDKWeaponID id);
+
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 
@@ -449,6 +451,8 @@ public:
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );
+
+	CWeaponSDKBase *switchfrom;
 
 protected:
 	static PartInfo m_partInfo[ MAX_PLAYERS ];						///< part positions for each player

@@ -77,6 +77,7 @@ public:
 	virtual bool			HasWeaponIdleTimeElapsed( void );
 
 	//Tony; added so we can have base functionality without implementing it into every weapon.
+	virtual void finishattack (CSDKPlayer *pPlayer);
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
@@ -168,6 +169,11 @@ private:
 	CNetworkVar(bool, m_bSwingSecondary);
 
 	CSDKPlayer *m_pPrevOwner;
+public:
+	/*I'm doing something horribly wrong*/
+	CNetworkVar (int, leftclip);
+	CNetworkVar (int, rightclip);
+	CNetworkVar (bool, shootright);
 };
 
 
