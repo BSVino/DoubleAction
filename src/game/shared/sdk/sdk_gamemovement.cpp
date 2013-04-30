@@ -2605,6 +2605,7 @@ void CSDKGameMovement::FullWalkMove ()
 	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND)
 		m_pSDKPlayer->m_Shared.m_flTimeLeftGround = m_pSDKPlayer->GetCurrentTime();
 
+#if 0
 	if (m_pSDKPlayer->m_Shared.runtime < 0)
 	{
 		if (!(m_pSDKPlayer->m_Shared.daflags&DA_WRLOCK))
@@ -2626,6 +2627,7 @@ void CSDKGameMovement::FullWalkMove ()
 			m_pSDKPlayer->m_Shared.kongtime = 0;
 		}
 	}
+#endif
 	if (player->m_flWaterJumpTime)
 	{// If we are leaping out of the water, just update the counters.
 		WaterJump();
@@ -2666,6 +2668,7 @@ void CSDKGameMovement::FullWalkMove ()
 		int pressed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
 		if (pressed&IN_ALT1)
 		{/*Stunt button behaviour*/
+#if 0
 			if (m_pSDKPlayer->m_Shared.kongtime == 0 &&
 				m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt () &&
 				!m_pSDKPlayer->m_Shared.IsDiveSliding () &&
@@ -2712,10 +2715,12 @@ void CSDKGameMovement::FullWalkMove ()
 					m_pSDKPlayer->m_Shared.kongcnt++;
 				}
 			}
+#endif
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
 				m_pSDKPlayer->m_Shared.kongtime <= 0 &&
 				m_pSDKPlayer->m_Shared.CanDive ())
 			{
+#if 0
 				if (m_pSDKPlayer->m_Shared.runtime > 0)
 				{/*Project speed onto forward axis before dive, 
 					else dive gets affected by the run velocity*/
@@ -2727,10 +2732,12 @@ void CSDKGameMovement::FullWalkMove ()
 					player->SetAbsVelocity (velo);
 					m_pSDKPlayer->m_Shared.runtime = -1;
 				}
+#endif
 				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
 			}
 		}
 	}
+#if 0
 	if (checkrun ())
 	{/*Wallrunning*/
 		trace_t tr;
@@ -2853,6 +2860,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		return;
 	}
+#endif
 	if (m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity ())
 	{/*Raise player off the ground*/
 		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
@@ -2923,7 +2931,9 @@ void CSDKGameMovement::FullWalkMove ()
 	}
 	CheckFalling();
 #ifdef GAME_DLL
-	if (m_pSDKPlayer->m_Shared.IsDiving () || 
+	/*The great door hack*/
+	if (m_pSDKPlayer->m_Shared.IsDiving () ||
+		m_pSDKPlayer->m_Shared.IsDiveSliding () ||
 		m_pSDKPlayer->m_Shared.IsRolling ())
 	{
 		trace_t tr;
@@ -3037,15 +3047,8 @@ CSDKGameMovement::checkvault (void)
 		{/*Retry move once more with original velocity. No discontinuity*/
 			VectorCopy (velo, mv->m_vecVelocity);
 			TryPlayerMove ();
-			if (vault)
-			{
-				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_VAULT);
-			}
-			else
-			{
-				m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
-				m_pSDKPlayer->m_Shared.StartRolling ();
-			}
+			m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_STAND_TO_ROLL);
+			m_pSDKPlayer->m_Shared.StartRolling ();
 			mv->m_outStepHeight += mv->GetAbsOrigin ().z - startz;
 			return true;
 		}
