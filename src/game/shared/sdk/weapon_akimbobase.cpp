@@ -44,8 +44,8 @@ CAkimbobase::ActivityOverride (Activity baseAct, bool *pRequired)
 int
 CAkimbobase::GetTracerAttachment (void)
 {
-	if (!shootright) return 1;
-	return 2;
+	if (shootright) return 2;
+	return 1;
 }
 Activity 
 CAkimbobase::GetIdleActivity (void)

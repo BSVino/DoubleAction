@@ -680,13 +680,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD:
 		{
 			// Weapon reload.
+			/*//We only have standing reload-- it blends into other states
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_CROUCH );
-			else
+			else*/
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD );
 
 			iGestureActivity = ACT_VM_RELOAD; //Make view reload if it isn't already
@@ -695,13 +696,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
+			/*//We only have standing reload-- it blends into other states
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_CROUCH );
-			else
+			else*/
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
