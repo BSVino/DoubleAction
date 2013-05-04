@@ -565,6 +565,10 @@ protected:
 	int						m_iOldState;
 
 #endif // End Client .dll only
+public:
+	/*Called in DefaultReload for sane akimbo implementation*/
+	typedef bool (*delegate_t) (CBaseCombatWeapon *self);
+	delegate_t reload_delegate;
 };
 
 #endif // COMBATWEAPON_SHARED_H

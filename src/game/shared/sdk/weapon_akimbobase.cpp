@@ -23,8 +23,26 @@ END_NETWORK_TABLE()
 #endif
 LINK_ENTITY_TO_CLASS(weapon_akimbobase, CAkimbobase);
 
+static bool 
+akimbo_reload (CAkimbobase *self)
+{
+	CBaseCombatCharacter *owner = self->GetOwner ();
+	if (!owner)
+	{
+		return false;
+	}
+	int sum = (self->rightclip + self->leftclip);
+	int total = owner->GetAmmoCount (self->m_iPrimaryAmmoType);
+	int delta = min ((self->GetMaxClip1 ()<<1) - sum, total);
+	if (delta != 0)
+	{
+		return true;
+	}
+	return false;
+}
 CAkimbobase::CAkimbobase ()
 {
+	reload_delegate = (delegate_t)akimbo_reload;
 	leftclip = GetMaxClip1 ();
 	rightclip = GetMaxClip1 ();
 	shootright = false;
@@ -125,18 +143,28 @@ CAkimbobase::FinishReload (void)
 {
 	CSDKPlayer *owner = GetPlayerOwner();
 	int clipsize = GetMaxClip1 ();
-	int sum;
+	int total = owner->GetAmmoCount (m_iPrimaryAmmoType);
 	if (!owner)
 	{
 		return;
 	}
-	sum = min (clipsize<<1, owner->GetAmmoCount (m_iPrimaryAmmoType));
+	int take = min ((clipsize<<1) - (rightclip + leftclip), total);
 	if (!owner->IsStyleSkillActive (SKILL_MARKSMAN))
 	{
-		owner->RemoveAmmo (sum, m_iPrimaryAmmoType);
+		owner->RemoveAmmo (take, m_iPrimaryAmmoType);
 	}
-	rightclip = sum>>1; 
-	leftclip = sum - rightclip;
+	int r = min (clipsize - rightclip, take);
+	if (r != 0)
+	{
+		rightclip += r;
+		take -= r;
+	}
+	int l = min (clipsize - leftclip, take);
+	if (l != 0)
+	{
+		leftclip += l;
+		take -= l;
+	}
 	m_iClip1 = rightclip + leftclip;
 }
 void 
