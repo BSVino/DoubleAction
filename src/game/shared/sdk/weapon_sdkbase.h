@@ -77,7 +77,6 @@ public:
 	virtual bool			HasWeaponIdleTimeElapsed( void );
 
 	//Tony; added so we can have base functionality without implementing it into every weapon.
-	virtual void finishattack (CSDKPlayer *pPlayer);
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
@@ -170,7 +169,10 @@ private:
 
 	CSDKPlayer *m_pPrevOwner;
 public:
-	/*I'm doing something horribly wrong*/
+	/*New bits to make Akimbos work in a sane manner*/
+	void finishattack (CSDKPlayer *pPlayer);
+	/*TODO: These should be moved into the akimbo class, but for some reason
+	I can't get them to synch properly there.*/
 	CNetworkVar (int, leftclip);
 	CNetworkVar (int, rightclip);
 	CNetworkVar (bool, shootright);
