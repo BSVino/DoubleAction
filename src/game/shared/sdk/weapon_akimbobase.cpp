@@ -196,6 +196,7 @@ CAkimbobase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
 		pl->GiveNamedItem (name);
 	}
 	GiveDefaultAmmo ();
+	BaseClass::OnPickedUp (pNewOwner);
 #endif
 }
 void 

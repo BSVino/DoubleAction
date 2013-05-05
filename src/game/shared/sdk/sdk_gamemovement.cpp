@@ -2897,7 +2897,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		m_pSDKPlayer->m_Shared.kongcnt = 0;
 	}
-	if (mv->m_nButtons&IN_JUMP) jump ();
+	if (mv->m_nButtons&IN_JUMP) CheckJumpButton ();
 	else mv->m_nOldButtons &= ~IN_JUMP;
 	if (player->GetGroundEntity() != NULL)
 	{
@@ -2907,7 +2907,6 @@ void CSDKGameMovement::FullWalkMove ()
 
 	if (mv->m_vecVelocity.z < -da_terminal_velocity.GetFloat())
 		mv->m_vecVelocity.z = -da_terminal_velocity.GetFloat();
-
 	CheckVelocity();
 	if (player->GetGroundEntity() != NULL)
 	{
@@ -2932,9 +2931,6 @@ void CSDKGameMovement::FullWalkMove ()
 	CheckFalling();
 #ifdef GAME_DLL
 	/*The great door hack*/
-	if (m_pSDKPlayer->m_Shared.IsDiving () ||
-		m_pSDKPlayer->m_Shared.IsDiveSliding () ||
-		m_pSDKPlayer->m_Shared.IsRolling ())
 	{
 		trace_t tr;
 		float dt, slop;
@@ -2950,7 +2946,10 @@ void CSDKGameMovement::FullWalkMove ()
 				   tr);
 		if (tr.fraction < 1 && tr.DidHitNonWorldEntity ())
 		{
-			tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);
+			if (Q_strcmp ("func_brush", tr.m_pEnt->GetClassname ()) != 0)
+			{
+				tr.m_pEnt->ApplyAbsVelocityImpulse (dt*mv->m_vecVelocity);
+			}
 		}
 	}
 #endif
@@ -2962,6 +2961,9 @@ void CSDKGameMovement::FullWalkMove ()
 #endif
 		PlaySwimSound();
 	}
+#if GAME_DLL
+	//Msg ("%f %f %f\n", player->GetBaseVelocity ().x, player->GetBaseVelocity ().y, player->GetBaseVelocity().z);
+#endif
 }
 
 bool
@@ -2973,7 +2975,9 @@ CSDKGameMovement::checkvault (void)
 	Vector mins, maxs;
 	Vector org, end;
 	Vector velo;
+	float startz;
 
+	startz = mv->GetAbsOrigin ().z;
 	VectorCopy (mv->m_vecVelocity, velo);
 	VectorCopy (GetPlayerMins (), mins);
 	VectorCopy (GetPlayerMaxs (), maxs);
@@ -2994,13 +2998,13 @@ CSDKGameMovement::checkvault (void)
 	VectorMA (mv->GetAbsOrigin (), 16, forward, end);
 	TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
 	VectorCopy (tr.plane.normal, normal);
-	if (fabs (DotProduct (forward, normal)) < 0.7)
+	if (tr.DidHit () && fabs (DotProduct (forward, normal)) < 0.7)
 	{/*Must be facing toward wall*/
 		return false;
 	}
-	VectorCopy (mv->GetAbsOrigin(), end);
+	VectorCopy (mv->GetAbsOrigin (), end);
 	end.z += vault_height;
-	TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+	TracePlayerBBox (mv->GetAbsOrigin (), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
 	if (!tr.startsolid && !tr.allsolid)
 	{/*Pop up into the air*/
 		mv->SetAbsOrigin (tr.endpos);
@@ -3009,16 +3013,14 @@ CSDKGameMovement::checkvault (void)
 	if (TryPlayerMove () == 0)
 	{/*Can move forward over the ledge*/
 		Vector end;
-		float startz;
 		bool passable;
 		bool vault;
 
 		vault = false;
 		passable = false;
-		VectorCopy (mv->GetAbsOrigin(), end);
+		VectorCopy (mv->GetAbsOrigin (), end);
 		end.z -= vault_height - player->m_Local.m_flStepSize + 1e-4;
-		startz = mv->GetAbsOrigin ().z;
-		TracePlayerBBox (mv->GetAbsOrigin(), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
+		TracePlayerBBox (mv->GetAbsOrigin (), end, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, tr);
 		if (tr.fraction < 1 && !tr.startsolid && !tr.allsolid)
 		{/*Place player flush onto the ledge*/
 			mv->SetAbsOrigin (tr.endpos);
@@ -3067,10 +3069,12 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 	VectorCopy( mv->GetAbsOrigin(), vecPos );
 	VectorCopy( mv->m_vecVelocity, vecVel );
 
+#if 0
 	if (checkvault ())
 	{/*Vaulted OK, so early out*/
 		return;
 	}
+#endif
 	mv->SetAbsOrigin( vecPos );
 	VectorCopy( vecVel, mv->m_vecVelocity );
 
@@ -3154,11 +3158,16 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 }
 void CSDKGameMovement::StartGravity (void)
 {
-	float ent_gravity = player->GetGravity();
+	float ent_gravity;
+	
+	if (player->GetGravity())
+		ent_gravity = player->GetGravity();
+	else
+		ent_gravity = 1.0;
 
 	// Add gravity so they'll be in the correct position during movement
 	// yes, this 0.5 looks wrong, but it's not.  
-	if (ent_gravity > 0) mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * 0.5 * gpGlobals->frametime );
+	mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * 0.5 * gpGlobals->frametime );
 	mv->m_vecVelocity[2] += player->GetBaseVelocity()[2] * gpGlobals->frametime;
 
 	Vector temp = player->GetBaseVelocity();
@@ -3169,10 +3178,18 @@ void CSDKGameMovement::StartGravity (void)
 }
 void CSDKGameMovement::FinishGravity( void )
 {
-	float ent_gravity = player->GetGravity();
+	float ent_gravity;
+
 	if ( player->m_flWaterJumpTime )
 		return;
-	// Get the correct velocity for the end of the dt
-	if (ent_gravity > 0) mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * gpGlobals->frametime * 0.5);
+
+	if ( player->GetGravity() )
+		ent_gravity = player->GetGravity();
+	else
+		ent_gravity = 1.0;
+
+	// Get the correct velocity for the end of the dt 
+  	mv->m_vecVelocity[2] -= (ent_gravity * sv_gravity.GetFloat() * gpGlobals->frametime * 0.5);
+
 	CheckVelocity();
 }

@@ -3560,7 +3560,6 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
  		vecBaseVelocity += oldGround->GetAbsVelocity();
 		vecBaseVelocity.z = oldGround->GetAbsVelocity().z;
 	}
-
 	player->SetBaseVelocity( vecBaseVelocity );
 	player->SetGroundEntity( newGround );
 
