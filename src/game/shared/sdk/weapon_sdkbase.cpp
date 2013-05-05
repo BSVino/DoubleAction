@@ -957,6 +957,8 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			{/*Second pistol is always the left one*/
 				akb->leftclip = m_iClip1;
 				UTIL_Remove (this);
+				akb->SetOwner (pPlayer);
+				pPlayer->Weapon_Switch (akb);
 				return;
 			}
 		}
