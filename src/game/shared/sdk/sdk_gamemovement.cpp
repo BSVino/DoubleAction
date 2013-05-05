@@ -3069,12 +3069,10 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 	VectorCopy( mv->GetAbsOrigin(), vecPos );
 	VectorCopy( mv->m_vecVelocity, vecVel );
 
-#if 0
 	if (checkvault ())
 	{/*Vaulted OK, so early out*/
 		return;
 	}
-#endif
 	mv->SetAbsOrigin( vecPos );
 	VectorCopy( vecVel, mv->m_vecVelocity );
 
