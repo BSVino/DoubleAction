@@ -25,7 +25,7 @@ class CSDKPlayer;
 #define DA_PRONE		0x04
 #define DA_ROLL			0x08
 #define DA_WRLOCK		0x10	/*Don't refill wall run timer until grounded*/
-#define DA_KONGLOCK		0x20	/*Don't refill kong timer until grounded*/
+#define DA_KONG			0x20
 #define DA_CLIMB		0x40
 class CSDKPlayerShared
 {

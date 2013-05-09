@@ -2601,10 +2601,17 @@ void CSDKGameMovement::FullWalkMove ()
 	{
 		StartGravity();
 	}
-
 	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND)
+	{
 		m_pSDKPlayer->m_Shared.m_flTimeLeftGround = m_pSDKPlayer->GetCurrentTime();
-
+		if (!(mv->m_nButtons&IN_JUMP))
+		{
+			m_pSDKPlayer->m_Shared.daflags &= ~DA_KONG;
+			m_pSDKPlayer->m_Shared.daflags &= ~DA_WRLOCK;
+			m_pSDKPlayer->m_Shared.daflags &= ~DA_CLIMB;
+		}
+		m_pSDKPlayer->m_Shared.kongcnt = 0;
+	}
 #if 0
 	if (m_pSDKPlayer->m_Shared.runtime < 0)
 	{
@@ -2617,6 +2624,7 @@ void CSDKGameMovement::FullWalkMove ()
 			}
 		}
 	}
+#endif
 	if (m_pSDKPlayer->m_Shared.kongtime > 0)
 	{
 		mv->m_flForwardMove = 0;
@@ -2624,10 +2632,10 @@ void CSDKGameMovement::FullWalkMove ()
 		m_pSDKPlayer->m_Shared.kongtime -= 1000*gpGlobals->frametime;
 		if (m_pSDKPlayer->m_Shared.kongtime < 0)
 		{
+			m_pSDKPlayer->m_Shared.daflags &= ~DA_KONG;
 			m_pSDKPlayer->m_Shared.kongtime = 0;
 		}
 	}
-#endif
 	if (player->m_flWaterJumpTime)
 	{// If we are leaping out of the water, just update the counters.
 		WaterJump();
@@ -2668,13 +2676,7 @@ void CSDKGameMovement::FullWalkMove ()
 		int pressed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
 		if (pressed&IN_ALT1)
 		{/*Stunt button behaviour*/
-#if 0
-			if (m_pSDKPlayer->m_Shared.kongtime == 0 &&
-				m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt () &&
-				!m_pSDKPlayer->m_Shared.IsDiveSliding () &&
-				!m_pSDKPlayer->m_Shared.IsSliding () &&
-				!m_pSDKPlayer->m_Shared.IsRolling () &&
-				!m_pSDKPlayer->m_Shared.IsRollingFromDive ())
+			if (m_pSDKPlayer->m_Shared.kongcnt < da_acro_kong_limit.GetInt ())
 			{/*Kong (wallflip)*/
 				trace_t tr;
 				Vector org, mins, maxs;
@@ -2690,8 +2692,7 @@ void CSDKGameMovement::FullWalkMove ()
 				dir[1] = m_vecForward[1];
 				dir[2] = 0;
 				TraceBBox (org, org + dist*dir, mins, maxs, tr);
-				if (tr.fraction < 1 && 
-					!(tr.surface.flags&SURF_SKY) &&
+				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) &&
 					fabs (tr.plane.normal[2]) < 0.7)
 				{
 					float speed = da_acro_kong_speed.GetFloat ();
@@ -2713,9 +2714,9 @@ void CSDKGameMovement::FullWalkMove ()
 					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.kongtime = delay;
 					m_pSDKPlayer->m_Shared.kongcnt++;
+					m_pSDKPlayer->m_Shared.daflags |= DA_KONG;
 				}
 			}
-#endif
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
 				m_pSDKPlayer->m_Shared.kongtime <= 0 &&
 				m_pSDKPlayer->m_Shared.CanDive ())
@@ -2887,15 +2888,6 @@ void CSDKGameMovement::FullWalkMove ()
 			m_pSDKPlayer->SetViewOffset( vecViewOffset );
 		}
 		else m_pSDKPlayer->SetViewOffset( VEC_DIVE_VIEW );
-	}
-	if (player->GetGroundEntity() != NULL)
-	{
-		if (!(mv->m_nButtons&IN_JUMP))
-		{
-			m_pSDKPlayer->m_Shared.daflags &= ~DA_WRLOCK;
-			m_pSDKPlayer->m_Shared.daflags &= ~DA_CLIMB;
-		}
-		m_pSDKPlayer->m_Shared.kongcnt = 0;
 	}
 	if (mv->m_nButtons&IN_JUMP) CheckJumpButton ();
 	else mv->m_nOldButtons &= ~IN_JUMP;

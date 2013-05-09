@@ -351,7 +351,17 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 		return;
 	}
+	if (flipping)
+	{
+		m_angRender[YAW] = m_flEyeYaw;
+#ifndef CLIENT_DLL
+		QAngle angle = GetBasePlayer()->GetAbsAngles();
+		angle[YAW] = m_flCurrentFeetYaw;
 
+		GetBasePlayer()->SetAbsAngles( angle );
+#endif
+		return;
+	}
 	// Get the movement velocity.
 	Vector vecVelocity;
 	GetOuterAbsVelocity( vecVelocity );
@@ -1023,10 +1033,6 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 
 	if ( m_bDiveStart )
 	{
-		if (flipping) 
-		{/*Cancel flipping*/
-			flipping = false;
-		}
 		if (m_bDiveStartFirstFrame)
 		{
 			m_bDiveStartFirstFrame = false;
@@ -1038,6 +1044,7 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 			m_bDiveStart = false;
 		else
 			idealActivity = m_iDiveActivity;
+		flipping = false;
 	}
 
 	if ( !m_bDiveStart && m_pSDKPlayer->m_Shared.IsDiving() )
@@ -1200,11 +1207,15 @@ CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 {
 	if (!flipping)
 	{
-		if (m_pSDKPlayer->m_Shared.kongtime <= 0) 
-		{/*Not in the stunt*/
+		if (!(m_pSDKPlayer->m_Shared.daflags&DA_KONG))
+		{
 			return false;
 		}
-		flipping = true;
+	}
+	if (m_pSDKPlayer->m_Shared.IsDiving ()) 
+	{/*Not in the stunt*/
+		flipping = false;
+		return false;
 	}
 	if (m_pSDKPlayer->GetFlags()&FL_ONGROUND)
 	{/*Exit if we land on something*/
@@ -1217,6 +1228,7 @@ CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 		return false;
 	}
 	idealActivity = ACT_DAB_WALLFLIP;
+	flipping = true;
 	return true;
 }
 
@@ -1240,11 +1252,11 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 		idealActivity = ACT_DAB_STAND_READY;
 
 	if (
+		handlewallflip (idealActivity) ||
 		HandleDiving( idealActivity ) ||
-		
+
 		handlevault (idealActivity) ||
 		handlewallrun (idealActivity)||
-		handlewallflip (idealActivity) ||
 
 		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
