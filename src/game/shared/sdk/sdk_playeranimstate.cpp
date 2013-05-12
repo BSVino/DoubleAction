@@ -1044,7 +1044,6 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 			m_bDiveStart = false;
 		else
 			idealActivity = m_iDiveActivity;
-		flipping = false;
 	}
 
 	if ( !m_bDiveStart && m_pSDKPlayer->m_Shared.IsDiving() )
@@ -1206,14 +1205,15 @@ bool
 CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 {
 	if (!flipping)
-	{
+	{/*Flip only on activation*/
 		if (!(m_pSDKPlayer->m_Shared.daflags&DA_KONG))
 		{
 			return false;
 		}
 	}
-	if (m_pSDKPlayer->m_Shared.IsDiving ()) 
-	{/*Not in the stunt*/
+	if (m_pSDKPlayer->GetCurrentTime () - 
+		m_pSDKPlayer->m_Shared.GetDiveTime () < 1e-1) 
+	{/*Not in a dive (exception: we want to dive out of a flip)*/
 		flipping = false;
 		return false;
 	}
