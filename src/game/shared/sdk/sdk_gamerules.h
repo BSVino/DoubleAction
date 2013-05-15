@@ -164,6 +164,7 @@ public:
 	CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
 	bool IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
+	virtual bool InitTeamSpawns( void );
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	bool IsPlayerClassOnTeam( int cls, int team );

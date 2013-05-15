@@ -33,6 +33,7 @@
 #include "in_buttons.h"
 
 #include "dab_buymenu.h"
+#include "sdk_teammenu.h"
 #include "dab_charactermenu.h"
 #include "dab_skillmenu.h"
 
@@ -1513,12 +1514,23 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	pSetup->fov -= Bias(m_Shared.m_flSlowAimIn, 0.65f)*da_aimin_slow_fov_delta.GetFloat();
 }
 
+void C_SDKPlayer::UpdateTeamMenu()
+{
+	if (!SDKGameRules()->IsTeamplay())
+		return;
+
+	CSDKTeamMenu *teamMenu = static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM));
+	if (teamMenu->IsVisible())
+		teamMenu->MarkForUpdate();
+}
+
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	RecvProxy_Int32ToInt32( pData, pStruct, pOut );
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
+		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
 		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
 		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
@@ -1531,6 +1543,7 @@ void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
+		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
 		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
 		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
@@ -1543,6 +1556,7 @@ void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
+		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
 		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
 		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();

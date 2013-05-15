@@ -10,6 +10,7 @@
 #include "recvproxy.h"
 #include "c_sdk_team.h"
 #include "c_sdk_player_resource.h"
+#include "c_sdk_player.h"
 
 #include <vgui/ILocalize.h>
 #include <tier3/tier3.h>
@@ -43,6 +44,17 @@ C_SDKTeam::C_SDKTeam()
 C_SDKTeam::~C_SDKTeam()
 {
 }
+
+void C_SDKTeam::PostDataUpdate( DataUpdateType_t updateType )
+{
+	BaseClass::PostDataUpdate( updateType );
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (pPlayer)
+		pPlayer->UpdateTeamMenu();
+}
+
 char *C_SDKTeam::Get_Name( void )
 {
 	wchar_t *teamname;

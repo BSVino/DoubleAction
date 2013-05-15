@@ -36,6 +36,7 @@ public:
 					C_SDKTeam();
 	virtual			~C_SDKTeam();
 
+	virtual void	PostDataUpdate( DataUpdateType_t updateType );
 	virtual char	*Get_Name( void );
 
 #if defined ( SDK_USE_PLAYERCLASSES )

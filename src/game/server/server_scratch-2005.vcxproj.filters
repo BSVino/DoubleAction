@@ -1521,6 +1521,9 @@
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\da_spawngenerator.cpp">
+      <Filter>Source Files\SDK\Rules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -3085,6 +3088,9 @@
     </ClInclude>
     <ClInclude Include="sdk\da_ammo_pickup.h">
       <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\da_spawngenerator.h">
+      <Filter>Source Files\SDK\Rules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

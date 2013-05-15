@@ -29,6 +29,7 @@
 	#include "mapentities.h"
 	#include "sdk_basegrenade_projectile.h"
 	#include "bot.h"
+	#include "da_spawngenerator.h"
 
 #endif
 
@@ -286,6 +287,9 @@ void CSDKGameRules::ServerActivate()
 {
 	//Tony; initialize the level
 	CheckLevelInitialized();
+
+	if (m_bIsTeamplay)
+		InitTeamSpawns();
 
 	//Tony; do any post stuff
 	m_flGameStartTime = gpGlobals->curtime;
@@ -872,6 +876,62 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 
 	// First test the starting origin.
 	return UTIL_IsSpaceEmpty( pPlayer, vTestMins, vTestMaxs );
+}
+
+bool CSDKGameRules::InitTeamSpawns()
+{	
+	CBaseEntity *pRefSpot = NULL;
+	bool bSuccess = false;
+	int iNumSpawns = 20;
+	
+	// Pick a (fairly) random spawnpoint to start this process
+	for ( int i = random->RandomInt(1,30); i > 0; i-- )
+		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
+	if ( !pRefSpot )  // skip over the null point
+		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
+
+	// the second refpoint will tend to have a pattern so mix up which team gets it
+	int iLastTeam = random->RandomInt(SDK_TEAM_BLUE,SDK_TEAM_RED);
+
+	// create spawn grid
+	CSpawnPointGenerator m_SpawnGen(pRefSpot, iLastTeam, iNumSpawns);
+	bSuccess = (m_SpawnGen.SpawnsCreated() >= 1);
+	m_SpawnGen.~CSpawnPointGenerator();
+
+	// find the furthest spawn point from our initial spot
+	CBaseEntity *pCheckSpot = gEntList.FindEntityByClassname( NULL, "info_player_deathmatch" );
+	CBaseEntity *pFirstSpot = pRefSpot;
+	Vector vecRefOrig = pRefSpot->GetAbsOrigin();
+	Vector vecToSpot;
+	float flCheckDistSqr;
+	float flBestDistSqr = 0.0f;
+
+	// iterate the list of spawn points
+	while(pCheckSpot)
+	{
+		if (pCheckSpot != pFirstSpot)
+		{
+			vecToSpot = pCheckSpot->GetAbsOrigin() - vecRefOrig;
+			flCheckDistSqr = vecToSpot.LengthSqr();
+		
+			if (flCheckDistSqr > flBestDistSqr)
+			{
+				flBestDistSqr = flCheckDistSqr;
+				pRefSpot = pCheckSpot;
+			}
+		}
+
+		// get the next spawn point
+		pCheckSpot = gEntList.FindEntityByClassname( pCheckSpot, "info_player_deathmatch" );
+	}
+
+	// use whichever team we didn't use last time
+	iLastTeam = (iLastTeam == SDK_TEAM_BLUE ? SDK_TEAM_RED : SDK_TEAM_BLUE);
+	m_SpawnGen = CSpawnPointGenerator(pRefSpot, iLastTeam, iNumSpawns);
+
+	bSuccess = (m_SpawnGen.SpawnsCreated() >= 1);
+	
+	return (bSuccess);
 }
 
 void CSDKGameRules::PlayerSpawn( CBasePlayer *p )

@@ -914,6 +914,19 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
+	if ( gpGlobals->teamplay )
+	{
+		switch(GetTeamNumber())
+		{
+		case SDK_TEAM_BLUE:
+			SetCharacter("playermale");
+			break;
+		case SDK_TEAM_RED:
+			SetCharacter("wish");
+			break;
+		}
+	}
+
 	if (STRING(m_iszCharacter.Get())[0])
 		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else
@@ -975,6 +988,7 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
+	m_flNextSuicideTime = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
@@ -1031,7 +1045,7 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 	{
 #if defined ( SDK_USE_TEAMS )
 	case SDK_TEAM_BLUE:
-		/*{
+		{
 			pSpawnPointName = "info_player_blue";
 			pSpot = g_pLastBlueSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1039,9 +1053,9 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 				g_pLastBlueSpawn = pSpot;
 			}
 		}
-		break;*/
+		break;
 	case SDK_TEAM_RED:
-		/*{
+		{
 			pSpawnPointName = "info_player_red";
 			pSpot = g_pLastRedSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1049,7 +1063,7 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 				g_pLastRedSpawn = pSpot;
 			}
 		}		
-		break;*/
+		break;
 #endif // SDK_USE_TEAMS
 	case TEAM_UNASSIGNED:
 		{
@@ -1104,6 +1118,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	{
 		if (SDKGameRules()->IsTeamplay())
 			State_Transition( STATE_OBSERVER_MODE );
+		else
+			State_Transition( STATE_PICKINGCHARACTER );
 	}
 	else if ( iTeamNum == TEAM_SPECTATOR )
 	{
@@ -1129,7 +1145,10 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		// Put up the class selection menu.
 		State_Transition( STATE_PICKINGCLASS );
 #else
-		State_Transition( STATE_PICKINGCHARACTER );
+		if (gpGlobals->teamplay)
+			State_Transition( STATE_BUYINGWEAPONS );
+		else
+			State_Transition( STATE_PICKINGCHARACTER );
 #endif
 	}
 }
@@ -1147,6 +1166,12 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 		State_Get() != STATE_ACTIVE 
 		)
 		return;
+
+	if (!SuicideAllowed())
+	{		
+		ClientPrint( this, HUD_PRINTCENTER, "Game_No_Suicide" );
+		return;
+	}
 	
 	m_iSuicideCustomKillFlags = SDK_DMG_CUSTOM_SUICIDE;
 
@@ -1201,6 +1226,9 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	// disallow suicide for 10 seconds
+	m_flNextSuicideTime = GetCurrentTime() + 10.0f;
+
 	m_vecTotalBulletForce += info.GetDamageForce();
 
 	float flArmorBonus = 0.5f;
@@ -1231,18 +1259,25 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
-			if ( m_Shared.IsDiving() )
+			if ( m_Shared.IsDiving() || m_Shared.IsSliding() )
 			{
 				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
 				VectorNormalize( vecToPlayer );
 
-				// diving away from explosions reduces 30% damage
-				if ( vecToPlayer.Dot( m_Shared.GetDiveDirection() ) > 0.5f )
+				Vector vecDirection;
+
+				if (m_Shared.IsDiving())
+					vecDirection = m_Shared.GetDiveDirection();
+				else
+					vecDirection = m_Shared.GetSlideDirection();
+
+				// stunting away from explosions reduces 30% damage
+				if ( vecToPlayer.Dot( vecDirection ) > 0.5f )
 				{
 					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
 
 					// since we're being cool anyway give us a little push
-					Vector vecPush = ( info.GetDamageForce() / 140.0f );
+					Vector vecPush = ( info.GetDamageForce() / 150.0f );
 					SetBaseVelocity( vecPush );
 
 					// award style points
@@ -1253,6 +1288,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_POINT_STYLISH);
 					SendAnnouncement(ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
+					Instructor_LessonLearned("stuntfromexplo");
 				}
 			}
 		}
@@ -2151,6 +2187,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
+	else if ( FStrEq( pcmd, "teammenuopen" ) )
+	{
+		SetTeamMenuOpen( true );
+		return true;
+	}
+	else if ( FStrEq( pcmd, "teammenuclosed" ) )
+	{
+		SetTeamMenuOpen( false );
+
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGTEAM || IsDead()) )
+			State_Transition( STATE_BUYINGWEAPONS );
+
+		return true;
+	}
 	else if ( FStrEq( pcmd, "charmenuopen" ) )
 	{
 		SetCharacterMenuOpen( true );
@@ -2404,6 +2454,23 @@ bool CSDKPlayer::IsClassMenuOpen( void )
 	return m_bIsClassMenuOpen;
 }
 #endif // SDK_USE_PLAYERCLASSES
+
+#ifdef SDK_USE_TEAMS
+void CSDKPlayer::SetTeamMenuOpen( bool bOpen )
+{
+	m_bIsTeamMenuOpen = bOpen;
+}
+
+bool CSDKPlayer::IsTeamMenuOpen( void )
+{
+	return m_bIsTeamMenuOpen;
+}
+
+void CSDKPlayer::ShowTeamMenu()
+{
+	ShowViewPortPanel( PANEL_TEAM );
+}
+#endif
 
 void CSDKPlayer::SetCharacterMenuOpen( bool bOpen )
 {
@@ -2881,6 +2948,8 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsClassMenuOpen())
 			return;
 #endif
+		if (IsTeamMenuOpen())
+			return;
 
 		if (IsCharacterMenuOpen())
 			return;
@@ -2983,7 +3052,10 @@ void CSDKPlayer::State_Enter_PICKINGCLASS()
 #if defined ( SDK_USE_TEAMS )
 void CSDKPlayer::State_Enter_PICKINGTEAM()
 {
-	ShowViewPortPanel( PANEL_TEAM );
+	//ShowViewPortPanel( PANEL_TEAM );
+
+	StopObserverMode();
+	ShowTeamMenu();
 	PhysObjectSleep();
 
 }
@@ -3581,15 +3653,21 @@ void CC_Character(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		if (pPlayer->IsAlive())
-			pPlayer->ShowCharacterMenu();
+			gpGlobals->teamplay ? pPlayer->ShowTeamMenu() : pPlayer->ShowCharacterMenu();
 		else
-			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+			gpGlobals->teamplay ? pPlayer->State_Transition(STATE_PICKINGTEAM) : pPlayer->State_Transition( STATE_PICKINGCHARACTER );
 
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
+		if (gpGlobals->teamplay)
+		{
+			Msg("Can't set character in teamplay");
+			return;
+		}
+
 		pPlayer->StopObserverMode();
 
 		if (pPlayer->SetCharacter(args[1]))
