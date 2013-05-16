@@ -410,7 +410,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.kongcnt = 0;
 	m_Shared.kongtime = 0;
 	m_Shared.runtime = 0;
-	m_Shared.manteldist = 0;
+	m_Shared.manteltime = 0;
 
 	//Tony; todo; fix
 

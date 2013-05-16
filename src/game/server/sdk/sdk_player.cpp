@@ -153,8 +153,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat (SENDINFO (kongtime)),
 	SendPropFloat (SENDINFO (runtime)),
 	SendPropVector (SENDINFO (rundir)),
-	SendPropInt (SENDINFO (daflags)),
-	SendPropFloat (SENDINFO (manteldist)),
+	SendPropFloat (SENDINFO (manteltime)),
 	SendPropVector (SENDINFO (wallnormal)),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),

@@ -115,11 +115,7 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
 
-	wallflip = ACT_DAB_WALLFLIP;
 	flipping = false;
-	wallrun = ACT_DAB_WALLRUN;
-	wallclimb = ACT_DAB_WALLCLIMB;
-	vault = ACT_DAB_VAULT;
 }
 
 //-----------------------------------------------------------------------------
@@ -828,7 +824,10 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		iGestureActivity = ACT_VM_IDLE;
 		break;
 	case PLAYERANIMEVENT_WALLFLIP:
-		wallflip = ACT_DAB_WALLFLIP;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_WALLCLIMB:
 		RestartMainSequence();
 		iGestureActivity = ACT_VM_IDLE;
 		break;
@@ -1206,7 +1205,7 @@ CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 {
 	if (!flipping)
 	{/*Flip only on activation*/
-		if (!(m_pSDKPlayer->m_Shared.daflags&DA_KONG))
+		if (m_pSDKPlayer->m_Shared.kongtime <= 0)
 		{
 			return false;
 		}
@@ -1231,7 +1230,16 @@ CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 	flipping = true;
 	return true;
 }
-
+bool 
+CSDKPlayerAnimState::handlewallclimb (Activity &idealActivity)
+{
+	if (m_pSDKPlayer->m_Shared.manteltime > 0)
+	{
+		idealActivity = ACT_DAB_WALLCLIMB;
+		return true;
+	}
+	return false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Overriding CMultiplayerAnimState to add prone and sprinting checks as necessary.
@@ -1251,7 +1259,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	else if (m_pSDKPlayer->IsWeaponReady())
 		idealActivity = ACT_DAB_STAND_READY;
 
-	if (
+	if (handlewallclimb (idealActivity) ||
 		handlewallflip (idealActivity) ||
 		HandleDiving( idealActivity ) ||
 

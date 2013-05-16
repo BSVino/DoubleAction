@@ -54,6 +54,7 @@ public:
 	bool	handlevault (Activity &idealActivity);
 	bool	handlewallrun (Activity &idealActivity);
 	bool	handlewallflip (Activity &idealActivity);
+	bool	handlewallclimb (Activity &idealActivity);
 #if defined ( SDK_USE_PRONE )
 	bool	HandleProne( Activity &idealActivity );
 	bool	HandleProneTransition( Activity &idealActivity );
@@ -109,11 +110,7 @@ private:
 	bool		m_bRollTransition;
 	bool		m_bRollTransitionFirstFrame;
 
-	Activity	wallflip;
 	bool		flipping;
-	Activity	wallrun;
-	Activity	wallclimb;
-	Activity	vault;
 
 	float		m_flHoldDeployedPoseUntilTime;
 
