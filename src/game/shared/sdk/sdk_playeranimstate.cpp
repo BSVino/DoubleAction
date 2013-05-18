@@ -115,11 +115,7 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
 
-	wallflip = ACT_DAB_WALLFLIP;
 	flipping = false;
-	wallrun = ACT_DAB_WALLRUN;
-	wallclimb = ACT_DAB_WALLCLIMB;
-	vault = ACT_DAB_VAULT;
 }
 
 //-----------------------------------------------------------------------------
@@ -351,7 +347,17 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 		return;
 	}
+	if (flipping)
+	{
+		m_angRender[YAW] = m_flEyeYaw;
+#ifndef CLIENT_DLL
+		QAngle angle = GetBasePlayer()->GetAbsAngles();
+		angle[YAW] = m_flCurrentFeetYaw;
 
+		GetBasePlayer()->SetAbsAngles( angle );
+#endif
+		return;
+	}
 	// Get the movement velocity.
 	Vector vecVelocity;
 	GetOuterAbsVelocity( vecVelocity );
@@ -818,7 +824,10 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		iGestureActivity = ACT_VM_IDLE;
 		break;
 	case PLAYERANIMEVENT_WALLFLIP:
-		wallflip = ACT_DAB_WALLFLIP;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_WALLCLIMB:
 		RestartMainSequence();
 		iGestureActivity = ACT_VM_IDLE;
 		break;
@@ -1023,10 +1032,6 @@ bool CSDKPlayerAnimState::HandleDiving( Activity &idealActivity )
 
 	if ( m_bDiveStart )
 	{
-		if (flipping) 
-		{/*Cancel flipping*/
-			flipping = false;
-		}
 		if (m_bDiveStartFirstFrame)
 		{
 			m_bDiveStartFirstFrame = false;
@@ -1199,12 +1204,17 @@ bool
 CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 {
 	if (!flipping)
-	{
-		if (m_pSDKPlayer->m_Shared.kongtime <= 0) 
-		{/*Not in the stunt*/
+	{/*Flip only on activation*/
+		if (m_pSDKPlayer->m_Shared.kongtime <= 0)
+		{
 			return false;
 		}
-		flipping = true;
+	}
+	if (m_pSDKPlayer->GetCurrentTime () - 
+		m_pSDKPlayer->m_Shared.GetDiveTime () < 1e-1) 
+	{/*Not in a dive (exception: we want to dive out of a flip)*/
+		flipping = false;
+		return false;
 	}
 	if (m_pSDKPlayer->GetFlags()&FL_ONGROUND)
 	{/*Exit if we land on something*/
@@ -1217,9 +1227,19 @@ CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
 		return false;
 	}
 	idealActivity = ACT_DAB_WALLFLIP;
+	flipping = true;
 	return true;
 }
-
+bool 
+CSDKPlayerAnimState::handlewallclimb (Activity &idealActivity)
+{
+	if (m_pSDKPlayer->m_Shared.manteltime > 0)
+	{
+		idealActivity = ACT_DAB_WALLCLIMB;
+		return true;
+	}
+	return false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Overriding CMultiplayerAnimState to add prone and sprinting checks as necessary.
@@ -1239,12 +1259,12 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	else if (m_pSDKPlayer->IsWeaponReady())
 		idealActivity = ACT_DAB_STAND_READY;
 
-	if (
+	if (handlewallclimb (idealActivity) ||
+		handlewallflip (idealActivity) ||
 		HandleDiving( idealActivity ) ||
-		
+
 		handlevault (idealActivity) ||
 		handlewallrun (idealActivity)||
-		handlewallflip (idealActivity) ||
 
 		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
