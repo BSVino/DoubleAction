@@ -1528,8 +1528,8 @@ CBaseCombatWeapon* CSDKPlayer::GetLastWeapon()
 	if (pLastWeapon && pLastWeapon != GetActiveWeapon())
 		return pLastWeapon;
 
-	CWeaponSDKBase* pHeaviest = nullptr;
-	CWeaponSDKBase* pBrawl = nullptr;
+	CWeaponSDKBase* pHeaviest = NULL;
+	CWeaponSDKBase* pBrawl = NULL;
 	for (int i = 0; i < WeaponCount(); i++)
 	{
 		if (!GetWeapon(i))
