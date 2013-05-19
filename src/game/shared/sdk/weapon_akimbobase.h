@@ -70,6 +70,8 @@ public:
 	virtual void GiveDefaultAmmo (void);
 	virtual void OnPickedUp (CBaseCombatCharacter *pNewOwner);
 	virtual	void CheckReload (void);
+
+	virtual int GetMaxClip1( void ) const;
 public:
 };
 #endif

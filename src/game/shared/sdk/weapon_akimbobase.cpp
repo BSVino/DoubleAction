@@ -33,7 +33,7 @@ akimbo_reload (CAkimbobase *self)
 	}
 	int sum = (self->rightclip + self->leftclip);
 	int total = owner->GetAmmoCount (self->m_iPrimaryAmmoType);
-	int delta = min ((self->GetMaxClip1 ()<<1) - sum, total);
+	int delta = min (self->GetMaxClip1() - sum, total);
 	if (delta != 0)
 	{
 		return true;
@@ -43,10 +43,9 @@ akimbo_reload (CAkimbobase *self)
 CAkimbobase::CAkimbobase ()
 {
 	reload_delegate = (delegate_t)akimbo_reload;
-	leftclip = GetMaxClip1 ();
-	rightclip = GetMaxClip1 ();
 	shootright = false;
 }
+
 Activity 
 CAkimbobase::ActivityOverride (Activity baseAct, bool *pRequired)
 {/*Remap baseAct to the approrpiate left/right akimbo firing animation.*/
@@ -142,7 +141,7 @@ void
 CAkimbobase::FinishReload (void)
 {
 	CSDKPlayer *owner = GetPlayerOwner();
-	int clipsize = GetMaxClip1 ();
+	int clipsize = GetMaxClip1()/2;
 	int total = owner->GetAmmoCount (m_iPrimaryAmmoType);
 	if (!owner)
 	{
@@ -170,8 +169,8 @@ CAkimbobase::FinishReload (void)
 void 
 CAkimbobase::GiveDefaultAmmo (void)
 {
-	rightclip = GetMaxClip1 ();
-	leftclip = GetMaxClip1 ();
+	rightclip = GetMaxClip1 ()/2;
+	leftclip = GetMaxClip1 ()/2;
 	m_iClip1 = rightclip + leftclip;
 }
 void
@@ -203,4 +202,17 @@ void
 CAkimbobase::CheckReload (void)
 {
 	BaseClass::CheckReload ();
+}
+
+int CAkimbobase::GetMaxClip1() const
+{
+	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().akimbo);
+
+	CSDKWeaponInfo* pSingleInfo = CSDKWeaponInfo::GetWeaponInfo(eSingleID);
+
+	Assert(pSingleInfo);
+	if (!pSingleInfo)
+		return BaseClass::GetMaxClip1();
+
+	return pSingleInfo->iMaxClip1*2;
 }
