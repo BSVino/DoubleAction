@@ -35,6 +35,8 @@ protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
+
+	vgui::HTML		*m_pMapMessage;
 };
 
 
