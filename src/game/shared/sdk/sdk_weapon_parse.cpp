@@ -61,9 +61,8 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	else
 		m_eWeaponType = WT_NONE;
 
-	Q_strncpy (akimbo, 
-			   pKeyValuesData->GetString ("akimbo", ""), 
-			   sizeof (akimbo));
+	Q_strncpy(m_szAkimbo, pKeyValuesData->GetString("akimbo", ""), sizeof(m_szAkimbo));
+	Q_strncpy(m_szSingle, pKeyValuesData->GetString("single", ""), sizeof(m_szSingle));
 }
 
 CSDKWeaponInfo* CSDKWeaponInfo::GetWeaponInfo(SDKWeaponID eWeapon)

@@ -1316,12 +1316,22 @@ bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 
 	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
 
+	// Don't allow buying the akimbo version. Must buy the single version twice.
+	if (*pWeaponInfo->m_szSingle)
+		return false;
+
 	if (pWeaponInfo->iWeight + m_iLoadoutWeight > MAX_LOADOUT_WEIGHT)
 		return false;
 
 	if (pWeaponInfo->iMaxClip1 > 0)
 	{
-		if (m_aLoadout[eWeapon].m_iCount)
+		if (*pWeaponInfo->m_szAkimbo)
+		{
+			// If this weapon has an akimbo version, allow buying two of them.
+			if (m_aLoadout[eWeapon].m_iCount >= 2)
+				return false;
+		}
+		else if (m_aLoadout[eWeapon].m_iCount)
 			return false;
 	}
 

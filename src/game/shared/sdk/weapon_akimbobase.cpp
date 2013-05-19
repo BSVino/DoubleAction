@@ -76,7 +76,7 @@ CAkimbobase::Deploy ()
 {/*Transfer iClip1 of single pistol to rightclip*/
 	CWeaponSDKBase *from = GetPlayerOwner ()->switchfrom;
 	SDKWeaponID id1 = SDK_WEAPON_NONE;
-	SDKWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().akimbo);
+	SDKWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 	if (from) id1 = from->GetWeaponID ();
 	if (id1 == id2)
 	{
@@ -90,7 +90,7 @@ CAkimbobase::Holster (CBaseCombatWeapon *pSwitchingTo)
 {/*Transfer rightclip into iClip1 of single pistol*/
 	CWeaponSDKBase *to = (CWeaponSDKBase *)pSwitchingTo;
 	SDKWeaponID id1 = SDK_WEAPON_NONE;
-	SDKWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().akimbo);
+	SDKWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 	if (to) id1 = to->GetWeaponID ();
 	if (id1 == id2)
 	{
@@ -188,7 +188,7 @@ CAkimbobase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
 		return;
 	}
 	/*Ensure player has a single with their akimbos*/
-	Q_snprintf (name, sizeof (name), "weapon_%s", GetSDKWpnData ().akimbo);
+	Q_snprintf (name, sizeof (name), "weapon_%s", GetSDKWpnData ().m_szSingle);
 	single = pl->findweapon (AliasToWeaponID (name));
 	if (!single)
 	{/*Give them a single too*/
@@ -206,7 +206,7 @@ CAkimbobase::CheckReload (void)
 
 int CAkimbobase::GetMaxClip1() const
 {
-	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().akimbo);
+	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 
 	CSDKWeaponInfo* pSingleInfo = CSDKWeaponInfo::GetWeaponInfo(eSingleID);
 
@@ -215,4 +215,19 @@ int CAkimbobase::GetMaxClip1() const
 		return BaseClass::GetMaxClip1();
 
 	return pSingleInfo->iMaxClip1*2;
+}
+
+// For weight purposes an akimbo weighs the same as a single.
+// This is so that the second entity in the player's inventory just adds another single's worth of weight.
+int CAkimbobase::GetWeight() const
+{
+	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
+
+	CSDKWeaponInfo* pSingleInfo = CSDKWeaponInfo::GetWeaponInfo(eSingleID);
+
+	Assert(pSingleInfo);
+	if (!pSingleInfo)
+		return BaseClass::GetWeight();
+
+	return pSingleInfo->iWeight;
 }

@@ -913,11 +913,23 @@ void CSDKPlayer::GiveDefaultItems()
 		bool bHasGrenade = false;
 		CWeaponSDKBase* pHeaviestWeapon = NULL;
 
-		for (int i = 0; i < MAX_LOADOUT; i++)
+		for (int i = 1; i < MAX_LOADOUT; i++)
 		{
-			if (m_aLoadout[i].m_iCount)
+			SDKWeaponID eBuyWeapon = (SDKWeaponID)i;
+			CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eBuyWeapon);
+
+			bool bBuy = !!m_aLoadout[eBuyWeapon].m_iCount;
+			if (*pWeaponInfo->m_szSingle)
 			{
-				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
+				// If we're buying a weapon that has a single version, buy the akimbo version if we want two of the singles.
+				SDKWeaponID eSingleWeapon = AliasToWeaponID(pWeaponInfo->m_szSingle);
+				if (m_aLoadout[eSingleWeapon].m_iCount == 2)
+					bBuy = true;
+			}
+
+			if (bBuy)
+			{
+				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias(eBuyWeapon) );
 				CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(GiveNamedItem( szName ));
 
 				if (!pHeaviestWeapon)
@@ -1918,7 +1930,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 			1. Akimbos are moved if a single is tossed
 			2. Single is removed if akimbos are tossed
 		It's either this or a rewrite of the weapon code*/
-		if (pWeapon->GetSDKWpnData ().akimbo[0] == '\0')
+		if (pWeapon->GetSDKWpnData ().m_szSingle[0] == '\0')
 		{/*Single toss*/
 			const char *cls = pWeapon->GetClassname ();
 			weapontype_t type = pWeapon->GetWeaponType ();
@@ -1942,7 +1954,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		else
 		{/*Akimbo toss*/
 			CAkimbobase *akb = (CAkimbobase *)pWeapon;
-			const char *alias = pWeapon->GetSDKWpnData ().akimbo;
+			const char *alias = pWeapon->GetSDKWpnData ().m_szSingle;
 			char name[32];
 			int i;
 			/*Throw two singles instead of pmodel (rule of style)*/
@@ -3786,8 +3798,6 @@ void CC_Buy(const CCommand& args)
 		eWeapon = AliasToWeaponID(args[2]);
 		pPlayer->StopObserverMode();
 		pPlayer->RemoveFromLoadout(eWeapon);
-		if (SDK_WEAPON_M1911 == eWeapon)
-			pPlayer->RemoveFromLoadout(SDK_WEAPON_AKIMBO_M1911);
 		return;
 	}
 
@@ -3796,10 +3806,6 @@ void CC_Buy(const CCommand& args)
 	{
 		pPlayer->StopObserverMode();
 		pPlayer->AddToLoadout(eWeapon);
-		if (SDK_WEAPON_M1911 == eWeapon) 
-			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_M1911);
-		else if (SDK_WEAPON_BERETTA == eWeapon) 
-			pPlayer->AddToLoadout(SDK_WEAPON_AKIMBO_BERETTA);
 		return;
 	}
 }

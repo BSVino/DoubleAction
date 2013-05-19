@@ -72,6 +72,7 @@ public:
 	virtual	void CheckReload (void);
 
 	virtual int GetMaxClip1( void ) const;
+	virtual int GetWeight( void ) const;
 public:
 };
 #endif
