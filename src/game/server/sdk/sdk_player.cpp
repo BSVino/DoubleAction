@@ -918,6 +918,9 @@ void CSDKPlayer::GiveDefaultItems()
 			SDKWeaponID eBuyWeapon = (SDKWeaponID)i;
 			CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eBuyWeapon);
 
+			if (!pWeaponInfo)
+				continue;
+
 			bool bBuy = !!m_aLoadout[eBuyWeapon].m_iCount;
 			if (*pWeaponInfo->m_szSingle)
 			{
