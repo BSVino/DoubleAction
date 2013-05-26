@@ -275,6 +275,7 @@ void CWeaponSDKBase::finishattack (CSDKPlayer *pPlayer)
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
 	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
 }
+
 void CWeaponSDKBase::PrimaryAttack( void )
 {
 	// If my clip is empty (and I use clips) start reload
@@ -302,7 +303,14 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		break;
 	}
 
-	SendWeaponAnim( GetPrimaryAttackActivity() );
+	if (m_iClip1 == 1)
+	{
+		if (!SendWeaponAnim( ACT_DA_VM_FIRELAST ))
+			SendWeaponAnim( GetPrimaryAttackActivity() );
+	}
+	else
+		SendWeaponAnim( GetPrimaryAttackActivity() );
+
 	/*if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
 	{
 		// Marksmen don't consume ammo while their skill is active.
@@ -926,6 +934,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		{
 			HandleFireOnEmpty();
 			pPlayer->ReadyWeapon();
+			SendWeaponAnim( ACT_VM_DRYFIRE );
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
