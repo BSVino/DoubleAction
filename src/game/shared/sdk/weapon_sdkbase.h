@@ -100,6 +100,10 @@ public:
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );
 #endif
 
+#ifdef CLIENT_DLL
+	virtual int     DrawModel( int flags );
+#endif
+
 	virtual float GetWeaponSpread();
 	virtual bool WeaponSpreadFixed() const { return false; }
 
@@ -168,6 +172,11 @@ private:
 	CNetworkVar(bool, m_bSwingSecondary);
 
 	CSDKPlayer *m_pPrevOwner;
+
+	float       m_flArrowGoalSize;
+	float       m_flArrowCurSize;
+	float       m_flArrowSpinOffset;
+
 public:
 	/*New bits to make Akimbos work in a sane manner*/
 	void finishattack (CSDKPlayer *pPlayer);

@@ -113,6 +113,10 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+
+	m_flArrowGoalSize = 0;
+	m_flArrowCurSize = 0;
+	m_flArrowSpinOffset = RandomFloat(0, 10);
 }
 
 void CWeaponSDKBase::Precache()
@@ -126,6 +130,8 @@ void CWeaponSDKBase::Precache()
 	m_flRecoil = GetSDKWpnData().m_flRecoil;
 	m_flSpread = GetSDKWpnData().m_flSpread;
 #endif
+
+	CBaseEntity::PrecacheModel( "particle/weaponarrow.vmt" );
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -733,6 +739,79 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 	Vector vecRecoil = GetPlayerOwner()->m_Shared.GetRecoil(flInputSampleTime);
 	pCmd->viewangles[PITCH] -= vecRecoil.y;
 	pCmd->viewangles[YAW] += vecRecoil.x;
+}
+
+CMaterialReference g_hWeaponArrow;
+int CWeaponSDKBase::DrawModel(int flags)
+{
+	if (!g_hWeaponArrow.IsValid())
+		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
+
+	int iReturn = BaseClass::DrawModel(flags);
+
+	if (GetOwnerEntity())
+	{
+		m_flArrowCurSize = m_flArrowGoalSize = 0;
+
+		return iReturn;
+	}
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pLocalPlayer)
+		return iReturn;
+
+	float flAppearDistance = 250;
+	float flAppearDistanceSqr = flAppearDistance*flAppearDistance;
+
+	if ((pLocalPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flAppearDistanceSqr)
+		m_flArrowGoalSize = 5;
+	else
+		m_flArrowGoalSize = 0;
+
+	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+	float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+
+	m_flArrowCurSize = Approach(m_flArrowGoalSize, m_flArrowCurSize, flFrameTime*20);
+
+	if (m_flArrowCurSize == 0)
+		return iReturn;
+
+	Vector vecOrigin = GetAbsOrigin() + Vector(0, 0, 10);
+	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
+	Vector vecUp = Vector(0, 0, 1);
+
+	float flSize = m_flArrowCurSize;
+
+	CMeshBuilder meshBuilder;
+	CMatRenderContextPtr pRenderContext( materials );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+	pRenderContext->Bind( g_hWeaponArrow );
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.End(false, true);
+
+	return iReturn;
 }
 #endif
 
