@@ -2636,28 +2636,55 @@ void CSDKGameMovement::FullWalkMove ()
 				dir[1] = m_vecForward[1];
 				dir[2] = 0;
 				TraceBBox (org, org + dist*dir, mins, maxs, tr);
+
+
 				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) &&
 					fabs (tr.plane.normal[2]) < 0.7)
 				{
-					float speed = da_acro_kong_speed.GetFloat ();
-					float delay = da_acro_kong_delay.GetFloat ();
-					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
-					mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
-					mv->m_vecVelocity[2] = da_acro_kong_gain.GetFloat ();
-					SetGroundEntity (NULL);
-					FinishGravity ();
-					
-					CPASFilter filter (org);
-					filter.UsePredictionRules ();
-					m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
 
-					if (m_pSDKPlayer->m_Shared.runtime > 0)
+					//get angle between wall and player
+					const Vector *viewAngles = &m_vecForward;
+
+					float angle = (viewAngles->x * tr.plane.normal.x) + 
+						(viewAngles->y * tr.plane.normal.y);
+						
+					angle = fabs(acos(angle)); //any source math funcs?
+					angle *= 180.0f / 3.1416f; //change for PI constant
+
+					if (angle < 140.0f)
 					{
-						m_pSDKPlayer->m_Shared.runtime = -1;
+						float speed = da_acro_kong_speed.GetFloat ();
+						float delay = da_acro_kong_delay.GetFloat ();
+
+						mv->m_vecVelocity[0] = 2*speed*dir[0];
+						mv->m_vecVelocity[1] = 2*speed*dir[1];
+						mv->m_vecVelocity[2] = da_acro_kong_gain.GetFloat () / 1.45;
+						SetGroundEntity (NULL);
+						FinishGravity ();
+						m_pSDKPlayer->m_Shared.kongtime = delay;
 					}
-					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
-					m_pSDKPlayer->m_Shared.kongtime = delay;
-					m_pSDKPlayer->m_Shared.kongcnt++;
+					else
+					{
+						float speed = da_acro_kong_speed.GetFloat ();
+						float delay = da_acro_kong_delay.GetFloat ();
+						mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
+						mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
+						mv->m_vecVelocity[2] = da_acro_kong_gain.GetFloat ();
+						SetGroundEntity (NULL);
+						FinishGravity ();
+					
+						CPASFilter filter (org);
+						filter.UsePredictionRules ();
+						m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+
+						if (m_pSDKPlayer->m_Shared.runtime > 0)
+						{
+							m_pSDKPlayer->m_Shared.runtime = -1;
+						}
+						m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
+						m_pSDKPlayer->m_Shared.kongtime = delay;
+						m_pSDKPlayer->m_Shared.kongcnt++;
+					}
 				}
 			}
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
