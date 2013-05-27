@@ -173,9 +173,11 @@ private:
 
 	CSDKPlayer *m_pPrevOwner;
 
+#ifdef CLIENT_DLL
 	float       m_flArrowGoalSize;
 	float       m_flArrowCurSize;
 	float       m_flArrowSpinOffset;
+#endif
 
 public:
 	/*New bits to make Akimbos work in a sane manner*/

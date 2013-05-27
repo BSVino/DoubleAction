@@ -114,9 +114,11 @@ CWeaponSDKBase::CWeaponSDKBase()
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
 
+#ifdef CLIENT_DLL
 	m_flArrowGoalSize = 0;
 	m_flArrowCurSize = 0;
 	m_flArrowSpinOffset = RandomFloat(0, 10);
+#endif
 }
 
 void CWeaponSDKBase::Precache()
