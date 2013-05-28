@@ -659,19 +659,17 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 	m_bProneSliding = false;
 	m_flDisallowUnProneTime = -1;
 
-	if ( bNoAnimation )
+	if (bNoAnimation)
 	{
 		m_flGoProneTime = 0;
 		m_flUnProneTime = 0;
 	}
 
-	if ( !bProne /*&& IsSniperZoomed()*/ )	// forceunzoom for going prone is in StartGoingProne
+	if (!bProne)	// forceunzoom for going prone is in StartGoingProne
 	{
 		ForceUnzoom();
-	}
-
-	if (!bProne)
 		m_pOuter->ReadyWeapon();
+	}		
 }
 
 void CSDKPlayerShared::StartGoingProne( void )
@@ -1425,35 +1423,42 @@ void CSDKPlayer::UpdateViewBobRamp()
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
 }
 
+ConVar  sdk_cam_fade_distance( "sdk_cam_fade_distance", "20", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+
 void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 {
 	if (!IsInThirdPerson())
 		return;
 
-
-	if (this->GetRenderMode() != kRenderTransTexture){
-		this->SetRenderMode(kRenderTransTexture);
+	CWeaponSDKBase * pWeapon = NULL;
+	if (GetActiveWeapon() != NULL){
+		pWeapon = GetActiveSDKWeapon();
 	}
 
-	CWeaponSDKBase * wp = 0;
-	if (this->GetActiveWeapon() != NULL){
-		wp = this->GetActiveSDKWeapon();
+	Assert(pWeapon);
 
-		if (wp->GetRenderMode() != kRenderTransTexture){
-			wp->SetRenderMode(kRenderTransTexture);
+	if (m_vecThirdCamera.DistTo(vecEye) < sdk_cam_fade_distance.GetFloat()){
+
+		if (GetRenderMode() != kRenderTransTexture){
+			SetRenderMode(kRenderTransTexture);
+			SetRenderColorA(100);
 		}
-	}
 
-	if (m_vecThirdCamera.DistTo(vecEye) < 20.0f){
-		this->SetRenderColorA(100);
-		if (wp != NULL)
-			wp->SetRenderColorA(100);
-	}
-	else
-	{
-		this->SetRenderColorA(255);
-		if (wp != NULL)
-			wp->SetRenderColorA(255);
+		if (pWeapon && pWeapon->GetRenderMode() != kRenderTransTexture){
+			pWeapon->SetRenderMode(kRenderTransTexture);
+			pWeapon->SetRenderColorA(100);
+		}
+	}else{
+
+		if (GetRenderMode() != kRenderNormal){
+			SetRenderMode(kRenderNormal);
+			SetRenderColorA(255);
+		}
+
+		if (pWeapon && pWeapon->GetRenderMode() != kRenderNormal){
+			pWeapon->SetRenderMode(kRenderNormal);
+			pWeapon->SetRenderColorA(255);
+		}
 	}
 
 	m_vecThirdCamera = CalculateThirdPersonCameraPosition(vecEye, angEye);
