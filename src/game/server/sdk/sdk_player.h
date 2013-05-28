@@ -442,6 +442,10 @@ public:
 
 	CNetworkVar( bool, m_bThirdPerson );
 	CNetworkVar( bool, m_bThirdPersonCamSide );
+
+
+	CNetworkVar( float, m_flCurrentAlphaVal );
+
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;

@@ -215,6 +215,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
 	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),
 
+	RecvPropFloat( RECVINFO( m_flCurrentAlphaVal ) ),
+	
+
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 END_RECV_TABLE()
 
@@ -293,6 +296,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_bThirdPersonCamSide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_flCurrentAlphaVal, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -652,6 +656,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_fNextThinkPushAway = 0.0f;
 
 	m_flLastSlowMoMultiplier = 1;
+	m_currentAlphaVal = 255.0f;
 }
 
 

@@ -385,6 +385,7 @@ void CSDKPlayer::SharedSpawn()
 
 	SetGravity(1);
 
+	m_flCurrentAlphaVal = 255.0f;
 	m_flReadyWeaponUntil = -1;
 	m_bThirdPersonCamSide = true;
 	m_flSideLerp = m_bThirdPersonCamSide?1:-1;
@@ -1423,7 +1424,8 @@ void CSDKPlayer::UpdateViewBobRamp()
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
 }
 
-ConVar  sdk_cam_fade_distance( "sdk_cam_fade_distance", "20", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_cam_fade_distance("sdk_cam_fade_distance", "30", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
+ConVar	sdk_cam_fade_alpha_val("sdk_cam_fade_alpha_val", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 {
@@ -1439,25 +1441,35 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 
 	if (m_vecThirdCamera.DistTo(vecEye) < sdk_cam_fade_distance.GetFloat()){
 
+		m_flCurrentAlphaVal = Approach(sdk_cam_fade_alpha_val.GetFloat(), m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
+
 		if (GetRenderMode() != kRenderTransTexture){
 			SetRenderMode(kRenderTransTexture);
-			SetRenderColorA(100);
 		}
 
-		if (pWeapon && pWeapon->GetRenderMode() != kRenderTransTexture){
-			pWeapon->SetRenderMode(kRenderTransTexture);
-			pWeapon->SetRenderColorA(100);
+		SetRenderColorA(m_flCurrentAlphaVal);
+
+		if (pWeapon){
+			if (pWeapon->GetRenderMode() != kRenderTransTexture){
+				pWeapon->SetRenderMode(kRenderTransTexture);
+			}
+			pWeapon->SetRenderColorA(m_flCurrentAlphaVal);
 		}
 	}else{
 
+		m_flCurrentAlphaVal = Approach(255.0f, m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
+
 		if (GetRenderMode() != kRenderNormal){
 			SetRenderMode(kRenderNormal);
-			SetRenderColorA(255);
 		}
 
-		if (pWeapon && pWeapon->GetRenderMode() != kRenderNormal){
-			pWeapon->SetRenderMode(kRenderNormal);
-			pWeapon->SetRenderColorA(255);
+		SetRenderColorA(m_flCurrentAlphaVal);
+
+		if (pWeapon){
+			if (pWeapon->GetRenderMode() != kRenderNormal){
+				pWeapon->SetRenderMode(kRenderNormal);
+			}
+			pWeapon->SetRenderColorA(m_flCurrentAlphaVal);
 		}
 	}
 

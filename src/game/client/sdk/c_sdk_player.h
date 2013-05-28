@@ -263,7 +263,7 @@ public: // Public Variables
 	CNetworkVar( float, m_flReadyWeaponUntil );
 
 	CNetworkVar( float, m_flDisarmRedraw );
-
+	
 	EHANDLE	m_hRagdoll;
 
 	int	m_headYawPoseParam;
@@ -295,6 +295,7 @@ private:
 
 	float m_flStylePoints;
 	float m_flStyleSkillCharge;
+	float m_currentAlphaVal;
 
 	class CSDKSoundEvent
 	{
@@ -322,6 +323,9 @@ private:
 
 	CNetworkVar( bool, m_bThirdPerson );
 	CNetworkVar( bool, m_bThirdPersonCamSide );
+
+	CNetworkVar( float, m_flCurrentAlphaVal );
+
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
