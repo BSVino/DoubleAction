@@ -45,6 +45,10 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t type );
 	
 	float m_flSpawnTime;
+
+	float       m_flArrowGoalSize;
+	float       m_flArrowCurSize;
+	float       m_flArrowSpinOffset;
 #else
 	DECLARE_DATADESC();
 
