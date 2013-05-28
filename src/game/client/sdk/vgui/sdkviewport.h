@@ -33,6 +33,9 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 		
 	int GetDeathMessageStartHeight( void );
+
+	static bool DrawPolygon( CHudTexture* pTexture, Vector vecWorldPosition, float flWidth, float flHeight, float flRotation, const Color& c = Color(255, 255, 255, 255) );
+	static bool DrawPolygon( CHudTexture* pTexture, float x, float y, float flWidth, float flHeight, float flRotation, const Color& c = Color(255, 255, 255, 255) );
 };
 
 

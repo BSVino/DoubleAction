@@ -15,6 +15,7 @@
 #include <vgui/ILocalize.h>
 #include "ihudlcd.h"
 #include "c_sdk_player.h"
+#include "sdkviewport.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -47,6 +48,9 @@ protected:
 	void UpdateAmmoDisplays();
 	void UpdatePlayerAmmo( C_BasePlayer *player );
 
+	CHudTexture* GetTexture();
+	Vector2D GetRoundPosition(int i);
+
 private:
 	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
 	CHandle< C_BaseEntity > m_hCurrentVehicle;
@@ -57,6 +61,18 @@ private:
 	CHudTexture* m_p9mmRound;
 	CHudTexture* m_p45acpRound;
 	CHudTexture* m_pBuckshotRound;
+
+	class CFlyingRound
+	{
+	public:
+		bool bActive;
+		Vector2D vecPosition;
+		Vector2D vecVelocity;
+		float flAngle;
+		float flAngularVelocity;
+	};
+
+	CUtlVector<CFlyingRound> m_aRounds;
 };
 
 DECLARE_HUDELEMENT( CHudAmmo );
@@ -72,6 +88,8 @@ CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHu
 	hudlcd->SetGlobalStat( "(ammo_secondary)", "0" );
 	hudlcd->SetGlobalStat( "(weapon_print_name)", "" );
 	hudlcd->SetGlobalStat( "(weapon_name)", "" );
+
+	m_aRounds.EnsureCapacity(20);
 }
 
 void CHudAmmo::ApplySchemeSettings( IScheme *scheme )
@@ -220,6 +238,34 @@ void CHudAmmo::SetAmmo(int ammo, bool playAnimation)
 {
 	if (ammo != m_iAmmo)
 	{
+		if (playAnimation)
+		{
+			for (int i = ammo; i < m_iAmmo; i++)
+			{
+				int iSpot = -1;
+
+				// Find a spot to put it.
+				for (int j = 0; j < m_aRounds.Count(); j++)
+				{
+					if (!m_aRounds[j].bActive)
+					{
+						iSpot = j;
+						break;
+					}
+				}
+
+				if (iSpot == -1)
+					iSpot = m_aRounds.AddToTail();
+
+				m_aRounds[iSpot].bActive = true;
+				m_aRounds[iSpot].flAngle = 0;
+				m_aRounds[iSpot].flAngularVelocity = RandomFloat(10, 1000);
+				m_aRounds[iSpot].vecVelocity.x = RandomFloat(-100, -300);
+				m_aRounds[iSpot].vecVelocity.y = RandomFloat(-300, -500);
+				m_aRounds[iSpot].vecPosition = GetRoundPosition(ammo);
+			}
+		}
+
 		m_iAmmo = ammo;
 	}
 
@@ -239,6 +285,58 @@ void CHudAmmo::SetAmmo2(int ammo2, bool playAnimation)
 	SetSecondaryValue(ammo2);
 }
 
+CHudTexture* CHudAmmo::GetTexture()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return nullptr;
+
+	if (!pPlayer->IsAlive())
+		return nullptr;
+
+	if (!pPlayer->GetActiveSDKWeapon())
+		return nullptr;
+
+	if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "9x19mm"))
+		return m_p9mmRound;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "762x51mm"))
+		return m_p762Round;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "45acp"))
+		return m_p45acpRound;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "buckshot"))
+		return m_pBuckshotRound;
+
+	return nullptr;
+}
+
+Vector2D CHudAmmo::GetRoundPosition(int i)
+{
+	CHudTexture* pTexture = GetTexture();
+	if ( !pTexture )
+		return Vector2D();
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+
+	int iSpacing = 10;
+
+	int iMaxClip = pPlayer->GetActiveSDKWeapon()->GetMaxClip1();
+	if ((pTexture->Width() + iSpacing) * iMaxClip > 450)
+		iSpacing = -10;
+
+	if (iSpacing < 0)
+	{
+		if (i%2 == 0)
+			return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 30);
+		else
+			return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 20);
+	}
+	else
+		return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 20);
+}
+
 void CHudAmmo::Paint()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -251,48 +349,38 @@ void CHudAmmo::Paint()
 	if (!pPlayer->GetActiveSDKWeapon())
 		return;
 
-	CHudTexture* pTexture = nullptr;
-	if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "9x19mm"))
-		pTexture = m_p9mmRound;
-	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "762x51mm"))
-		pTexture = m_p762Round;
-	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "45acp"))
-		pTexture = m_p45acpRound;
-	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "buckshot"))
-		pTexture = m_pBuckshotRound;
+	CHudTexture* pTexture = GetTexture();
 
 	if (!pTexture)
 		return;
 
-	int iWidth, iHeight;
-	GetSize(iWidth, iHeight);
-
-	int iSpacing = 10;
-
-	int iMaxClip = pPlayer->GetActiveSDKWeapon()->GetMaxClip1();
-	if ((pTexture->Width() + iSpacing) * iMaxClip > iWidth)
-		iSpacing = -10;
-
-	int iYOffset = -10;
-
-	if (iSpacing < 0)
-	{
-		for (int i = 0; i < m_iAmmo; i++)
-		{
-			if (i%2 == 0)
-				continue;
-
-			pTexture->DrawSelf( iWidth - (i+1)*pTexture->Width() - i*iSpacing, iHeight - pTexture->Height() + iYOffset, pTexture->Width(), pTexture->Height(), Color(255, 255, 255, 255) );
-		}
-	}
-
-	iYOffset = 0;
-
 	for (int i = 0; i < m_iAmmo; i++)
 	{
-		if (iSpacing < 0 && i%2 == 1)
+		Vector2D vecRound = GetRoundPosition(i);
+		pTexture->DrawSelf( vecRound.x, vecRound.y, pTexture->Width(), pTexture->Height(), Color(255, 255, 255, 255) );
+	}
+
+	float flFrameTime = gpGlobals->frametime * pPlayer->GetSlowMoMultiplier();
+
+	for (int i = 0; i < m_aRounds.Count(); i++)
+	{
+		auto& oRound = m_aRounds[i];
+
+		if (!oRound.bActive)
 			continue;
 
-		pTexture->DrawSelf( iWidth - (i+1)*pTexture->Width() - i*iSpacing, iHeight - pTexture->Height() + iYOffset, pTexture->Width(), pTexture->Height(), Color(255, 255, 255, 255) );
+		if (oRound.vecPosition.y > 1000)
+		{
+			oRound.bActive = false;
+			continue;
+		}
+
+		oRound.vecPosition += flFrameTime * oRound.vecVelocity;
+		oRound.vecVelocity.y += flFrameTime * 2000;
+		oRound.flAngle += flFrameTime * oRound.flAngularVelocity;
+
+		SDKViewport::DrawPolygon(pTexture,
+			oRound.vecPosition.x, oRound.vecPosition.y,
+			pTexture->Width(), pTexture->Height(), oRound.flAngle);
 	}
 }
