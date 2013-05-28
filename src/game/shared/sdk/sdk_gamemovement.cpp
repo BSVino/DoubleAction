@@ -1682,13 +1682,13 @@ void CSDKGameMovement::Duck( void )
 			// Calc parametric time
 			float fraction = SimpleSpline( pronetime / TIME_TO_PRONE );
 			SetProneEyeOffset( fraction );
-
 		}
 
 		// Set these, so that as soon as we stop unproning, we don't pop to standing
 		// the information that we let go of the duck key has been lost by now.
 		if ( m_pSDKPlayer->m_bUnProneToDuck )
 		{
+			FinishProne();
             player->m_Local.m_flDucktime = 1000;
 			player->m_Local.m_bDucking    = true;
 		}
@@ -2651,7 +2651,7 @@ void CSDKGameMovement::FullWalkMove ()
 					angle = fabs(acos(angle)); //any source math funcs?
 					angle *= 180.0f / 3.1416f; //change for PI constant
 
-					if (angle < 140.0f)
+					if (angle < 150.0f)
 					{
 						float speed = da_acro_kong_speed.GetFloat ();
 						float delay = da_acro_kong_delay.GetFloat ();

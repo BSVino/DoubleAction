@@ -412,6 +412,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.runtime = 0;
 	m_Shared.manteltime = 0;
 
+
 	//Tony; todo; fix
 
 //	m_flMinNextStepSoundTime = gpGlobals->curtime;
@@ -1429,6 +1430,32 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 	if (!IsInThirdPerson())
 		return;
 
+
+	if (this->GetRenderMode() != kRenderTransTexture){
+		this->SetRenderMode(kRenderTransTexture);
+	}
+
+	CWeaponSDKBase * wp = 0;
+	if (this->GetActiveWeapon() != NULL){
+		wp = this->GetActiveSDKWeapon();
+
+		if (wp->GetRenderMode() != kRenderTransTexture){
+			wp->SetRenderMode(kRenderTransTexture);
+		}
+	}
+
+	if (m_vecThirdCamera.DistTo(vecEye) < 20.0f){
+		this->SetRenderColorA(100);
+		if (wp != NULL)
+			wp->SetRenderColorA(100);
+	}
+	else
+	{
+		this->SetRenderColorA(255);
+		if (wp != NULL)
+			wp->SetRenderColorA(255);
+	}
+
 	m_vecThirdCamera = CalculateThirdPersonCameraPosition(vecEye, angEye);
 
 	Vector vecShoot;
@@ -1439,6 +1466,7 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
 
 	m_vecThirdTarget = tr.endpos;
+	
 }
 
 ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
