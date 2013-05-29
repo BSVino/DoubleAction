@@ -236,7 +236,6 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
 	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
-	SendPropFloat( SENDINFO (m_flCurrentAlphaVal ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 END_SEND_TABLE()
 
