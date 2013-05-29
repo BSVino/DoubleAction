@@ -239,3 +239,81 @@ int SDKViewport::GetDeathMessageStartHeight( void )
 	return x;
 }
 
+#define XPROJECT(x)	( (1.0f+(x))*ScreenWidth()*0.5f )
+#define YPROJECT(y) ( (1.0f-(y))*ScreenHeight()*0.5f )
+
+int ScreenTransform( const Vector& point, Vector& screen );
+
+static void RotateVertex( float *x, float *y, float flAngle )
+{
+	float flRadians = DEG2RAD( flAngle );
+	float x1, y1;
+
+	x1 = *x * cos(flRadians) - *y * sin(flRadians);
+	y1 = *x * sin(flRadians) + *y * cos(flRadians);
+
+	*x = x1;
+	*y = y1;
+}
+
+// GOOSEMAN : Renders a textured polygon onto the screen
+bool SDKViewport::DrawPolygon( CHudTexture* pTexture, Vector vecWorldPosition, float flWidth, float flHeight, float flRotation, const Color& c )
+{
+	int x, y;
+	Vector screenOrigin;
+	ScreenTransform( vecWorldPosition, screenOrigin );
+	x = XPROJECT(screenOrigin.x);
+	y = YPROJECT(screenOrigin.y);
+
+	return DrawPolygon( pTexture, XPROJECT(screenOrigin.x), YPROJECT(screenOrigin.y), flWidth, flHeight, flRotation, c );
+}
+
+// This is a heavily modified version of a function Minh wrote for TacInt
+bool SDKViewport::DrawPolygon( CHudTexture* pTexture, float x, float y, float flWidth, float flHeight, float flRotation, const Color& c )
+{
+	if ( !pTexture )
+		return false;
+
+	float flOffsetX, flOffsetY;
+	flOffsetX = flWidth/2; flOffsetY = flHeight/2;
+
+	float vertex1[2], vertex2[2], vertex3[2], vertex4[2];
+
+	vertex1[0] = -flOffsetX;	vertex1[1] = flOffsetY;
+	vertex2[0] = flOffsetX;		vertex2[1] = flOffsetY;
+	vertex3[0] = flOffsetX;		vertex3[1] = -flOffsetY;
+	vertex4[0] = -flOffsetX;	vertex4[1] = -flOffsetY;
+
+	if ( flRotation )
+	{
+		RotateVertex( &vertex1[0], &vertex1[1], flRotation );
+		RotateVertex( &vertex2[0], &vertex2[1], flRotation );
+		RotateVertex( &vertex3[0], &vertex3[1], flRotation );
+		RotateVertex( &vertex4[0], &vertex4[1], flRotation );
+	}
+
+	// Adjust vertex co-ord so it's relative to the center of the icon
+	vertex1[0] += x + flOffsetX;	vertex1[1] += y + flOffsetY;
+	vertex2[0] += x + flOffsetX;	vertex2[1] += y + flOffsetY;
+	vertex3[0] += x + flOffsetX;	vertex3[1] += y + flOffsetY;
+	vertex4[0] += x + flOffsetX;	vertex4[1] += y + flOffsetY;
+
+	Vector2D uv11( pTexture->texCoords[0], pTexture->texCoords[1] );
+	Vector2D uv12( pTexture->texCoords[0], pTexture->texCoords[3] );
+	Vector2D uv21( pTexture->texCoords[2], pTexture->texCoords[1] );
+	Vector2D uv22( pTexture->texCoords[2], pTexture->texCoords[3] );
+
+	// Draw the main icon
+	vgui::Vertex_t vert[4];	
+	vgui::surface()->DrawSetColor( c );
+	vgui::surface()->DrawSetTexture( pTexture->textureId );
+
+	vert[0].Init( Vector2D( vertex4[0], vertex4[1] ), uv11 );
+	vert[1].Init( Vector2D( vertex3[0], vertex3[1] ), uv21 );
+	vert[2].Init( Vector2D( vertex2[0], vertex2[1] ), uv22 );
+	vert[3].Init( Vector2D( vertex1[0], vertex1[1] ), uv12 );
+
+	vgui::surface()->DrawTexturedPolygon(4, vert);
+
+	return true;
+}
