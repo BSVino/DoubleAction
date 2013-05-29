@@ -1682,13 +1682,13 @@ void CSDKGameMovement::Duck( void )
 			// Calc parametric time
 			float fraction = SimpleSpline( pronetime / TIME_TO_PRONE );
 			SetProneEyeOffset( fraction );
-
 		}
 
 		// Set these, so that as soon as we stop unproning, we don't pop to standing
 		// the information that we let go of the duck key has been lost by now.
 		if ( m_pSDKPlayer->m_bUnProneToDuck )
 		{
+			FinishProne();
             player->m_Local.m_flDucktime = 1000;
 			player->m_Local.m_bDucking    = true;
 		}
@@ -1929,11 +1929,6 @@ void CSDKGameMovement::Duck( void )
 		bool bStunt = !!(buttonsPressed & IN_ALT1);
 
 		bool bGoProne = false;
-		if (m_pSDKPlayer->GetAbsVelocity().Length() > 0.1f)
-			bGoProne = false;
-		if (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT))
-			bGoProne = false;
-
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
 		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
 
@@ -2064,7 +2059,7 @@ void CSDKGameMovement::Duck( void )
 
 			if ( m_pSDKPlayer->m_bUnProneToDuck )
 			{
-				m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
+				//m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
 
 				//prepare for duck transition
 				player->AddFlag( FL_DUCKING );
@@ -2156,33 +2151,12 @@ void CSDKGameMovement::Duck( void )
 		( buttonsPressed & IN_DUCK ) && 
 		CanUnprone() )	
 	{
-		// If the player presses duck while prone,
-		// unprone them to the duck position
 		m_pSDKPlayer->m_Shared.SetProne( false );
-		m_pSDKPlayer->m_Shared.StandUpFromProne();
-
-		m_pSDKPlayer->m_bUnProneToDuck = true;
-
-		//
-		//Tony; here is where you'd want to do an animation for first person to give the effect of going to duck from prone.
-		//
-
-		m_pSDKPlayer->DoAnimationEvent( PLAYERANIMEVENT_PRONE_TO_CROUCH );
-
-		// simulate a duck that was pressed while we were prone
 		player->AddFlag( FL_DUCKING );
-		player->m_Local.m_bDucked = true;
 		player->m_Local.m_flDucktime = 1000;
 		player->m_Local.m_bDucking    = true;
 	}
 
-	// no ducking or unducking while deployed or prone
-	if( m_pSDKPlayer->m_Shared.IsProne() ||
-		m_pSDKPlayer->m_Shared.IsGettingUpFromProne() ||
-		!m_pSDKPlayer->m_Shared.CanChangePosition() )
-	{
-		return;
-	}
 #endif // SDK_USE_PRONE
 
 	if (m_pSDKPlayer->m_Shared.IsRolling())
@@ -2651,7 +2625,7 @@ void CSDKGameMovement::FullWalkMove ()
 					angle = fabs(acos(angle)); //any source math funcs?
 					angle *= 180.0f / 3.1416f; //change for PI constant
 
-					if (angle < 140.0f)
+					if (angle < 150.0f)
 					{
 						float speed = da_acro_kong_speed.GetFloat ();
 						float delay = da_acro_kong_delay.GetFloat ();

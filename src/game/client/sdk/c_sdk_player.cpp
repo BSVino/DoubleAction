@@ -213,7 +213,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
-	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),
+	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),	
 
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 END_RECV_TABLE()
@@ -652,6 +652,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_fNextThinkPushAway = 0.0f;
 
 	m_flLastSlowMoMultiplier = 1;
+	m_currentAlphaVal = 255.0f;
 }
 
 
@@ -1490,7 +1491,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		angCamera[ ROLL ] = 0;
 
 		UpdateThirdCamera(pSetup->origin, angCamera);
-
+			
 		pSetup->origin = GetThirdPersonCameraPosition();
 	}
 	else
