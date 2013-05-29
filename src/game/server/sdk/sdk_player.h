@@ -442,6 +442,11 @@ public:
 
 	CNetworkVar( bool, m_bThirdPerson );
 	CNetworkVar( bool, m_bThirdPersonCamSide );
+
+#ifdef CLIENT_DLL
+	float m_flCurrentAlphaVal; // keeps track of the current alpha value for the player model
+#endif
+
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;

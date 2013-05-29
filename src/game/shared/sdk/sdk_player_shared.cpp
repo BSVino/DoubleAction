@@ -384,7 +384,9 @@ void CSDKPlayer::SharedSpawn()
 	// when we spawn
 
 	SetGravity(1);
-
+#ifdef CLIENT_DLL
+	m_flCurrentAlphaVal = 255.0f;
+#endif
 	m_flReadyWeaponUntil = -1;
 	m_bThirdPersonCamSide = true;
 	m_flSideLerp = m_bThirdPersonCamSide?1:-1;
@@ -411,6 +413,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.kongtime = 0;
 	m_Shared.runtime = 0;
 	m_Shared.manteltime = 0;
+
 
 	//Tony; todo; fix
 
@@ -658,19 +661,17 @@ void CSDKPlayerShared::SetProne( bool bProne, bool bNoAnimation /* = false */ )
 	m_bProneSliding = false;
 	m_flDisallowUnProneTime = -1;
 
-	if ( bNoAnimation )
+	if (bNoAnimation)
 	{
 		m_flGoProneTime = 0;
 		m_flUnProneTime = 0;
 	}
 
-	if ( !bProne /*&& IsSniperZoomed()*/ )	// forceunzoom for going prone is in StartGoingProne
+	if (!bProne)	// forceunzoom for going prone is in StartGoingProne
 	{
 		ForceUnzoom();
-	}
-
-	if (!bProne)
 		m_pOuter->ReadyWeapon();
+	}		
 }
 
 void CSDKPlayerShared::StartGoingProne( void )
@@ -1424,10 +1425,58 @@ void CSDKPlayer::UpdateViewBobRamp()
 	m_Shared.m_flViewBobRamp = Approach(flBobRampGoal, m_Shared.m_flViewBobRamp, gpGlobals->frametime*m_flSlowMoMultiplier*4);
 }
 
+ConVar  da_cam_fade_distance("sdk_cam_fade_distance", "30", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
+ConVar	da_cam_fade_alpha_val("sdk_cam_fade_alpha_val", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
+
 void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 {
 	if (!IsInThirdPerson())
 		return;
+
+	CWeaponSDKBase * pWeapon = NULL;
+	if (GetActiveWeapon() != NULL){
+		pWeapon = GetActiveSDKWeapon();
+	}
+
+	Assert(pWeapon);
+
+#ifdef CLIENT_DLL
+
+	if (m_vecThirdCamera.DistTo(vecEye) < da_cam_fade_distance.GetFloat()){
+
+		m_flCurrentAlphaVal = Approach(da_cam_fade_alpha_val.GetFloat(), m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
+
+		if (GetRenderMode() != kRenderTransTexture){
+			SetRenderMode(kRenderTransTexture);
+		}
+
+		SetRenderColorA(m_flCurrentAlphaVal);
+
+		if (pWeapon){
+			if (pWeapon->GetRenderMode() != kRenderTransTexture){
+				pWeapon->SetRenderMode(kRenderTransTexture);
+			}
+			pWeapon->SetRenderColorA(m_flCurrentAlphaVal);
+		}
+	}else{
+
+		m_flCurrentAlphaVal = Approach(255.0f, m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
+
+		if (GetRenderMode() != kRenderNormal){
+			SetRenderMode(kRenderNormal);
+		}
+
+		SetRenderColorA(m_flCurrentAlphaVal);
+
+		if (pWeapon){
+			if (pWeapon->GetRenderMode() != kRenderNormal){
+				pWeapon->SetRenderMode(kRenderNormal);
+			}
+			pWeapon->SetRenderColorA(m_flCurrentAlphaVal);
+		}
+	}
+
+#endif
 
 	m_vecThirdCamera = CalculateThirdPersonCameraPosition(vecEye, angEye);
 
@@ -1439,6 +1488,7 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
 
 	m_vecThirdTarget = tr.endpos;
+	
 }
 
 ConVar da_viewbob( "da_viewbob", "2.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "View bob magnitude." );
