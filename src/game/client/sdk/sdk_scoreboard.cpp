@@ -87,7 +87,9 @@ void CSDKScoreboard::Update( void )
 	UpdateTeamInfo();
 	UpdatePlayerInfo();
 
-	MoveToCenterOfScreen();
+	int wx, wy, ww, wt;
+	surface()->GetWorkspaceBounds(wx, wy, ww, wt);
+	SetPos(0, (wt - GetTall()) / 2);
 
 	// update every second
 	m_fNextUpdateTime = gpGlobals->curtime + 1.0f; 
@@ -226,15 +228,18 @@ void CSDKScoreboard::AddHeader()
 	m_pPlayerList->SetSectionAlwaysVisible(0);
 	m_pPlayerList->SetSectionFgColor(0, Color(0, 0, 0, 255));
 
-	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderMedium", false );
+	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
+
+	m_pPlayerList->SetFontSection(0, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
+
+	int iScoreWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth );
+	int iPingWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth );
+	int iListWidth = m_pPlayerList->GetWide();
 
 	m_pPlayerList->AddColumnToSection(0, "avatar", "", SectionedListPanel::COLUMN_IMAGE, m_iAvatarWidth );
-	m_pPlayerList->AddColumnToSection(0, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iNameWidth ), hFallbackFont );
-#if defined ( SDK_USE_PLAYERCLASSES )
-	m_pPlayerList->AddColumnToSection(0, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth ), hFallbackFont );
-#endif
-	m_pPlayerList->AddColumnToSection(0, "frags", "#PlayerScore", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth ) );
-	m_pPlayerList->AddColumnToSection(0, "ping", "#PlayerPing", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth ) );
+	m_pPlayerList->AddColumnToSection(0, "name", "", 0, iListWidth - m_iAvatarWidth - iPingWidth - iScoreWidth*1.5f, hFallbackFont );
+	m_pPlayerList->AddColumnToSection(0, "frags", "#DA_PlayerScore", 0 | SectionedListPanel::COLUMN_RIGHT, iScoreWidth );
+	m_pPlayerList->AddColumnToSection(0, "ping", "#DA_PlayerPing", 0 | SectionedListPanel::COLUMN_RIGHT, iPingWidth );
 }
 
 //-----------------------------------------------------------------------------
@@ -242,22 +247,25 @@ void CSDKScoreboard::AddHeader()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 {
-	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderMedium", false );
+	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
 
 	int sectionID = GetSectionFromTeamNumber( teamNumber );
 	if ( teamType == TYPE_TEAM )
 	{
  		m_pPlayerList->AddSection(sectionID, "", StaticPlayerSortFunc);
-		m_pPlayerList->SetSectionFgColor(0, Color(0, 0, 0, 255));
+		m_pPlayerList->SetSectionFgColor(sectionID, Color(0, 0, 0, 255));
+
+		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
+
+		int iScoreWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth );
+		int iPingWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth );
+		int iListWidth = m_pPlayerList->GetWide();
 
 		// setup the columns
 		m_pPlayerList->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE, m_iAvatarWidth );
-		m_pPlayerList->AddColumnToSection(sectionID, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iNameWidth ), hFallbackFont );
-#if defined ( SDK_USE_PLAYERCLASSES )
-		m_pPlayerList->AddColumnToSection(sectionID, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth ), hFallbackFont );
-#endif
-		m_pPlayerList->AddColumnToSection(sectionID, "frags", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth ) );
-		m_pPlayerList->AddColumnToSection(sectionID, "ping", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth ) );
+		m_pPlayerList->AddColumnToSection(sectionID, "name", "", 0, iListWidth - m_iAvatarWidth - iPingWidth - iScoreWidth*1.5f, hFallbackFont );
+		m_pPlayerList->AddColumnToSection(sectionID, "frags", "", SectionedListPanel::COLUMN_RIGHT, iScoreWidth );
+		m_pPlayerList->AddColumnToSection(sectionID, "ping", "", SectionedListPanel::COLUMN_RIGHT, iPingWidth );
 
 		//Tony; don't make unassigned always visible when using teams.
 #if defined ( SDK_USE_TEAMS )
@@ -270,9 +278,10 @@ void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 	else if ( teamType == TYPE_SPECTATORS )
 	{
 		m_pPlayerList->AddSection(sectionID, "");
+		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
 		m_pPlayerList->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE, m_iAvatarWidth );
 		m_pPlayerList->AddColumnToSection(sectionID, "name", "#SDK_Team_Spectators", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iNameWidth ), hFallbackFont );
-		m_pPlayerList->SetSectionFgColor(0, Color(0, 0, 0, 255));
+		m_pPlayerList->SetSectionFgColor(sectionID, Color(0, 0, 0, 255));
 	}
 }
 
@@ -370,7 +379,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 				// add a new row
 				itemID = m_pPlayerList->AddItem( sectionID, kv );
 
-				HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderMedium", false );
+				HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
 				m_pPlayerList->SetItemFont(itemID, hItemFont);
 			}
 			else
