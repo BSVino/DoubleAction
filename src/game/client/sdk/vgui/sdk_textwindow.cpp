@@ -32,8 +32,6 @@ CSDKTextWindow::CSDKTextWindow(IViewPort *pViewPort) : CTextWindow( pViewPort )
 {
 	// load the new scheme early!!
 	SetScheme("FolderScheme");
-
-	m_pMapMessage = new HTML(this,"MapMessage");;
 }
 
 //-----------------------------------------------------------------------------
@@ -71,29 +69,6 @@ void CSDKTextWindow::MoveToCenterOfScreen()
 void CSDKTextWindow::Update( void )
 {
 	BaseClass::Update();
-
-	m_pMapMessage->SetVisible( false );
-
-	if (engine->GetLevelName() && *engine->GetLevelName())
-	{
-		char szMapName[MAX_MAP_NAME];
-		Q_FileBase( engine->GetLevelName(), szMapName, sizeof(szMapName) );
-		Q_strlower( szMapName );
-
-		char szLocalURL[ _MAX_PATH + 7 ];
-		Q_strncpy( szLocalURL, "file://", sizeof( szLocalURL ) );
-		
-		char szPathData[ _MAX_PATH ];
-		g_pFullFileSystem->RelativePathToFullPath( VarArgs("maps/%s.htm", szMapName), "MOD", szPathData, sizeof(szPathData) );
-
-		if (g_pFullFileSystem->IsFileImmediatelyAvailable(szPathData))
-		{
-			Q_strncat( szLocalURL, szPathData, sizeof( szLocalURL ), COPY_ALL_CHARACTERS );
-
-			m_pMapMessage->SetVisible( true );
-			m_pMapMessage->OpenURL( szLocalURL );
-		}
-	}
 
 	MoveToCenterOfScreen();
 }

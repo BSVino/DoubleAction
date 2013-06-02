@@ -1470,6 +1470,9 @@
     <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\vgui\sdk_mapinfo.cpp">
+      <Filter>Source Files\SDK\GUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3277,6 +3280,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\weapon_akimbobase.h">
       <Filter>Source Files\SDK\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\vgui\sdk_mapinfo.h">
+      <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

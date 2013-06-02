@@ -48,6 +48,7 @@
 #include "dab_buymenu.h"
 #include "dab_skillmenu.h"
 #include "dab_charactermenu.h"
+#include "sdk_mapinfo.h"
 
 #if defined ( SDK_USE_TEAMS )
 CON_COMMAND_F( changeteam, "Choose a new team", FCVAR_SERVER_CAN_EXECUTE|FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -156,6 +157,10 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CSDKTextWindow( this );
 	}
+	else if ( Q_strcmp( PANEL_INTRO, szPanelName) == 0 )
+	{
+		newpanel = new CSDKMapInfo( this );
+	}
 	else if ( Q_strcmp(PANEL_SPECGUI, szPanelName) == 0 )
 	{
 		newpanel = new CSDKSpectatorGUI( this );	
@@ -207,6 +212,7 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 
 void SDKViewport::CreateDefaultPanels( void )
 {
+	AddNewPanel( CreatePanelByName( PANEL_INTRO ), "PANEL_INTRO" );
 #if defined ( SDK_USE_PLAYERCLASSES )
 	#if !defined ( SDK_USE_TEAMS )
 		AddNewPanel( CreatePanelByName( PANEL_CLASS_NOTEAMS ), "PANEL_CLASS_NOTEAMS" );

@@ -2239,21 +2239,22 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		HandleCommand_JoinTeam( TEAM_SPECTATOR );
 		return true;
 	}
-	else if ( FStrEq( pcmd, "joingame" ) )
+	else if ( FStrEq( pcmd, "showmapinfo" ) )
 	{
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_WELCOME )
 		{
-//Tony; using teams, go to picking team.
-#if defined( SDK_USE_TEAMS )
-			State_Transition( STATE_PICKINGTEAM );
-//Tony; not using teams, but we are using classes, so go straight to class picking.
-#elif !defined ( SDK_USE_TEAMS ) && defined ( SDK_USE_PLAYERCLASSES )
-			State_Transition( STATE_PICKINGCLASS );
-//Tony; not using teams or classes, go straight to active.
-#else
+			State_Transition( STATE_MAPINFO );
+		}
+		
+		return true;
+	}
+	else if ( FStrEq( pcmd, "joingame" ) )
+	{
+		// player just closed MOTD dialog
+		if ( m_iPlayerState == STATE_MAPINFO )
+		{
 			State_Transition( STATE_PICKINGCHARACTER );
-#endif
 		}
 		
 		return true;
@@ -2792,6 +2793,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 	{
 		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_Enter_ACTIVE, NULL, &CSDKPlayer::State_PreThink_ACTIVE },
 		{ STATE_WELCOME,		"STATE_WELCOME",		&CSDKPlayer::State_Enter_WELCOME, NULL, &CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_MAPINFO,        "STATE_MAPINFO",        &CSDKPlayer::State_Enter_MAPINFO, NULL, &CSDKPlayer::State_PreThink_MAPINFO },
 #if defined ( SDK_USE_TEAMS )
 		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_Enter_PICKINGTEAM, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
 #endif
@@ -2827,6 +2829,7 @@ void CSDKPlayer::PhysObjectWake()
 	if ( pObj )
 		pObj->Wake();
 }
+
 void CSDKPlayer::State_Enter_WELCOME()
 {
 	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
@@ -2853,13 +2856,23 @@ void CSDKPlayer::State_Enter_WELCOME()
 		data->SetString( "title", title );		// info panel title
 		data->SetString( "type", "1" );			// show userdata from stringtable entry
 		data->SetString( "msg",	"motd" );		// use this stringtable entry
-		data->SetString( "cmd", "joingame" );// exec this command if panel closed
+		data->SetString( "cmd", "showmapinfo" );// exec this command if panel closed
 
 		ShowViewPortPanel( PANEL_INFO, true, data );
 
 		data->deleteThis();
+	}
+}
 
-	}	
+void CSDKPlayer::State_Enter_MAPINFO()
+{
+	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
+	SetMoveType( MOVETYPE_NONE );
+	AddSolidFlags( FSOLID_NOT_SOLID );
+
+	PhysObjectSleep();
+
+	ShowViewPortPanel( PANEL_INTRO, true );
 }
 
 void CSDKPlayer::MoveToNextIntroCamera()
@@ -2912,6 +2925,15 @@ void CSDKPlayer::MoveToNextIntroCamera()
 }
 
 void CSDKPlayer::State_PreThink_WELCOME()
+{
+	// Update whatever intro camera it's at.
+	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )
+	{
+		MoveToNextIntroCamera();
+	}
+}
+
+void CSDKPlayer::State_PreThink_MAPINFO()
 {
 	// Update whatever intro camera it's at.
 	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )

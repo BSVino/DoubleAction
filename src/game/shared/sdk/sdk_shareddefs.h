@@ -201,7 +201,8 @@ enum SDKPlayerState
 	// It's switching between intro cameras every few seconds, and there's a level info 
 	// screen up.
 	STATE_WELCOME,			// Show the level intro screen.
-	
+	STATE_MAPINFO,          // Show the map info screen.
+
 	// During these states, you can either be a new player waiting to join, or
 	// you can be a live player in the game who wants to change teams.
 	// Either way, you can't move while choosing team or class (or while any menu is up).

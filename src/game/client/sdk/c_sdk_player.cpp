@@ -921,6 +921,10 @@ bool C_SDKPlayer::ShouldDraw( void )
 
 	if ( State_Get() == STATE_WELCOME )
 		return false;
+
+	if ( State_Get() == STATE_MAPINFO )
+		return false;
+
 #if defined ( SDK_USE_TEAMS )
 	if ( State_Get() == STATE_PICKINGTEAM )
 		return false;

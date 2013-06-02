@@ -307,6 +307,9 @@ private:
 	void State_Enter_WELCOME();
 	void State_PreThink_WELCOME();
 
+	void State_Enter_MAPINFO();
+	void State_PreThink_MAPINFO();
+
 	void State_Enter_PICKINGTEAM();
 	void State_Enter_PICKINGCLASS();
 

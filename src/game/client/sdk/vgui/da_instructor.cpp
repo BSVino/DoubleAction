@@ -137,6 +137,9 @@ bool ValidPlayerConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	if (gViewPortInterface->FindPanelByName(PANEL_INFO)->IsVisible())
 		return false;
 
+	if (gViewPortInterface->FindPanelByName(PANEL_INTRO)->IsVisible())
+		return false;
+
 	// Choose character screen
 	if (gViewPortInterface->FindPanelByName(PANEL_CLASS)->IsVisible())
 		return false;
