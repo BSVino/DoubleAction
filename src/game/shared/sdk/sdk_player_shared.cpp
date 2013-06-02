@@ -1426,7 +1426,7 @@ void CSDKPlayer::UpdateViewBobRamp()
 }
 
 ConVar  da_cam_fade_distance("sdk_cam_fade_distance", "30", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
-ConVar	da_cam_fade_alpha_val("sdk_cam_fade_alpha_val", "20", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
+ConVar	da_cam_fade_alpha_val("sdk_cam_fade_alpha_val", "100", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 {
