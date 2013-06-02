@@ -13,6 +13,7 @@
 #include "sdk_gamerules.h"
 #include "sdk_backgroundpanel.h"
 #include "folder_gui.h"
+#include "c_sdk_player.h"
 
 #include <KeyValues.h>
 
@@ -319,7 +320,6 @@ void CSDKScoreboard::UpdatePlayerInfo()
 
 	C_SDK_PlayerResource *sdkPR = SDKGameResources();
 
-
 #if defined ( SDK_USE_PLAYERCLASSES )
 	int localteam = pPlayer->GetTeamNumber();
 	C_BasePlayer *pOther = NULL;
@@ -336,7 +336,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 			kv->SetInt("playerIndex", i);
 			kv->SetInt("team", sdkPR->GetTeam( i ) );
 			kv->SetString("name", sdkPR->GetPlayerName(i) );
-			kv->SetInt("frags", sdkPR->GetPlayerScore( i ));
+			kv->SetInt("frags", sdkPR->GetStyle( i ));
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 			//Tony; for player classname, just look up directly from the player.
@@ -414,7 +414,108 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		m_pPlayerList->SetSelectedItem(selectedRow);
 	}
 
-	
+	Label *pMostLabel;
+	Label *pMostLabelPlayer;
+
+	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStyle"));
+	if (pMostLabel)
+		pMostLabel->SetText("#DA_ScoreBoard_MostStyle");
+
+	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStylePlayer"));
+	if (pMostLabelPlayer)
+	{
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStylePlayer()));
+		if (pPlayer)
+			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+	}
+
+	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStunts"));
+	if (pMostLabel)
+	{
+		pMostLabel->SetText("#DA_ScoreBoard_StuntKills");
+
+		wchar_t wszLabel[100];
+		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+
+		wchar_t wszNewLabel[100];
+		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestStuntKills());
+
+		pMostLabel->SetText(wszNewLabel);
+	}
+
+	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStuntsPlayer"));
+	if (pMostLabelPlayer)
+	{
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStuntKillPlayer()));
+		if (pPlayer)
+			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+	}
+
+	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostBrawl"));
+	if (pMostLabel)
+	{
+		pMostLabel->SetText("#DA_ScoreBoard_BrawlKills");
+
+		wchar_t wszLabel[100];
+		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+
+		wchar_t wszNewLabel[100];
+		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestBrawlKills());
+
+		pMostLabel->SetText(wszNewLabel);
+	}
+
+	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostBrawlPlayer"));
+	if (pMostLabelPlayer)
+	{
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestBrawlKillPlayer()));
+		if (pPlayer)
+			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+	}
+
+	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStreak"));
+	if (pMostLabel)
+	{
+		pMostLabel->SetText("#DA_ScoreBoard_KillStreak");
+
+		wchar_t wszLabel[100];
+		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+
+		wchar_t wszNewLabel[100];
+		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestKillStreak());
+
+		pMostLabel->SetText(wszNewLabel);
+	}
+
+	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStreakPlayer"));
+	if (pMostLabelPlayer)
+	{
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestKillStreakPlayer()));
+		if (pPlayer)
+			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+	}
+
+	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostGrenade"));
+	if (pMostLabel)
+	{
+		pMostLabel->SetText("#DA_ScoreBoard_GrenadeKills");
+
+		wchar_t wszLabel[100];
+		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+
+		wchar_t wszNewLabel[100];
+		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestGrenadeKills());
+
+		pMostLabel->SetText(wszNewLabel);
+	}
+
+	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostGrenadePlayer"));
+	if (pMostLabelPlayer)
+	{
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestGrenadeKillPlayer()));
+		if (pPlayer)
+			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+	}
 }
 
 Panel *CSDKScoreboard::CreateControlByName( const char *controlName )

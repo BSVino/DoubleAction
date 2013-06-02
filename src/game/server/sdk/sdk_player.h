@@ -145,6 +145,8 @@ public:
 
 	virtual void	Instructor_LessonLearned(const char* pszLesson);
 
+	int             GetTotalStyle() { return m_flTotalStyle; }
+
 	CWeaponSDKBase *findweapon (SDKWeaponID id);
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
@@ -461,6 +463,14 @@ public:
 	CNetworkVar( string_t, m_iszCharacter );
 
 	CWeaponSDKBase *switchfrom;
+
+	float  m_flTotalStyle;
+
+	int    m_iStuntKills;
+	int    m_iGrenadeKills;
+	int    m_iBrawlKills;
+	int    m_iStreakKills; // Kills in a row.
+	int    m_iCurrentStreak;
 
 protected:
 	static PartInfo m_partInfo[ MAX_PLAYERS ];						///< part positions for each player

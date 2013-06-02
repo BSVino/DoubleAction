@@ -1056,6 +1056,7 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
+	m_iCurrentStreak = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
@@ -1236,7 +1237,13 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 void CSDKPlayer::InitialSpawn( void )
 {
+	m_flTotalStyle = 0;
 	m_bThirdPerson = !!GetUserInfoInt("cl_thirdperson", 0);
+
+	m_iStuntKills = 0;
+	m_iGrenadeKills = 0;
+	m_iBrawlKills = 0;
+	m_iStreakKills = 0;
 
 	BaseClass::InitialSpawn();
 
@@ -1547,6 +1554,24 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	pAmmoPickup->SetNextThink(gpGlobals->curtime + 30);
 
 	CBaseEntity* pAttacker = info.GetAttacker();
+
+	if( pAttacker && pAttacker->IsPlayer() )
+	{
+		CSDKPlayer* pSDKAttacker = ToSDKPlayer(pAttacker);
+
+		pSDKAttacker->m_iCurrentStreak++;
+		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
+
+		if (info.GetDamageType() == DMG_BLAST)
+			pSDKAttacker->m_iGrenadeKills++;
+		else
+		{
+			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling())
+				pSDKAttacker->m_iStuntKills++;
+			else if (info.GetDamageType() == DMG_CLUB)
+				pSDKAttacker->m_iBrawlKills++;
+		}
+	}
 
 	// show killer in death cam mode
 	// chopped down version of SetObserverTarget without the team check
@@ -3310,6 +3335,8 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 {
+	m_flTotalStyle += points;
+
 	if (IsStyleSkillActive())
 	{
 		points = RemapValClamped(points, 0, dab_stylemeteractivationcost.GetFloat(), 0, dab_stylemetertotalcharge.GetFloat());
