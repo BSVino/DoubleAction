@@ -309,6 +309,8 @@ CHudTexture* CHudAmmo::GetTexture()
 	return nullptr;
 }
 
+ConVar hud_ammoscale("hud_ammoscale", "1.4", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the ammo display.");
+
 Vector2D CHudAmmo::GetRoundPosition(int i)
 {
 	CHudTexture* pTexture = GetTexture();
@@ -320,21 +322,26 @@ Vector2D CHudAmmo::GetRoundPosition(int i)
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
-	int iSpacing = 10;
+	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
+
+	float flRightPadding = 40;
+	float flBottomPadding = 40;
+
+	int iSpacing = 10*flScale;
 
 	int iMaxClip = pPlayer->GetActiveSDKWeapon()->GetMaxClip1();
-	if ((pTexture->Width() + iSpacing) * iMaxClip > 450)
-		iSpacing = -10;
+	if ((pTexture->EffectiveWidth(flScale) + iSpacing) * iMaxClip > 450*flScale)
+		iSpacing = -10*flScale;
 
 	if (iSpacing < 0)
 	{
 		if (i%2 == 0)
-			return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 30);
+			return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - (flBottomPadding+10)*flScale);
 		else
-			return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 20);
+			return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - flBottomPadding*flScale);
 	}
 	else
-		return Vector2D(iWidth - (i+1)*pTexture->Width() - i*iSpacing - 20, iHeight - pTexture->Height() - 20);
+		return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - flBottomPadding*flScale);
 }
 
 void CHudAmmo::Paint()
@@ -354,10 +361,15 @@ void CHudAmmo::Paint()
 	if (!pTexture)
 		return;
 
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+
+	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
+
 	for (int i = 0; i < m_iAmmo; i++)
 	{
 		Vector2D vecRound = GetRoundPosition(i);
-		pTexture->DrawSelf( vecRound.x, vecRound.y, pTexture->Width(), pTexture->Height(), Color(255, 255, 255, 255) );
+		pTexture->DrawSelf( vecRound.x, vecRound.y, pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale), Color(255, 255, 255, 255) );
 	}
 
 	float flFrameTime = gpGlobals->frametime * pPlayer->GetSlowMoMultiplier();
@@ -381,6 +393,6 @@ void CHudAmmo::Paint()
 
 		SDKViewport::DrawPolygon(pTexture,
 			oRound.vecPosition.x, oRound.vecPosition.y,
-			pTexture->Width(), pTexture->Height(), oRound.flAngle);
+			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale), oRound.flAngle);
 	}
 }
