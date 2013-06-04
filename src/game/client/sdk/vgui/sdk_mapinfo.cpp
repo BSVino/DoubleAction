@@ -33,7 +33,11 @@ CSDKMapInfo::CSDKMapInfo(IViewPort *pViewPort) : Frame(NULL, PANEL_INTRO)
 	// load the new scheme early!!
 	SetScheme(scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
 
+	SetMoveable(false);
+	SetSizeable(false);
 	SetProportional(true);
+	SetTitleBarVisible( false );
+
 	LoadControlSettings( "Resource/UI/MapInfo.res" );
 	InvalidateLayout();
 
