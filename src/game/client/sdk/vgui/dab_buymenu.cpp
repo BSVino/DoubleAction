@@ -235,6 +235,14 @@ void CDABBuyMenu::Update()
 		}
 	}
 
+	CFolderLabel* pWeaponTotalWeightNumber = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponTotalWeightNumber"));
+	if (pWeaponTotalWeightNumber)
+	{
+		wchar_t szText[20];
+		_snwprintf( szText, ARRAYSIZE(szText) - 1, L"%d/%d", pPlayer->GetLoadoutWeight(), MAX_LOADOUT_WEIGHT );
+		pWeaponTotalWeightNumber->SetText(szText);
+	}
+
 	for ( int i = 0; i < m_apTypes.Count(); i++)
 	{
 		m_apTypes[i]->DeletePanel();
