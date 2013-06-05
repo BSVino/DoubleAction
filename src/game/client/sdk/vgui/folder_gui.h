@@ -2,6 +2,7 @@
 
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Frame.h>
+#include <vgui_controls/Button.h>
 
 namespace vgui
 {
@@ -72,6 +73,32 @@ public:
 	virtual void SetImage(const char *imageName);
 
 	virtual void PaintBackground();
+	virtual void ApplySettings(KeyValues *inResourceData);
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+
+private:
+	char         m_szImageName[100];
+	CHudTexture* m_pImage;
+
+	int          m_iX;
+	int          m_iY;
+	int          m_iWidth;
+	int          m_iHeight;
+};
+
+class CImageButton : public vgui::Button
+{
+private:
+	DECLARE_CLASS_SIMPLE( CImageButton, vgui::Button );
+	
+public:
+	CImageButton(vgui::Panel *parent, const char *panelName);
+
+public:
+	virtual void SetImage(const char *imageName);
+
+	virtual void PaintBackground();
+	virtual void PaintBorder() {};
 	virtual void ApplySettings(KeyValues *inResourceData);
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 

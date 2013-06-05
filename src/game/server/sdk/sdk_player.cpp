@@ -2305,10 +2305,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if ( FStrEq( pcmd, "menuclosed" ) )
 	{
 		SetBuyMenuOpen( false );
-
-		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_BUYINGWEAPONS || IsDead()) )
-			State_Transition( STATE_PICKINGSKILL );
-
 		return true;
 	}
 	else if ( FStrEq( pcmd, "charmenuopen" ) )
@@ -2319,10 +2315,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if ( FStrEq( pcmd, "charmenuclosed" ) )
 	{
 		SetCharacterMenuOpen( false );
-
-		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGCHARACTER || IsDead()) )
-			State_Transition( STATE_BUYINGWEAPONS );
-
 		return true;
 	}
 	else if ( FStrEq( pcmd, "skillmenuopen" ) )
@@ -2333,10 +2325,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if ( FStrEq( pcmd, "skillmenuclosed" ) )
 	{
 		SetSkillMenuOpen( false );
-
-		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGSKILL || IsDead()) )
-			State_Transition( STATE_ACTIVE );
-
 		return true;
 	}
 	else if ( FStrEq( pcmd, "droptest" ) )
@@ -3797,12 +3785,22 @@ void CC_Character(const CCommand& args)
 		pPlayer->StopObserverMode();
 
 		if (pPlayer->SetCharacter(args[1]))
+		{
+			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
+				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 			return;
+		}
 
 		if (FStrEq(args[1], "random"))
 		{
 			if (pPlayer->PickRandomCharacter())
+			{
+				if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
+					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 				return;
+			}
 		}
 
 		Error("Couldn't find that player model.\n");
@@ -3884,10 +3882,17 @@ void CC_Skill(const CCommand& args)
 	if (FStrEq(args[1], "random"))
 	{
 		pPlayer->PickRandomSkill();
+
+		if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGSKILL || pPlayer->IsDead()) )
+			pPlayer->State_Transition( STATE_ACTIVE );
+
 		return;
 	}
 
 	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
+
+	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGSKILL || pPlayer->IsDead()) )
+		pPlayer->State_Transition( STATE_ACTIVE );
 }
 
 static ConCommand skill("setskill", CC_Skill, "Open the skill menu.", FCVAR_GAMEDLL);

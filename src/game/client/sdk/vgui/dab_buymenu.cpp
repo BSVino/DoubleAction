@@ -163,6 +163,18 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 	}
 }
 
+void CDABBuyMenu::OnCommand( const char *command )
+{
+	BaseClass::OnCommand(command);
+
+	if (FStrEq(command, "close"))
+	{
+		// Automatically bring up the next menu if the player is dead.
+		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
+			engine->ServerCmd( "setskill" );
+	}
+}
+
 void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
