@@ -10,6 +10,7 @@
 #include "takedamageinfo.h"
 #include "weapon_sdkbase.h"
 #include "ammodef.h"
+#include "weapon_akimbobase.h"
 
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"
@@ -42,6 +43,10 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	RecvPropFloat( RECVINFO( m_flRecoil ) ),
 	RecvPropFloat( RECVINFO( m_flSpread ) ),
   	RecvPropBool( RECVINFO( m_bSwingSecondary ) ),
+
+	RecvPropInt(RECVINFO(leftclip)),
+	RecvPropInt(RECVINFO(rightclip)),
+	RecvPropBool(RECVINFO(shootright)),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
@@ -53,6 +58,10 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	SendPropFloat( SENDINFO( m_flSpread ) ),
 	SendPropFloat( SENDINFO( m_flSwingTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
+
+	SendPropInt(SENDINFO(leftclip)),
+	SendPropInt(SENDINFO(rightclip)),
+	SendPropBool(SENDINFO(shootright)),
 #endif
 END_NETWORK_TABLE()
 
@@ -62,6 +71,10 @@ BEGIN_PREDICTION_DATA( CWeaponSDKBase )
 	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bSwingSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD(leftclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),			
+	DEFINE_PRED_FIELD(rightclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(shootright, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),	
 END_PREDICTION_DATA()
 #endif
 
@@ -73,7 +86,9 @@ LINK_ENTITY_TO_CLASS( weapon_sdk_base, CWeaponSDKBase );
 	BEGIN_DATADESC( CWeaponSDKBase )
 
 		// New weapon Think and Touch Functions go here..
-
+		DEFINE_FIELD(leftclip, FIELD_INTEGER),
+		DEFINE_FIELD(rightclip, FIELD_INTEGER),
+		DEFINE_FIELD(shootright, FIELD_BOOLEAN),
 	END_DATADESC()
 
 #endif
@@ -98,6 +113,12 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+
+#ifdef CLIENT_DLL
+	m_flArrowGoalSize = 0;
+	m_flArrowCurSize = 0;
+	m_flArrowSpinOffset = RandomFloat(0, 10);
+#endif
 }
 
 void CWeaponSDKBase::Precache()
@@ -111,6 +132,8 @@ void CWeaponSDKBase::Precache()
 	m_flRecoil = GetSDKWpnData().m_flRecoil;
 	m_flSpread = GetSDKWpnData().m_flSpread;
 #endif
+
+	CBaseEntity::PrecacheModel( "particle/weaponarrow.vmt" );
 }
 
 const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
@@ -171,52 +194,11 @@ ConVar dab_coldaccuracymultiplier( "dab_coldaccuracymultiplier", "0.25", FCVAR_C
 ConVar dab_decayrate( "dab_decayrate", "2", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "A multiplier for the accuracy decay rate of weapons as they fire." );
 
 //Tony; added as a default primary attack if it doesn't get overridden, ie: by CSDKWeaponMelee
-void CWeaponSDKBase::PrimaryAttack( void )
+void CWeaponSDKBase::finishattack (CSDKPlayer *pPlayer)
 {
-	// If my clip is empty (and I use clips) start reload
-	if ( UsesClipsForAmmo1() && !m_iClip1 ) 
-	{
-		Reload();
-		return;
-	}
-
-	CSDKPlayer *pPlayer = GetPlayerOwner();
-
-	if (!pPlayer)
-		return;
-
-	//Tony; check firemodes -- 
-	switch(GetFireMode())
-	{
-	case FM_SEMIAUTOMATIC:
-		if (pPlayer->GetShotsFired() > 0)
-			return;
-		break;
-		//Tony; added an accessor to determine the max burst on a per-weapon basis.
-	case FM_BURST:
-		if (pPlayer->GetShotsFired() > MaxBurstShots())
-			return;
-		break;
-	}
 #ifdef GAME_DLL
 	pPlayer->NoteWeaponFired();
 #endif
-
-	SendWeaponAnim( GetPrimaryAttackActivity() );
-
-	/*if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
-	{
-		// Marksmen don't consume ammo while their skill is active.
-	}
-	else*/
-	{
-		// Make sure we don't fire more than the amount in the clip
-		if ( UsesClipsForAmmo1() )
-			m_iClip1 --;
-		else
-			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
-	}
-
 	pPlayer->IncreaseShotsFired();
 
 	float flSpread = GetWeaponSpread();
@@ -294,6 +276,57 @@ void CWeaponSDKBase::PrimaryAttack( void )
 
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
 	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
+}
+
+void CWeaponSDKBase::PrimaryAttack( void )
+{
+	// If my clip is empty (and I use clips) start reload
+	if ( UsesClipsForAmmo1() && !m_iClip1 ) 
+	{
+		Reload();
+		return;
+	}
+
+	CSDKPlayer *pPlayer = GetPlayerOwner();
+	if (!pPlayer)
+		return;
+
+	//Tony; check firemodes -- 
+	switch(GetFireMode())
+	{
+	case FM_SEMIAUTOMATIC:
+		if (pPlayer->GetShotsFired() > 0)
+			return;
+		break;
+		//Tony; added an accessor to determine the max burst on a per-weapon basis.
+	case FM_BURST:
+		if (pPlayer->GetShotsFired() > MaxBurstShots())
+			return;
+		break;
+	}
+
+	if (m_iClip1 == 1)
+	{
+		if (!SendWeaponAnim( ACT_DA_VM_FIRELAST ))
+			SendWeaponAnim( GetPrimaryAttackActivity() );
+	}
+	else
+		SendWeaponAnim( GetPrimaryAttackActivity() );
+
+	/*if (pPlayer->IsStyleSkillActive(SKILL_MARKSMAN))
+	{
+		// Marksmen don't consume ammo while their skill is active.
+	}
+	else*/
+	{
+		// Make sure we don't fire more than the amount in the clip
+		if ( UsesClipsForAmmo1() )
+			m_iClip1 --;
+		else
+			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
+	}
+	/*Chopped this in half here for akimbos*/
+	finishattack (pPlayer);
 }
 
 void CWeaponSDKBase::SecondaryAttack()
@@ -613,7 +646,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	// The heavier the damage the more it hurts.
-	float flDamage = RemapVal(GetSDKWpnData().iWeight, 0, 20, 10, 60);
+	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 35, 60);
 
 	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
 
@@ -716,6 +749,79 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 	Vector vecRecoil = GetPlayerOwner()->m_Shared.GetRecoil(flInputSampleTime);
 	pCmd->viewangles[PITCH] -= vecRecoil.y;
 	pCmd->viewangles[YAW] += vecRecoil.x;
+}
+
+CMaterialReference g_hWeaponArrow;
+int CWeaponSDKBase::DrawModel(int flags)
+{
+	if (!g_hWeaponArrow.IsValid())
+		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
+
+	int iReturn = BaseClass::DrawModel(flags);
+
+	if (GetOwnerEntity())
+	{
+		m_flArrowCurSize = m_flArrowGoalSize = 0;
+
+		return iReturn;
+	}
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pLocalPlayer)
+		return iReturn;
+
+	float flAppearDistance = 250;
+	float flAppearDistanceSqr = flAppearDistance*flAppearDistance;
+
+	if ((pLocalPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flAppearDistanceSqr)
+		m_flArrowGoalSize = 5;
+	else
+		m_flArrowGoalSize = 0;
+
+	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+	float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+
+	m_flArrowCurSize = Approach(m_flArrowGoalSize, m_flArrowCurSize, flFrameTime*20);
+
+	if (m_flArrowCurSize == 0)
+		return iReturn;
+
+	Vector vecOrigin = GetAbsOrigin() + Vector(0, 0, 10);
+	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
+	Vector vecUp = Vector(0, 0, 1);
+
+	float flSize = m_flArrowCurSize;
+
+	CMeshBuilder meshBuilder;
+	CMatRenderContextPtr pRenderContext( materials );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+	pRenderContext->Bind( g_hWeaponArrow );
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.End(false, true);
+
+	return iReturn;
 }
 #endif
 
@@ -830,6 +936,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		{
 			HandleFireOnEmpty();
 			pPlayer->ReadyWeapon();
+			SendWeaponAnim( ACT_VM_DRYFIRE );
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
@@ -929,6 +1036,22 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	// ----------------------------------------
 	if (pPlayer->Weapon_OwnsThisType( GetClassname(), GetSubType())) 
 	{
+		if (GetSDKWpnData ().m_eWeaponType == WT_PISTOL)
+		{/*This is the only place I could think to put this, unfortunately.*/
+			const char *alias = WeaponIDToAlias (GetWeaponID ());
+			CAkimbobase *akb;
+			char name[32];
+			Q_snprintf (name, sizeof (name), "weapon_akimbo_%s", alias);
+			akb = (CAkimbobase *)pPlayer->GiveNamedItem (name);
+			if (akb) 
+			{/*Second pistol is always the left one*/
+				akb->leftclip = m_iClip1;
+				UTIL_Remove (this);
+				akb->SetOwner (pPlayer);
+				pPlayer->Weapon_Switch (akb);
+				return;
+			}
+		}
 		if ( pPlayer->Weapon_EquipAmmoOnly( this ) )
 		{
 			// Only remove me if I have no ammo left
@@ -1237,8 +1360,7 @@ bool CWeaponSDKBase::Deploy( )
 
 	bool bDeploy = DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDeployActivity(), (char*)GetAnimPrefix() );
 
-	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
-
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());	
 	float flSpeedMultiplier = GetSDKWpnData().m_flDrawTimeMultiplier;
 
 	flSpeedMultiplier = pOwner->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.3f, SKILL_MARKSMAN);
@@ -1309,7 +1431,6 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	m_flSwingTime = 0;
-
 	return true;
 }
 

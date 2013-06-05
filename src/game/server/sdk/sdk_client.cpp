@@ -87,7 +87,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBaseTFPlayer for pev, and call spawn
 	CSDKPlayer *pPlayer = CSDKPlayer::CreatePlayer( "player", pEdict );
-	pPlayer->SetPlayerName( playername );
+	pPlayer->SetPlayerName (playername);
 }
 
 

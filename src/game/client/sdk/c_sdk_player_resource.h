@@ -27,6 +27,19 @@ public:
 #endif
 	
 	int GetMaxHealth( int iIndex );
+	int GetStyle( int iIndex );
+
+	int GetHighestStyle() { return m_iHighestStyle; }
+	int GetHighestStuntKills() { return m_iHighestStuntKills; }
+	int GetHighestGrenadeKills() { return m_iHighestGrenadeKills; }
+	int GetHighestBrawlKills() { return m_iHighestBrawlKills; }
+	int GetHighestKillStreak() { return m_iHighestKillStreak; }
+
+	int GetHighestStylePlayer() { return m_iHighestStylePlayer; }
+	int GetHighestStuntKillPlayer() { return m_iHighestStuntKillPlayer; }
+	int GetHighestGrenadeKillPlayer() { return m_iHighestGrenadeKillPlayer; }
+	int GetHighestBrawlKillPlayer() { return m_iHighestBrawlKillPlayer; }
+	int GetHighestKillStreakPlayer() { return m_iHighestKillStreakPlayer; }
 
 protected:
 
@@ -35,7 +48,21 @@ protected:
 #endif
 
 	int		m_iMaxHealth[MAX_PLAYERS+1];
+	int		m_iStyle[MAX_PLAYERS+1];
+
+	CNetworkVar( int, m_iHighestStyle );
+	CNetworkVar( int, m_iHighestStuntKills );
+	CNetworkVar( int, m_iHighestGrenadeKills );
+	CNetworkVar( int, m_iHighestBrawlKills );
+	CNetworkVar( int, m_iHighestKillStreak );
+
+	CNetworkVar( int, m_iHighestStylePlayer );
+	CNetworkVar( int, m_iHighestStuntKillPlayer );
+	CNetworkVar( int, m_iHighestGrenadeKillPlayer );
+	CNetworkVar( int, m_iHighestBrawlKillPlayer );
+	CNetworkVar( int, m_iHighestKillStreakPlayer );
 };
+
 C_SDK_PlayerResource * SDKGameResources( void );
 
 #endif // C_SDK_PLAYERRESOURCE_H

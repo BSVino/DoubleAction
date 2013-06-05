@@ -50,6 +50,7 @@ void CBaseGrenadeProjectile::Precache()
 	PrecacheScriptSound( "BaseGrenade.Explode" );
 	PrecacheScriptSound( "Grenade.Bounce" );
 	PrecacheParticleSystem( "grenade_exp1" );
+	PrecacheModel( "particle/grenadearrow.vmt" );
 }
 
 #ifdef CLIENT_DLL
@@ -76,6 +77,8 @@ void CBaseGrenadeProjectile::Precache()
 		}
 	}
 
+	CMaterialReference g_hGrenadeArrow;
+
 	int CBaseGrenadeProjectile::DrawModel( int flags )
 	{
 		// During the first half-second of our life, don't draw ourselves if he's
@@ -94,13 +97,86 @@ void CBaseGrenadeProjectile::Precache()
 			}
 		}
 
-		return BaseClass::DrawModel( flags );
+		if (!g_hGrenadeArrow.IsValid())
+			g_hGrenadeArrow.Init( "particle/grenadearrow.vmt", TEXTURE_GROUP_OTHER );
+
+		int iReturn = BaseClass::DrawModel(flags);
+
+		C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+		if (!pLocalPlayer)
+			return iReturn;
+
+		if (pLocalPlayer == GetThrower())
+			return iReturn;
+
+		float flAppearDistance = 500;
+		float flAppearDistanceSqr = flAppearDistance*flAppearDistance;
+
+		if ((pLocalPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flAppearDistanceSqr)
+			m_flArrowGoalSize = 20;
+		else
+			m_flArrowGoalSize = 0;
+
+		float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+		float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+
+		m_flArrowCurSize = Approach(m_flArrowGoalSize, m_flArrowCurSize, flFrameTime*100);
+
+		if (m_flArrowCurSize == 0)
+			return iReturn;
+
+		Vector vecViewForward, vecViewRight, vecViewUp;
+		pLocalPlayer->EyeVectors(&vecViewForward, &vecViewRight, &vecViewUp);
+
+		float flSin = sin(flTime*4);
+		float flCos = cos(flTime*4);
+
+		Vector vecOrigin = GetAbsOrigin();
+		Vector vecRight = vecViewRight * flSin + vecViewUp * flCos;
+		Vector vecUp = vecViewRight * -flCos + vecViewUp * flSin;
+
+		float flSize = m_flArrowCurSize;
+
+		CMeshBuilder meshBuilder;
+		CMatRenderContextPtr pRenderContext( materials );
+		IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+		pRenderContext->Bind( g_hGrenadeArrow );
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+		meshBuilder.Color4f( 1, 1, 1, 1 );
+		meshBuilder.TexCoord2f( 0,0, 0 );
+		meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4f( 1, 1, 1, 1 );
+		meshBuilder.TexCoord2f( 0,1, 0 );
+		meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4f( 1, 1, 1, 1 );
+		meshBuilder.TexCoord2f( 0,1, 1 );
+		meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4f( 1, 1, 1, 1 );
+		meshBuilder.TexCoord2f( 0,0, 1 );
+		meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.End(false, true);
+
+		return iReturn;
 	}
 
 	void CBaseGrenadeProjectile::Spawn()
 	{
 		m_flSpawnTime = gpGlobals->curtime;
 		BaseClass::Spawn();
+
+		m_flArrowGoalSize = 0;
+		m_flArrowCurSize = 0;
+		m_flArrowSpinOffset = RandomFloat(0, 10);
 	}
 
 #else

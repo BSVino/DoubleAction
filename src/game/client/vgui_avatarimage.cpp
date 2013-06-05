@@ -122,7 +122,7 @@ void CAvatarImage::Paint( void )
 
 		vgui::surface()->DrawSetColor( m_Color );
 		vgui::surface()->DrawSetTexture( m_iTextureID );
-		vgui::surface()->DrawTexturedRect( m_nX + AVATAR_INDENT_X, m_nY + AVATAR_INDENT_Y, m_nX + AVATAR_INDENT_X + m_iAvatarWidth, m_nY + AVATAR_INDENT_Y + m_iAvatarHeight );
+		vgui::surface()->DrawTexturedRect( m_nX, m_nY + AVATAR_INDENT_Y, m_nX + m_iAvatarWidth, m_nY + AVATAR_INDENT_Y + m_iAvatarHeight );
 	}
 }
 

@@ -137,12 +137,23 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropVector( RECVINFO(m_vecDiveDirection) ),
 	RecvPropBool( RECVINFO( m_bRollAfterDive ) ),
 	RecvPropTime( RECVINFO(m_flDiveTime) ),
+	RecvPropTime( RECVINFO(m_flTimeLeftGround) ),
 	RecvPropFloat( RECVINFO(m_flDiveLerped) ),
+	RecvPropFloat( RECVINFO(m_flDiveToProneLandTime) ),
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
 	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
 	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
+
+	RecvPropInt (RECVINFO (tapkey)),
+	RecvPropFloat (RECVINFO (taptime)),
+	RecvPropInt (RECVINFO (kongcnt)),
+	RecvPropFloat (RECVINFO (kongtime)),
+	RecvPropFloat (RECVINFO (runtime)),
+	RecvPropVector (RECVINFO (rundir)),
+	RecvPropFloat (RECVINFO (manteltime)),
+	RecvPropVector (RECVINFO (wallnormal)),
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
@@ -203,6 +214,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
+	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),	
 
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 END_RECV_TABLE()
@@ -241,7 +253,9 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_vecDiveDirection, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bRollAfterDive, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flDiveTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flTimeLeftGround, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flDiveLerped, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flDiveToProneLandTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flViewTilt, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flViewBobRamp, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_bAimedIn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -250,6 +264,15 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_vecRecoilDirection, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD (tapkey, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (taptime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (kongcnt, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (kongtime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (runtime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (rundir, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (manteltime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (wallnormal, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
@@ -268,6 +291,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flCurrentTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flLastSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_bThirdPerson, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_bThirdPersonCamSide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA()
@@ -629,6 +653,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_fNextThinkPushAway = 0.0f;
 
 	m_flLastSlowMoMultiplier = 1;
+	m_currentAlphaVal = 255.0f;
 }
 
 
@@ -897,6 +922,10 @@ bool C_SDKPlayer::ShouldDraw( void )
 
 	if ( State_Get() == STATE_WELCOME )
 		return false;
+
+	if ( State_Get() == STATE_MAPINFO )
+		return false;
+
 #if defined ( SDK_USE_TEAMS )
 	if ( State_Get() == STATE_PICKINGTEAM )
 		return false;
@@ -1467,11 +1496,14 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 		angCamera[ ROLL ] = 0;
 
 		UpdateThirdCamera(pSetup->origin, angCamera);
-
+			
 		pSetup->origin = GetThirdPersonCameraPosition();
 	}
 	else
+	{
 		m_flCameraLerp = 0;
+		m_flStuntLerp = 0;
+	}
 
 	BaseClass::OverrideView(pSetup);
 
@@ -1692,4 +1724,18 @@ void C_SDKPlayer::TurnOffFlashlight( void )
 		ProjectedLightEffectManager( nSlot ).TurnOffFlashlight();
 		m_bFlashlightEnabled = false;
 	}
+}
+
+float C_SDKPlayer::GetUserInfoFloat(const char* pszCVar, float flBotDefault)
+{
+	ConVarRef UserInfoVar(pszCVar);
+
+	return UserInfoVar.GetFloat();
+}
+
+int C_SDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
+{
+	ConVarRef UserInfoVar(pszCVar);
+
+	return UserInfoVar.GetInt();
 }

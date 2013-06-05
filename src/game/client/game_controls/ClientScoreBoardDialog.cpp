@@ -326,11 +326,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			GetPlayerScoreInfo( i, playerData );
 			UpdatePlayerAvatar( i, playerData );
 
-			const char *oldName = playerData->GetString("name","");
+			const char *oldName = playerData->GetString("name");
 			char newName[MAX_PLAYER_NAME_LENGTH];
 
 			UTIL_MakeSafeName( oldName, newName, MAX_PLAYER_NAME_LENGTH );
-
 			playerData->SetString("name", newName);
 
 			int itemID = FindItemIDForPlayerIndex( i );
@@ -473,15 +472,25 @@ bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *lis
 //-----------------------------------------------------------------------------
 bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 {
+	char name[256];
 	IGameResources *gr = GameResources();
 
 	if (!gr )
 		return false;
 
+	player_info_t pi;
+	if (engine->GetPlayerInfo (playerIndex, &pi))
+	{
+		Q_strncpy (name, pi.name, sizeof (name));
+	}
+	else 
+	{/*No player info, use steam name?*/
+		Q_strncpy (name, "Useless", sizeof (name));
+	}
 	kv->SetInt("deaths", gr->GetDeaths( playerIndex ) );
 	kv->SetInt("frags", gr->GetFrags( playerIndex ) );
 	kv->SetInt("ping", gr->GetPing( playerIndex ) ) ;
-	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
+	kv->SetString ("name", name);
 	kv->SetInt("playerIndex", playerIndex);
 
 	return true;

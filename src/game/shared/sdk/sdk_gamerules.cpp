@@ -302,6 +302,8 @@ void CSDKGameRules::ServerActivate()
 	TheBots->ServerActivate();
 }
 
+ConVar da_slow_force_distance("da_slow_force_distance", "300", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");
+
 void CSDKGameRules::ReCalculateSlowMo()
 {
 	// Reset all passive players to none, to prevent circular activations
@@ -333,7 +335,7 @@ void CSDKGameRules::ReCalculateSlowMo()
 			CalculateSlowMoForPlayer(pSDKPlayer);
 	}
 
-	m_flNextSlowMoUpdate = gpGlobals->curtime + 0.5f;
+	m_flNextSlowMoUpdate = gpGlobals->curtime + 0.2f;
 }
 
 void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
@@ -389,8 +391,11 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 
 		if (pOtherPlayer->GetSlowMoType() != SLOWMO_NONE)
 		{
-			bOtherInSlow = true;
-			break;
+			if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() < da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() || pOtherPlayer->IsVisible(pPlayer))
+			{
+				bOtherInSlow = true;
+				break;
+			}
 		}
 	}
 
@@ -450,6 +455,9 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 			continue;
 
 		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE)
+			continue;
+
+		if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() > da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() && !pOtherPlayer->IsVisible(pPlayer))
 			continue;
 
 		apOthersInPVS.AddToTail(pOtherPlayer);

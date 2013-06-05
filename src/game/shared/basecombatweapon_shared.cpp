@@ -74,6 +74,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 #if defined( TF_DLL )
 	UseClientSideAnimation();
 #endif
+	reload_delegate = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1820,35 +1821,39 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 {
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (!pOwner)
+	{
 		return false;
-
-	// If I don't have any spare ammo, I can't reload
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-		return false;
-
+	}
 	bool bReload = false;
-
-	// If you don't have clips, then don't try to reload them.
-	if ( UsesClipsForAmmo1() )
+	if (NULL != reload_delegate)
 	{
-		// need to reload primary clip?
-		int primary	= min(iClipSize1 - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-		if ( primary != 0 )
+		bReload = reload_delegate (this);
+	}
+	else
+	{
+		// If I don't have any spare ammo, I can't reload
+		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+			return false;
+		// If you don't have clips, then don't try to reload them.
+		if ( UsesClipsForAmmo1() )
 		{
-			bReload = true;
+			// need to reload primary clip?
+			int primary	= min(iClipSize1 - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+			if ( primary != 0 )
+			{
+				bReload = true;
+			}
+		}
+		if ( UsesClipsForAmmo2() )
+		{
+			// need to reload secondary clip?
+			int secondary = min(iClipSize2 - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
+			if ( secondary != 0 )
+			{
+				bReload = true;
+			}
 		}
 	}
-
-	if ( UsesClipsForAmmo2() )
-	{
-		// need to reload secondary clip?
-		int secondary = min(iClipSize2 - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
-		if ( secondary != 0 )
-		{
-			bReload = true;
-		}
-	}
-
 	if ( !bReload )
 		return false;
 

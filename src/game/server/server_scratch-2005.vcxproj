@@ -227,12 +227,15 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="..\shared\sdk\bot\nav_path.cpp" />
     <ClCompile Include="..\shared\sdk\bot\shared_util.cpp" />
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="ai_activity.cpp" />
@@ -672,6 +675,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp" />
     <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp" />
     <ClCompile Include="sdk\da_ammo_pickup.cpp" />
+    <ClCompile Include="sdk\da_powerup.cpp" />
     <ClCompile Include="sdk\da_spawngenerator.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
@@ -862,6 +866,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "%SourceSDK%\..\
     <ClInclude Include="..\shared\sdk\bot\nav_path.h" />
     <ClInclude Include="..\shared\sdk\bot\shared_util.h" />
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="ai_baseactor.h" />
     <ClInclude Include="ai_basehumanoid.h" />

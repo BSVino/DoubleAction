@@ -2,6 +2,7 @@
 
 #include "dab_viewmodel.h"
 #include "sdk_gamerules.h"
+#include "weapon_akimbobase.h"
 
 #ifdef CLIENT_DLL
 #include "c_sdk_player.h"
@@ -38,11 +39,20 @@ float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence
 void CDABViewModel::DoMuzzleFlash()
 {
 #ifdef CLIENT_DLL
+	int id;
 	switch (GetDAWeapon()->GetWeaponType())
 	{
 	case WT_PISTOL:
 	default:
-		ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1" );
+		id = GetDAWeapon ()->GetWeaponID ();
+		if (SDK_WEAPON_AKIMBO_BERETTA == id || SDK_WEAPON_AKIMBO_M1911 == id)
+		{/*HACK: Alternate attachment for akimbos, where else to put this?*/
+			if (((CAkimbobase *)GetDAWeapon ())->shootright)
+				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "2");
+			else
+				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1");
+		}
+		else ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1" );
 		break;
 
 	case WT_SMG:
@@ -63,6 +73,7 @@ void CDABViewModel::DoMuzzleFlash()
 ConVar da_weaponlag( "da_weaponlag", "0.005", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
 ConVar da_weaponbob( "da_weaponbob", "0.7", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
 ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon drop while running." );
+ConVar da_weaponoffset( "da_weaponoffset", "0.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon offset, creates movement while looking around." );
 
 void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
 {
@@ -71,7 +82,7 @@ void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QA
 		return;
 
 	// Offset it a tad so that it moves while looking around.
-	eyePosition.x += 1;
+	eyePosition.x += da_weaponoffset.GetFloat();
 
 	Vector vecViewForward, vecViewRight, vecViewUp;
 	AngleVectors(EyeAngles(), &vecViewForward, &vecViewRight, &vecViewUp);

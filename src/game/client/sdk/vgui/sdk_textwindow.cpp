@@ -69,6 +69,7 @@ void CSDKTextWindow::MoveToCenterOfScreen()
 void CSDKTextWindow::Update( void )
 {
 	BaseClass::Update();
+
 	MoveToCenterOfScreen();
 }
 

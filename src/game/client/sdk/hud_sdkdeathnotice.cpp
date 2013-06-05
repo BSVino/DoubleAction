@@ -36,6 +36,8 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual bool IsVisible( void );
 
+	virtual void Paint( void );
+
 protected:	
 	virtual void OnGameEvent( IGameEvent *event, DeathNoticeItem &msg );
 	virtual Color GetTeamColor( int iTeamNumber );
@@ -64,6 +66,108 @@ void SDKHudDeathNotice::ApplySchemeSettings( vgui::IScheme *scheme )
 bool SDKHudDeathNotice::IsVisible( void )
 {
 	return BaseClass::IsVisible();
+}
+
+void SDKHudDeathNotice::Paint()
+{
+	// Retire any death notices that have expired
+	RetireExpiredDeathNotices();
+
+	CBaseViewport *pViewport = dynamic_cast<CBaseViewport *>( GetClientModeNormal()->GetViewport() );
+	int yStart = pViewport->GetDeathMessageStartHeight();
+
+	surface()->DrawSetTextFont( m_hTextFont );
+
+	int xMargin = XRES( 10 );
+	int xSpacing = UTIL_ComputeStringWidth( m_hTextFont, L" " );
+
+	int iCount = m_DeathNotices.Count();
+	for ( int i = 0; i < iCount; i++ )
+	{
+		DeathNoticeItem &msg = m_DeathNotices[i];
+		
+		CHudTexture *icon = msg.iconDeath;
+						
+		wchar_t victim[256]=L"";
+		wchar_t killer[256]=L"";
+
+		// TEMP - print the death icon name if we don't have a material for it
+
+		g_pVGuiLocalize->ConvertANSIToUnicode( msg.Victim.szName, victim, sizeof( victim ) );
+		g_pVGuiLocalize->ConvertANSIToUnicode( msg.Killer.szName, killer, sizeof( killer ) );
+
+		int iVictimTextWide = UTIL_ComputeStringWidth( m_hTextFont, victim ) + xSpacing;
+		int iDeathInfoTextWide= msg.wzInfoText[0] ? UTIL_ComputeStringWidth( m_hTextFont, msg.wzInfoText ) + xSpacing : 0;
+		int iKillerTextWide = killer[0] ? UTIL_ComputeStringWidth( m_hTextFont, killer ) + xSpacing : 0;
+		int iLineTall = m_flLineHeight;
+		int iTextTall = surface()->GetFontTall( m_hTextFont );
+		int iconWide = 0, iconTall = 0, iVictimTextOffset = 0, iconActualWide = 0;
+
+		wchar_t* pwszWeapon = nullptr;
+
+		if (msg.szIcon[0])
+			pwszWeapon = g_pVGuiLocalize->Find( VarArgs("#DAB_Weapon_Obituary_%s", msg.szIcon+2) );
+
+		if (!pwszWeapon)
+			pwszWeapon = L"x.x";
+
+		wchar_t wszWeaponName[20];
+		V_wcsncpy( wszWeaponName, pwszWeapon, sizeof( wszWeaponName ) );
+
+		int iWeaponTextWide = msg.szIcon[0] ? UTIL_ComputeStringWidth( m_hTextFont, wszWeaponName ) + xSpacing : 0;
+
+		// Get the local position for this notice
+		if ( icon )
+		{			
+			iconActualWide = icon->EffectiveWidth( 1.0f );
+			iconWide = iconActualWide + xSpacing;
+			iconTall = icon->EffectiveHeight( 1.0f );
+			
+			int iconTallDesired = iLineTall-YRES(2);
+			Assert( 0 != iconTallDesired );
+			float flScale = (float) iconTallDesired / (float) iconTall;
+
+			iconActualWide *= flScale;
+			iconTall *= flScale;
+			iconWide *= flScale;
+		}
+		int iTotalWide = iKillerTextWide + iWeaponTextWide + iVictimTextWide + iDeathInfoTextWide + ( xMargin * 2 );
+		int y = yStart + ( ( iLineTall + m_flLineSpacing ) * i );				
+		int yText = y + ( ( iLineTall - iTextTall ) / 2 );
+
+		int x=0;
+		if ( m_bRightJustify )
+		{
+			x =	GetWide() - iTotalWide;
+		}
+
+		// draw a background panel for the message
+		Vertex_t vert[NUM_BACKGROUND_COORD];
+		GetBackgroundPolygonVerts( x, y+1, x+iTotalWide, y+iLineTall-1, ARRAYSIZE( vert ), vert );		
+		surface()->DrawSetTexture( -1 );
+		surface()->DrawSetColor( msg.bLocalPlayerInvolved ? m_clrLocalBGColor : m_clrBaseBGColor );
+		surface()->DrawTexturedPolygon( ARRAYSIZE( vert ), vert );
+
+		x += xMargin;
+			
+		if ( killer[0] )
+		{
+			// Draw killer's name
+			DrawText( x, yText, m_hTextFont, GetTeamColor( msg.Killer.iTeam ), killer );
+			x += iKillerTextWide;
+		}
+
+		if ( wszWeaponName[0] )
+		{
+			DrawText( x, yText, m_hTextFont, Color( 255, 205, 55, 255 ), wszWeaponName );
+
+			x += iWeaponTextWide;
+		}
+
+		// Draw victims name
+		DrawText( x + iVictimTextOffset, yText, m_hTextFont, GetTeamColor( msg.Victim.iTeam ), victim );
+		x += iVictimTextWide;
+	}
 }
 
 //-----------------------------------------------------------------------------

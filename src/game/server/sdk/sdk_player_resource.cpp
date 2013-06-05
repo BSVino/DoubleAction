@@ -19,6 +19,18 @@ IMPLEMENT_SERVERCLASS_ST(CSDKPlayerResource, DT_SDKPlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_iPlayerClass), SendPropInt( SENDINFO_ARRAY(m_iPlayerClass), 4 ) ),
 #endif
 	SendPropArray3( SENDINFO_ARRAY3( m_iMaxHealth ), SendPropInt( SENDINFO_ARRAY( m_iMaxHealth ), 11, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_iStyle ), SendPropInt( SENDINFO_ARRAY( m_iStyle ), 11, SPROP_UNSIGNED ) ),
+
+	SendPropInt (SENDINFO (m_iHighestStyle)),
+	SendPropInt (SENDINFO (m_iHighestStuntKills)),
+	SendPropInt (SENDINFO (m_iHighestGrenadeKills)),
+	SendPropInt (SENDINFO (m_iHighestBrawlKills)),
+	SendPropInt (SENDINFO (m_iHighestKillStreak)),
+	SendPropInt (SENDINFO (m_iHighestStylePlayer)),
+	SendPropInt (SENDINFO (m_iHighestStuntKillPlayer)),
+	SendPropInt (SENDINFO (m_iHighestGrenadeKillPlayer)),
+	SendPropInt (SENDINFO (m_iHighestBrawlKillPlayer)),
+	SendPropInt (SENDINFO (m_iHighestKillStreakPlayer)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CSDKPlayerResource )
@@ -41,6 +53,18 @@ void CSDKPlayerResource::UpdatePlayerData( void )
 {
 	int i;
 
+	int iHighestStyle = 0;
+	int iHighestStuntKills = 0;
+	int iHighestGrenadeKills = 0;
+	int iHighestBrawlKills = 0;
+	int iHighestKillStreak = 0;
+
+	int iHighestStylePlayer = 0;
+	int iHighestStuntKillPlayer = 0;
+	int iHighestGrenadeKillPlayer = 0;
+	int iHighestBrawlKillPlayer = 0;
+	int iHighestKillStreakPlayer = 0;
+
 	for ( i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = (CSDKPlayer*)UTIL_PlayerByIndex( i );
@@ -51,7 +75,70 @@ void CSDKPlayerResource::UpdatePlayerData( void )
 			m_iPlayerClass.Set( i, pPlayer->m_Shared.PlayerClass() );
 #endif
 			m_iMaxHealth.Set( i, pPlayer->GetMaxHealth() );
+			m_iStyle.Set( i, pPlayer->GetTotalStyle() );
+
+			if (pPlayer->GetTotalStyle() > iHighestStyle)
+			{
+				iHighestStyle = pPlayer->GetTotalStyle();
+				iHighestStylePlayer = i;
+			}
+
+			if (pPlayer->m_iStuntKills > iHighestStuntKills)
+			{
+				iHighestStuntKills = pPlayer->m_iStuntKills;
+				iHighestStuntKillPlayer = i;
+			}
+
+			if (pPlayer->m_iGrenadeKills > iHighestGrenadeKills)
+			{
+				iHighestGrenadeKills = pPlayer->m_iGrenadeKills;
+				iHighestGrenadeKillPlayer = i;
+			}
+
+			if (pPlayer->m_iBrawlKills > iHighestBrawlKills)
+			{
+				iHighestBrawlKills = pPlayer->m_iBrawlKills;
+				iHighestBrawlKillPlayer = i;
+			}
+
+			if (pPlayer->m_iStreakKills > iHighestKillStreak)
+			{
+				iHighestKillStreak = pPlayer->m_iStreakKills;
+				iHighestKillStreakPlayer = i;
+			}
 		}
+	}
+
+	// Only overwrite the current high scorer if the new guy has passed him.
+	// The first to get there should always keep it.
+	if (iHighestStyle > m_iHighestStyle)
+	{
+		m_iHighestStyle = iHighestStyle;
+		m_iHighestStylePlayer = iHighestStylePlayer;
+	}
+
+	if (iHighestStuntKills > m_iHighestStuntKills)
+	{
+		m_iHighestStuntKills = iHighestStuntKills;
+		m_iHighestStuntKillPlayer = iHighestStuntKillPlayer;
+	}
+
+	if (iHighestGrenadeKills > m_iHighestGrenadeKills)
+	{
+		m_iHighestGrenadeKills = iHighestGrenadeKills;
+		m_iHighestGrenadeKillPlayer = iHighestGrenadeKillPlayer;
+	}
+
+	if (iHighestBrawlKills > m_iHighestBrawlKills)
+	{
+		m_iHighestBrawlKills = iHighestBrawlKills;
+		m_iHighestBrawlKillPlayer = iHighestBrawlKillPlayer;
+	}
+
+	if (iHighestKillStreak > m_iHighestKillStreak)
+	{
+		m_iHighestKillStreak = iHighestKillStreak;
+		m_iHighestKillStreakPlayer = iHighestKillStreakPlayer;
 	}
 
 	BaseClass::UpdatePlayerData();
@@ -67,7 +154,17 @@ void CSDKPlayerResource::Spawn( void )
 		m_iPlayerClass.Set( i, PLAYERCLASS_UNDEFINED );
 #endif
 		m_iMaxHealth.Set( i, 1 );
+		m_iStyle.Set( i, 0 );
 	}
+
+	m_iHighestStuntKills = -1;
+	m_iHighestGrenadeKills = -1;
+	m_iHighestBrawlKills = -1;
+	m_iHighestKillStreak = -1;
+	m_iHighestStuntKillPlayer = -1;
+	m_iHighestGrenadeKillPlayer = -1;
+	m_iHighestBrawlKillPlayer = -1;
+	m_iHighestKillStreakPlayer = -1;
 
 	BaseClass::Spawn();
 }

@@ -319,7 +319,7 @@ void CFolderMenu::ApplySchemeSettings( IScheme *pScheme )
 }
 
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)
-	: Label( parent, panelName, "FolderLabel")
+	: Label( parent, panelName, "")
 {
 }
 

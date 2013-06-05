@@ -1401,9 +1401,6 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_p99.cpp">
-      <Filter>Source Files\SDK\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1523,6 +1520,21 @@
     </ClCompile>
     <ClCompile Include="sdk\da_spawngenerator.cpp">
       <Filter>Source Files\SDK\Rules</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_powerup.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -3091,6 +3103,9 @@
     </ClInclude>
     <ClInclude Include="sdk\da_spawngenerator.h">
       <Filter>Source Files\SDK\Rules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h">
+      <Filter>Source Files\SDK\Weapons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

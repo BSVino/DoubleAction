@@ -14,14 +14,10 @@
 
 
 #ifdef CLIENT_DLL
-
 	#include "c_sdk_player.h"
-
 #else
-
 	#include "sdk_player.h"
 	#include "items.h"
-
 #endif
 
 

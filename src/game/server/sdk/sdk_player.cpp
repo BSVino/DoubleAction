@@ -21,6 +21,7 @@
 #include "in_buttons.h"
 #include "vprof.h"
 #include "engine/IEngineSound.h"
+#include "weapon_akimbobase.h"
 
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -138,11 +139,23 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropVector( SENDINFO(m_vecDiveDirection) ),
 	SendPropBool( SENDINFO( m_bRollAfterDive ) ),
 	SendPropTime( SENDINFO( m_flDiveTime ) ),
+	SendPropTime( SENDINFO( m_flTimeLeftGround ) ),
 	SendPropFloat( SENDINFO( m_flDiveLerped ) ),
+	SendPropFloat( SENDINFO( m_flDiveToProneLandTime ) ),
 	SendPropBool( SENDINFO( m_bAimedIn ) ),
 	SendPropFloat( SENDINFO( m_flAimIn ) ),
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
+	
+	SendPropInt (SENDINFO (tapkey)),
+	SendPropFloat (SENDINFO (taptime)),
+	SendPropInt (SENDINFO (kongcnt)),
+	SendPropFloat (SENDINFO (kongtime)),
+	SendPropFloat (SENDINFO (runtime)),
+	SendPropVector (SENDINFO (rundir)),
+	SendPropFloat (SENDINFO (manteltime)),
+	SendPropVector (SENDINFO (wallnormal)),
+
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -222,6 +235,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
+	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 END_SEND_TABLE()
 
@@ -230,6 +244,12 @@ class CSDKRagdoll : public CBaseAnimatingOverlay
 public:
 	DECLARE_CLASS( CSDKRagdoll, CBaseAnimatingOverlay );
 	DECLARE_SERVERCLASS();
+
+	void Spawn();
+
+	bool IsRagdollVisible();
+
+	void DisappearThink();
 
 	// Transmit ragdolls to everyone.
 	virtual int UpdateTransmitState()
@@ -257,6 +277,50 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CSDKRagdoll, DT_SDKRagdoll )
 	SendPropVector( SENDINFO( m_vecRagdollVelocity ) )
 END_SEND_TABLE()
 
+void CSDKRagdoll::Spawn()
+{
+	BaseClass::Spawn();
+
+	SetThink(&CSDKRagdoll::DisappearThink);
+	SetNextThink(gpGlobals->curtime + 15);
+}
+
+void CSDKRagdoll::DisappearThink()
+{
+	if (IsRagdollVisible())
+	{
+		SetNextThink(gpGlobals->curtime + 5);
+		return;
+	}
+
+	UTIL_Remove(this);
+}
+
+bool CSDKRagdoll::IsRagdollVisible()
+{
+	Vector vecOrigin = m_vecRagdollOrigin; // Ragdoll may have moved but it all happens client-side so this is close enough.
+
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		Vector vecToRagdoll = vecOrigin - pPlayer->GetAbsOrigin();
+		vecToRagdoll.NormalizeInPlace();
+		Vector vecForward;
+		pPlayer->GetVectors(&vecForward, NULL, NULL);
+
+		if (vecForward.Dot(vecToRagdoll) < 0.4)
+			continue;
+
+		if (pPlayer->IsVisible(GetAbsOrigin()))
+			return true;
+	}
+
+	return false;
+}
 
 // -------------------------------------------------------------------------------- //
 
@@ -637,7 +701,10 @@ void CSDKPlayer::PreThink(void)
 	if (IsInThirdPerson())
 		UpdateThirdCamera(Weapon_ShootPosition(), EyeAngles() + GetPunchAngle());
 	else
+	{
 		m_flCameraLerp = 0;
+		m_flStuntLerp = 0;
+	}
 
 	UpdateCurrentTime();
 
@@ -733,7 +800,6 @@ void CSDKPlayer::PreThink(void)
 	BaseClass::PreThink();
 }
 
-ConVar dab_stylemetertime( "dab_stylemetertime", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does the style meter remain active after activation?" );
 ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
 
 void CSDKPlayer::PostThink()
@@ -847,11 +913,26 @@ void CSDKPlayer::GiveDefaultItems()
 		bool bHasGrenade = false;
 		CWeaponSDKBase* pHeaviestWeapon = NULL;
 
-		for (int i = 0; i < MAX_LOADOUT; i++)
+		for (int i = 1; i < MAX_LOADOUT; i++)
 		{
-			if (m_aLoadout[i].m_iCount)
+			SDKWeaponID eBuyWeapon = (SDKWeaponID)i;
+			CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eBuyWeapon);
+
+			if (!pWeaponInfo)
+				continue;
+
+			bool bBuy = !!m_aLoadout[eBuyWeapon].m_iCount;
+			if (*pWeaponInfo->m_szSingle)
 			{
-				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias((SDKWeaponID)i) );
+				// If we're buying a weapon that has a single version, buy the akimbo version if we want two of the singles.
+				SDKWeaponID eSingleWeapon = AliasToWeaponID(pWeaponInfo->m_szSingle);
+				if (m_aLoadout[eSingleWeapon].m_iCount == 2)
+					bBuy = true;
+			}
+
+			if (bBuy)
+			{
+				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias(eBuyWeapon) );
 				CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(GiveNamedItem( szName ));
 
 				if (!pHeaviestWeapon)
@@ -988,6 +1069,7 @@ void CSDKPlayer::Spawn()
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
+	m_iCurrentStreak = 0;
 	m_flNextSuicideTime = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
@@ -1180,7 +1262,13 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 void CSDKPlayer::InitialSpawn( void )
 {
-	m_bThirdPerson = !!atoi(engine->GetClientConVarValue( entindex(), "cl_thirdperson" ));
+	m_flTotalStyle = 0;
+	m_bThirdPerson = !!GetUserInfoInt("cl_thirdperson", 0);
+
+	m_iStuntKills = 0;
+	m_iGrenadeKills = 0;
+	m_iBrawlKills = 0;
+	m_iStreakKills = 0;
 
 	BaseClass::InitialSpawn();
 
@@ -1460,8 +1548,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return 1;
 }
 
-ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
+extern ConVar dab_stylemeteractivationcost;
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1472,8 +1560,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_Shared.IsDiving() && m_bDamagedEnemyDuringDive)
 	{
-		SendNotice(NOTICE_WORTHIT);
 		AddStylePoints(10, STYLE_POINT_STYLISH);
+		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
+		SendNotice(NOTICE_WORTHIT);
 	}
 
 	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_GRENADE)
@@ -1505,6 +1594,24 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	pAmmoPickup->SetNextThink(gpGlobals->curtime + 30);
 
 	CBaseEntity* pAttacker = info.GetAttacker();
+
+	if( pAttacker && pAttacker->IsPlayer() )
+	{
+		CSDKPlayer* pSDKAttacker = ToSDKPlayer(pAttacker);
+
+		pSDKAttacker->m_iCurrentStreak++;
+		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
+
+		if (info.GetDamageType() == DMG_BLAST)
+			pSDKAttacker->m_iGrenadeKills++;
+		else
+		{
+			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling())
+				pSDKAttacker->m_iStuntKills++;
+			else if (info.GetDamageType() == DMG_CLUB)
+				pSDKAttacker->m_iBrawlKills++;
+		}
+	}
 
 	// show killer in death cam mode
 	// chopped down version of SetObserverTarget without the team check
@@ -1558,11 +1665,13 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// This way, running around with your bar full you run a high risk.
 	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
 
+	float flLostPoints = RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/4);
+
 	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling())
 		// Lose less bar if you die during a stunt. Going out with style is never a bad thing!
-		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/16, flActivationCost/4));
-	else
-		SetStylePoints(m_flStylePoints - RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/2));
+		flLostPoints /= 2;
+
+	SetStylePoints(m_flStylePoints - flLostPoints);
 
 	// Turn off slow motion.
 	m_flSlowMoSeconds = 0;
@@ -1572,6 +1681,11 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_bHasPlayerDied = true;
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
+}
+
+void CSDKPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
+{
+	UTIL_ScreenShake( info.GetInflictor()->GetAbsOrigin(), 10.0, 1.0, 0.5, 2000, SHAKE_START, false );
 }
 
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
@@ -1595,14 +1709,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	if (bKilledVictim)
 	{
-		// Give me half of the activation cost. The other half I'll get from damaging.
-		flPoints = dab_stylemeteractivationcost.GetFloat()/2;
+		// Give me a quarter of the activation cost. I'll get another quarter from damaging.
+		flPoints = dab_stylemeteractivationcost.GetFloat()/4;
 	}
 	else
 	{
-		// Damaging someone stylishly for 100% of their health is enough to get one bar.
-		// The player will get half the points from damaging and the other half from killing.
-		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/2);
+		// Damaging someone stylishly for 100% of their health is enough to get one quarter bar.
+		// The player will double their points from from killing. Need to kill two enemies to fill the bar.
+		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/4);
 	}
 
 	if (m_Shared.IsAimedIn())
@@ -1748,6 +1862,21 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
+	else if (m_Shared.IsAimedIn())
+	{
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		if (bKilledVictim)
+			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
+		else
+			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
+	}
+	else if (bKilledVictim && m_flSlowMoMultiplier < 1)
+	{
+		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
+
+		SendAnnouncement(ANNOUNCEMENT_SLOWMO_KILL, STYLE_POINT_LARGE);
+	}
 	else
 	{
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
@@ -1756,7 +1885,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flPoints*0.2f, bKilledVictim?STYLE_POINT_LARGE:STYLE_POINT_SMALL);
 
-		// Only some chance of sending a message at all.
 		if (bKilledVictim)
 		{
 			int iRandom = random->RandomInt(0, 1);
@@ -1773,16 +1901,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				break;
 			}
 
-			if (m_Shared.IsAimedIn() && pWeaponInfo->m_bAimInSpeedPenalty)
-				eAnnouncement = ANNOUNCEMENT_TACTICOOL;
-
-			if (bKilledVictim && m_flSlowMoMultiplier < 1)
-				eAnnouncement = ANNOUNCEMENT_SLOWMO_KILL;
-
-			if (bKilledVictim)
-				SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
-			else
-				SendAnnouncement(eAnnouncement, STYLE_POINT_SMALL);
+			SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
 		}
 	}
 }
@@ -1855,7 +1974,6 @@ int CSDKPlayer::GetMaxHealth() const
 
 	return BaseClass::GetMaxHealth();
 }
-
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
@@ -1875,16 +1993,63 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		AngleVectors( gunAngles, &vecForward, NULL, NULL );
 
 		float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
-
 		pWeapon->SetWeaponVisible( false );
 		pWeapon->Holster(NULL);
 		pWeapon->SetPrevOwner(this);
+		/*HACK: Pay attention now, this is where it gets tricky.
+		We want to ensure:
+			1. Akimbos are moved if a single is tossed
+			2. Single is removed if akimbos are tossed
+		It's either this or a rewrite of the weapon code*/
+		if (pWeapon->GetSDKWpnData ().m_szSingle[0] == '\0')
+		{/*Single toss*/
+			const char *cls = pWeapon->GetClassname ();
+			weapontype_t type = pWeapon->GetWeaponType ();
+			SDKWeaponID id = pWeapon->GetWeaponID ();
 
-		SDKThrowWeapon( pWeapon, vecForward, gunAngles, flDiameter );
-
-		if (bAutoSwitch)
-			SwitchToNextBestWeapon( NULL );
-
+			SDKThrowWeapon (pWeapon, vecForward, gunAngles, flDiameter);
+			if (WT_PISTOL == type)
+			{
+				char name[32];
+				Q_snprintf (name, sizeof (name), "akimbo_%s", WeaponIDToAlias (id));
+				CAkimbobase *akb = (CAkimbobase *)findweapon (AliasToWeaponID (name));
+				if (akb)
+				{/*Keep left pistol if we have akimbos*/
+					CWeaponSDKBase *left = (CWeaponSDKBase *)GiveNamedItem (cls);
+					left->m_iClip1 = akb->leftclip;
+					SetActiveWeapon (left);
+					RemovePlayerItem (akb); /*Ensure 1.*/
+				}
+			}
+		}
+		else
+		{/*Akimbo toss*/
+			CAkimbobase *akb = (CAkimbobase *)pWeapon;
+			const char *alias = pWeapon->GetSDKWpnData ().m_szSingle;
+			char name[32];
+			int i;
+			/*Throw two singles instead of pmodel (rule of style)*/
+			Q_snprintf (name, sizeof (name), "weapon_%s", alias);
+			for (i = 0; i < 2; i++)
+			{/*I have to redo vphysics here else source cries.
+			 This doesn't really make sense, but it seems to work.*/
+				CWeaponSDKBase *wpn = (CWeaponSDKBase *)Weapon_Create (name);
+				wpn->VPhysicsDestroyObject (); 
+				wpn->VPhysicsInitShadow (true, true);
+				if (i == 0) wpn->m_iClip1 = akb->rightclip;
+				else wpn->m_iClip1 = akb->leftclip;
+				SDKThrowWeapon (wpn, vecForward, gunAngles, flDiameter);
+			}
+			RemovePlayerItem (akb);
+			/*Ensure 2.*/
+			CWeaponSDKBase *wpn = findweapon (AliasToWeaponID (alias));
+			AssertMsg (wpn != NULL, "How do you have akimbos without a single?");
+			if (wpn) 
+			{
+				RemovePlayerItem (wpn);
+			}
+		}
+		if (bAutoSwitch) SwitchToNextBestWeapon( NULL );
 		return true;
 	}
 
@@ -1896,6 +2061,7 @@ bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 	if (GetCurrentTime() < m_flDisarmRedraw)
 		return false;
 
+	switchfrom = GetActiveSDKWeapon (); 
 	bool bSwitched = BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
 
 	if (bSwitched)
@@ -1989,6 +2155,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_nModelIndex = m_nModelIndex;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
+		pRagdoll->Spawn();
 	}
 
 	// ragdolls will be removed on round restart automatically
@@ -2140,10 +2307,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		HandleCommand_JoinTeam( TEAM_SPECTATOR );
 		return true;
 	}
-	else if ( FStrEq( pcmd, "joingame" ) )
+	else if ( FStrEq( pcmd, "showmapinfo" ) )
 	{
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_WELCOME )
+		{
+			State_Transition( STATE_MAPINFO );
+		}
+		
+		return true;
+	}
+	else if ( FStrEq( pcmd, "joingame" ) )
+	{
+		// player just closed MOTD dialog
+		if ( m_iPlayerState == STATE_MAPINFO )
 		{
 //Tony; using teams, go to picking team.
 #if defined( SDK_USE_TEAMS )
@@ -2728,6 +2905,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 	{
 		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_Enter_ACTIVE, NULL, &CSDKPlayer::State_PreThink_ACTIVE },
 		{ STATE_WELCOME,		"STATE_WELCOME",		&CSDKPlayer::State_Enter_WELCOME, NULL, &CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_MAPINFO,        "STATE_MAPINFO",        &CSDKPlayer::State_Enter_MAPINFO, NULL, &CSDKPlayer::State_PreThink_MAPINFO },
 #if defined ( SDK_USE_TEAMS )
 		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_Enter_PICKINGTEAM, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
 #endif
@@ -2763,6 +2941,7 @@ void CSDKPlayer::PhysObjectWake()
 	if ( pObj )
 		pObj->Wake();
 }
+
 void CSDKPlayer::State_Enter_WELCOME()
 {
 	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
@@ -2789,13 +2968,23 @@ void CSDKPlayer::State_Enter_WELCOME()
 		data->SetString( "title", title );		// info panel title
 		data->SetString( "type", "1" );			// show userdata from stringtable entry
 		data->SetString( "msg",	"motd" );		// use this stringtable entry
-		data->SetString( "cmd", "joingame" );// exec this command if panel closed
+		data->SetString( "cmd", "showmapinfo" );// exec this command if panel closed
 
 		ShowViewPortPanel( PANEL_INFO, true, data );
 
 		data->deleteThis();
+	}
+}
 
-	}	
+void CSDKPlayer::State_Enter_MAPINFO()
+{
+	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
+	SetMoveType( MOVETYPE_NONE );
+	AddSolidFlags( FSOLID_NOT_SOLID );
+
+	PhysObjectSleep();
+
+	ShowViewPortPanel( PANEL_INTRO, true );
 }
 
 void CSDKPlayer::MoveToNextIntroCamera()
@@ -2848,6 +3037,15 @@ void CSDKPlayer::MoveToNextIntroCamera()
 }
 
 void CSDKPlayer::State_PreThink_WELCOME()
+{
+	// Update whatever intro camera it's at.
+	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )
+	{
+		MoveToNextIntroCamera();
+	}
+}
+
+void CSDKPlayer::State_PreThink_MAPINFO()
 {
 	// Update whatever intro camera it's at.
 	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )
@@ -3229,6 +3427,8 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 {
+	m_flTotalStyle += points;
+
 	if (IsStyleSkillActive())
 	{
 		points = RemapValClamped(points, 0, dab_stylemeteractivationcost.GetFloat(), 0, dab_stylemetertotalcharge.GetFloat());
@@ -3236,7 +3436,7 @@ void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > dab_stylemetertotalcharge.GetFloat()) ? dab_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
 	}
 	else
-		m_flStylePoints = (m_flStylePoints+points > 100) ? 100 : m_flStylePoints+points;
+		m_flStylePoints += points;
 
 	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
 	{
@@ -3374,6 +3574,12 @@ void CSDKPlayer::ThirdPersonToggle()
 {
 	m_bThirdPerson = !m_bThirdPerson;
 	Instructor_LessonLearned("thirdperson");
+}
+
+void CSDKPlayer::ThirdPersonSwitchSide()
+{
+	m_bThirdPersonCamSide = !m_bThirdPersonCamSide;
+	Instructor_LessonLearned("thirdpersonswitch");
 }
 
 bool CSDKPlayer::InSameTeam( CBaseEntity *pEntity ) const
@@ -3627,7 +3833,25 @@ void CSDKPlayer::VPhysicsDestroyObject ()
 	BaseClass::VPhysicsDestroyObject();
 }
 
+float CSDKPlayer::GetUserInfoFloat(const char* pszCVar, float flBotDefault)
+{
+	if (IsBot())
+		return flBotDefault;
 
+	float flCVarValue = atof(engine->GetClientConVarValue( entindex(), pszCVar ));
+
+	return flCVarValue;
+}
+
+int CSDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
+{
+	if (IsBot())
+		return iBotDefault;
+
+	int iCVarValue = atoi(engine->GetClientConVarValue( entindex(), pszCVar ));
+
+	return iCVarValue;
+}
 
 void CC_ActivateSlowmo_f (void)
 {
@@ -3688,6 +3912,7 @@ static ConCommand character("character", CC_Character, "Choose a character.", FC
 void CC_Buy(const CCommand& args)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+	SDKWeaponID eWeapon;
 
 	if (!pPlayer)
 		return;
@@ -3720,12 +3945,13 @@ void CC_Buy(const CCommand& args)
 
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
+		eWeapon = AliasToWeaponID(args[2]);
 		pPlayer->StopObserverMode();
-		pPlayer->RemoveFromLoadout(AliasToWeaponID(args[2]));
+		pPlayer->RemoveFromLoadout(eWeapon);
 		return;
 	}
 
-	SDKWeaponID eWeapon = AliasToWeaponID(args[1]);
+	eWeapon = AliasToWeaponID(args[1]);
 	if (eWeapon)
 	{
 		pPlayer->StopObserverMode();
@@ -3813,6 +4039,18 @@ void CC_ThirdPersonToggle(const CCommand& args)
 
 static ConCommand cam_thirdperson_toggle( "cam_thirdperson_toggle", ::CC_ThirdPersonToggle, "Toggle third person mode.", FCVAR_GAMEDLL );
 
+void CC_ThirdPersonSwitchSide(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->ThirdPersonSwitchSide();
+}
+
+static ConCommand cam_thirdperson_switchside( "cam_thirdperson_switch", ::CC_ThirdPersonSwitchSide, "Switch third person camera position.", FCVAR_GAMEDLL );
+
 void CC_HealMe_f(const CCommand &args)
 {
 	if ( !sv_cheats->GetBool() )
@@ -3830,5 +4068,4 @@ void CC_HealMe_f(const CCommand &args)
 
 	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
 }
-
 static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);

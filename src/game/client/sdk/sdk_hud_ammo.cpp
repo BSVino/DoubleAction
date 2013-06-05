@@ -14,9 +14,13 @@
 #include <vgui_controls/AnimationController.h>
 #include <vgui/ILocalize.h>
 #include "ihudlcd.h"
+#include "c_sdk_player.h"
+#include "sdkviewport.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays current ammunition level
@@ -27,6 +31,7 @@ class CHudAmmo : public CHudNumericDisplay, public CHudElement
 
 public:
 	CHudAmmo( const char *pElementName );
+	virtual void ApplySchemeSettings( IScheme *scheme );
 	void Init( void );
 	void VidInit( void );
 	void Reset();
@@ -34,17 +39,40 @@ public:
 	void SetAmmo(int ammo, bool playAnimation);
 	void SetAmmo2(int ammo2, bool playAnimation);
 
+	virtual void Paint();
+	virtual void PaintBackground() {};
+
 protected:
 	virtual void OnThink();
 
 	void UpdateAmmoDisplays();
 	void UpdatePlayerAmmo( C_BasePlayer *player );
 
+	CHudTexture* GetTexture();
+	Vector2D GetRoundPosition(int i);
+
 private:
 	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
 	CHandle< C_BaseEntity > m_hCurrentVehicle;
 	int		m_iAmmo;
 	int		m_iAmmo2;
+
+	CHudTexture* m_p762Round;
+	CHudTexture* m_p9mmRound;
+	CHudTexture* m_p45acpRound;
+	CHudTexture* m_pBuckshotRound;
+
+	class CFlyingRound
+	{
+	public:
+		bool bActive;
+		Vector2D vecPosition;
+		Vector2D vecVelocity;
+		float flAngle;
+		float flAngularVelocity;
+	};
+
+	CUtlVector<CFlyingRound> m_aRounds;
 };
 
 DECLARE_HUDELEMENT( CHudAmmo );
@@ -60,6 +88,18 @@ CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHu
 	hudlcd->SetGlobalStat( "(ammo_secondary)", "0" );
 	hudlcd->SetGlobalStat( "(weapon_print_name)", "" );
 	hudlcd->SetGlobalStat( "(weapon_name)", "" );
+
+	m_aRounds.EnsureCapacity(20);
+}
+
+void CHudAmmo::ApplySchemeSettings( IScheme *scheme )
+{
+	BaseClass::ApplySchemeSettings(scheme);
+
+	m_p762Round = gHUD.GetIcon("round_762");
+	m_p9mmRound = gHUD.GetIcon("round_9mm");
+	m_p45acpRound = gHUD.GetIcon("round_45acp");
+	m_pBuckshotRound = gHUD.GetIcon("round_buckshot");
 }
 
 //-----------------------------------------------------------------------------
@@ -163,79 +203,15 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 		if (wpn->UsesClipsForAmmo1())
 		{
 			SetShouldDisplaySecondaryValue(true);
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponUsesClips");
 		}
 		else
 		{
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponDoesNotUseClips");
 			SetShouldDisplaySecondaryValue(false);
 		}
 
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponChanged");
 		m_hCurrentActiveWeapon = wpn;
 	}
 }
-
-/*
-void CHudAmmo::UpdateVehicleAmmo( C_BasePlayer *player, IClientVehicle *pVehicle )
-{
-	m_hCurrentActiveWeapon = NULL;
-	CBaseEntity *pVehicleEnt = pVehicle->GetVehicleEnt();
-
-	if ( !pVehicleEnt || pVehicle->GetPrimaryAmmoType() < 0 )
-	{
-		SetPaintEnabled(false);
-		SetPaintBackgroundEnabled(false);
-		return;
-	}
-
-	SetPaintEnabled(true);
-	SetPaintBackgroundEnabled(true);
-
-	// get the ammo in our clip
-	int ammo1 = pVehicle->GetPrimaryAmmoClip();
-	int ammo2;
-	if (ammo1 < 0)
-	{
-		// we don't use clip ammo, just use the total ammo count
-		ammo1 = pVehicle->GetPrimaryAmmoCount();
-		ammo2 = 0;
-	}
-	else
-	{
-		// we use clip ammo, so the second ammo is the total ammo
-		ammo2 = pVehicle->GetPrimaryAmmoCount();
-	}
-
-	if (pVehicleEnt == m_hCurrentVehicle)
-	{
-		// same weapon, just update counts
-		SetAmmo(ammo1, true);
-		SetAmmo2(ammo2, true);
-	}
-	else
-	{
-		// diferent weapon, change without triggering
-		SetAmmo(ammo1, false);
-		SetAmmo2(ammo2, false);
-
-		// update whether or not we show the total ammo display
-		if (pVehicle->PrimaryAmmoUsesClips())
-		{
-			SetShouldDisplaySecondaryValue(true);
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponUsesClips");
-		}
-		else
-		{
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponDoesNotUseClips");
-			SetShouldDisplaySecondaryValue(false);
-		}
-
-		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponChanged");
-		m_hCurrentVehicle = pVehicleEnt;
-	}
-}
-*/
 
 //-----------------------------------------------------------------------------
 // Purpose: called every frame to get ammo info from the weapon
@@ -262,19 +238,32 @@ void CHudAmmo::SetAmmo(int ammo, bool playAnimation)
 {
 	if (ammo != m_iAmmo)
 	{
-		if (ammo == 0)
+		if (playAnimation)
 		{
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoEmpty");
-		}
-		else if (ammo < m_iAmmo)
-		{
-			// ammo has decreased
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoDecreased");
-		}
-		else
-		{
-			// ammunition has increased
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoIncreased");
+			for (int i = ammo; i < m_iAmmo; i++)
+			{
+				int iSpot = -1;
+
+				// Find a spot to put it.
+				for (int j = 0; j < m_aRounds.Count(); j++)
+				{
+					if (!m_aRounds[j].bActive)
+					{
+						iSpot = j;
+						break;
+					}
+				}
+
+				if (iSpot == -1)
+					iSpot = m_aRounds.AddToTail();
+
+				m_aRounds[iSpot].bActive = true;
+				m_aRounds[iSpot].flAngle = 0;
+				m_aRounds[iSpot].flAngularVelocity = RandomFloat(10, 1000);
+				m_aRounds[iSpot].vecVelocity.x = RandomFloat(-100, -300);
+				m_aRounds[iSpot].vecVelocity.y = RandomFloat(-300, -500);
+				m_aRounds[iSpot].vecPosition = GetRoundPosition(ammo);
+			}
 		}
 
 		m_iAmmo = ammo;
@@ -290,137 +279,120 @@ void CHudAmmo::SetAmmo2(int ammo2, bool playAnimation)
 {
 	if (ammo2 != m_iAmmo2)
 	{
-		if (ammo2 == 0)
-		{
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Ammo2Empty");
-		}
-		else if (ammo2 < m_iAmmo2)
-		{
-			// ammo has decreased
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Ammo2Decreased");
-		}
-		else
-		{
-			// ammunition has increased
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("Ammo2Increased");
-		}
-
 		m_iAmmo2 = ammo2;
 	}
 
 	SetSecondaryValue(ammo2);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Displays the secondary ammunition level
-//-----------------------------------------------------------------------------
-class CHudSecondaryAmmo : public CHudNumericDisplay, public CHudElement
+CHudTexture* CHudAmmo::GetTexture()
 {
-	DECLARE_CLASS_SIMPLE( CHudSecondaryAmmo, CHudNumericDisplay );
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return nullptr;
 
-public:
-	CHudSecondaryAmmo( const char *pElementName ) : BaseClass( NULL, "HudAmmoSecondary" ), CHudElement( pElementName )
+	if (!pPlayer->IsAlive())
+		return nullptr;
+
+	if (!pPlayer->GetActiveSDKWeapon())
+		return nullptr;
+
+	if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "9x19mm"))
+		return m_p9mmRound;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "762x51mm"))
+		return m_p762Round;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "45acp"))
+		return m_p45acpRound;
+	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "buckshot"))
+		return m_pBuckshotRound;
+
+	return nullptr;
+}
+
+ConVar hud_ammoscale("hud_ammoscale", "1.4", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the ammo display.");
+
+Vector2D CHudAmmo::GetRoundPosition(int i)
+{
+	CHudTexture* pTexture = GetTexture();
+	if ( !pTexture )
+		return Vector2D();
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+
+	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
+
+	float flRightPadding = 40;
+	float flBottomPadding = 40;
+
+	int iSpacing = 10*flScale;
+
+	int iMaxClip = pPlayer->GetActiveSDKWeapon()->GetMaxClip1();
+	if ((pTexture->EffectiveWidth(flScale) + iSpacing) * iMaxClip > 450*flScale)
+		iSpacing = -10*flScale;
+
+	if (iSpacing < 0)
 	{
-		m_iAmmo = -1;
-
-		SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_WEAPONSELECTION | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
-	}
-
-	void Init( void )
-	{
-	}
-
-	void VidInit( void )
-	{
-	}
-
-	void SetAmmo( int ammo )
-	{
-		if (ammo != m_iAmmo)
-		{
-			if (ammo == 0)
-			{
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoSecondaryEmpty");
-			}
-			else if (ammo < m_iAmmo)
-			{
-				// ammo has decreased
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoSecondaryDecreased");
-			}
-			else
-			{
-				// ammunition has increased
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("AmmoSecondaryIncreased");
-			}
-
-			m_iAmmo = ammo;
-		}
-		SetDisplayValue( ammo );
-	}
-
-	void Reset()
-	{
-		// hud reset, update ammo state
-		BaseClass::Reset();
-		m_iAmmo = 0;
-		m_hCurrentActiveWeapon = NULL;
-		SetAlpha( 0 );
-		UpdateAmmoState();
-	}
-
-protected:
-	virtual void OnThink()
-	{
-		// set whether or not the panel draws based on if we have a weapon that supports secondary ammo
-		C_BaseCombatWeapon *wpn = GetActiveWeapon();
-		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-		IClientVehicle *pVehicle = player ? player->GetVehicle() : NULL;
-		if (!wpn || !player || pVehicle)
-		{
-			m_hCurrentActiveWeapon = NULL;
-			SetPaintEnabled(false);
-			SetPaintBackgroundEnabled(false);
-			return;
-		}
+		if (i%2 == 0)
+			return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - (flBottomPadding+10)*flScale);
 		else
-		{
-			SetPaintEnabled(true);
-			SetPaintBackgroundEnabled(true);
-		}
-
-		UpdateAmmoState();
+			return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - flBottomPadding*flScale);
 	}
+	else
+		return Vector2D(iWidth - (i+1)*pTexture->EffectiveWidth(flScale) - i*iSpacing - flRightPadding*flScale, iHeight - pTexture->EffectiveHeight(flScale) - flBottomPadding*flScale);
+}
 
-	void UpdateAmmoState()
+void CHudAmmo::Paint()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return;
+
+	if (!pPlayer->IsAlive())
+		return;
+
+	if (!pPlayer->GetActiveSDKWeapon())
+		return;
+
+	CHudTexture* pTexture = GetTexture();
+
+	if (!pTexture)
+		return;
+
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+
+	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
+
+	for (int i = 0; i < m_iAmmo; i++)
 	{
-		C_BaseCombatWeapon *wpn = GetActiveWeapon();
-		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-
-		if (player && wpn && wpn->UsesSecondaryAmmo())
-		{
-			SetAmmo(player->GetAmmoCount(wpn->GetSecondaryAmmoType()));
-		}
-
-		if ( m_hCurrentActiveWeapon != wpn )
-		{
-			if ( wpn->UsesSecondaryAmmo() )
-			{
-				// we've changed to a weapon that uses secondary ammo
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponUsesSecondaryAmmo");
-			}
-			else 
-			{
-				// we've changed away from a weapon that uses secondary ammo
-				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("WeaponDoesNotUseSecondaryAmmo");
-			}
-			m_hCurrentActiveWeapon = wpn;
-		}
+		Vector2D vecRound = GetRoundPosition(i);
+		pTexture->DrawSelf( vecRound.x, vecRound.y, pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale), Color(255, 255, 255, 255) );
 	}
 
-private:
-	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
-	int		m_iAmmo;
-};
+	float flFrameTime = gpGlobals->frametime * pPlayer->GetSlowMoMultiplier();
 
-DECLARE_HUDELEMENT( CHudSecondaryAmmo );
+	for (int i = 0; i < m_aRounds.Count(); i++)
+	{
+		auto& oRound = m_aRounds[i];
 
+		if (!oRound.bActive)
+			continue;
+
+		if (oRound.vecPosition.y > 1000)
+		{
+			oRound.bActive = false;
+			continue;
+		}
+
+		oRound.vecPosition += flFrameTime * oRound.vecVelocity;
+		oRound.vecVelocity.y += flFrameTime * 2000;
+		oRound.flAngle += flFrameTime * oRound.flAngularVelocity;
+
+		SDKViewport::DrawPolygon(pTexture,
+			oRound.vecPosition.x, oRound.vecPosition.y,
+			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale), oRound.flAngle);
+	}
+}

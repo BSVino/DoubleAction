@@ -100,6 +100,10 @@ public:
 	virtual void			CreateMove( float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles );
 #endif
 
+#ifdef CLIENT_DLL
+	virtual int     DrawModel( int flags );
+#endif
+
 	virtual float GetWeaponSpread();
 	virtual bool WeaponSpreadFixed() const { return false; }
 
@@ -168,6 +172,21 @@ private:
 	CNetworkVar(bool, m_bSwingSecondary);
 
 	CSDKPlayer *m_pPrevOwner;
+
+#ifdef CLIENT_DLL
+	float       m_flArrowGoalSize;
+	float       m_flArrowCurSize;
+	float       m_flArrowSpinOffset;
+#endif
+
+public:
+	/*New bits to make Akimbos work in a sane manner*/
+	void finishattack (CSDKPlayer *pPlayer);
+	/*TODO: These should be moved into the akimbo class, but for some reason
+	I can't get them to synch properly there.*/
+	CNetworkVar (int, leftclip);
+	CNetworkVar (int, rightclip);
+	CNetworkVar (bool, shootright);
 };
 
 

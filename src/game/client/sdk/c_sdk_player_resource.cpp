@@ -20,6 +20,18 @@ IMPLEMENT_CLIENTCLASS_DT(C_SDK_PlayerResource, DT_SDKPlayerResource, CSDKPlayerR
 	RecvPropArray3( RECVINFO_ARRAY(m_iPlayerClass), RecvPropInt( RECVINFO(m_iPlayerClass[0]))),
 #endif
 	RecvPropArray3( RECVINFO_ARRAY( m_iMaxHealth ), RecvPropInt( RECVINFO( m_iMaxHealth[0] ) ) ),
+	RecvPropArray3( RECVINFO_ARRAY( m_iStyle ), RecvPropInt( RECVINFO( m_iStyle[0] ) ) ),
+
+	RecvPropInt (RECVINFO (m_iHighestStyle)),
+	RecvPropInt (RECVINFO (m_iHighestStuntKills)),
+	RecvPropInt (RECVINFO (m_iHighestGrenadeKills)),
+	RecvPropInt (RECVINFO (m_iHighestBrawlKills)),
+	RecvPropInt (RECVINFO (m_iHighestKillStreak)),
+	RecvPropInt (RECVINFO (m_iHighestStylePlayer)),
+	RecvPropInt (RECVINFO (m_iHighestStuntKillPlayer)),
+	RecvPropInt (RECVINFO (m_iHighestGrenadeKillPlayer)),
+	RecvPropInt (RECVINFO (m_iHighestBrawlKillPlayer)),
+	RecvPropInt (RECVINFO (m_iHighestKillStreakPlayer)),
 END_RECV_TABLE()
 
 
@@ -63,6 +75,13 @@ int C_SDK_PlayerResource::GetMaxHealth( int iIndex )
 	return m_iMaxHealth[iIndex];
 }
 
+int C_SDK_PlayerResource::GetStyle( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 1;
+
+	return m_iStyle[iIndex];
+}
 
 
 C_SDK_PlayerResource * SDKGameResources( void )

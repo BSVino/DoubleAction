@@ -61,7 +61,7 @@
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>Copying to %SourceSDK%\..\..\SourceMods\dab\bin\</Message>
-      <Command>if exist $(SourceSDK)\..\..\SourceMods\dab\bin\client.dll attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll"
+      <Command>if exist "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll" attrib -r "$(SourceSDK)\..\..\SourceMods\dab\bin\client.dll"
 if exist "$(TargetDir)"client.dll copy "$(TargetDir)"client.dll "$(SourceSDK)\..\..\SourceMods\dab\bin"
 </Command>
       <Outputs>%SourceSDK%\..\..\SourceMods\dab\bin\client.dll;%(Outputs)</Outputs>
@@ -219,12 +219,15 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_p99.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="achievement_notification_panel.cpp" />
@@ -619,6 +622,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClCompile Include="sdk\vgui\dab_skillmenu.cpp" />
     <ClCompile Include="sdk\vgui\da_instructor.cpp" />
     <ClCompile Include="sdk\vgui\folder_gui.cpp" />
+    <ClCompile Include="sdk\vgui\sdk_mapinfo.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -837,6 +841,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\sdk\dab_viewmodel.h" />
+    <ClInclude Include="..\shared\sdk\weapon_akimbobase.h" />
     <ClInclude Include="..\shared\sdk\weapon_shotgun.h" />
     <ClInclude Include="achievement_notification_panel.h" />
     <ClInclude Include="..\shared\achievement_saverestore.h" />
@@ -860,6 +865,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "%SourceSDK%\..\
     <ClInclude Include="sdk\vgui\dab_skillmenu.h" />
     <ClInclude Include="sdk\vgui\da_instructor.h" />
     <ClInclude Include="sdk\vgui\folder_gui.h" />
+    <ClInclude Include="sdk\vgui\sdk_mapinfo.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />

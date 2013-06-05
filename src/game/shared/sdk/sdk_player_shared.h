@@ -106,6 +106,7 @@ public:
 	float   GetDiveTime() const { return m_flDiveTime; };
 	float   GetDiveLerped() const { return m_flDiveLerped; };
 	void    IncreaseDiveLerped(float flLerped) { m_flDiveLerped += flLerped; };
+	float   GetTimeLeftGround() const { return m_flTimeLeftGround; };
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -156,7 +157,7 @@ private:
 	CNetworkVar( bool, m_bIsSprinting );
 	bool m_bGaveSprintPenalty;
 #endif
-
+public: /*Slopes need to slide longer, let there be light here!*/
 	CNetworkVar( bool, m_bSliding );
 	CNetworkVar( bool, m_bInAirSlide );
 	CNetworkVar( Vector, m_vecSlideDirection );
@@ -166,14 +167,17 @@ private:
 	CNetworkVar( float, m_flLastDuckPress );
 	CNetworkVar( bool, m_bRolling );
 	CNetworkVar( bool, m_bRollingFromDive );
+public: /*For double tapping.*/
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
-
+public:
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
 	CNetworkVar( bool, m_bRollAfterDive );
 	CNetworkVar( float, m_flDiveTime );
+	CNetworkVar( float, m_flTimeLeftGround );
 	CNetworkVar( float, m_flDiveLerped );
+	CNetworkVar( float, m_flDiveToProneLandTime );
 	float m_flViewTilt;
 
 	float m_flViewBobRamp;
@@ -189,6 +193,16 @@ private:
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
+public:
+	/*Stuff for new controls*/
+	CNetworkVar (int,		tapkey);
+	CNetworkVar (float,		taptime);
+	CNetworkVar (int,		kongcnt);
+	CNetworkVar (float,		kongtime);
+	CNetworkVar (float,		runtime);
+	CNetworkVar (Vector,	rundir);
+	CNetworkVar (float,		manteltime);
+	CNetworkVar (Vector,	wallnormal);
 public:
 
 #ifdef SDK_USE_PRONE

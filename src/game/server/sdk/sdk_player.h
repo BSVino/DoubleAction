@@ -103,6 +103,7 @@ public:
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+	virtual void        OnDamagedByExplosion( const CTakeDamageInfo &info );
 
 	virtual bool        FVisible(CBaseEntity* pEntity, int iTraceMask = MASK_OPAQUE, CBaseEntity** ppBlocker = NULL);
 	virtual bool        IsVisible(const Vector &pos, bool testFOV = false, const CBaseEntity *ignore = NULL) const;	///< return true if we can see the point
@@ -128,6 +129,7 @@ public:
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
 	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
+	virtual CBaseCombatWeapon* GetLastWeapon( void );
 
 	virtual Vector  EyePosition();
 
@@ -142,6 +144,10 @@ public:
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
 
 	virtual void	Instructor_LessonLearned(const char* pszLesson);
+
+	int             GetTotalStyle() { return m_flTotalStyle; }
+
+	CWeaponSDKBase *findweapon (SDKWeaponID id);
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
@@ -212,6 +218,7 @@ public:
 	virtual void Disarm();
 
 	virtual void ThirdPersonToggle();
+	virtual void ThirdPersonSwitchSide();
 	virtual bool IsInThirdPerson() const;
 	const Vector CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera);
 	const Vector GetThirdPersonCameraPosition();
@@ -263,6 +270,9 @@ public:
 	void NoteWeaponFired();
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 
+	float GetUserInfoFloat(const char* pszCVar, float flBotDefault = 0);
+	int GetUserInfoInt(const char* pszCVar, int iBotDefault = 0);
+
 // ------------------------------------------------------------------------------------------------ //
 // Player state management.
 // ------------------------------------------------------------------------------------------------ //
@@ -304,6 +314,9 @@ private:
 	// Specific state handler functions.
 	void State_Enter_WELCOME();
 	void State_PreThink_WELCOME();
+
+	void State_Enter_MAPINFO();
+	void State_PreThink_MAPINFO();
 
 	void State_Enter_PICKINGTEAM();
 	void State_Enter_PICKINGCLASS();
@@ -446,13 +459,31 @@ public:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+	CNetworkVar( bool, m_bThirdPersonCamSide );
+
+#ifdef CLIENT_DLL
+	float m_flCurrentAlphaVal; // keeps track of the current alpha value for the player model
+#endif
+
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
+	float  m_flStuntLerp;
+	float  m_flSideLerp;
 
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );
+
+	CWeaponSDKBase *switchfrom;
+
+	float  m_flTotalStyle;
+
+	int    m_iStuntKills;
+	int    m_iGrenadeKills;
+	int    m_iBrawlKills;
+	int    m_iStreakKills; // Kills in a row.
+	int    m_iCurrentStreak;
 
 protected:
 	static PartInfo m_partInfo[ MAX_PLAYERS ];						///< part positions for each player

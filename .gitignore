@@ -6,3 +6,4 @@
 /src/linux_sdk/obj
 /src/linux_sdk/files.vdf
 /src/linux_sdk/Makefile.Server*
+*.orig

@@ -120,6 +120,7 @@ public:
 	CWeaponSDKBase *GetActiveSDKWeapon() const;
 
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
+	virtual C_BaseCombatWeapon* GetLastWeapon( void );
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
@@ -149,6 +150,8 @@ public:
 
 	virtual void    ReadyWeapon();
 	virtual bool    IsWeaponReady();
+
+	CWeaponSDKBase *findweapon (SDKWeaponID id);
 
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
@@ -191,9 +194,12 @@ public:
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
 	CSDKPlayerShared m_Shared;
-
+	
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
+
+	float GetUserInfoFloat(const char* pszCVar, float flBotDefault = 0);
+	int GetUserInfoInt(const char* pszCVar, int iBotDefault = 0);
 
 // Not Shared, but public.
 public:
@@ -259,7 +265,7 @@ public: // Public Variables
 	CNetworkVar( float, m_flReadyWeaponUntil );
 
 	CNetworkVar( float, m_flDisarmRedraw );
-
+	
 	EHANDLE	m_hRagdoll;
 
 	int	m_headYawPoseParam;
@@ -291,6 +297,7 @@ private:
 
 	float m_flStylePoints;
 	float m_flStyleSkillCharge;
+	float m_currentAlphaVal;
 
 	class CSDKSoundEvent
 	{
@@ -317,9 +324,15 @@ private:
 	CNetworkVar( bool, m_bHasPlayerDied );
 
 	CNetworkVar( bool, m_bThirdPerson );
+	CNetworkVar( bool, m_bThirdPersonCamSide );
+
+	float m_flCurrentAlphaVal;
+
 	Vector m_vecThirdCamera; // Where is the third person camera?
 	Vector m_vecThirdTarget; // Where is the third person camera pointing?
 	float  m_flCameraLerp;
+	float  m_flStuntLerp;
+	float  m_flSideLerp;
 
 	char m_iszCharacter[256];
 
@@ -334,6 +347,8 @@ private:
 	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
 	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
 	float                                  m_flLastLesson;
+public:
+	CWeaponSDKBase *switchfrom;
 };
 
 

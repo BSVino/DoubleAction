@@ -137,6 +137,9 @@ bool ValidPlayerConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	if (gViewPortInterface->FindPanelByName(PANEL_INFO)->IsVisible())
 		return false;
 
+	if (gViewPortInterface->FindPanelByName(PANEL_INTRO)->IsVisible())
+		return false;
+
 	// Choose character screen
 	if (gViewPortInterface->FindPanelByName(PANEL_CLASS)->IsVisible())
 		return false;
@@ -233,6 +236,9 @@ bool PlayerOutOfAmmoAndMultipleWeaponsConditions( C_SDKPlayer *pPlayer, class CL
 	if (!pWeapon)
 		return false;
 
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+		return false;
+
 	return !pWeapon->HasPrimaryAmmo();
 }
 
@@ -260,6 +266,17 @@ bool PlayerHasSlowMoConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	return pPlayer->GetSlowMoSeconds() > 0;
 }
 
+bool PlayerInThirdPersonConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
+{
+	if (!PlayerAliveConditions(pPlayer, pLesson))
+		return false;
+
+	if (!pPlayer->IsInThirdPerson())
+		return false;
+
+	return true;
+}
+
 pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 {
 	if (sConditions == "WhoCares")
@@ -280,6 +297,8 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 		return PlayerActiveWeaponHasAimInConditions;
 	else if (sConditions == "PlayerHasSlowMo")
 		return PlayerHasSlowMoConditions;
+	else if (sConditions == "PlayerInThirdPerson")
+		return PlayerInThirdPersonConditions;
 
 	Assert(false);
 	Error(std::string("Couldn't find lesson condition '").append(sConditions.Get()).append("'\n").c_str());

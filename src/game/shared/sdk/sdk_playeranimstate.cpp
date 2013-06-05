@@ -114,6 +114,8 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_iRollActivity = ACT_DAB_ROLL;
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
+
+	flipping = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -345,7 +347,17 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 		return;
 	}
+	if (flipping)
+	{
+		m_angRender[YAW] = m_flEyeYaw;
+#ifndef CLIENT_DLL
+		QAngle angle = GetBasePlayer()->GetAbsAngles();
+		angle[YAW] = m_flCurrentFeetYaw;
 
+		GetBasePlayer()->SetAbsAngles( angle );
+#endif
+		return;
+	}
 	// Get the movement velocity.
 	Vector vecVelocity;
 	GetOuterAbsVelocity( vecVelocity );
@@ -674,13 +686,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD:
 		{
 			// Weapon reload.
+			/*//We only have standing reload-- it blends into other states
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_CROUCH );
-			else
+			else*/
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD );
 
 			iGestureActivity = ACT_VM_RELOAD; //Make view reload if it isn't already
@@ -689,13 +702,14 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_RELOAD_LOOP:
 		{
 			// Weapon reload.
+			/*//We only have standing reload-- it blends into other states
 			if ( m_pSDKPlayer->m_Shared.IsProne() || m_pSDKPlayer->m_Shared.IsDiveSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_PRONE );
 			else if ( m_pSDKPlayer->m_Shared.IsSliding() )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_SLIDE );
 			else if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP_CROUCH );
-			else
+			else*/
 				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_RELOAD_LOOP );
 
 			iGestureActivity = ACT_INVALID; //TODO: fix
@@ -795,6 +809,28 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		}
 		break;
 
+	case PLAYERANIMEVENT_STAND_TO_VAULT:
+		m_bRollTransition = true;
+		m_bRollTransitionFirstFrame = true;
+		m_iRollActivity = ACT_DAB_ROLL;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_STAND_TO_WALLRUN:
+		m_bRollTransition = true;
+		m_bRollTransitionFirstFrame = true;
+		m_iRollActivity = ACT_DAB_ROLL;
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_WALLFLIP:
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
+	case PLAYERANIMEVENT_WALLCLIMB:
+		RestartMainSequence();
+		iGestureActivity = ACT_VM_IDLE;
+		break;
 	case PLAYERANIMEVENT_JUMP:
 		{
 			// Jump.
@@ -855,7 +891,8 @@ bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
 //-----------------------------------------------------------------------------
 bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
 {	
-	if ( !(m_pSDKPlayer->GetFlags() & FL_ONGROUND) )
+	if (!(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
+		 m_pSDKPlayer->GetAbsVelocity ().z < -270)
 	{
 		idealActivity = ACT_DAB_JUMP_FLOAT;
 		return true;
@@ -1072,7 +1109,6 @@ bool CSDKPlayerAnimState::HandleRollTransition( Activity &idealActivity )
 		else
 			idealActivity = m_iRollActivity;
 	}
-
 	return m_bRollTransition;
 }
 
@@ -1136,11 +1172,72 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			else
 				idealActivity = ACT_DAB_JUMP_START;
 		}
+	}	
+
+	if (!m_bJumping && 
+		!(m_pSDKPlayer->GetFlags() & FL_ONGROUND) &&
+		!m_pSDKPlayer->m_Shared.IsSliding () &&
+		!m_pSDKPlayer->m_Shared.IsRolling () &&
+		m_pSDKPlayer->GetAbsVelocity ().z < -270)
+	{
+		idealActivity = ACT_DAB_JUMP_FLOAT;
+		return true;
 	}
 
 	if ( m_bJumping )
 		return true;
 
+	return false;
+}
+
+bool 
+CSDKPlayerAnimState::handlevault (Activity &idealActivity)
+{/*TODO: implement*/
+	return false;
+}
+bool 
+CSDKPlayerAnimState::handlewallrun (Activity &idealActivity)
+{/*TODO: implement*/
+	return false;
+}
+bool 
+CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
+{
+	if (!flipping)
+	{/*Flip only on activation*/
+		if (m_pSDKPlayer->m_Shared.kongtime <= 0)
+		{
+			return false;
+		}
+	}
+	if (m_pSDKPlayer->GetCurrentTime () - 
+		m_pSDKPlayer->m_Shared.GetDiveTime () < 1e-1) 
+	{/*Not in a dive (exception: we want to dive out of a flip)*/
+		flipping = false;
+		return false;
+	}
+	if (m_pSDKPlayer->GetFlags()&FL_ONGROUND)
+	{/*Exit if we land on something*/
+		flipping = false;
+		return false;
+	}
+	if (GetBasePlayer()->GetCycle () >= 0.99) 
+	{/*Exit once the flip animation finished once*/
+		flipping = false;
+		return false;
+	}
+	idealActivity = ACT_DAB_WALLFLIP;
+	flipping = true;
+	return true;
+}
+bool 
+CSDKPlayerAnimState::handlewallclimb (Activity &idealActivity)
+{
+	if (m_pSDKPlayer->m_Shared.manteltime > 0)
+	{
+		idealActivity = ACT_DAB_WALLCLIMB;
+		return true;
+	}
 	return false;
 }
 
@@ -1162,8 +1259,13 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	else if (m_pSDKPlayer->IsWeaponReady())
 		idealActivity = ACT_DAB_STAND_READY;
 
-	if (
+	if (handlewallclimb (idealActivity) ||
+		handlewallflip (idealActivity) ||
 		HandleDiving( idealActivity ) ||
+
+		handlevault (idealActivity) ||
+		handlewallrun (idealActivity)||
+
 		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )
 		//Tony; handle these before ducking !!

@@ -192,7 +192,7 @@ public:
 	virtual bool			HasSecondaryAmmo( void );					// Returns true is weapon has ammo
 	bool					UsesPrimaryAmmo( void );					// returns true if the weapon actually uses primary ammo
 	bool					UsesSecondaryAmmo( void );					// returns true if the weapon actually uses secondary ammo
-	void					GiveDefaultAmmo( void );
+	virtual void			GiveDefaultAmmo( void );
 	
 	virtual bool			CanHolster( void ) { return TRUE; };		// returns true if the weapon can be holstered
 	virtual bool			DefaultDeploy( char *szViewModel, char *szWeaponModel, int iActivity, char *szAnimExt );
@@ -565,6 +565,10 @@ protected:
 	int						m_iOldState;
 
 #endif // End Client .dll only
+public:
+	/*Called in DefaultReload for sane akimbo implementation*/
+	typedef bool (*delegate_t) (CBaseCombatWeapon *self);
+	delegate_t reload_delegate;
 };
 
 #endif // COMBATWEAPON_SHARED_H

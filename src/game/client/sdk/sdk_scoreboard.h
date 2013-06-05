@@ -25,6 +25,7 @@ public:
 	CSDKScoreboard(IViewPort *pViewPort);
 	~CSDKScoreboard();
 
+	virtual void Update();
 
 protected:
 	// scoreboard overrides
@@ -36,6 +37,7 @@ protected:
 	virtual void PaintBackground();
 	virtual void PaintBorder();
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual Panel *CreateControlByName( const char *controlName );
 
 private:
 	virtual void AddHeader(); // add the start header of the scoreboard
