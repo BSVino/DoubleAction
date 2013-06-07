@@ -2874,6 +2874,10 @@ void CSDKGameMovement::FullWalkMove ()
 bool
 CSDKGameMovement::checkvault (void)
 {
+	// Disable vaulting for now. It could be cool but it would need a lot of refining and polishing.
+	// I'm not up for doing that work right now, and until then it's only in the way. -Vino
+	return false;
+
 	trace_t tr;
 	float vault_height = da_acro_vault_height.GetFloat ();
 	Vector forward, normal;
