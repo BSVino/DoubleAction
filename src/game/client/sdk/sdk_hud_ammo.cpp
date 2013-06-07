@@ -238,7 +238,8 @@ void CHudAmmo::SetAmmo(int ammo, bool playAnimation)
 {
 	if (ammo != m_iAmmo)
 	{
-		if (playAnimation)
+		CHudTexture* pTexture = GetTexture();
+		if (playAnimation && pTexture)
 		{
 			for (int i = ammo; i < m_iAmmo; i++)
 			{
@@ -315,7 +316,7 @@ Vector2D CHudAmmo::GetRoundPosition(int i)
 {
 	CHudTexture* pTexture = GetTexture();
 	if ( !pTexture )
-		return Vector2D();
+		return Vector2D(0, 0);
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
