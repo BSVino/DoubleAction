@@ -74,6 +74,7 @@ ConVar da_weaponlag( "da_weaponlag", "0.005", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR
 ConVar da_weaponbob( "da_weaponbob", "0.7", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
 ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon drop while running." );
 ConVar da_weaponoffset( "da_weaponoffset", "0.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon offset, creates movement while looking around." );
+ConVar da_weapontilt( "da_weapontilt", "16", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the weapon tilt when diving laterally?" );
 
 void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
 {
@@ -133,7 +134,7 @@ void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QA
 		float flRightDot = vecViewDirection.Dot(vecDiveRight);
 		float flUpDot = vecViewDirection.Dot(pOwner->m_Shared.GetDiveDirection());
 
-		eyeAngles.z -= flRightDot * pOwner->m_Shared.GetViewTilt() * 8;
+		eyeAngles.z += flRightDot * pOwner->m_Shared.GetViewTilt() * da_weapontilt.GetFloat();;
 
 		eyePosition += (vecViewUp * (flUpDot * 0.5f) + vecViewDirection * (flUpDot * 0.5f)) * pOwner->m_Shared.GetViewTilt();
 
