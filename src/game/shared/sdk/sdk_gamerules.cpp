@@ -1660,11 +1660,11 @@ CAmmoDef* GetAmmoDef()
 	{
 		bInitted = true;
 
-		def.AddAmmoType( "9x19mm",   DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, BULLET_IMPULSE(120, 400),    0 );
-		def.AddAmmoType( "762x51mm", DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, BULLET_IMPULSE(140, 800),    0 );
-		def.AddAmmoType( "45acp",    DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, 200/*max carry*/, BULLET_IMPULSE(200, 1225),   0 );
+		def.AddAmmoType( "9x19mm",   DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, INFINITE_AMMO, BULLET_IMPULSE(120, 400),    0 );
+		def.AddAmmoType( "762x51mm", DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, INFINITE_AMMO, BULLET_IMPULSE(140, 800),    0 );
+		def.AddAmmoType( "45acp",    DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, INFINITE_AMMO, BULLET_IMPULSE(200, 1225),   0 );
 
-		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE,          0, 0, 50/*max carry*/,  BULLET_IMPULSE(526/9, 1300), 0 );
+		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE,          0, 0, INFINITE_AMMO,  BULLET_IMPULSE(526/9, 1300), 0 );
 		def.AddAmmoType( "grenades", DMG_BLAST,    TRACER_NONE,          0, 0, 5/*max carry*/,   1,                           0 );
 	}
 

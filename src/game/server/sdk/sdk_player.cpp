@@ -1630,14 +1630,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	while (ThrowActiveWeapon());
 
-	CAmmoPickup* pAmmoPickup = static_cast<CAmmoPickup*>(CBaseEntity::Create( "da_ammo_pickup", GetAbsOrigin(), GetAbsAngles() ));
-
-	if (!pAmmoPickup->TakeAmmoFromPlayer(this))
-		UTIL_Remove(pAmmoPickup);
-
-	pAmmoPickup->SetThink(&CAmmoPickup::SUB_Remove);
-	pAmmoPickup->SetNextThink(gpGlobals->curtime + 30);
-
 	CBaseEntity* pAttacker = info.GetAttacker();
 
 	if( pAttacker && pAttacker->IsPlayer() )
