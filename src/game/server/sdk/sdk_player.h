@@ -418,6 +418,7 @@ private:
 	CSDKPlayerAnimState *m_PlayerAnimState;
 
 	CNetworkVar( bool, m_bSpawnInterpCounter );
+	CUtlVector<int> m_arrIgnoreNadesByIndex;
 
 	int m_iSpawnArmorValue;
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_ArmorValue );

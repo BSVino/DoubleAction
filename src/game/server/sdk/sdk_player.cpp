@@ -1079,6 +1079,16 @@ void CSDKPlayer::Spawn()
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
 	m_flLastSpawnTime = gpGlobals->curtime;
+
+	// ignore damage from all grenades currently in play
+	m_arrIgnoreNadesByIndex.RemoveAll();
+	CBaseEntity *pGrenade = gEntList.FindEntityByClassname( NULL, "grenade_projectile");
+
+	while (pGrenade)
+	{
+		m_arrIgnoreNadesByIndex.AddToHead(pGrenade->entindex());
+		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile");
+	}
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1111,6 +1121,10 @@ bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
 
+	// if we're searching deathmatch spawns in teamplay and didn't get a valid one return false
+	if (g_pGameRules->IsTeamplay() && !stricmp(pEntClassName, "info_player_deathmatch"))
+		return false;
+
 	DevMsg("CSDKPlayer::SelectSpawnSpot: couldn't find valid spawn point.\n");
 
 	return true;
@@ -1123,11 +1137,27 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 
 	const char *pSpawnPointName = "";
 
+	if (g_pGameRules->IsTeamplay()) //&& g_pGameRules->UseDeathmatchSpawns()
+	{		
+		pSpawnPointName = "info_player_deathmatch";
+		pSpot = g_pLastDMSpawn;
+		if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
+		{
+			g_pLastDMSpawn = pSpot;
+		}
+		else
+			pSpot = NULL;
+	}
+
 	switch( GetTeamNumber() )
 	{
 #if defined ( SDK_USE_TEAMS )
 	case SDK_TEAM_BLUE:
 		{
+			// if we found a suitable spawn point in the field don't use a team spawn
+			if (pSpot)
+				break;
+
 			pSpawnPointName = "info_player_blue";
 			pSpot = g_pLastBlueSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1138,6 +1168,9 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 		break;
 	case SDK_TEAM_RED:
 		{
+			if (pSpot)
+				break;
+
 			pSpawnPointName = "info_player_red";
 			pSpot = g_pLastRedSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1251,7 +1284,7 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 	if (!SuicideAllowed())
 	{		
-		ClientPrint( this, HUD_PRINTCENTER, "Game_No_Suicide" );
+		ClientPrint( this, HUD_PRINTCENTER, "DAB_No_Suicide" );
 		return;
 	}
 	
@@ -1347,6 +1380,18 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
+			// this timing only accounts for weapon_grenade (with fuse of 1.5s)
+			if ( m_flLastSpawnTime > (gpGlobals->curtime - 2.5f) )
+			{
+				int inflictorindex = pInflictor->entindex();
+				// if this is a grenade thrown before we spawned ignore the damage
+				for (int i = 0; i < m_arrIgnoreNadesByIndex.Count(); i++)
+				{
+					if (m_arrIgnoreNadesByIndex[i] == inflictorindex)
+						return 0;
+				}
+			}
+
 			if ( m_Shared.IsDiving() || m_Shared.IsSliding() )
 			{
 				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();

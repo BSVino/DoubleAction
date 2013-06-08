@@ -846,35 +846,52 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		}
 	}
 
+	// in teamplay only use deathmatch spawns that are near team mates
+	bool bNeedTeamMate = (IsTeamplay() && !stricmp(pSpot->GetClassname(),"info_player_deathmatch"));
+
 	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
 		if (!pOtherPlayer)
 			continue;
 
-		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
+		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
+
+		if (!pOtherSDKPlayer->IsAlive())
 			continue;
+
+		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
+		{
+			if (bNeedTeamMate)
+			{
+				if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() <= 384*384)
+					bNeedTeamMate = false;
+			}
+			continue;
+		}
 
 		if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
 			continue;
 
-		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
-
 		trace_t tr;
-		// FIX THIS:
 		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
 		if (tr.m_pEnt == pOtherPlayer)
 			return false;
 	}
 
-	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "sdk_basegrenade_projectile" );
+	// if we need a team mate and didn't find one don't use this point
+	if (bNeedTeamMate)
+		return false;
+
+	// should we still check this even though you can't be hurt by pre-existing grenades?
+	/*CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "grenade_projectile" );
 	while (pGrenade)
 	{
 		if ((pSpot->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
 			return false;
 
-		pGrenade = gEntList.FindEntityByClassname( pGrenade, "sdk_basegrenade_projectile" );
-	}
+		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile" );
+	}*/
 
 	Vector mins = GetViewVectors()->m_vHullMin;
 	Vector maxs = GetViewVectors()->m_vHullMax;
@@ -893,7 +910,7 @@ bool CSDKGameRules::InitTeamSpawns()
 	int iNumSpawns = 20;
 	
 	// Pick a (fairly) random spawnpoint to start this process
-	for ( int i = random->RandomInt(1,30); i > 0; i-- )
+	for ( int i = random->RandomInt(1,32); i > 0; i-- )
 		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
 	if ( !pRefSpot )  // skip over the null point
 		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
@@ -912,7 +929,16 @@ bool CSDKGameRules::InitTeamSpawns()
 	Vector vecRefOrig = pRefSpot->GetAbsOrigin();
 	Vector vecToSpot;
 	float flCheckDistSqr;
-	float flBestDistSqr = 0.0f;
+
+	// size of farthest spawns list (ordered farthest to closest)
+	const int iSetSize = 6;
+	CUtlVector<CBaseEntity*> arrFarthestSet;
+	float arrDistSqr[iSetSize];
+
+	for (int i = 0; i < iSetSize; i++)
+	{
+		arrDistSqr[i] = 0;
+	}
 
 	// iterate the list of spawn points
 	while(pCheckSpot)
@@ -922,16 +948,27 @@ bool CSDKGameRules::InitTeamSpawns()
 			vecToSpot = pCheckSpot->GetAbsOrigin() - vecRefOrig;
 			flCheckDistSqr = vecToSpot.LengthSqr();
 		
-			if (flCheckDistSqr > flBestDistSqr)
+			for (int i = 0; i<iSetSize; i++)
 			{
-				flBestDistSqr = flCheckDistSqr;
-				pRefSpot = pCheckSpot;
+				if(flCheckDistSqr > arrDistSqr[i])
+				{
+					arrFarthestSet.InsertBefore(i, pCheckSpot);
+
+					for (int k = (iSetSize-1); k > i; k--)
+						arrDistSqr[k] = arrDistSqr[k-1];
+					
+					arrDistSqr[i] = flCheckDistSqr;
+					break;
+				}
 			}
 		}
 
 		// get the next spawn point
 		pCheckSpot = gEntList.FindEntityByClassname( pCheckSpot, "info_player_deathmatch" );
 	}
+
+	// choose a random spawn from our set of spawns farthest from the initial point
+	pRefSpot = arrFarthestSet[random->RandomInt(0,(iSetSize-1))];
 
 	// use whichever team we didn't use last time
 	iLastTeam = (iLastTeam == SDK_TEAM_BLUE ? SDK_TEAM_RED : SDK_TEAM_BLUE);

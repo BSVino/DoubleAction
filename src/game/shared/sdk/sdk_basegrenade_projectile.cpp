@@ -43,8 +43,6 @@ BEGIN_NETWORK_TABLE( CBaseGrenadeProjectile, DT_BaseGrenadeProjectile )
 	#endif
 END_NETWORK_TABLE()
 
-LINK_ENTITY_TO_CLASS( sdk_basegrenade_projectile, CBaseGrenadeProjectile );
-
 void CBaseGrenadeProjectile::Precache()
 {
 	PrecacheScriptSound( "BaseGrenade.Explode" );

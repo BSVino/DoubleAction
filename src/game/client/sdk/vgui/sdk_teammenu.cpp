@@ -201,12 +201,12 @@ void CSDKTeamMenu::Update( void )
 
 	MoveToCenterOfScreen();*/
 
-	Label *pStatusLabel = dynamic_cast<Label *>(FindChildByName("frankteamstatus"));
+	Label *pStatusLabel = dynamic_cast<Label *>(FindChildByName("frankteaminfo"));
 	C_Team *team = GetGlobalTeam(SDK_TEAM_BLUE);
 	if (pStatusLabel && team)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_Team_Status" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_TeamMenu_Info" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";
@@ -222,12 +222,12 @@ void CSDKTeamMenu::Update( void )
 		}
 	}
 
-	pStatusLabel = dynamic_cast<Label *>(FindChildByName("wishteamstatus"));
+	pStatusLabel = dynamic_cast<Label *>(FindChildByName("wishteaminfo"));
 	team = GetGlobalTeam(SDK_TEAM_RED);
 	if (pStatusLabel && team)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_Team_Status" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_TeamMenu_Info" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";
@@ -360,7 +360,7 @@ void CSDKTeamMenu::OnCommand( const char *command )
 
 		BaseClass::OnCommand( command );
 
-		engine->ClientCmd( command );
+		//engine->ClientCmd( command );
 	}
 	else
 		BaseClass::OnCommand(command);
