@@ -995,6 +995,19 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
+	if ( gpGlobals->teamplay )
+	{
+		switch(GetTeamNumber())
+		{
+		case SDK_TEAM_BLUE:
+			SetCharacter("playermale");
+			break;
+		case SDK_TEAM_RED:
+			SetCharacter("wish");
+			break;
+		}
+	}
+
 	if (STRING(m_iszCharacter.Get())[0])
 		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else
@@ -1057,6 +1070,7 @@ void CSDKPlayer::Spawn()
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
 	m_iCurrentStreak = 0;
+	m_flNextSuicideTime = 0;
 
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
@@ -1065,6 +1079,16 @@ void CSDKPlayer::Spawn()
 	SDKGameRules()->CalculateSlowMoForPlayer(this);
 
 	m_flLastSpawnTime = gpGlobals->curtime;
+
+	// ignore damage from all grenades currently in play
+	m_arrIgnoreNadesByIndex.RemoveAll();
+	CBaseEntity *pGrenade = gEntList.FindEntityByClassname( NULL, "grenade_projectile");
+
+	while (pGrenade)
+	{
+		m_arrIgnoreNadesByIndex.AddToHead(pGrenade->entindex());
+		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile");
+	}
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1097,6 +1121,10 @@ bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot
 		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
 	} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
 
+	// if we're searching deathmatch spawns in teamplay and didn't get a valid one return false
+	if (g_pGameRules->IsTeamplay() && !stricmp(pEntClassName, "info_player_deathmatch"))
+		return false;
+
 	DevMsg("CSDKPlayer::SelectSpawnSpot: couldn't find valid spawn point.\n");
 
 	return true;
@@ -1109,11 +1137,27 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 
 	const char *pSpawnPointName = "";
 
+	if (g_pGameRules->IsTeamplay()) //&& g_pGameRules->UseDeathmatchSpawns()
+	{		
+		pSpawnPointName = "info_player_deathmatch";
+		pSpot = g_pLastDMSpawn;
+		if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
+		{
+			g_pLastDMSpawn = pSpot;
+		}
+		else
+			pSpot = NULL;
+	}
+
 	switch( GetTeamNumber() )
 	{
 #if defined ( SDK_USE_TEAMS )
 	case SDK_TEAM_BLUE:
 		{
+			// if we found a suitable spawn point in the field don't use a team spawn
+			if (pSpot)
+				break;
+
 			pSpawnPointName = "info_player_blue";
 			pSpot = g_pLastBlueSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1124,6 +1168,9 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 		break;
 	case SDK_TEAM_RED:
 		{
+			if (pSpot)
+				break;
+
 			pSpawnPointName = "info_player_red";
 			pSpot = g_pLastRedSpawn;
 			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
@@ -1186,6 +1233,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	{
 		if (SDKGameRules()->IsTeamplay())
 			State_Transition( STATE_OBSERVER_MODE );
+		else
+			State_Transition( STATE_PICKINGCHARACTER );
 	}
 	else if ( iTeamNum == TEAM_SPECTATOR )
 	{
@@ -1211,7 +1260,10 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		// Put up the class selection menu.
 		State_Transition( STATE_PICKINGCLASS );
 #else
-		State_Transition( STATE_ACTIVE );
+		if (gpGlobals->teamplay)
+			State_Transition( STATE_BUYINGWEAPONS );
+		else
+			State_Transition( STATE_PICKINGCHARACTER );
 #endif
 	}
 }
@@ -1229,6 +1281,12 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 		State_Get() != STATE_ACTIVE 
 		)
 		return;
+
+	if (!SuicideAllowed())
+	{		
+		ClientPrint( this, HUD_PRINTCENTER, "DAB_No_Suicide" );
+		return;
+	}
 	
 	m_iSuicideCustomKillFlags = SDK_DMG_CUSTOM_SUICIDE;
 
@@ -1289,6 +1347,9 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	// disallow suicide for 10 seconds
+	m_flNextSuicideTime = GetCurrentTime() + 10.0f;
+
 	m_vecTotalBulletForce += info.GetDamageForce();
 
 	float flArmorBonus = 0.5f;
@@ -1307,7 +1368,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		flDamage = m_Shared.ModifySkillValue(flDamage, 0.3f, SKILL_IMPERVIOUS);
 	}*/
 
-	if ( !(bFriendlyFire || ( bCheckFriendlyFire && pInflictor->GetTeamNumber() != GetTeamNumber() ) /*|| pInflictor == this ||	info.GetAttacker() == this*/ ) )
+	if ( !(bCheckFriendlyFire && pInflictor->GetTeamNumber() == GetTeamNumber() ) || bFriendlyFire /*|| pInflictor == this ||	info.GetAttacker() == this*/ )
 	{
 		if ( bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
 		{
@@ -1319,18 +1380,37 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
-			if ( m_Shared.IsDiving() )
+			// this timing only accounts for weapon_grenade (with fuse of 1.5s)
+			if ( m_flLastSpawnTime > (gpGlobals->curtime - 2.5f) )
+			{
+				int inflictorindex = pInflictor->entindex();
+				// if this is a grenade thrown before we spawned ignore the damage
+				for (int i = 0; i < m_arrIgnoreNadesByIndex.Count(); i++)
+				{
+					if (m_arrIgnoreNadesByIndex[i] == inflictorindex)
+						return 0;
+				}
+			}
+
+			if ( m_Shared.IsDiving() || m_Shared.IsSliding() )
 			{
 				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
 				VectorNormalize( vecToPlayer );
 
-				// diving away from explosions reduces 30% damage
-				if ( vecToPlayer.Dot( m_Shared.GetDiveDirection() ) > 0.5f )
+				Vector vecDirection;
+
+				if (m_Shared.IsDiving())
+					vecDirection = m_Shared.GetDiveDirection();
+				else
+					vecDirection = m_Shared.GetSlideDirection();
+
+				// stunting away from explosions reduces 30% damage
+				if ( vecToPlayer.Dot( vecDirection ) > 0.5f )
 				{
 					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
 
 					// since we're being cool anyway give us a little push
-					Vector vecPush = ( info.GetDamageForce() / 140.0f );
+					Vector vecPush = ( info.GetDamageForce() / 150.0f );
 					SetBaseVelocity( vecPush );
 
 					// award style points
@@ -1341,6 +1421,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_POINT_STYLISH);
 					SendAnnouncement(ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
+					Instructor_LessonLearned("stuntfromexplo");
 				}
 			}
 		}
@@ -1489,13 +1570,17 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	{
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		pAttackerSDK->AwardStylePoints(this, false, info);
+		// friendly fire is never stylish!
+		if ( !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+			pAttackerSDK->AwardStylePoints(this, false, info);
 
 		// If the player is stunting and managed to damage another player while stunting, he's trained the be stylish hint.
 		if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsRolling())
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 
-		pAttackerSDK->m_bDamagedEnemyDuringDive = true;
+		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
+		if ( pAttackerSDK->m_Shared.IsDiving() && !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+			pAttackerSDK->m_bDamagedEnemyDuringDive = true;
 	}
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
@@ -1585,10 +1670,13 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 		CSDKPlayer* pAttackerSDK = ToSDKPlayer(pAttacker);
 
-		if (pAttacker != this)
+		if ( pAttacker != this && !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
 		{
 			pAttackerSDK->AwardStylePoints(this, true, info);
 			pAttackerSDK->GiveSlowMo(1);
+
+			if (gpGlobals->teamplay && pAttackerSDK->GetTeam())
+				pAttackerSDK->GetTeam()->AddScore(1);
 		}
 	}
 	else
@@ -2279,6 +2367,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_MAPINFO )
 		{
+//Tony; using teams, go to picking team.
+#if defined( SDK_USE_TEAMS )
+			if (gpGlobals->teamplay)
+				State_Transition( STATE_PICKINGTEAM );
+			else
+//Tony; not using teams, but we are using classes, so go straight to class picking.
+#elif !defined ( SDK_USE_TEAMS ) && defined ( SDK_USE_PLAYERCLASSES )
+			State_Transition( STATE_PICKINGCLASS );
+//Tony; not using teams or classes, go straight to active.
+#endif
 			State_Transition( STATE_PICKINGCHARACTER );
 		}
 		
@@ -2305,6 +2403,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if ( FStrEq( pcmd, "menuclosed" ) )
 	{
 		SetBuyMenuOpen( false );
+		return true;
+	}
+	else if ( FStrEq( pcmd, "teammenuopen" ) )
+	{
+		SetTeamMenuOpen( true );
+		return true;
+	}
+	else if ( FStrEq( pcmd, "teammenuclosed" ) )
+	{
+		SetTeamMenuOpen( false );
+
+		if ( State_Get() != STATE_OBSERVER_MODE && (State_Get() == STATE_PICKINGTEAM || IsDead()) )
+			State_Transition( STATE_BUYINGWEAPONS );
+
 		return true;
 	}
 	else if ( FStrEq( pcmd, "charmenuopen" ) )
@@ -2341,10 +2453,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 {
 // FIXME: TEMPORARY HACK TO NOT LET PEOPLE JOIN BLUE TEAM IN DEATHMATCH (shmopaloppa)
-#if !defined ( SDK_USE_TEAMS )
-	if (team == 2)
+	if (!gpGlobals->teamplay && team == 2)
 		team = 0;
-#endif
+
 	int iOldTeam = GetTeamNumber();
 	if ( !GetGlobalTeam( team ) )
 	{
@@ -2353,26 +2464,30 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 	}
 
 #if defined ( SDK_USE_TEAMS )
-	// If we already died and changed teams once, deny
-	if( m_bTeamChanged && team != TEAM_SPECTATOR && iOldTeam != TEAM_SPECTATOR )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
-		return true;
-	}
-
 	CSDKGameRules *mp = SDKGameRules();
-	if ( team == TEAM_UNASSIGNED )
+
+	if ( mp->IsTeamplay() )
 	{
-		// Attempt to auto-select a team, may set team to T, CT or SPEC
-		team = mp->SelectDefaultTeam();
+		// If we already died and changed teams once, deny
+		if( m_bTeamChanged && team != TEAM_SPECTATOR && iOldTeam != TEAM_SPECTATOR )
+		{
+			ClientPrint( this, HUD_PRINTCENTER, "game_switch_teams_once" );
+			return true;
+		}
 
 		if ( team == TEAM_UNASSIGNED )
 		{
-			// still team unassigned, try to kick a bot if possible	
-			 
-			ClientPrint( this, HUD_PRINTTALK, "#All_Teams_Full" );
+			// Attempt to auto-select a team, may set team to T, CT or SPEC
+			team = mp->SelectDefaultTeam();
 
-			team = TEAM_SPECTATOR;
+			if ( team == TEAM_UNASSIGNED )
+			{
+				// still team unassigned, try to kick a bot if possible	
+			 
+				ClientPrint( this, HUD_PRINTTALK, "#All_Teams_Full" );
+
+				team = TEAM_SPECTATOR;
+			}
 		}
 	}
 #endif
@@ -2549,6 +2664,23 @@ bool CSDKPlayer::IsClassMenuOpen( void )
 	return m_bIsClassMenuOpen;
 }
 #endif // SDK_USE_PLAYERCLASSES
+
+#ifdef SDK_USE_TEAMS
+void CSDKPlayer::SetTeamMenuOpen( bool bOpen )
+{
+	m_bIsTeamMenuOpen = bOpen;
+}
+
+bool CSDKPlayer::IsTeamMenuOpen( void )
+{
+	return m_bIsTeamMenuOpen;
+}
+
+void CSDKPlayer::ShowTeamMenu()
+{
+	ShowViewPortPanel( PANEL_TEAM );
+}
+#endif
 
 void CSDKPlayer::SetCharacterMenuOpen( bool bOpen )
 {
@@ -3047,6 +3179,8 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsClassMenuOpen())
 			return;
 #endif
+		if (IsTeamMenuOpen())
+			return;
 
 		if (IsCharacterMenuOpen())
 			return;
@@ -3149,7 +3283,10 @@ void CSDKPlayer::State_Enter_PICKINGCLASS()
 #if defined ( SDK_USE_TEAMS )
 void CSDKPlayer::State_Enter_PICKINGTEAM()
 {
-	ShowViewPortPanel( PANEL_TEAM );
+	//ShowViewPortPanel( PANEL_TEAM );
+
+	StopObserverMode();
+	ShowTeamMenu();
 	PhysObjectSleep();
 
 }
@@ -3773,15 +3910,21 @@ void CC_Character(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		if (pPlayer->IsAlive())
-			pPlayer->ShowCharacterMenu();
+			gpGlobals->teamplay ? pPlayer->ShowTeamMenu() : pPlayer->ShowCharacterMenu();
 		else
-			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+			gpGlobals->teamplay ? pPlayer->State_Transition(STATE_PICKINGTEAM) : pPlayer->State_Transition( STATE_PICKINGCHARACTER );
 
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
+		if (gpGlobals->teamplay)
+		{
+			Msg("Can't set character in teamplay");
+			return;
+		}
+
 		pPlayer->StopObserverMode();
 
 		if (pPlayer->SetCharacter(args[1]))

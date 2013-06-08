@@ -269,7 +269,7 @@ void CDABCharacterMenu::OnCommand( const char *command )
 
 		BaseClass::OnCommand( command );
 
-		engine->ClientCmd( command );
+		//engine->ClientCmd( command );
 	}
 	else
 		BaseClass::OnCommand(command);

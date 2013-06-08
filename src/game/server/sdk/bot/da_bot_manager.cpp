@@ -779,6 +779,7 @@ bool CDABotManager::BotAddCommand( int team, bool isFromConsole, const char *pro
 		return false;
 
 	const BotProfile *profile = NULL;
+	int iDesiredTeam = cv_bot_join_team.GetInt();
 
 	if ( !isFromConsole )
 	{
@@ -795,7 +796,7 @@ bool CDABotManager::BotAddCommand( int team, bool isFromConsole, const char *pro
 		// if team not specified, check bot_join_team cvar for preference
 		if (team == TEAM_UNASSIGNED)
 		{
-			//team = SDKGameRules()->SelectBestTeam();
+			team = iDesiredTeam ? iDesiredTeam : SDKGameRules()->SelectDefaultTeam();//SDKGameRules()->SelectBestTeam();
 		}
 	}
 
@@ -833,7 +834,7 @@ bool CDABotManager::BotAddCommand( int team, bool isFromConsole, const char *pro
 		// if team not specified, check bot_join_team cvar for preference
 		if (team == TEAM_UNASSIGNED)
 		{
-			//team = SDKGameRules()->SelectBestTeam();
+			team = iDesiredTeam ? iDesiredTeam : SDKGameRules()->SelectDefaultTeam();//SDKGameRules()->SelectBestTeam();
 		}
 
 		profile = TheBotProfiles->GetRandomProfile( difficulty, team, weaponType );

@@ -242,6 +242,8 @@ public:
 
 	virtual void				OverrideView( CViewSetup *pSetup );
 
+	virtual void	UpdateTeamMenu( void );
+
 	float			GetCurrentTime() const { return m_flCurrentTime; }
 
 	float           GetLastSpawnTime() const { return m_flLastSpawnTime; }

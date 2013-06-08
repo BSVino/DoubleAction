@@ -160,6 +160,12 @@ public:
 	bool IsClassMenuOpen( void );
 #endif
 
+#if defined ( SDK_USE_TEAMS )
+	void SetTeamMenuOpen( bool bIsOpen );
+	bool IsTeamMenuOpen( void );
+	void ShowTeamMenu();
+#endif
+
 	void SetCharacterMenuOpen( bool bIsOpen );
 	bool IsCharacterMenuOpen( void );
 	void ShowCharacterMenu();
@@ -358,6 +364,10 @@ private:
 	bool m_bIsClassMenuOpen;
 #endif
 
+#if defined ( SDK_USE_TEAMS )
+	bool m_bIsTeamMenuOpen;
+#endif
+
 	bool m_bIsCharacterMenuOpen;
 
 	bool m_bIsBuyMenuOpen;
@@ -388,6 +398,7 @@ private:
 
 public:
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
+	virtual bool		SuicideAllowed( void ) { return GetCurrentTime() > m_flNextSuicideTime; }
 
 private:
 	// Last usercmd we shot a bullet on.
@@ -407,6 +418,7 @@ private:
 	CSDKPlayerAnimState *m_PlayerAnimState;
 
 	CNetworkVar( bool, m_bSpawnInterpCounter );
+	CUtlVector<int> m_arrIgnoreNadesByIndex;
 
 	int m_iSpawnArmorValue;
 	IMPLEMENT_NETWORK_VAR_FOR_DERIVED( m_ArmorValue );
@@ -430,6 +442,8 @@ public:
 
 	float       m_flNextRegen;
 	float       m_flNextHealthDecay;
+
+	float		m_flNextSuicideTime;
 
 	CNetworkVar( float, m_flDisarmRedraw );
 
