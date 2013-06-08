@@ -163,6 +163,18 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 	}
 }
 
+void CDABBuyMenu::OnCommand( const char *command )
+{
+	BaseClass::OnCommand(command);
+
+	if (FStrEq(command, "close"))
+	{
+		// Automatically bring up the next menu if the player is dead.
+		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
+			engine->ServerCmd( "setskill" );
+	}
+}
+
 void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
@@ -233,6 +245,14 @@ void CDABBuyMenu::Update()
 
 			pSlotsLabel->SetText(szText);
 		}
+	}
+
+	CFolderLabel* pWeaponTotalWeightNumber = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponTotalWeightNumber"));
+	if (pWeaponTotalWeightNumber)
+	{
+		wchar_t szText[20];
+		_snwprintf( szText, ARRAYSIZE(szText) - 1, L"%d/%d", pPlayer->GetLoadoutWeight(), MAX_LOADOUT_WEIGHT );
+		pWeaponTotalWeightNumber->SetText(szText);
 	}
 
 	for ( int i = 0; i < m_apTypes.Count(); i++)

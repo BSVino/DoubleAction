@@ -79,6 +79,9 @@ Panel *CFolderMenu::CreateControlByName( const char *controlName )
 	if (FStrEq(controlName, "PanelTexture"))
 		return new CPanelTexture( this, NULL );
 
+	if (FStrEq(controlName, "ImageButton"))
+		return new CImageButton( this, NULL );
+
 	return BaseClass::CreateControlByName(controlName);
 }
 
@@ -266,7 +269,25 @@ void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
 
 void CFolderMenu::OnCommand( const char *command )
 {
-	if ( Q_stricmp( command, "close" ) == 0 )
+	if ( Q_strncasecmp( command, "tab ", 4 ) == 0)
+	{
+		if (FStrEq(command+4, "characters"))
+		{
+			Close();
+			engine->ServerCmd("character");
+		}
+		else if (FStrEq(command+4, "weapons"))
+		{
+			Close();
+			engine->ServerCmd("buy");
+		}
+		else if (FStrEq(command+4, "skills"))
+		{
+			Close();
+			engine->ServerCmd("setskill");
+		}
+	}
+	else if ( Q_stricmp( command, "close" ) == 0 )
 	{
 		Close();
 
@@ -469,4 +490,151 @@ void CPanelTexture::ApplySchemeSettings(IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	SetImage( m_szImageName );
+}
+
+CImageButton::CImageButton(Panel *parent, const char *panelName)
+	: Button(parent, panelName, "")
+{
+	m_pImage = nullptr;
+
+	m_iX = m_iY = 0;
+	m_iWidth = m_iHeight = 100;
+	SetPaintBorderEnabled(false);
+}
+
+void CImageButton::SetImage(const char* pszName)
+{
+	m_pImage = gHUD.GetIcon(pszName);
+}
+
+void CImageButton::PaintBackground()
+{
+	if (m_pImage)
+	{
+		int x, y;
+		GetPos(x, y);
+		m_pImage->DrawSelf(0, 0, m_iWidth, m_iHeight, Color(255, 255, 255, 255));
+	}
+}
+
+void CImageButton::ApplySettings(KeyValues *inResourceData)
+{
+	Q_strncpy(m_szImageName, inResourceData->GetString("image", ""), sizeof(m_szImageName));
+
+	BaseClass::ApplySettings(inResourceData);
+
+	SetPos(0, 0);
+
+	int wide, tall;
+
+	int screenWide, screenTall;
+	surface()->GetScreenSize(screenWide, screenTall);
+
+	wide = screenWide; 
+	tall = scheme()->GetProportionalScaledValueEx(GetScheme(), 480);
+
+	SetSize( wide, tall );
+
+	const char *xstr = inResourceData->GetString( "xpos", NULL );
+	const char *ystr = inResourceData->GetString( "ypos", NULL );
+	if (xstr)
+	{
+		bool bRightAligned = false;
+		bool bCenterAligned = false;
+
+		// look for alignment flags
+		if (xstr[0] == 'r' || xstr[0] == 'R')
+		{
+			bRightAligned = true;
+			xstr++;
+		}
+		else if (xstr[0] == 'c' || xstr[0] == 'C')
+		{
+			bCenterAligned = true;
+			xstr++;
+		}
+
+		// get the value
+		m_iX = atoi(xstr);
+
+		// scale the x up to our screen co-ords
+		if ( IsProportional() )
+			m_iX = scheme()->GetProportionalScaledValueEx(GetScheme(), m_iX);
+
+		// now correct the alignment
+		if (bRightAligned)
+			m_iX = screenWide - m_iX; 
+		else if (bCenterAligned)
+			m_iX = (screenWide / 2) + m_iX;
+	}
+
+	if (ystr)
+	{
+		bool bBottomAligned = false;
+		bool bCenterAligned = false;
+
+		// look for alignment flags
+		if (ystr[0] == 'r' || ystr[0] == 'R')
+		{
+			bBottomAligned = true;
+			ystr++;
+		}
+		else if (ystr[0] == 'c' || ystr[0] == 'C')
+		{
+			bCenterAligned = true;
+			ystr++;
+		}
+
+		m_iY = atoi(ystr);
+		if (IsProportional())
+			// scale the y up to our screen co-ords
+			m_iY = scheme()->GetProportionalScaledValueEx(GetScheme(), m_iY);
+
+		// now correct the alignment
+		if (bBottomAligned)
+			m_iY = screenTall - m_iY; 
+		else if (bCenterAligned)
+			m_iY = (screenTall / 2) + m_iY;
+	}
+
+	const char *wstr = inResourceData->GetString( "wide", NULL );
+	if ( wstr )
+	{
+		bool bFull = false;
+		if (wstr[0] == 'f' || wstr[0] == 'F')
+		{
+			bFull = true;
+			wstr++;
+		}
+
+		m_iWidth = atof(wstr);
+		if ( IsProportional() )
+		{
+			// scale the x and y up to our screen co-ords
+			m_iWidth = scheme()->GetProportionalScaledValueEx(GetScheme(), m_iWidth);
+		}
+
+		// now correct the alignment
+		if (bFull)
+			m_iWidth = screenWide - m_iWidth; 
+	}
+
+	m_iHeight = inResourceData->GetInt( "tall", tall );
+	if ( IsProportional() )
+	{
+		// scale the x and y up to our screen co-ords
+		m_iHeight = scheme()->GetProportionalScaledValueEx(GetScheme(), m_iHeight);
+	}
+
+	SetPos(m_iX, m_iY);
+	SetSize(m_iWidth, m_iHeight);
+	SetPaintBorderEnabled(false);
+}
+
+void CImageButton::ApplySchemeSettings(IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+
+	SetImage( m_szImageName );
+	SetPaintBorderEnabled(false);
 }

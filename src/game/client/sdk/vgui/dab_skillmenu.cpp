@@ -190,11 +190,16 @@ void CDABSkillMenu::SetVisible( bool state )
 
 void CDABSkillMenu::OnCommand( const char *command )
 {
-	engine->ClientCmd( command );
+	if (Q_strncasecmp(command, "setskill ", 9) == 0)
+	{
+		engine->ClientCmd( command );
 
-	Close();
+		Close();
 
-	gViewPortInterface->ShowBackGround( false );
+		gViewPortInterface->ShowBackGround( false );
+	}
+	else
+		BaseClass::OnCommand(command);
 }
 
 void CDABSkillMenu::PaintBackground()
