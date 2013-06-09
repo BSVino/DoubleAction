@@ -5,6 +5,7 @@
 //=============================================================================//
 
 #include "cbase.h"
+
 #include "weapon_selection.h"
 #include "iclientmode.h"
 #include "history_resource.h"
@@ -19,8 +20,32 @@
 
 #include "vgui/ILocalize.h"
 
+#include "basemodelpanel.h"
+#include "weapon_sdkbase.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+class CWeaponModelPanel : public CModelPanel
+{
+public:
+	DECLARE_CLASS_SIMPLE( CWeaponModelPanel, CModelPanel );
+
+	CWeaponModelPanel( vgui::Panel *pParent, const char *pName )
+		 : CModelPanel( pParent, pName )
+	{}
+
+public:
+	virtual void ParseModelInfo( KeyValues *inResourceData )
+	{
+		BaseClass::ParseModelInfo(inResourceData);
+
+		SetupModel();
+	}
+
+protected:
+	virtual void PaintBackground() {};
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: hl2 weapon selection hud element
@@ -50,6 +75,8 @@ public:
 	virtual void HideSelection( void );
 
 	virtual void LevelInit();
+
+	virtual void ClearModels();
 
 protected:
 	virtual void OnThink();
@@ -82,6 +109,7 @@ private:
 
 	CPanelAnimationVarAliasType( float, m_flSmallBoxSize, "SmallBoxSize", "32", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flLargeBoxWide, "LargeBoxWide", "108", "proportional_float" );
+	CPanelAnimationVarAliasType( float, m_flRifleBoxWide, "RifleBoxWide", "200", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flLargeBoxTall, "LargeBoxTall", "72", "proportional_float" );
 
 	CPanelAnimationVarAliasType( float, m_flBoxGap, "BoxGap", "12", "proportional_float" );
@@ -106,6 +134,8 @@ private:
 	CPanelAnimationVar( float, m_flTextScan, "TextScan", "1.0" );
 
 	bool m_bFadingOut;
+
+	CWeaponModelPanel* m_apModel[MAX_WEAPON_SLOTS][MAX_WEAPON_POSITIONS];
 };
 
 DECLARE_HUDELEMENT( CHudWeaponSelection );
@@ -164,6 +194,123 @@ void CHudWeaponSelection::OnThink( void )
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "OpenWeaponSelectionMenu" );
 		m_bFadingOut = false;
 	}
+
+	// iterate over all the weapon slots
+	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
+	{
+		for (int slotpos = 0; slotpos < MAX_WEAPON_POSITIONS; slotpos++)
+		{
+			C_BaseCombatWeapon *pWeapon = GetWeaponInSlot(i, slotpos);
+			if ( !pWeapon )
+			{
+				if (m_apModel[i][slotpos])
+				{
+					// I don't have this weapon anymore. Clear it out.
+					delete m_apModel[i][slotpos];
+					m_apModel[i][slotpos] = nullptr;
+				}
+
+				continue;
+			}
+
+			if (!*pWeapon->GetWorldModel())
+				continue;
+
+			if (m_apModel[i][slotpos])
+			{
+				if (m_apModel[i][slotpos]->m_hModel->GetModelName() && !FStrEq(m_apModel[i][slotpos]->m_hModel->GetModelName(), pWeapon->GetWorldModel()))
+				{
+					// The weapon is different somehow. Clear it out.
+					delete m_apModel[i][slotpos];
+					m_apModel[i][slotpos] = nullptr;
+				}
+				else
+					continue;
+			}
+
+			CWeaponModelPanel* pWeaponModel = m_apModel[i][slotpos] = new CWeaponModelPanel(this, "weapon_model");
+
+			KeyValues* pValues = new KeyValues("preview");
+
+			pValues->SetString("modelname", pWeapon->GetWorldModel());
+			pValues->SetInt("spotlight", 1);
+
+			pWeaponModel->ParseModelInfo(pValues);
+
+			Vector vecWeaponOrigin(25, 0, 0);
+
+			pValues->SetFloat("origin_x", vecWeaponOrigin.x);
+			pValues->SetFloat("origin_y", vecWeaponOrigin.y);
+			pValues->SetFloat("origin_z", vecWeaponOrigin.z);
+
+			MDLCACHE_CRITICAL_SECTION();
+
+			auto pModel = pWeaponModel->m_hModel;
+			if (pModel)
+			{
+				auto pModelPointer = pModel->GetModelPtr();
+
+				pModel->SetAbsAngles(QAngle(0, 0, 0));
+				pModel->SetAbsOrigin(Vector(0, 0, 0));
+
+				pModel->SetHitboxSetByName("center");
+
+				VMatrix mHitboxCenter;
+				mHitboxCenter.Identity();
+
+				Assert(pModel->GetHitboxSet() >= 0);
+				if (pModel->GetHitboxSet() >= 0)
+				{
+					auto pHitbox = pModelPointer?pModelPointer->pHitbox(0, pModel->GetHitboxSet()):nullptr;
+					if (pHitbox)
+					{
+						Vector vecCenter = (pHitbox->bbmax + pHitbox->bbmin)/2;
+						mHitboxCenter.SetTranslation(-vecCenter);
+
+						vecWeaponOrigin.x = pHitbox->bbmax.x - pHitbox->bbmin.x;
+					}
+				}
+
+				Vector vecAttachment;
+				QAngle angAttachment;
+
+				VMatrix mRotation;
+				mRotation.Identity();
+
+				int iCenterAttachment = pModel->LookupAttachment("center");
+				if (iCenterAttachment > 0)
+				{
+					pModel->GetAttachment(iCenterAttachment, vecAttachment, angAttachment);
+					VMatrix mModelRotation = SetupMatrixAngles(angAttachment);
+
+					QAngle angDesired(0, -90, 90);
+					VMatrix mDesired = SetupMatrixAngles(angDesired);
+
+					mRotation = mDesired * mModelRotation.InverseTR();
+				}
+
+				VMatrix mTotal = mRotation * mHitboxCenter;
+
+				QAngle angModel;
+				MatrixToAngles(mTotal, angModel);
+
+				Vector vecTotal = mTotal.GetTranslation();
+
+				Vector vecModel = vecWeaponOrigin + vecTotal;
+
+				pValues->SetFloat("origin_x", vecModel.x);
+				pValues->SetFloat("origin_y", vecModel.y);
+				pValues->SetFloat("origin_z", vecModel.z);
+				pValues->SetFloat("angles_x", angModel.x);
+				pValues->SetFloat("angles_y", angModel.y);
+				pValues->SetFloat("angles_z", angModel.z);
+
+				pWeaponModel->ParseModelInfo(pValues);
+			}
+
+			pValues->deleteThis();
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -194,6 +341,24 @@ bool CHudWeaponSelection::ShouldDraw()
 void CHudWeaponSelection::LevelInit()
 {
 	CHudElement::LevelInit();
+
+	ClearModels();
+}
+
+void CHudWeaponSelection::ClearModels()
+{
+	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
+	{
+		for (int slotpos = 0; slotpos < MAX_WEAPON_POSITIONS; slotpos++)
+		{
+			if (!m_apModel[i][slotpos])
+				continue;
+
+			delete m_apModel[i][slotpos];
+
+			m_apModel[i][slotpos] = nullptr;
+		}
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -215,16 +380,11 @@ void CHudWeaponSelection::Paint()
 
 	int iActiveSlot = (pSelectedWeapon ? pSelectedWeapon->GetSlot() : -1);
 
-	// interpolate the selected box size between the small box size and the large box size
-	// interpolation has been removed since there is no weapon pickup animation anymore, so it's all at the largest size
-	float percentageDone = 1.0f; //min(1.0f, (gpGlobals->curtime - m_flPickupStartTime) / m_flWeaponPickupGrowTime);
-	int largeBoxWide = m_flSmallBoxSize + ((m_flLargeBoxWide - m_flSmallBoxSize) * percentageDone);
-	int largeBoxTall = m_flSmallBoxSize + ((m_flLargeBoxTall - m_flSmallBoxSize) * percentageDone);
-	Color selectedColor;
-	{for (int i = 0; i < 4; i++)
-	{
-		selectedColor[i] = m_BoxColor[i] + ((m_SelectedBoxColor[i] - m_BoxColor[i]) * percentageDone);
-	}}
+	int largeBoxWide = m_flLargeBoxWide;
+	int iRifleBoxWide = m_flRifleBoxWide;
+	int largeBoxTall = m_flLargeBoxTall;
+
+	Color selectedColor = m_SelectedBoxColor;
 
 	// calculate where to start drawing
 	int width = (MAX_WEAPON_SLOTS - 1) * (m_flSmallBoxSize + m_flBoxGap) + largeBoxWide;
@@ -234,6 +394,10 @@ void CHudWeaponSelection::Paint()
 	// iterate over all the weapon slots
 	for ( int i = 0; i < MAX_WEAPON_SLOTS; i++ )
 	{
+		int iBoxWide = largeBoxWide;
+		if (i == 3)
+			iBoxWide = iRifleBoxWide;
+
 		if ( i == iActiveSlot )
 		{
 			bool bFirstItem = true;
@@ -243,36 +407,26 @@ void CHudWeaponSelection::Paint()
 				if ( !pWeapon )
 					continue;
 
-				// draw box for selected weapon
-				DrawBox(xpos, ypos, largeBoxWide, largeBoxTall, selectedColor, m_flSelectionAlphaOverride, bFirstItem ? i + 1 : -1);
+				DrawBox(xpos, ypos, iBoxWide, largeBoxTall, selectedColor, m_flSelectionAlphaOverride, bFirstItem ? i + 1 : -1);
 
 				// draw icon
 				Color col = GetFgColor();
 				if ( pWeapon->GetSpriteActive() )
 				{
-					// find the center of the box to draw in
-					int iconWidth = pWeapon->GetSpriteActive()->Width();
-					int iconHeight = pWeapon->GetSpriteActive()->Height();
-
-					int x_offs = (largeBoxWide - iconWidth) / 2;
-					int y_offs = (largeBoxTall - iconHeight) / 2;
-
-					if (!pWeapon->CanBeSelected() || !pWeapon->HasAnyAmmo())
-					{
-						// unselectable weapon, display as such
-						col = Color(255, 0, 0, col[3]);
-					}
-					else if (pWeapon == pSelectedWeapon)
+					if (pWeapon == pSelectedWeapon)
 					{
 						// currently selected weapon, display brighter
 						col[3] = m_flSelectionAlphaOverride;
-
-						// draw an active version over the top
-						pWeapon->GetSpriteActive()->DrawSelf( xpos + x_offs, ypos + y_offs, col );
 					}
+				}
 
-					// draw the inactive version
-					pWeapon->GetSpriteInactive()->DrawSelf( xpos + x_offs, ypos + y_offs, col );
+				if (m_apModel[i][slotpos])
+				{
+					CWeaponModelPanel* pWeaponModel = m_apModel[i][slotpos];
+
+					pWeaponModel->SetPos(xpos, ypos);
+					pWeaponModel->SetSize(iBoxWide, largeBoxTall);
+					pWeaponModel->SetVisible(true);
 				}
 
 				// draw text
@@ -339,7 +493,7 @@ void CHudWeaponSelection::Paint()
 						firstslen = maxslen;
 					}
 
-					int tx = xpos + ((largeBoxWide - firstslen) / 2);
+					int tx = xpos + ((iBoxWide - firstslen) / 2);
 					int ty = ypos + (int)m_flTextYPos;
 					surface()->DrawSetTextPos( tx, ty );
 					// adjust the charCount by the scan amount
@@ -349,7 +503,7 @@ void CHudWeaponSelection::Paint()
 						if (*pch == '\n')
 						{
 							// newline character, move to the next line
-							surface()->DrawSetTextPos( xpos + ((largeBoxWide - slen) / 2), ty + (surface()->GetFontTall(m_hTextFont) * 1.1f));
+							surface()->DrawSetTextPos( xpos + ((iBoxWide - slen) / 2), ty + (surface()->GetFontTall(m_hTextFont) * 1.1f));
 						}
 						else if (*pch == '\r')
 						{
@@ -367,7 +521,7 @@ void CHudWeaponSelection::Paint()
 				bFirstItem = false;
 			}
 
-			xpos += largeBoxWide;
+			xpos += iBoxWide;
 		}
 		else
 		{
@@ -375,12 +529,18 @@ void CHudWeaponSelection::Paint()
 			if ( GetFirstPos( i ) )
 			{
 				// draw has weapon in slot
-				DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxSize, m_BoxColor, m_flAlphaOverride, i + 1);
+				//DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxSize, m_BoxColor, m_flAlphaOverride, i + 1);
 			}
 			else
 			{
 				// draw empty slot
-				DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxSize, m_EmptyBoxColor, m_flAlphaOverride, -1);
+				//DrawBox(xpos, ypos, m_flSmallBoxSize, m_flSmallBoxSize, m_EmptyBoxColor, m_flAlphaOverride, -1);
+			}
+
+			for (int slotpos = 0; slotpos < MAX_WEAPON_POSITIONS; slotpos++)
+			{
+				if (m_apModel[i][slotpos])
+					m_apModel[i][slotpos]->SetVisible(false);
 			}
 
 			xpos += m_flSmallBoxSize;
@@ -757,4 +917,10 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 	}
 
 	pPlayer->EmitSound( "Player.WeaponSelectionMoveSlot" );
+}
+
+CON_COMMAND(hud_reload_weapon_models, "Reload weapon models in the weapon selection UI.")
+{
+	CHudWeaponSelection* pWeaponSelection = ( CHudWeaponSelection * )GET_HUDELEMENT( CHudWeaponSelection );
+	pWeaponSelection->ClearModels();
 }
