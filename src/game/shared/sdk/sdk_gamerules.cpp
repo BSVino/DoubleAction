@@ -29,6 +29,7 @@
 	#include "mapentities.h"
 	#include "sdk_basegrenade_projectile.h"
 	#include "bot.h"
+	#include "da_spawngenerator.h"
 
 #endif
 
@@ -77,8 +78,10 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
+		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
 #else
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
+		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -182,15 +185,18 @@ public:
 	virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 	{
 		// Dead players can only be heard by other dead team mates
+		/* ROUNDS PLAY ONLY
 		if ( pTalker->IsAlive() == false )
 		{
 			if ( pListener->IsAlive() == false )
 				return ( pListener->InSameTeam( pTalker ) );
 
 			return false;
-		}
-
-		return ( pListener->InSameTeam( pTalker ) );
+		}*/
+		if ( gpGlobals->teamplay )
+			return ( pListener->InSameTeam( pTalker ) );
+		else
+			return true;
 	}
 };
 CVoiceGameMgrHelper g_VoiceGameMgrHelper;
@@ -255,17 +261,22 @@ void InitBodyQue()
 // --------------------------------------------------------------------------------------------------- //
 // CSDKGameRules implementation.
 // --------------------------------------------------------------------------------------------------- //
+extern ConVar teamplay;
 
 CSDKGameRules::CSDKGameRules()
 {
-	InitTeams();
-
 	m_bLevelInitialized = false;
 
 #if defined ( SDK_USE_TEAMS )
 	m_iSpawnPointCount_Blue = 0;
 	m_iSpawnPointCount_Red = 0;
+	m_bIsTeamplay = teamplay.GetBool();
+#ifdef GAME_DLL
+	gpGlobals->teamplay = m_bIsTeamplay;
+#endif
 #endif // SDK_USE_TEAMS
+
+	InitTeams();
 
 	m_flGameStartTime = 0;
 
@@ -276,6 +287,9 @@ void CSDKGameRules::ServerActivate()
 {
 	//Tony; initialize the level
 	CheckLevelInitialized();
+
+	if (m_bIsTeamplay)
+		InitTeamSpawns();
 
 	//Tony; do any post stuff
 	m_flGameStartTime = gpGlobals->curtime;
@@ -459,6 +473,22 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 
 		pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
 		GiveSlowMoToNearbyPlayers(pOtherPlayer);
+	}
+}
+
+void CSDKGameRules::GoToIntermission( void )
+{
+	BaseClass::GoToIntermission();
+
+	// set all players to FL_FROZEN
+	for ( int i = 1; i <= MAX_PLAYERS; i++ )
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+
+		if ( pPlayer )
+		{
+			pPlayer->AddFlag( FL_FROZEN );
+		}
 	}
 }
 
@@ -816,19 +846,32 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		}
 	}
 
+	// in teamplay only use deathmatch spawns that are near team mates
+	bool bNeedTeamMate = (IsTeamplay() && !stricmp(pSpot->GetClassname(),"info_player_deathmatch"));
+
 	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
 		if (!pOtherPlayer)
 			continue;
 
-		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
+		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
+
+		if (!pOtherSDKPlayer->IsAlive())
 			continue;
+
+		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
+		{
+			if (bNeedTeamMate)
+			{
+				if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() <= 384*384)
+					bNeedTeamMate = false;
+			}
+			continue;
+		}
 
 		if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
 			continue;
-
-		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
 
 		trace_t tr;
 		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
@@ -836,14 +879,19 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 			return false;
 	}
 
-	CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "weapon_grenade" );
+	// if we need a team mate and didn't find one don't use this point
+	if (bNeedTeamMate)
+		return false;
+
+	// should we still check this even though you can't be hurt by pre-existing grenades?
+	/*CBaseEntity* pGrenade = gEntList.FindEntityByClassname( NULL, "grenade_projectile" );
 	while (pGrenade)
 	{
 		if ((pSpot->GetAbsOrigin() - pGrenade->GetAbsOrigin()).LengthSqr() < 500*500)
 			return false;
 
-		pGrenade = gEntList.FindEntityByClassname( pGrenade, "weapon_grenade" );
-	}
+		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile" );
+	}*/
 
 	Vector mins = GetViewVectors()->m_vHullMin;
 	Vector maxs = GetViewVectors()->m_vHullMax;
@@ -853,6 +901,82 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 
 	// First test the starting origin.
 	return UTIL_IsSpaceEmpty( pPlayer, vTestMins, vTestMaxs );
+}
+
+bool CSDKGameRules::InitTeamSpawns()
+{	
+	CBaseEntity *pRefSpot = NULL;
+	bool bSuccess = false;
+	int iNumSpawns = 20;
+	
+	// Pick a (fairly) random spawnpoint to start this process
+	for ( int i = random->RandomInt(1,32); i > 0; i-- )
+		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
+	if ( !pRefSpot )  // skip over the null point
+		pRefSpot = gEntList.FindEntityByClassname( pRefSpot, "info_player_deathmatch" );
+
+	// the second refpoint will tend to have a pattern so mix up which team gets it
+	int iLastTeam = random->RandomInt(SDK_TEAM_BLUE,SDK_TEAM_RED);
+
+	// create spawn grid
+	CSpawnPointGenerator m_SpawnGen(pRefSpot, iLastTeam, iNumSpawns);
+	bSuccess = (m_SpawnGen.SpawnsCreated() >= 1);
+	m_SpawnGen.~CSpawnPointGenerator();
+
+	// find the furthest spawn point from our initial spot
+	CBaseEntity *pCheckSpot = gEntList.FindEntityByClassname( NULL, "info_player_deathmatch" );
+	CBaseEntity *pFirstSpot = pRefSpot;
+	Vector vecRefOrig = pRefSpot->GetAbsOrigin();
+	Vector vecToSpot;
+	float flCheckDistSqr;
+
+	// size of farthest spawns list (ordered farthest to closest)
+	const int iSetSize = 6;
+	CUtlVector<CBaseEntity*> arrFarthestSet;
+	float arrDistSqr[iSetSize];
+
+	for (int i = 0; i < iSetSize; i++)
+	{
+		arrDistSqr[i] = 0;
+	}
+
+	// iterate the list of spawn points
+	while(pCheckSpot)
+	{
+		if (pCheckSpot != pFirstSpot)
+		{
+			vecToSpot = pCheckSpot->GetAbsOrigin() - vecRefOrig;
+			flCheckDistSqr = vecToSpot.LengthSqr();
+		
+			for (int i = 0; i<iSetSize; i++)
+			{
+				if(flCheckDistSqr > arrDistSqr[i])
+				{
+					arrFarthestSet.InsertBefore(i, pCheckSpot);
+
+					for (int k = (iSetSize-1); k > i; k--)
+						arrDistSqr[k] = arrDistSqr[k-1];
+					
+					arrDistSqr[i] = flCheckDistSqr;
+					break;
+				}
+			}
+		}
+
+		// get the next spawn point
+		pCheckSpot = gEntList.FindEntityByClassname( pCheckSpot, "info_player_deathmatch" );
+	}
+
+	// choose a random spawn from our set of spawns farthest from the initial point
+	pRefSpot = arrFarthestSet[random->RandomInt(0,(iSetSize-1))];
+
+	// use whichever team we didn't use last time
+	iLastTeam = (iLastTeam == SDK_TEAM_BLUE ? SDK_TEAM_RED : SDK_TEAM_BLUE);
+	m_SpawnGen = CSpawnPointGenerator(pRefSpot, iLastTeam, iNumSpawns);
+
+	bSuccess = (m_SpawnGen.SpawnsCreated() >= 1);
+	
+	return (bSuccess);
 }
 
 void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
@@ -1147,24 +1271,26 @@ void CSDKGameRules::InitTeams( void )
 
 	//Tony; don't create these two managers unless teams are being used!
 #if defined ( SDK_USE_TEAMS )
-	//Tony; create the blue team
-	CTeam *pBlue = static_cast<CTeam*>(CreateEntityByName( "sdk_team_blue" ));
-	Assert( pBlue );
-	pBlue->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
-	g_Teams.AddToTail( pBlue );
+	if( IsTeamplay() )
+	{
+		//Tony; create the blue team
+		CTeam *pBlue = static_cast<CTeam*>(CreateEntityByName( "sdk_team_blue" ));
+		Assert( pBlue );
+		pBlue->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
+		g_Teams.AddToTail( pBlue );
 
-	//Tony; create the red team
-	CTeam *pRed = static_cast<CTeam*>(CreateEntityByName( "sdk_team_red" ));
-	Assert( pRed );
-	pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
-	g_Teams.AddToTail( pRed );
-#else
+		//Tony; create the red team
+		CTeam *pRed = static_cast<CTeam*>(CreateEntityByName( "sdk_team_red" ));
+		Assert( pRed );
+		pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
+		g_Teams.AddToTail( pRed );
+	}
+#endif
 	// clean this up later.. anyone who's in the game and playing should be on SDK_TEAM_DEATHMATCH
 	CTeam *pDeathmatch = static_cast<CTeam*>(CreateEntityByName( "sdk_team_deathmatch" ));
 	Assert( pDeathmatch );
 	pDeathmatch->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
 	g_Teams.AddToTail( pDeathmatch );
-#endif
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1185,54 +1311,57 @@ int CSDKGameRules::SelectDefaultTeam()
 	int team = TEAM_UNASSIGNED;
 
 #if defined ( SDK_USE_TEAMS )
-	CSDKTeam *pBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE);
-	CSDKTeam *pRed = GetGlobalSDKTeam(SDK_TEAM_RED);
+	if (gpGlobals->teamplay)
+	{
+		CSDKTeam *pBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE);
+		CSDKTeam *pRed = GetGlobalSDKTeam(SDK_TEAM_RED);
 
-	int iNumBlue = pBlue->GetNumPlayers();
-	int iNumRed = pRed->GetNumPlayers();
+		int iNumBlue = pBlue->GetNumPlayers();
+		int iNumRed = pRed->GetNumPlayers();
 
-	int iBluePoints = pBlue->GetScore();
-	int iRedPoints  = pRed->GetScore();
+		int iBluePoints = pBlue->GetScore();
+		int iRedPoints  = pRed->GetScore();
 
-	// Choose the team that's lacking players
-	if ( iNumBlue < iNumRed )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iNumBlue > iNumRed )
-	{
-		team = SDK_TEAM_RED;
-	}
-	// choose the team with fewer points
-	else if ( iBluePoints < iRedPoints )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iBluePoints > iRedPoints )
-	{
-		team = SDK_TEAM_RED;
-	}
-	else
-	{
-		// Teams and scores are equal, pick a random team
-		team = ( random->RandomInt(0,1) == 0 ) ? SDK_TEAM_BLUE : SDK_TEAM_RED;		
-	}
-
-	if ( TeamFull( team ) )
-	{
-		// Pick the opposite team
-		if ( team == SDK_TEAM_BLUE )
+		// Choose the team that's lacking players
+		if ( iNumBlue < iNumRed )
+		{
+			team = SDK_TEAM_BLUE;
+		}
+		else if ( iNumBlue > iNumRed )
+		{
+			team = SDK_TEAM_RED;
+		}
+		// choose the team with fewer points
+		else if ( iBluePoints < iRedPoints )
+		{
+			team = SDK_TEAM_BLUE;
+		}
+		else if ( iBluePoints > iRedPoints )
 		{
 			team = SDK_TEAM_RED;
 		}
 		else
 		{
-			team = SDK_TEAM_BLUE;
+			// Teams and scores are equal, pick a random team
+			team = ( random->RandomInt(0,1) == 0 ) ? SDK_TEAM_BLUE : SDK_TEAM_RED;		
 		}
 
-		// No choices left
 		if ( TeamFull( team ) )
-			return TEAM_UNASSIGNED;
+		{
+			// Pick the opposite team
+			if ( team == SDK_TEAM_BLUE )
+			{
+				team = SDK_TEAM_RED;
+			}
+			else
+			{
+				team = SDK_TEAM_BLUE;
+			}
+
+			// No choices left
+			if ( TeamFull( team ) )
+				return TEAM_UNASSIGNED;
+		}
 	}
 #endif // SDK_USE_TEAMS
 	return team;
@@ -1245,13 +1374,13 @@ bool CSDKGameRules::TeamFull( int team_id )
 	{
 	case SDK_TEAM_BLUE:
 		{
-			int iNumBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE)->GetNumPlayers();
-			return iNumBlue >= m_iSpawnPointCount_Blue;
+			//int iNumBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE)->GetNumPlayers();
+			return false;//iNumBlue >= m_iSpawnPointCount_Blue;
 		}
 	case SDK_TEAM_RED:
 		{
-			int iNumRed = GetGlobalSDKTeam(SDK_TEAM_RED)->GetNumPlayers();
-			return iNumRed >= m_iSpawnPointCount_Red;
+			//int iNumRed = GetGlobalSDKTeam(SDK_TEAM_RED)->GetNumPlayers();
+			return false;//iNumRed >= m_iSpawnPointCount_Red;
 		}
 	}
 	return false;
@@ -1265,6 +1394,9 @@ bool CSDKGameRules::TeamStacked( int iNewTeam, int iCurTeam  )
 		return false;
 
 #if defined ( SDK_USE_TEAMS )
+	if (!IsTeamplay())
+		return false;
+
 	int iTeamLimit = mp_limitteams.GetInt();
 
 	// Tabulate the number of players on each team.

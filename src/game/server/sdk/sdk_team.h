@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-
+#include "sdk_shareddefs.h"
 #include "utlvector.h"
 #include "team.h"
 #include "playerclass_info_parse.h"

@@ -59,7 +59,7 @@ ConVar cv_bot_quota_mode( "bot_quota_mode", "normal", FCVAR_REPLICATED, "Determi
 ConVar cv_bot_prefix( "bot_prefix", "", FCVAR_REPLICATED, "This string is prefixed to the name of all bots that join the game.\n<difficulty> will be replaced with the bot's difficulty.\n<weaponclass> will be replaced with the bot's desired weapon class.\n<skill> will be replaced with a 0-100 representation of the bot's skill.", PrefixChanged );
 ConVar cv_bot_allow_rogues( "bot_allow_rogues", "1", FCVAR_REPLICATED, "If nonzero, bots may occasionally go 'rogue'. Rogue bots do not obey radio commands, nor pursue scenario goals." );
 ConVar cv_bot_allow_pistols( "bot_allow_pistols", "1", FCVAR_REPLICATED, "If nonzero, bots may use pistols." );
-ConVar cv_bot_join_team( "bot_join_team", "any", FCVAR_REPLICATED, "Determines the team bots will join into. Allowed values: 'any', 'T', or 'CT'." );
+ConVar cv_bot_join_team( "bot_join_team", "0", FCVAR_REPLICATED, "Determines the team bots will join into. Auto assign with '0' value." );
 ConVar cv_bot_join_after_player( "bot_join_after_player", "1", FCVAR_REPLICATED, "If nonzero, bots wait until a player joins before entering the game." );
 ConVar cv_bot_auto_vacate( "bot_auto_vacate", "1", FCVAR_REPLICATED, "If nonzero, bots will automatically leave to make room for human players." );
 ConVar cv_bot_zombie( "bot_zombie", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If nonzero, bots will stay in idle mode and not attack." );
@@ -129,10 +129,13 @@ bool CDABot::Initialize( const BotProfile *profile, int team )
 
 	m_desiredTeam = team;
 
+	// what? this isn't a hack how dare you
+	m_lifeState = LIFE_DEAD;
 	if (GetTeamNumber() <= LAST_SHARED_TEAM)
 	{
 		ChangeTeam(m_desiredTeam);
 	}
+	m_lifeState = LIFE_ALIVE;
 
 	Buy();
 

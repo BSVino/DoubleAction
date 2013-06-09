@@ -114,10 +114,10 @@ public:
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
 	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
-	virtual bool	IsTeamplay( void ) 
+	virtual bool	IsTeamplay( void )
 	{ 
 #if defined ( SDK_USE_TEAMS )
-		return true;
+		return m_bIsTeamplay;
 #else
 		return false;	
 #endif
@@ -151,6 +151,7 @@ public:
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
 	virtual void Think();
+	virtual void GoToIntermission( void );
 	virtual void EndGameFrame();
 
 	void InitTeams( void );
@@ -163,6 +164,7 @@ public:
 	CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
 	bool IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
+	virtual bool InitTeamSpawns( void );
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	bool IsPlayerClassOnTeam( int cls, int team );
@@ -213,6 +215,7 @@ public:
 
 private:
 	CNetworkVar( float, m_flGameStartTime );
+	CNetworkVar( bool, m_bIsTeamplay );
 
 	float	m_flNextSlowMoUpdate;
 };

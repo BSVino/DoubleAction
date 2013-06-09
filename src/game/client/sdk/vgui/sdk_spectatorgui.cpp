@@ -6,14 +6,14 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "sdk_spectatorgui.h"
 #include "hud.h"
 
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include <filesystem.h>
-#include "sdk_gamerules.h"
 #include "c_sdk_team.h"
+#include "sdk_gamerules.h"
+#include "sdk_spectatorgui.h"
 #include "c_sdk_player_resource.h"
 #include "vtf/vtf.h"
 #include "clientmode.h"
