@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -40,6 +40,9 @@ public:
 
 	#ifdef GAME_DLL
 		DECLARE_DATADESC();
+	
+		void SendReloadSoundEvent( void );
+
 		void Materialize( void );
 		virtual	int	ObjectCaps( void );
 	#endif
@@ -57,7 +60,6 @@ public:
 
 	virtual void FireBullets( const FireBulletsInfo_t &info );
 	virtual void FallInit( void );
-	virtual bool Reload();
 	
 public:
 	#if defined( CLIENT_DLL )

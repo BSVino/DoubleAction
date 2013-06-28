@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2007, Valve Corporation, All rights reserved. ====
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // An entity that allows level designer control over the fog parameters.
 //
@@ -240,11 +240,11 @@ int CFogController::DrawDebugTextOverlays(void)
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
-		Q_snprintf(tempstr,sizeof(tempstr),"Start: %3.0f",m_fog.start);
+		Q_snprintf(tempstr,sizeof(tempstr),"Start: %3.0f",m_fog.start.Get());
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
-		Q_snprintf(tempstr,sizeof(tempstr),"End  : %3.0f",m_fog.end);
+		Q_snprintf(tempstr,sizeof(tempstr),"End  : %3.0f",m_fog.end.Get());
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 

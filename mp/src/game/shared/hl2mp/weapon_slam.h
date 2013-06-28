@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		SLAM 
 //
@@ -78,8 +78,8 @@ public:
 
 	CWeapon_SLAM();
 
-	DECLARE_ACTTABLE();
 #ifndef CLIENT_DLL
+	DECLARE_ACTTABLE();
 	DECLARE_DATADESC();
 #endif
 

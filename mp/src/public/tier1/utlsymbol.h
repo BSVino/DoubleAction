@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines a symbol table
 //
@@ -16,7 +16,6 @@
 #include "tier0/threadtools.h"
 #include "tier1/utlrbtree.h"
 #include "tier1/utlvector.h"
-#include "tier1/stringpool.h"
 
 
 //-----------------------------------------------------------------------------
@@ -190,9 +189,9 @@ public:
 
 	CUtlSymbol Find( const char* pString ) const
 	{
-		m_lock.LockForWrite();
+		m_lock.LockForRead();
 		CUtlSymbol result = CUtlSymbolTable::Find( pString );
-		m_lock.UnlockWrite();
+		m_lock.UnlockRead();
 		return result;
 	}
 
@@ -205,7 +204,11 @@ public:
 	}
 	
 private:
+#if defined(WIN32) || defined(_WIN32)
 	mutable CThreadSpinRWLock m_lock;
+#else
+	mutable CThreadRWLock m_lock;
+#endif
 };
 
 
@@ -222,6 +225,7 @@ private:
 // The handle is a CUtlSymbol for the dirname and the same for the filename, the accessor
 //  copies them into a static char buffer for return.
 typedef void* FileNameHandle_t;
+#define FILENAMEHANDLE_INVALID 0
 
 // Symbol table for more efficiently storing filenames by breaking paths and filenames apart.
 // Refactored from BaseFileSystem.h
@@ -244,16 +248,20 @@ class CUtlFilenameSymbolTable
 		unsigned short file;
 	};
 
+	class HashTable;
+
 public:
+	CUtlFilenameSymbolTable();
+	~CUtlFilenameSymbolTable();
 	FileNameHandle_t	FindOrAddFileName( const char *pFileName );
 	FileNameHandle_t	FindFileName( const char *pFileName );
 	int					PathIndex(const FileNameHandle_t &handle) { return (( const FileNameHandleInternal_t * )&handle)->path; }
 	bool				String( const FileNameHandle_t& handle, char *buf, int buflen );
 	void				RemoveAll();
-	void				SpewStrings();
 
 private:
-	CCountedStringPool	m_StringPool;
+	//CCountedStringPool	m_StringPool;
+	HashTable* m_Strings;
 	mutable CThreadSpinRWLock m_lock;
 };
 

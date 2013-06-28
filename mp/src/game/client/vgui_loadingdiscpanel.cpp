@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -114,6 +114,7 @@ public:
 	CLoadingDisc( void )
 	{
 		loadingDiscPanel = NULL;
+		m_pPauseDiscPanel = NULL;
 	}
 
 	void Create( vgui::VPANEL parent )
@@ -128,13 +129,17 @@ public:
 		{
 			loadingDiscPanel->SetParent( (vgui::Panel *)NULL );
 			delete loadingDiscPanel;
+			loadingDiscPanel = NULL;
 		}
 
 		if ( m_pPauseDiscPanel )
 		{
 			m_pPauseDiscPanel->SetParent( (vgui::Panel *)NULL );
 			delete m_pPauseDiscPanel;
+			m_pPauseDiscPanel = NULL;
 		}
+
+		m_hParent = NULL;
 	}
 
 	void SetLoadingVisible( bool bVisible )

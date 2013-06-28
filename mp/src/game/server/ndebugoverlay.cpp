@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Namespace for functions dealing with Debug Overlays
 //
@@ -13,7 +13,7 @@
 #include "ndebugoverlay.h"
 #include "wcedit.h"
 
-#ifdef _LINUX
+#ifdef POSIX
 #include "ai_basenpc.h"
 #include "ai_network.h"
 #include "ai_networkmanager.h"
@@ -248,6 +248,9 @@ void DebugDrawLine( const Vector& vecAbsStart, const Vector& vecAbsEnd, int r, i
 //-----------------------------------------------------------------------------
 CON_COMMAND( clear_debug_overlays, "clears debug overlays" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBaseEntity *pEntity = gEntList.FirstEnt();
 	
 	// Clear all entities of their debug overlays

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,20 +15,12 @@
 #include "tier1/utlvector.h"
 
 // more flexible than default pointers to members code required for casting member function pointers
-#pragma pointers_to_members( full_generality, virtual_inheritance )
+//#pragma pointers_to_members( full_generality, virtual_inheritance )
 
 namespace vgui
 {
 
 ////////////// MESSAGEMAP DEFINITIONS //////////////
-
-#ifndef offsetof
-#define offsetof(s,m)	(size_t)&(((s *)0)->m)
-#endif
-
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(p)	(sizeof(p)/sizeof(p[0]))
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -41,7 +33,7 @@ enum DataType_t
 	DATATYPE_CONSTCHARPTR,
 	DATATYPE_INT,
 	DATATYPE_FLOAT,
-	DATATYPE_PTR,
+	DATATYPE_PTR,	
 	DATATYPE_BOOL,
 	DATATYPE_KEYVALUES,
 	DATATYPE_CONSTWCHARPTR,
@@ -49,7 +41,11 @@ enum DataType_t
 	DATATYPE_HANDLE,  // It's an int, really
 };
 
+#ifdef WIN32
+class __virtual_inheritance Panel;
+#else
 class Panel;
+#endif
 typedef unsigned int VPANEL;
 
 typedef void (Panel::*MessageFunc_t)(void);
@@ -288,7 +284,6 @@ PanelMessageMap *FindOrAddPanelMessageMap( char const *className );
 
 // if more parameters are needed, just use MAP_MESSAGE_PARAMS() and pass the keyvalue set into the function
 
-
 //-----------------------------------------------------------------------------
 // Purpose: stores the list of objects in the hierarchy
 //			used to iterate through an object's message maps
@@ -356,19 +351,19 @@ private:
 // It them hooks that function up to the helper list so that the CHud objects can create
 //  the elements by name, with no header file dependency, etc.
 #define DECLARE_BUILD_FACTORY( className )										\
-	static vgui::Panel *Create_##className##( void )							\
+	static vgui::Panel *Create_##className( void )							\
 		{																		\
 			return new className( NULL, NULL );									\
 		};																		\
-		static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className## );\
+		static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className );\
 	className *g_##className##LinkerHack = NULL;
 
 #define DECLARE_BUILD_FACTORY_DEFAULT_TEXT( className, defaultText )			\
-	static vgui::Panel *Create_##className##( void )							\
+	static vgui::Panel *Create_##className( void )							\
 		{																		\
 			return new className( NULL, NULL, #defaultText );					\
 		};																		\
-	static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className## );\
+	static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className );\
 	className *g_##className##LinkerHack = NULL;
 
 // This one allows passing in a special function with calls new panel( xxx ) with arbitrary default parameters

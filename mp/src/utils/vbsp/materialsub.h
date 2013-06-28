@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This file loads a KeyValues file containing material name mappings.
 //			When the bsp is compiled, all materials listed in the file will

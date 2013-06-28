@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics constraint entities
 //
@@ -9,7 +9,6 @@
 #include "physics.h"
 #include "entityoutput.h"
 #include "engine/IEngineSound.h"
-#include "vphysics/constraints.h"
 #include "igamesystem.h"
 #include "physics_saverestore.h"
 #include "vcollide_parse.h"
@@ -21,6 +20,8 @@
 #if HINGE_NOTIFY
 #include "physconstraint_sounds.h"
 #endif
+
+#include "physconstraint.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,24 +37,6 @@
 
 
 ConVar    g_debug_constraint_sounds	  ( "g_debug_constraint_sounds", "0", FCVAR_CHEAT, "Enable debug printing about constraint sounds.");
-
-struct hl_constraint_info_t
-{
-	hl_constraint_info_t() 
-	{ 
-		pObjects[0] = pObjects[1] = NULL;
-		pGroup = NULL;
-		anchorPosition[0].Init();
-		anchorPosition[1].Init();
-		swapped = false; 
-		massScale[0] = massScale[1] = 1.0f;
-	}
-	Vector			anchorPosition[2];
-	IPhysicsObject	*pObjects[2];
-	IPhysicsConstraintGroup *pGroup;
-	float			massScale[2];
-	bool			swapped;
-};
 
 struct constraint_anchor_t
 {
@@ -259,190 +242,146 @@ static void DrawConstraintObjectsAxes(CBaseEntity *pConstraintEntity, IPhysicsCo
 	}
 }
 
-abstract_class CPhysConstraint : public CLogicalEntity
+void CPhysConstraint::ClearStaticFlag( IPhysicsObject *pObj )
 {
-	DECLARE_CLASS( CPhysConstraint, CLogicalEntity );
-public:
+	if ( !pObj )
+		return;
+	PhysClearGameFlags( pObj, FVPHYSICS_CONSTRAINT_STATIC );
+}
 
-	CPhysConstraint();
-	~CPhysConstraint();
-
-	DECLARE_DATADESC();
-
-	void Spawn( void );
-	void Precache( void );
-	void Activate( void );
-
-	void ClearStaticFlag( IPhysicsObject *pObj )
+void CPhysConstraint::Deactivate()
+{
+	if ( !m_pConstraint )
+		return;
+	m_pConstraint->Deactivate();
+	ClearStaticFlag( m_pConstraint->GetReferenceObject() );
+	ClearStaticFlag( m_pConstraint->GetAttachedObject() );
+	if ( m_spawnflags & SF_CONSTRAINT_DISABLE_COLLISION )
 	{
-		if ( !pObj )
-			return;
-		PhysClearGameFlags( pObj, FVPHYSICS_CONSTRAINT_STATIC );
-	}
-
-	virtual void Deactivate()
-	{
-		if ( !m_pConstraint )
-			return;
-		m_pConstraint->Deactivate();
-		ClearStaticFlag( m_pConstraint->GetReferenceObject() );
-		ClearStaticFlag( m_pConstraint->GetAttachedObject() );
-		if ( m_spawnflags & SF_CONSTRAINT_DISABLE_COLLISION )
+		// constraint may be getting deactivated because an object got deleted, so check them here.
+		IPhysicsObject *pRef = m_pConstraint->GetReferenceObject();
+		IPhysicsObject *pAtt = m_pConstraint->GetAttachedObject();
+		if ( pRef && pAtt )
 		{
-			// constraint may be getting deactivated because an object got deleted, so check them here.
-			IPhysicsObject *pRef = m_pConstraint->GetReferenceObject();
-			IPhysicsObject *pAtt = m_pConstraint->GetAttachedObject();
-			if ( pRef && pAtt )
-			{
-				PhysEnableEntityCollisions( pRef, pAtt );
-			}
+			PhysEnableEntityCollisions( pRef, pAtt );
 		}
 	}
+}
 
-	void OnBreak( void )
+void CPhysConstraint::OnBreak( void )
+{
+	Deactivate();
+	if ( m_breakSound != NULL_STRING )
 	{
-		Deactivate();
-		if ( m_breakSound != NULL_STRING )
+		CPASAttenuationFilter filter( this, ATTN_STATIC );
+
+		Vector origin = GetAbsOrigin();
+		Vector refPos = origin, attachPos = origin;
+
+		IPhysicsObject *pRef = m_pConstraint->GetReferenceObject();
+		if ( pRef && (pRef != g_PhysWorldObject) )
 		{
-			CPASAttenuationFilter filter( this, ATTN_STATIC );
-
-			Vector origin = GetAbsOrigin();
-			Vector refPos = origin, attachPos = origin;
-
-			IPhysicsObject *pRef = m_pConstraint->GetReferenceObject();
-			if ( pRef && (pRef != g_PhysWorldObject) )
-			{
-				pRef->GetPosition( &refPos, NULL );
-				attachPos = refPos;
-			}
-			IPhysicsObject *pAttach = m_pConstraint->GetAttachedObject();
-			if ( pAttach && (pAttach != g_PhysWorldObject) )
-			{
-				pAttach->GetPosition( &attachPos, NULL );
-				if ( !pRef || (pRef == g_PhysWorldObject) )
-				{
-					refPos = attachPos;
-				}
-			}
-			
-			VectorAdd( refPos, attachPos, origin );
-			origin *= 0.5f;
-
-			EmitSound_t ep;
-			ep.m_nChannel = CHAN_STATIC;
-			ep.m_pSoundName = STRING(m_breakSound);
-			ep.m_flVolume = VOL_NORM;
-			ep.m_SoundLevel = ATTN_TO_SNDLVL( ATTN_STATIC );
-			ep.m_pOrigin = &origin;
-
-			EmitSound( filter, entindex(), ep );
+			pRef->GetPosition( &refPos, NULL );
+			attachPos = refPos;
 		}
-		m_OnBreak.FireOutput( this, this );
-		// queue this up to be deleted at the end of physics 
-		// The Deactivate() call should make sure we don't get more of these callbacks.
-		PhysCallbackRemove( this->NetworkProp() );
-	}
-
-	void InputBreak( inputdata_t &inputdata )
-	{
-		if ( m_pConstraint ) 
-			m_pConstraint->Deactivate();
+		IPhysicsObject *pAttach = m_pConstraint->GetAttachedObject();
+		if ( pAttach && (pAttach != g_PhysWorldObject) )
+		{
+			pAttach->GetPosition( &attachPos, NULL );
+			if ( !pRef || (pRef == g_PhysWorldObject) )
+			{
+				refPos = attachPos;
+			}
+		}
 		
-		OnBreak();
+		VectorAdd( refPos, attachPos, origin );
+		origin *= 0.5f;
+
+		EmitSound_t ep;
+		ep.m_nChannel = CHAN_STATIC;
+		ep.m_pSoundName = STRING(m_breakSound);
+		ep.m_flVolume = VOL_NORM;
+		ep.m_SoundLevel = ATTN_TO_SNDLVL( ATTN_STATIC );
+		ep.m_pOrigin = &origin;
+
+		EmitSound( filter, entindex(), ep );
 	}
+	m_OnBreak.FireOutput( this, this );
+	// queue this up to be deleted at the end of physics 
+	// The Deactivate() call should make sure we don't get more of these callbacks.
+	PhysCallbackRemove( this->NetworkProp() );
+}
 
-	void InputOnBreak( inputdata_t &inputdata )
-	{
-		OnBreak();
-	}
-
-	void InputTurnOn( inputdata_t &inputdata )
-	{
-		if ( HasSpawnFlags( SF_CONSTRAINT_NO_CONNECT_UNTIL_ACTIVATED ) )
-		{
-			ActivateConstraint();
-		}
-
-		if ( !m_pConstraint || !m_pConstraint->GetReferenceObject() || !m_pConstraint->GetAttachedObject() )
-			return;
-
-		m_pConstraint->Activate();
-		m_pConstraint->GetReferenceObject()->Wake();
-		m_pConstraint->GetAttachedObject()->Wake();
-	}
-
-	void InputTurnOff( inputdata_t &inputdata )
-	{
-		Deactivate();
-	}
-
-	int DrawDebugTextOverlays()
-	{
-		int pos = BaseClass::DrawDebugTextOverlays();
-		if ( m_pConstraint && (m_debugOverlays & OVERLAY_TEXT_BIT) )
-		{
-			constraint_breakableparams_t params;
-			Q_memset(&params,0,sizeof(params));
-			m_pConstraint->GetConstraintParams( &params );
-			
-			if ( (params.bodyMassScale[0] != 1.0f && params.bodyMassScale[0] != 0.0f) || (params.bodyMassScale[1] != 1.0f && params.bodyMassScale[1] != 0.0f) )
-			{
-				CFmtStr str("mass ratio %.4f:%.4f\n", params.bodyMassScale[0], params.bodyMassScale[1] );
-				NDebugOverlay::EntityTextAtPosition( GetAbsOrigin(), pos, str.Access(), 0, 255, 255, 0, 255 );
-			}
-			pos++;
-		}
-		return pos;
-	}
-
-	void DrawDebugGeometryOverlays()
-	{
-		if ( m_debugOverlays & (OVERLAY_BBOX_BIT|OVERLAY_PIVOT_BIT|OVERLAY_ABSBOX_BIT) )
-		{
-			DrawConstraintObjectsAxes(this, m_pConstraint);
-		}
-		BaseClass::DrawDebugGeometryOverlays();
-	}
-
-	void GetBreakParams( constraint_breakableparams_t &params, const hl_constraint_info_t &info )
-	{
-		params.Defaults();
-		params.forceLimit = lbs2kg(m_forceLimit);
-		params.torqueLimit = lbs2kg(m_torqueLimit);
-		params.isActive = HasSpawnFlags( SF_CONSTRAINT_START_INACTIVE ) ? false : true;
-		params.bodyMassScale[0] = info.massScale[0];
-		params.bodyMassScale[1] = info.massScale[1];
-	}
-
-	// the notify system calls this on the constrained entities - used to detect & follow teleports
-	void NotifySystemEvent( CBaseEntity *pNotify, notify_system_event_t eventType, const notify_system_event_params_t &params );
+void CPhysConstraint::InputBreak( inputdata_t &inputdata )
+{
+	if ( m_pConstraint ) 
+		m_pConstraint->Deactivate();
 	
-	// gets called at setup time on first init and restore
-	virtual void OnConstraintSetup( hl_constraint_info_t &info ); 
+	OnBreak();
+}
 
-	// return the internal constraint object (used by sound gadgets)
-	inline IPhysicsConstraint *GetPhysConstraint() { return m_pConstraint; }
+void CPhysConstraint::InputOnBreak( inputdata_t &inputdata )
+{
+	OnBreak();
+}
 
-protected:	
-	void GetConstraintObjects( hl_constraint_info_t &info );
-	void SetupTeleportationHandling( hl_constraint_info_t &info );
-	bool ActivateConstraint( void );
-	virtual IPhysicsConstraint *CreateConstraint( IPhysicsConstraintGroup *pGroup, const hl_constraint_info_t &info ) = 0;
+void CPhysConstraint::InputTurnOn( inputdata_t &inputdata )
+{
+	if ( HasSpawnFlags( SF_CONSTRAINT_NO_CONNECT_UNTIL_ACTIVATED ) )
+	{
+		ActivateConstraint();
+	}
 
-	IPhysicsConstraint	*m_pConstraint;
+	if ( !m_pConstraint || !m_pConstraint->GetReferenceObject() || !m_pConstraint->GetAttachedObject() )
+		return;
 
-	// These are "template" values used to construct the hinge
-	string_t		m_nameAttach1;
-	string_t		m_nameAttach2;
-	string_t		m_breakSound;
-	string_t		m_nameSystem;
-	float			m_forceLimit;
-	float			m_torqueLimit;
-	unsigned int	m_teleportTick;
-	float			m_minTeleportDistance;
+	m_pConstraint->Activate();
+	m_pConstraint->GetReferenceObject()->Wake();
+	m_pConstraint->GetAttachedObject()->Wake();
+}
 
-	COutputEvent	m_OnBreak;
-};
+void CPhysConstraint::InputTurnOff( inputdata_t &inputdata )
+{
+	Deactivate();
+}
+
+int CPhysConstraint::DrawDebugTextOverlays()
+{
+	int pos = BaseClass::DrawDebugTextOverlays();
+	if ( m_pConstraint && (m_debugOverlays & OVERLAY_TEXT_BIT) )
+	{
+		constraint_breakableparams_t params;
+		Q_memset(&params,0,sizeof(params));
+		m_pConstraint->GetConstraintParams( &params );
+		
+		if ( (params.bodyMassScale[0] != 1.0f && params.bodyMassScale[0] != 0.0f) || (params.bodyMassScale[1] != 1.0f && params.bodyMassScale[1] != 0.0f) )
+		{
+			CFmtStr str("mass ratio %.4f:%.4f\n", params.bodyMassScale[0], params.bodyMassScale[1] );
+			NDebugOverlay::EntityTextAtPosition( GetAbsOrigin(), pos, str.Access(), 0, 255, 255, 0, 255 );
+		}
+		pos++;
+	}
+	return pos;
+}
+
+void CPhysConstraint::DrawDebugGeometryOverlays()
+{
+	if ( m_debugOverlays & (OVERLAY_BBOX_BIT|OVERLAY_PIVOT_BIT|OVERLAY_ABSBOX_BIT) )
+	{
+		DrawConstraintObjectsAxes(this, m_pConstraint);
+	}
+	BaseClass::DrawDebugGeometryOverlays();
+}
+
+void CPhysConstraint::GetBreakParams( constraint_breakableparams_t &params, const hl_constraint_info_t &info )
+{
+	params.Defaults();
+	params.forceLimit = lbs2kg(m_forceLimit);
+	params.torqueLimit = lbs2kg(m_torqueLimit);
+	params.isActive = HasSpawnFlags( SF_CONSTRAINT_START_INACTIVE ) ? false : true;
+	params.bodyMassScale[0] = info.massScale[0];
+	params.bodyMassScale[1] = info.massScale[1];
+}
 
 BEGIN_DATADESC( CPhysConstraint )
 
@@ -1280,7 +1219,7 @@ IPhysicsConstraint *CPhysSlideConstraint::CreateConstraint( IPhysicsConstraintGr
 		sliding.limitMax = DotProduct( axisDirection, m_axisEnd );
 		if ( sliding.limitMax < sliding.limitMin )
 		{
-			swap( sliding.limitMin, sliding.limitMax );
+			::V_swap( sliding.limitMin, sliding.limitMax );
 		}
 
 		// expand limits to make initial position of the attached object valid
@@ -1352,49 +1291,6 @@ void CPhysSlideConstraint::Precache()
 #endif
 
 
-//-----------------------------------------------------------------------------
-// Purpose: Fixed breakable constraint
-//-----------------------------------------------------------------------------
-class CPhysFixed : public CPhysConstraint
-{
-	DECLARE_CLASS( CPhysFixed, CPhysConstraint );
-public:
-	IPhysicsConstraint *CreateConstraint( IPhysicsConstraintGroup *pGroup, const hl_constraint_info_t &info );
-	
-	// just for debugging - move to the position of the reference entity
-	void MoveToRefPosition()
-	{
-		if ( m_pConstraint )
-		{
-			matrix3x4_t xformRef;
-			m_pConstraint->GetConstraintTransform( &xformRef, NULL );
-			IPhysicsObject *pObj = m_pConstraint->GetReferenceObject();
-			if ( pObj && pObj->IsMoveable() )
-			{
-				Vector pos, posWorld;
-				MatrixPosition( xformRef, pos );
-				pObj->LocalToWorld(&posWorld, pos);
-				SetAbsOrigin(posWorld);
-			}
-		}
-	}
-	int DrawDebugTextOverlays()
-	{
-		if ( m_debugOverlays & OVERLAY_TEXT_BIT )
-		{
-			MoveToRefPosition();
-		}
-		return BaseClass::DrawDebugTextOverlays();
-	}
-	void DrawDebugGeometryOverlays()
-	{
-		if ( m_debugOverlays & (OVERLAY_BBOX_BIT|OVERLAY_PIVOT_BIT|OVERLAY_ABSBOX_BIT) )
-		{
-			MoveToRefPosition();
-		}
-		BaseClass::DrawDebugGeometryOverlays();
-	}
-};
 
 LINK_ENTITY_TO_CLASS( phys_constraint, CPhysFixed );
 

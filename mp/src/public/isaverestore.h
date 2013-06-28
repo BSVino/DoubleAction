@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -188,7 +188,7 @@ public:
 	virtual void	WriteTick( const char *pname, const int *value, int count = 1 ) = 0;	// Save a tick (timevalue)
 	virtual void	WritePositionVector( const char *pname, const Vector &value ) = 0;		// Offset for landmark if necessary
 	virtual void	WritePositionVector( const char *pname, const Vector *value, int count = 1 ) = 0;	// array of pos vectors
-	virtual void	WriteFunction( datamap_t *pMap, const char *pname, const int *value, int count = 1 ) = 0; // Save a function pointer
+	virtual void	WriteFunction( datamap_t *pMap, const char *pname, inputfunc_t **value, int count = 1 ) = 0; // Save a function pointer
 
 	virtual void	WriteTime( const float *value, int count = 1 ) = 0;	// Save a float (timevalue)
 	virtual void	WriteTick( const int *value, int count = 1 ) = 0;	// Save a tick (timevalue)
@@ -285,7 +285,7 @@ public:
 	virtual int		ReadTick( int *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadPositionVector( Vector *pValue ) = 0;
 	virtual int		ReadPositionVector( Vector *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
-	virtual int		ReadFunction( datamap_t *pMap, void **pValue, int count = 1, int nBytesAvailable = 0) = 0;
+	virtual int		ReadFunction( datamap_t *pMap, inputfunc_t **pValue, int count = 1, int nBytesAvailable = 0) = 0;
 	
 	virtual int		ReadEntityPtr( CBaseEntity **ppEntity, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadEdictPtr( edict_t **ppEdict, int count = 1, int nBytesAvailable = 0 ) = 0;

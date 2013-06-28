@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -134,12 +134,17 @@ public:
 	template< class T > CDmxAttribute* SetValue( const char *pAttributeName, const T& value );
 
 	// Method to unpack data into a structure
-	void UnpackIntoStructure( void *pData, const DmxElementUnpackStructure_t *pUnpack ) const;
+	void UnpackIntoStructure( void *pData, size_t DataSizeInBytes, const DmxElementUnpackStructure_t *pUnpack ) const;
 
 	// Creates attributes based on the unpack structure
-	void AddAttributesFromStructure( const void *pData, const DmxElementUnpackStructure_t *pUnpack );
+	template <typename T>
+	void AddAttributesFromStructure( const T *pData, const DmxElementUnpackStructure_t *pUnpack )
+	{
+		AddAttributesFromStructure_Internal( pData, sizeof(T), pUnpack );
+	}
 
 private:
+	void AddAttributesFromStructure_Internal( const void *pData, size_t byteCount, const DmxElementUnpackStructure_t *pUnpack );
 	typedef CUtlSortVector< CDmxAttribute*, CDmxAttributeLess > AttributeList_t;
 
 	CDmxElement( const char *pType );

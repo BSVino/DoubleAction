@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -323,7 +323,7 @@ void CRopeKeyframe::Init()
 	SetLocalAngles( vec3_angle );
 	RecalculateLength();
 
-	m_nSegments = clamp( m_nSegments, 2, ROPE_MAX_SEGMENTS );
+	m_nSegments = clamp( (int) m_nSegments, 2, ROPE_MAX_SEGMENTS );
 
 	UpdateBBox( true );
 
@@ -723,6 +723,13 @@ bool CRopeKeyframe::KeyValue( const char *szKeyName, const char *szValue )
 			char str[512];
 			Q_snprintf( str, sizeof( str ), "%s.vmt", szValue );
 			SetMaterial( str );
+		}
+	}
+	else if ( stricmp( szKeyName, "NoWind" ) == 0 )
+	{
+		if ( atoi( szValue ) == 1 )
+		{
+			m_RopeFlags |= ROPE_NO_WIND;
 		}
 	}
 	

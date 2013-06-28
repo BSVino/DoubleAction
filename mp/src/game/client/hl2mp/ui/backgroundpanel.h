@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -37,18 +37,6 @@ void ResizeWindowControls( vgui::EditablePanel *pWindow, int tall, int wide, int
 //          of the horizontal and vertical ratios
 //-----------------------------------------------------------------------------
 int GetAlternateProportionalValueFromScaled( vgui::HScheme hScheme, int scaledValue );
-
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void DrawRoundedBackground( Color bgColor, int wide, int tall );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void DrawRoundedBorder( Color borderColor, int wide, int tall );
 
 //-----------------------------------------------------------------------------
 

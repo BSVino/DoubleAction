@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,10 +27,7 @@
 using namespace std;
 
 // RDTSC Instruction macro
-#define RDTSC(var) \
-_asm RDTSC \
-_asm mov DWORD PTR var,eax \
-_asm mov DWORD PTR var+4,edx
+#define RDTSC(var) var = __rdtsc()
 
 // RDPMC Instruction macro
 #define RDPMC(counter, var) \

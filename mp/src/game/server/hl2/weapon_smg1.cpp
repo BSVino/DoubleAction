@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,14 +6,14 @@
 
 #include "cbase.h"
 #include "basehlcombatweapon.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
 #include "game.h"
 #include "in_buttons.h"
 #include "grenade_ar2.h"
-#include "AI_Memory.h"
+#include "ai_memory.h"
 #include "soundent.h"
 #include "rumble_shared.h"
 #include "gamestats.h"

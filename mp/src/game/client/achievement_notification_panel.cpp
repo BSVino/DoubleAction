@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #include "ienginevgui.h"
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
-#include <vgui/IVGUI.h>
+#include <vgui/IVGui.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/ImagePanel.h>
@@ -108,10 +108,11 @@ void CAchievementNotificationPanel::FireGameEvent( IGameEvent * event )
 			{				
 				Msg( "Steam not running, achievement progress notification not displayed\n" );
 			}
-
-			// use Steam to show achievement progress UI
-			CGameID gameID( engine->GetAppID() );
-			steamapicontext->SteamUserStats()->IndicateAchievementProgress( gameID, pchName, iCur, iMax );
+			else 
+			{
+				// use Steam to show achievement progress UI
+				steamapicontext->SteamUserStats()->IndicateAchievementProgress( pchName, iCur, iMax );
+			}
 		}
 		else 
 		{
@@ -215,9 +216,9 @@ void CAchievementNotificationPanel::ShowNextNotification()
 	int iHeadingWidth = UTIL_ComputeStringWidth( hFontHeading, notification.szHeading );
 	int iTitleWidth = UTIL_ComputeStringWidth( hFontTitle, notification.szTitle );
 	// use the widest string
-	int iTextWidth = max( iHeadingWidth, iTitleWidth );
+	int iTextWidth = MAX( iHeadingWidth, iTitleWidth );
 	// don't let it be insanely wide
-	iTextWidth = min( iTextWidth, XRES( 300 ) );
+	iTextWidth = MIN( iTextWidth, XRES( 300 ) );
 	int iIconWidth = m_pIcon->GetWide();
 	int iSpacing = XRES( 10 );
 	int iPanelWidth = iSpacing + iIconWidth + iSpacing + iTextWidth + iSpacing;

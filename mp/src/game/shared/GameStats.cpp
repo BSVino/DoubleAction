@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 
 
 #include "igamesystem.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "tier1/utlstring.h"
 #include "filesystem.h"
 #include "tier1/utlbuffer.h"
@@ -28,6 +28,29 @@
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
+
+#ifdef CLIENT_DLL
+#include "materialsystem/materialsystem_config.h"
+#include "vgui_int.h"
+#include "igameresources.h"
+#include "voice_status.h"
+extern const ConVar *sv_cheats;
+#if !defined(NO_STEAM)
+#include "steam/steam_api.h"
+#endif
+#endif
+
+
+#if !defined(NO_STEAM) && defined(CLIENT_DLL)
+#if defined(TF_CLIENT_DLL) ||  defined(CSTRIKE_DLL)
+#define STEAMWORKS_GAMESTATS_ACTIVE
+#include "steamworks_gamestats.h"
+#endif
+#endif
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
+
 
 #define GAMESTATS_LOG_FILE "gamestats.log"
 #define GAMESTATS_PATHID "MOD"
@@ -92,117 +115,7 @@ public:
 	bool m_bHaveData;
 };
 
-//used to drive most of the game stat event handlers as well as track basic stats under the hood of CBaseGameStats
-class CBaseGameStats_Driver : public CAutoGameSystemPerFrame
-{
-public:
-	CBaseGameStats_Driver( void );
-	
-	typedef CAutoGameSystemPerFrame BaseClass;
-
-	// IGameSystem overloads
-	virtual bool Init();
-	virtual void Shutdown();
-
-	// Level init, shutdown
-	virtual void LevelInitPreEntity();
-	virtual void LevelShutdownPreEntity();
-	// Called during game save
-	virtual void OnSave();
-	// Called during game restore, after the local player has connected and entities have been fully restored
-	virtual void OnRestore();
-
-	virtual void FrameUpdatePostEntityThink();
-
-	void PossibleMapChange( void );
-
-	void CollectData( StatSendType_t sendType );
-	void SendData();
-	void ResetData();
-	bool AddBaseDataForSend( KeyValues *pKV, StatSendType_t sendType );
-
-	StatsBufferRecord_t m_StatsBuffer[STATS_WINDOW_SIZE];
-	bool m_bBufferFull;
-	int m_nWriteIndex;
-	float m_flLastRealTime;
-	float m_flLastSampleTime;
-	float m_flTotalTimeInLevels;
-	int m_iNumLevels;
-
-	template<class T> T AverageStat( T StatsBufferRecord_t::*field ) const
-	{
-		T sum = 0;
-		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
-			sum += m_StatsBuffer[i].*field;
-		return sum / STATS_WINDOW_SIZE;
-	}
-
-	template<class T> T MaxStat( T StatsBufferRecord_t::*field ) const
-	{
-		T maxsofar = -16000000;
-		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
-			maxsofar = max( maxsofar, m_StatsBuffer[i].*field );
-		return maxsofar;
-	}
-
-	template<class T> T MinStat( T StatsBufferRecord_t::*field ) const
-	{
-		T minsofar = 16000000;
-		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
-			minsofar = min( minsofar, m_StatsBuffer[i].*field );
-		return minsofar;
-	}
-
-	inline void AdvanceIndex( void )
-	{
-		m_nWriteIndex++;
-		if ( m_nWriteIndex == STATS_WINDOW_SIZE )
-		{
-			m_nWriteIndex = 0;
-			m_bBufferFull = true;
-		}
-	}
-
-	void UpdatePerfStats( void )
-	{
-		float flCurTime = Plat_FloatTime();
-		if (
-			( m_flLastSampleTime == -1 ) || 
-			( flCurTime - m_flLastSampleTime >= STATS_RECORD_INTERVAL ) )
-		{
-			if ( ( m_flLastRealTime > 0 ) && ( flCurTime > m_flLastRealTime ) )
-			{
-				float flFrameRate = 1.0 / ( flCurTime - m_flLastRealTime );
-				StatsBufferRecord_t &stat = m_StatsBuffer[m_nWriteIndex];
-				stat.m_flFrameRate = flFrameRate;
-				AdvanceIndex();
-				m_flLastSampleTime = flCurTime;
-			}
-		}
-		m_flLastRealTime = flCurTime;
-	}
-
-	CUtlString		m_PrevMapName; //used to track "OnMapChange" events
-	int				m_iLoadedVersion;
-	char			m_szLoadedUserID[ 17 ];	// GUID
-
-	bool			m_bEnabled; //false if incapable of uploading or the user doesn't want to enable stat tracking
-	bool			m_bShuttingDown;
-	bool			m_bInLevel;
-	bool			m_bFirstLevel;
-	time_t			m_tLastUpload;
-
-	float			m_flLevelStartTime;
-
-	bool			m_bStationary;
-	float			m_flLastMovementTime;
-	CUserCmd		m_LastUserCmd;
-	bool			m_bGamePaused;
-	float			m_flPauseStartTime;
-
-	CGamestatsData	*m_pGamestatsData;
-};
-static CBaseGameStats_Driver CBGSDriver;
+CBaseGameStats_Driver CBGSDriver;
 
 void UpdatePerfStats( void )
 {
@@ -226,7 +139,8 @@ CBaseGameStats_Driver::CBaseGameStats_Driver( void ) :
 	m_flLastRealTime( -1 ),
 	m_flLastSampleTime( -1 ),
 	m_flTotalTimeInLevels( 0 ),
-	m_iNumLevels( 0 )
+	m_iNumLevels( 0 ),
+	m_bDidVoiceChat( false )
 
 {
 	m_szLoadedUserID[0] = 0;;
@@ -554,7 +468,7 @@ void CBaseGameStats::Event_PlayerConnected( CBasePlayer *pBasePlayer )
 
 void CBaseGameStats::Event_PlayerDisconnected( CBasePlayer *pBasePlayer )
 {
-	StatsLog( "CBaseGameStats::Event_PlayerDisconnected\n", pBasePlayer->GetPlayerName() );
+	StatsLog( "CBaseGameStats::Event_PlayerDisconnected\n" );
 }
 
 void CBaseGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDamageInfo &info )
@@ -596,6 +510,18 @@ void CBaseGameStats::Event_IncrementCountedStatistic( const Vector& vecAbsOrigin
 {
 	StatsLog( "Incrementing %s by %f at pos (%d, %d, %d)\n", pchStatisticName, flIncrementAmount, (int)vecAbsOrigin.x, (int)vecAbsOrigin.y, (int)vecAbsOrigin.z );
 }
+
+//=============================================================================
+// HPE_BEGIN
+// [dwenger] Needed for CS window-breaking stat
+//=============================================================================
+void CBaseGameStats::Event_WindowShattered( CBasePlayer *pPlayer )
+{
+    StatsLog( "In Event_WindowShattered\n" );
+}
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 bool CBaseGameStats::UploadStatsFileNOW( void )
 {
@@ -730,6 +656,17 @@ bool CBaseGameStats::LoadFromFile( void )
 	return false;	
 }
 
+void CBaseGameStats::CollectData( StatSendType_t sendType )
+{
+	CBGSDriver.CollectData( sendType );
+}
+
+void CBaseGameStats::SendData()
+{
+	CBGSDriver.SendData();
+}
+
+
 #endif // GAME_DLL
 
 bool CBaseGameStats_Driver::Init()
@@ -843,6 +780,45 @@ void CBaseGameStats_Driver::Shutdown()
 	}
 }
 
+void CBaseGameStats_Driver::UpdatePerfStats( void )
+{
+	float flCurTime = Plat_FloatTime();
+	if (
+		( m_flLastSampleTime == -1 ) || 
+		( flCurTime - m_flLastSampleTime >= STATS_RECORD_INTERVAL ) )
+	{
+		if ( ( m_flLastRealTime > 0 ) && ( flCurTime > m_flLastRealTime ) )
+		{
+			float flFrameRate = 1.0 / ( flCurTime - m_flLastRealTime );
+			StatsBufferRecord_t &stat = m_StatsBuffer[m_nWriteIndex];
+			stat.m_flFrameRate = flFrameRate;
+#ifdef CLIENT_DLL
+			// The stat system isn't designed to handle split screen players. Until it get's 
+			// redesigned, let's take the first player's split screen ping, since all other stats
+			// will be based on the first player
+			IGameResources *gr = GameResources();
+			int ping = 0;
+			C_BasePlayer *pPlayer =	C_BasePlayer::GetLocalPlayer(); // GetLocalPlayer( FirstValidSplitScreenSlot() );
+			if ( pPlayer && gr )
+			{
+				ping = gr->GetPing( pPlayer->entindex() );
+			}
+			stat.m_flServerPing = ping;
+#endif
+			AdvanceIndex();
+			m_flLastSampleTime = flCurTime;
+		}
+	}
+	m_flLastRealTime = flCurTime;
+
+#ifdef CLIENT_DLL
+	if ( g_pGameRules && g_pGameRules->IsMultiplayer() )
+	{
+		m_bDidVoiceChat |= GetClientVoiceMgr()->IsLocalPlayerSpeaking();
+	}
+#endif
+}
+
 void CBaseGameStats_Driver::PossibleMapChange( void )
 {
 #ifdef GAME_DLL
@@ -917,6 +893,20 @@ void CBaseGameStats_Driver::LevelInitPreEntity()
 
 
 void CBaseGameStats_Driver::LevelShutdownPreEntity()
+{
+#ifdef CLIENT_DLL
+	LevelShutdown();
+#endif
+}
+
+void CBaseGameStats_Driver::LevelShutdownPreClearSteamAPIContext()
+{
+#ifdef GAME_DLL
+	LevelShutdown();
+#endif
+}
+
+void CBaseGameStats_Driver::LevelShutdown()
 {
 	float flElapsed = gpGlobals->realtime - m_flLevelStartTime;
 
@@ -1005,7 +995,7 @@ void CBaseGameStats_Driver::CollectData( StatSendType_t sendType )
 			// make a map node in the KeyValues to use for this level
 			char szMap[MAX_PATH+1]="";
 #ifdef CLIENT_DLL	
-			Q_FileBase( engine->GetLevelName(), szMap, ARRAYSIZE( szMap ) );
+			Q_FileBase( MapName(), szMap, ARRAYSIZE( szMap ) );
 #else
 			Q_strncpy( szMap, gpGlobals->mapname.ToCStr(), ARRAYSIZE( szMap ) );
 #endif // CLIENT_DLL
@@ -1027,8 +1017,23 @@ void CBaseGameStats_Driver::CollectData( StatSendType_t sendType )
 
 	// add common data
 	pGamestatsData->m_bHaveData |= AddBaseDataForSend( pKV, sendType );
+	
+#if defined(STEAMWORKS_GAMESTATS_ACTIVE)
+	// At the end of every map, clients submit their perfdata for the map
+	if ( sendType == STATSEND_LEVELSHUTDOWN && pGamestatsData && pGamestatsData->m_bHaveData )
+	{
+		GetSteamWorksSGameStatsUploader().AddClientPerfData( pGamestatsData->m_pKVData );
+	}
+	GetSteamWorksSGameStatsUploader().LevelShutdown();
+#endif
+
 	// add game-specific data
-	pGamestatsData->m_bHaveData |= gamestats->AddDataForSend( pKV, sendType );	
+	pGamestatsData->m_bHaveData |= gamestats->AddDataForSend( pKV, sendType );
+
+// Need to initialiate a reset since cs isn't using the gamestat system to add data
+#if defined(CSTRIKE_DLL) && defined(CLIENT_DLL)
+	ResetData();
+#endif
 }
 
 
@@ -1085,11 +1090,58 @@ bool CBaseGameStats_Driver::AddBaseDataForSend( KeyValues *pKV, StatSendType_t s
 			float flMinFrameRate = MinStat( &StatsBufferRecord_t::m_flFrameRate );
 			float flMaxFrameRate = MaxStat( &StatsBufferRecord_t::m_flFrameRate );
 
+
+			float flDeviationsquared = 0;
+			// Compute std deviation
+			for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
+			{
+				float val = m_StatsBuffer[i].m_flFrameRate - flAverageFrameRate;
+				flDeviationsquared += ( val * val );
+			}
+
+			float var = flDeviationsquared / (float)( STATS_WINDOW_SIZE - 1 );
+			float flStandardDeviationFrameRate = sqrt( var );
+
 			pKVPerf->SetFloat( "AvgFPS", flAverageFrameRate );
 			pKVPerf->SetFloat( "MinFPS", flMinFrameRate );
 			pKVPerf->SetFloat( "MaxFPS", flMaxFrameRate );
+			pKVPerf->SetFloat( "StdDevFPS", flStandardDeviationFrameRate );
+
+			// Determine the min/avg/max Server Ping and store the results 
+			float flAverageServerPing = AverageStat( &StatsBufferRecord_t::m_flServerPing );
+			pKVPerf->SetFloat( "AvgServerPing", flAverageServerPing );
 
 			pKV->AddSubKey( pKVPerf );
+
+			// Only keeping track of using voice in a multiplayer game
+			if ( g_pGameRules && g_pGameRules->IsMultiplayer() )
+			{
+				pKV->SetInt( "UsedVoice", m_bDidVoiceChat );
+			}
+
+			extern ConVar closecaption;
+			pKV->SetInt( "Caption", closecaption.GetInt() );
+
+#ifndef	NO_STEAM
+			// We can now get the game language from steam :)
+			if ( steamapicontext && steamapicontext->SteamApps() )
+			{
+				const char *currentLanguage = steamapicontext->SteamApps()->GetCurrentGameLanguage();
+				pKV->SetString( "Language", currentLanguage ? currentLanguage : "unknown" );
+			}
+#endif
+
+			// We need to filter out client side dev work from playtest work for the stat reporting.
+			// The simplest way is to check for sv_cheats, since we also do NOT want client stat reports
+			// where the player has cheated.
+			if ( NULL != sv_cheats )
+			{
+				int iCheats = sv_cheats->GetInt();
+				pKV->SetInt( "Cheats", iCheats );
+			}
+
+			int mapTime = gpGlobals->realtime - m_flLevelStartTime;
+			pKV->SetInt( "MapTime", mapTime );
 
 			return true;
 		}
@@ -1115,14 +1167,15 @@ void CBaseGameStats_Driver::ResetData()
 		m_pGamestatsData = NULL;
 	}
 
+	m_bDidVoiceChat = false;
 	m_pGamestatsData = new CGamestatsData();
 	KeyValues *pKV = m_pGamestatsData->m_pKVData;
-
+	pKV->SetInt( "IsPc", IsPC() );
 	pKV->SetInt( "version", GAMESTATS_VERSION );
 	pKV->SetString( "srcid", s_szPseudoUniqueID );
 
 #ifdef CLIENT_DLL
-	const CPUInformation &cpu = GetCPUInformation();
+	const CPUInformation &cpu = *GetCPUInformation();
 	OverWriteCharsWeHate( cpu.m_szProcessorID );
 	pKV->SetString( "CPUID", cpu.m_szProcessorID );
 	pKV->SetFloat( "CPUGhz", cpu.m_Speed * ( 1.0 / 1.0e9 ) );
@@ -1146,8 +1199,22 @@ void CBaseGameStats_Driver::ResetData()
 	pKV->SetInt( "DxLvl", g_pMaterialSystemHardwareConfig->GetDXSupportLevel() );
 	pKV->SetInt( "Width", dest_width );
 	pKV->SetInt( "Height", dest_height );
+	const MaterialSystem_Config_t &config = materials->GetCurrentConfigForVideoCard();
+	pKV->SetInt( "Windowed", config.Windowed() == true );
 
 	engine->SetGamestatsData( m_pGamestatsData );
+#endif
+
+#if defined(CSTRIKE_DLL) && defined(CLIENT_DLL)
+	// reset perf buffer for next map
+	for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
+	{
+		m_StatsBuffer[i].m_flFrameRate = 0;
+		m_StatsBuffer[i].m_flServerPing = 0;
+	}
+	
+	m_bBufferFull = false;
+	m_nWriteIndex = 0;
 #endif
 }
 

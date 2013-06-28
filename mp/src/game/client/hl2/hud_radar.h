@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/Label.h>
 #include "hl2_vehicle_radar.h"
-#include "C_VGUIScreen.h"
+#include "c_vguiscreen.h"
 
 class CRadarContact
 {

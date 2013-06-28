@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A Class to create a window that you can type and edit text in.
 //          Window can hold single line or multiline text. 
@@ -92,8 +92,8 @@ public:
 
 	virtual void SetText(const wchar_t *wszText);
 	virtual void SetText(const char *text);
-	virtual void GetText(char *buf, int bufLen);
-	virtual void GetText(wchar_t *buf, int bufLen);
+	virtual void GetText(OUT_Z_BYTECAP(bufLenInBytes) char *buf, int bufLenInBytes);
+	virtual void GetText(OUT_Z_BYTECAP(bufLenInBytes) wchar_t *buf, int bufLenInBytes);
 	virtual int GetTextLength() const;
 	virtual bool IsTextFullySelected() const;
 
@@ -111,7 +111,7 @@ public:
 
 	virtual void InsertChar(wchar_t ch);
 	virtual void InsertString(const char *text);
-	virtual void InsertString(wchar_t *wszText);
+	virtual void InsertString(const wchar_t *wszText);
 	virtual void Backspace();								   
 	virtual void Delete();
 	virtual void SelectNone();
@@ -254,6 +254,7 @@ protected:
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" ); // respond to scroll bar events
 	virtual void OnKillFocus();
 	virtual void OnMouseWheeled(int delta);	// respond to mouse wheel events
+	virtual void OnKeyCodePressed(KeyCode code); //respond to keyboard events
 	virtual void OnKeyCodeTyped(KeyCode code);	//respond to keyboard events
 	virtual	void OnKeyTyped(wchar_t unichar);	//respond to keyboard events
 

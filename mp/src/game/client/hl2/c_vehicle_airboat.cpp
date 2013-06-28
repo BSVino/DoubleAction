@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client side implementation of the airboat.
 //
@@ -23,8 +23,10 @@
 #include "fx_water.h"
 #include "engine/ivdebugoverlay.h"
 #include "view.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "c_basehlplayer.h"
+#include "vgui_controls/Controls.h"
+#include "vgui/ISurface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -247,8 +249,13 @@ void C_PropAirboat::DrawHudElements( )
 		float x, y;
 		Vector screen;
 
-		x = ScreenWidth()/2;
-		y = ScreenHeight()/2;
+		int vx, vy, vw, vh;
+		vgui::surface()->GetFullscreenViewport( vx, vy, vw, vh );
+		float screenWidth = vw;
+		float screenHeight = vh;
+		
+		x = screenWidth/2;
+		y = screenHeight/2;
 
 		int eyeAttachmentIndex = LookupAttachment( "vehicle_driver_eyes" );
 		Vector vehicleEyeOrigin;
@@ -263,8 +270,8 @@ void C_PropAirboat::DrawHudElements( )
 		VectorMA( vehicleEyeOrigin, 100.0f, vecForward, vehicleEyeOrigin );
 
 		ScreenTransform( vehicleEyeOrigin, screen );
-		x += 0.5 * screen[0] * ScreenWidth() + 0.5;
-		y -= 0.5 * screen[1] * ScreenHeight() + 0.5;
+		x += 0.5 * screen[0] * screenWidth + 0.5;
+		y -= 0.5 * screen[1] * screenHeight + 0.5;
 
 		x -= pIcon->Width() / 2; 
 		y -= pIcon->Height() / 2; 
@@ -661,9 +668,9 @@ void C_PropAirboat::DrawPontoonSplash( Vector origin, Vector direction, float sp
 		
 		colorRamp = random->RandomFloat( 0.75f, 1.25f );
 
-		pParticle->m_uchColor[0]	= min( 1.0f, color[0] * colorRamp ) * 255.0f;
-		pParticle->m_uchColor[1]	= min( 1.0f, color[1] * colorRamp ) * 255.0f;
-		pParticle->m_uchColor[2]	= min( 1.0f, color[2] * colorRamp ) * 255.0f;
+		pParticle->m_uchColor[0]	= MIN( 1.0f, color[0] * colorRamp ) * 255.0f;
+		pParticle->m_uchColor[1]	= MIN( 1.0f, color[1] * colorRamp ) * 255.0f;
+		pParticle->m_uchColor[2]	= MIN( 1.0f, color[2] * colorRamp ) * 255.0f;
 		
 		pParticle->m_uchStartSize	= random->RandomFloat( 8, 16 ) * flScale;
 		pParticle->m_uchEndSize		= pParticle->m_uchStartSize * 2;

@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Client side antlion guard. Used to create dlight for the cave guard.
 //
 //=============================================================================
 
 #include "cbase.h"
-#include "c_AI_BaseNPC.h"
+#include "c_ai_basenpc.h"
 #include "dlight.h"
 #include "iefx.h"
 

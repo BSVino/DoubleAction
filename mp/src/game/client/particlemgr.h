@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -113,13 +113,17 @@ entities. Each one is useful under different conditions.
 #include "materialsystem/imaterialsystem.h"
 #include "mathlib/vector.h"
 #include "mathlib/vmatrix.h"
-#include "mathlib/Mathlib.h"
+#include "mathlib/mathlib.h"
 #include "iclientrenderable.h"
 #include "clientleafsystem.h"
 #include "tier0/fasttimer.h"
 #include "utllinkedlist.h"
-#include "UtlDict.h"
+#include "utldict.h"
+#ifdef WIN32
 #include <typeinfo.h>
+#else
+#include <typeinfo>
+#endif
 #include "tier1/utlintrusivelist.h"
 #include "tier1/utlstring.h"
 
@@ -133,13 +137,15 @@ class IClientParticleListener;
 struct Particle;
 class ParticleDraw;
 class CMeshBuilder;
-class CMemoryPool;
+class CUtlMemoryPool;
 class CEffectMaterial;
 class CParticleSimulateIterator;
 class CParticleRenderIterator;
 class IThreadPool;
 class CParticleSystemDefinition;
-
+class CParticleMgr;
+class CNewParticleEffect;
+class CParticleCollection;
 
 #define INVALID_MATERIAL_HANDLE	NULL
 
@@ -666,8 +672,6 @@ public:
 	void GetDirectionalLightInfo( CParticleLightInfo &info ) const;
 	void SetDirectionalLightInfo( const CParticleLightInfo &info );
 
-	void SpewInfo( bool bDetail );
-
 	// add a class that gets notified of entity events
 	void AddEffectListener( IClientParticleListener *pListener );
 	void RemoveEffectListener( IClientParticleListener *pListener );
@@ -682,6 +686,16 @@ public:
 	void RenderParticleSystems( bool bEnable );
 	bool ShouldRenderParticleSystems() const;
 
+	// Quick profiling (counts only, not clock cycles).
+	bool		m_bStatsRunning;
+	int			m_nStatsFramesSinceLastAlert;
+
+	void StatsAccumulateActiveParticleSystems();
+	void StatsReset();
+	void StatsSpewResults();
+	void StatsNewParticleEffectDrawn ( CNewParticleEffect *pParticles );
+	void StatsOldParticleEffectDrawn ( CParticleEffectBinding *pParticles );
+
 private:
 	struct RetireInfo_t
 	{
@@ -694,8 +708,6 @@ private:
 	void UpdateAllEffects( float flTimeDelta );
 
 	void UpdateNewEffects( float flTimeDelta );				// update new particle effects
-
-	void SpewActiveParticleSystems( );
 
 	CParticleSubTextureGroup* FindOrAddSubTextureGroup( IMaterial *pPageMaterial );
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,16 +10,16 @@
 #include "particles_attractor.h"
 #include "iefx.h"
 #include "dlight.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "c_te_effect_dispatch.h"
 #include "fx_quad.h"
 
 #include "c_ai_basenpc.h"
 
 // For material proxy
-#include "ProxyEntity.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "proxyentity.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialvar.h"
 
 #define NUM_INTERIOR_PARTICLES	8
 

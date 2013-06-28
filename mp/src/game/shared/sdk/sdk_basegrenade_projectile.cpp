@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "sdk_basegrenade_projectile.h"
 
-extern ConVar sv_gravity;
+float GetCurrentGravity( void );
 
 
 #ifdef CLIENT_DLL
@@ -23,8 +23,6 @@ extern ConVar sv_gravity;
 	END_DATADESC()
 
 #endif
-
-const float GRENADE_COEFFICIENT_OF_RESTITUTION = 0.2f;
 
 
 IMPLEMENT_NETWORKCLASS_ALIASED( BaseGrenadeProjectile, DT_BaseGrenadeProjectile )
@@ -44,6 +42,7 @@ END_NETWORK_TABLE()
 
 
 #ifdef CLIENT_DLL
+
 
 	void CBaseGrenadeProjectile::PostDataUpdate( DataUpdateType_t type )
 	{
@@ -76,12 +75,11 @@ END_NETWORK_TABLE()
 		{
 			if ( gpGlobals->curtime - m_flSpawnTime < 0.5 )
 			{
-//Tony; FIXME!
-//				C_SDKPlayer *pPlayer = dynamic_cast<C_SDKPlayer*>( GetThrower() );
-//				if ( pPlayer && pPlayer->m_PlayerAnimState->IsThrowingGrenade() )
-//				{
-//					return 0;
-//				}
+				C_SDKPlayer *pPlayer = dynamic_cast<C_SDKPlayer*>( GetThrower() );
+				if ( pPlayer && pPlayer->m_PlayerAnimState->IsThrowingGrenade() )
+				{
+					return 0;
+				}
 			}
 		}
 
@@ -106,108 +104,6 @@ END_NETWORK_TABLE()
 
 		// smaller, cube bounding box so we rest on the ground
 		SetSize( Vector ( -2, -2, -2 ), Vector ( 2, 2, 2 ) );
-		SetCollisionGroup( COLLISION_GROUP_WEAPON );
-		CreateVPhysics();
-
-		//Tony; bit of a hack for the sdk, the CS grenade is really heavy for some reason.
-		if ( VPhysicsGetObject() )
-			VPhysicsGetObject()->SetMass( 5 );
-	}
-	void CBaseGrenadeProjectile::SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity )
-	{
-		IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
-		if ( pPhysicsObject )
-		{
-			pPhysicsObject->AddVelocity( &velocity, &angVelocity );
-		}
-	}
-// this will hit only things that are in newCollisionGroup, but NOT in collisionGroupAlreadyChecked
-	class CTraceFilterCollisionGroupDelta : public CTraceFilterEntitiesOnly
-	{
-	public:
-		// It does have a base, but we'll never network anything below here..
-		DECLARE_CLASS_NOBASE( CTraceFilterCollisionGroupDelta );
-
-		CTraceFilterCollisionGroupDelta( const IHandleEntity *passentity, int collisionGroupAlreadyChecked, int newCollisionGroup )
-			: m_pPassEnt(passentity), m_collisionGroupAlreadyChecked( collisionGroupAlreadyChecked ), m_newCollisionGroup( newCollisionGroup )
-		{
-		}
-
-		virtual bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
-		{
-			if ( !PassServerEntityFilter( pHandleEntity, m_pPassEnt ) )
-				return false;
-			CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
-
-			if ( pEntity )
-			{
-				if ( g_pGameRules->ShouldCollide( m_collisionGroupAlreadyChecked, pEntity->GetCollisionGroup() ) )
-					return false;
-				if ( g_pGameRules->ShouldCollide( m_newCollisionGroup, pEntity->GetCollisionGroup() ) )
-					return true;
-			}
-
-			return false;
-		}
-
-	protected:
-		const IHandleEntity *m_pPassEnt;
-		int		m_collisionGroupAlreadyChecked;
-		int		m_newCollisionGroup;
-	};
-
-	void CBaseGrenadeProjectile::VPhysicsUpdate( IPhysicsObject *pPhysics )
-	{
-		BaseClass::VPhysicsUpdate( pPhysics );
-		Vector vel;
-		AngularImpulse angVel;
-		pPhysics->GetVelocity( &vel, &angVel );
-
-		Vector start = GetAbsOrigin();
-		// find all entities that my collision group wouldn't hit, but COLLISION_GROUP_NONE would and bounce off of them as a ray cast
-		CTraceFilterCollisionGroupDelta filter( this, GetCollisionGroup(), COLLISION_GROUP_NONE );
-		trace_t tr;
-
-		// UNDONE: Hull won't work with hitboxes - hits outer hull.  But the whole point of this test is to hit hitboxes.
-#if 0
-		UTIL_TraceHull( start, start + vel * gpGlobals->frametime, CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs(), CONTENTS_HITBOX|CONTENTS_MONSTER|CONTENTS_SOLID, &filter, &tr );
-#else
-		UTIL_TraceLine( start, start + vel * gpGlobals->frametime, CONTENTS_HITBOX|CONTENTS_MONSTER|CONTENTS_SOLID, &filter, &tr );
-#endif
-		if ( tr.startsolid )
-		{
-			if ( !m_inSolid )
-			{
-				// UNDONE: Do a better contact solution that uses relative velocity?
-				vel *= -GRENADE_COEFFICIENT_OF_RESTITUTION; // bounce backwards
-				pPhysics->SetVelocity( &vel, NULL );
-			}
-			m_inSolid = true;
-			return;
-		}
-		m_inSolid = false;
-		if ( tr.DidHit() )
-		{
-			Vector dir = vel;
-			VectorNormalize(dir);
-			// send a tiny amount of damage so the character will react to getting bonked
-			CTakeDamageInfo info( this, GetThrower(), pPhysics->GetMass() * vel, GetAbsOrigin(), 0.1f, DMG_CRUSH );
-			tr.m_pEnt->TakeDamage( info );
-
-			// reflect velocity around normal
-			vel = -2.0f * tr.plane.normal * DotProduct(vel,tr.plane.normal) + vel;
-
-			// absorb 80% in impact
-			vel *= GRENADE_COEFFICIENT_OF_RESTITUTION;
-			angVel *= -0.5f;
-			pPhysics->SetVelocity( &vel, &angVel );
-		}
-	}
-	bool CBaseGrenadeProjectile::CreateVPhysics()
-	{
-		// Create the object in the physics system
-		VPhysicsInitNormal( SOLID_BBOX, 0, false );
-		return true;
 	}
 
 	void CBaseGrenadeProjectile::DangerSoundThink( void )

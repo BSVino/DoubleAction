@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,6 +25,13 @@
 #define GAMEMOVEMENT_TIME_TO_UNDUCK			( TIME_TO_UNDUCK * 1000.0f )		// ms
 #define GAMEMOVEMENT_TIME_TO_UNDUCK_INV		( GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK )
 
+enum
+{
+	SPEED_CROPPED_RESET = 0,
+	SPEED_CROPPED_DUCK = 1,
+	SPEED_CROPPED_WEAPON = 2,
+};
+
 struct surfacedata_t;
 
 class CBasePlayer;
@@ -41,13 +48,18 @@ public:
 
 	virtual void	StartTrackPredictionErrors( CBasePlayer *pPlayer );
 	virtual void	FinishTrackPredictionErrors( CBasePlayer *pPlayer );
-	virtual void	DiffPrint( char const *fmt, ... );
-	virtual const Vector&	GetPlayerMins( bool ducked ) const;
-	virtual const Vector&	GetPlayerMaxs( bool ducked ) const;
-	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const;
+	virtual void	DiffPrint( PRINTF_FORMAT_STRING char const *fmt, ... );
+	virtual Vector	GetPlayerMins( bool ducked ) const;
+	virtual Vector	GetPlayerMaxs( bool ducked ) const;
+	virtual Vector	GetPlayerViewOffset( bool ducked ) const;
 
 // For sanity checking getting stuck on CMoveData::SetAbsOrigin
-	virtual void			TracePlayerBBox( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm );
+	virtual void	TracePlayerBBox( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm );
+	
+	// allows derived classes to exclude entities from trace
+	virtual void	TryTouchGround( const Vector& start, const Vector& end, const Vector& mins, const Vector& maxs, unsigned int fMask, int collisionGroup, trace_t& pm );
+
+
 #define BRUSH_ONLY true
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );	///< returns the solid mask for the given player, so bots can have a more-restrictive set
 	CBasePlayer		*player;
@@ -89,6 +101,7 @@ protected:
 	virtual void	AirAccelerate( Vector& wishdir, float wishspeed, float accel );
 
 	virtual void	AirMove( void );
+	virtual float	GetAirSpeedCap( void ) { return 30.f; }
 	
 	virtual bool	CanAccelerate();
 	virtual void	Accelerate( Vector& wishdir, float wishspeed, float accel);
@@ -102,11 +115,15 @@ protected:
 	// Handle MOVETYPE_WALK.
 	virtual void	FullWalkMove();
 
+	// allow overridden versions to respond to jumping
+	virtual void	OnJump( float fImpulse ) {}
+	virtual void	OnLand( float fVelocity ) {}
+
 	// Implement this if you want to know when the player collides during OnPlayerMove
 	virtual void	OnTryPlayerMoveCollision( trace_t &tr ) {}
 
-	virtual const Vector&	GetPlayerMins( void ) const; // uses local player
-	virtual const Vector&	GetPlayerMaxs( void ) const; // uses local player
+	virtual Vector	GetPlayerMins( void ) const; // uses local player
+	virtual Vector	GetPlayerMaxs( void ) const; // uses local player
 
 	typedef enum
 	{
@@ -170,10 +187,7 @@ protected:
 	// If pmove.origin is in a solid position,
 	// try nudging slightly on all axis to
 	// allow for the cut precision of the net coordinates
-#ifdef PORTAL
-	virtual 
-#endif
-	int				CheckStuck( void );
+	virtual int		CheckStuck( void );
 	
 	// Check if the point is in water.
 	// Sets refWaterLevel and refWaterType appropriately.
@@ -233,6 +247,10 @@ protected:
 
 	virtual void	StepMove( Vector &vecDestination, trace_t &trace );
 
+	// when we step on ground that's too steep, search to see if there's any ground nearby that isn't too steep
+	void			TryTouchGroundInQuadrants( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm );
+
+
 protected:
 
 	// Performs the collision resolution for fliers.
@@ -256,7 +274,7 @@ protected:
 	float			m_fFrameTime;
 
 //private:
-	bool			m_bSpeedCropped;
+	int				m_iSpeedCropped;
 
 	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
 
@@ -269,16 +287,5 @@ public:
 };
 
 
-//-----------------------------------------------------------------------------
-// Traces player movement + position
-//-----------------------------------------------------------------------------
-inline void CGameMovement::TracePlayerBBox( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm )
-{
-	VPROF( "CGameMovement::TracePlayerBBox" );
-
-	Ray_t ray;
-	ray.Init( start, end, GetPlayerMins(), GetPlayerMaxs() );
-	UTIL_TraceRay( ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm );
-}
 
 #endif // GAMEMOVEMENT_H

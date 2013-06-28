@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -64,8 +64,8 @@ const char *pszTeamNames[] =
 const char *pszPossiblePlayerModels[] =
 {
 	SDK_PLAYER_MODEL,
-	"models/player/blue_player.mdl",
-	"models/player/red_player.mdl",
+	"models/player/american_rifleman.mdl",
+	"models/player/german_rifleman.mdl",
 	NULL
 };
 

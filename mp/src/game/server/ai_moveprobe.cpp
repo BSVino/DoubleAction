@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -50,6 +50,9 @@ float MOVE_HEIGHT_EPSILON = 0.0625f;
 
 CON_COMMAND( ai_set_move_height_epsilon, "Set how high AI bumps up ground walkers when checking steps" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	if ( args.ArgC() > 1 )
 	{
 		float newEps = atof( args[1] );
@@ -533,7 +536,7 @@ bool CAI_MoveProbe::TestGroundMove( const Vector &vecActualStart, const Vector &
 
 	for (;;)
 	{
-		float flStepSize = min( LOCAL_STEP_SIZE, pMoveTrace->flTotalDist - distClear );
+		float flStepSize = MIN( LOCAL_STEP_SIZE, pMoveTrace->flTotalDist - distClear );
 		if ( flStepSize < 0.001 )
 			break;
 
@@ -648,7 +651,7 @@ bool CAI_MoveProbe::TestGroundMove( const Vector &vecActualStart, const Vector &
 	// and not a ledge above or below the target.
 	if (!(flags & AITGM_2D))
 	{
-		float threshold = max(  0.5f * GetHullHeight(), StepHeight() + 0.1 );
+		float threshold = MAX(  0.5f * GetHullHeight(), StepHeight() + 0.1 );
 		if (fabs(pMoveTrace->vEndPosition.z - vecDesiredEnd.z) > threshold)
 		{
 #if 0
@@ -828,7 +831,7 @@ void CAI_MoveProbe::JumpMoveLimit( const Vector &vecStart, const Vector &vecEnd,
 	// FIXME: add max jump velocity callback?  Look at the velocity in the jump animation?  use ideal running speed?
 	float maxHorzVel = GetOuter()->GetMaxJumpSpeed();
 
-	Vector gravity = Vector(0, 0, sv_gravity.GetFloat() * GetOuter()->GetJumpGravity() );
+	Vector gravity = Vector(0, 0, GetCurrentGravity() * GetOuter()->GetJumpGravity() );
 
 	if ( gravity.z < 0.01 )
 	{
@@ -1104,9 +1107,9 @@ Vector CAI_MoveProbe::CalcJumpLaunchVelocity(const Vector &startPos, const Vecto
 	float minHorzHeight = 0.5 * flGravity * (minHorzTime * 0.5) * (minHorzTime * 0.5);
 
 	// jump height must be enough to hang in the air
-	*pminHeight = max( *pminHeight, minHorzHeight );
+	*pminHeight = MAX( *pminHeight, minHorzHeight );
 	// jump height must be enough to cover the step up
-	*pminHeight = max( *pminHeight, stepHeight );
+	*pminHeight = MAX( *pminHeight, stepHeight );
 
 	// time from start to apex
 	float t0 = sqrt( ( 2.0 * *pminHeight) / flGravity );

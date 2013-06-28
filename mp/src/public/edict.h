@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -59,11 +59,14 @@ public:
 	bool			teamplay;
 	// current maxentities
 	int				maxEntities;
+
+	int				serverCount;
 };
 
 inline CGlobalVars::CGlobalVars( bool bIsClient ) : 
 	CGlobalVarsBase( bIsClient )
 {
+	serverCount = 0;
 }
 
 
@@ -204,7 +207,21 @@ public:
 #endif	
 
 	// NOTE: this is in the edict instead of being accessed by a virtual because the engine needs fast access to it.
-	int m_NetworkSerialNumber;	// Game DLL sets this when it gets a serial number for its EHANDLE.
+	// int m_NetworkSerialNumber;
+
+	// NOTE: m_EdictIndex is an optimization since computing the edict index
+	// from a CBaseEdict* pointer otherwise requires divide-by-20. values for
+	// m_NetworkSerialNumber all fit within a 16-bit integer range, so we're
+	// repurposing the other 16 bits to cache off the index without changing
+	// the overall layout or size of this struct. existing mods compiled with
+	// a full 32-bit serial number field should still work. henryg 8/17/2011
+#if VALVE_LITTLE_ENDIAN
+	short m_NetworkSerialNumber;
+	short m_EdictIndex;
+#else
+	short m_EdictIndex;
+	short m_NetworkSerialNumber;
+#endif
 
 	// NOTE: this is in the edict instead of being accessed by a virtual because the engine needs fast access to it.
 	IServerNetworkable	*m_pNetworkable;

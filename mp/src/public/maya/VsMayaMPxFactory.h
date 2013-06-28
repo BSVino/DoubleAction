@@ -19,6 +19,7 @@
 #include <maya/MPxNode.h>
 #include <maya/MPxSurfaceShape.h>
 #include <maya/MPxSurfaceShapeUI.h>
+#include <maya/MPxToolCommand.h>
 #include <maya/MPxTransform.h>
 #include <maya/MPxTransformationMatrix.h>
 #include <maya/MSyntax.h>
@@ -71,6 +72,10 @@ public:
 		kUnknown
 	};
 
+	void Enable( bool bEnabled ) { m_bEnabled = bEnabled; }
+
+	bool IsEnabled() const { return m_bEnabled; }
+
 protected:
 	// Constructor
 	CVsMayaMPxFactoryBase();
@@ -99,6 +104,9 @@ private:
 
 	// Everything has a type (map types to names)
 	MString GetTypeName() const;
+
+	// Whether this factory is enabled or not
+	bool m_bEnabled;
 };
 
 
@@ -204,6 +212,100 @@ private:
 	static void *Create()
 	{
 		CVsMayaMPxCommandDecorator *pDecorator = new CVsMayaMPxCommandDecorator< T >;
+		pDecorator->m_pSyntaxHelp = &s_mSyntaxHelp;
+		return pDecorator;
+	}
+
+	static MSyntax CreateSyntax()
+	{
+		// Maya will simply never call this unless the 'hasSyntax()' virtual returns true
+		// doesn't matter if a syntaxCreator is registered or not, and an empty
+		// MSyntax is fine too.  Also note the return is by value and not reference.
+		// Also... even when Maya does call this, it is only ever called once, the
+		// first time Maya needs to know what the syntax is (when the command is
+		// invoked or when help cmd is done
+
+		MSyntax mSyntax;
+		T().SpecifySyntax( mSyntax, s_mSyntaxHelp );
+		return mSyntax;
+	}
+
+	static MStatus Register( MFnPlugin &pluginFn )
+	{
+		return T::Register( pluginFn, s_name, Create, T().hasSyntax() ? CreateSyntax : NULL );
+	}
+
+	static MStatus Deregister( MFnPlugin &pluginFn )
+	{
+		return T::Deregister( pluginFn, s_name );
+	}
+};
+
+
+//============================================================================
+//
+// Base class for Valve Maya commands ( CVsMayaMPxToolCommand )
+//
+//============================================================================
+class CVsMayaMPxToolCommand : public MPxToolCommand
+{
+public:
+	virtual const MString &GetName() const { return m_nullStr; }
+	virtual const MString &GetDesc() const { return m_nullStr; }
+
+protected:
+	// Derived classes must specify this to override syntax
+	virtual void SpecifySyntax( MSyntax &mSyntax, ValveMaya::CMSyntaxHelp &help );
+	ValveMaya::CMSyntaxHelp *GetSyntaxHelp() { return m_pSyntaxHelp; }
+
+private:
+	ValveMaya::CMSyntaxHelp *m_pSyntaxHelp;
+
+	static MStatus Register(
+		MFnPlugin &pluginFn,
+		const MString &name,
+		MCreatorFunction creatorFunction,
+		MCreateSyntaxFunction createSyntaxFunction = NULL );
+
+	static MStatus Deregister( MFnPlugin &pluginFn, const MString &name );
+
+	template < class T > friend class CVsMayaMPxToolCommandDecorator;
+
+	MString m_nullStr;
+};
+
+
+//-----------------------------------------------------------------------------
+//
+// Decorator class for Valve Maya commands ( CVsMayaMPxToolCommandDecorator )
+//
+//-----------------------------------------------------------------------------
+template < class T >
+class CVsMayaMPxToolCommandDecorator : public T
+{
+public:
+	static const MString &Name() { return s_name; };
+	static const MString &Desc() { return s_desc; };
+
+	virtual const MString &GetName() const { return Name(); };
+	virtual const MString &GetDesc() const { return Desc(); };
+
+	static CVsMayaMPxFactoryBase::Type GetType() { return CVsMayaMPxFactoryBase::kCommand; }
+
+private:
+	friend class CVsMayaMPxFactoryBase;
+	template < class U > friend class CVsMayaMPxFactory;
+
+	// These should be const but it's not because the CVsMayaMPxFactoryCommand class
+	// only knows its name and therefore it's description at runtime
+
+	static MString s_name;
+	static MString s_desc;
+	static ValveMaya::CMSyntaxHelp s_mSyntaxHelp;	// Keeps track of command line flags
+
+	static void *Create()
+	{
+		CVsMayaMPxToolCommandDecorator *pDecorator = new CVsMayaMPxToolCommandDecorator< T >;
 		pDecorator->m_pSyntaxHelp = &s_mSyntaxHelp;
 		return pDecorator;
 	}
@@ -387,6 +489,21 @@ public:
 	virtual const MString &GetName() const = 0;
 
 protected:
+
+#if MAYA_API_VERSION >= 200900
+
+	static MStatus Register(
+		MFnPlugin &pluginFn,
+		const MString &name,
+		const MTypeId &mTypeId,
+		MCreatorFunction creatorFunction,
+		MInitializeFunction initFunction,
+		MCreateXformMatrixFunction xformCreatorFunction = MPxTransformationMatrix::creator,
+		const MTypeId &xformMTypeId = MPxTransformationMatrix::baseTransformationMatrixId,
+		const MString *classification = NULL );
+
+#else // #if MAYA_API_VERSION >= 200900
+
 	static MStatus Register(
 		MFnPlugin &pluginFn,
 		const MString &name,
@@ -396,6 +513,8 @@ protected:
 		MCreatorFunction xformCreatorFunction = MPxTransformationMatrix::creator,
 		const MTypeId &xformMTypeId = MPxTransformationMatrix::baseTransformationMatrixId,
 		const MString *classification = NULL );
+
+#endif // #if MAYA_API_VERSION >= 200900
 
 	static MStatus Deregister(
 		MFnPlugin &pluginFn,
@@ -431,7 +550,15 @@ private:
 
 	static const MInitializeFunction s_mInitializeFunction;
 
+#if MAYA_API_VERSION >= 200900
+
+	static const MCreateXformMatrixFunction s_xformMCreatorFunction;
+
+#else // #if MAYA_API_VERSION >= 200900
+
 	static const MCreatorFunction s_xformMCreatorFunction;
+
+#endif // #if MAYA_API_VERSION >= 200900
 
 	static const MTypeId s_xformMTypeId;
 
@@ -846,6 +973,15 @@ private:
 	ValveMaya::CMSyntaxHelp CVsMayaMPxCommandDecorator< _class >::s_mSyntaxHelp;			\
 	static CVsMayaMPxFactory< CVsMayaMPxCommandDecorator< _class > > s_##_name##_Factory
 
+//-----------------------------------------------------------------------------
+// Helper macro to instantiate a command 
+//-----------------------------------------------------------------------------
+#define INSTALL_MAYA_MPXTOOLCOMMAND( _class, _name, _desc )										\
+	MString CVsMayaMPxToolCommandDecorator< _class >::s_name( #_name );							\
+	MString CVsMayaMPxToolCommandDecorator< _class >::s_desc( _desc );							\
+	ValveMaya::CMSyntaxHelp CVsMayaMPxToolCommandDecorator< _class >::s_mSyntaxHelp;			\
+	static CVsMayaMPxFactory< CVsMayaMPxToolCommandDecorator< _class > > s_##_name##_Factory
+
 
 //-----------------------------------------------------------------------------
 // Helper macro to instantiate a translator 
@@ -884,6 +1020,19 @@ private:
 //-----------------------------------------------------------------------------
 // Helper macro to instantiate a transform node 
 //-----------------------------------------------------------------------------
+#if MAYA_API_VERSION >= 200900
+
+#define INSTALL_MAYA_MPXTRANSFORM( _class, _name, _typeId, _initializeFunction, _desc )													\
+	const MString CVsMayaMPxTransformDecorator< _class >::s_name( #_name );																\
+	const MString CVsMayaMPxTransformDecorator< _class >::s_desc( _desc );																\
+	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_mTypeId( _typeId );															\
+	const MInitializeFunction CVsMayaMPxTransformDecorator< _class >::s_mInitializeFunction( _initializeFunction );						\
+	const MCreateXformMatrixFunction CVsMayaMPxTransformDecorator< _class >::s_xformMCreatorFunction( MPxTransformationMatrix::creator );			\
+	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_xformMTypeId( MPxTransformationMatrix::baseTransformationMatrixId );		\
+	static CVsMayaMPxFactory< CVsMayaMPxTransformDecorator< _class > > s_##_name##_Factory
+
+#else // #if MAYA_API_VERSION >= 200900
+
 #define INSTALL_MAYA_MPXTRANSFORM( _class, _name, _typeId, _initializeFunction, _desc )													\
 	const MString CVsMayaMPxTransformDecorator< _class >::s_name( #_name );																\
 	const MString CVsMayaMPxTransformDecorator< _class >::s_desc( _desc );																\
@@ -893,11 +1042,26 @@ private:
 	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_xformMTypeId( MPxTransformationMatrix::baseTransformationMatrixId );		\
 	static CVsMayaMPxFactory< CVsMayaMPxTransformDecorator< _class > > s_##_name##_Factory
 
+#endif // #if MAYA_API_VERSION >= 200900
+
 
 //-----------------------------------------------------------------------------
 // Helper macro to instantiate a transform node with a custom transformation matrix
 // TODO: Make CVsMayaMPxTransformationMatrix and create the MCreatorFunction for the user
 //-----------------------------------------------------------------------------
+#if MAYA_API_VERSION >= 200900
+
+#define INSTALL_MAYA_MPXTRANSFORM_WITHMATRIX( _class, _name, _typeId, _initializeFunction, _xformCreatorFunction, _xformTypeId, _desc )	\
+	const MString CVsMayaMPxTransformDecorator< _class >::s_name( #_name );																\
+	const MString CVsMayaMPxTransformDecorator< _class >::s_desc( _desc );																\
+	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_mTypeId( _typeId );															\
+	const MInitializeFunction CVsMayaMPxTransformDecorator< _class >::s_mInitializeFunction( _initializeFunction );						\
+	const MCreateXformMatrixFunction CVsMayaMPxTransformDecorator< _class >::s_xformMCreatorFunction( _xformCreatorFunction );					\
+	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_xformMTypeId( _xformTypeId );												\
+	static CVsMayaMPxFactory< CVsMayaMPxTransformDecorator< _class > > s_##_name##_Factory
+
+#else // #if MAYA_API_VERSION >= 200900
+
 #define INSTALL_MAYA_MPXTRANSFORM_WITHMATRIX( _class, _name, _typeId, _initializeFunction, _xformCreatorFunction, _xformTypeId, _desc )	\
 	const MString CVsMayaMPxTransformDecorator< _class >::s_name( #_name );																\
 	const MString CVsMayaMPxTransformDecorator< _class >::s_desc( _desc );																\
@@ -906,6 +1070,8 @@ private:
 	const MCreatorFunction CVsMayaMPxTransformDecorator< _class >::s_xformMCreatorFunction( _xformCreatorFunction );					\
 	const MTypeId CVsMayaMPxTransformDecorator< _class >::s_xformMTypeId( _xformTypeId );												\
 	static CVsMayaMPxFactory< CVsMayaMPxTransformDecorator< _class > > s_##_name##_Factory
+
+#endif // #if MAYA_API_VERSION >= 200900
 
 
 //-----------------------------------------------------------------------------

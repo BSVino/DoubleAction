@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,9 +12,8 @@
 #endif
 
 #include "mathlib/vector.h"
-#include "avi/iavi.h"
-
-
+#include "video/ivideoservices.h"
+#include "const.h"
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
@@ -34,31 +33,30 @@ public:
 	int GetWidth() { return m_width; }
 	int GetHeight() { return m_height; }
 	int GetNumFrames() { return m_numFrames; }
-	IMaterial *GetMaterial() { return m_material; } // hack - should keep this internal and draw internally.
+	IMaterial *GetMaterial( RenderMode_t nRenderMode ) { return m_material[nRenderMode]; }
+	IMaterial *GetMaterial( RenderMode_t nRenderMode, int nFrame );
+	void SetFrame( RenderMode_t nRenderMode, int nFrame );
 	bool Init( const char *name );
 	void Shutdown( void );
 	void UnloadMaterial();
 	void SetColor( float r, float g, float b );
-	void SetAdditive( bool enable );
-	void SetFrame( float frame );
-	void SetRenderMode( int renderMode );
 	int GetOrientation( void );
 	void GetHUDSpriteColor( float* color );
 	float GetUp() { return up; }
 	float GetDown() { return down; }
 	float GetLeft() { return left; }
 	float GetRight() { return right; }
-	void DrawFrame( int frame, int x, int y, const wrect_t *prcSubRect );
-	void DrawFrameOfSize( int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect);
-	bool IsAVI();
+	void DrawFrame( RenderMode_t nRenderMode, int frame, int x, int y, const wrect_t *prcSubRect );
+	void DrawFrameOfSize( RenderMode_t nRenderMode, int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect);
+	bool		IsVideo();
 	void GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, float *pMaxV );
 
 private:
-	AVIMaterial_t m_hAVIMaterial;
+	IVideoMaterial *m_VideoMaterial;
 	int m_width;
 	int m_height;
 	int m_numFrames;
-	IMaterial *m_material;
+	IMaterial *m_material[kRenderModeCount];
 	int m_orientation;
 	float m_hudSpriteColor[3];
 	float up, down, left, right;

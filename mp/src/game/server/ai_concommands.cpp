@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Console commands for debugging and manipulating NPCs.
 //
@@ -610,6 +610,9 @@ CON_COMMAND( npc_freeze_unselected, "Freeze all NPCs not selected" )
 //------------------------------------------------------------------------------
 CON_COMMAND(npc_thinknow, "Trigger NPC to think")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBaseEntity *pEntity = FindPickerEntity( UTIL_GetCommandClient() );
 	if ( pEntity )
 	{
@@ -812,6 +815,9 @@ static ConCommand npc_steering_all("npc_steering_all", CC_NPC_ViewSteeringRegula
 
 CON_COMMAND( npc_heal, "Heals the target back to full health" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBaseEntity *pEntity = FindPickerEntity( UTIL_GetCommandClient() );
 	if ( pEntity )
 	{
@@ -825,6 +831,9 @@ CON_COMMAND( npc_heal, "Heals the target back to full health" )
 
 CON_COMMAND( npc_ammo_deplete, "Subtracts half of the target's ammo" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBaseEntity *pEntity = FindPickerEntity( UTIL_GetCommandClient() );
 	if ( pEntity )
 	{
@@ -838,6 +847,9 @@ CON_COMMAND( npc_ammo_deplete, "Subtracts half of the target's ammo" )
 
 CON_COMMAND( ai_clear_bad_links, "Clears bits set on nav links indicating link is unusable " )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CAI_Node *pNode;
 	
 	for ( int i = 0; i < g_pBigAINet->NumNodes(); i++ )
@@ -852,6 +864,9 @@ CON_COMMAND( ai_clear_bad_links, "Clears bits set on nav links indicating link i
 
 CON_COMMAND( ai_test_los, "Test AI LOS from the player's POV" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	trace_t tr;
 	// Use the custom LOS trace filter
 	CTraceFilterLOS traceFilter( UTIL_GetLocalPlayer(), COLLISION_GROUP_NONE );

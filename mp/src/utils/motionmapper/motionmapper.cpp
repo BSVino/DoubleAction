@@ -1,3 +1,4 @@
+//========= Copyright Valve Corporation, All rights reserved. ============//
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -14,7 +15,7 @@
 #include "utldict.h"
 #include <windows.h>
 #include "UtlBuffer.h"
-#include "UtlSymbol.h"
+#include "utlsymbol.h"
 
 bool g_quiet = false;
 bool g_verbose = false;
@@ -41,7 +42,7 @@ void vprint( int depth, const char *fmt, ... )
 	char string[ 8192 ];
 	va_list va;
 	va_start( va, fmt );
-	_vsnprintf( string, sizeof( string ) - 1, fmt, va );
+	V_vsprintf_safe( string, fmt, va );
 	va_end( va );
 
 	FILE *fp = NULL;
@@ -61,7 +62,7 @@ void vprint( int depth, const char *fmt, ... )
 		}
 	}
 
-	::printf( string );
+	::printf( "%s", string );
 	OutputDebugString( string );
 
 	if ( fp )
@@ -307,7 +308,7 @@ int Grab_Nodes( s_node_t *pnodes )
 			}
 			*/
 			// copy name to struct array
-			strcpyn( pnodes[index].name, name );
+			V_strcpy_safe( pnodes[index].name, name );
 			// set parent into struct array
 			pnodes[index].parent = parent;
 			// increment numbones
@@ -733,7 +734,7 @@ int lookup_texture( char *texturename, int maxlen )
 		MdlError("Too many materials used, max %d\n", ( int )MAXSTUDIOSKINS );
 
 //	vprint( 0,  "texture %d = %s\n", i, texturename );
-	strcpyn( g_texture[i].name, texturename );
+	V_strcpy_safe( g_texture[i].name, texturename );
 
 	g_texture[i].material = -1;
 	/*
@@ -1261,7 +1262,7 @@ void Grab_Triangles( s_source_t *psource )
 		}
 
 		// strip off trailing smag
-		strncpy( texturename, g_szLine, 63 );
+		V_strcpy_safe( texturename, g_szLine );
 		for (i = strlen( texturename ) - 1; i >= 0 && ! isgraph( texturename[i] ); i--)
 		{
 		}
@@ -1471,7 +1472,7 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 	Q_ExtractFileExtension( pTempName, xext, sizeof( xext ) );
 	if (xext[0] == '\0')
 	{
-		strcpyn( xext, ext );
+		V_strcpy_safe( xext, ext );
 	}
 	else
 	{
@@ -1489,7 +1490,7 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 
 	// allocate space and whatnot
 	g_source[g_numsources] = (s_source_t *)kalloc( 1, sizeof( s_source_t ) );
-	strcpyn( g_source[g_numsources]->filename, g_szFilename );
+	V_strcpy_safe( g_source[g_numsources]->filename, g_szFilename );
 
 	// legacy stuff
 	if (isActiveModel)
@@ -1501,7 +1502,7 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 	if ( ( !result && xext[0] == '\0' ) || stricmp( xext, "smd" ) == 0)
 	{
 		Q_snprintf( g_szFilename, sizeof(g_szFilename), "%s%s.smd", cddir[numdirs], pTempName );
-		strcpyn( g_source[g_numsources]->filename, g_szFilename );
+		V_strcpy_safe( g_source[g_numsources]->filename, g_szFilename );
  
 		// Import part, load smd file
 		result = Load_SMD( g_source[g_numsources] );
@@ -1511,7 +1512,7 @@ s_source_t *Load_Source( char const *name, const char *ext, bool reverse, bool i
 	if ( ( !result && xext[0] == '\0' ) || stricmp( xext, "dmx" ) == 0)
 	{
 		Q_snprintf( g_szFilename, sizeof(g_szFilename), "%s%s.dmx", cddir[numdirs], pTempName );
-		strcpyn( g_source[g_numsources]->filename, g_szFilename );
+		V_strcpy_safe( g_source[g_numsources]->filename, g_szFilename );
 
 		// Import part, load smd file
 		result = Load_DMX( g_source[g_numsources] );
@@ -2562,7 +2563,7 @@ s_source_t *MotionMap( s_source_t *pSource, s_source_t *pTarget, s_template_t *p
 	}
 	else
 	{
-		printf("Error: Can't find node: %s\n" , rootScalePath);
+		printf("Error: Can't find node\n");
 		exit(0);
 	}
 	float rootScaleLengthSrc = pSource->rawanim[0][rootScaleIndex].pos[BONEDIR];

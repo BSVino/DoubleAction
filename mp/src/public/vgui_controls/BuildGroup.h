@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -49,7 +49,7 @@ public:
 	virtual Panel *GetCurrentPanel();
 
 	// Load the control settings from file
-	virtual void LoadControlSettings(const char *controlResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL);
+	virtual void LoadControlSettings(const char *controlResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL, KeyValues *pConditions = NULL);
 
 	// Reload the control settings from file
 	void ReloadControlSettings();
@@ -122,6 +122,9 @@ public:
 
 	// dialog variables
 	KeyValues *GetDialogVariables();
+
+	// conditional keys for selectively reading keyvalues
+	void ProcessConditionalKeys( KeyValues *pDat, KeyValues *pConditions );
 
 protected:
 	virtual bool CursorMoved(int x, int y, Panel *panel);

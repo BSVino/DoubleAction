@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -91,7 +91,7 @@ void CSoundscapeSystem::AddSoundscapeFile( const char *filename )
 	pKeyValuesData->deleteThis();
 }
 
-CON_COMMAND( sv_soundscape_printdebuginfo, "print soundscapes" )
+CON_COMMAND_F( sv_soundscape_printdebuginfo, "print soundscapes", FCVAR_DEVELOPMENTONLY )
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
 		return;
@@ -116,7 +116,7 @@ void CSoundscapeSystem::PrintDebugInfo()
 		CEnvSoundscape *currentSoundscape = m_soundscapeEntities[entityIndex];
 		Msg("- %d: %s x:%.4f y:%.4f z:%.4f\n", 
 			entityIndex, 
-			currentSoundscape->GetSoundscapeName(), 
+			STRING(currentSoundscape->GetSoundscapeName()), 
 			currentSoundscape->GetAbsOrigin().x,
 			currentSoundscape->GetAbsOrigin().y,
 			currentSoundscape->GetAbsOrigin().z
@@ -166,7 +166,7 @@ bool CSoundscapeSystem::Init()
 		Error( "Unable to load manifest file '%s'\n", SOUNDSCAPE_MANIFEST_FILE );
 	}
 	manifest->deleteThis();
-	m_activeIndex = -1;
+	m_activeIndex = 0;
 
 	return true;
 }
@@ -181,7 +181,7 @@ void CSoundscapeSystem::Shutdown()
 {
 	FlushSoundscapes();
 	m_soundscapeEntities.RemoveAll();
-	m_activeIndex = -1;
+	m_activeIndex = 0;
 
 	if ( IsX360() )
 	{
@@ -201,6 +201,66 @@ void CSoundscapeSystem::LevelInitPostEntity()
 	{
 		m_soundscapeSounds.Purge();
 	}
+	CUtlVector<bbox_t> clusterbounds;
+	int clusterCount = engine->GetClusterCount();
+	clusterbounds.SetCount( clusterCount );
+	engine->GetAllClusterBounds( clusterbounds.Base(), clusterCount );
+	m_soundscapesInCluster.SetCount(clusterCount);
+	for ( int i = 0; i < clusterCount; i++ )
+	{
+		m_soundscapesInCluster[i].soundscapeCount = 0;
+		m_soundscapesInCluster[i].firstSoundscape = 0;
+	}
+	unsigned char myPVS[16 * 1024];
+	CUtlVector<short> clusterIndexList;
+	CUtlVector<short> soundscapeIndexList;
+
+	// find the clusters visible from each soundscape
+	// add this soundscape to the list of soundscapes for that cluster, clip cluster bounds to radius
+	for ( int i = 0; i < m_soundscapeEntities.Count(); i++ )
+	{
+		Vector position = m_soundscapeEntities[i]->GetAbsOrigin();
+		float radius = m_soundscapeEntities[i]->m_flRadius;
+		float radiusSq = radius * radius;
+		engine->GetPVSForCluster( engine->GetClusterForOrigin( position ), sizeof( myPVS ), myPVS );
+		for ( int j = 0; j < clusterCount; j++ )
+		{
+			if ( myPVS[ j >> 3 ] & (1<<(j&7)) )
+			{
+				float distSq = CalcSqrDistanceToAABB( clusterbounds[j].mins, clusterbounds[j].maxs, position );
+				if ( distSq < radiusSq || radius < 0 )
+				{
+					m_soundscapesInCluster[j].soundscapeCount++;
+					clusterIndexList.AddToTail(j);
+					// UNDONE: Technically you just need a soundscape index and a count for this list.
+					soundscapeIndexList.AddToTail(i);
+				}
+			}
+		}
+	}
+
+	// basically this part is like a radix sort
+	// this is how many entries we need in the soundscape index list
+	m_soundscapeIndexList.SetCount(soundscapeIndexList.Count());
+
+	// now compute the starting index of each cluster
+	int firstSoundscape = 0;
+	for ( int i = 0; i < clusterCount; i++ )
+	{
+		m_soundscapesInCluster[i].firstSoundscape = firstSoundscape;
+		firstSoundscape += m_soundscapesInCluster[i].soundscapeCount;
+		m_soundscapesInCluster[i].soundscapeCount = 0;
+	}
+	// now add each soundscape index to the appropriate cluster's list
+	// The resulting list is precomputing all soundscapes that need to be checked for a player
+	// in each cluster.  This is used to accelerate the per-frame operations
+	for ( int i = 0; i < soundscapeIndexList.Count(); i++ )
+	{
+		int cluster = clusterIndexList[i];
+		int outIndex = m_soundscapesInCluster[cluster].soundscapeCount + m_soundscapesInCluster[cluster].firstSoundscape;
+		m_soundscapesInCluster[cluster].soundscapeCount++;
+		m_soundscapeIndexList[outIndex] = soundscapeIndexList[i];
+	}
 }
 
 int	CSoundscapeSystem::GetSoundscapeIndex( const char *pName )
@@ -219,13 +279,15 @@ void CSoundscapeSystem::AddSoundscapeEntity( CEnvSoundscape *pSoundscape )
 {
 	if ( m_soundscapeEntities.Find( pSoundscape ) == -1 )
 	{
-		m_soundscapeEntities.AddToTail( pSoundscape );
+		int index = m_soundscapeEntities.AddToTail( pSoundscape );
+		pSoundscape->m_soundscapeEntityId = index + 1;
 	}
 }
 
 void CSoundscapeSystem::RemoveSoundscapeEntity( CEnvSoundscape *pSoundscape )
 {
 	m_soundscapeEntities.FindAndRemove( pSoundscape );
+	pSoundscape->m_soundscapeEntityId = -1;
 }
 
 void CSoundscapeSystem::FrameUpdatePostEntityThink()
@@ -233,19 +295,72 @@ void CSoundscapeSystem::FrameUpdatePostEntityThink()
 	int total = m_soundscapeEntities.Count();
 	if ( total > 0 )
 	{
-		if ( !m_soundscapeEntities.IsValidIndex(m_activeIndex) )
+		int traceCount = 0;
+		int playerCount = 0;
+		// budget tuned for TF.  Do a max of 20 traces.  That's going to happen anyway because a bunch of the maps
+		// use radius -1 for all soundscapes.  So to trace one player you'll often need that many and this code must
+		// always trace one player's soundscapes.
+		// If the map has been optimized, then allow more players to update per frame.
+		int maxPlayers = gpGlobals->maxClients / 2;
+		// maxPlayers has to be at least 1
+		maxPlayers = MAX( 1, maxPlayers );
+		int maxTraces = 20;
+		if ( soundscape_debug.GetBool() )
 		{
-			m_activeIndex = 0;
+			maxTraces = 9999;
+			maxPlayers = MAX_PLAYERS;
 		}
 
-		// update 2 soundscape entities each tick. (when debugging update 
-		// them all)
-		int count = soundscape_debug.GetBool() ? total : min(2, total);
-		for ( int i = 0; i < count; i++ )
+		// load balance across server ticks a bit by limiting the numbers of players (get cluster for origin)
+		// and traces processed in a single tick.  In single player this will update the player every tick
+		// because it always does at least one player's full load of work
+		for ( int i = 0; i < gpGlobals->maxClients && traceCount <= maxTraces && playerCount <= maxPlayers; i++ )
 		{
-			m_activeIndex++;
-			m_activeIndex = m_activeIndex % total;
-			m_soundscapeEntities[m_activeIndex]->Update();
+			m_activeIndex = (m_activeIndex+1) % gpGlobals->maxClients;
+			CBasePlayer *pPlayer = UTIL_PlayerByIndex( m_activeIndex + 1 );
+			if ( pPlayer && pPlayer->IsNetClient() )
+			{
+				// check to see if this is the sound entity that is 
+				// currently affecting this player
+				audioparams_t &audio = pPlayer->GetAudioParams();
+
+				// if we got this far, we're looking at an entity that is contending
+				// for current player sound. the closest entity to player wins.
+				CEnvSoundscape *pCurrent = (CEnvSoundscape *)( audio.ent.Get() );
+				if ( pCurrent )
+				{
+					int nEntIndex = pCurrent->m_soundscapeEntityId - 1;
+					NOTE_UNUSED( nEntIndex );
+					Assert( m_soundscapeEntities[nEntIndex] == pCurrent );
+				}
+				ss_update_t update;
+				update.pPlayer = pPlayer;
+				update.pCurrentSoundscape = pCurrent;
+				update.playerPosition = pPlayer->EarPosition();
+				update.bInRange = false;
+				update.currentDistance = 0;
+				update.traceCount = 0;
+				if ( pCurrent )
+				{
+					pCurrent->UpdateForPlayer(update);
+				}
+
+				int clusterIndex = engine->GetClusterForOrigin( update.playerPosition );
+			
+				if ( clusterIndex >= 0 && clusterIndex < m_soundscapesInCluster.Count() )
+				{
+					// find all soundscapes that could possibly attach to this player and update them
+					for ( int j = 0; j < m_soundscapesInCluster[clusterIndex].soundscapeCount; j++ )
+					{
+						int ssIndex = m_soundscapeIndexList[m_soundscapesInCluster[clusterIndex].firstSoundscape + j];
+						if ( m_soundscapeEntities[ssIndex] == update.pCurrentSoundscape )
+							continue;
+						m_soundscapeEntities[ssIndex]->UpdateForPlayer( update );
+					}
+				}
+				playerCount++;
+				traceCount += update.traceCount;
+			}
 		}
 	}
 }

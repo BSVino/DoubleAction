@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -780,7 +780,7 @@ void CSentence::CacheSaveToBuffer( CUtlBuffer& buf, int version )
 			CEmphasisSample *sample = &m_EmphasisSamples[i];
 			Assert( sample );
 			buf.PutFloat( sample->time );
-			short scaledValue = clamp( (short)( sample->value * 32767 ), 0, 32767 );
+			short scaledValue = clamp( (short)( sample->value * 32767 ), (short)0, (short)32767 );
 			buf.PutShort( scaledValue );
 		}
 		buf.PutChar( GetVoiceDuck() ? 1 : 0 );

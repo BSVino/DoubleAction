@@ -1,8 +1,9 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================
+
 #include "vgui_controls/KeyBindingHelpDialog.h"
 #include "vgui_controls/ListPanel.h"
 #include "vgui/ISurface.h"
@@ -12,8 +13,12 @@
 #include "vgui/ISystem.h"
 #include "KeyValues.h"
 #include "vgui/Cursor.h"
-#include "tier1/UtlDict.h"
+#include "tier1/utldict.h"
 #include "vgui_controls/KeyBoardEditorDialog.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
+
 
 using namespace vgui;
 

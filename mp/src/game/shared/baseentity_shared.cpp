@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,6 +18,7 @@
 #include "mapentities_shared.h"
 #include "debugoverlay_shared.h"
 #include "coordsize.h"
+#include "vphysics/performance.h"
 
 #ifdef CLIENT_DLL
 	#include "c_te_effect_dispatch.h"
@@ -33,7 +34,7 @@
 	#include "te_hl2mp_shotgun_shot.h"
 #endif
 
-	#include "GameStats.h"
+	#include "gamestats.h"
 
 #endif
 
@@ -60,10 +61,36 @@ ConVar hl2_episodic( "hl2_episodic", "0", FCVAR_REPLICATED );
 
 bool CBaseEntity::m_bAllowPrecache = false;
 
+// Set default max values for entities based on the existing constants from elsewhere
+float k_flMaxEntityPosCoord = MAX_COORD_FLOAT;
+float k_flMaxEntityEulerAngle = 360.0 * 1000.0f; // really should be restricted to +/-180, but some code doesn't adhere to this.  let's just trap NANs, etc
+// Sometimes the resulting computed speeds are legitimately above the original
+// constants; use bumped up versions for the downstream validation logic to
+// account for this.
+float k_flMaxEntitySpeed = k_flMaxVelocity * 2.0f;
+float k_flMaxEntitySpinRate = k_flMaxAngularVelocity * 10.0f;
 
 ConVar	ai_shot_bias_min( "ai_shot_bias_min", "-1.0", FCVAR_REPLICATED );
 ConVar	ai_shot_bias_max( "ai_shot_bias_max", "1.0", FCVAR_REPLICATED );
 ConVar	ai_debug_shoot_positions( "ai_debug_shoot_positions", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
+
+// Utility func to throttle rate at which the "reasonable position" spew goes out
+static double s_LastEntityReasonableEmitTime;
+bool CheckEmitReasonablePhysicsSpew()
+{
+
+	// Reported recently?
+	double now = Plat_FloatTime();
+	if ( now >= s_LastEntityReasonableEmitTime && now < s_LastEntityReasonableEmitTime + 5.0 )
+	{
+		// Already reported recently
+		return false;
+	}
+
+	// Not reported recently.  Report it now
+	s_LastEntityReasonableEmitTime = now;
+	return true;
+}
 
 
 //-----------------------------------------------------------------------------
@@ -99,7 +126,7 @@ void CBaseEntity::UnsetPlayerSimulated( void )
 // position of eyes
 Vector CBaseEntity::EyePosition( void )
 { 
-	return GetAbsOrigin() + m_vecViewOffset; 
+	return GetAbsOrigin() + GetViewOffset(); 
 }
 
 const QAngle &CBaseEntity::EyeAngles( void )
@@ -115,7 +142,17 @@ const QAngle &CBaseEntity::LocalEyeAngles( void )
 // position of ears
 Vector CBaseEntity::EarPosition( void )
 { 
-	return EyePosition( ); 
+	return EyePosition(); 
+}
+
+void CBaseEntity::SetViewOffset( const Vector& v ) 
+{ 
+	m_vecViewOffset = v; 
+}
+
+const Vector& CBaseEntity::GetViewOffset() const 
+{ 
+	return m_vecViewOffset; 
 }
 
 
@@ -176,18 +213,6 @@ void CBaseEntity::SetEffects( int nEffects )
 
 		m_fEffects = nEffects;
 
-#if !defined( CLIENT_DLL )
-		if ( nEffects & ( EF_NOINTERP ) )
-		{
-			gEntList.AddPostClientMessageEntity( this );
-		}
-#endif
-
-		if ( ( nEffects & EF_NOINTERP ) && IsPlayer() )
-		{
-			((CBasePlayer *)this)->IncrementEFNoInterpParity();
-		}
-
 #ifndef CLIENT_DLL
 		DispatchUpdateTransmitState();
 #else
@@ -212,13 +237,6 @@ void CBaseEntity::AddEffects( int nEffects )
 #endif // !CLIENT_DLL
 
 	m_fEffects |= nEffects; 
-#if !defined( CLIENT_DLL )
-	if ( nEffects & ( EF_NOINTERP ) )
-	{
-		gEntList.AddPostClientMessageEntity( this );
-	}
-#endif
-
 
 	if ( nEffects & EF_NODRAW)
 	{
@@ -639,7 +657,7 @@ void CBaseEntity::DecalTrace( trace_t *pTrace, char const *decalName )
 //-----------------------------------------------------------------------------
 // Purpose: Base handling for impacts against entities
 //-----------------------------------------------------------------------------
-void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
+void CBaseEntity::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )
 {
 	VPROF( "CBaseEntity::ImpactTrace" );
 	Assert( pTrace->m_pEnt );
@@ -731,7 +749,11 @@ BASEPTR	CBaseEntity::ThinkSet( BASEPTR func, float thinkTime, const char *szCont
 {
 #if !defined( CLIENT_DLL )
 #ifdef _DEBUG
+#ifdef GNUC
+	COMPILE_TIME_ASSERT( sizeof(func) == 8 );
+#else
 	COMPILE_TIME_ASSERT( sizeof(func) == 4 );
+#endif
 #endif
 #endif
 
@@ -1074,6 +1096,29 @@ int	CBaseEntity::GetNextThinkTick( int nContextIndex ) const
 }
 
 
+int CheckEntityVelocity( Vector &v )
+{
+	float r = k_flMaxEntitySpeed;
+	if (
+		v.x > -r && v.x < r &&
+		v.y > -r && v.y < r &&
+		v.z > -r && v.z < r)
+	{
+		// The usual case.  It's totally reasonable
+		return 1;
+	}
+	float speed = v.Length();
+	if ( speed < k_flMaxEntitySpeed * 100.0f )
+	{
+		// Sort of suspicious.  Clamp it
+		v *= k_flMaxEntitySpeed / speed;
+		return 0;
+	}
+
+	// A terrible, horrible, no good, very bad velocity.
+	return -1;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: My physics object has been updated, react or extract data
 //-----------------------------------------------------------------------------
@@ -1093,22 +1138,28 @@ void CBaseEntity::VPhysicsUpdate( IPhysicsObject *pPhysics )
 
 			pPhysics->GetPosition( &origin, &angles );
 
-			if ( !IsFinite( angles.x ) || !IsFinite( angles.y ) || !IsFinite( angles.x ) )
+			if ( !IsEntityQAngleReasonable( angles ) )
 			{
-				Msg( "Infinite angles from vphysics! (entity %s)\n", GetDebugName() );
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Ignoring bogus angles (%f,%f,%f) from vphysics! (entity %s)\n", angles.x, angles.y, angles.z, GetDebugName() );
+				}
 				angles = vec3_angle;
 			}
 #ifndef CLIENT_DLL 
 			Vector prevOrigin = GetAbsOrigin();
 #endif
 
-			if ( origin.IsValid() )
+			if ( IsEntityPositionReasonable( origin ) )
 			{
 				SetAbsOrigin( origin );
 			}
 			else
 			{
-				Msg( "Infinite origin from vphysics! (entity %s)\n", GetDebugName() );
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Ignoring unreasonable position (%f,%f,%f) from vphysics! (entity %s)\n", origin.x, origin.y, origin.z, GetDebugName() );
+				}
 			}
 
 			for ( int i = 0; i < 3; ++i )
@@ -1756,7 +1807,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 		// Now hit all triggers along the ray that respond to shots...
 		// Clip the ray to the first collided solid returned from traceline
-		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, info.m_iDamage, nDamageType );
+		CTakeDamageInfo triggerInfo( pAttacker, pAttacker, info.m_flDamage, nDamageType );
 		CalculateBulletDamageForce( &triggerInfo, info.m_iAmmoType, vecDir, tr.endpos );
 		triggerInfo.ScaleDamageForce( info.m_flDamageForceScale );
 		triggerInfo.SetAmmoType( info.m_iAmmoType );
@@ -1791,7 +1842,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				bHitWater = HandleShotImpactingWater( info, vecEnd, &traceFilter, &vecTracerDest );
 			}
 
-			float flActualDamage = info.m_iDamage;
+			float flActualDamage = info.m_flDamage;
 
 			// If we hit a player, and we have player damage specified, use that instead
 			// Adrian: Make sure to use the currect value if we hit a vehicle the player is currently driving.
@@ -1826,6 +1877,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			{
 				// Damage specified by function parameter
 				CTakeDamageInfo dmgInfo( this, pAttacker, flActualDamage, nActualDamageType );
+				ModifyFireBulletsDamage( &dmgInfo );
 				CalculateBulletDamageForce( &dmgInfo, info.m_iAmmoType, vecDir, tr.endpos );
 				dmgInfo.ScaleDamageForce( info.m_flDamageForceScale );
 				dmgInfo.SetAmmoType( info.m_iAmmoType );
@@ -2038,8 +2090,7 @@ ITraceFilter* CBaseEntity::GetBeamTraceFilter( void )
 	return NULL;
 }
 
-
-void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 #ifdef GAME_DLL
 	// Make sure our damage filter allows the damage.
@@ -2049,16 +2100,25 @@ void CBaseEntity::DispatchTraceAttack( const CTakeDamageInfo &info, const Vector
 	}
 #endif
 
-	TraceAttack( info, vecDir, ptr );
+	TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
-void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBaseEntity::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	Vector vecOrigin = ptr->endpos - vecDir * 4;
 
 	if ( m_takedamage )
 	{
-		AddMultiDamage( info, this );
+#ifdef GAME_DLL
+		if ( pAccumulator )
+		{
+			pAccumulator->AccumulateMultiDamage( info, this );
+		}
+		else
+#endif // GAME_DLL
+		{
+			AddMultiDamage( info, this );
+		}
 
 		int blood = BloodColor();
 		
@@ -2258,6 +2318,15 @@ const char* CBaseEntity::GetTracerType()
 	return NULL;
 }
 
+void CBaseEntity::ModifyEmitSoundParams( EmitSound_t &params )
+{
+#ifdef CLIENT_DLL
+	if ( GameRules() )
+	{
+		params.m_pSoundName = GameRules()->TranslateEffectForVisionFilter( "sounds", params.m_pSoundName );
+	}
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // These methods encapsulate MOVETYPE_FOLLOW, which became obsolete
@@ -2290,13 +2359,30 @@ void CBaseEntity::SetEffectEntity( CBaseEntity *pEffectEnt )
 	}
 }
 
-void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )
+void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &inVecImpulse )
 {
 	// NOTE: Don't have to use GetVelocity here because local values
 	// are always guaranteed to be correct, unlike abs values which may 
 	// require recomputation
-	if (vecImpulse != vec3_origin )
+	if ( inVecImpulse != vec3_origin )
 	{
+		Vector vecImpulse = inVecImpulse;
+
+		// Safety check against receive a huge impulse, which can explode physics
+		switch ( CheckEntityVelocity( vecImpulse ) )
+		{
+			case -1:
+				Warning( "Discarding ApplyLocalVelocityImpulse(%f,%f,%f) on %s\n", vecImpulse.x, vecImpulse.y, vecImpulse.z, GetDebugName() );
+				Assert( false );
+				return;
+			case 0:
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Clamping ApplyLocalVelocityImpulse(%f,%f,%f) on %s\n", inVecImpulse.x, inVecImpulse.y, inVecImpulse.z, GetDebugName() );
+				}
+				break;
+		}
+
 		if ( GetMoveType() == MOVETYPE_VPHYSICS )
 		{
 			Vector worldVel;
@@ -2311,10 +2397,27 @@ void CBaseEntity::ApplyLocalVelocityImpulse( const Vector &vecImpulse )
 	}
 }
 
-void CBaseEntity::ApplyAbsVelocityImpulse( const Vector &vecImpulse )
+void CBaseEntity::ApplyAbsVelocityImpulse( const Vector &inVecImpulse )
 {
-	if (vecImpulse != vec3_origin )
+	if ( inVecImpulse != vec3_origin )
 	{
+		Vector vecImpulse = inVecImpulse;
+
+		// Safety check against receive a huge impulse, which can explode physics
+		switch ( CheckEntityVelocity( vecImpulse ) )
+		{
+			case -1:
+				Warning( "Discarding ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", vecImpulse.x, vecImpulse.y, vecImpulse.z, GetDebugName() );
+				Assert( false );
+				return;
+			case 0:
+				if ( CheckEmitReasonablePhysicsSpew() )
+				{
+					Warning( "Clamping ApplyAbsVelocityImpulse(%f,%f,%f) on %s\n", inVecImpulse.x, inVecImpulse.y, inVecImpulse.z, GetDebugName() );
+				}
+				break;
+		}
+
 		if ( GetMoveType() == MOVETYPE_VPHYSICS )
 		{
 			VPhysicsGetObject()->AddVelocity( &vecImpulse, NULL );
@@ -2333,6 +2436,14 @@ void CBaseEntity::ApplyLocalAngularVelocityImpulse( const AngularImpulse &angImp
 {
 	if (angImpulse != vec3_origin )
 	{
+		// Safety check against receive a huge impulse, which can explode physics
+		if ( !IsEntityAngularVelocityReasonable( angImpulse ) )
+		{
+			Warning( "Bad ApplyLocalAngularVelocityImpulse(%f,%f,%f) on %s\n", angImpulse.x, angImpulse.y, angImpulse.z, GetDebugName() );
+			Assert( false );
+			return;
+		}
+
 		if ( GetMoveType() == MOVETYPE_VPHYSICS )
 		{
 			VPhysicsGetObject()->AddVelocity( NULL, &angImpulse );

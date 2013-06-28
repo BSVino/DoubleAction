@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -29,7 +29,7 @@ using namespace vgui;
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
 
-#include "ConVar.h"
+#include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -127,7 +127,7 @@ void CHudBonusProgress::OnThink()
 	}
 
 	// Never below zero
-	newBonusProgress = max( local->GetBonusProgress(), 0 );
+	newBonusProgress = MAX( local->GetBonusProgress(), 0 );
 	iBonusChallenge = local->GetBonusChallenge();
 
 	// Only update the fade if we've changed bonusProgress

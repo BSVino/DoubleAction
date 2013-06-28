@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -7,10 +7,6 @@
 
 #ifndef MINMAX_H
 #define MINMAX_H
-
-#if defined( _WIN32 )
-#pragma once
-#endif
 
 #ifndef min
 #define min(a,b)  (((a) < (b)) ? (a) : (b))

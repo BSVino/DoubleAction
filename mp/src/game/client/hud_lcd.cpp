@@ -1,14 +1,21 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: LCD support
 //
 //=====================================================================================//
 
-#if !defined( _X360 )
+#if defined( WIN32 ) && !defined( _X360 )
 #include <windows.h>
 #endif
 
 #include "cbase.h"
+
+#ifdef POSIX
+#define HICON int
+const int DT_LEFT = 1;
+const int DT_CENTER = 2;
+const int DT_RIGHT = 3;
+#endif
 
 #include "hud_lcd.h"
 
@@ -110,7 +117,11 @@ void CLCDItemAggregate::WipeChildrenOnly( IG15 *lcd )
 
 void CLCDItemIcon::Create( IG15 *lcd )
 {	
+#ifdef WIN32
 	m_Handle = lcd->AddIcon( (HICON)m_icon, w, h );
+#else
+	m_Handle = lcd->AddIcon( (void *)m_icon, w, h );
+#endif
 	lcd->SetOrigin( m_Handle, x, y );
 	lcd->SetVisible( m_Handle, false );
 }
@@ -762,8 +773,11 @@ void CLCD::ParseIconMappings( KeyValues *kv )
 		char const *name = icon->GetName();
 		char fullpath[ 512 ];
 		filesystem->RelativePathToFullPath( icon->GetString(), "GAME", fullpath, sizeof( fullpath ) );
+#ifdef WIN32
 		hIcon = (HICON)::LoadImageA( NULL, fullpath, IMAGE_ICON, 32, 32, LR_LOADFROMFILE );
-
+#else
+		hIcon = 0;
+#endif
 		info.m_handle = (void *)hIcon;
 		m_Icons.Insert( name, info );
 	}

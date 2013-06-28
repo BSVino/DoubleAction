@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,13 +17,12 @@
 #include "clientmode.h"
 #include "usercmd.h"
 #include "engine/IEngineSound.h"
-#include "crtdbg.h"
 #include "engine/IEngineTrace.h"
 #include "engine/ivmodelinfo.h"
 #include "tier0/vprof.h"
 #include "fx_line.h"
 #include "interface.h"
-#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/imaterialsystem.h"
 #include "soundinfo.h"
 #include "mathlib/vmatrix.h"
 #include "isaverestore.h"
@@ -40,6 +39,7 @@
 #include "decals.h"
 #include "cdll_bounded_cvars.h"
 #include "inetchannelinfo.h"
+#include "proto_version.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -54,8 +54,6 @@
 static bool g_bWasSkipping = (bool)-1;
 static bool g_bWasThreaded =(bool)-1;
 static int  g_nThreadModeTicks = 0;
-static ConVar cl_interp_threadmodeticks( "cl_interp_threadmodeticks", "0", 0, "Additional interpolation ticks to use when interpolating with threaded engine mode set." );
-
 
 void cc_cl_interp_all_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
 {
@@ -304,9 +302,6 @@ int CRecordingList::Count()
 // Should these be somewhere else?
 #define PITCH 0
 
-// HACK HACK:  3/28/02 ywb Had to proxy around this or interpolation is borked in multiplayer, not sure what
-//  the issue is, just a global optimizer bug I presume
-#pragma optimize( "g", off )
 //-----------------------------------------------------------------------------
 // Purpose: Decodes animtime and notes when it changes
 // Input  : *pStruct - ( C_BaseEntity * ) used to flag animtime is changine
@@ -392,8 +387,6 @@ void RecvProxy_ToolRecording( const CRecvProxyData *pData, void *pStruct, void *
 	pEnt->SetToolRecording( pData->m_Value.m_Int != 0 );
 }
 
-#pragma optimize( "g", on )
-
 // Expose it to the engine.
 IMPLEMENT_CLIENTCLASS(C_BaseEntity, DT_BaseEntity, CBaseEntity);
 
@@ -439,6 +432,7 @@ END_RECV_TABLE()
 BEGIN_RECV_TABLE_NOBASE(C_BaseEntity, DT_BaseEntity)
 	RecvPropDataTable( "AnimTimeMustBeFirst", 0, 0, &REFERENCE_RECV_TABLE(DT_AnimTimeMustBeFirst) ),
 	RecvPropInt( RECVINFO(m_flSimulationTime), 0, RecvProxy_SimulationTime ),
+	RecvPropInt( RECVINFO( m_ubInterpolationFrame ) ),
 
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 #if PREDICTION_ERROR_CHECK_LEVEL > 1 
@@ -446,7 +440,12 @@ BEGIN_RECV_TABLE_NOBASE(C_BaseEntity, DT_BaseEntity)
 #else
 	RecvPropQAngles( RECVINFO_NAME( m_angNetworkAngles, m_angRotation ) ),
 #endif
-	RecvPropInt(RECVINFO(m_nModelIndex) ),
+
+#ifdef DEMO_BACKWARDCOMPATABILITY
+	RecvPropInt( RECVINFO(m_nModelIndex), 0, RecvProxy_IntToModelIndex16_BackCompatible ),
+#else
+	RecvPropInt( RECVINFO(m_nModelIndex) ),
+#endif
 
 	RecvPropInt(RECVINFO(m_fEffects), 0, RecvProxy_EffectFlags ),
 	RecvPropInt(RECVINFO(m_nRenderMode)),
@@ -474,7 +473,13 @@ BEGIN_RECV_TABLE_NOBASE(C_BaseEntity, DT_BaseEntity)
 	RecvPropInt		( RECVINFO( m_bAnimatedEveryTick ), 0, RecvProxy_InterpolationAmountChanged ),
 	RecvPropBool	( RECVINFO( m_bAlternateSorting ) ),
 
+#ifdef TF_CLIENT_DLL
+	RecvPropArray3( RECVINFO_ARRAY(m_nModelIndexOverrides),	RecvPropInt( RECVINFO(m_nModelIndexOverrides[0]) ) ),
+#endif
+
 END_RECV_TABLE()
+
+const float coordTolerance = 2.0f / (float)( 1 << COORD_FRACTIONAL_BITS );
 
 BEGIN_PREDICTION_DATA_NO_BASE( C_BaseEntity )
 
@@ -506,7 +511,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( C_BaseEntity )
 //	DEFINE_PRED_FIELD( m_pMovePeer, FIELD_EHANDLE ),
 //	DEFINE_PRED_FIELD( m_pMovePrevPeer, FIELD_EHANDLE ),
 
-	DEFINE_PRED_FIELD_TOL( m_vecNetworkOrigin, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.002f ),
+	DEFINE_PRED_FIELD_TOL( m_vecNetworkOrigin, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, coordTolerance ),
 	DEFINE_PRED_FIELD( m_angNetworkAngles, FIELD_VECTOR, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_FIELD( m_vecAbsOrigin, FIELD_VECTOR ),
 	DEFINE_FIELD( m_angAbsRotation, FIELD_VECTOR ),
@@ -686,8 +691,8 @@ void GetInterpolatedVarTimeRange( CInterpolatedVar<T> *pVar, float &flMin, float
 		if ( !pVar->GetHistoryValue( i, changetime ) )
 			return;
 
-		flMin = min( flMin, changetime );
-		flMax = max( flMax, changetime );
+		flMin = MIN( flMin, changetime );
+		flMax = MAX( flMax, changetime );
 		i = pVar->GetNext( i );
 	}
 }
@@ -802,10 +807,13 @@ void C_BaseEntity::Interp_SetupMappings( VarMapping_t *map )
 
 void C_BaseEntity::Interp_RestoreToLastNetworked( VarMapping_t *map )
 {
+	VPROF( "C_BaseEntity::Interp_RestoreToLastNetworked" );
+
 	PREDICTION_TRACKVALUECHANGESCOPE_ENTITY( this, "restoretolastnetworked" );
 
 	Vector oldOrigin = GetLocalOrigin();
 	QAngle oldAngles = GetLocalAngles();
+	Vector oldVel = GetLocalVelocity();
 
 	int c = map->m_Entries.Count();
 	for ( int i = 0; i < c; i++ )
@@ -815,7 +823,7 @@ void C_BaseEntity::Interp_RestoreToLastNetworked( VarMapping_t *map )
 		watcher->RestoreToLastNetworked();
 	}
 
-	BaseInterpolatePart2( oldOrigin, oldAngles, 0 );
+	BaseInterpolatePart2( oldOrigin, oldAngles, oldVel, 0 );
 }
 
 void C_BaseEntity::Interp_UpdateInterpolationAmounts( VarMapping_t *map )
@@ -881,10 +889,12 @@ inline int C_BaseEntity::Interp_Interpolate( VarMapping_t *map, float currentTim
 //-----------------------------------------------------------------------------
 C_BaseEntity::C_BaseEntity() : 
 	m_iv_vecOrigin( "C_BaseEntity::m_iv_vecOrigin" ),
-	m_iv_angRotation( "C_BaseEntity::m_iv_angRotation" )
+	m_iv_angRotation( "C_BaseEntity::m_iv_angRotation" ),
+	m_iv_vecVelocity( "C_BaseEntity::m_iv_vecVelocity" )
 {
 	AddVar( &m_vecOrigin, &m_iv_vecOrigin, LATCH_SIMULATION_VAR );
 	AddVar( &m_angRotation, &m_iv_angRotation, LATCH_SIMULATION_VAR );
+	AddVar( &m_vecVelocity, &m_iv_vecVelocity, LATCH_SIMULATION_VAR );
 
 	m_DataChangeEventRef = -1;
 	m_EntClientFlags = 0;
@@ -925,7 +935,9 @@ C_BaseEntity::C_BaseEntity() :
 #if !defined( NO_ENTITY_PREDICTION )
 	m_pPredictionContext = NULL;
 #endif
-	Clear();
+	
+	//NOTE: not virtual! we are in the constructor!
+	C_BaseEntity::Clear();
 	
 	m_InterpolationListEntry = 0xFFFF;
 	m_TeleportListEntry = 0xFFFF;
@@ -936,6 +948,12 @@ C_BaseEntity::C_BaseEntity() :
 	m_ToolHandle = 0;
 	m_nLastRecordedFrame = -1;
 	m_bRecordInTools = true;
+#endif
+
+#ifdef TF_CLIENT_DLL
+	m_bValidatedOwner = false;
+	m_bDeemedInvalid = false;
+	m_bWasDeemedInvalid = false;
 #endif
 
 	ParticleProp()->Init( this );
@@ -1001,6 +1019,11 @@ void C_BaseEntity::Clear( void )
 	m_ShadowDirUseOtherEntity = NULL;
 
 	m_nLastThinkTick = gpGlobals->tickcount;
+
+#if defined(SIXENSE)
+	m_vecEyeOffset.Init();
+	m_EyeAngleOffset.Init();
+#endif
 
 	// Remove prediction context if it exists
 #if !defined( NO_ENTITY_PREDICTION )
@@ -1097,6 +1120,8 @@ bool C_BaseEntity::InitializeAsClientEntity( const char *pszModelName, RenderGro
 //-----------------------------------------------------------------------------
 bool C_BaseEntity::InitializeAsClientEntityByIndex( int iIndex, RenderGroup_t renderGroup )
 {
+	index = -1;
+
 	// Setup model data.
 	SetModelByIndex( iIndex );
 
@@ -1109,8 +1134,6 @@ bool C_BaseEntity::InitializeAsClientEntityByIndex( int iIndex, RenderGroup_t re
 
 	// Add the client entity to the spatial partition. (Collidable)
 	CollisionProp()->CreatePartitionHandle();
-
-	index = -1;
 
 	SpawnClientEntity();
 
@@ -1315,6 +1338,56 @@ void C_BaseEntity::GetVectors(Vector* pForward, Vector* pRight, Vector* pUp) con
 
 void C_BaseEntity::UpdateVisibility()
 {
+#ifdef TF_CLIENT_DLL
+	// TF prevents drawing of any entity attached to players that aren't items in the inventory of the player.
+	// This is to prevent servers creating fake cosmetic items and attaching them to players.
+	if ( !engine->IsPlayingDemo() )
+	{
+		static bool bIsStaging = ( engine->GetAppID() == 810 );
+		if ( !m_bValidatedOwner )
+		{
+			bool bRetry = false;
+
+			// Check it the first time we call update visibility (Source TV doesn't bother doing validation)
+			m_bDeemedInvalid = engine->IsHLTV() ? false : !ValidateEntityAttachedToPlayer( bRetry );
+			m_bValidatedOwner = !bRetry;
+		}
+
+		if ( m_bDeemedInvalid )
+		{
+			if ( bIsStaging )
+			{
+				if ( !m_bWasDeemedInvalid )
+				{
+					m_PreviousRenderMode = GetRenderMode();
+					m_PreviousRenderColor = GetRenderColor();
+					m_bWasDeemedInvalid = true;
+				}
+
+				SetRenderMode( kRenderTransColor );
+				SetRenderColor( 255, 0, 0, 200 );
+
+			}
+			else
+			{
+				RemoveFromLeafSystem();
+				return;
+			}
+		}
+		else if ( m_bWasDeemedInvalid )
+		{
+			if ( bIsStaging )
+			{
+				// We need to fix up the rendering.
+				SetRenderMode( m_PreviousRenderMode );
+				SetRenderColor( m_PreviousRenderColor.r, m_PreviousRenderColor.g, m_PreviousRenderColor.b, m_PreviousRenderColor.a );
+			}
+
+			m_bWasDeemedInvalid = false;
+		}
+	}
+#endif
+
 	if ( ShouldDraw() && !IsDormant() && ( !ToolsEnabled() || IsEnabledInToolView() ) )
 	{
 		// add/update leafsystem
@@ -1629,7 +1702,7 @@ void C_BaseEntity::GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType
 //-----------------------------------------------------------------------------
 const Vector& C_BaseEntity::GetAbsOrigin( void ) const
 {
-	Assert( s_bAbsQueriesValid );
+	//Assert( s_bAbsQueriesValid );
 	const_cast<C_BaseEntity*>(this)->CalcAbsolutePosition();
 	return m_vecAbsOrigin;
 }
@@ -1641,7 +1714,7 @@ const Vector& C_BaseEntity::GetAbsOrigin( void ) const
 //-----------------------------------------------------------------------------
 const QAngle& C_BaseEntity::GetAbsAngles( void ) const
 {
-	Assert( s_bAbsQueriesValid );
+	//Assert( s_bAbsQueriesValid );
 	const_cast<C_BaseEntity*>(this)->CalcAbsolutePosition();
 	return m_angAbsRotation;
 }
@@ -1662,46 +1735,6 @@ void C_BaseEntity::SetNetworkOrigin( const Vector& org )
 void C_BaseEntity::SetNetworkAngles( const QAngle& ang )
 {
 	m_angNetworkAngles = ang;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : const Vector&
-//-----------------------------------------------------------------------------
-const Vector& C_BaseEntity::GetNetworkOrigin() const
-{
-	return m_vecNetworkOrigin;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : const QAngle&
-//-----------------------------------------------------------------------------
-const QAngle& C_BaseEntity::GetNetworkAngles() const
-{
-	return m_angNetworkAngles;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Get current model pointer for this entity
-// Output : const struct model_s
-//-----------------------------------------------------------------------------
-const model_t *C_BaseEntity::GetModel( void ) const
-{
-	return model;
-}
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Get model index for this entity
-// Output : int - model index
-//-----------------------------------------------------------------------------
-int C_BaseEntity::GetModelIndex( void ) const
-{
-	return m_nModelIndex;
 }
 
 //-----------------------------------------------------------------------------
@@ -1775,6 +1808,11 @@ bool C_BaseEntity::UsesPowerOfTwoFrameBufferTexture()
 bool C_BaseEntity::UsesFullFrameBufferTexture()
 {
 	return false;
+}
+
+bool C_BaseEntity::IgnoresZBuffer( void ) const
+{
+	return m_nRenderMode == kRenderGlow || m_nRenderMode == kRenderWorldGlow;
 }
 
 //-----------------------------------------------------------------------------
@@ -1887,19 +1925,34 @@ float *C_BaseEntity::GetRenderClipPlane( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_BaseEntity::DrawBrushModel( bool bSort, bool bShadowDepth )
+int C_BaseEntity::DrawBrushModel( bool bDrawingTranslucency, int nFlags, bool bTwoPass )
 {
 	VPROF_BUDGET( "C_BaseEntity::DrawBrushModel", VPROF_BUDGETGROUP_BRUSHMODEL_RENDERING );
 	// Identity brushes are drawn in view->DrawWorld as an optimization
 	Assert ( modelinfo->GetModelType( model ) == mod_brush );
 
-	if ( bShadowDepth )
+	ERenderDepthMode DepthMode = DEPTH_MODE_NORMAL;
+	if ( ( nFlags & STUDIO_SSAODEPTHTEXTURE ) != 0 )
 	{
-		render->DrawBrushModelShadowDepth( this, (model_t *)model, GetAbsOrigin(), GetAbsAngles(), bSort );
+		DepthMode = DEPTH_MODE_SSA0;
+	}
+	else if ( ( nFlags & STUDIO_SHADOWDEPTHTEXTURE ) != 0 )
+	{
+		DepthMode = DEPTH_MODE_SHADOW;
+	}
+
+	if ( DepthMode != DEPTH_MODE_NORMAL )
+	{
+		render->DrawBrushModelShadowDepth( this, (model_t *)model, GetAbsOrigin(), GetAbsAngles(), DepthMode );
 	}
 	else
 	{
-		render->DrawBrushModel( this, (model_t *)model, GetAbsOrigin(), GetAbsAngles(), bSort );
+		DrawBrushModelMode_t mode = DBM_DRAW_ALL;
+		if ( bTwoPass )
+		{
+			mode = bDrawingTranslucency ? DBM_DRAW_TRANSLUCENT_ONLY : DBM_DRAW_OPAQUE_ONLY;
+		}
+		render->DrawBrushModelEx( this, (model_t *)model, GetAbsOrigin(), GetAbsAngles(), mode );
 	}
 
 	return 1;
@@ -1924,7 +1977,7 @@ int C_BaseEntity::DrawModel( int flags )
 	switch ( modelType )
 	{
 	case mod_brush:
-		drawn = DrawBrushModel( flags & STUDIO_TRANSPARENCY ? true : false, flags & STUDIO_SHADOWDEPTHTEXTURE ? true : false );
+		drawn = DrawBrushModel( flags & STUDIO_TRANSPARENCY ? true : false, flags, ( flags & STUDIO_TWOPASS ) ? true : false );
 		break;
 	case mod_studio:
 		// All studio models must be derived from C_BaseAnimating.  Issue warning.
@@ -2064,6 +2117,8 @@ void C_BaseEntity::MarkMessageReceived()
 //-----------------------------------------------------------------------------
 void C_BaseEntity::PreDataUpdate( DataUpdateType_t updateType )
 {
+	VPROF( "C_BaseEntity::PreDataUpdate" );
+
 	// Register for an OnDataChanged call and call OnPreDataChanged().
 	if ( AddDataChangeEvent( this, updateType, &m_DataChangeEventRef ) )
 	{
@@ -2108,6 +2163,8 @@ void C_BaseEntity::PreDataUpdate( DataUpdateType_t updateType )
 	{
 		ClientLeafSystem()->EnableAlternateSorting( m_hRender, m_bAlternateSorting );
 	}
+
+	m_ubOldInterpolationFrame = m_ubInterpolationFrame;
 }
 
 const Vector& C_BaseEntity::GetOldOrigin()
@@ -2312,6 +2369,10 @@ void C_BaseEntity::HierarchySetParent( C_BaseEntity *pNewParent )
 	}
 
 	InvalidatePhysicsRecursive( POSITION_CHANGED | ANGLES_CHANGED | VELOCITY_CHANGED );
+
+#ifdef TF_CLIENT_DLL
+	m_bValidatedOwner = false;
+#endif
 }
 
 
@@ -2343,6 +2404,11 @@ void C_BaseEntity::SetParent( C_BaseEntity *pParentEntity, int iParentAttachment
 		LinkChild( pParentEntity, this );
 	}
 
+	if ( !IsServerEntity() )
+	{
+		m_hNetworkMoveParent = pParentEntity;
+	}
+	
 	m_iParentAttachment = iParentAttachment;
 	
 	m_vecAbsOrigin.Init( FLT_MAX, FLT_MAX, FLT_MAX );
@@ -2395,6 +2461,33 @@ void C_BaseEntity::UnlinkFromHierarchy()
 //-----------------------------------------------------------------------------
 void C_BaseEntity::ValidateModelIndex( void )
 {
+#ifdef TF_CLIENT_DLL
+	if ( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_DEFAULT] > 0 ) 
+	{
+		if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_HALLOWEEN ) )
+		{
+			if ( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_HALLOWEEN] > 0 )
+			{
+				SetModelByIndex( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_HALLOWEEN] );
+				return;
+			}
+		}
+		
+		if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) )
+		{
+			if ( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_PYRO] > 0 )
+			{
+				SetModelByIndex( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_PYRO] );
+				return;
+			}
+		}
+
+		SetModelByIndex( m_nModelIndexOverrides[MODEL_INDEX_OVERRIDE_DEFAULT] );		
+
+		return;
+	}
+#endif
+
 	SetModelByIndex( m_nModelIndex );
 }
 
@@ -2506,7 +2599,7 @@ void C_BaseEntity::PostDataUpdate( DataUpdateType_t updateType )
 	// Add the entity to the nointerp list.
 	if ( !IsClientCreated() )
 	{
-		if ( Teleported() || IsEffectActive(EF_NOINTERP) )
+		if ( Teleported() || IsNoInterpolationFrame() )
 			AddToTeleportList();
 	}
 
@@ -2685,7 +2778,7 @@ void C_BaseEntity::OnLatchInterpolatedVariables( int flags )
 	}
 }
 
-int CBaseEntity::BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles, int &bNoMoreChanges )
+int CBaseEntity::BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles, Vector &oldVel, int &bNoMoreChanges )
 {
 	// Don't mess with the world!!!
 	bNoMoreChanges = 1;
@@ -2713,6 +2806,7 @@ int CBaseEntity::BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QA
 
 	oldOrigin = m_vecOrigin;
 	oldAngles = m_angRotation;
+	oldVel = m_vecVelocity;
 
 	bNoMoreChanges = Interp_Interpolate( GetVarMapping(), currentTime );
 	if ( cl_interp_all.GetInt() || (m_EntClientFlags & ENTCLIENTFLAG_ALWAYS_INTERPOLATE) )
@@ -2725,7 +2819,7 @@ int CBaseEntity::BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QA
 static ConVar cl_watchplayer( "cl_watchplayer", "-1", 0 );
 #endif
 
-void C_BaseEntity::BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, int nChangeFlags )
+void C_BaseEntity::BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, Vector &oldVel, int nChangeFlags )
 {
 	if ( m_vecOrigin != oldOrigin )
 	{
@@ -2737,23 +2831,20 @@ void C_BaseEntity::BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, i
 		nChangeFlags |= ANGLES_CHANGED;
 	}
 
+	if ( m_vecVelocity != oldVel )
+	{
+		nChangeFlags |= VELOCITY_CHANGED;
+	}
+
 	if ( nChangeFlags != 0 )
 	{
 		InvalidatePhysicsRecursive( nChangeFlags );
 	}
 
 #if 0
-	if ( IsPlayer() &&
-		cl_watchplayer.GetInt() == entindex() &&
-		C_BasePlayer::GetLocalPlayer() &&
-		GetTeam() == C_BasePlayer::GetLocalPlayer()->GetTeam() )
+	if ( index == 1 )
 	{
-		// SpewInterpolatedVar( &m_iv_vecOrigin, gpGlobals->curtime, GetInterpolationAmount( LATCH_SIMULATION_VAR ), false );
-		Vector vel;
-		EstimateAbsVelocity( vel );
-		float spd = vel.Length();
-
-		Msg( "estimated %f\n", spd );
+		SpewInterpolatedVar( &m_iv_vecOrigin, gpGlobals->curtime, GetInterpolationAmount( LATCH_SIMULATION_VAR ), true );
 	}
 #endif
 }
@@ -2769,9 +2860,10 @@ bool C_BaseEntity::Interpolate( float currentTime )
 
 	Vector oldOrigin;
 	QAngle oldAngles;
+	Vector oldVel;
 
 	int bNoMoreChanges;
-	int retVal = BaseInterpolatePart1( currentTime, oldOrigin, oldAngles, bNoMoreChanges );
+	int retVal = BaseInterpolatePart1( currentTime, oldOrigin, oldAngles, oldVel, bNoMoreChanges );
 
 	// If all the Interpolate() calls returned that their values aren't going to
 	// change anymore, then get us out of the interpolation list.
@@ -2782,13 +2874,17 @@ bool C_BaseEntity::Interpolate( float currentTime )
 		return true;
 
 	int nChangeFlags = 0;
-	BaseInterpolatePart2( oldOrigin, oldAngles, nChangeFlags );
+	BaseInterpolatePart2( oldOrigin, oldAngles, oldVel, nChangeFlags );
 
 	return true;
 }
 
 CStudioHdr *C_BaseEntity::OnNewModel()
 {
+#ifdef TF_CLIENT_DLL
+	m_bValidatedOwner = false;
+#endif
+
 	return NULL;
 }
 
@@ -2909,7 +3005,7 @@ void C_BaseEntity::ProcessTeleportList()
 		C_BaseEntity *pCur = g_TeleportList[iCur];
 
 		bool teleport = pCur->Teleported();
-		bool ef_nointerp = pCur->IsEffectActive(EF_NOINTERP);
+		bool ef_nointerp = pCur->IsNoInterpolationFrame();
 	
 		if ( teleport || ef_nointerp )
 		{
@@ -3070,25 +3166,25 @@ void C_BaseEntity::InterpolateServerEntities()
 	s_bInterpolate = cl_interpolate.GetBool();
 
 	// Don't interpolate during timedemo playback
-	if ( engine->IsPlayingTimeDemo() )
+	if ( engine->IsPlayingTimeDemo() || engine->IsPaused() )
 	{										 
 		s_bInterpolate = false;
 	}
 
-	// Don't interpolate, either, if we are timing out
-	INetChannelInfo *nci = engine->GetNetChannelInfo();
-	if ( nci && nci->GetTimeSinceLastReceived() > 0.5f )
+	if ( !engine->IsPlayingDemo() )
 	{
-		s_bInterpolate = false;
+		// Don't interpolate, either, if we are timing out
+		INetChannelInfo *nci = engine->GetNetChannelInfo();
+		if ( nci && nci->GetTimeSinceLastReceived() > 0.5f )
+		{
+			s_bInterpolate = false;
+		}
 	}
 
-	if ( IsSimulatingOnAlternateTicks() != g_bWasSkipping ||
-		 IsEngineThreaded() != g_bWasThreaded ||
-		 cl_interp_threadmodeticks.GetInt() != g_nThreadModeTicks )
+	if ( IsSimulatingOnAlternateTicks() != g_bWasSkipping || IsEngineThreaded() != g_bWasThreaded )
 	{
 		g_bWasSkipping = IsSimulatingOnAlternateTicks();
 		g_bWasThreaded = IsEngineThreaded();
-		g_nThreadModeTicks = cl_interp_threadmodeticks.GetInt();
 
 		C_BaseEntityIterator iterator;
 		C_BaseEntity *pEnt;
@@ -3592,7 +3688,7 @@ void *C_BaseEntity::operator new( size_t stAllocateBlock )
 {
 	Assert( stAllocateBlock != 0 );	
 	MEM_ALLOC_CREDIT();
-	void *pMem = g_pMemAlloc->Alloc( stAllocateBlock );
+	void *pMem = MemAlloc_Alloc( stAllocateBlock );
 	memset( pMem, 0, stAllocateBlock );
 	return pMem;												
 }
@@ -3601,7 +3697,7 @@ void *C_BaseEntity::operator new[]( size_t stAllocateBlock )
 {
 	Assert( stAllocateBlock != 0 );				
 	MEM_ALLOC_CREDIT();
-	void *pMem = g_pMemAlloc->Alloc( stAllocateBlock );
+	void *pMem = MemAlloc_Alloc( stAllocateBlock );
 	memset( pMem, 0, stAllocateBlock );
 	return pMem;												
 }
@@ -3609,7 +3705,7 @@ void *C_BaseEntity::operator new[]( size_t stAllocateBlock )
 void *C_BaseEntity::operator new( size_t stAllocateBlock, int nBlockUse, const char *pFileName, int nLine )
 {
 	Assert( stAllocateBlock != 0 );	
-	void *pMem = g_pMemAlloc->Alloc( stAllocateBlock, pFileName, nLine );
+	void *pMem = MemAlloc_Alloc( stAllocateBlock, pFileName, nLine );
 	memset( pMem, 0, stAllocateBlock );
 	return pMem;												
 }
@@ -3617,7 +3713,7 @@ void *C_BaseEntity::operator new( size_t stAllocateBlock, int nBlockUse, const c
 void *C_BaseEntity::operator new[]( size_t stAllocateBlock, int nBlockUse, const char *pFileName, int nLine )
 {
 	Assert( stAllocateBlock != 0 );				
-	void *pMem = g_pMemAlloc->Alloc( stAllocateBlock, pFileName, nLine );
+	void *pMem = MemAlloc_Alloc( stAllocateBlock, pFileName, nLine );
 	memset( pMem, 0, stAllocateBlock );
 	return pMem;												
 }
@@ -3629,14 +3725,8 @@ void *C_BaseEntity::operator new[]( size_t stAllocateBlock, int nBlockUse, const
 //-----------------------------------------------------------------------------
 void C_BaseEntity::operator delete( void *pMem )
 {
-#ifdef _DEBUG
-	// set the memory to a known value
-	int size = g_pMemAlloc->GetSize( pMem );
-	Q_memset( pMem, 0xdd, size );
-#endif
-
 	// get the engine to free the memory
-	g_pMemAlloc->Free( pMem );
+	MemAlloc_Free( pMem );
 }
 
 #include "tier0/memdbgon.h"
@@ -4182,7 +4272,7 @@ void C_BaseEntity::CalcAbsolutePosition( )
 	//
 	// So here, we keep our absorigin invalidated. It means we're returning an origin that is a frame old to CalculateIKLocks,
 	// but we'll still render with the right origin.
-	if ( m_iParentAttachment != 0 && (m_pMoveParent->GetFlags() & EFL_SETTING_UP_BONES) )
+	if ( m_iParentAttachment != 0 && (m_pMoveParent->GetEFlags() & EFL_SETTING_UP_BONES) )
 	{
 		m_iEFlags |= EFL_DIRTY_ABSTRANSFORM;
 	}
@@ -4544,9 +4634,11 @@ C_BaseEntity *C_BaseEntity::Instance( int iEnt )
 	return ClientEntityList().GetBaseEntity( iEnt );
 }
 
+#ifdef WIN32
 #pragma warning( push )
 #include <typeinfo.h>
 #pragma warning( pop )
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -4563,7 +4655,7 @@ const char *C_BaseEntity::GetClassname( void )
 		const char *mapname =  GetClassMap().Lookup( GetPredDescMap()->dataClassName );
 		if ( mapname && mapname[ 0 ] ) 
 		{
-			Q_snprintf( outstr, sizeof( outstr ), "%s", mapname );
+			Q_strncpy( outstr, mapname, sizeof( outstr ) );
 			gotname = true;
 		}
 	}
@@ -5093,7 +5185,7 @@ int C_BaseEntity::GetIntermediateDataSize( void )
 	Assert( size > 0 );	
 
 	// At least 4 bytes to avoid some really bad stuff
-	return max( size, 4 );
+	return MAX( size, 4 );
 #else
 	return 0;
 #endif
@@ -5127,7 +5219,12 @@ static int g_FieldSizes[FIELD_TYPECOUNT] =
 	sizeof(int),		// FIELD_SOUNDNAME
 
 	sizeof(int),		// FIELD_INPUT		(uses custom type)
+#ifdef GNUC
+	// pointer to members under gnuc are 8bytes if you have a virtual func
+	sizeof(uint64),		// FIELD_FUNCTION
+#else
 	sizeof(int *),		// FIELD_FUNCTION
+#endif
 	sizeof(VMatrix),	// FIELD_VMATRIX
 	sizeof(VMatrix),	// FIELD_VMATRIX_WORLDSPACE
 	sizeof(matrix3x4_t),// FIELD_MATRIX3X4_WORLDSPACE	// NOTE: Use array(FIELD_FLOAT, 12) for matrix3x4_t NOT in worldspace
@@ -5479,15 +5576,25 @@ int C_BaseEntity::SaveData( const char *context, int slot, int type )
 
 	void *dest = ( slot == SLOT_ORIGINALDATA ) ? GetOriginalNetworkDataObject() : GetPredictedFrame( slot );
 	Assert( dest );
-	char sz[ 64 ];
-	if ( slot == SLOT_ORIGINALDATA )
-	{
-		Q_snprintf( sz, sizeof( sz ), "%s SaveData(original)", context );
-	}
-	else
-	{
-		Q_snprintf( sz, sizeof( sz ), "%s SaveData(slot %02i)", context, slot );
 
+	char sz[ 64 ];
+	sz[0] = 0;
+	// don't build debug strings per entity per frame, unless we are watching the entity
+	static ConVarRef pwatchent( "pwatchent" );
+	if ( pwatchent.GetInt() == entindex() )
+	{
+		if ( slot == SLOT_ORIGINALDATA )
+		{
+			Q_snprintf( sz, sizeof( sz ), "%s SaveData(original)", context );
+		}
+		else
+		{
+			Q_snprintf( sz, sizeof( sz ), "%s SaveData(slot %02i)", context, slot );
+		}
+	}
+
+	if ( slot != SLOT_ORIGINALDATA )
+	{
 		// Remember high water mark so that we can detect below if we are reading from a slot not yet predicted into...
 		m_nIntermediateDataCount = slot;
 	}
@@ -5518,23 +5625,33 @@ int C_BaseEntity::RestoreData( const char *context, int slot, int type )
 
 	const void *src = ( slot == SLOT_ORIGINALDATA ) ? GetOriginalNetworkDataObject() : GetPredictedFrame( slot );
 	Assert( src );
-	char sz[ 64 ];
-	if ( slot == SLOT_ORIGINALDATA )
-	{
-		Q_snprintf( sz, sizeof( sz ), "%s RestoreData(original)", context );
-	}
-	else
-	{
-		Q_snprintf( sz, sizeof( sz ), "%s RestoreData(slot %02i)", context, slot );
 
-		// This assert will fire if the server ack'd a CUserCmd which we hadn't predicted yet...
-		// In that case, we'd be comparing "old" data from this "unused" slot with the networked data and reporting all kinds of prediction errors possibly.
-		Assert( slot <= m_nIntermediateDataCount );
+	// This assert will fire if the server ack'd a CUserCmd which we hadn't predicted yet...
+	// In that case, we'd be comparing "old" data from this "unused" slot with the networked data and reporting all kinds of prediction errors possibly.
+	Assert( slot == SLOT_ORIGINALDATA || slot <= m_nIntermediateDataCount );
+
+	char sz[ 64 ];
+	sz[0] = 0;
+	// don't build debug strings per entity per frame, unless we are watching the entity
+	static ConVarRef pwatchent( "pwatchent" );
+	if ( pwatchent.GetInt() == entindex() )
+	{
+		if ( slot == SLOT_ORIGINALDATA )
+		{
+			Q_snprintf( sz, sizeof( sz ), "%s RestoreData(original)", context );
+		}
+		else
+		{
+			Q_snprintf( sz, sizeof( sz ), "%s RestoreData(slot %02i)", context, slot );
+		}
 	}
 
 	// some flags shouldn't be predicted - as we find them, add them to the savedEFlagsMask
 	const int savedEFlagsMask = EFL_DIRTY_SHADOWUPDATE;
 	int savedEFlags = GetEFlags() & savedEFlagsMask;
+
+	// model index needs to be set manually for dynamic model refcounting purposes
+	int oldModelIndex = m_nModelIndex;
 
 	CPredictionCopy copyHelper( type, this, PC_DATA_NORMAL, src, PC_DATA_PACKED );
 	int error_count = copyHelper.TransferData( sz, entindex(), GetPredDescMap() );
@@ -5542,6 +5659,18 @@ int C_BaseEntity::RestoreData( const char *context, int slot, int type )
 	// set non-predicting flags back to their prior state
 	RemoveEFlags( savedEFlagsMask );
 	AddEFlags( savedEFlags );
+
+	// restore original model index and change via SetModelIndex
+	int newModelIndex = m_nModelIndex;
+	m_nModelIndex = oldModelIndex;
+	int overrideModelIndex = CalcOverrideModelIndex();
+	if( overrideModelIndex != -1 )
+		newModelIndex = overrideModelIndex;
+	if ( oldModelIndex != newModelIndex )
+	{
+		MDLCACHE_CRITICAL_SECTION(); // ???
+		SetModelIndex( newModelIndex );
+	}
 
 	OnPostRestoreData();
 
@@ -5563,6 +5692,8 @@ void C_BaseEntity::OnPostRestoreData()
 	}
 
 	// If our model index has changed, then make sure it's reflected in our model pointer.
+	// (Mostly superseded by new modelindex delta check in RestoreData, but I'm leaving it
+	// because it might be band-aiding any other missed calls to SetModelByIndex --henryg)
 	if ( GetModel() != modelinfo->GetModel( GetModelIndex() ) )
 	{
 		MDLCACHE_CRITICAL_SECTION();
@@ -5579,6 +5710,7 @@ void C_BaseEntity::EstimateAbsVelocity( Vector& vel )
 {
 	if ( this == C_BasePlayer::GetLocalPlayer() )
 	{
+		// This is interpolated and networked
 		vel = GetAbsVelocity();
 		return;
 	}
@@ -5652,17 +5784,20 @@ float C_BaseEntity::GetInterpolationAmount( int flags )
 		return TICK_INTERVAL * serverTickMultiple;
 	}
 
-	// Always fully interpolate during multi-player or during demo playback...
-	if ( ( gpGlobals->maxClients > 1 ) || 
-		engine->IsPlayingDemo() )
+	// Always fully interpolate during multi-player or during demo playback, if the recorded
+	// demo was recorded locally.
+	const bool bPlayingDemo = engine->IsPlayingDemo();
+	const bool bPlayingMultiplayer = !bPlayingDemo && ( gpGlobals->maxClients > 1 );
+	const bool bPlayingNonLocallyRecordedDemo = bPlayingDemo && !engine->IsPlayingDemoALocallyRecordedDemo();
+	if ( bPlayingMultiplayer || bPlayingNonLocallyRecordedDemo )
 	{
-		return AdjustInterpolationAmount( this, TICKS_TO_TIME ( TIME_TO_TICKS( GetClientInterpAmount() ) + serverTickMultiple ) );
+		return AdjustInterpolationAmount( this, TICKS_TO_TIME( TIME_TO_TICKS( GetClientInterpAmount() ) + serverTickMultiple ) );
 	}
 
 	int expandedServerTickMultiple = serverTickMultiple;
 	if ( IsEngineThreaded() )
 	{
-		expandedServerTickMultiple += cl_interp_threadmodeticks.GetInt();
+		expandedServerTickMultiple += g_nThreadModeTicks;
 	}
 
 	if ( IsAnimatedEveryTick() && IsSimulatedEveryTick() )
@@ -5679,7 +5814,7 @@ float C_BaseEntity::GetInterpolationAmount( int flags )
 		return TICK_INTERVAL * expandedServerTickMultiple;
 	}
 
-	return AdjustInterpolationAmount( this, TICK_INTERVAL * ( TIME_TO_TICKS( GetClientInterpAmount() ) +  serverTickMultiple ) );
+	return AdjustInterpolationAmount( this, TICKS_TO_TIME( TIME_TO_TICKS( GetClientInterpAmount() ) + serverTickMultiple ) );
 }
 
 
@@ -5935,14 +6070,14 @@ void C_BaseEntity::GetToolRecordingState( KeyValues *msg )
 	state.m_vecRenderAngles = GetRenderAngles();
 
 	// use EF_NOINTERP if the owner or a hierarchical parent has NO_INTERP
-	if ( pOwner && pOwner->IsEffectActive( EF_NOINTERP ) )
+	if ( pOwner && pOwner->IsNoInterpolationFrame() )
 	{
 		state.m_nEffects |= EF_NOINTERP;
 	}
 	C_BaseEntity *pParent = GetMoveParent();
 	while ( pParent )
 	{
-		if ( pParent->IsEffectActive( EF_NOINTERP ) )
+		if ( pParent->IsNoInterpolationFrame() )
 		{
 			state.m_nEffects |= EF_NOINTERP;
 			break;
@@ -6033,6 +6168,48 @@ void C_BaseEntity::RemoveFromTeleportList()
 		m_TeleportListEntry = 0xFFFF;
 	}
 }
+
+#ifdef TF_CLIENT_DLL
+bool C_BaseEntity::ValidateEntityAttachedToPlayer( bool &bShouldRetry )
+{
+	bShouldRetry = false;
+	C_BaseEntity *pParent = GetRootMoveParent();
+	if ( pParent == this )
+		return true;
+
+	// Some wearables parent to the view model
+	C_BasePlayer *pPlayer = ToBasePlayer( pParent );
+	if ( pPlayer && pPlayer->GetViewModel() == this )
+	{
+		return true;
+	}
+
+	// always allow the briefcase model
+	const char *pszModel = modelinfo->GetModelName( GetModel() );
+	if ( pszModel && pszModel[0] )
+	{
+		if ( FStrEq( pszModel, "models/flag/briefcase.mdl" ) )
+			return true;
+
+		if ( FStrEq( pszModel, "models/props_doomsday/australium_container.mdl" ) )
+			return true;
+
+		// Temp for MVM testing
+		if ( FStrEq( pszModel, "models/buildables/sapper_placement_sentry1.mdl" ) )
+			return true;
+
+		if ( FStrEq( pszModel, "models/props_td/atom_bomb.mdl" ) )
+			return true;
+
+		if ( FStrEq( pszModel, "models/props_lakeside_event/bomb_temp_hat.mdl" ) )
+			return true;
+	}
+
+	// Any entity that's not an item parented to a player is invalid.
+	// This prevents them creating some other entity to pretend to be a cosmetic item.
+	return !pParent->IsPlayer();
+}
+#endif // TF_CLIENT_DLL
 
 
 void C_BaseEntity::AddVar( void *data, IInterpolatedVar *watcher, int type, bool bSetup )

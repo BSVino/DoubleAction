@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -60,7 +60,7 @@ public:
 
 	void			AddPlayersFromBitMask( CBitVec< ABSOLUTE_PLAYER_LIMIT >& playerbits );
 
-private:
+//private:
 
 	bool				m_bReliable;
 	bool				m_bInitMessage;
@@ -174,5 +174,16 @@ class CLocalPlayerFilter : public C_RecipientFilter
 public:
 	CLocalPlayerFilter( void );
 };
+
+class CUIFilter : public C_RecipientFilter
+{
+public:
+	CUIFilter( void )
+	{
+		m_Recipients.AddToTail( 1 );
+//		AddRecipient( 0 );
+	}
+};
+
 
 #endif // C_RECIPIENTFILTER_H

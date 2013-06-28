@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -118,6 +118,19 @@ public:
 	CReliableBroadcastRecipientFilter( void )
 	{
 		MakeReliable();
+	}
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: Simple class to create a filter for all players except for one ( unreliable )
+//-----------------------------------------------------------------------------
+class CBroadcastNonOwnerRecipientFilter : public CRecipientFilter
+{
+public:
+	CBroadcastNonOwnerRecipientFilter( CBasePlayer *player )
+	{
+		AddAllPlayers();
+		RemoveRecipient( player );
 	}
 };
 

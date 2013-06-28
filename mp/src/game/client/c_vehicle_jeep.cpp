@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -76,7 +76,7 @@ void C_PropJeep::Simulate( void )
 
 		int iAttachment = LookupAttachment( "headlight" );
 
-		if ( iAttachment != -1 )
+		if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
 		{
 			GetAttachment( iAttachment, vVector, vAngle );
 			AngleVectors( vAngle, &vecForward, &vecRight, &vecUp );
@@ -133,6 +133,7 @@ void C_PropJeep::UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUserCmd *pCmd )
 //-----------------------------------------------------------------------------
 void C_PropJeep::DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehicleEyeAngles )
 {
+#ifdef HL2_CLIENT_DLL
 	// Get the frametime. (Check to see if enough time has passed to warrent dampening).
 	float flFrameTime = gpGlobals->frametime;
 
@@ -149,6 +150,7 @@ void C_PropJeep::DampenEyePosition( Vector &vecVehicleEyePos, QAngle &vecVehicle
 
 	// Blend up/down motion.
 	DampenUpMotion( vecVehicleEyePos, vecVehicleEyeAngles, flFrameTime );
+#endif
 }
 
 

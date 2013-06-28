@@ -1,6 +1,6 @@
 /***
 *
-*	Copyright (c) 1998, Valve LLC. All rights reserved.
+//========= Copyright Valve Corporation, All rights reserved. ============//
 *	
 *	This product contains software technology licensed from Id 
 *	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
@@ -238,8 +238,6 @@ EXTERN int g_numsources;
 EXTERN s_source_t *g_source[MAXSTUDIOSEQUENCES];
 
 EXTERN	int is_v1support;
-
-#define strcpyn( a, b ) strncpy( a, b, sizeof( a ) )
 
 EXTERN	int g_numverts;
 EXTERN	Vector g_vertex[MAXSTUDIOVERTS];

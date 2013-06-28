@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -260,7 +260,7 @@ void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow, bool bCacheFull
 		else
 		{
 			m_flGlowObstructionScale -= gpGlobals->frametime / cl_sun_decay_rate.GetFloat();
-			m_flGlowObstructionScale = max( m_flGlowObstructionScale, 0.0f );
+			m_flGlowObstructionScale = MAX( m_flGlowObstructionScale, 0.0f );
 		}
 	}
 	else
@@ -272,7 +272,7 @@ void CGlowOverlay::UpdateGlowObstruction( const Vector &vToGlow, bool bCacheFull
 		else
 		{
 			m_flGlowObstructionScale += gpGlobals->frametime / cl_sun_decay_rate.GetFloat();
-			m_flGlowObstructionScale = min( m_flGlowObstructionScale, 1.0f );
+			m_flGlowObstructionScale = MIN( m_flGlowObstructionScale, 1.0f );
 		}
 	}
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -31,7 +31,9 @@ ImagePanel::ImagePanel(Panel *parent, const char *name) : Panel(parent, name)
 {
 	m_pImage = NULL;
 	m_pszImageName = NULL;
-	m_pszColorName = NULL;
+	m_pszFillColorName = NULL;
+	m_pszDrawColorName = NULL;	// HPE addition
+	m_bCenterImage = false;
 	m_bScaleImage = false;
 	m_bTileImage = false;
 	m_bTileHorizontally = false;
@@ -39,8 +41,12 @@ ImagePanel::ImagePanel(Panel *parent, const char *name) : Panel(parent, name)
 	m_fScaleAmount = 0.0f;
 	m_FillColor = Color(0, 0, 0, 0);
 	m_DrawColor = Color(255,255,255,255);
+	m_iRotation = ROTATED_UNROTATED;
 
-	SetImage(m_pImage);
+	SetImage( m_pImage );
+
+	REGISTER_COLOR_AS_OVERRIDABLE( m_FillColor, "fillcolor_override" );
+	REGISTER_COLOR_AS_OVERRIDABLE( m_DrawColor, "drawcolor_override" );
 }
 
 //-----------------------------------------------------------------------------
@@ -49,7 +55,8 @@ ImagePanel::ImagePanel(Panel *parent, const char *name) : Panel(parent, name)
 ImagePanel::~ImagePanel()
 {
 	delete [] m_pszImageName;
-	delete [] m_pszColorName;
+	delete [] m_pszFillColorName;
+	delete [] m_pszDrawColorName;	// HPE addition
 }
 
 //-----------------------------------------------------------------------------
@@ -74,11 +81,14 @@ void ImagePanel::SetImage(IImage *image)
 //-----------------------------------------------------------------------------
 void ImagePanel::SetImage(const char *imageName)
 {
+	if ( imageName && m_pszImageName && V_stricmp( imageName, m_pszImageName ) == 0 )
+		return;
+
 	int len = Q_strlen(imageName) + 1;
 	delete [] m_pszImageName;
 	m_pszImageName = new char[ len ];
 	Q_strncpy(m_pszImageName, imageName, len );
-	InvalidateLayout(false, true); // forrce applyschemesettings to run
+	InvalidateLayout(false, true); // force applyschemesettings to run
 }
 
 //-----------------------------------------------------------------------------
@@ -118,10 +128,41 @@ void ImagePanel::PaintBackground()
 		surface()->DrawSetColor(m_FillColor);
 		surface()->DrawFilledRect(0, 0, wide, tall);
 	}
-	if (m_pImage)
+	if ( m_pImage )
 	{
-		surface()->DrawSetColor( 255, 255, 255, 255 );
-		m_pImage->SetPos(0, 0);
+		//=============================================================================
+		// HPE_BEGIN:
+		// [pfreese] Color should be always set from GetDrawColor(), not just when 
+		// scaling is true (see previous code)
+		//=============================================================================
+		
+		// surface()->DrawSetColor( 255, 255, 255, GetAlpha() );
+		m_pImage->SetColor( GetDrawColor() );
+		
+		//=============================================================================
+		// HPE_END
+		//=============================================================================
+
+		if ( m_bCenterImage )
+		{
+			int wide, tall;
+			GetSize(wide, tall);
+
+			int imageWide, imageTall;
+			m_pImage->GetSize( imageWide, imageTall );
+
+			if ( m_bScaleImage && m_fScaleAmount > 0.0f )
+			{
+				imageWide = static_cast<int>( static_cast<float>(imageWide) * m_fScaleAmount );
+				imageTall = static_cast<int>( static_cast<float>(imageTall) * m_fScaleAmount );
+			}
+
+			m_pImage->SetPos( (wide - imageWide) / 2, (tall - imageTall) / 2 );
+		}
+		else
+		{
+			m_pImage->SetPos(0, 0);
+		}
 
 		if (m_bScaleImage)
 		{
@@ -145,7 +186,6 @@ void ImagePanel::PaintBackground()
 				m_pImage->SetSize( wide, tall );
 			}
 
-			m_pImage->SetColor( GetDrawColor() );
 			m_pImage->Paint();
 
 			m_pImage->SetSize( imageWide, imageTall );
@@ -181,6 +221,7 @@ void ImagePanel::PaintBackground()
 		}
 		else
 		{
+			m_pImage->SetColor( GetDrawColor() );
 			m_pImage->Paint();
 		}
 	}
@@ -196,10 +237,23 @@ void ImagePanel::GetSettings(KeyValues *outResourceData)
 	{
 		outResourceData->SetString("image", m_pszImageName);
 	}
-	if (m_pszColorName)
+	if (m_pszFillColorName)
 	{
-		outResourceData->SetString("fillcolor", m_pszColorName);
+		outResourceData->SetString("fillcolor", m_pszFillColorName);
 	}
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [pfreese] Added support for specifying drawcolor
+	//=============================================================================
+	if (m_pszDrawColorName)
+	{
+		outResourceData->SetString("drawcolor", m_pszDrawColorName);
+	}
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
 	if (GetBorder())
 	{
 		outResourceData->SetString("border", GetBorder()->GetName());
@@ -218,9 +272,11 @@ void ImagePanel::GetSettings(KeyValues *outResourceData)
 void ImagePanel::ApplySettings(KeyValues *inResourceData)
 {
 	delete [] m_pszImageName;
-	delete [] m_pszColorName;
+	delete [] m_pszFillColorName;
+	delete [] m_pszDrawColorName;	// HPE addition
 	m_pszImageName = NULL;
-	m_pszColorName = NULL;
+	m_pszFillColorName = NULL;
+	m_pszDrawColorName = NULL;		// HPE addition
 
 	m_bScaleImage = inResourceData->GetInt("scaleImage", 0);
 	m_fScaleAmount = inResourceData->GetFloat("scaleAmount", 0.0f);
@@ -228,7 +284,7 @@ void ImagePanel::ApplySettings(KeyValues *inResourceData)
 	m_bTileHorizontally = inResourceData->GetInt("tileHorizontally", m_bTileImage);
 	m_bTileVertically = inResourceData->GetInt("tileVertically", m_bTileImage);
 	const char *imageName = inResourceData->GetString("image", "");
-	if (*imageName)
+	if ( *imageName )
 	{
 		SetImage( imageName );
 	}
@@ -238,8 +294,8 @@ void ImagePanel::ApplySettings(KeyValues *inResourceData)
 	{
 		int r = 0, g = 0, b = 0, a = 255;
 		int len = Q_strlen(pszFillColor) + 1;
-		m_pszColorName = new char[ len ];
-		Q_strncpy( m_pszColorName, pszFillColor, len );
+		m_pszFillColorName = new char[ len ];
+		Q_strncpy( m_pszFillColorName, pszFillColor, len );
 
 		if (sscanf(pszFillColor, "%d %d %d %d", &r, &g, &b, &a) >= 3)
 		{
@@ -252,6 +308,33 @@ void ImagePanel::ApplySettings(KeyValues *inResourceData)
 			m_FillColor = pScheme->GetColor(pszFillColor, Color(0, 0, 0, 0));
 		}
 	}
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [pfreese] Added support for specifying drawcolor
+	//=============================================================================
+	const char *pszDrawColor = inResourceData->GetString("drawcolor", "");
+	if (*pszDrawColor)
+	{
+		int r = 255, g = 255, b = 255, a = 255;
+		int len = Q_strlen(pszDrawColor) + 1;
+		m_pszDrawColorName = new char[ len ];
+		Q_strncpy( m_pszDrawColorName, pszDrawColor, len );
+
+		if (sscanf(pszDrawColor, "%d %d %d %d", &r, &g, &b, &a) >= 3)
+		{
+			// it's a direct color
+			m_DrawColor = Color(r, g, b, a);
+		}
+		else
+		{
+			IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+			m_DrawColor = pScheme->GetColor(pszDrawColor, Color(255, 255, 255, 255));
+		}
+	}
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
 
 	const char *pszBorder = inResourceData->GetString("border", "");
 	if (*pszBorder)
@@ -294,6 +377,14 @@ void ImagePanel::SetShouldScaleImage( bool state )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: gets whether or not the image should be scaled to fit the size of the ImagePanel
+//-----------------------------------------------------------------------------
+bool ImagePanel::GetShouldScaleImage()
+{
+	return m_bScaleImage;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: used in conjunction with setting that the image should scale and defines an absolute scale amount
 //-----------------------------------------------------------------------------
 void ImagePanel::SetScaleAmount( float scale )
@@ -325,4 +416,48 @@ Color ImagePanel::GetFillColor()
 char *ImagePanel::GetImageName()
 {
 	return m_pszImageName;
+}
+
+bool ImagePanel::EvictImage()
+{
+	if ( !m_pImage )
+	{
+		// nothing to do
+		return false;
+	}
+
+	if ( !scheme()->DeleteImage( m_pszImageName ) )
+	{
+		// no eviction occured, could have an outstanding reference
+		return false;
+	}
+
+	// clear out our cached concept of it
+	// as it may change
+	// the next SetImage() will re-establish
+	m_pImage = NULL;
+	delete [] m_pszImageName;
+	m_pszImageName = NULL;
+
+	return true;
+}
+
+int ImagePanel::GetNumFrames()
+{
+	if ( !m_pImage )
+	{
+		return 0;
+	}
+
+	return m_pImage->GetNumFrames();
+}
+
+void ImagePanel::SetFrame( int nFrame )
+{
+	if ( !m_pImage )
+	{
+		return;
+	}
+
+	return m_pImage->SetFrame( nFrame );
 }

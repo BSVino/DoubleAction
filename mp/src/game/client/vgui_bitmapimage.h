@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -19,6 +19,7 @@ namespace vgui
 }
 
 class KeyValues;
+struct Bitmap_t;
 
 //-----------------------------------------------------------------------------
 // Purpose: Bitmap image
@@ -28,6 +29,7 @@ class BitmapImage : public vgui::Image
 public:
 	BitmapImage();
 	BitmapImage( vgui::VPANEL pPanelSize, const char *pFileName );
+	virtual ~BitmapImage();
 	bool Init( vgui::VPANEL pParent, const char *pFileName );
 	bool Init( vgui::VPANEL pParent, KeyValues* pInitData );
 
@@ -37,7 +39,7 @@ public:
 	void DoPaint( vgui::VPANEL panel, float yaw = 0, float flAlphaModulate = 1.0f );
 	void DoPaint( int x, int y, int w, int h, float yaw = 0, float flAlphaModulate = 1.0f );
 	void Paint( );
-	void SetColor( Color& clr );
+	void SetColor( const Color& clr );
 	Color GetColor( );
 	void GetColor( int& r,int& g,int& b,int& a );
 	void GetSize( int& wide, int& tall );
@@ -53,6 +55,12 @@ public:
 
 	void SetViewport( bool use, float left, float top, float right, float bottom );
 
+	/// Set raw bitmap data
+	void SetBitmap( const Bitmap_t &bitmap );
+
+	/// Clean up vgui resources
+	void DestroyTexture();
+
 private:
 	int				m_nTextureId;
 	Color		m_clr;
@@ -62,6 +70,7 @@ private:
 
 	bool			m_bUseViewport;
 	float			m_rgViewport[ 4 ];
+	bool			m_bProcedural;
 };
 
 

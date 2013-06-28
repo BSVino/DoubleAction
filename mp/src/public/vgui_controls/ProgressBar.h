@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -36,10 +36,12 @@ public:
 	virtual void SetSegmentInfo( int gap, int width );
 
 	// utility function for calculating a time remaining string
-	static bool ConstructTimeRemainingString(wchar_t *output, int outputBufferSizeInBytes, float startTime, float currentTime, float currentProgress, float lastProgressUpdateTime, bool addRemainingSuffix);
+	static bool ConstructTimeRemainingString(OUT_Z_BYTECAP(outputBufferSizeInBytes) wchar_t *output, int outputBufferSizeInBytes, float startTime, float currentTime, float currentProgress, float lastProgressUpdateTime, bool addRemainingSuffix);
 
 	void SetBarInset( int pixels );
 	int GetBarInset( void );
+	void SetMargin( int pixels );
+	int GetMargin();
 	
 	virtual void ApplySettings(KeyValues *inResourceData);
 	virtual void GetSettings(KeyValues *outResourceData);
@@ -79,6 +81,7 @@ private:
 	int _segmentGap;
 	int _segmentWide;
 	int m_iBarInset;
+	int m_iBarMargin;
 	char *m_pszDialogVar;
 };
 

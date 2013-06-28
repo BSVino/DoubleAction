@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A fast stack memory allocator that uses virtual memory if available
 //
@@ -144,7 +144,10 @@ public:
 
 	// Can we use this index?
 	bool IsIdxValid( I i ) const							{ return (i >= 0) && (i < m_nAllocated); }
-	static int InvalidIndex()								{ return -1; }
+
+	// Specify the invalid ('null') index that we'll only return on failure
+	static const I INVALID_INDEX = ( I )-1; // For use with COMPILE_TIME_ASSERT
+	static I InvalidIndex() { return INVALID_INDEX; }
 
 	class Iterator_t
 	{

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -80,6 +80,19 @@ MaterialSystemMaterial_t GetMatIDFromDisp( mapdispinfo_t *pMapDisp )
 	dtexdata_t *pTexData = GetTexData( pTexInfo->texdata );
 	MaterialSystemMaterial_t matID = FindOriginalMaterial( TexDataStringTable_GetString( pTexData->nameStringTableID ), NULL, true );
 	return matID;
+}
+
+// check this and disable virtual mesh if in use
+bool Disp_HasPower4Displacements()
+{
+	for ( int i = 0; i < g_CoreDispInfos.Count(); i++ )
+	{
+		if ( g_CoreDispInfos[i]->GetPower() > 3 )
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 // adds all displacement faces as a series of convex objects
@@ -207,7 +220,7 @@ CDispMeshEvent::CDispMeshEvent( unsigned short *pIndices, int indexCount, CCoreD
 	}
 	for ( int i = 0; i < indexCount/2; i++ )
 	{
-		swap( pIndices[i], pIndices[(indexCount-i)-1] );
+		V_swap( pIndices[i], pIndices[(indexCount-i)-1] );
 	}
 	int count = maxIndex + 1;
 	m_verts.SetCount( count );

@@ -1,12 +1,12 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // This is a helper class designed to help with the chains of modal dialogs
 // encountered when trying to open or save a particular file
 //
 //=============================================================================
 
-#include "vgui_controls/fileopenstatemachine.h"
-#include "tier1/keyvalues.h"
+#include "vgui_controls/FileOpenStateMachine.h"
+#include "tier1/KeyValues.h"
 #include "vgui_controls/FileOpenDialog.h"
 #include "vgui_controls/MessageBox.h"
 #include "vgui_controls/perforcefilelistframe.h"

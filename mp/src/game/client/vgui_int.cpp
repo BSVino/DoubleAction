@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,18 +14,23 @@
 #include "imessagechars.h"
 #include "inetgraphpanel.h"
 #include "idebugoverlaypanel.h"
-#include <vgui/isurface.h>
+#include <vgui/ISurface.h>
 #include <vgui/IVGui.h>
 #include <vgui/IInput.h>
 #include "tier0/vprof.h"
 #include "iclientmode.h"
 #include <vgui_controls/Panel.h>
 #include <KeyValues.h>
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
-//Tony; so we can load localization at initialize
-#include <vgui/ILocalize.h>
-#include <tier3/tier3.h>
+
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#endif
+
+#if defined( TF_CLIENT_DLL )
+#include "tf_gamerules.h"
+#endif
 
 using namespace vgui;
 
@@ -111,6 +116,39 @@ public:
 
 static CHudTextureHandleProperty textureHandleConverter;
 
+static void VGui_VideoMode_AdjustForModeChange( void )
+{
+	// Kill all our panels. We need to do this in case any of them
+	//	have pointers to objects (eg: iborders) that will get freed
+	//	when schemes get destroyed and recreated (eg: mode change).
+	netgraphpanel->Destroy();
+	debugoverlaypanel->Destroy();
+#if defined( TRACK_BLOCKING_IO )
+	iopanel->Destroy();
+#endif
+	fps->Destroy();
+	messagechars->Destroy();
+	loadingdisc->Destroy();
+
+	// Recreate our panels.
+	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
+	VPANEL toolParent = enginevgui->GetPanel( PANEL_TOOLS );
+#if defined( TRACK_BLOCKING_IO )
+	VPANEL gameDLLPanel = enginevgui->GetPanel( PANEL_GAMEDLL );
+#endif
+
+	loadingdisc->Create( gameToolParent );
+	messagechars->Create( gameToolParent );
+
+	// Debugging or related tool
+	fps->Create( toolParent );
+#if defined( TRACK_BLOCKING_IO )
+	iopanel->Create( gameDLLPanel );
+#endif
+	netgraphpanel->Create( toolParent );
+	debugoverlaypanel->Create( gameToolParent );
+}
+
 static void VGui_OneTimeInit()
 {
 	static bool initialized = false;
@@ -120,6 +158,8 @@ static void VGui_OneTimeInit()
 
 	vgui::Panel::AddPropertyConverter( "CHudTextureHandle", &textureHandleConverter );
 
+
+    g_pMaterialSystem->AddModeChangeCallBack( &VGui_VideoMode_AdjustForModeChange );
 }
 
 bool VGui_Startup( CreateInterfaceFn appSystemFactory )
@@ -147,16 +187,6 @@ bool VGui_Startup( CreateInterfaceFn appSystemFactory )
 	{
 		return false;
 	}
-
-		//Tony; add localization for the specific SDK.
-#if defined( SP_SDK )
-	g_pVGuiLocalize->AddFile( "resource/ep2_%language%.txt", "GAME" );
-#elif defined( MP_SDK )
-	g_pVGuiLocalize->AddFile( "resource/hl2mp_%language%.txt", "GAME" );
-#elif defined ( SDK_DLL )
-	//Tony; for the sdk template, just check for SDK_DLL
-	g_pVGuiLocalize->AddFile( "resource/sdktemplate_%language%.txt", "MOD" );
-#endif
 	return true;
 }
 
@@ -186,6 +216,9 @@ void VGui_CreateGlobalPanels( void )
 #ifndef _X360
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
+#endif
+#ifdef SIXENSE
+	g_pSixenseInput->CreateGUI( gameToolParent );
 #endif
 }
 
@@ -226,12 +259,18 @@ static ConVar cl_showpausedimage( "cl_showpausedimage", "1", 0, "Show the 'Pause
 void VGui_PreRender()
 {
 	VPROF( "VGui_PreRender" );
+	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
 
 	// 360 does not use these plaques
 	if ( IsPC() )
 	{
 		loadingdisc->SetLoadingVisible( engine->IsDrawingLoadingImage() && !engine->IsPlayingDemo() );
+#if !defined( TF_CLIENT_DLL )
 		loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && cl_showpausedimage.GetBool() && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
+#else
+		bool bShowPausedImage = cl_showpausedimage.GetBool() && ( TFGameRules() && !TFGameRules()->IsInTraining() );
+		loadingdisc->SetPausedVisible( !enginevgui->IsGameUIVisible() && bShowPausedImage && engine->IsPaused() && !engine->IsTakingScreenshot() && !engine->IsPlayingDemo() );
+#endif
 	}
 }
 

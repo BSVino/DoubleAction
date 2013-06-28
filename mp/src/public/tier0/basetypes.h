@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,6 +16,12 @@
 #ifdef _WIN32
 #pragma once
 #endif
+
+
+// This is a trick to get the DLL extension off the -D option on the command line.
+#define DLLExtTokenPaste(x) #x
+#define DLLExtTokenPaste2(x) DLLExtTokenPaste(x)
+#define DLL_EXT_STRING DLLExtTokenPaste2( _DLL_EXT )
 
 
 #include "protected_things.h"
@@ -37,8 +43,8 @@
 #endif
 
 
-#ifdef _LINUX
-typedef unsigned int uintptr_t;
+#ifdef POSIX
+#include <stdint.h>
 #endif
 
 #define ExecuteNTimes( nTimes, x )	\
@@ -56,7 +62,7 @@ typedef unsigned int uintptr_t;
 
 
 template <typename T>
-inline T AlignValue( T val, unsigned alignment )
+inline T AlignValue( T val, uintptr_t alignment )
 {
 	return (T)( ( (uintptr_t)val + alignment - 1 ) & ~( alignment - 1 ) );
 }
@@ -68,26 +74,56 @@ inline T AlignValue( T val, unsigned alignment )
 	( ((number) + ((boundary)-1)) / (boundary) ) * (boundary)
 
 // In case this ever changes
+#if !defined(M_PI) && !defined(HAVE_M_PI)
 #define M_PI			3.14159265358979323846
+#endif
 
 #include "valve_minmax_on.h"
 
-#if !defined(_X360)
-#define fpmin min
-#define fpmax max
+// #define COMPILETIME_MAX and COMPILETIME_MIN for max/min in constant expressions
+#define COMPILETIME_MIN( a, b ) ( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
+#define COMPILETIME_MAX( a, b ) ( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
+#ifndef MIN
+#define MIN( a, b ) ( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
+#endif
+
+#ifndef MAX
+#define MAX( a, b ) ( ( ( a ) > ( b ) ) ? ( a ) : ( b ) )
 #endif
 
 #ifdef __cplusplus
-	template< class T >
-	inline T clamp( T const &val, T const &minVal, T const &maxVal )
-	{
-		if( val < minVal )
-			return minVal;
-		else if( val > maxVal )
-			return maxVal;
-		else
-			return val;
-	}
+
+// This is the preferred clamp operator. Using the clamp macro can lead to
+// unexpected side-effects or more expensive code. Even the clamp (all
+// lower-case) function can generate more expensive code because of the
+// mixed types involved.
+template< class T >
+T Clamp( T const &val, T const &minVal, T const &maxVal )
+{
+	if( val < minVal )
+		return minVal;
+	else if( val > maxVal )
+		return maxVal;
+	else
+		return val;
+}
+
+// This is the preferred Min operator. Using the MIN macro can lead to unexpected
+// side-effects or more expensive code.
+template< class T >
+T Min( T const &val1, T const &val2 )
+{
+	return val1 < val2 ? val1 : val2;
+}
+
+// This is the preferred Max operator. Using the MAX macro can lead to unexpected
+// side-effects or more expensive code.
+template< class T >
+T Max( T const &val1, T const &val2 )
+{
+	return val1 > val2 ? val1 : val2;
+}
+
 #endif
 
 #ifndef FALSE
@@ -96,15 +132,20 @@ inline T AlignValue( T val, unsigned alignment )
 #endif
 
 
+#ifndef DONT_DEFINE_BOOL // Needed for Cocoa stuff to compile.
 typedef int BOOL;
+#endif
+
 typedef int qboolean;
 typedef unsigned long ULONG;
 typedef unsigned char BYTE;
 typedef unsigned char byte;
 typedef unsigned short word;
-
-typedef unsigned int uintptr_t;
-
+#ifdef _WIN32
+typedef wchar_t ucs2; // under windows wchar_t is ucs2
+#else
+typedef unsigned short ucs2;
+#endif
 
 enum ThreeState_t
 {
@@ -115,19 +156,19 @@ enum ThreeState_t
 
 typedef float vec_t;
 
-
-// FIXME: this should move 
-#ifndef __cplusplus
-#define true TRUE
-#define false FALSE
+#if defined(__GNUC__)
+#define fpmin __builtin_fminf
+#define fpmax __builtin_fmaxf
+#elif !defined(_X360)
+#define fpmin min
+#define fpmax max
 #endif
+
 
 //-----------------------------------------------------------------------------
 // look for NANs, infinities, and underflows. 
 // This assumes the ANSI/IEEE 754-1985 standard
 //-----------------------------------------------------------------------------
-
-#ifdef __cplusplus
 
 inline unsigned long& FloatBits( vec_t& f )
 {
@@ -154,42 +195,30 @@ inline unsigned long FloatAbsBits( vec_t f )
 	return FloatBits(f) & 0x7FFFFFFF;
 }
 
+// Given today's processors, I cannot think of any circumstance
+// where bit tricks would be faster than fabs. henryg 8/16/2011
+#ifdef _MSC_VER
+#ifndef _In_
+#define _In_
+#endif
+extern "C" float fabsf(_In_ float);
+#else
+#include <math.h>
+#endif
+
 inline float FloatMakeNegative( vec_t f )
 {
-	return BitsToFloat( FloatBits(f) | 0x80000000 );
+	return -fabsf(f);
 }
 
-#if defined( WIN32 )
-
-//#include <math.h>
-// Just use prototype from math.h
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-	double __cdecl fabs(double);
-#ifdef __cplusplus
-}
-#endif
-
-// In win32 try to use the intrinsic fabs so the optimizer can do it's thing inline in the code
-#pragma intrinsic( fabs )
-// Also, alias float make positive to use fabs, too
-// NOTE:  Is there a perf issue with double<->float conversion?
 inline float FloatMakePositive( vec_t f )
 {
-	return (float)fabs( f );
+	return fabsf(f);
 }
-#else
-inline float FloatMakePositive( vec_t f )
-{
-	return BitsToFloat( FloatBits(f) & 0x7FFFFFFF );
-}
-#endif
 
 inline float FloatNegate( vec_t f )
 {
-	return BitsToFloat( FloatBits(f) ^ 0x80000000 );
+	return -f;
 }
 
 
@@ -198,7 +227,7 @@ inline float FloatNegate( vec_t f )
 
 #define VEC_T_NAN FLOAT32_NAN
 
-#endif
+
 
 // FIXME: why are these here?  Hardly anyone actually needs them.
 struct color24
@@ -225,17 +254,14 @@ struct colorVec
 
 
 #ifndef NOTE_UNUSED
-#define NOTE_UNUSED(x)	(x = x)	// for pesky compiler / lint warnings
+#define NOTE_UNUSED(x)	(void)(x)	// for pesky compiler / lint warnings
 #endif
-#ifdef __cplusplus
 
 struct vrect_t
 {
 	int				x,y,width,height;
 	vrect_t			*pnext;
 };
-
-#endif
 
 
 //-----------------------------------------------------------------------------

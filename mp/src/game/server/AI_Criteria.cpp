@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -51,19 +51,25 @@ AI_CriteriaSet::~AI_CriteriaSet()
 //-----------------------------------------------------------------------------
 void AI_CriteriaSet::AppendCriteria( const char *criteria, const char *value /*= ""*/, float weight /*= 1.0f*/ )
 {
+	// Note: value pointer may come from an entry inside m_Lookup!
+	// that value string must be copied out before any modification
+	// to the m_Lookup struct which could make the pointer invalid
 	int idx = FindCriterionIndex( criteria );
 	if ( idx == -1 )
 	{
 		CritEntry_t entry;
 		entry.criterianame = criteria;
 		MEM_ALLOC_CREDIT();
-		idx = m_Lookup.Insert( entry );
+		entry.SetValue(value);
+		entry.weight = weight;
+		m_Lookup.Insert( entry );
 	}
-
-	CritEntry_t *entry = &m_Lookup[ idx ];
-
-	entry->SetValue( value );
-	entry->weight = weight;
+	else
+	{
+		CritEntry_t *entry = &m_Lookup[ idx ];
+		entry->SetValue( value );
+		entry->weight = weight;
+	}
 }
 
 
@@ -474,8 +480,8 @@ const char *SplitContext( const char *raw, char *key, int keylen, char *value, i
 	}
 
 	int len = colon1 - raw;
-	Q_strncpy( key, raw, min( len + 1, keylen ) );
-	key[ min( len, keylen - 1 ) ] = 0;
+	Q_strncpy( key, raw, MIN( len + 1, keylen ) );
+	key[ MIN( len, keylen - 1 ) ] = 0;
 
 	bool last = false;
 	char *end = Q_strstr( colon1 + 1, "," );
@@ -492,7 +498,7 @@ const char *SplitContext( const char *raw, char *key, int keylen, char *value, i
 		if ( duration )
 			*duration = atof( colon2 + 1 );
 
-		len = min( colon2 - ( colon1 + 1 ), valuelen - 1 );
+		len = MIN( colon2 - ( colon1 + 1 ), valuelen - 1 );
 		Q_strncpy( value, colon1 + 1, len + 1 );
 		value[ len ] = 0;
 	}
@@ -501,7 +507,7 @@ const char *SplitContext( const char *raw, char *key, int keylen, char *value, i
 		if ( duration )
 			*duration = 0.0;
 
-		len = min( end - ( colon1 + 1 ), valuelen - 1 );
+		len = MIN( end - ( colon1 + 1 ), valuelen - 1 );
 		Q_strncpy( value, colon1 + 1, len + 1 );
 		value[ len ] = 0;
 	}

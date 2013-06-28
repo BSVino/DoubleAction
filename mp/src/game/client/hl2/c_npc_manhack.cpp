@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "c_AI_BaseNPC.h"
+#include "c_ai_basenpc.h"
 #include "soundenvelope.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

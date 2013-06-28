@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,9 +13,10 @@
 #endif
 
 #include "tier1/interface.h"
+#include "appframework/IAppSystem.h"
 
 
-class IVTex
+class IVTex : public IAppSystem
 {
 public:
 	// For use by command-line tools

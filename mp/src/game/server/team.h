@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Team management class. Contains all the details for a specific team
 //
@@ -75,6 +75,8 @@ public:
 	virtual void IncrementRoundsWon( void ) { m_iRoundsWon++; }
 
 	void AwardAchievement( int iAchievement );
+
+	virtual int GetAliveMembers( void );
 
 public:
 	CUtlVector< CTeamSpawnPoint * > m_aSpawnPoints;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Template entities are used by spawners to create copies of entities
 //			that were configured by the level designer. This allows us to spawn
@@ -335,19 +335,9 @@ char *Templates_GetEntityIOFixedMapData( int iIndex )
 		Q_strncpy( g_Templates[iIndex]->pszFixedMapData, g_Templates[iIndex]->pszMapData, g_Templates[iIndex]->iMapDataLength );
 	}
 
-	int iFixupSize = Q_strlen(ENTITYIO_FIXUP_STRING);
-
-	// iFixupSize needs to be 1 size bigger in linux ie: if strlen returns 5, it needs to be 6, GCC must be doing something funky.                            
-	// if it's not, in linux the operations below fail on linux dedicated when using a template with name fixup, where it targets itself.
-	// I don't honestly know why. I even added null termination to make sure there is no garbage at the end as well, but it _will not_ work
-	// the way it does in windows, in GCC if it's kept the same length. Anyone else have any ideas?
-#ifdef LINUX
-	iFixupSize += 1;
-#endif
-
-	char *sOurFixup = new char[iFixupSize+1]; //Increase by 1 for null termination
-	Q_snprintf( sOurFixup, iFixupSize, "%c%.4d", ENTITYIO_FIXUP_STRING[0], g_iCurrentTemplateInstance );
-	sOurFixup[iFixupSize] = NULL; // Null terminate it
+	int iFixupSize = strlen(ENTITYIO_FIXUP_STRING); // don't include \0 when copying in the fixup
+	char *sOurFixup = new char[iFixupSize+1]; // do alloc room here for the null terminator
+	Q_snprintf( sOurFixup, iFixupSize+1, "%c%.4d", ENTITYIO_FIXUP_STRING[0], g_iCurrentTemplateInstance );
 
 	// Now rip through the map data string and replace any instances of the fixup string with our unique identifier
 	char *c = g_Templates[iIndex]->pszFixedMapData;
@@ -371,7 +361,7 @@ char *Templates_GetEntityIOFixedMapData( int iIndex )
 			// Stomp it with our unique string
 			if ( bValid )
 			{
-				Q_memcpy( c, sOurFixup, iFixupSize );
+				memcpy( c, sOurFixup, iFixupSize );
 				c += iFixupSize;
 			}
 		}

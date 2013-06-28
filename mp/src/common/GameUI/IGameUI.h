@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -106,6 +106,14 @@ public:
 	virtual void SetProgressOnStart() = 0;
 	virtual void OnDisconnectFromServer( uint8 eSteamLoginFailure ) = 0;
 
+	virtual void OnConfirmQuit( void ) = 0;
+
+	virtual bool IsMainMenuVisible( void ) = 0;
+
+	// Client DLL is providing us with a panel that it wants to replace the main menu with
+	virtual void SetMainMenuOverride( vgui::VPANEL panel ) = 0;
+	// Client DLL is telling us that a main menu command was issued, probably from its custom main menu panel
+	virtual void SendMainMenuCommand( const char *pszCommand ) = 0;
 };
 
 #define GAMEUI_INTERFACE_VERSION "GameUI011"

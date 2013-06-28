@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -7,16 +7,16 @@
 
 #include "cbase.h"
 #include "basecombatweapon.h"
-#include "NPCevent.h"
+#include "npcevent.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
 #include "weapon_ar2.h"
 #include "grenade_ar2.h"
 #include "gamerules.h"
 #include "game.h"
 #include "in_buttons.h"
-#include "AI_Memory.h"
+#include "ai_memory.h"
 #include "soundent.h"
 #include "hl2_player.h"
 #include "EntityFlame.h"
@@ -488,7 +488,7 @@ void CWeaponAR2::AddViewKick( void )
 		// AR2 progressive into the late, highly inaccurate stages of its kick. Just
 		// spoof the time to make it look (to the kicking code) like we haven't been
 		// firing for very long.
-		flDuration = min( flDuration, 0.75f );
+		flDuration = MIN( flDuration, 0.75f );
 	}
 
 	DoMachineGunKick( pPlayer, EASY_DAMPEN, MAX_VERTICAL_KICK, flDuration, SLIDE_LIMIT );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL2.
 //
@@ -14,11 +14,6 @@
 #include "hl2_playerlocaldata.h"
 #include "simtimer.h"
 #include "soundenvelope.h"
-
-// In HL2MP we need to inherit from  BaseMultiplayerPlayer!
-#if defined ( HL2MP )
-#include "basemultiplayerplayer.h"
-#endif
 
 class CAI_Squad;
 class CPropCombineBall;
@@ -80,19 +75,10 @@ public:
 //=============================================================================
 // >> HL2_PLAYER
 //=============================================================================
-class CHL2_Player : public 
-#if defined ( HL2MP )
-	CBaseMultiplayerPlayer
-#else
-	CBasePlayer
-#endif
+class CHL2_Player : public CBasePlayer
 {
 public:
-#if defined ( HL2MP )
-	DECLARE_CLASS( CHL2_Player, CBaseMultiplayerPlayer );
-#else
 	DECLARE_CLASS( CHL2_Player, CBasePlayer );
-#endif
 
 	CHL2_Player();
 	~CHL2_Player( void );
@@ -255,7 +241,6 @@ public:
 	virtual	bool		IsHoldingEntity( CBaseEntity *pEnt );
 	virtual void		ForceDropOfCarriedPhysObjects( CBaseEntity *pOnlyIfHoldindThis );
 	virtual float		GetHeldObjectMass( IPhysicsObject *pHeldObject );
-	virtual CBaseEntity	*CHL2_Player::GetHeldObject( void );
 
 	virtual bool		IsFollowingPhysics( void ) { return (m_afPhysicsFlags & PFLAG_ONBARNACLE) > 0; }
 	void				InputForceDropPhysObjects( inputdata_t &data );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements breakables and pushables. func_breakable is a bmodel
 //			that breaks into pieces after taking damage.
@@ -62,11 +62,11 @@ extern Vector		g_vecAttackDir;
 		"item_rpg_round",			// 12
 		"unused (item_smg1_grenade) 13",// 13
 		"item_box_sniper_rounds",	// 14
-		"unused (???) 15",			// 15
+		"unused (???"") 15",		// 15 - split into two strings to avoid trigraph warning 
 		"weapon_stunstick",			// 16
 		"unused (weapon_ar1) 17",	// 17
 		"weapon_ar2",				// 18
-		"unused (???) 19",				// 19
+		"unused (???"") 19",		// 19 - split into two strings to avoid trigraph warning 
 		"weapon_rpg",				// 20
 		"weapon_smg1",				// 21
 		"unused (weapon_smg2) 22",	// 22
@@ -501,7 +501,7 @@ void CBreakable::DamageSound( void )
 {
 	int pitch;
 	float fvol;
-	char *soundname = NULL;
+	const char *soundname = NULL;
 	int material = m_Material;
 
 	if (random->RandomInt(0,2))
@@ -690,7 +690,7 @@ bool CBreakable::UpdateHealth( int iNewHealth, CBaseEntity *pActivator )
 		}
 
 		// Output the new health as a percentage of max health [0..1]
-		float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0, 1 );
+		float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0.f, 1.f );
 		m_OnHealthChanged.Set( flRatio, pActivator, this );
 
 		if ( m_iHealth <= 0 )
@@ -733,7 +733,7 @@ void CBreakable::Break( CBaseEntity *pBreaker )
 }
 
 
-void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	// random spark if this is a 'computer' object
 	if (random->RandomInt(0,1) )
@@ -754,7 +754,7 @@ void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir,
 		}
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 
@@ -1064,7 +1064,7 @@ void CBreakable::Die( void )
 		else if ( m_PerformanceMode == PM_REDUCED_GIBS )
 		{
 			int iNewCount = iCount * func_break_reduction_factor.GetFloat();
-			iCount = max( iNewCount, 1 );
+			iCount = MAX( iNewCount, 1 );
 		}
 	}
 

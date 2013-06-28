@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: contains entities who have no physical representation in the game, and who
 //		must be triggered by other entities to cause their effects.
@@ -69,20 +69,17 @@ void CTargetCDAudioRep::InputChangeCDTrack( inputdata_t &inputdata )
 
 	if ( iTrack < -1 || iTrack > 30 )
 	{
-		Warning( "TargetCDAudio - Track %d out of range\n" );
+		Warning( "TargetCDAudio - Track %d out of range\n", iTrack );
 		return;
 	}
 
 	if ( iTrack == -1 )
 	{
-		engine->ClientCommand( pClient, "cd pause\n");
+		engine->ClientCommand( pClient, "cd pause\n" );
 	}
 	else
 	{
-		char string [ 64 ];
-
-		Q_snprintf( string,sizeof(string), "cd play %3d\n", iTrack );
-		engine->ClientCommand ( pClient, string);
+		engine->ClientCommand ( pClient, "cd play %3d\n", iTrack );
 	}
 }
 

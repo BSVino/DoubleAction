@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -140,7 +140,7 @@ Vector PointInsideBrush( bspbrush_t *brush )
 		for (int i = 0; i < brush->numsides; i++)
 		{
 			side_t *side = &brush->sides[i];
-			plane_t *plane = &mapplanes[side->planenum];
+			plane_t *plane = &g_MainMap->mapplanes[side->planenum];
 			float d = DotProduct( plane->normal, insidePoint ) - plane->dist;
 			if ( d < 0 )
 			{
@@ -172,7 +172,7 @@ void CreateBrushWindings (bspbrush_t *brush)
 	for (i=0 ; i<brush->numsides ; i++)
 	{
 		side = &brush->sides[i];
-		plane = &mapplanes[side->planenum];
+		plane = &g_MainMap->mapplanes[side->planenum];
 		w = BaseWindingForPlane (plane->normal, plane->dist + DotProduct(plane->normal, offset));
 		for (j=0 ; j<brush->numsides && w; j++)
 		{
@@ -180,7 +180,7 @@ void CreateBrushWindings (bspbrush_t *brush)
 				continue;
 			if (brush->sides[j].bevel)
 				continue;
-			plane = &mapplanes[brush->sides[j].planenum^1];
+			plane = &g_MainMap->mapplanes[brush->sides[j].planenum^1];
 			ChopWindingInPlace (&w, plane->normal, plane->dist + DotProduct(plane->normal, offset), 0); //CLIP_EPSILON);
 		}
 
@@ -212,11 +212,11 @@ bspbrush_t	*BrushFromBounds (Vector& mins, Vector& maxs)
 		VectorClear (normal);
 		normal[i] = 1;
 		dist = maxs[i];
-		b->sides[i].planenum = FindFloatPlane (normal, dist);
+		b->sides[i].planenum = g_MainMap->FindFloatPlane (normal, dist);
 
 		normal[i] = -1;
 		dist = -mins[i];
-		b->sides[3+i].planenum = FindFloatPlane (normal, dist);
+		b->sides[3+i].planenum = g_MainMap->FindFloatPlane (normal, dist);
 	}
 
 	CreateBrushWindings (b);
@@ -262,7 +262,7 @@ vec_t BrushVolume (bspbrush_t *brush)
 		w = brush->sides[i].winding;
 		if (!w)
 			continue;
-		plane = &mapplanes[brush->sides[i].planenum];
+		plane = &g_MainMap->mapplanes[brush->sides[i].planenum];
 		d = -(DotProduct (corner, plane->normal) - plane->dist);
 		area = WindingArea (w);
 		volume += d*area;
@@ -422,7 +422,7 @@ node_t	*PointInLeaf (node_t *node, Vector& point)
 
 	while (node->planenum != PLANENUM_LEAF)
 	{
-		plane = &mapplanes[node->planenum];
+		plane = &g_MainMap->mapplanes[node->planenum];
 		if (plane->type < 3)
 		{
 			d = point[plane->type] - plane->dist;
@@ -523,7 +523,7 @@ int	QuickTestBrushToPlanenum (bspbrush_t *brush, int planenum, int *numsplits)
 	}
 
 	// box on plane side
-	plane = &mapplanes[planenum];
+	plane = &g_MainMap->mapplanes[planenum];
 	s = BrushBspBoxOnPlaneSide (brush->mins, brush->maxs, plane);
 
 	// if both sides, count the visible faces split
@@ -568,7 +568,7 @@ int	TestBrushToPlanenum (bspbrush_t *brush, int planenum,
 	}
 
 	// box on plane side
-	plane = &mapplanes[planenum];
+	plane = &g_MainMap->mapplanes[planenum];
 	s = BrushBspBoxOnPlaneSide (brush->mins, brush->maxs, plane);
 
 	if (s != PSIDE_BOTH)
@@ -939,7 +939,7 @@ side_t *SelectSplitSide (bspbrush_t *brushes, node_t *node)
 				value =  5*facing - 5*splits - abs(front-back);
 //					value =  -5*splits;
 //					value =  5*facing - 5*splits;
-				if (mapplanes[pnum].type < 3)
+				if (g_MainMap->mapplanes[pnum].type < 3)
 					value+=5;		// axial is better
 				value -= epsilonbrush*1000;	// avoid!
 
@@ -1055,7 +1055,7 @@ void SplitBrush( bspbrush_t *brush, int planenum, bspbrush_t **front, bspbrush_t
 	float		d, d_front, d_back;
 
 	*front = *back = NULL;
-	plane = &mapplanes[planenum];
+	plane = &g_MainMap->mapplanes[planenum];
 
 	// check all points
 	d_front = d_back = 0;
@@ -1094,7 +1094,7 @@ void SplitBrush( bspbrush_t *brush, int planenum, bspbrush_t **front, bspbrush_t
 	w = BaseWindingForPlane (plane->normal, plane->dist + DotProduct(plane->normal,offset));
 	for (i=0 ; i<brush->numsides && w ; i++)
 	{
-		plane2 = &mapplanes[brush->sides[i].planenum ^ 1];
+		plane2 = &g_MainMap->mapplanes[brush->sides[i].planenum ^ 1];
 		ChopWindingInPlace (&w, plane2->normal, plane2->dist+DotProduct(plane2->normal,offset), 0); // PLANESIDE_EPSILON);
 	}
 

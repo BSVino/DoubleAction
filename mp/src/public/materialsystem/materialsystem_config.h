@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -45,7 +45,11 @@ struct MaterialSystem_Config_t
 {
 	bool Windowed() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_WINDOWED ) != 0; }
 	bool Resizing() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_RESIZING ) != 0; }
+#ifdef CSS_PERF_TEST
+	bool WaitForVSync() const { return false; }//( m_Flags & MATSYS_VIDCFG_FLAGS_NO_WAIT_FOR_VSYNC ) == 0; }
+#else
 	bool WaitForVSync() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_NO_WAIT_FOR_VSYNC ) == 0; }
+#endif
 	bool Stencil() const { return (m_Flags & MATSYS_VIDCFG_FLAGS_STENCIL ) != 0; }
 	bool ForceTrilinear() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_FORCE_TRILINEAR ) != 0; }
 	bool ForceHWSync() const { return ( m_Flags & MATSYS_VIDCFG_FLAGS_FORCE_HWSYNC ) != 0; }

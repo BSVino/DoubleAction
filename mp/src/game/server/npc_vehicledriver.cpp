@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -541,7 +541,7 @@ void CNPC_VehicleDriver::GatherEnemyConditions( CBaseEntity *pEnemy )
 Disposition_t CNPC_VehicleDriver::IRelationType(CBaseEntity *pTarget)
 {
 	// If it's the player and they are a criminal, we hate them.
-	if (pTarget->Classify() == CLASS_PLAYER)
+	if ( pTarget && pTarget->Classify() == CLASS_PLAYER)
 	{
 		if (GlobalEntity_GetState("gordon_precriminal") == GLOBAL_ON)
 		{
@@ -690,7 +690,7 @@ bool CNPC_VehicleDriver::WaypointReached( void )
 	m_pNextWaypoint = m_Waypoints[1];
 
 	// Drop the spline marker back
-	m_flDistanceAlongSpline = max( 0, m_flDistanceAlongSpline - 1.0 );
+	m_flDistanceAlongSpline = MAX( 0, m_flDistanceAlongSpline - 1.0 );
 
 	CheckForTeleport();
 
@@ -763,7 +763,7 @@ bool CNPC_VehicleDriver::OverridePathMove( float flInterval )
 	float flIncrement = flIncTime * (flSpeed / pCurrentSplineBeingTraversed->GetLength());
 
 	// Now advance our point along the spline
-	m_flDistanceAlongSpline = clamp( m_flDistanceAlongSpline + flIncrement, 0, 2);
+	m_flDistanceAlongSpline = clamp( m_flDistanceAlongSpline + flIncrement, 0.f, 2.f);
 	if ( m_flDistanceAlongSpline > 1 )
 	{
 		// We crossed the spline boundary
@@ -951,7 +951,7 @@ void CNPC_VehicleDriver::CheckForTeleport( void )
 	// Does it have the teleport flag set?
 	if ( pTrack->HasSpawnFlags( SF_PATH_TELEPORT ) )
 	{
-		AddEffects( EF_NOINTERP );
+		IncrementInterpolationFrame();
 
 		// Teleport the vehicle to the pathcorner
 		Vector vecMins, vecMaxs;

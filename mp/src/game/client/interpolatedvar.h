@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -171,6 +171,8 @@ public:
 
 	virtual const char *GetDebugName() = 0;
 	virtual void SetDebugName( const char* pName )	= 0;
+
+	virtual void SetDebug( bool bDebug ) = 0;
 };
 
 template< typename Type, bool IS_ARRAY >
@@ -495,7 +497,7 @@ public:
 
 	// set a debug name (if not provided by constructor)
 	void	SetDebugName(const char *pName ) { m_pDebugName = pName; }
-
+	virtual void SetDebug( bool bDebug ) { m_bDebug = bDebug; }
 	bool GetInterpolationInfo( float currentTime, int *pNewer, int *pOlder, int *pOldest );
 
 protected:
@@ -569,6 +571,7 @@ protected:
 	byte *								m_bLooping;
 	float								m_InterpolationAmount;
 	const char *						m_pDebugName;
+	bool								m_bDebug : 1;
 };
 
 
@@ -583,6 +586,7 @@ inline CInterpolatedVarArrayBase<Type, IS_ARRAY>::CInterpolatedVarArrayBase( con
 	m_LastNetworkedTime = 0;
 	m_LastNetworkedValue = NULL;
 	m_bLooping = NULL;
+	m_bDebug = false;
 }
 
 template< typename Type, bool IS_ARRAY >
@@ -635,6 +639,13 @@ inline bool CInterpolatedVarArrayBase<Type, IS_ARRAY>::NoteChanged( float change
 		}
 	}
 	
+	if ( m_bDebug )
+	{
+		char const *pDiffString = bRet ? "differs" : "identical";
+
+		Msg( "%s LatchChanged at %f changetime %f:  %s\n", GetDebugName(), gpGlobals->curtime, changetime, pDiffString );
+	}
+
 	AddToHead( changetime, m_pValue, true );
 
 	if ( bUpdateLastNetworkedValue )
@@ -833,7 +844,7 @@ inline bool CInterpolatedVarArrayBase<Type, IS_ARRAY>::GetInterpolationInfo(
 		if ( dt > 0.0001f )
 		{
 			pInfo->frac = ( targettime - older_change_time ) / ( newer_change_time - older_change_time );
-			pInfo->frac = min( pInfo->frac, 2.0f );
+			pInfo->frac = MIN( pInfo->frac, 2.0f );
 
 			int oldestindex = i+1;
 														    
@@ -964,6 +975,14 @@ inline int CInterpolatedVarArrayBase<Type, IS_ARRAY>::Interpolate( float current
 
 	
 	CVarHistory &history = m_VarHistory;
+
+	if ( m_bDebug )
+	{
+		// "value will hold" means we are either extrapolating, or the samples in GetInterpolationInfo are all the same... In either case there are no more "changes" until we latch a new
+		//  value and we can remove this var from the interpolated var list (bit perf optimization)
+		Msg( "%s Interpolate at %f%s\n", GetDebugName(), currentTime, noMoreChanges ? " [value will hold]" : "" );
+	}
+
 
 #ifdef INTERPOLATEDVAR_PARANOID_MEASUREMENT
 	Type *backupValues = (Type*)_alloca( m_nMaxCount * sizeof(Type) );
@@ -1110,7 +1129,7 @@ void CInterpolatedVarArrayBase<Type, IS_ARRAY>::GetDerivative_SmoothVelocity( Ty
 		// Now ramp it to zero after cl_extrapolate_amount..
 		float flDestTime = currentTime - m_InterpolationAmount;
 		float diff = flDestTime - history[info.newer].changetime;
-		diff = clamp( diff, 0, cl_extrapolate_amount.GetFloat() * 2 );
+		diff = clamp( diff, 0.f, cl_extrapolate_amount.GetFloat() * 2 );
 		if ( diff > cl_extrapolate_amount.GetFloat() )
 		{
 			float scale = 1 - (diff - cl_extrapolate_amount.GetFloat()) / cl_extrapolate_amount.GetFloat();
@@ -1141,7 +1160,15 @@ inline void CInterpolatedVarArrayBase<Type, IS_ARRAY>::Copy( IInterpolatedVar *p
 
 	if ( !pSrc || pSrc->m_nMaxCount != m_nMaxCount )
 	{
-		Assert( false );
+		if ( pSrc )
+		{
+			AssertMsg3( false, "pSrc->m_nMaxCount (%i) != m_nMaxCount (%i) for %s.", pSrc->m_nMaxCount, m_nMaxCount, m_pDebugName);
+		}
+		else
+		{
+			AssertMsg( false, "pSrc was null in CInterpolatedVarArrayBase<Type, IS_ARRAY>::Copy.");
+		}
+
 		return;
 	}
 
@@ -1254,7 +1281,7 @@ inline void	CInterpolatedVarArrayBase<Type, IS_ARRAY>::SetMaxCount( int newmax )
 	bool changed = ( newmax != m_nMaxCount ) ? true : false;
 
 	// BUGBUG: Support 0 length properly?
-	newmax = max(1,newmax);
+	newmax = MAX(1,newmax);
 
 	m_nMaxCount = newmax;
 	// Wipe everything any time this changes!!!
@@ -1330,7 +1357,7 @@ inline void CInterpolatedVarArrayBase<Type, IS_ARRAY>::_Extrapolate(
 	}
 	else
 	{
-		float flExtrapolationAmount = min( flDestinationTime - pNew->changetime, flMaxExtrapolationAmount );
+		float flExtrapolationAmount = MIN( flDestinationTime - pNew->changetime, flMaxExtrapolationAmount );
 
 		float divisor = 1.0f / (pNew->changetime - pOld->changetime);
 		for ( int i=0; i < m_nMaxCount; i++ )
@@ -1539,7 +1566,7 @@ public:
 	CInterpolatedVarArray( const char *pDebugName = "no debug name" )
 		: CInterpolatedVarArrayBase<Type, true>( pDebugName )
 	{
-		SetMaxCount( COUNT );
+		this->SetMaxCount( COUNT );
 	}
 };
 
@@ -1555,7 +1582,7 @@ public:
 	CInterpolatedVar( const char *pDebugName = NULL )
 		: CInterpolatedVarArrayBase< Type, false >(pDebugName) 
 	{
-		SetMaxCount( 1 );
+		this->SetMaxCount( 1 );
 	}
 };
 

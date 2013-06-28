@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -51,6 +51,7 @@ public:
 	virtual bool	IsMultiplayer( void ) const = 0;
 	virtual bool	IsPausable() const = 0;
 	virtual bool	IsHLTV() const = 0;
+	virtual bool	IsReplay() const = 0;
 
 	virtual const char * GetPassword() const = 0;	// returns the password or NULL if none set	
 

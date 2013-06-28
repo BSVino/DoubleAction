@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The Halflife Cycler NPCs
 //
@@ -180,7 +180,7 @@ int CCycler::OnTakeDamage( const CTakeDamageInfo &info )
 		m_flPlaybackRate = 1.0;
 		StudioFrameAdvance ();
 		m_flPlaybackRate = 0;
-		Msg( "sequence: %d, frame %.0f\n", GetSequence(), m_flCycle );
+		Msg( "sequence: %d, frame %.0f\n", GetSequence(), m_flCycle.Get() );
 	}
 
 	return 0;

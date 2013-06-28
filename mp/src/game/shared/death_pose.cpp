@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,8 +30,6 @@ void GetRagdollCurSequenceWithDeathPose( C_BaseAnimating *entity, matrix3x4_t *c
 		int iTempSequence = entity->GetSequence();
 		float flTempCycle = entity->GetCycle();
 
-		entity->SetEffects( EF_NOINTERP );
-
 		entity->SetSequence( activity );
 
 		entity->SetCycle( (float)frame / MAX_DEATHPOSE_FRAMES );
@@ -52,8 +50,6 @@ void GetRagdollCurSequenceWithDeathPose( C_BaseAnimating *entity, matrix3x4_t *c
 		entity->Interpolate( gpGlobals->curtime );
 
 		entity->SetupBones( NULL, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime );
-
-		entity->RemoveEffects( EF_NOINTERP );
 	}
 	else
 	{

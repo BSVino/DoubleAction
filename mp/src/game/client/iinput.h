@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -76,11 +76,14 @@ public:
 	virtual void		SetFullscreenMousePos( int mx, int my ) = 0;
 	virtual void		ResetMouse( void ) = 0;
 	virtual	float		GetLastForwardMove( void ) = 0;
+	virtual	float		Joystick_GetForward( void ) = 0;
+	virtual	float		Joystick_GetSide( void ) = 0;
+	virtual	float		Joystick_GetPitch( void ) = 0;
+	virtual	float		Joystick_GetYaw( void ) = 0;
 
 	// Third Person camera ( TODO/FIXME:  Move this to a separate interface? )
 	virtual void		CAM_Think( void ) = 0;
 	virtual int			CAM_IsThirdPerson( void ) = 0;
-	virtual void		CAM_GetCameraOffset( Vector& ofs ) = 0;
 	virtual void		CAM_ToThirdPerson(void) = 0;
 	virtual void		CAM_ToFirstPerson(void) = 0;
 	virtual void		CAM_StartMouseMove(void) = 0;
@@ -106,6 +109,8 @@ public:
 
 	virtual	void		CAM_SetCameraThirdData( CameraThirdData_t *pCameraData, const QAngle &vecCameraOffset ) = 0;
 	virtual void		CAM_CameraThirdThink( void ) = 0;
+
+	virtual	bool		EnableJoystickMode() = 0;
 };
 
 extern ::IInput *input;

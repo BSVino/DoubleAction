@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,7 +10,7 @@
 #include <vgui_controls/Label.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/ImagePanel.h>
-#include <vgui/isurface.h>
+#include <vgui/ISurface.h>
 #include "c_baseplayer.h"
 #include "iclientmode.h"
 #include "c_team_objectiveresource.h"
@@ -127,9 +127,8 @@ CHudCapturePanelProgressBar::CHudCapturePanelProgressBar( vgui::Panel *parent, c
 	if ( m_iTexture == -1 ) // we didn't find it, so create a new one
 	{
 		m_iTexture = vgui::surface()->CreateNewTextureID();	
+		vgui::surface()->DrawSetTextureFile( m_iTexture, "vgui/progress_bar", true, false );
 	}
-
-	vgui::surface()->DrawSetTextureFile( m_iTexture, "vgui/progress_bar", true, false );
 }
 
 //-----------------------------------------------------------------------------
@@ -376,9 +375,8 @@ CHudCapturePanelIcon::CHudCapturePanelIcon( vgui::Panel *parent, const char *nam
 	if ( m_iTexture == -1 ) // we didn't find it, so create a new one
 	{
 		m_iTexture = vgui::surface()->CreateNewTextureID();	
+		vgui::surface()->DrawSetTextureFile( m_iTexture, "vgui/capture_icon", true, false );
 	}
-
-	vgui::surface()->DrawSetTextureFile( m_iTexture, "vgui/capture_icon", true, false );
 }
 
 //-----------------------------------------------------------------------------

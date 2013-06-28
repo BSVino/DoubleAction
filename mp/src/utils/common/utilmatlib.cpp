@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,15 +9,15 @@
 
 // C callable material system interface for the utils.
 
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialvar.h"
 #include <cmdlib.h>
 #include "utilmatlib.h"
 #include "tier0/dbg.h"
 #include <windows.h>
-#include "FileSystem.h"
-#include "materialsystem/MaterialSystem_Config.h"
+#include "filesystem.h"
+#include "materialsystem/materialsystem_config.h"
 #include "mathlib/Mathlib.h"
 
 void LoadMaterialSystemInterface( CreateInterfaceFn fileSystemFactory )

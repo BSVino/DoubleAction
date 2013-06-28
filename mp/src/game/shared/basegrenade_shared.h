@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,17 +28,12 @@
 
 class CTakeDamageInfo;
 
-//Tony; Compromise! in episodic single player, inherit CBaseCombatCharacter for the barnacle interaction, otherwise this will never get called.
-class CBaseGrenade : 
-	#if defined( HL2_EPISODIC )
-		public CBaseCombatCharacter
-	#else
-		public CBaseAnimating
-	#endif
-	#if defined( GAME_DLL )
-		, public CDefaultPlayerPickupVPhysics
-	#endif
-{		//Tony; the ugliest class definition ever, but it saves characters, or something. Should I be shot for this?
+#if !defined( CLIENT_DLL )
+class CBaseGrenade : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
+#else
+class CBaseGrenade : public CBaseAnimating
+#endif
+{
 	DECLARE_CLASS( CBaseGrenade, CBaseAnimating );
 public:
 
@@ -106,12 +101,6 @@ public:
 	void				  SetThrower( CBaseCombatCharacter *pThrower );
 	CBaseEntity *GetOriginalThrower() { return m_hOriginalThrower; }
 
-	// added for entity info so that certain classes can override this, without screwing up the normal GetOwnerEntity()
-	virtual CBaseEntity	*GetTrueOwnerEntity()
-	{
-		return dynamic_cast<CBaseEntity *>( GetThrower() );
-	}
-
 #if !defined( CLIENT_DLL )
 	// Allow +USE pickup
 	int ObjectCaps() 
@@ -129,7 +118,7 @@ public:
 	bool				m_bHasWarnedAI;				// whether or not this grenade has issued its DANGER sound to the world sound list yet.
 	CNetworkVar( bool, m_bIsLive );					// Is this grenade live, or can it be picked up?
 	CNetworkVar( float, m_DmgRadius );				// How far do I do damage?
-	CNetworkVar( float, m_flNextAttack );			// Added into grenade itself now that it's no longer CBaseCombatCharacter
+	CNetworkVar( float, m_flNextAttack );
 	float				m_flDetonateTime;			// Time at which to detonate.
 	float				m_flWarnAITime;				// Time at which to warn the AI
 

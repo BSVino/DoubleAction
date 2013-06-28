@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -49,6 +49,7 @@ public:
 
 	// Automatic casts to IMaterial
 	operator IMaterial*() { return m_pMaterial; }
+	operator IMaterial*() const { return m_pMaterial; }
 	operator IMaterial const*() const { return m_pMaterial; }
 	IMaterial* operator->() { return m_pMaterial; }
 	

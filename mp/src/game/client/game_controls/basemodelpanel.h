@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 #include <vgui/IScheme.h>
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/EditablePanel.h>
-#include "gameeventlistener.h"
+#include "GameEventListener.h"
 #include "KeyValues.h"
 
 class C_SceneEntity;
@@ -194,6 +194,7 @@ public:
 	void		CalculateFrameDistance( void );
 	void		ZoomToFrameDistance( void );
 
+	void		UpdateModel();
 public: // IGameEventListener:
 	virtual void FireGameEvent( IGameEvent * event );
 

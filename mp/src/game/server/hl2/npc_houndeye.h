@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		
 //
@@ -16,7 +16,7 @@
 #pragma once
 
 
-#include	"AI_BaseNPC.h"
+#include	"ai_basenpc.h"
 
 #include	"energy_wave.h"
 

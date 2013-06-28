@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -105,7 +105,7 @@ public:
 	const char	*CurrentToken( void );
 	bool		GetToken( bool crossline );
 	bool		TokenAvailable( void );
-	void		Error( const char *fmt, ... );
+	void		Error( PRINTF_FORMAT_STRING const char *fmt, ... );
 	void		SetBuffer( char *buffer );
 private:
 	const char	*m_pBuffer;
@@ -114,7 +114,7 @@ private:
 
 extern CSceneTokenProcessor g_TokenProcessor;
 
-void Scene_Printf( const char *pFormat, ... );
+void Scene_Printf( PRINTF_FORMAT_STRING const char *pFormat, ... );
 extern ConVar scene_clientflex;
 
 #endif // SCENEENTITY_SHARED_H

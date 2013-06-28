@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -44,6 +44,7 @@ enum
 	DRAWWORLDLISTS_DRAW_SHADOWDEPTH				= 0x040,
 	DRAWWORLDLISTS_DRAW_REFRACTION				= 0x080,
 	DRAWWORLDLISTS_DRAW_REFLECTION				= 0x100,
+	DRAWWORLDLISTS_DRAW_SSAO					= 0x800,
 };
 
 enum
@@ -56,6 +57,15 @@ enum
 	MAX_MAT_SORT_GROUPS
 };
 
+enum ERenderDepthMode
+{
+	DEPTH_MODE_NORMAL = 0,
+	DEPTH_MODE_SHADOW = 1,
+	DEPTH_MODE_SSA0 = 2,
+	DEPTH_MODE_OVERRIDE = 3,
+
+	DEPTH_MODE_MAX
+}; 
 
 typedef VPlane Frustum[FRUSTUM_NUMPLANES];
 
@@ -164,6 +174,13 @@ public:
 //  The client .dll can call Render multiple times to overlay one or more world
 //  views on top of one another
 //-----------------------------------------------------------------------------
+enum DrawBrushModelMode_t
+{
+	DBM_DRAW_ALL = 0,
+	DBM_DRAW_OPAQUE_ONLY,
+	DBM_DRAW_TRANSLUCENT_ONLY,
+};
+
 class IVRenderView
 {
 public:
@@ -176,7 +193,7 @@ public:
 		model_t *model, 
 		const Vector& origin, 
 		const QAngle& angles, 
-		bool sort ) = 0;
+		bool bUnused ) = 0;
 	
 	// Draw brush model that has no origin/angles change ( uses identity transform )
 	// FIXME, Material proxy IClientEntity *baseentity is unused right now, use DrawBrushModel for brushes with
@@ -287,7 +304,7 @@ public:
 	//replaces the current view frustum with a rhyming replacement of your choice
 	virtual void			OverrideViewFrustum( Frustum custom ) = 0;
 
-	virtual void			DrawBrushModelShadowDepth( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, bool bSort ) = 0;
+	virtual void			DrawBrushModelShadowDepth( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, ERenderDepthMode DepthMode ) = 0;
 	virtual void			UpdateBrushModelLightmap( model_t *model, IClientRenderable *pRenderable ) = 0;
 	virtual void			BeginUpdateLightmaps( void ) = 0;
 	virtual void			EndUpdateLightmaps( void ) = 0;
@@ -295,10 +312,11 @@ public:
 	virtual void			OLD_SetProjectionMatrixOrtho( float left, float top, float right, float bottom, float zNear, float zFar ) = 0;
 	virtual void			Push3DView( const CViewSetup &view, int nFlags, ITexture* pRenderTarget, Frustum frustumPlanes, ITexture* pDepthTexture ) = 0;
 	virtual void			GetMatricesForView( const CViewSetup &view, VMatrix *pWorldToView, VMatrix *pViewToProjection, VMatrix *pWorldToProjection, VMatrix *pWorldToPixels ) = 0;
+	virtual void			DrawBrushModelEx( IClientEntity *baseentity, model_t *model, const Vector& origin, const QAngle& angles, DrawBrushModelMode_t mode ) = 0;
 };
 
 // change this when the new version is incompatable with the old
-#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView013"
+#define VENGINE_RENDERVIEW_INTERFACE_VERSION	"VEngineRenderView014"
 
 #if defined(_STATIC_LINKED) && defined(CLIENT_DLL)
 namespace Client

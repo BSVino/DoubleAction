@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2007, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,6 +10,9 @@
 #include "view.h"
 #include "env_wind_shared.h"
 #include "input.h"
+#ifdef TF_CLIENT_DLL
+#include "cdll_util.h"
+#endif
 #include "rope_helpers.h"
 #include "engine/ivmodelinfo.h"
 #include "tier0/vprof.h"
@@ -77,7 +80,10 @@ static ConVar rope_smooth_maxalpha( "rope_smooth_maxalpha", "0.5", 0, "Alpha for
 
 static ConVar mat_fullbright( "mat_fullbright", "0", FCVAR_CHEAT ); // get it from the engine
 static ConVar r_drawropes( "r_drawropes", "1", FCVAR_CHEAT );
+static ConVar r_queued_ropes( "r_queued_ropes", "1" );
 static ConVar r_ropetranslucent( "r_ropetranslucent", "1");
+static ConVar r_rope_holiday_light_scale( "r_rope_holiday_light_scale", "0.055", FCVAR_DEVELOPMENTONLY );
+static ConVar r_ropes_holiday_lights_allowed( "r_ropes_holiday_lights_allowed", "1", FCVAR_DEVELOPMENTONLY );
 
 static ConVar rope_wind_dist( "rope_wind_dist", "1000", 0, "Don't use CPU applying small wind gusts to ropes when they're past this distance." );
 static ConVar rope_averagelight( "rope_averagelight", "1", 0, "Makes ropes use average of cubemap lighting instead of max intensity." );
@@ -161,7 +167,7 @@ public:
 		{
 			for( int j = m_DeleteOnSwitch[i].Count(); --j >= 0; )
 			{
-				delete []m_DeleteOnSwitch[i].Element(j);
+				free( m_DeleteOnSwitch[i].Element(j) );
 			}
 
 			m_DeleteOnSwitch[i].RemoveAll();
@@ -175,7 +181,7 @@ public:
 
 		for( int i = m_DeleteOnSwitch[m_nCurrentStack].Count(); --i >= 0; )
 		{
-			delete []m_DeleteOnSwitch[m_nCurrentStack].Element(i);
+			free( m_DeleteOnSwitch[m_nCurrentStack].Element(i) );
 		}
 		m_DeleteOnSwitch[m_nCurrentStack].RemoveAll();
 	}
@@ -188,7 +194,7 @@ public:
 		{
 			int iMaxSize = m_QueuedRopeMemory[m_nCurrentStack].GetMaxSize();
 			Warning( "Overflowed rope queued rendering memory stack. Needed %d, have %d/%d\n", bytes, iMaxSize - m_QueuedRopeMemory[m_nCurrentStack].GetUsed(), iMaxSize );
-			pReturn = new uint8 [bytes];
+			pReturn = malloc( bytes );
 			m_DeleteOnSwitch[m_nCurrentStack].AddToTail( pReturn );
 		}
 		return pReturn;
@@ -227,6 +233,10 @@ public:
 	{
 		m_QueuedModeMemory.SwitchStack();
 	}
+
+	void SetHolidayLightMode( bool bHoliday ) { m_bDrawHolidayLights = bHoliday; }
+	bool IsHolidayLightMode( void );
+	int GetHolidayLightStyle( void );
 	
 private:
 	struct RopeRenderData_t;
@@ -273,7 +283,11 @@ private:
 		RopeQueuedRenderCache_t( void ) : pCaches(NULL), iCacheCount(0) { };
 	};
 
-	CUtlLinkedList<RopeQueuedRenderCache_t> m_RopeQueuedRenderCaches;	
+	CUtlLinkedList<RopeQueuedRenderCache_t> m_RopeQueuedRenderCaches;
+
+	bool m_bDrawHolidayLights;
+	bool m_bHolidayInitialized;
+	int m_nHolidayLightsStyle;
 };
 
 static CRopeManager s_RopeManager;
@@ -299,6 +313,9 @@ CRopeManager::CRopeManager()
 	m_aSegmentCache.Purge();
 	m_nSegmentCacheCount = 0;
 	m_pDepthWriteMaterial = NULL;
+	m_bDrawHolidayLights = false;
+	m_bHolidayInitialized = false;
+	m_nHolidayLightsStyle = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -306,6 +323,19 @@ CRopeManager::CRopeManager()
 //-----------------------------------------------------------------------------
 CRopeManager::~CRopeManager()
 {
+	int nRenderCacheCount = m_aRenderCache.Count();
+	for ( int iRenderCache = 0; iRenderCache < nRenderCacheCount; ++iRenderCache )
+	{
+		if ( m_aRenderCache[iRenderCache].m_pSolidMaterial )
+		{
+			m_aRenderCache[iRenderCache].m_pSolidMaterial->DecrementReferenceCount();
+		}
+		if ( m_aRenderCache[iRenderCache].m_pBackMaterial )
+		{
+			m_aRenderCache[iRenderCache].m_pBackMaterial->DecrementReferenceCount();
+		}
+	}
+
 	m_aRenderCache.Purge();
 	m_aSegmentCache.Purge();
 }
@@ -348,7 +378,15 @@ void CRopeManager::AddToRenderCache( C_RopeKeyframe *pRope )
 	{
 		int iRenderCache = m_aRenderCache.AddToTail();
 		m_aRenderCache[iRenderCache].m_pSolidMaterial = pRope->GetSolidMaterial();
+		if ( m_aRenderCache[iRenderCache].m_pSolidMaterial )
+		{
+			m_aRenderCache[iRenderCache].m_pSolidMaterial->IncrementReferenceCount();
+		}
 		m_aRenderCache[iRenderCache].m_pBackMaterial = pRope->GetBackMaterial();
+		if ( m_aRenderCache[iRenderCache].m_pBackMaterial )
+		{
+			m_aRenderCache[iRenderCache].m_pBackMaterial->IncrementReferenceCount();
+		}
 		m_aRenderCache[iRenderCache].m_nCacheCount = 0;
 	}
 
@@ -369,7 +407,14 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 
 	// Check to see if we want to render the ropes.
 	if( !r_drawropes.GetBool() )
+	{
+		if( pBuildRopeQueuedData && (m_RopeQueuedRenderCaches.Count() != 0) )
+		{
+			m_RopeQueuedRenderCaches.Remove( m_RopeQueuedRenderCaches.Head() );
+		}
+
 		return;
+	}
 
 	if ( bShadowDepth && !m_pDepthWriteMaterial && g_pMaterialSystem )
 	{
@@ -378,6 +423,7 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 		pVMTKeyValues->SetInt( "$alphatest", 0 );
 		pVMTKeyValues->SetInt( "$nocull", 1 );
 		m_pDepthWriteMaterial = g_pMaterialSystem->FindProceduralMaterial( "__DepthWrite01", TEXTURE_GROUP_OTHER, pVMTKeyValues );
+		m_pDepthWriteMaterial->IncrementReferenceCount();
 	}
 
 	CMatRenderContextPtr pRenderContext( materials );
@@ -403,7 +449,7 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 				
 				if( pBuildRopeQueuedData )
 				{
-					pRope->BuildRope( pRopeSegment, vCurrentViewForward, vCurrentViewOrigin, pBuildRopeQueuedData );
+					pRope->BuildRope( pRopeSegment, vCurrentViewForward, vCurrentViewOrigin, pBuildRopeQueuedData, true );
 					++pBuildRopeQueuedData;
 				}
 				else
@@ -415,12 +461,13 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 					stackQueuedData.m_pPredictedPositions = vStackPredictedPositions;
 					stackQueuedData.m_RopeLength = pRope->m_RopeLength;
 					stackQueuedData.m_Slack = pRope->m_Slack;
+
 					for( int i = 0; i != stackQueuedData.m_iNodeCount; ++i )
 					{
 						vStackPredictedPositions[i] = pRope->m_RopePhysics.GetNode( i )->m_vPredicted;
 					}
 					
-					pRope->BuildRope( pRopeSegment, vCurrentViewForward, vCurrentViewOrigin, &stackQueuedData );
+					pRope->BuildRope( pRopeSegment, vCurrentViewForward, vCurrentViewOrigin, &stackQueuedData, false );
 				}
 			}
 			else
@@ -431,6 +478,13 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 					++pBuildRopeQueuedData;
 				}
 			}
+		}
+
+		if ( materials->GetRenderContext()->GetCallQueue() != NULL && pBuildRopeQueuedData == NULL )
+		{
+			// We build ropes outside of queued mode for holidy lights
+			// But we don't want to render them
+			continue;
 		}
 
 		int nVertCount = 0;
@@ -460,10 +514,10 @@ void CRopeManager::DrawRenderCache_NonQueued( bool bShadowDepth, RopeRenderData_
 	ResetSegmentCache( 0 );
 
 	if( pBuildRopeQueuedData && (m_RopeQueuedRenderCaches.Count() != 0) )
+	{
 		m_RopeQueuedRenderCaches.Remove( m_RopeQueuedRenderCaches.Head() );
+	}
 }
-
-ConVar r_queued_ropes( "r_queued_ropes", "1" );
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -566,11 +620,55 @@ void CRopeManager::DrawRenderCache( bool bShadowDepth )
 		}
 		Assert( ((void *)pVectorWrite == (void *)(((uint8 *)pMemory) + iMemoryNeeded)) && ((void *)pWriteRopeQueuedData == (void *)pVectorDataStart));		
 		pCallQueue->QueueCall( this, &CRopeManager::DrawRenderCache_NonQueued, bShadowDepth, pRenderCachesStart, iRenderCacheCount, vForward, vOrigin, pBuildRopeQueuedDataStart );
+
+		if ( IsHolidayLightMode() )
+		{
+			// With holiday lights we need to also build the ropes non-queued without rendering them
+			DrawRenderCache_NonQueued( bShadowDepth, m_aRenderCache.Base(), iRenderCacheCount, vForward, vOrigin, NULL );
+		}
 	}
 	else
 	{
 		DrawRenderCache_NonQueued( bShadowDepth, m_aRenderCache.Base(), iRenderCacheCount, vForward, vOrigin, NULL );
 	}
+}
+
+bool CRopeManager::IsHolidayLightMode( void )
+{
+	if ( !r_ropes_holiday_lights_allowed.GetBool() )
+	{
+		return false;
+	}
+
+	bool bDrawHolidayLights = false;
+
+#ifdef USES_ECON_ITEMS
+	if ( !m_bHolidayInitialized && GameRules() )
+	{
+		m_bHolidayInitialized = true;
+		m_bDrawHolidayLights = GameRules()->IsHolidayActive( kHoliday_Christmas );
+	}
+
+	bDrawHolidayLights = m_bDrawHolidayLights;
+	m_nHolidayLightsStyle = 0;
+
+#ifdef TF_CLIENT_DLL
+	// Turn them on in Pyro-vision too
+	if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) )
+	{
+		bDrawHolidayLights = true;
+		m_nHolidayLightsStyle = 1;
+	}
+#endif // TF_CLIENT_DLL
+
+#endif // USES_ECON_ITEMS
+
+	return bDrawHolidayLights;
+}
+
+int CRopeManager::GetHolidayLightStyle( void )
+{
+	return m_nHolidayLightsStyle;
 }
 
 //-----------------------------------------------------------------------------
@@ -899,7 +997,7 @@ void C_RopeKeyframe::CPhysicsDelegate::ApplyConstraints( CSimplePhysics::CNode *
 			AngleVectors( angles, &forward );
 
 			int parity = 1;
-			int nFalloffNodes = min( 2, nNodes - 2 );
+			int nFalloffNodes = MIN( 2, nNodes - 2 );
 			LockNodeDirection( pNodes, parity, nFalloffNodes, g_flLockAmount, g_flLockFalloff, forward );
 		}
 	}
@@ -913,7 +1011,7 @@ void C_RopeKeyframe::CPhysicsDelegate::ApplyConstraints( CSimplePhysics::CNode *
 			AngleVectors( angles, &forward );
 			
 			int parity = -1;
-			int nFalloffNodes = min( 2, nNodes - 2 );
+			int nFalloffNodes = MIN( 2, nNodes - 2 );
 			LockNodeDirection( &pNodes[nNodes-1], parity, nFalloffNodes, g_flLockAmount, g_flLockFalloff, forward );
 		}
 	}
@@ -955,6 +1053,12 @@ C_RopeKeyframe::~C_RopeKeyframe()
 {
 	s_RopeManager.RemoveRopeFromQueuedRenderCaches( this );	
 	g_Ropes.FindAndRemove( this );
+
+	if ( m_pBackMaterial )
+	{
+		m_pBackMaterial->DecrementReferenceCount();
+		m_pBackMaterial = NULL;
+	}
 }
 
 
@@ -1206,7 +1310,10 @@ void C_RopeKeyframe::FinishInit( const char *pMaterialName )
 		m_pBackMaterial = NULL;
 
 	if ( m_pBackMaterial )
+	{
+		m_pBackMaterial->IncrementReferenceCount();
 		m_pBackMaterial->GetMappingWidth();
+	}
 	
 	// Init rope physics.
 	m_nSegments = clamp( m_nSegments, 2, ROPE_MAX_SEGMENTS );
@@ -1553,7 +1660,7 @@ inline void Catmull_Rom_Eval( const catmull_t &spline, const Vector &t, Vector &
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurrentViewForward, const Vector &vCurrentViewOrigin, C_RopeKeyframe::BuildRopeQueuedData_t *pQueuedData )
+void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurrentViewForward, const Vector &vCurrentViewOrigin, C_RopeKeyframe::BuildRopeQueuedData_t *pQueuedData, bool bQueued )
 {
 	if ( !pSegmentData )
 		return;
@@ -1579,6 +1686,18 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurr
 	{
 		pSegmentData->m_Segments[nSegmentCount].m_vPos = pPredictedPositions[iNode];
 		pSegmentData->m_Segments[nSegmentCount].m_vColor = pLightValues[iNode] * vColorMod;
+
+		CEffectData data;
+
+		if ( !bQueued && RopeManager()->IsHolidayLightMode() && r_rope_holiday_light_scale.GetFloat() > 0.0f )
+		{
+			data.m_nMaterial = reinterpret_cast< int >( this );
+			data.m_nHitBox = ( iNode << 8 );
+			data.m_flScale = r_rope_holiday_light_scale.GetFloat();
+			data.m_vOrigin = pSegmentData->m_Segments[nSegmentCount].m_vPos;
+			DispatchEffect( "TF_HolidayLight", data );
+		}
+
 		++nSegmentCount;
 
 		if ( iNode < lastNode )
@@ -1604,6 +1723,14 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurr
 				pSegmentData->m_Segments[nSegmentCount].m_vColor = pSegmentData->m_Segments[nSegmentCount-1].m_vColor + vecColorInc;
 				// simple eval using precomputed basis
 				Catmull_Rom_Eval( spline, pSubdivVecList[iSubdiv], pSegmentData->m_Segments[nSegmentCount].m_vPos );
+
+				if ( !bQueued && RopeManager()->IsHolidayLightMode() && r_rope_holiday_light_scale.GetFloat() > 0.0f )
+				{
+					data.m_nHitBox++;
+					data.m_flScale = r_rope_holiday_light_scale.GetFloat();
+					data.m_vOrigin = pSegmentData->m_Segments[nSegmentCount].m_vPos;
+					DispatchEffect( "TF_HolidayLight", data );
+				}
 
 				++nSegmentCount;
 				Assert( nSegmentCount <= MAX_ROPE_SEGMENTS );
@@ -1643,7 +1770,7 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurr
 
 			// Right here, we need to specify a width that will be 1 pixel larger in screen space.
 			float zCoord = vCurrentViewForward.Dot( pSegmentData->m_Segments[iSegment].m_vPos - vCurrentViewOrigin );
-			zCoord = max( zCoord, 0.1f );
+			zCoord = MAX( zCoord, 0.1f );
 							
 			float flScreenSpaceWidth = m_Width * flHalfScreenWidth / zCoord;
 			if ( flScreenSpaceWidth < flMinScreenSpaceWidth )
@@ -1671,7 +1798,7 @@ void C_RopeKeyframe::BuildRope( RopeSegData_t *pSegmentData, const Vector &vCurr
 				}
 				else
 				{
-					pSegmentData->m_flMaxBackWidth = max( pSegmentData->m_flMaxBackWidth, pSegmentData->m_BackWidths[iSegment] );
+					pSegmentData->m_flMaxBackWidth = MAX( pSegmentData->m_flMaxBackWidth, pSegmentData->m_BackWidths[iSegment] );
 				}
 			}
 
@@ -1835,6 +1962,25 @@ bool C_RopeKeyframe::GetEndPointPos( int iPt, Vector &vPos )
 	return true;
 }
 
+IMaterial* C_RopeKeyframe::GetSolidMaterial( void )
+{
+#ifdef TF_CLIENT_DLL
+	if ( RopeManager()->IsHolidayLightMode() )
+	{
+		if ( RopeManager()->GetHolidayLightStyle() == 1 )
+		{
+			return materials->FindMaterial( "cable/pure_white", TEXTURE_GROUP_OTHER );
+		}
+	}
+#endif
+
+	return m_pMaterial;
+}
+IMaterial* C_RopeKeyframe::GetBackMaterial( void )
+{
+	return m_pBackMaterial;
+}
+
 bool C_RopeKeyframe::GetEndPointAttachment( int iPt, Vector &vPos, QAngle &angle )
 {
 	// By caching the results here, we avoid doing this a bunch of times per frame.
@@ -1897,12 +2043,12 @@ void C_RopeKeyframe::CalcLightValues()
 			for ( int iSide=0; iSide < 6; iSide++ )
 			{
 				float flLen = boxColors[iSide].Length();
-				flMaxIntensity = max( flMaxIntensity, flLen );
+				flMaxIntensity = MAX( flMaxIntensity, flLen );
 			}
 
 			VectorNormalize( m_LightValues[i] );
 			m_LightValues[i] *= flMaxIntensity;
-			float flMax = max( m_LightValues[i].x, max( m_LightValues[i].y, m_LightValues[i].z ) );
+			float flMax = MAX( m_LightValues[i].x, MAX( m_LightValues[i].y, m_LightValues[i].z ) );
 			if ( flMax > 1 )
 				m_LightValues[i] /= flMax;
 		}
@@ -1928,4 +2074,3 @@ void C_RopeKeyframe::ReceiveMessage( int classID, bf_read &msg )
 	m_flImpulse.y   = msg.ReadFloat();
 	m_flImpulse.z   = msg.ReadFloat();
 }
-

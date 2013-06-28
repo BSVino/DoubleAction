@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Crows. Simple ambient birds that fly away when they hear gunfire or
 //			when anything gets too close to them.
@@ -239,7 +239,7 @@ void CNPC_Crow::HandleAnimEvent( animevent_t *pEvent )
 		// How fast does the crow need to travel to reach the hop goal given gravity?
 		//
 		float flHopDistance = ( m_vSavePosition - GetLocalOrigin() ).Length();
-		float gravity = sv_gravity.GetFloat();
+		float gravity = GetCurrentGravity();
 		if ( gravity <= 1 )
 		{
 			gravity = 1;
@@ -738,7 +738,7 @@ void CNPC_Crow::Takeoff( const Vector &vGoal )
 	}
 }
 
-void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CTakeDamageInfo	newInfo = info;
 
@@ -752,7 +752,7 @@ void CNPC_Crow::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		newInfo.SetDamageForce( puntDir );
 	}
 
-	BaseClass::TraceAttack( newInfo, vecDir, ptr );
+	BaseClass::TraceAttack( newInfo, vecDir, ptr, pAccumulator );
 }
 
 
@@ -1084,7 +1084,7 @@ bool CNPC_Crow::BecomeRagdollOnClient( const Vector &force )
 	{
 		float flMass = VPhysicsGetObject()->GetMass();
 		float speed = VectorNormalize( newForce );
-		speed = min( speed, (CROW_RAGDOLL_SPEED_LIMIT * flMass) );
+		speed = MIN( speed, (CROW_RAGDOLL_SPEED_LIMIT * flMass) );
 		newForce *= speed;
 	}
 

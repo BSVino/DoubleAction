@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -87,7 +87,7 @@ private:
 
 	void	DetermineWatchField( const char *operation, int entindex,  datamap_t *dmap );
 	void	DumpWatchField( typedescription_t *field );
-	void	WatchMsg( const char *fmt, ... );
+	void	WatchMsg( PRINTF_FORMAT_STRING const char *fmt, ... );
 
 	difftype_t	CompareShort( short *outvalue, const short *invalue, int count );
 	difftype_t	CompareInt( int *outvalue, const int *invalue, int count );		// Compare an int
@@ -126,8 +126,8 @@ private:
 	void	WatchEHandle( difftype_t dt, EHANDLE *outvalue, EHANDLE const *invalue, int count );
 
 	// Report function
-	void	ReportFieldsDiffer( const char *fmt, ... );
-	void	DescribeFields( difftype_t dt, const char *fmt, ... );
+	void	ReportFieldsDiffer( PRINTF_FORMAT_STRING const char *fmt, ... );
+	void	DescribeFields( difftype_t dt, PRINTF_FORMAT_STRING const char *fmt, ... );
 	
 	bool	CanCheck( void );
 
@@ -190,7 +190,7 @@ private:
 	void const		*m_pSrc;
 	int				m_nSrcOffsetIndex;
 
-	void			Describe( const char *fmt, ... );
+	void			Describe( PRINTF_FORMAT_STRING const char *fmt, ... );
 
 	typedescription_t *m_pCurrentField;
 	char const		*m_pCurrentClassName;

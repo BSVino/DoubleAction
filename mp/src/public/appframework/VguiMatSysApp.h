@@ -1,4 +1,4 @@
-//=========== (C) Copyright 1999 Valve, L.L.C. All rights reserved. ===========
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // The copyright to the contents herein is the property of Valve, L.L.C.
 // The contents may be used and/or copied only with the written permission of
@@ -38,18 +38,18 @@ public:
 	virtual void PostShutdown();
 	virtual void Destroy();
 
-protected:
-	void AppPumpMessages();
-
-	// Sets the video mode
-	bool SetVideoMode( );
-
-	// Returns the window
+	// Returns the window handle (HWND in Win32)
 	void* GetAppWindow();
 
 	// Gets the window size
 	int GetWindowWidth() const;
 	int GetWindowHeight() const;
+
+protected:
+	void AppPumpMessages();
+
+	// Sets the video mode
+	bool SetVideoMode( );
 
 	// Sets up the game path
 	bool SetupSearchPaths( const char *pStartingDir, bool bOnlyUseStartingDir, bool bIsTool );

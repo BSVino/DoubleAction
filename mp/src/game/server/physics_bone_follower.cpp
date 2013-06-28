@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -443,16 +443,16 @@ void CBoneFollower::Touch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 // Purpose: Pass on trace attack calls to the entity we're following
 //-----------------------------------------------------------------------------
-void CBoneFollower::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBoneFollower::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CBaseEntity *pOwner = GetOwnerEntity();
 	if ( pOwner )
 	{
-		pOwner->DispatchTraceAttack( info, vecDir, ptr );
+		pOwner->DispatchTraceAttack( info, vecDir, ptr, pAccumulator );
 		return;
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 LINK_ENTITY_TO_CLASS( phys_bone_follower, CBoneFollower );

@@ -1,16 +1,16 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Core Movie Maker UI API
 //
 //=============================================================================
 
 #include "vgui_controls/savedocumentquery.h"
-#include "vgui_controls/button.h"
-#include "vgui_controls/label.h"
-#include "vgui_controls/frame.h"
-#include "vgui/isurface.h"
-#include "vgui/ivgui.h"
-#include "tier1/keyvalues.h"
+#include "vgui_controls/Button.h"
+#include "vgui_controls/Label.h"
+#include "vgui_controls/Frame.h"
+#include "vgui/ISurface.h"
+#include "vgui/IVGui.h"
+#include "tier1/KeyValues.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

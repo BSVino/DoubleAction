@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -102,6 +102,7 @@ enum DmAttributeType_t
 	AT_TYPE_COUNT,
 };
 
+const char *GetTypeString( DmAttributeType_t type );
 
 inline bool IsValueType( DmAttributeType_t type )
 {

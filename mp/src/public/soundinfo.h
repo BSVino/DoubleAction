@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -67,6 +67,7 @@
 // This means any negative sound delay greater than -100ms will get encoded at full precision
 #define SOUND_DELAY_OFFSET					(0.100f)
 
+#pragma pack(4)
 //-----------------------------------------------------------------------------
 struct SoundInfo_t
 {
@@ -80,6 +81,7 @@ struct SoundInfo_t
 	soundlevel_t	Soundlevel;
 	bool			bLooping;
 	int				nPitch;
+	int				nSpecialDSP;
 	Vector			vListenerOrigin;
 	int				nFlags;
 	int 			nSoundNum;
@@ -117,6 +119,7 @@ struct SoundInfo_t
 		fVolume = DEFAULT_SOUND_PACKET_VOLUME;
 		Soundlevel = SNDLVL_NORM;
 		nPitch = DEFAULT_SOUND_PACKET_PITCH;
+		nSpecialDSP = 0;
 
 		nEntityIndex = 0;
 		nSpeakerEntity = -1;
@@ -141,6 +144,7 @@ struct SoundInfo_t
 		fVolume = 0;
 		Soundlevel = SNDLVL_NONE;
 		nPitch = PITCH_NORM;
+		nSpecialDSP = 0;
 		pszName = NULL;
 		fDelay = 0.0f;
 		nSequenceNumber = 0;
@@ -215,6 +219,8 @@ struct SoundInfo_t
 
 			WRITE_DELTA_UINT( nPitch, 8 );
 
+			WRITE_DELTA_UINT( nSpecialDSP, 8 );
+
 			if ( fDelay == delta->fDelay )
 			{
 				buffer.WriteOneBit( 0 );
@@ -253,7 +259,7 @@ struct SoundInfo_t
 		}
 	};
 
-	void ReadDelta( SoundInfo_t *delta, bf_read &buffer)
+	void ReadDelta( SoundInfo_t *delta, bf_read &buffer, int nProtoVersion )
 	{
 		if ( !buffer.ReadOneBit() )
 		{
@@ -271,9 +277,24 @@ struct SoundInfo_t
 			}
 		}
 
-		READ_DELTA_UINT( nSoundNum, MAX_SOUND_INDEX_BITS );
+		if ( nProtoVersion > 22 )
+		{	
+			READ_DELTA_UINT( nSoundNum, MAX_SOUND_INDEX_BITS );
+		}
+		else
+		{
+			READ_DELTA_UINT( nSoundNum, 13 );
+		}
 
-		READ_DELTA_UINT( nFlags, SND_FLAG_BITS_ENCODE );
+		if ( nProtoVersion > 18 )
+		{
+			READ_DELTA_UINT( nFlags, SND_FLAG_BITS_ENCODE );
+		}
+		else
+		{
+			// There was 9 flag bits for version 18 and below (prior to Halloween 2011)
+			READ_DELTA_UINT( nFlags, 9 );
+		}
 
 		READ_DELTA_UINT( nChannel, 3 );
 
@@ -315,6 +336,11 @@ struct SoundInfo_t
 
 			READ_DELTA_UINT( nPitch, 8 );
 
+			if ( nProtoVersion > 21 )
+			{
+				// These bit weren't written in version 19 and below
+				READ_DELTA_UINT( nSpecialDSP, 8 );
+			}
 
 			if ( buffer.ReadOneBit() != 0 )
 			{
@@ -364,5 +390,6 @@ struct SpatializationInfo_t
 	QAngle				*pAngles;
 	float				*pflRadius;
 };
+#pragma pack()
 
 #endif // SOUNDINFO_H

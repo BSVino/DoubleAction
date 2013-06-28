@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -152,7 +152,7 @@ mstudioanim_t *mstudioanimdesc_t::pAnim( int *piFrame, float &flStall ) const
 		float dt = Plat_FloatTime() - zeroframestalltime;
 		if (dt >= 0.0)
 		{
-			flStall = SimpleSpline( clamp( (0.200f - dt) * 5.0, 0.0f, 1.0f ) );
+			flStall = SimpleSpline( clamp( (0.200f - dt) * 5.0f, 0.0f, 1.0f ) );
 		}
 
 		if (flStall == 0.0f)
@@ -342,7 +342,7 @@ int	studiohdr_t::GetNumPoseParameters( void ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-const mstudioposeparamdesc_t &studiohdr_t::pPoseParameter( int i ) const
+const mstudioposeparamdesc_t &studiohdr_t::pPoseParameter( int i )
 {
 	if (numincludemodels == 0)
 	{
@@ -391,7 +391,7 @@ int studiohdr_t::GetSharedPoseParameter( int iSequence, int iLocalPose ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int studiohdr_t::EntryNode( int iSequence ) const
+int studiohdr_t::EntryNode( int iSequence )
 {
 	mstudioseqdesc_t &seqdesc = pSeqdesc( iSequence );
 
@@ -414,7 +414,7 @@ int studiohdr_t::EntryNode( int iSequence ) const
 //-----------------------------------------------------------------------------
 
 
-int studiohdr_t::ExitNode( int iSequence ) const
+int studiohdr_t::ExitNode( int iSequence )
 {
 	mstudioseqdesc_t &seqdesc = pSeqdesc( iSequence );
 
@@ -476,7 +476,7 @@ const mstudioattachment_t &studiohdr_t::pAttachment( int i ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int	studiohdr_t::GetAttachmentBone( int i ) const
+int	studiohdr_t::GetAttachmentBone( int i )
 {
 	const mstudioattachment_t &attachment = pAttachment( i );
 
@@ -516,7 +516,7 @@ void studiohdr_t::SetAttachmentBone( int iAttachment, int iBone )
 // Purpose:
 //-----------------------------------------------------------------------------
 
-char *studiohdr_t::pszNodeName( int iNode ) const
+char *studiohdr_t::pszNodeName( int iNode )
 {
 	if (numincludemodels == 0)
 	{
@@ -555,7 +555,7 @@ int studiohdr_t::GetTransition( int iFrom, int iTo ) const
 }
 
 
-int	studiohdr_t::GetActivityListVersion( void ) const
+int	studiohdr_t::GetActivityListVersion( void )
 {
 	if (numincludemodels == 0)
 	{
@@ -624,7 +624,7 @@ int studiohdr_t::GetNumIKAutoplayLocks( void ) const
 	return pVModel->m_iklock.Count();
 }
 
-const mstudioiklock_t &studiohdr_t::pIKAutoplayLock( int i ) const
+const mstudioiklock_t &studiohdr_t::pIKAutoplayLock( int i )
 {
 	if (numincludemodels == 0)
 	{
@@ -817,7 +817,7 @@ const virtualmodel_t * CStudioHdr::ResetVModel( const virtualmodel_t *pVModel ) 
 	}
 }
 
-const studiohdr_t *CStudioHdr::GroupStudioHdr( int i ) const
+const studiohdr_t *CStudioHdr::GroupStudioHdr( int i )
 {
 	if ( !this )
 	{
@@ -838,7 +838,7 @@ const studiohdr_t *CStudioHdr::GroupStudioHdr( int i ) const
 	if ( !m_pStudioHdrCache.IsValidIndex( i ) )
 	{
 		const char *pszName = ( m_pStudioHdr ) ? m_pStudioHdr->pszName() : "<<null>>";
-		ExecuteNTimes( 5, Warning( "Invalid index passed to CStudioHdr(%s)::GroupStudioHdr(): %d, but max is %d [%d]\n", pszName, i, m_pStudioHdrCache.Count() ) );
+		ExecuteNTimes( 5, Warning( "Invalid index passed to CStudioHdr(%s)::GroupStudioHdr(): %d, but max is %d\n", pszName, i, m_pStudioHdrCache.Count() ) );
 		DebuggerBreakIfDebugging();
 		return m_pStudioHdr; // return something known to probably exist, certainly things will be messed up, but hopefully not crash before the warning is noticed
 	}
@@ -858,7 +858,7 @@ const studiohdr_t *CStudioHdr::GroupStudioHdr( int i ) const
 }
 
 
-const studiohdr_t *CStudioHdr::pSeqStudioHdr( int sequence ) const
+const studiohdr_t *CStudioHdr::pSeqStudioHdr( int sequence )
 {
 	if (m_pVModel == NULL)
 	{
@@ -871,7 +871,7 @@ const studiohdr_t *CStudioHdr::pSeqStudioHdr( int sequence ) const
 }
 
 
-const studiohdr_t *CStudioHdr::pAnimStudioHdr( int animation ) const
+const studiohdr_t *CStudioHdr::pAnimStudioHdr( int animation )
 {
 	if (m_pVModel == NULL)
 	{
@@ -885,7 +885,7 @@ const studiohdr_t *CStudioHdr::pAnimStudioHdr( int animation ) const
 
 
 
-mstudioanimdesc_t &CStudioHdr::pAnimdesc( int i ) const
+mstudioanimdesc_t &CStudioHdr::pAnimdesc( int i )
 { 
 	if (m_pVModel == NULL)
 	{
@@ -915,9 +915,9 @@ int CStudioHdr::GetNumSeq( void ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-mstudioseqdesc_t &CStudioHdr::pSeqdesc( int i ) const
+mstudioseqdesc_t &CStudioHdr::pSeqdesc( int i )
 {
-	Assert( i >= 0 && i < GetNumSeq() );
+	Assert( ( i >= 0 && i < GetNumSeq() ) || ( i == 1 && GetNumSeq() <= 1 ) );
 	if ( i < 0 || i >= GetNumSeq() )
 	{
 		// Avoid reading random memory.
@@ -977,7 +977,10 @@ int	CStudioHdr::GetNumPoseParameters( void ) const
 {
 	if (m_pVModel == NULL)
 	{
-		return m_pStudioHdr->numlocalposeparameters;
+		if ( m_pStudioHdr )
+			return m_pStudioHdr->numlocalposeparameters;
+		else
+			return 0;
 	}
 
 	Assert( m_pVModel );
@@ -991,7 +994,7 @@ int	CStudioHdr::GetNumPoseParameters( void ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-const mstudioposeparamdesc_t &CStudioHdr::pPoseParameter( int i ) const
+const mstudioposeparamdesc_t &CStudioHdr::pPoseParameter( int i )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1033,7 +1036,7 @@ int CStudioHdr::GetSharedPoseParameter( int iSequence, int iLocalPose ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int CStudioHdr::EntryNode( int iSequence ) const
+int CStudioHdr::EntryNode( int iSequence )
 {
 	mstudioseqdesc_t &seqdesc = pSeqdesc( iSequence );
 
@@ -1055,7 +1058,7 @@ int CStudioHdr::EntryNode( int iSequence ) const
 //-----------------------------------------------------------------------------
 
 
-int CStudioHdr::ExitNode( int iSequence ) const
+int CStudioHdr::ExitNode( int iSequence )
 {
 	mstudioseqdesc_t &seqdesc = pSeqdesc( iSequence );
 
@@ -1094,7 +1097,7 @@ int	CStudioHdr::GetNumAttachments( void ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-const mstudioattachment_t &CStudioHdr::pAttachment( int i ) const
+const mstudioattachment_t &CStudioHdr::pAttachment( int i )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1112,7 +1115,7 @@ const mstudioattachment_t &CStudioHdr::pAttachment( int i ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int	CStudioHdr::GetAttachmentBone( int i ) const
+int	CStudioHdr::GetAttachmentBone( int i )
 {
 	if (m_pVModel == 0)
 	{
@@ -1149,7 +1152,7 @@ void CStudioHdr::SetAttachmentBone( int iAttachment, int iBone )
 // Purpose:
 //-----------------------------------------------------------------------------
 
-char *CStudioHdr::pszNodeName( int iNode ) const
+char *CStudioHdr::pszNodeName( int iNode )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1190,7 +1193,7 @@ int CStudioHdr::GetTransition( int iFrom, int iTo ) const
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int	CStudioHdr::GetActivityListVersion( void ) const
+int	CStudioHdr::GetActivityListVersion( void )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1233,7 +1236,7 @@ void CStudioHdr::SetActivityListVersion( int version )
 // Purpose:
 //-----------------------------------------------------------------------------
 
-int	CStudioHdr::GetEventListVersion( void ) const
+int	CStudioHdr::GetEventListVersion( void )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1286,7 +1289,7 @@ int CStudioHdr::GetNumIKAutoplayLocks( void ) const
 	return m_pVModel->m_iklock.Count();
 }
 
-const mstudioiklock_t &CStudioHdr::pIKAutoplayLock( int i ) const
+const mstudioiklock_t &CStudioHdr::pIKAutoplayLock( int i )
 {
 	if (m_pVModel == NULL)
 	{
@@ -1376,7 +1379,7 @@ void CStudioHdr::RunFlexRules( const float *src, float *dest )
 
 	for (i = 0; i < numflexrules(); i++)
 	{
-		float stack[32];
+		float stack[32] = {};
 		int k = 0;
 		mstudioflexrule_t *prule = pFlexRule( i );
 
@@ -1654,6 +1657,7 @@ void CStudioHdr::CActivityToSequenceMapping::Initialize( CStudioHdr * __restrict
 				HashValueType * __restrict toUpdate = &m_ActToSeqHash.Element(handle);
 				toUpdate->count += 1;
 				toUpdate->totalWeight += iabs(seqdesc.actweight);
+				Assert( toUpdate->totalWeight > 0 );
 			}
 			else
 			{
@@ -1720,6 +1724,13 @@ void CStudioHdr::CActivityToSequenceMapping::Initialize( CStudioHdr * __restrict
 			// don't! the tuple list is marked __restrict above.
 			(tupleList + element.startingIdx + tupleOffset)->seqnum = i; // store sequence number
 			(tupleList + element.startingIdx + tupleOffset)->weight = iabs(seqdesc.actweight);
+
+			// We can't have weights of 0
+			// Assert( (tupleList + element.startingIdx + tupleOffset)->weight > 0 );
+			if ( (tupleList + element.startingIdx + tupleOffset)->weight == 0 )
+			{
+				(tupleList + element.startingIdx + tupleOffset)->weight = 1;
+			}
 
 			seqsPerAct[seqdesc.activity] += 1;
 		}

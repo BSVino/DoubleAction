@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -117,7 +117,7 @@ void CHudHealth::OnThink()
 	if ( local )
 	{
 		// Never below zero
-		newHealth = max( local->GetHealth(), 0 );
+		newHealth = MAX( local->GetHealth(), 0 );
 	}
 
 	// Only update the fade if we've changed health

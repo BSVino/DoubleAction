@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 
 #if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
 
-char *s_ClientElementNames[MAX_ARRAY_ELEMENTS] =
+const char *s_ClientElementNames[MAX_ARRAY_ELEMENTS] =
 {
 	"000", "001", "002", "003", "004", "005", "006", "007", "008", "009", 
 	"010", "011", "012", "013", "014", "015", "016", "017", "018", "019",
@@ -127,6 +127,9 @@ CStandardRecvProxies::CStandardRecvProxies()
 	m_Int32ToInt8 = RecvProxy_Int32ToInt8;
 	m_Int32ToInt16 = RecvProxy_Int32ToInt16;
 	m_Int32ToInt32 = RecvProxy_Int32ToInt32;
+#ifdef SUPPORTS_INT64
+	m_Int64ToInt64 = RecvProxy_Int64ToInt64;
+#endif
 	m_FloatToFloat = RecvProxy_FloatToFloat;
 	m_VectorToVector = RecvProxy_VectorToVector;
 }
@@ -162,7 +165,7 @@ RecvTable::RecvTable()
 	Construct( NULL, 0, NULL );
 }
 
-RecvTable::RecvTable(RecvProp *pProps, int nProps, char *pNetTableName)
+RecvTable::RecvTable(RecvProp *pProps, int nProps, const char *pNetTableName)
 {
 	Construct( pProps, nProps, pNetTableName );
 }
@@ -171,7 +174,7 @@ RecvTable::~RecvTable()
 {
 }
 
-void RecvTable::Construct( RecvProp *pProps, int nProps, char *pNetTableName )
+void RecvTable::Construct( RecvProp *pProps, int nProps, const char *pNetTableName )
 {
 	m_pProps = pProps;
 	m_nProps = nProps;
@@ -187,7 +190,7 @@ void RecvTable::Construct( RecvProp *pProps, int nProps, char *pNetTableName )
 // ---------------------------------------------------------------------- //
 
 RecvProp RecvPropFloat(
-	char *pVarName, 
+	const char *pVarName, 
 	int offset, 
 	int sizeofVar,
 	int flags, 
@@ -213,7 +216,7 @@ RecvProp RecvPropFloat(
 }
 
 RecvProp RecvPropVector(
-	char *pVarName, 
+	const char *pVarName, 
 	int offset, 
 	int sizeofVar,
 	int flags, 
@@ -238,10 +241,36 @@ RecvProp RecvPropVector(
 	return ret;
 }
 
+RecvProp RecvPropVectorXY(
+	const char *pVarName, 
+	int offset, 
+	int sizeofVar,
+	int flags, 
+	RecvVarProxyFn varProxy
+	)
+{
+	RecvProp ret;
+
+#ifdef _DEBUG
+	if ( varProxy == RecvProxy_VectorToVector )
+	{
+		Assert( sizeofVar == sizeof( Vector ) );
+	}
+#endif
+
+	ret.m_pVarName = pVarName;
+	ret.SetOffset( offset );
+	ret.m_RecvType = DPT_VectorXY;
+	ret.m_Flags = flags;
+	ret.SetProxyFn( varProxy );
+
+	return ret;
+}
+
 #if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
 
 RecvProp RecvPropQuaternion(
-	char *pVarName, 
+	const char *pVarName, 
 	int offset, 
 	int sizeofVar,	// Handled by RECVINFO macro, but set to SIZEOF_IGNORE if you don't want to bother.
 	int flags, 
@@ -268,7 +297,7 @@ RecvProp RecvPropQuaternion(
 #endif
 
 RecvProp RecvPropInt(
-	char *pVarName, 
+	const char *pVarName, 
 	int offset, 
 	int sizeofVar,
 	int flags, 
@@ -292,6 +321,12 @@ RecvProp RecvPropInt(
 		{
 			varProxy = RecvProxy_Int32ToInt32;
 		}
+#ifdef SUPPORTS_INT64		
+		else if (sizeofVar == 8)
+		{
+			varProxy = RecvProxy_Int64ToInt64;
+		}
+#endif
 		else
 		{
 			Assert(!"RecvPropInt var has invalid size");
@@ -301,7 +336,11 @@ RecvProp RecvPropInt(
 
 	ret.m_pVarName = pVarName;
 	ret.SetOffset( offset );
+#ifdef SUPPORTS_INT64
+	ret.m_RecvType = (sizeofVar == 8) ? DPT_Int64 : DPT_Int;
+#else
 	ret.m_RecvType = DPT_Int;
+#endif
 	ret.m_Flags = flags;
 	ret.SetProxyFn( varProxy );
 
@@ -309,7 +348,7 @@ RecvProp RecvPropInt(
 }
 
 RecvProp RecvPropString(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int bufferSize,
 	int flags,
@@ -329,7 +368,7 @@ RecvProp RecvPropString(
 }
 
 RecvProp RecvPropDataTable(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int flags,
 	RecvTable *pTable,
@@ -349,7 +388,7 @@ RecvProp RecvPropDataTable(
 }
 
 RecvProp RecvPropArray3(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int elements,
@@ -388,7 +427,7 @@ RecvProp RecvPropArray3(
 RecvProp InternalRecvPropArray(
 	const int elementCount,
 	const int elementStride,
-	char *pName,
+	const char *pName,
 	ArrayLengthRecvProxyFn proxy
 	)
 {
@@ -422,6 +461,15 @@ void RecvProxy_VectorToVector( const CRecvProxyData *pData, void *pStruct, void 
 	((float*)pOut)[2] = v[2];
 }
 
+void RecvProxy_VectorXYToVectorXY( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	const float *v = pData->m_Value.m_Vector;
+	
+	Assert( IsFinite( v[0] ) && IsFinite( v[1] ) );
+	((float*)pOut)[0] = v[0];
+	((float*)pOut)[1] = v[1];
+}
+
 void RecvProxy_QuaternionToQuaternion( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	const float *v = pData->m_Value.m_Vector;
@@ -447,6 +495,13 @@ void RecvProxy_Int32ToInt32( const CRecvProxyData *pData, void *pStruct, void *p
 {
 	*((unsigned long*)pOut) = (unsigned long)pData->m_Value.m_Int;
 }
+
+#ifdef SUPPORTS_INT64
+void RecvProxy_Int64ToInt64( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	*((int64*)pOut) = (int64)pData->m_Value.m_Int64;
+}
+#endif
 
 void RecvProxy_StringToString( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {

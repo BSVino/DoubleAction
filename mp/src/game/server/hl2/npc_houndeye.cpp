@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Houndeye - a spooky sonic dog.
 //
@@ -12,7 +12,7 @@
 #include "ai_route.h"
 #include "AI_Navigator.h"
 #include "AI_Motor.h"
-#include "AI_Squad.h"
+#include "ai_squad.h"
 #include "AI_TacticalServices.h"
 #include "soundent.h"
 #include "EntityList.h"
@@ -23,7 +23,7 @@
 #include "energy_wave.h"
 #include "ai_interactions.h"
 #include "ndebugoverlay.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "player.h"
 #include "vstdlib/random.h"
 #include "engine/IEngineSound.h"
@@ -285,7 +285,7 @@ void CNPC_Houndeye::HandleAnimEvent( animevent_t *pEvent )
 
 		case HOUND_AE_HOPBACK:
 			{
-				float flGravity = sv_gravity.GetFloat();
+				float flGravity = GetCurrentGravity();
 
 				SetGroundEntity( NULL );
 
@@ -337,7 +337,7 @@ void CNPC_Houndeye::HandleAnimEvent( animevent_t *pEvent )
 				{
 					Vector vecEnemyEyePos = GetEnemy()->EyePosition();
 
-					float gravity = sv_gravity.GetFloat();
+					float gravity = GetCurrentGravity();
 					if ( gravity <= 1 )
 					{
 						gravity = 1;

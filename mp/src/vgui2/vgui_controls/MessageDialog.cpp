@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,6 +7,10 @@
 #include "vgui_controls/MessageDialog.h"
 #include "vgui/ILocalize.h"
 #include "vgui/ISurface.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
+
 
 //-----------------------------------------------------------------------------
 // CMessageDialog
@@ -303,7 +307,7 @@ void CMessageDialog::OnKeyCodePressed( vgui::KeyCode code )
 		return;
 	}
 
-	switch ( code )
+	switch ( GetBaseButtonCode( code ) )
 	{
 	case KEY_XBUTTON_A:
 		DoCommand( BTN_A );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -20,8 +20,8 @@
 //  it has a list view to show the actual files in either view
 
 #include "vgui_controls/Frame.h"
-#include "FileSystem.h"
-#include "UtlSymbol.h"
+#include "filesystem.h"
+#include "utlsymbol.h"
 
 // Forward declarations
 namespace vgui

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base combat character with no AI
 //
@@ -95,7 +95,7 @@ public:
 	float	LengthOfLastCombat( void ) const;
 	// bool	IsNavigationUrgent();
 
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	bool	CanBeHitByMeleeAttack( CBaseEntity *pAttacker );
 	int		OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	bool	FCanCheckAttacks();

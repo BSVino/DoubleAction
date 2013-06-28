@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Spawn and use functions for editor-placed triggers.
 //
@@ -303,6 +303,19 @@ int CBaseTrigger::DrawDebugTextOverlays(void)
 	return text_offset;
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Return true if the specified point is within this zone
+//-----------------------------------------------------------------------------
+bool CBaseTrigger::PointIsWithin( const Vector &vecPoint )
+{
+	Ray_t ray;
+	trace_t tr;
+	ICollideable *pCollide = CollisionProp();
+	ray.Init( vecPoint, vecPoint );
+	enginetrace->ClipRayToCollideable( ray, MASK_ALL, pCollide, &tr );
+	return ( tr.startsolid );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -396,6 +409,12 @@ bool CBaseTrigger::PassesTriggerFilters(CBaseEntity *pOther)
 		if ( HasSpawnFlags(SF_TRIGGER_ONLY_CLIENTS_OUT_OF_VEHICLES) && bOtherIsPlayer )
 		{
 			if ( ((CBasePlayer*)pOther)->IsInAVehicle() )
+				return false;
+		}
+
+		if ( HasSpawnFlags( SF_TRIGGER_DISALLOW_BOTS ) && bOtherIsPlayer )
+		{
+			if ( ((CBasePlayer*)pOther)->IsFakeClient() )
 				return false;
 		}
 
@@ -1185,7 +1204,7 @@ int CTriggerLook::DrawDebugTextOverlays(void)
 		// Print Look time
 		// ----------------
 		char tempstr[255];
-		Q_snprintf(tempstr,sizeof(tempstr),"Time:   %3.2f",m_flLookTime - max(0,m_flLookTimeTotal));
+		Q_snprintf(tempstr,sizeof(tempstr),"Time:   %3.2f",m_flLookTime - MAX(0,m_flLookTimeTotal));
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
@@ -3022,7 +3041,7 @@ void CTriggerCamera::Enable( void )
 			else
 			{
 				m_iAttachmentIndex = m_hTarget->GetBaseAnimating()->LookupAttachment( STRING(m_iszTargetAttachment) );
-				if ( !m_iAttachmentIndex )
+				if ( m_iAttachmentIndex <= 0 )
 				{
 					Warning("%s could not find attachment %s on target %s.\n", GetClassname(), STRING(m_iszTargetAttachment), STRING(m_hTarget->GetEntityName()) );
 				}
@@ -3124,10 +3143,9 @@ void CTriggerCamera::Disable( void )
 		{
 			((CBasePlayer*)m_hPlayer.Get())->GetActiveWeapon()->RemoveEffects( EF_NODRAW );
 		}
+		//return the player to previous takedamage state
+		m_hPlayer->m_takedamage = m_nOldTakeDamage;
 	}
-
-	//return the player to previous takedamage state
-	m_hPlayer->m_takedamage = m_nOldTakeDamage;
 
 	m_state = USE_OFF;
 	m_flReturnTime = gpGlobals->curtime;
@@ -3415,7 +3433,7 @@ static void PlayCDTrack( int iTrack )
 	// UNDONE: Move this to engine sound
 	if ( iTrack < -1 || iTrack > 30 )
 	{
-		Warning( "TriggerCDAudio - Track %d out of range\n" );
+		Warning( "TriggerCDAudio - Track %d out of range\n", iTrack );
 		return;
 	}
 
@@ -3425,10 +3443,7 @@ static void PlayCDTrack( int iTrack )
 	}
 	else
 	{
-		char string [ 64 ];
-
-		Q_snprintf( string,sizeof(string), "cd play %3d\n", iTrack );
-		engine->ClientCommand ( pClient, string);
+		engine->ClientCommand ( pClient, "cd play %3d\n", iTrack);
 	}
 }
 
@@ -4031,8 +4046,8 @@ END_DATADESC()
 void CTriggerImpact::Spawn( void )
 {	
 	// Clamp date in case user made an error
-	m_flNoise = clamp(m_flNoise,0,1);
-	m_flViewkick = clamp(m_flViewkick,0,1);
+	m_flNoise = clamp(m_flNoise,0.f,1.f);
+	m_flViewkick = clamp(m_flViewkick,0.f,1.f);
 
 	// Always start disabled
 	m_bDisabled = true;
@@ -4666,7 +4681,7 @@ IMotionEvent::simresult_e CTriggerVPhysicsMotion::Simulate( IPhysicsMotionContro
 	if ( HasGravityScale() )
 	{
 		// assume object already has 1.0 gravities applied to it, so apply the additional amount
-		linear.z -= (m_gravityScale-1) * sv_gravity.GetFloat();
+		linear.z -= (m_gravityScale-1) * GetCurrentGravity();
 	}
 
 	if ( HasLinearForce() )

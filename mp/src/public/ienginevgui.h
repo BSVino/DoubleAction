@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -38,6 +38,7 @@ enum PaintMode_t
 {
 	PAINT_UIPANELS		= (1<<0),
 	PAINT_INGAMEPANELS  = (1<<1),
+	PAINT_CURSOR		= (1<<2), // software cursor, if appropriate
 };
 
 abstract_class IEngineVGui

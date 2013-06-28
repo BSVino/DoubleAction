@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,16 +28,14 @@ public:
 	DECLARE_CLASS( CWeaponShotgun, CWeaponSDKBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
-
+	
 	CWeaponShotgun();
 
 	virtual void PrimaryAttack();
 	virtual bool Reload();
 	virtual void WeaponIdle();
 
-	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_SHOTGUN; }
-	virtual float GetWeaponSpread() { return 0.04362f; }
+	virtual SDKWeaponID GetWeaponID( void ) const		{ return WEAPON_SHOTGUN; }
 
 
 private:
@@ -45,7 +43,7 @@ private:
 	CWeaponShotgun( const CWeaponShotgun & );
 
 	float m_flPumpTime;
-	CNetworkVar( int, m_iInSpecialReload );
+	CNetworkVar( int, m_fInSpecialReload );
 
 };
 
@@ -54,17 +52,14 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponShotgun, DT_WeaponShotgun )
 BEGIN_NETWORK_TABLE( CWeaponShotgun, DT_WeaponShotgun )
 
 	#ifdef CLIENT_DLL
-		RecvPropInt( RECVINFO( m_iInSpecialReload ) )
+		RecvPropInt( RECVINFO( m_fInSpecialReload ) )
 	#else
-		SendPropInt( SENDINFO( m_iInSpecialReload ), 2, SPROP_UNSIGNED )
+		SendPropInt( SENDINFO( m_fInSpecialReload ), 2, SPROP_UNSIGNED )
 	#endif
 
 END_NETWORK_TABLE()
 
 BEGIN_PREDICTION_DATA( CWeaponShotgun )
-#ifdef CLIENT_DLL
-	DEFINE_PRED_FIELD( m_iInSpecialReload, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-#endif
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( weapon_shotgun, CWeaponShotgun );
@@ -90,30 +85,68 @@ void CWeaponShotgun::PrimaryAttack()
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.15;
 		return;
 	}
-	bool doPunch = true;
+
+	// Out of ammo?
 	if ( m_iClip1 <= 0 )
-		doPunch = false;
-
-	BaseClass::PrimaryAttack();
-
-	if ( doPunch )
 	{
-		m_iInSpecialReload = 0;
-
-		// Update punch angles.
-		QAngle angle = pPlayer->GetPunchAngle();
-
-		if ( pPlayer->GetFlags() & FL_ONGROUND )
+		Reload();
+		if ( m_iClip1 == 0 )
 		{
-			angle.x -= SharedRandomInt( "ShotgunPunchAngleGround", 4, 6 );
-		}
-		else
-		{
-			angle.x -= SharedRandomInt( "ShotgunPunchAngleAir", 8, 11 );
+			PlayEmptySound();
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
 		}
 
-		pPlayer->SetPunchAngle( angle );
+		return;
 	}
+
+	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+
+	m_iClip1--;
+	pPlayer->DoMuzzleFlash();
+
+	// player "shoot" animation
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	// Dispatch the FX right away with full accuracy.
+	FX_FireBullets( 
+		pPlayer->entindex(),
+		pPlayer->Weapon_ShootPosition(), 
+		pPlayer->EyeAngles() + 2.0f * pPlayer->GetPunchAngle(), 
+		GetWeaponID(),
+		Primary_Mode,
+		CBaseEntity::GetPredictionRandomSeed() & 255, // wrap it for network traffic so it's the same between client and server
+		0.0675 );
+
+	if (!m_iClip1 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
+	}
+
+	if (m_iClip1 != 0)
+		m_flPumpTime = gpGlobals->curtime + 0.5;
+
+	m_flNextPrimaryAttack = gpGlobals->curtime + 0.875;
+	m_flNextSecondaryAttack = gpGlobals->curtime + 0.875;
+	if (m_iClip1 != 0)
+		SetWeaponIdleTime( gpGlobals->curtime + 2.5 );
+	else
+		SetWeaponIdleTime( gpGlobals->curtime + 0.875 );
+	m_fInSpecialReload = 0;
+
+	// Update punch angles.
+	QAngle angle = pPlayer->GetPunchAngle();
+
+	if ( pPlayer->GetFlags() & FL_ONGROUND )
+	{
+		angle.x -= SharedRandomInt( "ShotgunPunchAngleGround", 4, 6 );
+	}
+	else
+	{
+		angle.x -= SharedRandomInt( "ShotgunPunchAngleAir", 8, 11 );
+	}
+
+	pPlayer->SetPunchAngle( angle );
 }
 
 
@@ -129,29 +162,29 @@ bool CWeaponShotgun::Reload()
 		return true;
 		
 	// check to see if we're ready to reload
-	if (m_iInSpecialReload == 0)
+	if (m_fInSpecialReload == 0)
 	{
 		pPlayer->SetAnimation( PLAYER_RELOAD );
 
 		SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
-		m_iInSpecialReload = 1;
+		m_fInSpecialReload = 1;
 		pPlayer->m_flNextAttack = gpGlobals->curtime + 0.5;
 		m_flNextPrimaryAttack = gpGlobals->curtime + 0.5;
 		m_flNextSecondaryAttack = gpGlobals->curtime + 0.5;
 		SetWeaponIdleTime( gpGlobals->curtime + 0.5 );
 		return true;
 	}
-	else if (m_iInSpecialReload == 1)
+	else if (m_fInSpecialReload == 1)
 	{
 		if (m_flTimeWeaponIdle > gpGlobals->curtime)
 			return true;
 		// was waiting for gun to move to side
-		m_iInSpecialReload = 2;
+		m_fInSpecialReload = 2;
 
 		SendWeaponAnim( ACT_VM_RELOAD );
 		SetWeaponIdleTime( gpGlobals->curtime + 0.45 );
 	}
-	else if ( m_iInSpecialReload == 2 ) // Sanity, make sure it's actually in the right state.
+	else
 	{
 		// Add them to the clip
 		m_iClip1 += 1;
@@ -159,12 +192,13 @@ bool CWeaponShotgun::Reload()
 #ifdef GAME_DLL
 		SendReloadEvents();
 #endif
+		
 		CSDKPlayer *pPlayer = GetPlayerOwner();
 
 		if ( pPlayer )
 			 pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
 
-		m_iInSpecialReload = 1;
+		m_fInSpecialReload = 1;
 	}
 
 	return true;
@@ -183,11 +217,11 @@ void CWeaponShotgun::WeaponIdle()
 
 	if (m_flTimeWeaponIdle < gpGlobals->curtime)
 	{
-		if (m_iClip1 == 0 && m_iInSpecialReload == 0 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ))
+		if (m_iClip1 == 0 && m_fInSpecialReload == 0 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ))
 		{
 			Reload( );
 		}
-		else if (m_iInSpecialReload != 0)
+		else if (m_fInSpecialReload != 0)
 		{
 			if (m_iClip1 != 8 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ))
 			{
@@ -196,12 +230,12 @@ void CWeaponShotgun::WeaponIdle()
 			else
 			{
 				// reload debounce has timed out
+				//MIKETODO: shotgun anims
 				SendWeaponAnim( ACT_SHOTGUN_RELOAD_FINISH );
 				
 				// play cocking sound
-				m_iInSpecialReload = 0;
+				m_fInSpecialReload = 0;
 				SetWeaponIdleTime( gpGlobals->curtime + 1.5 );
-				m_flNextPrimaryAttack = gpGlobals->curtime + 0.15; // Add a small delay between finishing reload and firing again
 			}
 		}
 		else
@@ -210,28 +244,3 @@ void CWeaponShotgun::WeaponIdle()
 		}
 	}
 }
-
-
-//Tony; todo; add ACT_MP_PRONE* activities, so we have them.
-acttable_t CWeaponShotgun::m_acttable[] = 
-{
-	{ ACT_MP_STAND_IDLE,					ACT_DOD_STAND_IDLE_TOMMY,				false },
-	{ ACT_MP_CROUCH_IDLE,					ACT_DOD_CROUCH_IDLE_TOMMY,				false },
-	{ ACT_MP_PRONE_IDLE,					ACT_DOD_PRONE_AIM_TOMMY,				false },
-
-	{ ACT_MP_RUN,							ACT_DOD_RUN_AIM_TOMMY,					false },
-	{ ACT_MP_WALK,							ACT_DOD_WALK_AIM_TOMMY,					false },
-	{ ACT_MP_CROUCHWALK,					ACT_DOD_CROUCHWALK_AIM_TOMMY,			false },
-	{ ACT_MP_PRONE_CRAWL,					ACT_DOD_PRONEWALK_IDLE_TOMMY,			false },
-	{ ACT_SPRINT,							ACT_DOD_SPRINT_IDLE_TOMMY,				false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_TOMMY,			false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_TOMMY,			false },
-	{ ACT_MP_ATTACK_PRONE_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_PRONE_TOMMY,		false },
-
-	{ ACT_MP_RELOAD_STAND,					ACT_DOD_RELOAD_TOMMY,					false },
-	{ ACT_MP_RELOAD_CROUCH,					ACT_DOD_RELOAD_CROUCH_TOMMY,			false },
-	{ ACT_MP_RELOAD_PRONE,					ACT_DOD_RELOAD_PRONE_TOMMY,				false },
-};
-
-IMPLEMENT_ACTTABLE( CWeaponShotgun );

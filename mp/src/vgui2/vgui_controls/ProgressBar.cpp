@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -33,6 +33,7 @@ ProgressBar::ProgressBar(Panel *parent, const char *panelName) : Panel(parent, p
 	m_pszDialogVar = NULL;
 	SetSegmentInfo( 4, 8 );
 	SetBarInset( 4 );
+	SetMargin( 0 );
 	m_iProgressDirection = PROGRESS_EAST;
 }
 
@@ -119,29 +120,33 @@ void ProgressBar::Paint()
 	switch( m_iProgressDirection )
 	{
 	case PROGRESS_WEST:
-		x = wide;
+		wide -= 2 * m_iBarMargin;
+		x = wide - m_iBarMargin;
 		y = m_iBarInset;
 		segmentTotal = wide / (_segmentGap + _segmentWide);
 		segmentsDrawn = (int)(segmentTotal * _progress);
 		break;
 
 	case PROGRESS_EAST:
-		x = 0;
+		wide -= 2 * m_iBarMargin;
+		x = m_iBarMargin;
 		y = m_iBarInset;
 		segmentTotal = wide / (_segmentGap + _segmentWide);
 		segmentsDrawn = (int)(segmentTotal * _progress);
 		break;
 
 	case PROGRESS_NORTH:
+		tall -= 2 * m_iBarMargin;
 		x = m_iBarInset;
-		y = tall;
+		y = tall - m_iBarMargin;
 		segmentTotal = tall / (_segmentGap + _segmentWide);
 		segmentsDrawn = (int)(segmentTotal * _progress);
 		break;
 
 	case PROGRESS_SOUTH:
+		tall -= 2 * m_iBarMargin;
 		x = m_iBarInset;
-		y = 0;
+		y = m_iBarMargin;
 		segmentTotal = tall / (_segmentGap + _segmentWide);
 		segmentsDrawn = (int)(segmentTotal * _progress);
 		break;
@@ -306,6 +311,22 @@ void ProgressBar::SetBarInset( int pixels )
 int ProgressBar::GetBarInset( void )
 {
 	return m_iBarInset;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: data accessor
+//-----------------------------------------------------------------------------
+void ProgressBar::SetMargin( int pixels )
+{ 
+	m_iBarMargin = pixels;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: data accessor
+//-----------------------------------------------------------------------------
+int ProgressBar::GetMargin()
+{
+	return m_iBarMargin;
 }
 
 //-----------------------------------------------------------------------------

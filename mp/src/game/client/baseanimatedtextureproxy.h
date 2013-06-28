@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #ifndef BASEANIMATEDTEXTUREPROXY
 #define BASEANIMATEDTEXTUREPROXY
 
-#include "materialsystem/IMaterialProxy.h"
+#include "materialsystem/imaterialproxy.h"
 
 class IMaterial;
 class IMaterialVar;

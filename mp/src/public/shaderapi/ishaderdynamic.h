@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,6 +16,7 @@
 #include "shaderapi/shareddefs.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialsystem.h"
+#include "tier0/basetypes.h"
 
 
 typedef int ShaderAPITextureHandle_t;
@@ -108,6 +109,37 @@ enum StandardTextureId_t
 	TEXTURE_MAX_STD_TEXTURES = 32
 };
 
+//-----------------------------------------------------------------------------
+// Viewport structure
+//-----------------------------------------------------------------------------
+#define SHADER_VIEWPORT_VERSION 1
+struct ShaderViewport_t
+{
+	int m_nVersion;
+	int m_nTopLeftX;
+	int m_nTopLeftY;
+	int m_nWidth;
+	int m_nHeight;
+	float m_flMinZ;
+	float m_flMaxZ;
+
+	ShaderViewport_t() : m_nVersion( SHADER_VIEWPORT_VERSION ) {}
+
+	void Init()
+	{
+		memset( this, 0, sizeof(ShaderViewport_t) );
+		m_nVersion = SHADER_VIEWPORT_VERSION;
+	}
+
+	void Init( int x, int y, int nWidth, int nHeight, float flMinZ = 0.0f, float flMaxZ = 1.0f )
+	{
+		m_nVersion = SHADER_VIEWPORT_VERSION;
+		m_nTopLeftX = x; m_nTopLeftY = y; m_nWidth = nWidth; m_nHeight = nHeight;
+		m_flMinZ = flMinZ;
+		m_flMaxZ = flMaxZ;
+	}
+};
+
 
 //-----------------------------------------------------------------------------
 // The Shader interface versions
@@ -116,6 +148,10 @@ enum StandardTextureId_t
 abstract_class IShaderDynamicAPI
 {
 public:
+
+	virtual void SetViewports( int nCount, const ShaderViewport_t* pViewports ) = 0;
+	virtual int GetViewports( ShaderViewport_t* pViewports, int nMax ) const = 0;
+
 	// returns the current time in seconds....
 	virtual double CurrentTime() const = 0;
 
@@ -293,6 +329,8 @@ public:
 
 	// Interface for mat system to tell shaderapi about color correction
 	virtual void GetCurrentColorCorrection( ShaderColorCorrectionInfo_t* pInfo ) = 0;
+
+	virtual void SetPSNearAndFarZ( int pshReg ) = 0;
 
 	virtual void SetDepthFeatheringPixelShaderConstant( int iConstant, float fDepthBlendScale ) = 0;
 };

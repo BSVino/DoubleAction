@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Mouse input routines
 //
@@ -6,9 +6,14 @@
 // $Date:         $
 // $NoKeywords: $
 //===========================================================================//
-#if !defined( _X360 )
+#if defined( WIN32 ) && !defined( _X360 )
+#define _WIN32_WINNT 0x0502
 #include <windows.h>
 #endif
+#ifdef OSX
+#include <Carbon/Carbon.h>
+#endif
+#include "cbase.h"
 #include "hud.h"
 #include "cdll_int.h"
 #include "kbutton.h"
@@ -18,12 +23,14 @@
 #include "iviewrender.h"
 #include "iclientmode.h"
 #include "tier0/icommandline.h"
-#include "vgui/isurface.h"
-#include "vgui_controls/controls.h"
-#include "vgui/cursor.h"
+#include "vgui/ISurface.h"
+#include "vgui_controls/Controls.h"
+#include "vgui/Cursor.h"
 #include "cdll_client_int.h"
 #include "cdll_util.h"
 #include "tier1/convar_serverbounded.h"
+#include "cam_thirdperson.h"
+#include "inputsystem/iinputsystem.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
@@ -78,24 +85,38 @@ extern ConVar cam_idealpitch;
 extern ConVar thirdperson_platformer;
 
 static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Mouse filtering (set this to 1 to average the mouse over 2 frames)." );
-ConVar sensitivity( "sensitivity","3", FCVAR_ARCHIVE, "Mouse sensitivity.", true, 0.0001f, false, 10000000 );
+ConVar sensitivity( "sensitivity","3", FCVAR_ARCHIVE, "Mouse sensitivity.", true, 0.0001f, true, 10000000 );
 
 static ConVar m_side( "m_side","0.8", FCVAR_ARCHIVE, "Mouse side factor." );
 static ConVar m_yaw( "m_yaw","0.022", FCVAR_ARCHIVE, "Mouse yaw factor." );
 static ConVar m_forward( "m_forward","1", FCVAR_ARCHIVE, "Mouse forward factor." );
 
-static ConVar m_customaccel( "m_customaccel", "0", FCVAR_ARCHIVE, "Custom mouse acceleration (0 disable, 1 to enable, 2 enable with separate yaw/pitch rescale)."\
-	"\nFormula: mousesensitivity = ( rawmousedelta^m_customaccel_exponent ) * m_customaccel_scale + sensitivity"\
-	"\nIf mode is 2, then x and y sensitivity are scaled by m_pitch and m_yaw respectively.", true, 0, false, 0.0f );
+static ConVar m_customaccel( "m_customaccel", "0", FCVAR_ARCHIVE, "Custom mouse acceleration:"
+	"\n0: custom accelaration disabled"
+	"\n1: mouse_acceleration = min(m_customaccel_max, pow(raw_mouse_delta, m_customaccel_exponent) * m_customaccel_scale + sensitivity)"
+	"\n2: Same as 1, with but x and y sensitivity are scaled by m_pitch and m_yaw respectively."
+	"\n3: mouse_acceleration = pow(raw_mouse_delta, m_customaccel_exponent - 1) * sensitivity"
+	);
 static ConVar m_customaccel_scale( "m_customaccel_scale", "0.04", FCVAR_ARCHIVE, "Custom mouse acceleration value.", true, 0, false, 0.0f );
 static ConVar m_customaccel_max( "m_customaccel_max", "0", FCVAR_ARCHIVE, "Max mouse move scale factor, 0 for no limit" );
-static ConVar m_customaccel_exponent( "m_customaccel_exponent", "1", FCVAR_ARCHIVE, "Mouse move is raised to this power before being scaled by scale factor.");
+static ConVar m_customaccel_exponent( "m_customaccel_exponent", "1", FCVAR_ARCHIVE, "Mouse move is raised to this power before being scaled by scale factor.", true, 1.0f, false, 0.0f);
 
+static ConVar m_mousespeed( "m_mousespeed", "1", FCVAR_ARCHIVE, "Windows mouse acceleration (0 to disable, 1 to enable [Windows 2000: enable initial threshold], 2 to enable secondary threshold [Windows 2000 only]).", true, 0, true, 2 );
 static ConVar m_mouseaccel1( "m_mouseaccel1", "0", FCVAR_ARCHIVE, "Windows mouse acceleration initial threshold (2x movement).", true, 0, false, 0.0f );
 static ConVar m_mouseaccel2( "m_mouseaccel2", "0", FCVAR_ARCHIVE, "Windows mouse acceleration secondary threshold (4x movement).", true, 0, false, 0.0f );
-static ConVar m_mousespeed( "m_mousespeed", "1", FCVAR_ARCHIVE, "Windows mouse speed factor (range 1 to 20).", true, 1, true, 20 );
 
+#if defined( OSX )
+// On OSX, this needs to stick at 0.
+static ConVar m_rawinput( "m_rawinput", "0", FCVAR_ARCHIVE, "Raw Mouse input is unavailable on OSX", true, 0.0, true, 0.0);
+#else
+static ConVar m_rawinput( "m_rawinput", "0", FCVAR_ARCHIVE, "Use Raw Input for mouse input.");
+#endif
+
+#if DEBUG
+ConVar cl_mouselook( "cl_mouselook", "1", FCVAR_ARCHIVE, "Set to 1 to use mouse for look, 0 for keyboard look." );
+#else
 ConVar cl_mouselook( "cl_mouselook", "1", FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED, "Set to 1 to use mouse for look, 0 for keyboard look. Cannot be set while connected to a server." );
+#endif
 
 ConVar cl_mouseenable( "cl_mouseenable", "1" );
 
@@ -115,15 +136,25 @@ void CInput::ActivateMouse (void)
 	{
 		if ( m_fMouseParmsValid )
 		{
+#if defined( PLATFORM_WINDOWS )
 			m_fRestoreSPI = SystemParametersInfo (SPI_SETMOUSE, 0, m_rgNewMouseParms, 0) ? true : false;
+#endif
 		}
 		m_fMouseActive = true;
 
 		ResetMouse();
+#if !defined( PLATFORM_WINDOWS )
+		int dx, dy;
+		engine->GetMouseDelta( dx, dy, true );
+#endif
 
 		// Clear accumulated error, too
 		m_flAccumulatedMouseXMovement = 0;
 		m_flAccumulatedMouseYMovement = 0;
+
+		// clear raw mouse accumulated data
+		int rawX, rawY;
+		inputsystem->GetRawMouseAccumulators(rawX, rawY);
 	}
 }
 
@@ -141,10 +172,16 @@ void CInput::DeactivateMouse (void)
 	{
 		if ( m_fRestoreSPI )
 		{
+#if defined( PLATFORM_WINDOWS )
 			SystemParametersInfo( SPI_SETMOUSE, 0, m_rgOrigMouseParms, 0 );
+#endif
 		}
 		m_fMouseActive = false;
 		vgui::surface()->SetCursor( vgui::dc_arrow );
+#if !defined( PLATFORM_WINDOWS )
+		// now put the mouse back in the middle of the screen
+		ResetMouse();
+#endif
 
 		// Clear accumulated error, too
 		m_flAccumulatedMouseXMovement = 0;
@@ -209,7 +246,9 @@ void CInput::CheckMouseAcclerationVars()
 	if ( dirty )
 	{
 		// Update them
+#ifdef WIN32
 		m_fRestoreSPI = SystemParametersInfo( SPI_SETMOUSE, 0, m_rgNewMouseParms, 0 ) ? true : false;
+#endif
 	}
 }
 
@@ -223,23 +262,39 @@ void CInput::Init_Mouse (void)
 
 	m_flPreviousMouseXPosition = 0.0f;
 	m_flPreviousMouseYPosition = 0.0f;
-
+	
 	m_fMouseInitialized = true;
 
 	m_fMouseParmsValid = false;
 
 	if ( CommandLine()->FindParm ("-useforcedmparms" ) ) 
 	{
+#ifdef WIN32
 		m_fMouseParmsValid = SystemParametersInfo( SPI_GETMOUSE, 0, m_rgOrigMouseParms, 0 ) ? true : false;
+#else
+		m_fMouseParmsValid = false;
+#endif
 		if ( m_fMouseParmsValid )
 		{
 			if ( CommandLine()->FindParm ("-noforcemspd" ) ) 
 			{
 				m_rgNewMouseParms[ MOUSE_SPEED_FACTOR ] = m_rgOrigMouseParms[ MOUSE_SPEED_FACTOR ];
+
+/*
+				int mouseAccel[3];
+				SystemParametersInfo(SPI_GETMOUSE, 0, &mouseAccel, 0); mouseAccel[2] = 0; 
+				bool ok = SystemParametersInfo(SPI_SETMOUSE, 0, &mouseAccel, SPIF_UPDATEINIFILE); 
+				
+				// Now check registry and close/re-open Control Panel > Mouse and see 'Enhance pointer precision' is OFF 
+				mouseAccel[2] = 1; 
+				ok = SystemParametersInfo(SPI_SETMOUSE, 0, &mouseAccel, SPIF_UPDATEINIFILE); 
+				
+				// Now check registry and close/re-open Control Panel > Mouse and see 'Enhance pointer precision' is ON
+*/
 			}
 			else
 			{
-				m_rgCheckMouseParam[ MOUSE_SPEED_FACTOR ] = true;
+				m_rgCheckMouseParam[ MOUSE_SPEED_FACTOR ] = 1;
 			}
 
 			if ( CommandLine()->FindParm ("-noforcemaccel" ) ) 
@@ -295,6 +350,16 @@ void CInput::GetAccumulatedMouseDeltasAndResetAccumulators( float *mx, float *my
 	*mx = m_flAccumulatedMouseXMovement;
 	*my = m_flAccumulatedMouseYMovement;
 
+	if ( m_rawinput.GetBool() )
+	{
+		int rawMouseX, rawMouseY;
+		if ( inputsystem->GetRawMouseAccumulators(rawMouseX, rawMouseY) )
+		{
+			*mx = (float)rawMouseX;
+			*my = (float)rawMouseY;
+		}
+	}
+	
 	m_flAccumulatedMouseXMovement = 0;
 	m_flAccumulatedMouseYMovement = 0;
 }
@@ -341,16 +406,16 @@ void CInput::ScaleMouse( float *x, float *y )
 	float mx = *x;
 	float my = *y;
 
-	float mouse_senstivity = ( gHUD.GetSensitivity() != 0 ) 
+	float mouse_sensitivity = ( gHUD.GetSensitivity() != 0 ) 
 		?  gHUD.GetSensitivity() : sensitivity.GetFloat();
 
-	if ( m_customaccel.GetBool() ) 
+	if ( m_customaccel.GetInt() == 1 ||  m_customaccel.GetInt() == 2 ) 
 	{ 
 		float raw_mouse_movement_distance = sqrt( mx * mx + my * my );
 		float acceleration_scale = m_customaccel_scale.GetFloat();
 		float accelerated_sensitivity_max = m_customaccel_max.GetFloat();
 		float accelerated_sensitivity_exponent = m_customaccel_exponent.GetFloat();
-		float accelerated_sensitivity = ( (float)pow( raw_mouse_movement_distance, accelerated_sensitivity_exponent ) * acceleration_scale + mouse_senstivity );
+		float accelerated_sensitivity = ( (float)pow( raw_mouse_movement_distance, accelerated_sensitivity_exponent ) * acceleration_scale + mouse_sensitivity );
 
 		if ( accelerated_sensitivity_max > 0.0001f && 
 			accelerated_sensitivity > accelerated_sensitivity_max )
@@ -361,19 +426,28 @@ void CInput::ScaleMouse( float *x, float *y )
 		*x *= accelerated_sensitivity; 
 		*y *= accelerated_sensitivity; 
 
-		// Further re-scale by yaw and pitch magnitude if user requests alternate mode 2
+		// Further re-scale by yaw and pitch magnitude if user requests alternate mode 2/4
 		// This means that they will need to up their value for m_customaccel_scale greatly (>40x) since m_pitch/yaw default
 		//  to 0.022
-		if ( m_customaccel.GetInt() == 2 )
+		if ( m_customaccel.GetInt() == 2 || m_customaccel.GetInt() == 4 )
 		{ 
 			*x *= m_yaw.GetFloat(); 
 			*y *= m_pitch->GetFloat(); 
 		} 
 	}
+	else if ( m_customaccel.GetInt() == 3 )
+	{
+		float raw_mouse_movement_distance_squared = mx * mx + my * my;
+		float fExp = MAX(0.0f, (m_customaccel_exponent.GetFloat() - 1.0f) / 2.0f);
+		float accelerated_sensitivity = powf( raw_mouse_movement_distance_squared, fExp ) * mouse_sensitivity;
+
+		*x *= accelerated_sensitivity; 
+		*y *= accelerated_sensitivity; 
+	}
 	else
 	{ 
-		*x *= mouse_senstivity;
-		*y *= mouse_senstivity;
+		*x *= mouse_sensitivity;
+		*y *= mouse_sensitivity;
 	}
 }
 
@@ -400,9 +474,13 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			{
 				if ( mouse_x )
 				{
+					Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
 					// use the mouse to orbit the camera around the player, and update the idealAngle
-					m_vecCameraOffset[ YAW ] -= m_yaw.GetFloat() * mouse_x;
-					cam_idealyaw.SetValue( m_vecCameraOffset[ YAW ] - viewangles[ YAW ] );
+					vTempOffset[ YAW ] -= m_yaw.GetFloat() * mouse_x;
+					cam_idealyaw.SetValue( vTempOffset[ YAW ] - viewangles[ YAW ] );
+
+					g_ThirdPersonManager.SetCameraOffsetAngles( vTempOffset );
 
 					// why doesn't this work??? CInput::AdjustYaw is why
 					//cam_idealyaw.SetValue( cam_idealyaw.GetFloat() - m_yaw.GetFloat() * mouse_x );
@@ -411,7 +489,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			else
 			{
 				// Otherwize, use mouse to spin around vertical axis
-				viewangles[YAW] -= m_yaw.GetFloat() * mouse_x;
+				viewangles[YAW] -= CAM_CapYaw( m_yaw.GetFloat() * mouse_x );
 			}
 		}
 	}
@@ -438,9 +516,13 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			{
 				if ( mouse_y )
 				{
+					Vector vTempOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
+
 					// use the mouse to orbit the camera around the player, and update the idealAngle
-					m_vecCameraOffset[ PITCH ] += m_pitch->GetFloat() * mouse_y;
-					cam_idealpitch.SetValue( m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ] );
+					vTempOffset[ PITCH ] += m_pitch->GetFloat() * mouse_y;
+					cam_idealpitch.SetValue( vTempOffset[ PITCH ] - viewangles[ PITCH ] );
+
+					g_ThirdPersonManager.SetCameraOffsetAngles( vTempOffset );
 
 					// why doesn't this work??? CInput::AdjustYaw is why
 					//cam_idealpitch.SetValue( cam_idealpitch.GetFloat() + m_pitch->GetFloat() * mouse_y );
@@ -497,16 +579,45 @@ void CInput::AccumulateMouse( void )
 		return;
 	}
 
+	if ( m_rawinput.GetBool() )
+	{
+		return;
+	}
+
 	int w, h;
 	engine->GetScreenSize( w, h );
 
 	// x,y = screen center
-	int x = w >> 1;
-	int y = h >> 1;
+	int x = w >> 1;	x;
+	int y = h >> 1;	y;
 
-	// Clamp
-	if ( m_fMouseActive )
+	//only accumulate mouse if we are not moving the camera with the mouse
+	if ( !m_fCameraInterceptingMouse && vgui::surface()->IsCursorLocked() )
 	{
+		//Assert( !vgui::surface()->IsCursorVisible() );
+		// By design, we follow the old mouse path even when using SDL for Windows, to retain old mouse behavior.
+#if defined( PLATFORM_WINDOWS )
+		int current_posx, current_posy;
+
+		GetMousePos(current_posx, current_posy);
+
+		m_flAccumulatedMouseXMovement += current_posx - x;
+		m_flAccumulatedMouseYMovement += current_posy - y;
+		
+#elif defined( USE_SDL ) || defined( OSX )
+		int dx, dy;
+		engine->GetMouseDelta( dx, dy );
+		m_flAccumulatedMouseXMovement += dx;
+		m_flAccumulatedMouseYMovement += dy;
+#else
+#error
+#endif
+		// force the mouse to the center, so there's room to move
+		ResetMouse();
+	}
+	else if ( m_fMouseActive )
+	{
+		// Clamp
 		int ox, oy;
 		GetMousePos( ox, oy );
 		ox = clamp( ox, 0, w - 1 );
@@ -514,21 +625,7 @@ void CInput::AccumulateMouse( void )
 		SetMousePos( ox, oy );
 	}
 
-	//only accumulate mouse if we are not moving the camera with the mouse
-	if ( !m_fCameraInterceptingMouse && vgui::surface()->IsCursorLocked() )
-	{
-		//Assert( !vgui::surface()->IsCursorVisible() );
 
-		int current_posx, current_posy;
-
-		GetMousePos(current_posx, current_posy);
-
-		m_flAccumulatedMouseXMovement += current_posx - x;
-		m_flAccumulatedMouseYMovement += current_posy - y;
-
-		// force the mouse to the center, so there's room to move
-		ResetMouse();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -647,11 +744,11 @@ void CInput::GetFullscreenMousePos( int *mx, int *my, int *unclampedx /*=NULL*/,
 	}
 
 	// Clamp
-	current_posx = max( 0, current_posx );
-	current_posx = min( ScreenWidth(), current_posx );
+	current_posx = MAX( 0, current_posx );
+	current_posx = MIN( ScreenWidth(), current_posx );
 
-	current_posy = max( 0, current_posy );
-	current_posy = min( ScreenHeight(), current_posy );
+	current_posy = MAX( 0, current_posy );
+	current_posy = MIN( ScreenHeight(), current_posy );
 
 	*mx = current_posx;
 	*my = current_posy;
@@ -677,4 +774,8 @@ void CInput::ClearStates (void)
 
 	m_flAccumulatedMouseXMovement = 0;
 	m_flAccumulatedMouseYMovement = 0;
+
+	// clear raw mouse accumulated data
+	int rawX, rawY;
+	inputsystem->GetRawMouseAccumulators(rawX, rawY);
 }

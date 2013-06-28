@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -44,21 +44,15 @@ void FinishClientPutInServer( CSDKPlayer *pPlayer )
 	pPlayer->InitialSpawn();
 	pPlayer->Spawn();
 
-	//Tony; changed from old SDK, we want to start out dead etc beacuse we're using states.
-
-//	if (!pPlayer->IsBot())	//Tony; even bots should start out like this; we finish a spawn sequence.
+	if (!pPlayer->IsBot())
 	{
 		// When the player first joins the server, they
-		pPlayer->m_takedamage = DAMAGE_NO;
-		pPlayer->pl.deadflag = true;
-		pPlayer->m_lifeState = LIFE_DEAD;
-		pPlayer->AddEffects( EF_NODRAW );
+		pPlayer->m_takedamage = DAMAGE_YES;
+		pPlayer->pl.deadflag = false;
+		pPlayer->m_lifeState = LIFE_ALIVE;
+		pPlayer->RemoveEffects( EF_NODRAW );
 		pPlayer->ChangeTeam( TEAM_UNASSIGNED );
 		pPlayer->SetThink( NULL );
-
-		// Move them to the first intro camera.
-		pPlayer->MoveToNextIntroCamera();
-		pPlayer->SetMoveType( MOVETYPE_NONE );
 	}
 
 	char sName[128];
@@ -113,7 +107,7 @@ const char *GetGameDescription()
 	if ( g_pGameRules ) // this function may be called before the world has spawned, and the game rules initialized
 		return g_pGameRules->GetGameDescription();
 	else
-		return SDK_GAME_DESCRIPTION;
+		return "CounterStrike";
 }
 
 
@@ -147,6 +141,7 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 		engine->ServerCommand("reload\n");
 	}
 }
+
 void GameStartFrame( void )
 {
 	VPROF( "GameStartFrame" );
@@ -157,13 +152,7 @@ void GameStartFrame( void )
 	if ( g_fGameOver )
 		return;
 
-#if defined ( SDK_USE_TEAMS )
-	gpGlobals->teamplay = true;
-#else
-	gpGlobals->teamplay = false;
-#endif
-	extern void Bot_RunAll();
-	Bot_RunAll();
+	gpGlobals->teamplay = teamplay.GetInt() ? true : false;
 }
 
 //=========================================================

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Game rules for Half-Life 2.
 //
@@ -106,6 +106,10 @@ private:
 //-----------------------------------------------------------------------------
 inline CHalfLife2* HL2GameRules()
 {
+#if ( !defined( HL2_DLL ) && !defined( HL2_CLIENT_DLL ) ) || defined( HL2MP )
+	Assert( 0 );	// g_pGameRules is NOT an instance of CHalfLife2 and bad things happen
+#endif
+
 	return static_cast<CHalfLife2*>(g_pGameRules);
 }
 

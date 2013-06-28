@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,6 +18,16 @@ class Color;
 
 namespace vgui
 {
+
+typedef unsigned long HTexture;
+
+enum iimage_rotation_t
+{
+	ROTATED_UNROTATED = 0,
+	ROTATED_CLOCKWISE_90,
+	ROTATED_ANTICLOCKWISE_90,
+	ROTATED_FLIPPED,
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to drawing an image
@@ -46,6 +56,17 @@ public:
 
 	// virtual destructor
 	virtual ~IImage() {}
+
+	// not for general purpose use
+	// evicts the underlying image from memory if refcounts permit, otherwise ignored
+	// returns true if eviction occurred, otherwise false
+	virtual bool Evict() = 0;
+
+	virtual int GetNumFrames() = 0;
+	virtual void SetFrame( int nFrame ) = 0;
+	virtual HTexture GetID() = 0;
+
+	virtual void SetRotation( int iRotation ) = 0;
 };
 
 } // namespace vgui

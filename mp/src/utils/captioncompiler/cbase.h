@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,6 @@
 
 // This is just a dummy file to make this tool compile
 #include "ai_activity.h"
-#include "UtlVector.h"
+#include "utlvector.h"
 
 #endif // CBASE_H

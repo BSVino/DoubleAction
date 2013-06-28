@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2004, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Win32 replacements for XBox.
 //
@@ -84,13 +84,14 @@ typedef enum
 //} xverbose_e;
 
 typedef unsigned short WORD;
-#ifndef _LINUX
+#ifndef POSIX
 typedef unsigned long DWORD;
 typedef void* HANDLE;
+typedef unsigned __int64 ULONGLONG;
 #endif
 
-#ifdef _LINUX
-typedef int32 COLORREF;
+#ifdef POSIX
+typedef DWORD COLORREF;
 #endif
 
 #ifndef INVALID_HANDLE_VALUE

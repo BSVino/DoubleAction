@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements a grab bag of visual effects entities.
 //
@@ -1539,7 +1539,7 @@ public:
 	DECLARE_SERVERCLASS();
 
 private:
-#ifdef _LINUX
+#ifdef POSIX
 	CEnvWindShared m_EnvWindShared; // FIXME - fails to compile as networked var due to operator= problem
 #else
 	CNetworkVarEmbedded( CEnvWindShared, m_EnvWindShared );
@@ -1897,7 +1897,7 @@ void CEnvMuzzleFlash::Spawn()
 	{
 		CBaseAnimating *pAnim = GetParent()->GetBaseAnimating();
 		int nParentAttachment = pAnim->LookupAttachment( STRING(m_iszParentAttachment) );
-		if ( nParentAttachment != 0 )
+		if ( nParentAttachment > 0 )
 		{
 			SetParent( GetParent(), nParentAttachment );
 			SetLocalOrigin( vec3_origin );

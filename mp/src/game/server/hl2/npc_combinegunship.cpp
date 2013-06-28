@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -273,7 +273,7 @@ public:
 	void	ApplyGeneralDrag( void );
 	void	ApplySidewaysDrag( const Vector &vecRight );
 
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	void	UpdateEnemyTarget( void );
 
@@ -2007,7 +2007,7 @@ void CNPC_CombineGunship::BeginDestruct( void )
 		return;
 	}
 
-	m_hRagdoll->SetName( AllocPooledString( UTIL_VarArgs("%s_ragdoll", GetEntityName()) ) );
+	m_hRagdoll->SetName( AllocPooledString( UTIL_VarArgs("%s_ragdoll", STRING(GetEntityName()) ) ) );
 
 	// Tell the smoke trail to follow the ragdoll
 	CreateSmokeTrail();
@@ -2122,7 +2122,7 @@ void CNPC_CombineGunship::Flight( void )
 	}
 
 	float flCurrentSpeed = GetAbsVelocity().Length();
-	float flDist = min( flCurrentSpeed + accelRate, maxSpeed );
+	float flDist = MIN( flCurrentSpeed + accelRate, maxSpeed );
 
 	Vector deltaPos;
 	if ( m_lifeState == LIFE_DYING || m_hGroundAttackTarget )
@@ -2719,19 +2719,19 @@ bool CNPC_CombineGunship::PoseGunTowardTargetDirection( const Vector &vTargetDir
 
 	if (angles.x > m_angGun.x)
 	{
-		m_angGun.x = min( angles.x, m_angGun.x + 12 );
+		m_angGun.x = MIN( angles.x, m_angGun.x + 12 );
 	}
 	if (angles.x < m_angGun.x)
 	{
-		m_angGun.x = max( angles.x, m_angGun.x - 12 );
+		m_angGun.x = MAX( angles.x, m_angGun.x - 12 );
 	}
 	if (angles.y > m_angGun.y)
 	{
-		m_angGun.y = min( angles.y, m_angGun.y + 12 );
+		m_angGun.y = MIN( angles.y, m_angGun.y + 12 );
 	}
 	if (angles.y < m_angGun.y)
 	{
-		m_angGun.y = max( angles.y, m_angGun.y - 12 );
+		m_angGun.y = MAX( angles.y, m_angGun.y - 12 );
 	}
 
 	SetPoseParameter( m_poseWeapon_Pitch, -m_angGun.x );
@@ -2828,7 +2828,7 @@ void CNPC_CombineGunship::MakeTracer( const Vector &vecTracerSrc, const trace_t 
 //			*ptr - 
 // Output : int
 //-----------------------------------------------------------------------------
-void CNPC_CombineGunship::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_CombineGunship::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	// Reflect bullets
 	if ( info.GetDamageType() & DMG_BULLET )
@@ -2863,7 +2863,7 @@ void CNPC_CombineGunship::TraceAttack( const CTakeDamageInfo &info, const Vector
 		return;
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------

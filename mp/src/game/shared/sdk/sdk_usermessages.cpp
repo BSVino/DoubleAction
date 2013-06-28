@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,6 @@ void RegisterUserMessages()
 	usermessages->Register( "Train", 1 );		// train control data
 	usermessages->Register( "HudText", -1 );	
 	usermessages->Register( "SayText", -1 );	
-	usermessages->Register( "SayText2", -1 );	
 	usermessages->Register( "TextMsg", -1 );
 	usermessages->Register( "HudMsg", -1 );
 	usermessages->Register( "ResetHUD", 1 );	// called every respawn
@@ -25,7 +24,6 @@ void RegisterUserMessages()
 	usermessages->Register( "Shake", 13 );		// shake view
 	usermessages->Register( "Fade", 10 );	// fade HUD in/out
 	usermessages->Register( "VGUIMenu", -1 );	// Show VGUI menu
-	usermessages->Register( "Rumble", 3 );	// Send a rumble to a controller
 	usermessages->Register( "CloseCaption", -1 ); // Show a caption (by string id number)(duration in 10th of a second)
 
 	usermessages->Register( "SendAudio", -1 );	// play radion command
@@ -43,8 +41,6 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerAnimEvent", -1 );	// jumping, firing, reload, etc.
 
 	usermessages->Register( "AmmoDenied", 2 );
-	usermessages->Register( "AchievementEvent", -1 );
-
 	usermessages->Register( "UpdateRadar", -1 );
 
 	// Used to send a sample HUD message

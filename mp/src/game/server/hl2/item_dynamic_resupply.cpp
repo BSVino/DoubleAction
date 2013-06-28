@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -349,7 +349,7 @@ void CItem_DynamicResupply::SpawnFullItem( CItem_DynamicResupply *pMaster, CBase
 
 			if ( iDebug )
 			{
-				Msg("Player is full, spawning item_healthvial due to spawnflag.\n", g_DynamicResupplyAmmoItems[i].sEntityName );
+				Msg("Player is full, spawning item_healthvial due to spawnflag.\n");
 			}
 			return;
 		}

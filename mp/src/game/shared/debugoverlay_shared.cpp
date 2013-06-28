@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Utility functions for using debug overlays to visualize information
 //			in the world.  Uses the IVDebugOverlay interface.
@@ -186,7 +186,7 @@ void NDebugOverlay::EntityTextAtPosition( const Vector &origin, int text_offset,
 {
 	if ( debugoverlay )
 	{
-		debugoverlay->AddTextOverlayRGB( origin, text_offset, duration, r, g, b, a, text );
+		debugoverlay->AddTextOverlayRGB( origin, text_offset, duration, r, g, b, a, "%s", text );
 	}
 }
 
@@ -237,7 +237,7 @@ void NDebugOverlay::Text( const Vector &origin, const char *text, bool bViewChec
 
 	if ( debugoverlay )
 	{
-		debugoverlay->AddTextOverlay( origin, duration, text );
+		debugoverlay->AddTextOverlay( origin, duration, "%s", text );
 	}	
 }
 
@@ -525,6 +525,56 @@ void NDebugOverlay::Axis( const Vector &position, const QAngle &angles, float si
 	Line( position, xvec, 255, 0, 0, noDepthTest, flDuration );
 	Line( position, yvec, 0, 255, 0, noDepthTest, flDuration );
 	Line( position, zvec, 0, 0, 255, noDepthTest, flDuration );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw circles to suggest a sphere
+//-----------------------------------------------------------------------------
+void NDebugOverlay::Sphere( const Vector &center, float radius, int r, int g, int b, bool noDepthTest, float flDuration )
+{
+	Vector edge, lastEdge;
+
+	float axisSize = radius;
+	Line( center + Vector( 0, 0, -axisSize ), center + Vector( 0, 0, axisSize ), r, g, b, noDepthTest, flDuration );
+	Line( center + Vector( 0, -axisSize, 0 ), center + Vector( 0, axisSize, 0 ), r, g, b, noDepthTest, flDuration );
+	Line( center + Vector( -axisSize, 0, 0 ), center + Vector( axisSize, 0, 0 ), r, g, b, noDepthTest, flDuration );
+
+	lastEdge = Vector( radius + center.x, center.y, center.z );
+	float angle;
+	for( angle=0.0f; angle <= 360.0f; angle += 22.5f )
+	{
+		edge.x = radius * cosf( angle / 180.0f * M_PI ) + center.x;
+		edge.y = center.y;
+		edge.z = radius * sinf( angle / 180.0f * M_PI ) + center.z;
+
+		Line( edge, lastEdge, r, g, b, noDepthTest, flDuration );
+
+		lastEdge = edge;
+	}
+
+	lastEdge = Vector( center.x, radius + center.y, center.z );
+	for( angle=0.0f; angle <= 360.0f; angle += 22.5f )
+	{
+		edge.x = center.x;
+		edge.y = radius * cosf( angle / 180.0f * M_PI ) + center.y;
+		edge.z = radius * sinf( angle / 180.0f * M_PI ) + center.z;
+
+		Line( edge, lastEdge, r, g, b, noDepthTest, flDuration );
+
+		lastEdge = edge;
+	}
+
+	lastEdge = Vector( center.x, radius + center.y, center.z );
+	for( angle=0.0f; angle <= 360.0f; angle += 22.5f )
+	{
+		edge.x = radius * cosf( angle / 180.0f * M_PI ) + center.x;
+		edge.y = radius * sinf( angle / 180.0f * M_PI ) + center.y;
+		edge.z = center.z;
+
+		Line( edge, lastEdge, r, g, b, noDepthTest, flDuration );
+
+		lastEdge = edge;
+	}
 }
 
 //-----------------------------------------------------------------------------

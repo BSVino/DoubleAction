@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,6 +27,14 @@ extern float (*pfFastCos)(float x);
 #define FastRSqrtFast(x)    (*pfRSqrtFast)(x)
 #define FastSinCos(x,s,c)   (*pfFastSinCos)(x,s,c)
 #define FastCos(x)			(*pfFastCos)(x)
+
+#if defined(__i386__) || defined(_M_IX86)
+// On x86, the inline FPU or SSE sqrt instruction is faster than
+// the overhead of setting up a function call and saving/restoring
+// the FPU or SSE register state and can be scheduled better, too.
+#undef FastSqrt
+#define FastSqrt(x)			::sqrtf(x)
+#endif
 
 #endif // !_X360
 

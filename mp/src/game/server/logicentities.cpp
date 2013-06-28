@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements many of the entities that control logic flow within a map.
 //
@@ -2737,7 +2737,7 @@ int CLogicBranchList::DrawDebugTextOverlays( void )
 			CLogicBranch *pBranch = (CLogicBranch *)m_LogicBranchList.Element( i ).Get();
 			if ( pBranch )
 			{
-				Q_snprintf( tempstr, sizeof(tempstr), "Branch (%s): %s", pBranch->GetEntityName(), (pBranch->GetLogicBranchState()) ? "TRUE" : "FALSE" );
+				Q_snprintf( tempstr, sizeof(tempstr), "Branch (%s): %s", STRING(pBranch->GetEntityName()), (pBranch->GetLogicBranchState()) ? "TRUE" : "FALSE" );
 				EntityText( text_offset, tempstr, 0 );
 				text_offset++;
 			}

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -304,7 +304,7 @@ int CBSPTreeData::CountElementsInLeaf( int leaf )
 //-----------------------------------------------------------------------------
 bool CBSPTreeData::EnumerateElementsInLeaf( int leaf, IBSPTreeDataEnumerator* pEnum, int context )
 {
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	// The enumeration method better damn well not change this list...
 	int nCount = CountElementsInLeaf(leaf);
 #endif

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Hint node utilities and functions.
 //
@@ -201,6 +201,7 @@ public:
 	CAIHintVector &operator=( const CAIHintVector &src )
 	{
 		CopyArray( src.Base(), src.Count() );
+		return *this;
 	}
 };
 

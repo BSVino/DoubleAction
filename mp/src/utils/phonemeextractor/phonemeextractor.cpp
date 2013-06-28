@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,7 +24,7 @@
 #include "sentence.h"
 #include "tier0/dbg.h"
 #include "tier0/icommandline.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 
 // Extract phoneme grammar id
 #define EP_GRAM_ID			101

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,6 @@
 #endif
 
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
-#include "weapon_hl2mpbase_machinegun.h"
 
 #define	PISTOL_FASTEST_REFIRE_TIME		0.1f
 #define	PISTOL_FASTEST_DRY_REFIRE_TIME	0.2f
@@ -31,10 +30,10 @@
 // CWeaponPistol
 //-----------------------------------------------------------------------------
 
-class CWeaponPistol : public CHL2MPMachineGun
+class CWeaponPistol : public CBaseHL2MPCombatWeapon
 {
 public:
-	DECLARE_CLASS( CWeaponPistol, CHL2MPMachineGun );
+	DECLARE_CLASS( CWeaponPistol, CBaseHL2MPCombatWeapon );
 
 	CWeaponPistol(void);
 
@@ -85,7 +84,10 @@ public:
 	{
 		return 0.5f; 
 	}
+	
+#ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
+#endif
 
 private:
 	CNetworkVar( float,	m_flSoonestPrimaryAttack );
@@ -125,24 +127,23 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( weapon_pistol, CWeaponPistol );
 PRECACHE_WEAPON_REGISTER( weapon_pistol );
 
+#ifndef CLIENT_DLL
 acttable_t CWeaponPistol::m_acttable[] = 
 {
-	{ ACT_MP_STAND_IDLE,				ACT_HL2MP_IDLE_PISTOL,					false },
-	{ ACT_MP_CROUCH_IDLE,				ACT_HL2MP_IDLE_CROUCH_PISTOL,			false },
-
-	{ ACT_MP_RUN,						ACT_HL2MP_RUN_PISTOL,					false },
-	{ ACT_MP_CROUCHWALK,				ACT_HL2MP_WALK_CROUCH_PISTOL,			false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,	false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,	false },
-
-	{ ACT_MP_RELOAD_STAND,				ACT_HL2MP_GESTURE_RELOAD_PISTOL,		false },
-	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RELOAD_PISTOL,		false },
-
-	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_PISTOL,					false },
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_PISTOL,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_PISTOL,					false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_PISTOL,			false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_PISTOL,			false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_PISTOL,		false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_PISTOL,					false },
+	{ ACT_RANGE_ATTACK1,				ACT_RANGE_ATTACK_PISTOL,				false },
 };
 
+
 IMPLEMENT_ACTTABLE( CWeaponPistol );
+
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -312,7 +313,6 @@ bool CWeaponPistol::Reload( void )
 	if ( fRet )
 	{
 		WeaponSound( RELOAD );
-		ToHL2MPPlayer(GetOwner())->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 		m_flAccuracyPenalty = 0.0f;
 	}
 	return fRet;

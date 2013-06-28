@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,13 +11,13 @@
 #include <vgui/IVGui.h>
 #include <KeyValues.h>
 #include <vgui_controls/AnimationController.h>
-#include "FileSystem.h"
-#include "FileSystem_Helpers.h"
+#include "filesystem.h"
+#include "filesystem_helpers.h"
 
 #include <stdio.h>
 #include <math.h>
 #include "mempool.h"
-#include "UtlDict.h"
+#include "utldict.h"
 #include "mathlib/mathlib.h"
 #include "characterset.h"
 
@@ -398,8 +398,34 @@ bool AnimationController::ParseScriptFile(char *pMem, int length)
 					// parse the floating point values right out
 					if (0 == sscanf(token, "%f %f %f %f", &cmdAnimate.target.a, &cmdAnimate.target.b, &cmdAnimate.target.c, &cmdAnimate.target.d))
 					{
+						//=============================================================================
+						// HPE_BEGIN:
+						// [pfreese] Improved handling colors not defined in scheme 
+						//=============================================================================
+						
 						// could be referencing a value in the scheme file, lookup
-						Color col = scheme->GetColor(token, Color(0, 0, 0, 0));
+						Color default_invisible_black(0, 0, 0, 0);
+						Color col = scheme->GetColor(token, default_invisible_black);
+
+						// we don't have a way of seeing if the color is not declared in the scheme, so we use this
+						// silly method of trying again with a different default to see if we get the fallback again
+						if (col == default_invisible_black)
+						{
+							Color error_pink(255, 0, 255, 255);	// make it extremely obvious if a scheme lookup fails
+							col = scheme->GetColor(token, error_pink);
+
+							// commented out for Soldier/Demo release...(getting spammed in console)
+							// we'll try to figure this out after the update is out
+// 							if (col == error_pink)
+// 							{
+// 								Warning("Missing color in scheme: %s\n", token);
+// 							}
+						}
+						
+						//=============================================================================
+						// HPE_END
+						//=============================================================================
+
 						cmdAnimate.target.a = col[0];
 						cmdAnimate.target.b = col[1];
 						cmdAnimate.target.c = col[2];
@@ -453,6 +479,10 @@ bool AnimationController::ParseScriptFile(char *pMem, int length)
 					// noiseamount
 					pMem = ParseFile(pMem, token, NULL);
 					cmdAnimate.interpolationParameter = (float)atof(token);
+				}
+				else if (!stricmp(token, "Bounce"))
+				{
+					cmdAnimate.interpolationFunction = INTERPOLATOR_BOUNCE;
 				}
 				else
 				{
@@ -819,6 +849,27 @@ AnimationController::Value_t AnimationController::GetInterpolatedValue(int inter
 			pos = 0.0f;
 		}
 		break;
+	case INTERPOLATOR_BOUNCE:
+	{
+		// fall from startValue to endValue, bouncing a few times and settling out at endValue
+		const float hit1 = 0.33f;
+		const float hit2 = 0.67f;
+		const float hit3 = 1.0f;
+
+		if ( pos < hit1 )
+		{
+			pos = 1.0f - sin( M_PI * pos / hit1 );
+		}
+		else if ( pos < hit2 )
+		{
+			pos = 0.5f + 0.5f * ( 1.0f - sin( M_PI * ( pos - hit1 ) / ( hit2 - hit1 ) ) );
+		}
+		else
+		{
+			pos = 0.8f + 0.2f * ( 1.0f - sin( M_PI * ( pos - hit2 ) / ( hit3 - hit2 ) ) );
+		}
+		break;
+	}
 	case INTERPOLATOR_LINEAR:
 	default:
 		break;
@@ -1060,6 +1111,8 @@ void AnimationController::ExecAnimationCommand(UtlSymId_t seqName, AnimCommand_t
 void AnimationController::StartCmd_Animate(UtlSymId_t seqName, AnimCmdAnimate_t &cmd, Panel *pWithinParent)
 {
 	Assert( pWithinParent );
+	if ( !pWithinParent )
+		return;
 
 	// make sure the child exists
 	Panel *panel = pWithinParent->FindChildByName(g_ScriptSymbols.String(cmd.panel),true);

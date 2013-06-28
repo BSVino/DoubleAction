@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -60,8 +60,8 @@ public:
 	virtual void FreePanel(VPANEL panel) = 0;
 	
 	// debugging prints
-	virtual void DPrintf(const char *format, ...) = 0;
-	virtual void DPrintf2(const char *format, ...) = 0;
+	virtual void DPrintf(PRINTF_FORMAT_STRING const char *format, ...) = 0;
+	virtual void DPrintf2(PRINTF_FORMAT_STRING const char *format, ...) = 0;
 	virtual void SpewAllActivePanelNames() = 0;
 	
 	// safe-pointer handle methods

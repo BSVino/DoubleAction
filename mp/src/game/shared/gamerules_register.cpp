@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -45,22 +45,14 @@ CGameRulesRegister* CGameRulesRegister::FindByName( const char *pName )
 // ------------------------------------------------------------------------------------------ //
 // Functions to dispatch the messages to create the game rules object on the client.
 // ------------------------------------------------------------------------------------------ //
-
-#define GAMERULES_STRINGTABLE_NAME "GameRulesCreation"
-
+#define GAMERULES_STRINGTABLE_NAME		"GameRulesCreation"
 
 #ifdef CLIENT_DLL
-
 	#include "networkstringtable_clientdll.h"
 
 	INetworkStringTable *g_StringTableGameRules = NULL;
 
-	void OnGameRulesCreationStringChanged( 
-		void *object, 
-		INetworkStringTable *stringTable, 
-		int stringNumber, 
-		const char *newString, 
-		void const *newData )
+	void OnGameRulesCreationStringChanged( void *object, INetworkStringTable *stringTable, int stringNumber, const char *newString, void const *newData )
 	{
 		// The server has created a new CGameRules object.
 		delete g_pGameRules;
@@ -69,7 +61,9 @@ CGameRulesRegister* CGameRulesRegister::FindByName( const char *pName )
 		const char *pClassName = (const char*)newData;
 		CGameRulesRegister *pReg = CGameRulesRegister::FindByName( pClassName );
 		if ( !pReg )
+		{
 			Error( "OnGameRulesCreationStringChanged: missing gamerules class '%s' on the client", pClassName );
+		}
 
 		// Create the new game rules object.
 		pReg->CreateGameRules();
@@ -87,19 +81,20 @@ CGameRulesRegister* CGameRulesRegister::FindByName( const char *pName )
 		{
 			g_StringTableGameRules = networkstringtable->FindTable( GAMERULES_STRINGTABLE_NAME );
 			if ( g_StringTableGameRules )
+			{
 				g_StringTableGameRules->SetStringChangedCallback( NULL, OnGameRulesCreationStringChanged );
+			}
 		}
 	}
 
 #else
-
 	#include "networkstringtable_gamedll.h"
 
 	INetworkStringTable *g_StringTableGameRules = NULL;
 
 	void CreateNetworkStringTables_GameRules()
 	{
-		// Create the string table used by 
+		// Create the string tables
 		g_StringTableGameRules = networkstringtable->CreateStringTable( GAMERULES_STRINGTABLE_NAME, 1 );
 
 #ifdef CSTRIKE_DLL

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,7 +7,7 @@
 
 #include <vgui/KeyCode.h>
 #include <KeyValues.h>
-#include "vgui/iinput.h"
+#include "vgui/IInput.h"
 #include "vgui/MouseCode.h"
 #include "vgui/ISurface.h"
 

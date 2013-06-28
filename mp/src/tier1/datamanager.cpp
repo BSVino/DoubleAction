@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -122,7 +122,8 @@ unsigned int CDataManagerBase::FlushAll()
 unsigned int CDataManagerBase::Purge( unsigned int nBytesToPurge )
 {
 	unsigned int nTargetSize = MemUsed_Inline() - nBytesToPurge;
-	if ( nTargetSize < 0 )
+	// Check for underflow
+	if ( MemUsed_Inline() < nBytesToPurge )
 		nTargetSize = 0;
 	unsigned int nImpliedCapacity = MemTotal_Inline() - nTargetSize;
 	return EnsureCapacity( nImpliedCapacity );

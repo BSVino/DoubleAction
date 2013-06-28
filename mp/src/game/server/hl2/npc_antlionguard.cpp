@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:	Antlion Guard
 //
@@ -254,7 +254,7 @@ public:
 	virtual void	UpdateEfficiency( bool bInPVS )	{ SetEfficiency( ( GetSleepState() != AISS_AWAKE ) ? AIE_DORMANT : AIE_NORMAL ); SetMoveEfficiency( AIME_NORMAL ); }
 	virtual void	PrescheduleThink( void );
 	virtual void	GatherConditions( void );
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void	StartTask( const Task_t *pTask );
 	virtual void	RunTask( const Task_t *pTask );
 	virtual void	StopLoopingSounds();
@@ -910,7 +910,7 @@ bool CNPC_AntlionGuard::CanSummon( bool bIgnoreTime )
 		return false;
 
 	// Hit the max number of them allowed? Only summon when we're 2 down.
-	if ( m_iNumLiveAntlions >= max(1, ANTLIONGUARD_SUMMON_COUNT-1) )
+	if ( m_iNumLiveAntlions >= MAX(1, ANTLIONGUARD_SUMMON_COUNT-1) )
 		return false;
 
 	return true;
@@ -1641,7 +1641,7 @@ void CNPC_AntlionGuard::Footstep( bool bHeavy )
 	}
 }
 
-extern ConVar sv_gravity;
+float GetCurrentGravity( void );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1665,7 +1665,7 @@ void CNPC_AntlionGuard::GetPhysicsShoveDir( CBaseEntity *pObject, float flMass, 
 		vecToss = VecCheckThrow( this, vecStart, vecTarget, flSpeed * 1.25f, 1.0f );
 		if ( vecToss == vec3_origin )
 		{
-			const float flGravity = sv_gravity.GetFloat();
+			const float flGravity = GetCurrentGravity();
 
 			vecToss = (vecTarget - vecStart);
 
@@ -2278,7 +2278,7 @@ int CNPC_AntlionGuard::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //			*ptr - 
 //			bitsDamageType - 
 //-----------------------------------------------------------------------------
-void CNPC_AntlionGuard::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
+void CNPC_AntlionGuard::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CTakeDamageInfo info = inputInfo;
 
@@ -2298,7 +2298,7 @@ void CNPC_AntlionGuard::TraceAttack( const CTakeDamageInfo &inputInfo, const Vec
 		info.SetDamage( 1.0f );
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------

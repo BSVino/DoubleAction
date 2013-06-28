@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Base combat character with no AI
 //
@@ -27,8 +27,10 @@
 #include "damagemodifier.h"
 #include "utllinkedlist.h"
 #include "ai_hull.h"
+#include "ai_utils.h"
 #include "physics_impact_damage.h"
 
+class CNavArea;
 class CScriptedTarget;
 typedef CHandle<CBaseCombatWeapon> CBaseCombatWeaponHandle;
 
@@ -79,6 +81,7 @@ enum Capability_t
 
 class CBaseCombatWeapon;
 
+#define BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE 0.9f
 
 enum Disposition_t 
 {
@@ -119,13 +122,7 @@ public:
 
 public:
 
-	void				Spawn( void )
-	{
-		BaseClass::Spawn();
-		SetBlocksLOS( false );
-	}
-
-
+	virtual void		Spawn( void );
 	virtual void		Precache();
 
 	virtual int			Restore( IRestore &restore );
@@ -135,7 +132,7 @@ public:
 	int					TakeHealth( float flHealth, int bitsDamageType );
 	void				CauseDeath( const CTakeDamageInfo &info );
 
-	virtual	bool		FVisible ( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL );
+	virtual	bool		FVisible ( CBaseEntity *pEntity, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL ); // true iff the parameter can be seen by me.
 	virtual bool		FVisible( const Vector &vecTarget, int traceMask = MASK_BLOCKLOS, CBaseEntity **ppBlocker = NULL )	{ return BaseClass::FVisible( vecTarget, traceMask, ppBlocker ); }
 	static void			ResetVisibilityCache( CBaseCombatCharacter *pBCC = NULL );
 
@@ -171,16 +168,49 @@ public:
 
 	virtual void SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 
+	// -----------------------
+	// Fog
+	// -----------------------
+	virtual bool		IsHiddenByFog( const Vector &target ) const;	///< return true if given target cant be seen because of fog
+	virtual bool		IsHiddenByFog( CBaseEntity *target ) const;		///< return true if given target cant be seen because of fog
+	virtual bool		IsHiddenByFog( float range ) const;				///< return true if given distance is too far to see through the fog
+	virtual float		GetFogObscuredRatio( const Vector &target ) const;///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
+	virtual float		GetFogObscuredRatio( CBaseEntity *target ) const;	///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
+	virtual float		GetFogObscuredRatio( float range ) const;		///< return 0-1 ratio where zero is not obscured, and 1 is completely obscured
+
+
+	// -----------------------
+	// Vision
+	// -----------------------
+	enum FieldOfViewCheckType { USE_FOV, DISREGARD_FOV };
+
+	// Visible starts with line of sight, and adds all the extra game checks like fog, smoke, camo...
+	bool IsAbleToSee( const CBaseEntity *entity, FieldOfViewCheckType checkFOV );
+	bool IsAbleToSee( CBaseCombatCharacter *pBCC, FieldOfViewCheckType checkFOV );
+
+	virtual bool IsLookingTowards( const CBaseEntity *target, float cosTolerance = BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE ) const;	// return true if our view direction is pointing at the given target, within the cosine of the angular tolerance. LINE OF SIGHT IS NOT CHECKED.
+	virtual bool IsLookingTowards( const Vector &target, float cosTolerance = BCC_DEFAULT_LOOK_TOWARDS_TOLERANCE ) const;	// return true if our view direction is pointing at the given target, within the cosine of the angular tolerance. LINE OF SIGHT IS NOT CHECKED.
+
+	virtual bool IsInFieldOfView( CBaseEntity *entity ) const;	// Calls IsLookingTowards with the current field of view.  
+	virtual bool IsInFieldOfView( const Vector &pos ) const;
+
+	enum LineOfSightCheckType
+	{
+		IGNORE_NOTHING,
+		IGNORE_ACTORS
+	};
+	virtual bool IsLineOfSightClear( CBaseEntity *entity, LineOfSightCheckType checkType = IGNORE_NOTHING ) const;// strictly LOS check with no other considerations
+	virtual bool IsLineOfSightClear( const Vector &pos, LineOfSightCheckType checkType = IGNORE_NOTHING, CBaseEntity *entityToIgnore = NULL ) const;
 
 	// -----------------------
 	// Ammo
 	// -----------------------
 	virtual int			GiveAmmo( int iCount, int iAmmoIndex, bool bSuppressSound = false );
 	int					GiveAmmo( int iCount, const char *szName, bool bSuppressSound = false );
-	void				RemoveAmmo( int iCount, int iAmmoIndex );
-	void				RemoveAmmo( int iCount, const char *szName );
+	virtual void		RemoveAmmo( int iCount, int iAmmoIndex );
+	virtual void		RemoveAmmo( int iCount, const char *szName );
 	void				RemoveAllAmmo( );
-	int					GetAmmoCount( int iAmmoIndex ) const;
+	virtual int			GetAmmoCount( int iAmmoIndex ) const;
 	int					GetAmmoCount( char *szName ) const;
 
 	virtual Activity	NPC_TranslateActivity( Activity baseAct );
@@ -228,8 +258,13 @@ public:
 	virtual int				OnTakeDamage_Dying( const CTakeDamageInfo &info );
 	virtual int				OnTakeDamage_Dead( const CTakeDamageInfo &info );
 
+	virtual float			GetAliveDuration( void ) const;			// return time we have been alive (only valid when alive)
+
 	virtual void 			OnFriendDamaged( CBaseCombatCharacter *pSquadmate, CBaseEntity *pAttacker ) {}
 	virtual void 			NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity ) {}
+	virtual bool			HasEverBeenInjured( int team = TEAM_ANY ) const;			// return true if we have ever been injured by a member of the given team
+	virtual float			GetTimeSinceLastInjury( int team = TEAM_ANY ) const;		// return time since we were hurt by a member of the given team
+
 
 	virtual void			OnPlayerKilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info ) {}
 
@@ -260,7 +295,8 @@ public:
 	// returns true if gibs were spawned
 	virtual bool			Event_Gibbed( const CTakeDamageInfo &info );
 	// Character entered the dying state without being gibbed (only fired once)
-	virtual void			Event_Dying( void );
+	virtual void			Event_Dying( const CTakeDamageInfo &info );
+	virtual void			Event_Dying();
 	// character died and should become a ragdoll now
 	// return true if converted to a ragdoll, false to use AI death
 	virtual bool			BecomeRagdoll( const CTakeDamageInfo &info, const Vector &forceVector );
@@ -312,7 +348,7 @@ public:
 	int					WeaponCount() const;
 	CBaseCombatWeapon*	GetWeapon( int i ) const;
 	bool				RemoveWeapon( CBaseCombatWeapon *pWeapon );
-	void				RemoveAllWeapons();
+	virtual void		RemoveAllWeapons();
 	WeaponProficiency_t GetCurrentWeaponProficiency() { return m_CurrentWeaponProficiency; }
 	void				SetCurrentWeaponProficiency( WeaponProficiency_t iProficiency ) { m_CurrentWeaponProficiency = iProficiency; }
 	virtual WeaponProficiency_t CalcWeaponProficiency( CBaseCombatWeapon *pWeapon );
@@ -330,6 +366,8 @@ public:
 	virtual void		AddEntityRelationship( CBaseEntity *pEntity, Disposition_t nDisposition, int nPriority );
 	virtual bool		RemoveEntityRelationship( CBaseEntity *pEntity );
 	virtual void		AddClassRelationship( Class_T nClass, Disposition_t nDisposition, int nPriority );
+
+	virtual void		ChangeTeam( int iTeamNum );
 
 	// Nav hull type
 	Hull_t	GetHullType() const				{ return m_eHull; }
@@ -362,8 +400,28 @@ public:
 	void				SetPreventWeaponPickup( bool bPrevent ) { m_bPreventWeaponPickup = bPrevent; }
 	bool				m_bPreventWeaponPickup;
 
+	virtual CNavArea *GetLastKnownArea( void ) const		{ return m_lastNavArea; }		// return the last nav area the player occupied - NULL if unknown
+	virtual bool IsAreaTraversable( const CNavArea *area ) const;							// return true if we can use the given area 
+	virtual void ClearLastKnownArea( void );
+	virtual void UpdateLastKnownArea( void );										// invoke this to update our last known nav area (since there is no think method chained to CBaseCombatCharacter)
+	virtual void OnNavAreaChanged( CNavArea *enteredArea, CNavArea *leftArea ) { }	// invoked (by UpdateLastKnownArea) when we enter a new nav area (or it is reset to NULL)
+	virtual void OnNavAreaRemoved( CNavArea *removedArea );
+
+	// -----------------------
+	// Notification from INextBots.
+	// -----------------------
+	virtual void		OnPursuedBy( INextBot * RESTRICT pPursuer ){} // called every frame while pursued by a bot in DirectChase.
+
+#ifdef GLOWS_ENABLE
+	// Glows
+	void				AddGlowEffect( void );
+	void				RemoveGlowEffect( void );
+	bool				IsGlowEffectActive( void );
+#endif // GLOWS_ENABLE
+
 #ifdef INVASION_DLL
 public:
+
 
 	// TF2 Powerups
 	virtual bool		CanBePoweredUp( void );
@@ -398,9 +456,16 @@ protected:
 public:
 	CNetworkVar( float, m_flNextAttack );			// cannot attack again until this time
 
+#ifdef GLOWS_ENABLE
 protected:
+	CNetworkVar( bool, m_bGlowEnabled );
+#endif // GLOWS_ENABLE
+
 private:
 	Hull_t		m_eHull;
+
+	void				UpdateGlowEffect( void );
+	void				DestroyGlowEffect( void );
 
 protected:
 	int			m_bloodColor;			// color of blood particless
@@ -416,6 +481,9 @@ protected:
 public:
 	static int					GetInteractionID();	// Returns the next interaction #
 
+protected:
+	// Visibility-related stuff
+	bool ComputeLOS( const Vector &vecEyePosition, const Vector &vecTarget ) const;
 private:
 	// For weapon strip
 	void ThrowDirForWeaponStrip( CBaseCombatWeapon *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
@@ -440,6 +508,7 @@ private:
 	// ---------------
 	CUtlVector<Relationship_t>		m_Relationship;						// Array of relationships
 
+protected:
 	// shared ammo slots
 	CNetworkArrayForDerived( int, m_iAmmo, MAX_AMMO_SLOTS );
 
@@ -449,7 +518,31 @@ private:
 	CNetworkHandle( CBaseCombatWeapon, m_hActiveWeapon );
 
 	friend class CCleanupDefaultRelationShips;
+	
+	IntervalTimer m_aliveTimer;
+
+	unsigned int m_hasBeenInjured;							// bitfield corresponding to team ID that did the injury	
+
+	// we do this because MAX_TEAMS is 32, which is wasteful for most games
+	enum { MAX_DAMAGE_TEAMS = 4 };
+	struct DamageHistory
+	{
+		int team;					// which team hurt us (TEAM_INVALID means slot unused)
+		IntervalTimer interval;		// how long has it been
+	};
+	DamageHistory m_damageHistory[ MAX_DAMAGE_TEAMS ];
+
+	// last known navigation area of player - NULL if unknown
+	CNavArea *m_lastNavArea;
+	CAI_MoveMonitor m_NavAreaUpdateMonitor;
+	int m_registeredNavTeam;	// ugly, but needed to clean up player team counts in nav mesh
 };
+
+
+inline float CBaseCombatCharacter::GetAliveDuration( void ) const
+{
+	return m_aliveTimer.GetElapsedTime();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

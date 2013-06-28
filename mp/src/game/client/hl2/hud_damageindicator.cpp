@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,13 +13,14 @@
 #include <KeyValues.h>
 #include <vgui_controls/AnimationController.h>
 #include <vgui/ISurface.h>
-#include "vguimatsurface/IMatSystemSurface.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMesh.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imesh.h"
 #include "materialsystem/imaterialvar.h"
-#include "ieffects.h"
+#include "IEffects.h"
 #include "hudelement.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
+#include "headtrack/isourcevirtualreality.h"
 
 using namespace vgui;
 
@@ -431,8 +432,8 @@ void CHudDamageIndicator::GetDamagePosition( const Vector &vecDelta, float *flRo
 	float sa = sin( yawRadians );
 				 
 	// Rotate it around the circle
-	xpos = (int)((ScreenWidth() / 2) + (flRadius * sa));
-	ypos = (int)((ScreenHeight() / 2) - (flRadius * ca));
+	xpos = (int)((GetWide() / 2) + (flRadius * sa));
+	ypos = (int)((GetTall() / 2) - (flRadius * ca));
 }
 
 //-----------------------------------------------------------------------------
@@ -443,7 +444,18 @@ void CHudDamageIndicator::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 	SetPaintBackgroundEnabled(false);
 
-	int wide, tall;
-	GetHudSize(wide, tall);
-	SetSize(wide, tall);
+	int vx, vy, vw, vh;
+	vgui::surface()->GetFullscreenViewport( vx, vy, vw, vh );
+
+	SetForceStereoRenderToFrameBuffer( true );
+
+	if( UseVR() )
+	{
+		m_flDmgY = 0.125f * (float)vh;
+		m_flDmgTall1 = 0.625f * (float)vh;
+		m_flDmgTall2 = 0.4f * (float)vh;
+		m_flDmgWide = 0.1f * (float)vw;
+	}
+
+	SetSize(vw, vh);
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Utility code.
 //
@@ -35,6 +35,7 @@
 #include "engine/ivdebugoverlay.h"
 #include "datacache/imdlcache.h"
 #include "util.h"
+#include "cdll_int.h"
 
 #ifdef PORTAL
 #include "PortalSimulation.h"
@@ -94,6 +95,9 @@ IEntityFactoryDictionary *EntityFactoryDictionary()
 
 void DumpEntityFactories_f()
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CEntityFactoryDictionary *dict = ( CEntityFactoryDictionary * )EntityFactoryDictionary();
 	if ( dict )
 	{
@@ -112,6 +116,9 @@ static ConCommand dumpentityfactories( "dumpentityfactories", DumpEntityFactorie
 //-----------------------------------------------------------------------------
 CON_COMMAND( dump_entity_sizes, "Print sizeof(entclass)" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	((CEntityFactoryDictionary*)EntityFactoryDictionary())->ReportEntitySizes();
 }
 
@@ -329,7 +336,7 @@ private:
 //-----------------------------------------------------------------------------
 // Drops an entity onto the floor
 //-----------------------------------------------------------------------------
-int UTIL_DropToFloor( CBaseEntity *pEntity, unsigned int mask, CBaseEntity *pIgnore)
+int UTIL_DropToFloor( CBaseEntity *pEntity, unsigned int mask, CBaseEntity *pIgnore )
 {
 	// Assume no ground
 	pEntity->SetGroundEntity( NULL );
@@ -337,10 +344,13 @@ int UTIL_DropToFloor( CBaseEntity *pEntity, unsigned int mask, CBaseEntity *pIgn
 	Assert( pEntity );
 
 	trace_t	trace;
+
+#ifndef HL2MP
 	// HACK: is this really the only sure way to detect crossing a terrain boundry?
 	UTIL_TraceEntity( pEntity, pEntity->GetAbsOrigin(), pEntity->GetAbsOrigin(), mask, pIgnore, pEntity->GetCollisionGroup(), &trace );
 	if (trace.fraction == 0.0)
 		return -1;
+#endif // HL2MP
 
 	UTIL_TraceEntity( pEntity, pEntity->GetAbsOrigin(), pEntity->GetAbsOrigin() - Vector(0,0,256), mask, pIgnore, pEntity->GetCollisionGroup(), &trace );
 
@@ -655,8 +665,23 @@ bool UTIL_IsCommandIssuedByServerAdmin( void )
 	if ( engine->IsDedicatedServer() && issuingPlayerIndex > 0 )
 		return false;
 
-	if ( issuingPlayerIndex > 1 )
+#if defined( REPLAY_ENABLED )
+	// entity 1 is replay?
+	player_info_t pi;
+	bool bPlayerIsReplay = engine->GetPlayerInfo( 1, &pi ) && pi.isreplay;
+#else
+	bool bPlayerIsReplay = false;
+#endif
+
+	if ( bPlayerIsReplay )
+	{
+		if ( issuingPlayerIndex > 2 )
+			return false;
+	}
+	else if ( issuingPlayerIndex > 1 )
+	{
 		return false;
+	}
 
 	return true;
 }
@@ -712,7 +737,7 @@ void UTIL_GetPlayerConnectionInfo( int playerIndex, int& ping, int &packetloss )
 		// then updaterate, what is the case for default settings
 		const char * szCmdRate = engine->GetClientConVarValue( playerIndex, "cl_cmdrate" );
 		
-		int nCmdRate = max( 1, Q_atoi( szCmdRate ) );
+		int nCmdRate = MAX( 1, Q_atoi( szCmdRate ) );
 		latency -= (0.5f/nCmdRate) + TICKS_TO_TIME( 1.0f ); // correct latency
 
 		// in GoldSrc we had a different, not fixed tickrate. so we have to adjust
@@ -1255,27 +1280,11 @@ void UTIL_SetModel( CBaseEntity *pEntity, const char *pModelName )
 {
 	// check to see if model was properly precached
 	int i = modelinfo->GetModelIndex( pModelName );
-	if ( i < 0 )
+	if ( i == -1 )	
 	{
 		Error("%i/%s - %s:  UTIL_SetModel:  not precached: %s\n", pEntity->entindex(),
 			STRING( pEntity->GetEntityName() ),
 			pEntity->GetClassname(), pModelName);
-	}
-
-	pEntity->SetModelIndex( i ) ;
-	pEntity->SetModelName( AllocPooledString( pModelName ) );
-
-	// brush model
-	const model_t *mod = modelinfo->GetModel( i );
-	if ( mod )
-	{
-		Vector mins, maxs;
-		modelinfo->GetModelBounds( mod, mins, maxs );
-		SetMinMaxSize (pEntity, mins, maxs);
-	}
-	else
-	{
-		SetMinMaxSize (pEntity, vec3_origin, vec3_origin);
 	}
 
 	CBaseAnimating *pAnimating = pEntity->GetBaseAnimating();
@@ -1283,6 +1292,11 @@ void UTIL_SetModel( CBaseEntity *pEntity, const char *pModelName )
 	{
 		pAnimating->m_nForceBone = 0;
 	}
+
+	pEntity->SetModelName( AllocPooledString( pModelName ) );
+	pEntity->SetModelIndex( i ) ;
+	SetMinMaxSize(pEntity, vec3_origin, vec3_origin);
+	pEntity->SetCollisionBoundsFromModel();
 }
 
 	
@@ -1326,7 +1340,7 @@ void UTIL_SnapDirectionToAxis( Vector &direction, float epsilon )
 	}
 }
 
-char *UTIL_VarArgs( char *format, ... )
+char *UTIL_VarArgs( const char *format, ... )
 {
 	va_list		argptr;
 	static char		string[1024];
@@ -1365,7 +1379,7 @@ void UTIL_BloodStream( const Vector &origin, const Vector &direction, int color,
 		color = 0;
 
 	CPVSFilter filter( origin );
-	te->BloodStream( filter, 0.0, &origin, &direction, 247, 63, 14, 255, min( amount, 255 ) );
+	te->BloodStream( filter, 0.0, &origin, &direction, 247, 63, 14, 255, MIN( amount, 255 ) );
 }				
 
 
@@ -1387,7 +1401,7 @@ Vector UTIL_RandomBloodVector( void )
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
+void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )
 {
 	CBaseEntity *pEntity = pTrace->m_pEnt;
 
@@ -1766,7 +1780,7 @@ void UTIL_PrecacheOther( const char *szClassname, const char *modelName )
 // UTIL_LogPrintf - Prints a logged message to console.
 // Preceded by LOG: ( timestamp ) < message >
 //=========================================================
-void UTIL_LogPrintf( char *fmt, ... )
+void UTIL_LogPrintf( const char *fmt, ... )
 {
 	va_list		argptr;
 	char		tempString[1024];
@@ -1813,7 +1827,7 @@ void UTIL_StripToken( const char *pKey, char *pDest )
 // computes gravity scale for an absolute gravity.  Pass the result into CBaseEntity::SetGravity()
 float UTIL_ScaleForGravity( float desiredGravity )
 {
-	float worldGravity = sv_gravity.GetFloat();
+	float worldGravity = GetCurrentGravity();
 	return worldGravity > 0 ? desiredGravity / worldGravity : 0;
 }
 
@@ -2957,7 +2971,7 @@ void CC_KDTreeTest( const CCommand &args )
 			trace_t trace;
 			for ( int iTest = 0; iTest < NUM_KDTREE_TESTS; ++iTest )
 			{
-				UTIL_TraceHull( vecStart, vecTargets[iTest], VEC_HULL_MIN, VEC_HULL_MAX, MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
+				UTIL_TraceHull( vecStart, vecTargets[iTest], VEC_HULL_MIN_SCALED( pPlayer ), VEC_HULL_MAX_SCALED( pPlayer ), MASK_SOLID, pPlayer, COLLISION_GROUP_NONE, &trace );
 			}
 			break;
 		}
@@ -3054,7 +3068,7 @@ void CC_VoxelTreePlayerView( void )
 
 	CBasePlayer *pPlayer = static_cast<CBasePlayer*>( UTIL_GetLocalPlayer() );
 	Vector vecStart = pPlayer->GetAbsOrigin();
-	partition->RenderObjectsInPlayerLeafs( vecStart - VEC_HULL_MIN, vecStart + VEC_HULL_MAX, 3.0f  );
+	partition->RenderObjectsInPlayerLeafs( vecStart - VEC_HULL_MIN_SCALED( pPlayer ), vecStart + VEC_HULL_MAX_SCALED( pPlayer ), 3.0f  );
 }
 
 static ConCommand voxeltree_playerview( "voxeltree_playerview", CC_VoxelTreePlayerView, "View entities in the voxel-tree at the player position.", FCVAR_CHEAT );

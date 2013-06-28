@@ -1,15 +1,18 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //===========================================================================//
 #include "cbase.h"
 #include "decals.h"
-#include "materialsystem/IMaterialVar.h"
-#include "ieffects.h"
+#include "materialsystem/imaterialvar.h"
+#include "IEffects.h"
 #include "fx.h"
 #include "fx_impact.h"
 #include "view.h"
+#ifdef TF_CLIENT_DLL
+#include "cdll_util.h"
+#endif
 #include "engine/IStaticPropMgr.h"
 #include "c_impact_effects.h"
 #include "tier0/vprof.h"
@@ -122,18 +125,35 @@ bool Impact( Vector &vecOrigin, Vector &vecStart, int iMaterial, int iDamageType
 
 	if ( (nFlags & IMPACT_NODECAL) == 0 )
 	{
-		int decalNumber = decalsystem->GetDecalIndexForName( GetImpactDecal( pEntity, iMaterial, iDamageType ) );
+		const char *pchDecalName = GetImpactDecal( pEntity, iMaterial, iDamageType );
+		int decalNumber = decalsystem->GetDecalIndexForName( pchDecalName );
 		if ( decalNumber == -1 )
 			return false;
 
-		if ( (pEntity->entindex() == 0) && (iHitbox != 0) )
+		bool bSkipDecal = false;
+
+#ifdef TF_CLIENT_DLL
+		// Don't show blood decals if we're filtering them out (Pyro Goggles)
+		if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) || UTIL_IsLowViolence() )
 		{
-			staticpropmgr->AddDecalToStaticProp( vecStart, traceExt, iHitbox - 1, decalNumber, true, tr );
+			if ( V_strstr( pchDecalName, "Flesh" ) )
+			{
+				bSkipDecal = true;
+			}
 		}
-		else if ( pEntity )
+#endif
+
+		if ( !bSkipDecal )
 		{
-			// Here we deal with decals on entities.
-			pEntity->AddDecal( vecStart, traceExt, vecOrigin, iHitbox, decalNumber, true, tr, maxLODToDecal );
+			if ( (pEntity->entindex() == 0) && (iHitbox != 0) )
+			{
+				staticpropmgr->AddDecalToStaticProp( vecStart, traceExt, iHitbox - 1, decalNumber, true, tr );
+			}
+			else if ( pEntity )
+			{
+				// Here we deal with decals on entities.
+				pEntity->AddDecal( vecStart, traceExt, vecOrigin, iHitbox, decalNumber, true, tr, maxLODToDecal );
+			}
 		}
 	}
 	else

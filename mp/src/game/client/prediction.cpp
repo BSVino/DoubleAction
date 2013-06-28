@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include <vgui/ISurface.h>
 #include <vgui/IScheme.h>
 #include "hud.h"
-#include "IClientVehicle.h"
+#include "iclientvehicle.h"
 #include "in_buttons.h"
 #include "con_nprint.h"
 #include "hud_pdump.h"
@@ -34,8 +34,8 @@ IPredictionSystem *IPredictionSystem::g_pPredictionSystems = NULL;
 
 #if !defined( NO_ENTITY_PREDICTION )
 
-ConVar	cl_predictweapons	( "cl_predictweapons","1", FCVAR_USERINFO, "Perform client side prediction of weapon effects." );
-ConVar	cl_lagcompensation	( "cl_lagcompensation","1", FCVAR_USERINFO, "Perform server side lag compensation of weapon firing events." );
+ConVar	cl_predictweapons	( "cl_predictweapons","1", FCVAR_USERINFO | FCVAR_NOT_CONNECTED, "Perform client side prediction of weapon effects." );
+ConVar	cl_lagcompensation	( "cl_lagcompensation","1", FCVAR_USERINFO | FCVAR_NOT_CONNECTED, "Perform server side lag compensation of weapon firing events." );
 ConVar	cl_showerror		( "cl_showerror", "0", 0, "Show prediction errors, 2 for above plus detailed field deltas." );
 
 static ConVar	cl_idealpitchscale	( "cl_idealpitchscale", "0.8", FCVAR_ARCHIVE );
@@ -50,7 +50,7 @@ static ConVar	cl_pred_optimize( "cl_pred_optimize", "2", 0, "Optimize for not co
 extern IGameMovement *g_pGameMovement;
 extern CMoveData *g_pMoveData;
 
-void COM_Log( char *pszFile, char *fmt, ...);
+void COM_Log( char *pszFile, const char *fmt, ...);
 typedescription_t *FindFieldByName( const char *fieldname, datamap_t *dmap );
 
 #if !defined( NO_ENTITY_PREDICTION )
@@ -694,7 +694,8 @@ void CPrediction::FinishMove( C_BasePlayer *player, CUserCmd *ucmd, CMoveData *m
 	player->m_Local.m_nOldButtons = move->m_nButtons;
 
 
-	player->m_flMaxspeed = move->m_flClientMaxSpeed;
+	// NOTE: Don't copy this.  the movement code modifies its local copy but is not expecting to be authoritative
+	//player->m_flMaxspeed = move->m_flClientMaxSpeed;
 	
 	m_hLastGround = player->GetGroundEntity();
  
@@ -834,7 +835,7 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 
 	// Set globals appropriately
 	gpGlobals->curtime		= player->m_nTickBase * TICK_INTERVAL;
-	gpGlobals->frametime	= TICK_INTERVAL;
+	gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
 
 	g_pGameMovement->StartTrackPredictionErrors( player );
 
@@ -910,7 +911,10 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 
 	FinishCommand( player );
 
-	player->m_nTickBase++;
+	if ( gpGlobals->frametime > 0 )
+	{
+		player->m_nTickBase++;
+	}
 #endif
 }
 
@@ -1158,7 +1162,7 @@ void CPrediction::RunSimulation( int current_command, float curtime, CUserCmd *c
 	{
 		// Always reset
 		gpGlobals->curtime		= curtime;
-		gpGlobals->frametime	= TICK_INTERVAL;
+		gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
 
 		C_BaseEntity *entity = predictables->GetPredictable( i );
 
@@ -1381,9 +1385,9 @@ int CPrediction::ComputeFirstCommandToExecute( bool received_new_world_update, i
 		// this is where we would normally start
 		int start = incoming_acknowledged + 1;
 		// outgoing_command is where we really want to start
-		skipahead = max( 0, ( outgoing_command - start ) );
+		skipahead = MAX( 0, ( outgoing_command - start ) );
 		// Don't start past the last predicted command, though, or we'll get prediction errors
-		skipahead = min( skipahead, m_nCommandsPredicted  );
+		skipahead = MIN( skipahead, m_nCommandsPredicted  );
 
 		// Always restore since otherwise we might start prediction using an "interpolated" value instead of a purely predicted value
 		RestoreEntityToPredictedFrame( skipahead - 1 );
@@ -1534,7 +1538,7 @@ bool CPrediction::PerformPrediction( bool received_new_world_update, C_BasePlaye
 		RunSimulation( current_command, curtime, cmd, localPlayer );
 
 		gpGlobals->curtime		= curtime;
-		gpGlobals->frametime	= TICK_INTERVAL;
+		gpGlobals->frametime	= m_bEnginePaused ? 0 : TICK_INTERVAL;
 
 		// Call untouch on any entities no longer predicted to be touching
 		Untouch();
@@ -1607,6 +1611,8 @@ void CPrediction::Update( int startframe, bool validframe,
 {
 #if !defined( NO_ENTITY_PREDICTION )
 	VPROF_BUDGET( "CPrediction::Update", VPROF_BUDGETGROUP_PREDICTION );
+
+	m_bEnginePaused = engine->IsPaused();
 
 	bool received_new_world_update = true;
 

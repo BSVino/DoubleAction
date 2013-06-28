@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		
 //
@@ -8,7 +8,6 @@
 #include "cbase.h"
 #include "mp_shareddefs.h"
 #include "basemultiplayerplayer.h"
-#include "steam/steam_api.h"
 
 // Minimum interval between rate-limited commands that players can run.
 #define COMMAND_MAX_RATE  0.3
@@ -86,7 +85,7 @@ IResponseSystem *CBaseMultiplayerPlayer::GetResponseSystem()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: Doesn't actually speak the concept. Just finds a response in the system. You then have to play it yourself.
 //-----------------------------------------------------------------------------
 AI_Response *CBaseMultiplayerPlayer::SpeakConcept( int iConcept )
 {
@@ -213,10 +212,12 @@ void CBaseMultiplayerPlayer::Spawn( void )
 {
 	ResetPerLifeCounters();
 
+	StopScoringEscortPoints();
+
 	BaseClass::Spawn();
 }
 
-void CBaseMultiplayerPlayer::AwardAchievement( int iAchievement )
+void CBaseMultiplayerPlayer::AwardAchievement( int iAchievement, int iCount )
 {
 	Assert( iAchievement >= 0 && iAchievement < 0xFFFF );		// must fit in short
 
@@ -224,6 +225,7 @@ void CBaseMultiplayerPlayer::AwardAchievement( int iAchievement )
 
 	UserMessageBegin( filter, "AchievementEvent" );
 		WRITE_SHORT( iAchievement );
+		WRITE_SHORT( iCount );
 	MessageEnd();
 }
 
@@ -337,30 +339,3 @@ void CBaseMultiplayerPlayer::StopScoringEscortPoints( void )
 	SetContextThink( NULL, 0, ESCORT_SCORE_CONTEXT );
 }
 
-#if !defined(NO_STEAM)
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::GetSteamID( CSteamID *pID )
-{
-	const CSteamID *pClientID = engine->GetClientSteamID( edict() );
-	if ( pClientID )
-	{
-		*pID = *pClientID;
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-uint64 CBaseMultiplayerPlayer::GetSteamIDAsUInt64( void )
-{
-	CSteamID steamIDForPlayer;
-	if ( GetSteamID( &steamIDForPlayer ) )
-		return steamIDForPlayer.ConvertToUint64();
-	return 0;
-}
-#endif // NO_STEAM

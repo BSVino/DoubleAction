@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2007, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,21 +9,20 @@
 //===========================================================================//
 
 #include "cbase.h"
-#include "ClientLeafSystem.h"
-#include "UtlBidirectionalSet.h"
+#include "clientleafsystem.h"
+#include "utlbidirectionalset.h"
 #include "model_types.h"
-#include "IVRenderView.h"
+#include "ivrenderview.h"
 #include "tier0/vprof.h"
-#include "BSPTreeData.h"
-#include "DetailObjectSystem.h"
+#include "bsptreedata.h"
+#include "detailobjectsystem.h"
 #include "engine/IStaticPropMgr.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "vstdlib/jobthread.h"
 #include "tier1/utllinkedlist.h"
 #include "datacache/imdlcache.h"
 #include "view.h"
 #include "viewrender.h"
-#include <algorithm>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,7 +35,7 @@ static ConVar r_portalsopenall( "r_portalsopenall", "0", FCVAR_CHEAT, "Open all 
 static ConVar cl_threaded_client_leaf_system("cl_threaded_client_leaf_system", "0"  );
 
 
-DEFINE_FIXEDSIZE_ALLOCATOR( CClientRenderablesList, 1, CMemoryPool::GROW_SLOW );
+DEFINE_FIXEDSIZE_ALLOCATOR( CClientRenderablesList, 1, CUtlMemoryPool::GROW_SLOW );
 
 //-----------------------------------------------------------------------------
 // Threading helpers
@@ -360,8 +359,8 @@ void DefaultRenderBoundsWorldspace( IClientRenderable *pRenderable, Vector &absM
 			// if our origin is actually farther away than that, expand again
 			float radius = pEnt->GetLocalOrigin().Length();
 
-			float flBloatSize = max( vAddMins.Length(), vAddMaxs.Length() );
-			flBloatSize = max(flBloatSize, radius);
+			float flBloatSize = MAX( vAddMins.Length(), vAddMaxs.Length() );
+			flBloatSize = MAX(flBloatSize, radius);
 			absMins -= Vector( flBloatSize, flBloatSize, flBloatSize );
 			absMaxs += Vector( flBloatSize, flBloatSize, flBloatSize );
 			return;
@@ -420,8 +419,8 @@ void CalcRenderableWorldSpaceAABB_Fast( IClientRenderable *pRenderable, Vector &
 		// if our origin is actually farther away than that, expand again
 		float radius = pEnt->GetLocalOrigin().Length();
 
-		float flBloatSize = max( vAddMins.Length(), vAddMaxs.Length() );
-		flBloatSize = max(flBloatSize, radius);
+		float flBloatSize = MAX( vAddMins.Length(), vAddMaxs.Length() );
+		flBloatSize = MAX(flBloatSize, radius);
 		absMin -= Vector( flBloatSize, flBloatSize, flBloatSize );
 		absMax += Vector( flBloatSize, flBloatSize, flBloatSize );
 	}
@@ -550,7 +549,7 @@ void CClientLeafSystem::PreRender()
 			RemoveFromTree( handle );
 		}
 
-		bool bThreaded = ( nDirty > 5 && cl_threaded_client_leaf_system.GetBool() && g_pThreadPool->NumThreads() );
+		bool bThreaded = false;//( nDirty > 5 && cl_threaded_client_leaf_system.GetBool() && g_pThreadPool->NumThreads() );
 
 		if ( !bThreaded )
 		{
@@ -564,7 +563,7 @@ void CClientLeafSystem::PreRender()
 			// InsertIntoTree can result in new renderables being added, so copy:
 			ClientRenderHandle_t *pDirtyRenderables = (ClientRenderHandle_t *)alloca( sizeof(ClientRenderHandle_t) * nDirty );
 			memcpy( pDirtyRenderables, m_DirtyRenderables.Base(), sizeof(ClientRenderHandle_t) * nDirty );
-			ParallelProcess( pDirtyRenderables, nDirty, this, &CClientLeafSystem::InsertIntoTree, &CClientLeafSystem::FrameLock, &CClientLeafSystem::FrameUnlock );
+			ParallelProcess( "CClientLeafSystem::PreRender", pDirtyRenderables, nDirty, this, &CClientLeafSystem::InsertIntoTree, &CClientLeafSystem::FrameLock, &CClientLeafSystem::FrameUnlock );
 		}
 
 		if ( m_DeferredInserts.Count() )
@@ -1000,6 +999,8 @@ void CClientLeafSystem::AddShadowToLeaf( int leaf, ClientLeafShadowHandle_t shad
 			info.m_EnumCount = m_ShadowEnum;
 		}
 
+		Assert( m_ShadowsInLeaf.NumAllocated() < 2000 );
+
 		i = m_RenderablesInLeaf.NextElement(i);
 	}
 }
@@ -1330,7 +1331,7 @@ void CClientLeafSystem::ComputeTranslucentRenderLeaf( int count, const LeafIndex
 
 	// For better sorting, we're gonna choose the leaf that is closest to the camera.
 	// The leaf list passed in here is sorted front to back
-	bool bThreaded = ( cl_threaded_client_leaf_system.GetBool() && g_pThreadPool->NumThreads() );
+	bool bThreaded = false;//( cl_threaded_client_leaf_system.GetBool() && g_pThreadPool->NumThreads() );
 	int globalFrameCount = gpGlobals->framecount;
 	int i;
 
@@ -1368,7 +1369,7 @@ void CClientLeafSystem::ComputeTranslucentRenderLeaf( int count, const LeafIndex
 
 	if ( bThreaded )
 	{
-		ParallelProcess( renderablesToUpdate.Base(), renderablesToUpdate.Count(), &CallComputeFXBlend, &::FrameLock, &::FrameUnlock );
+		ParallelProcess( "CClientLeafSystem::ComputeTranslucentRenderLeaf", renderablesToUpdate.Base(), renderablesToUpdate.Count(), &CallComputeFXBlend, &::FrameLock, &::FrameUnlock );
 		renderablesToUpdate.RemoveAll();
 	}
 
@@ -1618,7 +1619,7 @@ void CClientLeafSystem::CollateRenderablesInLeaf( int leaf, int worldListLeafInd
 				Vector dims;
 				VectorSubtract( absMaxs, absMins, dims );
 
-				float const fDimension = max( max( fabs(dims.x), fabs(dims.y) ), fabs(dims.z) );
+				float const fDimension = MAX( MAX( fabs(dims.x), fabs(dims.y) ), fabs(dims.z) );
 				group = DetectBucketedRenderGroup( group, fDimension );
 				
 				Assert( group >= RENDER_GROUP_OPAQUE_STATIC_HUGE && group <= RENDER_GROUP_OPAQUE_ENTITY );
@@ -1722,8 +1723,8 @@ void CClientLeafSystem::SortEntities( const Vector &vecRenderOrigin, const Vecto
 		{
 			if( dists[i] > dists[i+stepSize] )
 			{
-				swap( pEntities[i], pEntities[i+stepSize] );
-				swap( dists[i], dists[i+stepSize] );
+				::V_swap( pEntities[i], pEntities[i+stepSize] );
+				::V_swap( dists[i], dists[i+stepSize] );
 
 				if( i == 0 )
 				{

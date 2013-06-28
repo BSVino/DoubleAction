@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -45,6 +45,8 @@ class CHUDAutoAim : public CHudElement, public vgui::Panel
 	DECLARE_CLASS_SIMPLE( CHUDAutoAim, vgui::Panel );
 public:
 	CHUDAutoAim( const char *pElementName );
+	virtual ~CHUDAutoAim( void );
+
 	void ApplySchemeSettings( IScheme *scheme );
 	void Init( void );
 	void VidInit( void );
@@ -81,7 +83,29 @@ CHUDAutoAim::CHUDAutoAim( const char *pElementName ) :
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 	SetHiddenBits( HIDEHUD_CROSSHAIR );
+
+	m_textureID_ActiveReticle = -1;
+	m_textureID_FixedReticle = -1;
 }
+
+CHUDAutoAim::~CHUDAutoAim( void )
+{
+	if ( vgui::surface() )
+	{
+		if ( m_textureID_ActiveReticle != -1 )
+		{
+			vgui::surface()->DestroyTextureID( m_textureID_ActiveReticle );
+			m_textureID_ActiveReticle = -1;
+		}
+
+		if ( m_textureID_FixedReticle != -1 )
+		{
+			vgui::surface()->DestroyTextureID( m_textureID_FixedReticle );
+			m_textureID_FixedReticle = -1;
+		}
+	}
+}
+
 
 void CHUDAutoAim::ApplySchemeSettings( IScheme *scheme )
 {
@@ -102,11 +126,17 @@ void CHUDAutoAim::VidInit( void )
 	SetAlpha( 255 );
 	Init();
 
-	m_textureID_ActiveReticle = vgui::surface()->CreateNewTextureID();
-	vgui::surface()->DrawSetTextureFile( m_textureID_ActiveReticle, "vgui/hud/autoaim", true, false );
+	if ( m_textureID_ActiveReticle == -1 )
+	{
+		m_textureID_ActiveReticle = vgui::surface()->CreateNewTextureID();
+		vgui::surface()->DrawSetTextureFile( m_textureID_ActiveReticle, "vgui/hud/autoaim", true, false );
+	}
 
-	m_textureID_FixedReticle = vgui::surface()->CreateNewTextureID();
-	vgui::surface()->DrawSetTextureFile( m_textureID_FixedReticle, "vgui/hud/xbox_reticle", true, false );
+	if ( m_textureID_FixedReticle == -1 )
+	{
+		m_textureID_FixedReticle = vgui::surface()->CreateNewTextureID();
+		vgui::surface()->DrawSetTextureFile( m_textureID_FixedReticle, "vgui/hud/xbox_reticle", true, false );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -290,7 +320,7 @@ void CHUDAutoAim::OnThink()
 
 			// Lerp and Clamp scale
 			float scaleDelta = fabs( goalscale - m_scale );
-			float scaleMove = min( AUTOAIM_SCALE_SPEED * gpGlobals->frametime, scaleDelta );
+			float scaleMove = MIN( AUTOAIM_SCALE_SPEED * gpGlobals->frametime, scaleDelta );
 			if( m_scale < goalscale )
 			{
 				m_scale += scaleMove;

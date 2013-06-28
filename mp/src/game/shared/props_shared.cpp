@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: static_prop - don't move, don't animate, don't do anything.
 //			physics_prop - move, take damage, but don't animate
@@ -12,6 +12,7 @@
 #include "animation.h"
 #include <vcollide_parse.h>
 #include <bone_setup.h>
+#include <tier0/vprof.h>
 
 #ifdef CLIENT_DLL
 #include "gamestringpool.h"
@@ -482,7 +483,7 @@ const char *CPropData::GetRandomChunkModel( const char *pszBreakableSection, int
 	else
 	{
 		// Don't pick anything over the specified size
-		iRandom = RandomInt( 0, min(iMaxSize, m_BreakableChunks[i].iszChunkModels.Count()-1) );
+		iRandom = RandomInt( 0, MIN(iMaxSize, m_BreakableChunks[i].iszChunkModels.Count()-1) );
 	}
 
 	return STRING(m_BreakableChunks[i].iszChunkModels[iRandom]);
@@ -683,7 +684,7 @@ const char *GetMassEquivalent(float flMass)
 	static struct
 	{
 		float flMass;
-		char *sz;
+		const char *sz;
 	} masstext[] =
 	{
 		{ 5e-6,		"snowflake" },
@@ -789,7 +790,6 @@ void CGameGibManager::Activate( void )
 
 	BaseClass::Activate();
 }
-
 
 void CGameGibManager::UpdateMaxPieces()
 {
@@ -915,7 +915,7 @@ void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const bre
 	{
 		if ( iPrecomputedBreakableCount != -1 )
 		{
-			iPrecomputedBreakableCount = min( iMaxBreakCount, iPrecomputedBreakableCount );
+			iPrecomputedBreakableCount = MIN( iMaxBreakCount, iPrecomputedBreakableCount );
 		}
 		else
 		{
@@ -1228,6 +1228,7 @@ void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const Vec
 //-----------------------------------------------------------------------------
 void PrecacheGibsForModel( int iModel )
 {
+	VPROF_BUDGET( "PrecacheGibsForModel", VPROF_BUDGETGROUP_PLAYER );
 	vcollide_t *pCollide = modelinfo->GetVCollide( iModel );
 	if ( !pCollide )
 		return;
@@ -1301,7 +1302,7 @@ CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex,
 	{
 		if ( iPrecomputedBreakableCount != -1 )
 		{
-			iPrecomputedBreakableCount = min( iMaxBreakCount, iPrecomputedBreakableCount );
+			iPrecomputedBreakableCount = MIN( iMaxBreakCount, iPrecomputedBreakableCount );
 		}
 		else
 		{

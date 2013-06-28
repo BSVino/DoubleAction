@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -207,7 +207,7 @@ float CRagdollMagnet::DistToPoint( const Vector &vecPoint )
 			axis.InitializePlane( vecUp, GetAbsOrigin() );
 			vDist = fabs( axis.PointDist( vecPoint ) );
 
-			return max( hDist, vDist );
+			return MAX( hDist, vDist );
 		}
 		else
 		{

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,7 +22,7 @@ public:
 	virtual void	ClientThink( void );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	BuildTransformations( CStudioHdr *pStudioHdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed );
-	virtual	void	AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
+	virtual	void	AccumulateLayers( IBoneSetup &boneSetup, Vector pos[], Quaternion q[], float currentTime );
 
 	EHANDLE		m_hAnimationTarget;
 	int			m_nTargetAttachment;
@@ -104,7 +104,7 @@ void C_NPC_Puppet::ClientThink( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void C_NPC_Puppet::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask )
+void C_NPC_Puppet::AccumulateLayers( IBoneSetup &boneSetup, Vector pos[], Quaternion q[], float currentTime )
 {
 	if ( m_hAnimationTarget == NULL )
 		return;
@@ -150,12 +150,12 @@ void C_NPC_Puppet::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q
 					if (fWeight > 1)
 						fWeight = 1;
 
-					AccumulatePose( hdr, NULL, pos, q, nSequence, fCycle, poseparam, boneMask, fWeight, currentTime );
+					boneSetup.AccumulatePose( pos, q, nSequence, fCycle, fWeight, currentTime, NULL );
 
 #if _DEBUG
-					if (Q_stristr( hdr->pszName(), r_sequence_debug.GetString()) != NULL)
+					if (Q_stristr( boneSetup.GetStudioHdr()->pszName(), r_sequence_debug.GetString()) != NULL)
 					{
-						DevMsgRT( "%6.2f : %30s : %5.3f : %4.2f : %1d\n", currentTime, hdr->pSeqdesc( nSequence ).pszLabel(), fCycle, fWeight, i );
+						DevMsgRT( "%6.2f : %30s : %5.3f : %4.2f : %1d\n", currentTime, boneSetup.GetStudioHdr()->pSeqdesc( nSequence ).pszLabel(), fCycle, fWeight, i );
 					}
 #endif
 

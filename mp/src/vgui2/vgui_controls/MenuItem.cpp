@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -139,7 +139,7 @@ void MenuItem::Init( void )
 	if (m_pCascadeMenu)
 	{
 		m_pCascadeMenu->SetParent(this);
-		m_pCascadeArrow = new TextImage (" 4");	// this makes a right pointing arrow.
+		m_pCascadeArrow = new TextImage("4");	// this makes a right pointing arrow.
 
 		m_pCascadeMenu->AddActionSignalTarget(this);
 	}

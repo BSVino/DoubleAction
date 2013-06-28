@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -834,7 +834,7 @@ void CBaseServerVehicle::ParseNPCRoles( KeyValues *pkvPassengerList )
 		Msg("Passenger Roles Parsed:\t%d\n\n", m_PassengerRoles.Count() );
 		for ( int i = 0; i < m_PassengerRoles.Count(); i++ )
 		{
-			Msg("\tPassenger Role:\t%s (%d seats)\n", m_PassengerRoles[i].m_strName, m_PassengerRoles[i].m_PassengerSeats.Count() );
+			Msg("\tPassenger Role:\t%s (%d seats)\n", STRING(m_PassengerRoles[i].m_strName), m_PassengerRoles[i].m_PassengerSeats.Count() );
 			
 			// Iterate through all information sets under this name
 			for ( int j = 0; j < m_PassengerRoles[i].m_PassengerSeats.Count(); j++ )
@@ -847,7 +847,7 @@ void CBaseServerVehicle::ParseNPCRoles( KeyValues *pkvPassengerList )
 
 				for ( int nEntry = 0; nEntry < m_PassengerRoles[i].m_PassengerSeats[j].m_EntryTransitions.Count(); nEntry++ )
 				{
-					Msg("\t\t\tAnimation:\t%s\t(Priority %d)\n", m_PassengerRoles[i].m_PassengerSeats[j].m_EntryTransitions[nEntry].m_strAnimationName, 
+					Msg("\t\t\tAnimation:\t%s\t(Priority %d)\n", STRING(m_PassengerRoles[i].m_PassengerSeats[j].m_EntryTransitions[nEntry].m_strAnimationName), 
 																 m_PassengerRoles[i].m_PassengerSeats[j].m_EntryTransitions[nEntry].m_nPriority );
 				}
 				
@@ -859,7 +859,7 @@ void CBaseServerVehicle::ParseNPCRoles( KeyValues *pkvPassengerList )
 
 				for ( int nExits = 0; nExits < m_PassengerRoles[i].m_PassengerSeats[j].m_ExitTransitions.Count(); nExits++ )
 				{
-					Msg("\t\t\tAnimation:\t%s\t(Priority %d)\n", m_PassengerRoles[i].m_PassengerSeats[j].m_ExitTransitions[nExits].m_strAnimationName, 
+					Msg("\t\t\tAnimation:\t%s\t(Priority %d)\n", STRING(m_PassengerRoles[i].m_PassengerSeats[j].m_ExitTransitions[nExits].m_strAnimationName), 
 																 m_PassengerRoles[i].m_PassengerSeats[j].m_ExitTransitions[nExits].m_nPriority );
 				}
 			}
@@ -2593,7 +2593,7 @@ vehiclesound g_iSoundsToStopOnExit[] =
 	VS_ENGINE2_STOP,
 };
 
-char *vehiclesound_parsenames[VS_NUM_SOUNDS] =
+const char *vehiclesound_parsenames[VS_NUM_SOUNDS] =
 {
 	"skid_lowfriction",
 	"skid_normalfriction",

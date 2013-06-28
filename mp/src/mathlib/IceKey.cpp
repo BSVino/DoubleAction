@@ -5,7 +5,7 @@
 #if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
 
 #include "mathlib/IceKey.H"
-
+#include "tier0/memdbgon.h"
 #pragma warning(disable: 4244)
 
 

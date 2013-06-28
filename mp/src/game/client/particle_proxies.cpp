@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This module implements all the proxies used by the particle systems.
 //
@@ -11,11 +11,6 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-// This was specified in the .dsp with the /Od flag, but that causes a warning since
-//  it's inconsistent with the release .pch, so just disable optimizations here instead
-// FIXME:  Is this even needed any more?
-#pragma optimize( "", off )
 
 
 // ------------------------------------------------------------------------ //
@@ -79,6 +74,4 @@ private:
 };
 
 EXPOSE_INTERFACE( ParticleSphereProxy, IMaterialProxy, "ParticleSphereProxy" IMATERIAL_PROXY_INTERFACE_VERSION );
-
-#pragma optimize( "", on )
 

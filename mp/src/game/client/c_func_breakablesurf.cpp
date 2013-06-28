@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,12 +7,12 @@
 //=============================================================================//
 #include "cbase.h"
 #include "particles_simple.h"
-#include "IViewRender.h"
-#include "ProxyEntity.h"
-#include "materialsystem/IMaterialVar.h"
+#include "iviewrender.h"
+#include "proxyentity.h"
+#include "materialsystem/imaterialvar.h"
 #include "model_types.h"
 #include "engine/ivmodelinfo.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -33,9 +33,9 @@ enum WinSide_t
 enum WinEdge_t 
 {
 	EDGE_NOT	= -1,		// No edge
-	EDGE_NONE,				// No edge on both sides	/##\  
-	EDGE_FULL,				// Edge on both sides		|##|
-	EDGE_LEFT,				// Edge is on left only		|##\ 
+	EDGE_NONE,				/* No edge on both sides	/##\  */
+	EDGE_FULL,				// Edge on both sides		|##| 
+	EDGE_LEFT,				/* Edge is on left only		|##\  */
 	EDGE_RIGHT,				// Edge is on right only	/##|
 };
 
@@ -1287,7 +1287,7 @@ public:
 	virtual ~CBreakableSurfaceProxy();
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( C_BaseEntity *pC_BaseEntity );
-	virtual IMaterial *CBreakableSurfaceProxy::GetMaterial();
+	virtual IMaterial *GetMaterial();
 
 private:
 	// get at the material whose texture we're going to steal

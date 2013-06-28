@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include <vgui_controls/Panel.h>
 #include "captioncompiler.h"
 #include "tier1/UtlSortVector.h"
-#include "tier1/UtlSymbol.h"
+#include "tier1/utlsymbol.h"
 
 class CSentence;
 class C_BaseFlex;

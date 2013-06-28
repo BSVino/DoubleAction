@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,8 +18,8 @@
 #include "in_buttons.h"
 #include "weapon_rpg.h"
 #include "shake.h"
-#include "AI_BaseNPC.h"
-#include "AI_Squad.h"
+#include "ai_basenpc.h"
+#include "ai_squad.h"
 #include "te_effect_dispatch.h"
 #include "triggers.h"
 #include "smoke_trail.h"
@@ -91,7 +91,7 @@ public:
 
 // a list of laser dots to search quickly
 CEntityClassList<CLaserDot> g_LaserDotList;
-CLaserDot *CEntityClassList<CLaserDot>::m_pClassList = NULL;
+template <>  CLaserDot *CEntityClassList<CLaserDot>::m_pClassList = NULL;
 CLaserDot *GetLaserDotList()
 {
 	return g_LaserDotList.m_pClassList;
@@ -891,7 +891,7 @@ CBaseEntity *CInfoAPCMissileHint::FindAimTarget( CBaseEntity *pMissile, const ch
 // a list of missiles to search quickly
 //-----------------------------------------------------------------------------
 CEntityClassList<CAPCMissile> g_APCMissileList;
-CAPCMissile *CEntityClassList<CAPCMissile>::m_pClassList = NULL;
+template <> CAPCMissile *CEntityClassList<CAPCMissile>::m_pClassList = NULL;
 CAPCMissile *GetAPCMissileList()
 {
 	return g_APCMissileList.m_pClassList;
@@ -1250,7 +1250,7 @@ void CAPCMissile::ComputeActualDotPosition( CLaserDot *pLaserDot, Vector *pActua
 		m_hSpecificTarget = CInfoAPCMissileHint::FindAimTarget( this, STRING( m_strHint ), vecOrigin, vecVelocity );
 	}
 
-	CBaseEntity *pLaserTarget = m_hSpecificTarget ? m_hSpecificTarget : pLaserDot->GetTargetEntity();
+	CBaseEntity *pLaserTarget = m_hSpecificTarget ? m_hSpecificTarget.Get() : pLaserDot->GetTargetEntity();
 	if ( !pLaserTarget )
 	{
 		BaseClass::ComputeActualDotPosition( pLaserDot, pActualDotPosition, pHomingSpeed );
@@ -2070,7 +2070,7 @@ int CWeaponRPG::WeaponRangeAttack1Condition( float flDot, float flDist )
 		flDist = vecToTarget.Length();
 	}
 
-	if ( flDist < min( m_fMinRange1, m_fMinRange2 ) )
+	if ( flDist < MIN( m_fMinRange1, m_fMinRange2 ) )
 		return COND_TOO_CLOSE_TO_ATTACK;
 
 	if ( m_flNextPrimaryAttack > gpGlobals->curtime )

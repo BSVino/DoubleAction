@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: An application framework 
 //
@@ -47,11 +47,31 @@ void AppShutdown( CAppSystemGroup *pAppSystemGroup );
 // Macros to create singleton application objects for windowed + console apps
 //-----------------------------------------------------------------------------
 #if !defined( _X360 )
+
+#ifdef WIN32
 #define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
 	int __stdcall WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )	\
 	{																							\
 		return AppMain( hInstance, hPrevInstance, lpCmdLine, nCmdShow, &_globalVarName );		\
 	}
+#elif defined( OSX )
+#define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
+	int main( int argc, char **argv )										\
+	{																							\
+		extern int ValveCocoaMain( int argc, char **argv, CAppSystemGroup *pAppSystemGroup ); \
+		return ValveCocoaMain( argc, argv, &_globalVarName ); \
+	}
+#elif defined( LINUX )
+#define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName ) \
+	int main( int argc, char **argv )										\
+	{																							\
+		extern int ValveLinuxWindowedMain( int argc, char **argv, CAppSystemGroup *pAppSystemGroup ); \
+		return ValveLinuxWindowedMain( argc, argv, &_globalVarName ); \
+	}
+#else
+#error
+#endif
+	
 #else
 #define DEFINE_WINDOWED_APPLICATION_OBJECT_GLOBALVAR( _globalVarName )	\
 	void __cdecl main()																\

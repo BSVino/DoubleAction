@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -416,14 +416,14 @@ int CNPC_BaseScanner::OnTakeDamage_Dying( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CNPC_BaseScanner::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_BaseScanner::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	if ( info.GetDamageType() & DMG_BULLET)
 	{
 		g_pEffects->Ricochet(ptr->endpos,ptr->plane.normal);
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------
@@ -813,7 +813,7 @@ void CNPC_BaseScanner::PlayFlySound(void)
 
 	float	speed	 = GetCurrentVelocity().Length();
 	float	flVolume = 0.25f + (0.75f*(speed/GetMaxSpeed()));
-	int		iPitch	 = min( 255, 80 + (20*(speed/GetMaxSpeed())) );
+	int		iPitch	 = MIN( 255, 80 + (20*(speed/GetMaxSpeed())) );
 
 	//Update our pitch and volume based on our speed
 	controller.SoundChangePitch( m_pEngineSound, iPitch, 0.1f );
@@ -1029,7 +1029,10 @@ bool CNPC_BaseScanner::OverrideMove( float flInterval )
 		Vector vMoveTargetPos(0,0,0);
 		CBaseEntity *pMoveTarget = NULL;
 
-		if ( !GetNavigator()->IsGoalActive() || ( GetNavigator()->GetCurWaypointFlags() | bits_WP_TO_PATHCORNER ) )
+		// The original line of code was, due to the accidental use of '|' instead of
+		// '&', always true. Replacing with 'true' to suppress the warning without changing
+		// the (long-standing) behavior.
+		if ( true ) //!GetNavigator()->IsGoalActive() || ( GetNavigator()->GetCurWaypointFlags() | bits_WP_TO_PATHCORNER ) )
 		{
 			// Select move target 
 			if ( GetTarget() != NULL )

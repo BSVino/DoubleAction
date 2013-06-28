@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2006, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,12 +12,17 @@
 #include "particle_property.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "model_types.h"
 #include "vprof.h"
+#include "input.h"
 
 extern ConVar cl_particleeffect_aabb_buffer;
-extern ConVar cl_particles_show_bbox;
+
+//extern ConVar cl_particle_show_bbox;
+//extern ConVar cl_particle_show_bbox_cost;
+extern bool g_cl_particle_show_bbox;
+extern int g_cl_particle_show_bbox_cost;
 
 
 //-----------------------------------------------------------------------------
@@ -399,6 +404,100 @@ void CNewParticleEffect::DetectChanges()
 
 extern ConVar r_DrawParticles;
 
+
+void CNewParticleEffect::DebugDrawBbox ( bool bCulled )
+{
+	int nParticlesShowBboxCost = g_cl_particle_show_bbox_cost;
+	bool bShowCheapSystems = false;
+	if ( nParticlesShowBboxCost < 0 )
+	{
+		nParticlesShowBboxCost = -nParticlesShowBboxCost;
+		bShowCheapSystems = true;
+	}
+
+	Vector center = GetRenderOrigin();
+	Vector mins   = m_MinBounds - center;
+	Vector maxs   = m_MaxBounds - center;
+	
+	int r, g, b;
+	bool bDraw = true;
+	if ( bCulled )
+	{
+		r = 64;
+		g = 64;
+		b = 64;
+	}
+	else if ( nParticlesShowBboxCost > 0 )
+	{
+		float fAmount = (float)m_nActiveParticles / (float)nParticlesShowBboxCost;
+		if ( fAmount < 0.5f )
+		{
+			if ( bShowCheapSystems )
+			{
+				r = 0;
+				g = 255;
+				b = 0;
+			}
+			else
+			{
+				// Prevent the screen getting spammed with low-count particles which aren't that expensive.
+				bDraw = false;
+				r = 0;
+				g = 0;
+				b = 0;
+			}
+		}
+		else if ( fAmount < 1.0f )
+		{
+			// green 0.5-1.0 blue
+			int nBlend = (int)( 512.0f * ( fAmount - 0.5f ) );
+			nBlend = MIN ( 255, MAX ( 0, nBlend ) );
+			r = 0;
+			g = 255 - nBlend;
+			b = nBlend;
+		}
+		else if ( fAmount < 2.0f )
+		{
+			// blue 1.0-2.0 red
+			int nBlend = (int)( 256.0f * ( fAmount - 1.0f ) );
+			nBlend = MIN ( 255, MAX ( 0, nBlend ) );
+			r = nBlend;
+			g = 0;
+			b = 255 - nBlend;
+		}
+		else
+		{
+			r = 255;
+			g = 0;
+			b = 0;
+		}
+	}
+	else
+	{
+		if ( GetAutoUpdateBBox() )
+		{
+			// red is bad, the bbox update is costly
+			r = 255;
+			g = 0;
+			b = 0;
+		}
+		else
+		{
+			// green, this effect presents less cpu load 
+			r = 0;
+			g = 255;
+			b = 0;
+		}
+	}
+		 
+	if ( bDraw )
+	{
+		debugoverlay->AddBoxOverlay( center, mins, maxs, QAngle( 0, 0, 0 ), r, g, b, 16, 0 );
+		debugoverlay->AddTextOverlayRGB( center, 0, 0, r, g, b, 64, "%s:(%d)", GetEffectName(), m_nActiveParticles );
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Rendering
 //-----------------------------------------------------------------------------
@@ -411,10 +510,10 @@ int CNewParticleEffect::DrawModel( int flags )
 	if ( !g_pClientMode->ShouldDrawParticles() || !ParticleMgr()->ShouldRenderParticleSystems() )
 		return 0;
 	
-
-
-	if( flags & STUDIO_SHADOWDEPTHTEXTURE )
+	if ( ( flags & ( STUDIO_SHADOWDEPTHTEXTURE | STUDIO_SSAODEPTHTEXTURE ) ) != 0 )
+	{
 		return 0;
+	}
 	
 	// do distance cull check here. We do it here instead of in particles so we can easily only do
 	// it for root objects, not bothering to cull children individually
@@ -422,7 +521,17 @@ int CNewParticleEffect::DrawModel( int flags )
 	Vector vecCamera;
 	pRenderContext->GetWorldSpaceCameraPosition( &vecCamera );
 	if ( CalcSqrDistanceToAABB( m_MinBounds, m_MaxBounds, vecCamera ) > ( m_pDef->m_flMaxDrawDistance * m_pDef->m_flMaxDrawDistance ) )
+	{
+		if ( !IsRetail() && ( g_cl_particle_show_bbox || ( g_cl_particle_show_bbox_cost != 0 ) ) )
+		{
+			DebugDrawBbox ( true );
+		}
+
+		// Still need to make sure we set this or they won't follow their attachemnt points.
+		m_flNextSleepTime = Max ( m_flNextSleepTime, ( g_pParticleSystemMgr->GetLastSimulationTime() + m_pDef->m_flNoDrawTimeToGoToSleep ));
+
 		return 0;
+	}
 
 	if ( flags & STUDIO_TRANSPARENCY )
 	{
@@ -431,9 +540,31 @@ int CNewParticleEffect::DrawModel( int flags )
 		// apply logic that lets you skip rendering a system if the camera is attached to its entity
 		if ( pCameraObject &&
 			 ( m_pDef->m_nSkipRenderControlPoint != -1 ) &&
-			 ( m_pDef->m_nSkipRenderControlPoint <= m_nHighestCP ) &&
-			 ( GetControlPointEntity( m_pDef->m_nSkipRenderControlPoint ) == pCameraObject ) )
-			return 0;
+			 ( m_pDef->m_nSkipRenderControlPoint <= m_nHighestCP ) )
+		{
+			C_BaseEntity *pEntity = (EHANDLE)GetControlPointEntity( m_pDef->m_nSkipRenderControlPoint );
+			if ( pEntity )
+			{
+				// If we're in thirdperson, we still see it
+				if ( !input->CAM_IsThirdPerson() )
+				{
+					if ( pEntity == pCameraObject )
+						return 0;
+					C_BaseEntity *pRootMove = pEntity->GetRootMoveParent();
+					if ( pRootMove == pCameraObject )
+						return 0;
+
+					// If we're spectating in-eyes of the camera object, we don't see it
+					C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+					if ( pPlayer == pCameraObject )
+					{
+						C_BaseEntity *pObTarget = pPlayer->GetObserverTarget();
+						if ( pPlayer->GetObserverMode() == OBS_MODE_IN_EYE && (pObTarget == pEntity || pRootMove == pObTarget ) )
+							return 0;
+					}
+				}
+			}
+		}
 
 		pRenderContext->MatrixMode( MATERIAL_MODEL );
 		pRenderContext->PushMatrix();
@@ -447,29 +578,18 @@ int CNewParticleEffect::DrawModel( int flags )
 		g_pParticleSystemMgr->AddToRenderCache( this );
 	}
 
-	if ( !IsRetail() && cl_particles_show_bbox.GetBool() )
+	if ( !IsRetail() )
 	{
-		Vector center = GetRenderOrigin();
-		Vector mins   = m_MinBounds - center;
-		Vector maxs   = m_MaxBounds - center;
-	
-		int r, g;
-		if ( GetAutoUpdateBBox() )
+		CParticleMgr *pMgr = ParticleMgr();
+		if ( pMgr->m_bStatsRunning )
 		{
-			// red is bad, the bbox update is costly
-			r = 255;
-			g = 0;
+			pMgr->StatsNewParticleEffectDrawn ( this );
 		}
-		else
+
+		if ( g_cl_particle_show_bbox || ( g_cl_particle_show_bbox_cost != 0 ) )
 		{
-			// green, this effect presents less cpu load 
-			r = 0;
-			g = 255;
+			DebugDrawBbox ( false );
 		}
-		 
-		debugoverlay->AddBoxOverlay( center, mins, maxs, QAngle( 0, 0, 0 ), r, g, 0, 16, 0 );
-		debugoverlay->AddTextOverlayRGB( center, 0, 0, r, g, 0, 64, "%s:(%d)", GetEffectName(),
-										 m_nActiveParticles );
 	}
 
 	return 1;

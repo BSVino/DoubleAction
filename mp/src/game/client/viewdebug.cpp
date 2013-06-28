@@ -1,4 +1,4 @@
-//========== Copyright © 2005, Valve Corporation, All rights reserved. ========
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -17,7 +17,7 @@
 #ifdef PORTAL
 //#include "C_Portal_Player.h"
 #include "portal_render_targets.h"
-#include "portalrender.h"
+#include "PortalRender.h"
 #endif
 
 //-----------------------------------------------------------------------------
@@ -25,11 +25,11 @@
 //-----------------------------------------------------------------------------
 static ConVar cl_drawmaterial( "cl_drawmaterial", "", FCVAR_CHEAT, "Draw a particular material over the frame" );
 static ConVar mat_showwatertextures( "mat_showwatertextures", "0", FCVAR_CHEAT );
-static ConVar mat_wateroverlaysize( "mat_wateroverlaysize", "128" );
+static ConVar mat_wateroverlaysize( "mat_wateroverlaysize", "256" );
 static ConVar mat_showframebuffertexture( "mat_showframebuffertexture", "0", FCVAR_CHEAT );
-static ConVar mat_framebuffercopyoverlaysize( "mat_framebuffercopyoverlaysize", "128" );
+static ConVar mat_framebuffercopyoverlaysize( "mat_framebuffercopyoverlaysize", "256" );
 static ConVar mat_showcamerarendertarget( "mat_showcamerarendertarget", "0", FCVAR_CHEAT );
-static ConVar mat_camerarendertargetoverlaysize( "mat_camerarendertargetoverlaysize", "128", FCVAR_CHEAT );
+static ConVar mat_camerarendertargetoverlaysize( "mat_camerarendertargetoverlaysize", "256", FCVAR_CHEAT );
 static ConVar mat_hsv( "mat_hsv", "0", FCVAR_CHEAT );
 static ConVar mat_yuv( "mat_yuv", "0", FCVAR_CHEAT );
 static ConVar cl_overdraw_test( "cl_overdraw_test", "0", FCVAR_CHEAT | FCVAR_NEVER_AS_STRING );
@@ -38,7 +38,6 @@ static ConVar mat_drawTextureScale( "mat_drawTextureScale", "1.0", 0, "Debug vie
 #ifdef _X360
 static ConVar mat_drawColorRamp( "mat_drawColorRamp", "0", 0, "Draw color test pattern (0=Off, 1=[0..255], 2=[0..127]" );
 #endif
-static ConVar mat_drawTitleSafe( "mat_drawTitleSafe", "0", 0, "Enable title safe overlay" );
 
 //-----------------------------------------------------------------------------
 // debugging
@@ -61,7 +60,7 @@ class CLightmapDebugView : public CRendering3dView
 public:
 	CLightmapDebugView(CViewRender *pMainView) : CRendering3dView( pMainView ) {}
 
-	void CLightmapDebugView::Draw()
+	void Draw()
 	{
 		extern bool s_bCanAccessCurrentView;
 		s_bCanAccessCurrentView = true;
@@ -513,73 +512,6 @@ static void OverlayColorRamp( bool bHalfSpace )
 #endif
 
 //-----------------------------------------------------------------------------
-// Debugging aid to display title safe areas.
-// Title Safe critical insets are SD:32x24 or HD:64x48
-//-----------------------------------------------------------------------------
-static void OverlayTitleSafe()
-{
-	IMaterial		*pMaterial;
-
-	pMaterial = materials->FindMaterial( "vgui/white", TEXTURE_GROUP_OTHER, true );
-
-	int backBufferWidth, backBufferHeight;
-	materials->GetBackBufferDimensions( backBufferWidth, backBufferHeight );
-
-	CMatRenderContextPtr pRenderContext( materials );
-
-	pRenderContext->Bind( pMaterial );
-	IMesh* pMesh = pRenderContext->GetDynamicMesh( true );
-
-	CMeshBuilder meshBuilder;
-
-	// Required Title safe is TCR documented at inner 90% (RED)
-	int insetX = 0.05f * backBufferWidth;
-	int insetY = 0.05f * backBufferHeight;
-	meshBuilder.Begin( pMesh, MATERIAL_LINE_LOOP, 4 );
-	meshBuilder.Position3f( insetX, insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 0, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( backBufferWidth-insetX, insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 0, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( backBufferWidth-insetX, backBufferHeight-insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 0, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( insetX, backBufferHeight-insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 0, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.End();
-	pMesh->Draw();
-
-	// Suggested Title Safe is TCR documented at inner 85% (YELLOW)
-	insetX = 0.075f * backBufferWidth;
-	insetY = 0.075f * backBufferHeight;
-	meshBuilder.Begin( pMesh, MATERIAL_LINE_LOOP, 4 );
-	meshBuilder.Position3f( insetX, insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 1, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( backBufferWidth-insetX, insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 1, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( backBufferWidth-insetX, backBufferHeight-insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 1, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.Position3f( insetX, backBufferHeight-insetY, 0.0f );
-	meshBuilder.TexCoord2f( 0, 0.0f, 0.0f );
-	meshBuilder.Color4f( 1, 1, 0, 1 );
-	meshBuilder.AdvanceVertex();
-	meshBuilder.End();
-	pMesh->Draw();
-}
-
-//-----------------------------------------------------------------------------
 // Draws all the debugging info
 //-----------------------------------------------------------------------------
 void CDebugViewRender::Draw3DDebuggingInfo( const CViewSetup &view )
@@ -609,7 +541,9 @@ void CDebugViewRender::Draw2DDebuggingInfo( const CViewSetup &view )
 		pMaterial = materials->FindMaterial( "debug/yuv", TEXTURE_GROUP_OTHER, true );
 		if( !IsErrorMaterial( pMaterial ) )
 		{
+			pMaterial->IncrementReferenceCount();
 			DrawScreenEffectMaterial( pMaterial, view.x, view.y, view.width, view.height );
+			pMaterial->DecrementReferenceCount();
 		}
 	}
 
@@ -619,7 +553,9 @@ void CDebugViewRender::Draw2DDebuggingInfo( const CViewSetup &view )
 		pMaterial = materials->FindMaterial( "debug/hsv", TEXTURE_GROUP_OTHER, true );
 		if( !IsErrorMaterial( pMaterial ) )
 		{
+			pMaterial->IncrementReferenceCount();
 			DrawScreenEffectMaterial( pMaterial, view.x, view.y, view.width, view.height );
+			pMaterial->DecrementReferenceCount();
 		}
 	}
 
@@ -685,11 +621,6 @@ void CDebugViewRender::Draw2DDebuggingInfo( const CViewSetup &view )
 	if ( r_flashlightdrawdepth.GetBool() )
 	{
 		shadowmgr->DrawFlashlightDepthTexture( );
-	}
-
-	if ( mat_drawTitleSafe.GetBool() )
-	{
-		OverlayTitleSafe();
 	}
 }
 

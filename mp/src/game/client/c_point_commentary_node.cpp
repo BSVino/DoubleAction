@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #include "hudelement.h"
 #include "clientmode.h"
 #include <vgui_controls/Panel.h>
-#include <vgui/isurface.h>
+#include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <vgui/IScheme.h>
 #include <vgui_controls/AnimationController.h>
@@ -392,7 +392,7 @@ void CHudCommentary::ApplySchemeSettings( vgui::IScheme *pScheme )
 void CHudCommentary::Paint()
 {
 	float flDuration = (m_flEndTime - m_flStartTime);
-	float flPercentage = clamp( ( gpGlobals->curtime - m_flStartTime ) / flDuration, 0, 1 );
+	float flPercentage = clamp( ( gpGlobals->curtime - m_flStartTime ) / flDuration, 0.f, 1.f );
 
 	if ( !m_hActiveNode )
 	{

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -109,6 +109,14 @@ public:
 
 	// Sets the cursor position
 	virtual void SetCursorPosition( int x, int y ) = 0;
+
+	// NVNT get address to haptics interface
+	virtual void *GetHapticsInterfaceAddress() const = 0;
+
+	virtual void SetNovintPure( bool bPure ) = 0;
+
+	// read and clear accumulated raw input values
+	virtual bool GetRawMouseAccumulators( int& accumX, int& accumY ) = 0;
 };
 
 

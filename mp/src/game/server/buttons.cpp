@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements buttons.
 //
@@ -235,7 +235,7 @@ void CBaseButton::Press( CBaseEntity *pActivator, BUTTON_CODE eCode )
 	// Temporarily disable the touch function, until movement is finished.
 	SetTouch( NULL );
 
-	if ( ( eCode == BUTTON_PRESS ) && ( m_toggle_state == TS_AT_TOP ) ||
+	if ( ( ( eCode == BUTTON_PRESS ) && ( m_toggle_state == TS_AT_TOP ) ) ||
 		 ( ( eCode == BUTTON_RETURN ) && ( m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP ) ) )
 	{
 		if ( m_sNoise != NULL_STRING )
@@ -802,7 +802,7 @@ int CBaseButton::DrawDebugTextOverlays()
 
 	if (m_debugOverlays & OVERLAY_TEXT_BIT) 
 	{
-		static char *pszStates[] =
+		static const char *pszStates[] =
 		{
 			"Pressed",
 			"Unpressed",
@@ -987,10 +987,10 @@ void CMomentaryRotButton::Spawn( void )
 	}
 
 	// Clamp start position and issue bounds warning
-	if (m_flStartPosition < 0.0 || m_flStartPosition > 1.0)
+	if (m_flStartPosition < 0.0f || m_flStartPosition > 1.0f)
 	{
 		Warning("WARNING: Momentary door (%s) start position not between 0 and 1.  Clamping.\n",GetDebugName());
-		m_flStartPosition = clamp(m_IdealYaw, 0, 1);
+		m_flStartPosition = clamp(m_IdealYaw, 0.f, 1.f);
 	}
 
 	// Check direction fields (for backward compatibility)
@@ -1124,7 +1124,7 @@ float CMomentaryRotButton::GetPos( const QAngle &vecAngles )
 	}
 
 	float flPos = flScale * CBaseToggle::AxisDelta( m_spawnflags, vecAngles, m_start ) / m_flMoveDistance;
-	return( clamp( flPos, 0, 1 ));
+	return( clamp( flPos, 0.f, 1.f ));
 }
 
 
@@ -1134,7 +1134,7 @@ float CMomentaryRotButton::GetPos( const QAngle &vecAngles )
 //------------------------------------------------------------------------------
 void CMomentaryRotButton::InputSetPosition( inputdata_t &inputdata )
 {
-	m_IdealYaw = clamp( inputdata.value.Float(), 0, 1 );
+	m_IdealYaw = clamp( inputdata.value.Float(), 0.f, 1.f );
 
 	float flCurPos = GetPos( GetLocalAngles() );
 	if ( flCurPos < m_IdealYaw )
@@ -1187,7 +1187,7 @@ void CMomentaryRotButton::InputSetPosition( inputdata_t &inputdata )
 //------------------------------------------------------------------------------
 void CMomentaryRotButton::InputSetPositionImmediately( inputdata_t &inputdata )
 {
-	m_IdealYaw = clamp( inputdata.value.Float(), 0, 1 );
+	m_IdealYaw = clamp( inputdata.value.Float(), 0.f, 1.f );
 	SetLocalAngles( m_start + m_vecMoveAng * ( m_IdealYaw * m_flMoveDistance ) );
 }
 

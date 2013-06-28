@@ -1,20 +1,20 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // List of perforce files and operations
 //
 //=============================================================================
 
 #include "vgui_controls/perforcefilelistframe.h"
-#include "tier1/keyvalues.h"
-#include "vgui_controls/button.h"
-#include "vgui_controls/listpanel.h"
-#include "vgui_controls/splitter.h"
-#include "vgui_controls/textentry.h"
-#include "vgui_controls/messagebox.h"
+#include "tier1/KeyValues.h"
+#include "vgui_controls/Button.h"
+#include "vgui_controls/ListPanel.h"
+#include "vgui_controls/Splitter.h"
+#include "vgui_controls/TextEntry.h"
+#include "vgui_controls/MessageBox.h"
 #include "tier2/tier2.h"
 #include "p4lib/ip4.h"
 #include "filesystem.h"
-#include "vgui/ivgui.h"
+#include "vgui/IVGui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -371,7 +371,7 @@ void CPerforceFileListFrame::AddFileForSubmit( const char *pFullPath, P4FileStat
 		return;
 
 	char pBuf[128];
-	char *pPrefix = (m_Action == PERFORCE_ACTION_FILE_REVERT) ? "Revert" : "Submit";
+	const char *pPrefix = (m_Action == PERFORCE_ACTION_FILE_REVERT) ? "Revert" : "Submit";
 	switch( state )
 	{
 	case P4FILE_OPENED_FOR_ADD:

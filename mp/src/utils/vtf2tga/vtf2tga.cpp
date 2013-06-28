@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -133,6 +133,7 @@ int main( int argc, char **argv )
 	Msg( "TEXTUREFLAGS_CLAMPS=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPS ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_CLAMPT=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPT ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_CLAMPU=%s\n", ( pTex->Flags() & TEXTUREFLAGS_CLAMPU ) ? "true" : "false" );
+	Msg( "TEXTUREFLAGS_BORDER=%s\n", ( pTex->Flags() & TEXTUREFLAGS_BORDER ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_ANISOTROPIC=%s\n", ( pTex->Flags() & TEXTUREFLAGS_ANISOTROPIC ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_HINT_DXT5=%s\n", ( pTex->Flags() & TEXTUREFLAGS_HINT_DXT5 ) ? "true" : "false" );
 	Msg( "TEXTUREFLAGS_SRGB=%s\n", ( pTex->Flags() & TEXTUREFLAGS_SRGB ) ? "true" : "false" );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Grigori's personal shotgun (npc_monk)
 //
@@ -70,7 +70,9 @@ IMPLEMENT_SERVERCLASS_ST(CWeaponAnnabelle, DT_WeaponAnnabelle)
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( weapon_annabelle, CWeaponAnnabelle );
+#ifndef HL2MP
 PRECACHE_WEAPON_REGISTER(weapon_annabelle);
+#endif
 
 BEGIN_DATADESC( CWeaponAnnabelle )
 	DEFINE_FIELD( m_bNeedPump, FIELD_BOOLEAN ),
@@ -157,7 +159,7 @@ bool CWeaponAnnabelle::StartReload( void )
 		m_bNeedPump = true;
 	}
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
@@ -198,7 +200,7 @@ bool CWeaponAnnabelle::Reload( void )
 	if (m_iClip1 >= GetMaxClip1())
 		return false;
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
@@ -323,7 +325,7 @@ void CWeaponAnnabelle::ItemHolsterFrame( void )
 			return;
 
 		// Just load the clip with no animations
-		int ammoFill = min( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
+		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
 		
 		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;

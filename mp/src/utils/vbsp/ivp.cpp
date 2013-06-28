@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,8 +17,8 @@
 #include <float.h>
 #include "KeyValues.h"
 #include "UtlBuffer.h"
-#include "UtlSymbol.h"
-#include "UtlRBTree.h"
+#include "utlsymbol.h"
+#include "utlrbtree.h"
 #include "ivp.h"
 #include "disp_ivp.h"
 #include "materialpatch.h"
@@ -502,9 +502,9 @@ CPhysConvex *CPlaneList::BuildConvexForBrush( int brushnumber, float shrink, CPh
 		dplane_t *pplane = dplanes + pside->planenum;
 		float shrinkThisPlane = shrink;
 
-		if ( i < mapbrushes[brushnumber].numsides )
+		if ( i < g_MainMap->mapbrushes[brushnumber].numsides )
 		{
-			if ( !mapbrushes[brushnumber].original_sides[i].visible )
+			if ( !g_MainMap->mapbrushes[brushnumber].original_sides[i].visible )
 			{
 				// don't shrink brush sides with no visible components.
 				// this produces something closer to the ideal shrink than simply shrinking all planes
@@ -991,7 +991,7 @@ static void BuildWaterLeaf( node_t *pLeafIn, waterleaf_t &waterLeafOut )
 		if ( !(pOpposite->contents & MASK_WATER) && !(pOpposite->contents & MASK_SOLID) )
 		{
 			// it does, there must be a surface here
-			plane_t *plane = &mapplanes[p->side->planenum];
+			plane_t *plane = &g_MainMap->mapplanes[p->side->planenum];
 			if ( waterLeafOut.hasSurface )
 			{
 				// Sort to find the most upward facing normal (skips sides)
@@ -1316,6 +1316,12 @@ static void BuildWorldPhysModel( CUtlVector<CPhysCollisionEntry *> &collisionLis
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, MASK_SOLID );
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, CONTENTS_PLAYERCLIP );
 	ConvertWorldBrushesToPhysCollide( collisionList, shrinkSize, mergeTolerance, CONTENTS_MONSTERCLIP );
+
+	if ( !g_bNoVirtualMesh && Disp_HasPower4Displacements() )
+	{
+		Warning("WARNING: Map using power 4 displacements, terrain physics cannot be compressed, map will need additional memory and CPU.\n");
+		g_bNoVirtualMesh = true;
+	}
 
 	// if there's terrain, save it off as a static mesh/polysoup
 	if ( g_bNoVirtualMesh || !physcollision->SupportsVirtualMesh() )

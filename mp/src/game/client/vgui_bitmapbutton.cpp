@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This is a panel which is rendered image on top of an entity
 //
@@ -9,7 +9,7 @@
 #pragma warning (disable: 4514)
 
 #include "vgui_bitmapimage.h"
-#include "vgui_BitmapButton.h"
+#include "vgui_bitmapbutton.h"
 #include <KeyValues.h>
 
 // memdbgon must be the last include file in a .cpp file!!!

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		barnacle - stationary ceiling mounted 'fishing' monster	
 //
@@ -35,7 +35,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar	sv_gravity;
+float GetCurrentGravity( void );
 ConVar	sk_barnacle_health( "sk_barnacle_health","0");
 
 static ConVar npc_barnacle_swallow( "npc_barnacle_swallow", "0", 0, "Use prototype swallow code." );
@@ -1518,7 +1518,7 @@ You can use this stanza to try to counterplace the constraint on the player's he
 	// barnacle might let go if ragdoll is separated - so increase the separation checking a bit
 	constraint_groupparams_t params;
 	pRagdoll->pGroup->GetErrorParams( &params );
-	params.minErrorTicks = min( params.minErrorTicks, 5 );
+	params.minErrorTicks = MIN( params.minErrorTicks, 5 );
 	pRagdoll->pGroup->SetErrorParams( params );
 
 	for ( int i = 0; i < pRagdoll->listCount; i++ )
@@ -1972,7 +1972,7 @@ void CNPC_Barnacle::UpdateTongue( void )
 
 	// Compute the rest length of the tongue based on the spring. 
 	// This occurs when mg == kx or x = mg/k
-	float flRestStretch = (BARNACLE_TONGUE_TIP_MASS * sv_gravity.GetFloat()) / BARNACLE_TONGUE_SPRING_CONSTANT_HANGING;
+	float flRestStretch = (BARNACLE_TONGUE_TIP_MASS * GetCurrentGravity()) / BARNACLE_TONGUE_SPRING_CONSTANT_HANGING;
 
 	// FIXME: HACK!!!! The code above doesn't quite make the tip end up in the right place.
 	// but it should. So, we're gonna hack it the rest of the way.
@@ -2141,11 +2141,11 @@ void CNPC_Barnacle::WaitTillDead ( void )
 		float dt = gpGlobals->curtime - GetLastThink();
 		if ( m_flAltitude >= goalAltitude )
 		{
-			flNewAltitude = max( goalAltitude, m_flAltitude - m_flBarnaclePullSpeed * dt );
+			flNewAltitude = MAX( goalAltitude, m_flAltitude - m_flBarnaclePullSpeed * dt );
 		}
 		else
 		{
-			flNewAltitude = min( goalAltitude, m_flAltitude + m_flBarnaclePullSpeed * dt );
+			flNewAltitude = MIN( goalAltitude, m_flAltitude + m_flBarnaclePullSpeed * dt );
 		}
 		SetAltitude( flNewAltitude );
 	}
@@ -2442,7 +2442,7 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 	
 	length = fabs( GetAbsOrigin().z - tr.endpos.z );
 	// Pull it up a tad
-	length = max(8, length - m_flRestUnitsAboveGround);
+	length = MAX(8, length - m_flRestUnitsAboveGround);
 	if ( pflLength )
 	{
 		*pflLength = length;
@@ -2510,7 +2510,7 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 #ifdef HL2_EPISODIC
 				length = fabs( GetAbsOrigin().z - pTest->WorldSpaceCenter().z );
 				// Pull it up a tad
-				length = max(8, length - m_flRestUnitsAboveGround);
+				length = MAX(8, length - m_flRestUnitsAboveGround);
 				if ( pflLength )
 				{
 					*pflLength = length;
@@ -2538,7 +2538,7 @@ CBaseEntity *CNPC_Barnacle::TongueTouchEnt ( float *pflLength )
 #ifdef HL2_EPISODIC
 			length = fabs( GetAbsOrigin().z - pTest->WorldSpaceCenter().z );
 			// Pull it up a tad
-			length = max(8, length - m_flRestUnitsAboveGround);
+			length = MAX(8, length - m_flRestUnitsAboveGround);
 			if ( pflLength )
 			{
 				*pflLength = length;

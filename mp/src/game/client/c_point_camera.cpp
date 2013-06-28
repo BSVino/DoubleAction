@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,10 +6,10 @@
 //===========================================================================//
 
 #include "cbase.h"
-#include "C_Point_Camera.h"
+#include "c_point_camera.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -28,7 +28,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_PointCamera, DT_PointCamera, CPointCamera )
 END_RECV_TABLE()
 
 C_EntityClassList<C_PointCamera> g_PointCameraList;
-C_PointCamera *C_EntityClassList<C_PointCamera>::m_pClassList = NULL;
+template<> C_PointCamera *C_EntityClassList<C_PointCamera>::m_pClassList = NULL;
 
 C_PointCamera* GetPointCameraList()
 {

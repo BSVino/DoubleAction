@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,9 +6,9 @@
 //=============================================================================//
 
 #include <windows.h>
+#include <dbghelp.h>
 #include "tier0/minidump.h"
 #include "tools_minidump.h"
-
 
 static bool g_bToolsWriteFullMinidumps = false;
 static ToolsExceptionHandler g_pCustomExceptionHandler = NULL;

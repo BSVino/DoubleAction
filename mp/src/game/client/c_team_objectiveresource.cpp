@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: An entity that networks the state of the game's objectives.
 //
@@ -72,6 +72,14 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_BaseTeamObjectiveResource, DT_BaseTeamObjectiv
 	RecvPropArray3( RECVINFO_ARRAY(m_iWarnOnCap),		RecvPropInt( RECVINFO(m_iWarnOnCap[0]) ) ),
 	RecvPropArray( RecvPropString( RECVINFO( m_iszWarnSound[0]) ), m_iszWarnSound ),
 	RecvPropArray3( RECVINFO_ARRAY(m_flPathDistance),	RecvPropFloat( RECVINFO(m_flPathDistance[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_iCPGroup),			RecvPropInt( RECVINFO(m_iCPGroup[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_bCPLocked),		RecvPropBool( RECVINFO(m_bCPLocked[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_nNumNodeHillData),	RecvPropInt( RECVINFO(m_nNumNodeHillData[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_flNodeHillData),	RecvPropFloat( RECVINFO(m_flNodeHillData[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_bTrackAlarm),		RecvPropBool( RECVINFO(m_bTrackAlarm[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_flUnlockTimes),	RecvPropFloat( RECVINFO(m_flUnlockTimes[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_bHillIsDownhill),	RecvPropBool( RECVINFO(m_bHillIsDownhill[0]) ) ),
+	RecvPropArray3( RECVINFO_ARRAY(m_flCPTimerTimes),	RecvPropFloat( RECVINFO(m_flCPTimerTimes[0]) ) ),
 
 	// state variables
 	RecvPropArray3( RECVINFO_ARRAY(m_iNumTeamMembers),	RecvPropInt( RECVINFO(m_iNumTeamMembers[0]) ) ),
@@ -95,15 +103,20 @@ C_BaseTeamObjectiveResource::C_BaseTeamObjectiveResource()
 	m_iUpdateCapHudParity = 0;
 	m_bControlPointsReset = false;
 
-	for ( int i=0; i < MAX_CONTROL_POINTS; i++ )
+	int i;
+
+	for ( i=0; i < MAX_CONTROL_POINTS; i++ )
 	{
 		m_flCapTimeLeft[i] = 0;
 		m_flCapLastThinkTime[i] = 0;
 		m_flLastCapWarningTime[i] = 0;
 		m_bWarnedOnFinalCap[i] = false; // have we warned
 		m_iWarnOnCap[i] = CP_WARN_NORMAL; // should we warn
+		m_iCPGroup[i] = -1;
 		m_iszWarnSound[i][0] = 0; // what sound should be played
 		m_flLazyCapPerc[i] = 0.0;
+		m_flUnlockTimes[i] = 0.0;
+		m_flCPTimerTimes[i] = -1.0;
 
 		for ( int team = 0; team < MAX_CONTROL_POINT_TEAMS; team++ )
 		{
@@ -125,6 +138,17 @@ C_BaseTeamObjectiveResource::C_BaseTeamObjectiveResource()
 	for ( int team = 0; team < MAX_CONTROL_POINT_TEAMS; team++ )
 	{
 		m_iTeamBaseIcons[team] = 0;
+	}
+
+	for ( i=0; i < TEAM_TRAIN_MAX_TEAMS; i++ )
+	{
+		m_nNumNodeHillData[i] = 0;
+		m_bTrainOnHill[i] = false;
+	}
+
+	for ( i=0; i < TEAM_TRAIN_HILLS_ARRAY_SIZE; i++ )
+	{
+		m_flNodeHillData[i] = 0;
 	}
 
 	g_pObjectiveResource = this;
@@ -150,6 +174,8 @@ void C_BaseTeamObjectiveResource::OnPreDataChanged( DataUpdateType_t updateType 
 	m_bOldControlPointsReset = m_bControlPointsReset;
 
 	memcpy( m_flOldLazyCapPerc, m_flLazyCapPerc, sizeof(float)*m_iNumControlPoints );
+	memcpy( m_flOldUnlockTimes, m_flUnlockTimes, sizeof(float)*m_iNumControlPoints );
+	memcpy( m_flOldCPTimerTimes, m_flCPTimerTimes, sizeof(float)*m_iNumControlPoints );
 }
 
 //-----------------------------------------------------------------------------
@@ -179,6 +205,28 @@ void C_BaseTeamObjectiveResource::OnDataChanged( DataUpdateType_t updateType )
 		if ( m_flOldLazyCapPerc[i] != m_flLazyCapPerc[i] )
 		{
 			m_flCapTimeLeft[i] = m_flLazyCapPerc[i] * m_flTeamCapTime[ TEAM_ARRAY(i,m_iCappingTeam[i]) ];
+		}
+
+		if ( m_flOldUnlockTimes[i] != m_flUnlockTimes[i] )
+		{
+			IGameEvent *event = gameeventmanager->CreateEvent( "controlpoint_unlock_updated" );
+			if ( event )
+			{
+				event->SetInt( "index", i );
+				event->SetFloat( "time", m_flUnlockTimes[i] );
+				gameeventmanager->FireEventClientSide( event );
+			}
+		}
+
+		if ( m_flOldCPTimerTimes[i] != m_flCPTimerTimes[i] )
+		{
+			IGameEvent *event = gameeventmanager->CreateEvent( "controlpoint_timer_updated" );
+			if ( event )
+			{
+				event->SetInt( "index", i );
+				event->SetFloat( "time", m_flCPTimerTimes[i] );
+				gameeventmanager->FireEventClientSide( event );
+			}
 		}
 	}
 }

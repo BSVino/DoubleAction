@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -408,10 +408,10 @@ int main( int argc, char **argv )
 				}
 				else if ( numBytes1 != numBytes2 )
 				{
-					printf( "%s different resource %s size %s != %s\n", 
+					printf( "%s different resource %s size %lld != %lld\n", 
 						argv[1],
 						ResourceToString( uiResType ),
-						numBytes1, numBytes2 );
+						(long long)numBytes1, (long long)numBytes2 );
 					bMatch = false;
 				}
 				else if ( memcmp( pvResData1, pvResData2, numBytes1 ) != 0 )

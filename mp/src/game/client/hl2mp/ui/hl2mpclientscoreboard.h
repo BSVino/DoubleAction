@@ -1,12 +1,12 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef HL2MPCLIENTSCOREBOARDDIALOG_H
-#define HL2MPCLIENTSCOREBOARDDIALOG_H
+#ifndef CHL2MPCLIENTSCOREBOARDDIALOG_H
+#define CHL2MPCLIENTSCOREBOARDDIALOG_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -19,14 +19,19 @@
 class CHL2MPClientScoreBoardDialog : public CClientScoreBoardDialog
 {
 private:
-	DECLARE_CLASS_SIMPLE( CHL2MPClientScoreBoardDialog, CClientScoreBoardDialog );
-
+	DECLARE_CLASS_SIMPLE(CHL2MPClientScoreBoardDialog, CClientScoreBoardDialog);
+	
 public:
-	CHL2MPClientScoreBoardDialog( IViewPort *pViewPort );
+	CHL2MPClientScoreBoardDialog(IViewPort *pViewPort);
 	~CHL2MPClientScoreBoardDialog();
 
-	virtual void Reset();
-	virtual void Update();
+
+protected:
+	// scoreboard overrides
+	virtual void InitScoreboardSections();
+	virtual void UpdateTeamInfo();
+	virtual bool GetPlayerScoreInfo(int playerIndex, KeyValues *outPlayerInfo);
+	virtual void UpdatePlayerInfo();
 
 	// vgui overrides for rounded corner background
 	virtual void PaintBackground();
@@ -34,52 +39,25 @@ public:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
-	void UpdateItemVisibiity();
-	void InitPlayerList( vgui::SectionedListPanel *pPlayerList, int teamNumber );
-	void UpdateTeamInfo();
-	void UpdatePlayerList();
-	void UpdateSpectatorList();
-	bool GetPlayerScoreInfo( int playerIndex, KeyValues *outPlayerInfo );
+	virtual void AddHeader(); // add the start header of the scoreboard
+	virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
 
-	bool ShouldShowAsSpectator( int iPlayerIndex );
-	void FireGameEvent( IGameEvent *event );
-
-	static bool HL2MPPlayerSortFunc( vgui::SectionedListPanel *list, int itemID1, int itemID2 );
+	int GetSectionFromTeamNumber( int teamNumber );
+	enum 
+	{ 
+		CSTRIKE_NAME_WIDTH = 320,
+		CSTRIKE_CLASS_WIDTH = 56,
+		CSTRIKE_SCORE_WIDTH = 40,
+		CSTRIKE_DEATH_WIDTH = 46,
+		CSTRIKE_PING_WIDTH = 46,
+//		CSTRIKE_VOICE_WIDTH = 40, 
+//		CSTRIKE_FRIENDS_WIDTH = 24,
+	};
 
 	// rounded corners
-	Color					m_bgColor;
-	Color					m_borderColor;
-
-	int						m_iStoredScoreboardWidth; // Store the full scoreboard width.
-
-	// player lists
-	vgui::SectionedListPanel *m_pPlayerListDM;	//Deathmatch Player list.
-	vgui::SectionedListPanel *m_pPlayerListR;
-	vgui::SectionedListPanel *m_pPlayerListC;
-
-	vgui::Label	*m_pPlayerCountLabel_DM;
-	vgui::Label *m_pScoreHeader_DM;
-	vgui::Label	*m_pDeathsHeader_DM;
-	vgui::Label	*m_pPingHeader_DM;
-	vgui::Label	*m_pPingLabel_DM;
-
-	vgui::Label	*m_pPlayerCountLabel_R;
-	vgui::Label	*m_pScoreHeader_R;
-	vgui::Label	*m_pScoreLabel_R;
-	vgui::Label	*m_pDeathsHeader_R;
-	vgui::Label	*m_pPingHeader_R;
-	vgui::Label	*m_pPingLabel_R;
-
-	vgui::Label	*m_pPlayerCountLabel_C;
-	vgui::Label	*m_pScoreHeader_C;
-	vgui::Label	*m_pScoreLabel_C;
-	vgui::Label	*m_pDeathsHeader_C;
-	vgui::Label	*m_pPingHeader_C;
-	vgui::Label	*m_pPingLabel_C;
-
-	// Create the vertical line so we can hide it in single column mode.
-	vgui::ImagePanel *m_pVertLine;
+	Color					 m_bgColor;
+	Color					 m_borderColor;
 };
 
 
-#endif // HL2MPCLIENTSCOREBOARDDIALOG_H
+#endif // CHL2MPCLIENTSCOREBOARDDIALOG_H

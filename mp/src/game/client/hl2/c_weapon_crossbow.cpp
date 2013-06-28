@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "model_types.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "fx.h"
 #include "c_te_effect_dispatch.h"
 #include "beamdraw.h"
@@ -92,7 +92,7 @@ int C_CrossbowBolt::DrawModel( int flags )
 		
 		if ( speed > 0 )
 		{
-			float	stepSize = min( ( speed * 0.5f ), 4.0f );
+			float	stepSize = MIN( ( speed * 0.5f ), 4.0f );
 
 			Vector	spawnPos = GetAbsOrigin() + ( vecDir * 24.0f );
 			Vector	spawnStep = -vecDir * stepSize;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -355,13 +355,12 @@ winding_t	*BaseWindingForNode (node_t *node)
 	Vector		normal;
 	vec_t		dist;
 
-	w = BaseWindingForPlane (mapplanes[node->planenum].normal
-		, mapplanes[node->planenum].dist);
+	w = BaseWindingForPlane (g_MainMap->mapplanes[node->planenum].normal, g_MainMap->mapplanes[node->planenum].dist);
 
 	// clip by all the parents
 	for (n=node->parent ; n && w ; )
 	{
-		plane = &mapplanes[n->planenum];
+		plane = &g_MainMap->mapplanes[n->planenum];
 
 		if (n->children[0] == node)
 		{	// take front
@@ -437,7 +436,7 @@ void MakeNodePortal (node_t *node)
 
 
 	new_portal = AllocPortal ();
-	new_portal->plane = mapplanes[node->planenum];
+	new_portal->plane = g_MainMap->mapplanes[node->planenum];
 	new_portal->onnode = node;
 	new_portal->winding = w;	
 
@@ -461,7 +460,7 @@ void SplitNodePortals (node_t *node)
 	plane_t		*plane;
 	winding_t	*frontwinding, *backwinding;
 
-	plane = &mapplanes[node->planenum];
+	plane = &g_MainMap->mapplanes[node->planenum];
 	f = node->children[0];
 	b = node->children[1];
 
@@ -716,7 +715,7 @@ qboolean PlaceOccupant (node_t *headnode, Vector& origin, entity_t *occupant)
 	node = headnode;
 	while (node->planenum != PLANENUM_LEAF)
 	{
-		plane = &mapplanes[node->planenum];
+		plane = &g_MainMap->mapplanes[node->planenum];
 		d = DotProduct (origin, plane->normal) - plane->dist;
 		if (d >= 0)
 			node = node->children[0];
@@ -1183,7 +1182,7 @@ void FindPortalsLeadingToArea_R(
 			p->nodes[0]->area == iDestArea && p->nodes[1]->area == iSrcArea )
 		{
 			// Make sure the plane normals point the same way.
-			plane_t *pMapPlane = &mapplanes[p->onnode->planenum];
+			plane_t *pMapPlane = &g_MainMap->mapplanes[p->onnode->planenum];
 			float flDot = fabs( pMapPlane->normal.Dot( pPlane->normal ) );
 			if( fabs( 1 - flDot ) < 0.01f )
 			{
@@ -1523,7 +1522,7 @@ void FindPortalSide (portal_t *p)
 	for (j=0 ; j<2 ; j++)
 	{
 		n = p->nodes[j];
-		p1 = &mapplanes[p->onnode->planenum];
+		p1 = &g_MainMap->mapplanes[p->onnode->planenum];
 
 		for (bb=n->brushlist ; bb ; bb=bb->next)
 		{
@@ -1546,7 +1545,7 @@ void FindPortalSide (portal_t *p)
 					goto gotit;
 				}
 
-				p2 = &mapplanes[side->planenum&~1];
+				p2 = &g_MainMap->mapplanes[side->planenum&~1];
 
 				float dist = ComputeDistFromPlane( p->winding, p2, bestdist );
 				if (dist < bestdist)
@@ -1636,7 +1635,7 @@ void MarkVisibleSides (tree_t *tree, int startbrush, int endbrush, int detailScr
 	// clear all the visible flags
 	for (i=startbrush ; i<endbrush ; i++)
 	{
-		mb = &mapbrushes[i];
+		mb = &g_MainMap->mapbrushes[i];
 
 		if ( detailScreen != FULL_DETAIL )
 		{

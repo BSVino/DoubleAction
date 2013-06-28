@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -157,7 +157,9 @@ private:
 	bool m_bAwaitingReadyRestart;
 	bool m_bHeardAllPlayersReady;
 
-
+#ifndef CLIENT_DLL
+	bool m_bChangelevelDone;
+#endif
 };
 
 inline CHL2MPRules* HL2MPRules()

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -7,7 +7,7 @@
 #include "cbase.h"
 #include "c_baseplayer.h"
 #include "menu.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 #include "multiplay_gamerules.h"
 
 static int g_ActiveVoiceMenu = 0;
@@ -29,9 +29,12 @@ void OpenVoiceMenu( int index )
 	// if they hit the key again, close the menu
 	if ( g_ActiveVoiceMenu == index )
 	{
-		pMenu->HideMenu();
-		g_ActiveVoiceMenu = 0;
-		return;
+		if ( pMenu->IsMenuOpen() )
+		{
+			pMenu->HideMenu();
+			g_ActiveVoiceMenu = 0;
+			return;
+		}
 	}
 
 	if ( index > 0 && index < 9 )

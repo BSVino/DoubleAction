@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -26,7 +26,7 @@
 		CHudElement *pElement = gHUD.FindElement( #y );				\
 		if ( pElement )												\
 		{															\
-			((##y##*)pElement)->MsgFunc_##x( msg );	\
+			((y *)pElement)->MsgFunc_##x( msg );	\
 		}															\
 	}
 
@@ -35,7 +35,7 @@
 		CHudElement *pElement = gHUD.FindElement( #name );				\
 		if ( pElement )												\
 		{															\
-			((##basename##*)pElement)->MsgFunc_##msgname(pszName, iSize, pbuf );	\
+			((basename *)pElement)->MsgFunc_##msgname(pszName, iSize, pbuf );	\
 		}															\
 	}
 
@@ -51,7 +51,7 @@
 	{																\
 		CHudElement *pElement = gHUD.FindElement( #y );				\
 		{															\
-			((##y##*)pElement)->UserCmd_##x( );						\
+			((y *)pElement)->UserCmd_##x( );						\
 		}															\
 	}
 
@@ -59,7 +59,7 @@
 	{																\
 		CHudElement *pElement = gHUD.FindElement( name );			\
 		{															\
-			((##y##*)pElement)->UserCmd_##x( );						\
+			((y *)pElement)->UserCmd_##x( );						\
 		}															\
 	}
 

@@ -1,11 +1,13 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
-//=====================================================================================//
+//=============================================================================//
 
 #include "cbase.h"
 #include "weapon_sdkbase.h"
+#include "sdk_fx_shared.h"
+
 
 #if defined( CLIENT_DLL )
 
@@ -25,15 +27,22 @@ public:
 	DECLARE_CLASS( CWeaponMP5, CWeaponSDKBase );
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
-	DECLARE_ACTTABLE();
 	
 	CWeaponMP5();
 
-	virtual SDKWeaponID GetWeaponID( void ) const		{ return SDK_WEAPON_MP5; }
+	virtual void PrimaryAttack();
+	virtual bool Deploy();
+	virtual bool Reload();
+	virtual void WeaponIdle();
+
+	virtual SDKWeaponID GetWeaponID( void ) const		{ return WEAPON_MP5; }
+
 
 private:
 
 	CWeaponMP5( const CWeaponMP5 & );
+
+	void Fire( float flSpread );
 };
 
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponMP5, DT_WeaponMP5 )
@@ -53,31 +62,107 @@ CWeaponMP5::CWeaponMP5()
 {
 }
 
-//Tony; todo; add ACT_MP_PRONE* activities, so we have them.
-acttable_t CWeaponMP5::m_acttable[] = 
+bool CWeaponMP5::Deploy( )
 {
-	{ ACT_MP_STAND_IDLE,					ACT_DOD_STAND_IDLE_TOMMY,				false },
-	{ ACT_MP_CROUCH_IDLE,					ACT_DOD_CROUCH_IDLE_TOMMY,				false },
-	{ ACT_MP_PRONE_IDLE,					ACT_DOD_PRONE_AIM_TOMMY,				false },
+	CSDKPlayer *pPlayer = GetPlayerOwner();
+	pPlayer->m_iShotsFired = 0;
 
-	{ ACT_MP_RUN,							ACT_DOD_RUN_AIM_TOMMY,					false },
-	{ ACT_MP_WALK,							ACT_DOD_WALK_AIM_TOMMY,					false },
-	{ ACT_MP_CROUCHWALK,					ACT_DOD_CROUCHWALK_AIM_TOMMY,			false },
-	{ ACT_MP_PRONE_CRAWL,					ACT_DOD_PRONEWALK_IDLE_TOMMY,			false },
-	{ ACT_SPRINT,							ACT_DOD_SPRINT_IDLE_TOMMY,				false },
+	return BaseClass::Deploy();
+}
 
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_TOMMY,			false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_TOMMY,			false },
-	{ ACT_MP_ATTACK_PRONE_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_PRONE_TOMMY,		false },
-	{ ACT_MP_ATTACK_STAND_SECONDARYFIRE,	ACT_DOD_SECONDARYATTACK_TOMMY,			false },
-	{ ACT_MP_ATTACK_CROUCH_SECONDARYFIRE,	ACT_DOD_SECONDARYATTACK_CROUCH_TOMMY,	false },
-	{ ACT_MP_ATTACK_PRONE_SECONDARYFIRE,	ACT_DOD_SECONDARYATTACK_PRONE_TOMMY,	false },
+bool CWeaponMP5::Reload( )
+{
+	CSDKPlayer *pPlayer = GetPlayerOwner();
 
-	{ ACT_MP_RELOAD_STAND,					ACT_DOD_RELOAD_TOMMY,					false },
-	{ ACT_MP_RELOAD_CROUCH,					ACT_DOD_RELOAD_CROUCH_TOMMY,			false },
-	{ ACT_MP_RELOAD_PRONE,					ACT_DOD_RELOAD_PRONE_TOMMY,				false },
+	if (pPlayer->GetAmmoCount( GetPrimaryAmmoType() ) <= 0)
+		return false;
 
-};
+	int iResult = DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD );
+	if ( !iResult )
+		return false;
 
-IMPLEMENT_ACTTABLE( CWeaponMP5 );
+	pPlayer->SetAnimation( PLAYER_RELOAD );
+
+#ifndef CLIENT_DLL
+	if ((iResult) && (pPlayer->GetFOV() != pPlayer->GetDefaultFOV()))
+	{
+		pPlayer->SetFOV( pPlayer, pPlayer->GetDefaultFOV() );
+	}
+#endif
+
+	pPlayer->m_iShotsFired = 0;
+
+	return true;
+}
+
+void CWeaponMP5::PrimaryAttack( void )
+{
+	const CSDKWeaponInfo &pWeaponInfo = GetSDKWpnData();
+	CSDKPlayer *pPlayer = GetPlayerOwner();
+
+	float flCycleTime = pWeaponInfo.m_flCycleTime;
+
+	bool bPrimaryMode = true;
+
+	float flSpread = 0.01f;
+
+	// more spread when jumping
+	if ( !FBitSet( pPlayer->GetFlags(), FL_ONGROUND ) )
+		flSpread = 0.05f;
+	
+	pPlayer->m_iShotsFired++;
+
+	// Out of ammo?
+	if ( m_iClip1 <= 0 )
+	{
+		if (m_bFireOnEmpty)
+		{
+			PlayEmptySound();
+			m_flNextPrimaryAttack = gpGlobals->curtime + 0.2;
+		}
+	}
+
+	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
+
+	m_iClip1--;
+
+	// player "shoot" animation
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	FX_FireBullets(
+		pPlayer->entindex(),
+		pPlayer->Weapon_ShootPosition(),
+		pPlayer->EyeAngles() + pPlayer->GetPunchAngle(),
+		GetWeaponID(),
+		bPrimaryMode?Primary_Mode:Secondary_Mode,
+		CBaseEntity::GetPredictionRandomSeed() & 255,
+		flSpread );
+
+	pPlayer->DoMuzzleFlash();
+	
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flCycleTime;
+
+	if (!m_iClip1 && pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", false, 0);
+	}
+
+	// start idle animation in 5 seconds
+	SetWeaponIdleTime( gpGlobals->curtime + 5.0 );
+}
+
+void CWeaponMP5::WeaponIdle()
+{
+	if (m_flTimeWeaponIdle > gpGlobals->curtime)
+		return;
+
+	// only idle if the slid isn't back
+	if ( m_iClip1 != 0 )
+	{
+		SetWeaponIdleTime( gpGlobals->curtime + 5.0f );
+		SendWeaponAnim( ACT_VM_IDLE );
+	}
+}
+
 

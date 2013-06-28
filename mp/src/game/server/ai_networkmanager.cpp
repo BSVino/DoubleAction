@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -24,6 +24,7 @@
 #include "ai_hull.h"
 #include "ndebugoverlay.h"
 #include "ai_hint.h"
+#include "tier0/icommandline.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -41,7 +42,13 @@ inline void DebugConnectMsg( int node1, int node2, const char *pszFormat, ... )
 {
 	if ( DebuggingConnect( node1, node2 ) )
 	{
-		DevMsg( CFmtStr( &pszFormat ) );
+		char string[ 2048 ];
+		va_list argptr;
+		va_start( argptr, pszFormat );
+		Q_vsnprintf( string, sizeof(string), pszFormat, argptr );
+		va_end( argptr );
+
+		DevMsg( string );
 	}
 }
 
@@ -470,15 +477,20 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 	// ---------------------------------------------------
 	// If I'm in edit mode don't load, always recalculate
 	// ---------------------------------------------------
+	DevMsg( "Loading AI graph\n" );
 	if (engine->IsInEditMode())
 	{
+		DevMsg( "Not loading AI due to edit mode\n" );
 		return;
 	}
 
 	if ( !g_pGameRules->FAllowNPCs() )
 	{
+		DevMsg( "Not loading AI due to games rules\n" );
 		return;
 	}
+
+	DevMsg( "Step 1 loading\n" );
 
 	// -----------------------------
 	// Make sure directories have been made
@@ -514,11 +526,15 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 		}
 	}
 	
+
+
 	if ( !bHaveAIN && !filesystem->ReadFile( szNrpFilename, "game", buf ) )
 	{
 		DevWarning( 2, "Couldn't read %s!\n", szNrpFilename );
 		return;
 	}
+
+	DevMsg( "Checking version\n" );
 
 	// ---------------------------
 	// Check the version number
@@ -528,10 +544,15 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 		DevMsg( "AI node graph %s is out of date\n", szNrpFilename );
 		return;
 	}
+	
+	DevMsg( "Passed first ver check\n" );
+
 
 	buf.SeekGet( CUtlBuffer::SEEK_HEAD, 0 );
 
 	int version = buf.GetInt();
+	DevMsg( "Got version %d\n", version );
+
 	if ( version != AINET_VERSION_NUMBER)
 	{
 		DevMsg( "AI node graph %s is out of date\n", szNrpFilename );
@@ -539,11 +560,34 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 	}
 
 	int mapversion = buf.GetInt();
+	DevMsg( "Map version %d\n", mapversion );
+
 	if ( mapversion != gpGlobals->mapversion && !g_ai_norebuildgraph.GetBool() )
 	{
-		DevMsg( "AI node graph %s is out of date (map version changed)\n", szNrpFilename );
-		return;
+		bool bOK = false;
+		
+		const char *pGameDir = CommandLine()->ParmValue( "-game", "hl2" );		
+		char szLoweredGameDir[256];
+		Q_strncpy( szLoweredGameDir, pGameDir, sizeof( szLoweredGameDir ) );
+		Q_strlower( szLoweredGameDir );
+
+		// hack for shipped ep1 and hl2 maps
+		// they were rebuilt a week after they were actually shipped so allow the slightly
+		// older node graphs to load for these maps
+		if ( !V_stricmp( szLoweredGameDir, "hl2" ) || !V_stricmp( szLoweredGameDir, "episodic" ) )
+		{
+			if ( filesystem->IsSteam() )
+				bOK = true;
+		}
+		
+		if ( !bOK )
+		{
+			DevMsg( "AI node graph %s is out of date (map version changed)\n", szNrpFilename );
+			return;
+		}
 	}
+
+	DevMsg( "Done version checks\n" );
 
 	// ----------------------------------------
 	// Get the network size and allocate space
@@ -553,22 +597,25 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 	if ( numNodes > MAX_NODES || numNodes < 0 )
 	{
 		Error( "AI node graph %s is corrupt\n", szNrpFilename );
-		DevMsg( (const char *)buf.Base() );
+		DevMsg( "%s", (const char *)buf.Base() );
 		DevMsg( "\n" );
 		Assert( 0 );
 		return;
 	}
+	
+	DevMsg( "Finishing load\n" );
+
 
 	// ------------------------------------------------------------------------
 	// If in wc_edit mode allocate extra space for nodes that might be created
 	// ------------------------------------------------------------------------
 	if ( engine->IsInEditMode() )
 	{
-		numNodes = max( numNodes, 1024 );
+		numNodes = MAX( numNodes, 1024 );
 	}
 
-	m_pNetwork->m_pAInode = new CAI_Node*[max( numNodes, 1 )];
-	memset( m_pNetwork->m_pAInode, 0, sizeof( CAI_Node* ) * max( numNodes, 1 ) );
+	m_pNetwork->m_pAInode = new CAI_Node*[MAX( numNodes, 1 )];
+	memset( m_pNetwork->m_pAInode, 0, sizeof( CAI_Node* ) * MAX( numNodes, 1 ) );
 
 	// -------------------------------
 	// Load all the nodes to the file
@@ -619,8 +666,8 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 	// Load WC lookup table
 	// -------------------------------
 	delete [] GetEditOps()->m_pNodeIndexTable;
-	GetEditOps()->m_pNodeIndexTable	= new int[max( m_pNetwork->m_iNumNodes, 1 )];
-	memset( GetEditOps()->m_pNodeIndexTable, 0, sizeof( int ) *max( m_pNetwork->m_iNumNodes, 1 ) );
+	GetEditOps()->m_pNodeIndexTable	= new int[MAX( m_pNetwork->m_iNumNodes, 1 )];
+	memset( GetEditOps()->m_pNodeIndexTable, 0, sizeof( int ) *MAX( m_pNetwork->m_iNumNodes, 1 ) );
 
 	for (node = 0; node < m_pNetwork->m_iNumNodes; node++)
 	{
@@ -733,7 +780,7 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 	// ------------------------------------------------------------------------
 	if ( engine->IsInEditMode() )
 	{
-		numNodes = max( numNodes, 1024 );
+		numNodes = MAX( numNodes, 1024 );
 	}
 
 	m_pAInode = new CAI_Node*[numNodes];
@@ -930,7 +977,21 @@ bool CAI_NetworkManager::IsAIFileCurrent ( const char *szMapName )
 		// dvd build process validates and guarantees correctness, timestamps are allowed to be wrong
 		return true;
 	}
-
+	
+	//if ( filesystem && filesystem->IsSteam() )
+	{
+		const char *pGameDir = CommandLine()->ParmValue( "-game", "hl2" );		
+		char szLoweredGameDir[256];
+		Q_strncpy( szLoweredGameDir, pGameDir, sizeof( szLoweredGameDir ) );
+		Q_strlower( szLoweredGameDir );
+		
+		if ( !V_stricmp( szLoweredGameDir, "hl2" ) || !V_stricmp( szLoweredGameDir, "episodic" ) || !V_stricmp( szLoweredGameDir, "ep2" ) || !V_stricmp( szLoweredGameDir, "portal" ) || !V_stricmp( szLoweredGameDir, "lostcoast" ) )
+		{
+			// we shipped good node graphs for our games
+			return true;
+		}
+	}
+	
 	Q_snprintf( szBspFilename, sizeof( szBspFilename ), "maps/%s%s.bsp" ,szMapName, GetPlatformExt() );
 	Q_snprintf( szGraphFilename, sizeof( szGraphFilename ), "maps/graphs/%s%s.ain", szMapName, GetPlatformExt() );
 	
@@ -1050,21 +1111,21 @@ void CAI_NetworkManager::DelayedInit( void )
 			}
 #endif
 
-			DevMsg( "Node Graph out of Date. Rebuilding...\n" );
+			DevMsg( "Node Graph out of Date. Rebuilding... (%d, %d, %d)\n", (int)m_bDontSaveGraph, (int)!CAI_NetworkManager::NetworksLoaded(), (int) engine->IsInEditMode() );
 			UTIL_CenterPrintAll( "Node Graph out of Date. Rebuilding...\n" );
 			m_bNeedGraphRebuild = true;
 			g_pAINetworkManager->SetNextThink( gpGlobals->curtime + 1 );
 			return;
 		}	
 
-		// --------------------------------------------
-		// Initialize any dynamic links
-		// --------------------------------------------
-		CAI_DynamicLink::InitDynamicLinks();
-		FixupHints();
 	}
 
-
+	// --------------------------------------------
+	// Initialize any dynamic links
+	// --------------------------------------------
+	CAI_DynamicLink::InitDynamicLinks();
+	FixupHints();
+	
 	GetEditOps()->OnInit();
 
 	m_fInitalized = true;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,9 +9,9 @@
 #include "c_ai_basenpc.h"
 #include "engine/ivmodelinfo.h"
 #include "rope_physics.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "FX_Line.h"
-#include "engine/IVDebugOverlay.h"
+#include "materialsystem/imaterialsystem.h"
+#include "fx_line.h"
+#include "engine/ivdebugoverlay.h"
 #include "bone_setup.h"
 #include "model_types.h"
 

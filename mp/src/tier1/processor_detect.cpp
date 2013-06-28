@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: win32 dependant ASM code for CPU capability detection
 //
@@ -6,11 +6,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifdef _LINUX
-
-#include "processor_detect_linux.cpp"
-
-#elif defined( _X360 )
+#if defined( _X360 ) || defined( WIN64 )
 
 bool CheckMMXTechnology(void) { return false; }
 bool CheckSSETechnology(void) { return false; }

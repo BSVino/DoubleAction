@@ -1,3 +1,4 @@
+//========= Copyright Valve Corporation, All rights reserved. ============//
 // QC_EyesDlg.h : header file
 //
 

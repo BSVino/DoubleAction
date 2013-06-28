@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -38,8 +38,7 @@ public:
 	void			CheckForLayerChanges( CStudioHdr *hdr, float currentTime );
 
 	// model specific
-	virtual void	AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask );
-
+	virtual void	AccumulateLayers( IBoneSetup &boneSetup, Vector pos[], Quaternion q[], float currentTime );
 	virtual void DoAnimationEvents( CStudioHdr *pStudioHdr );
 
 	enum

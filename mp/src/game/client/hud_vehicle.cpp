@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,9 +10,9 @@
 #include "hud_vehicle.h"
 #include "iclientmode.h"
 #include "view.h"
-#include <vgui_controls/controls.h>
+#include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
-#include "IClientVehicle.h"
+#include "iclientvehicle.h"
 #include "c_prop_vehicle.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -36,6 +36,7 @@ void CHudVehicle::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	SetPaintBackgroundEnabled( false );
+	SetForceStereoRenderToFrameBuffer( true );
 }
 
 //-----------------------------------------------------------------------------

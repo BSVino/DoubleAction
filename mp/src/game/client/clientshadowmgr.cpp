@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -56,27 +56,27 @@
 
 
 #include "cbase.h"
-#include "engine/IShadowMgr.h"
+#include "engine/ishadowmgr.h"
 #include "model_types.h"
 #include "bitmap/imageformat.h"
-#include "materialsystem/IMaterialProxy.h"
-#include "materialsystem/IMaterialVar.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMesh.h"
-#include "materialsystem/ITexture.h"
-#include "BSPTreeData.h"
+#include "materialsystem/imaterialproxy.h"
+#include "materialsystem/imaterialvar.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imesh.h"
+#include "materialsystem/itexture.h"
+#include "bsptreedata.h"
 #include "utlmultilist.h"
-#include "CollisionUtils.h"
+#include "collisionutils.h"
 #include "iviewrender.h"
-#include "IVRenderView.h"
+#include "ivrenderview.h"
 #include "tier0/vprof.h"
 #include "engine/ivmodelinfo.h"
 #include "view_shared.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "engine/IStaticPropMgr.h"
 #include "datacache/imdlcache.h"
 #include "viewrender.h"
-#include "tier0/ICommandLine.h"
+#include "tier0/icommandline.h"
 #include "vstdlib/jobthread.h"
 #include "toolframework_client.h"
 #include "bonetoworldarray.h"
@@ -89,7 +89,7 @@
 static ConVar r_flashlightdrawfrustum( "r_flashlightdrawfrustum", "0" );
 static ConVar r_flashlightmodels( "r_flashlightmodels", "1" );
 static ConVar r_shadowrendertotexture( "r_shadowrendertotexture", "0" );
-static ConVar r_flashlight_version2( "r_flashlight_version2", "0" );
+static ConVar r_flashlight_version2( "r_flashlight_version2", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 ConVar r_flashlightdepthtexture( "r_flashlightdepthtexture", "1" );
 
@@ -1138,7 +1138,7 @@ void CVisibleShadowList::PrioritySort()
 				flLargestArea = m_ShadowsInView[nIndex].m_flArea;
 			}
 		}
-		swap( m_PriorityIndex[i], m_PriorityIndex[nLargestInd] );
+		::V_swap( m_PriorityIndex[i], m_PriorityIndex[nLargestInd] );
 	}
 }
 
@@ -1364,7 +1364,7 @@ void CClientShadowMgr::InitDepthTextureShadows()
 			bool bFalse = false;
 
 			char strRTName[64];
-			sprintf( strRTName, "_rt_ShadowDepthTexture_%d", i );
+			Q_snprintf( strRTName, ARRAYSIZE( strRTName ), "_rt_ShadowDepthTexture_%d", i );
 
 #if defined( _X360 )
 			// create a render target to use as a resolve target to get the shared depth buffer
@@ -1440,7 +1440,7 @@ void CClientShadowMgr::InitRenderToTextureShadows()
 				MarkRenderToTextureShadowDirty( i );
 
 				// Switch the material to use render-to-texture shadows
-				shadowmgr->SetShadowMaterial( shadow.m_ShadowHandle, m_RenderShadow, m_RenderModelShadow, (void*)i );
+				shadowmgr->SetShadowMaterial( shadow.m_ShadowHandle, m_RenderShadow, m_RenderModelShadow, (void*)(uintp)i );
 			}
 		}
 	}
@@ -1596,8 +1596,8 @@ void CClientShadowMgr::SetupRenderToTextureShadow( ClientShadowHandle_t h )
 	// Compute the maximum dimension
 	Vector size;
 	VectorSubtract( maxs, mins, size );
-	float maxSize = max( size.x, size.y );
-	maxSize = max( maxSize, size.z );
+	float maxSize = MAX( size.x, size.y );
+	maxSize = MAX( maxSize, size.z );
 
 	// Figure out the texture size
 	// For now, we're going to assume a fixed number of shadow texels
@@ -1831,14 +1831,14 @@ ClientShadowHandle_t CClientShadowMgr::CreateProjectedTexture( ClientEntityHandl
 
 		pShadowMaterial = m_RenderShadow;
 		pShadowModelMaterial = m_RenderModelShadow;
-		pShadowProxyData = (void*)h;
+		pShadowProxyData = (void*)(uintp)h;
 	}
 
 	if( flags & SHADOW_FLAGS_USE_DEPTH_TEXTURE )
 	{
 		pShadowMaterial = m_RenderShadow;
 		pShadowModelMaterial = m_RenderModelShadow;
-		pShadowProxyData = (void*)h;
+		pShadowProxyData = (void*)(uintp)h;
 	}
 
 	int createShadowFlags;
@@ -3731,7 +3731,7 @@ bool CClientShadowMgr::DrawRenderToTextureShadow( unsigned short clientShadowHan
 	shadow.m_Flags &= ~SHADOW_FLAGS_USING_LOD_SHADOW;
 	if ( bPreviouslyUsingLODShadow )
 	{
-		shadowmgr->SetShadowMaterial( shadow.m_ShadowHandle, m_RenderShadow, m_RenderModelShadow, (void*)clientShadowHandle );
+		shadowmgr->SetShadowMaterial( shadow.m_ShadowHandle, m_RenderShadow, m_RenderModelShadow, (void*)(uintp)clientShadowHandle );
 	}
 
 	// Mark texture as being used...
@@ -3812,7 +3812,7 @@ void CClientShadowMgr::DrawRenderToTextureShadowLOD( unsigned short clientShadow
 	{
 		shadowmgr->SetShadowMaterial( shadow.m_ShadowHandle, m_SimpleShadow, m_SimpleShadow, (void*)CLIENTSHADOW_INVALID_HANDLE );
 		shadowmgr->SetShadowTexCoord( shadow.m_ShadowHandle, 0, 0, 1, 1 );
-		ClearExtraClipPlanes( shadow.m_ShadowHandle );
+		ClearExtraClipPlanes( clientShadowHandle ); // this was ClearExtraClipPlanes( shadow.m_ShadowHandle ), fix is from Joe Demers
 		shadow.m_Flags |= SHADOW_FLAGS_USING_LOD_SHADOW;
 	}
 }
@@ -3997,7 +3997,7 @@ void CClientShadowMgr::ComputeShadowTextures( const CViewSetup &view, int leafCo
 	if ( !m_RenderToTextureActive || (r_shadows.GetInt() == 0) || r_shadows_gamecontrol.GetInt() == 0 )
 		return;
 
-	m_bThreaded = ( r_threaded_client_shadow_manager.GetBool() && g_pThreadPool->NumIdleThreads() );
+	m_bThreaded = false;//( r_threaded_client_shadow_manager.GetBool() && g_pThreadPool->NumIdleThreads() );
 
 	MDLCACHE_CRITICAL_SECTION();
 	// First grab all shadow textures we may want to render
@@ -4060,8 +4060,8 @@ void CClientShadowMgr::ComputeShadowTextures( const CViewSetup &view, int leafCo
 			}
 		}
 
-		ParallelProcess( s_NPCShadowBoneSetups.Base(), s_NPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
-		ParallelProcess( s_NonNPCShadowBoneSetups.Base(), s_NonNPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
+		ParallelProcess( "NPCShadowBoneSetups", s_NPCShadowBoneSetups.Base(), s_NPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
+		ParallelProcess( "NonNPCShadowBoneSetups", s_NonNPCShadowBoneSetups.Base(), s_NonNPCShadowBoneSetups.Count(), &SetupBonesOnBaseAnimating );
 
 		nModelsRendered = 0;
 	}
@@ -4217,7 +4217,7 @@ bool CShadowProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 
 void CShadowProxy::OnBind( void *pProxyData )
 {
-	unsigned short clientShadowHandle = ( unsigned short )pProxyData;
+	unsigned short clientShadowHandle = ( unsigned short )(int)pProxyData&0xffff;
 	ITexture* pTex = s_ClientShadowMgr.GetShadowTexture( clientShadowHandle );
 	m_BaseTextureVar->SetTextureValue( pTex );
 	if ( ToolsEnabled() )
@@ -4301,7 +4301,7 @@ bool CShadowModelProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 
 void CShadowModelProxy::OnBind( void *pProxyData )
 {
-	unsigned short clientShadowHandle = ( unsigned short )pProxyData;
+	unsigned short clientShadowHandle = ( unsigned short )((int)pProxyData&0xffff);
 	ITexture* pTex = s_ClientShadowMgr.GetShadowTexture( clientShadowHandle );
 	m_BaseTextureVar->SetTextureValue( pTex );
 

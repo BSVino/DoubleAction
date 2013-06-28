@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,71 +12,65 @@
 
 
 #include "convar.h"
-#include "multiplayer_animstate.h"
+#include "iplayeranimstate.h"
+#include "base_playeranimstate.h"
 
-#if defined( CLIENT_DLL )
-class C_SDKPlayer;
-#define CSDKPlayer C_SDKPlayer
+
+#ifdef CLIENT_DLL
+	class C_BaseAnimatingOverlay;
+	class C_WeaponSDKBase;
+	#define CBaseAnimatingOverlay C_BaseAnimatingOverlay
+	#define CWeaponSDKBase C_WeaponSDKBase
+	#define CSDKPlayer C_SDKPlayer
 #else
-class CSDKPlayer;
+	class CBaseAnimatingOverlay;
+	class CWeaponSDKBase; 
+	class CSDKPlayer;
 #endif
 
-// ------------------------------------------------------------------------------------------------ //
-// CPlayerAnimState declaration.
-// ------------------------------------------------------------------------------------------------ //
-class CSDKPlayerAnimState : public CMultiPlayerAnimState
+
+// When moving this fast, he plays run anim.
+#define ARBITRARY_RUN_SPEED		175.0f
+
+
+enum PlayerAnimEvent_t
 {
-public:
+	PLAYERANIMEVENT_FIRE_GUN_PRIMARY=0,
+	PLAYERANIMEVENT_FIRE_GUN_SECONDARY,
+	PLAYERANIMEVENT_THROW_GRENADE,
+	PLAYERANIMEVENT_JUMP,
+	PLAYERANIMEVENT_RELOAD,
 	
-	DECLARE_CLASS( CSDKPlayerAnimState, CMultiPlayerAnimState );
-
-	CSDKPlayerAnimState();
-	CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
-	~CSDKPlayerAnimState();
-
-	void InitSDKAnimState( CSDKPlayer *pPlayer );
-	CSDKPlayer *GetSDKPlayer( void )							{ return m_pSDKPlayer; }
-
-	virtual void ClearAnimationState();
-	virtual Activity TranslateActivity( Activity actDesired );
-	virtual void Update( float eyeYaw, float eyePitch );
-
-	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
-
-	bool	HandleMoving( Activity &idealActivity );
-	bool	HandleJumping( Activity &idealActivity );
-	bool	HandleDucking( Activity &idealActivity );
-	bool	HandleSwimming( Activity &idealActivity );
-
-#if defined ( SDK_USE_PRONE )
-	bool	HandleProne( Activity &idealActivity );
-	bool	HandleProneTransition( Activity &idealActivity );
-#endif
-
-#if defined ( SDK_USE_SPRINTING )
-	bool	HandleSprinting( Activity &idealActivity );
-#endif
-
-	//Tony; overriding because the SDK Player models pose parameter is flipped the opposite direction
-	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
-
-	virtual Activity CalcMainActivity();	
-
-private:
-	
-	CSDKPlayer   *m_pSDKPlayer;
-	bool		m_bInAirWalk;
-#if defined ( SDK_USE_PRONE )
-	Activity	m_iProneActivity;
-	bool		m_bProneTransition;
-	bool		m_bProneTransitionFirstFrame;
-#endif
-
-	float		m_flHoldDeployedPoseUntilTime;
+	PLAYERANIMEVENT_COUNT
 };
 
-CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
 
+class ISDKPlayerAnimState : virtual public IPlayerAnimState
+{
+public:
+	// This is called by both the client and the server in the same way to trigger events for
+	// players firing, jumping, throwing grenades, etc.
+	virtual void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 ) = 0;
+	
+	// Returns true if we're playing the grenade prime or throw animation.
+	virtual bool IsThrowingGrenade() = 0;
+};
+
+
+// This abstracts the differences between SDK players and hostages.
+class ISDKPlayerAnimStateHelpers
+{
+public:
+	virtual CWeaponSDKBase* SDKAnim_GetActiveWeapon() = 0;
+	virtual bool SDKAnim_CanMove() = 0;
+};
+
+
+ISDKPlayerAnimState* CreatePlayerAnimState( CBaseAnimatingOverlay *pEntity, ISDKPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences );
+
+// If this is set, then the game code needs to make sure to send player animation events
+// to the local player if he's the one being watched.
+extern ConVar cl_showanimstate;
 
 
 #endif // SDK_PLAYERANIMSTATE_H

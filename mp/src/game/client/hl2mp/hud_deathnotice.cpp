@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Draws CSPort's death notices
 //
@@ -9,8 +9,8 @@
 #include "hud_macros.h"
 #include "c_playerresource.h"
 #include "clientmode_hl2mpnormal.h"
-#include <vgui_controls/controls.h>
-#include <vgui_controls/panel.h>
+#include <vgui_controls/Controls.h>
+#include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <KeyValues.h>

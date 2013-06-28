@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,6 +7,10 @@
 //=============================================================================//
 #ifndef IA32DETECT_H
 #define IA32DETECT_H
+
+#ifdef PLATFORM_WINDOWS_PC
+#include <intrin.h>
+#endif
 
 /*
     This section from http://iss.cs.cornell.edu/ia32.htm
@@ -125,6 +129,10 @@ public:
 
 		for (uint32 i = 1; i <= m; i++)
 		{
+#ifdef COMPILER_MSVC64
+			__cpuid((int *) (d + (i-1) * 4), i);
+
+#else
 			uint32 *t = d + (i - 1) * 4;
 
 			__asm
@@ -139,6 +147,7 @@ public:
 				mov dword ptr [esi + 0x8], ecx;
 				mov dword ptr [esi + 0xC], edx;
 			}
+#endif
 		}
 
 		if (m >= 1)
@@ -228,22 +237,25 @@ private:
 	uint32 init0 ()
 	{
 		uint32 m;
-		tchar s1[13];
 
-		s1[12] = '\0';
+		int data[4 + 1];
+		tchar * s1;
 
-		__asm
-		{
-			xor	eax, eax;
-			cpuid;
-			mov	m, eax;
-			mov dword ptr s1 + 0, ebx;
-			mov dword ptr s1 + 4, edx;
-			mov dword ptr s1 + 8, ecx;
-		}
+		s1 = (tchar *) &data[1];
+		__cpuid(data, 0);
+		data[4] = 0;
+		// Returns something like this:
+		//  data[0] = 0x0000000b
+		//  data[1] = 0x756e6547 	Genu
+		//  data[2] = 0x6c65746e 	ntel
+		//  data[3] = 0x49656e69 	ineI
+		//  data[4] = 0x00000000
 
+		m = data[0];
+		int t = data[2];
+		data[2] = data[3];
+		data[3] = t;
 		vendor_name = s1;
-
 		return m;
 	}
 
@@ -271,6 +283,9 @@ private:
 
 		for (int i = 0; i < count; i++)
 		{
+#ifdef COMPILER_MSVC64
+			__cpuid((int *) d, 2);
+#else
 			__asm
 			{
 				mov	eax, 2;
@@ -281,6 +296,7 @@ private:
 				mov [esi + 0x8], ecx;
 				mov [esi + 0xC], edx;
 			}
+#endif
 
 			if (i == 0)
 				d[0] &= 0xFFFFFF00;
@@ -312,12 +328,18 @@ private:
 	{
 		uint32 m;
 
+#ifdef COMPILER_MSVC64
+		int data[4];
+		__cpuid(data, 0x80000000);
+		m = data[0];
+#else
 		__asm
 		{
 			mov	eax, 0x80000000;
 			cpuid;
 			mov m, eax
 		}
+#endif
 
 		if ((m & 0x80000000) != 0)
 		{
@@ -327,6 +349,9 @@ private:
 			{
 				uint32 *t = d + (i - 0x80000001) * 4;
 
+#ifdef COMPILER_MSVC64
+				__cpuid((int *) (d + (i - 0x80000001) * 4), i);
+#else
 				__asm
 				{
 					mov	eax, i;
@@ -337,6 +362,7 @@ private:
 					mov dword ptr [esi + 0x8], ecx;
 					mov dword ptr [esi + 0xC], edx;
 				}
+#endif
 			}
 
 			if (m >= 0x80000002)

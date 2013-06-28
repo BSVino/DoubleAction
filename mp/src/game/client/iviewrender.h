@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,9 +30,9 @@ enum DrawFlags_t
 	DF_RENDER_ABOVEWATER	= 0x20,
 	DF_RENDER_WATER			= 0x40,
 
-	DF_UNUSED1				= 0x100,
+	DF_SSAO_DEPTH_PASS		= 0x100,
 	DF_WATERHEIGHT			= 0x200,
-	DF_UNUSED2				= 0x400,
+	DF_DRAW_SSAO			= 0x400,
 	DF_DRAWSKYBOX			= 0x800,
 
 	DF_FUDGE_UP				= 0x1000,
@@ -57,6 +57,8 @@ class CViewSetup;
 class C_BaseEntity;
 struct vrect_t;
 class C_BaseViewModel;
+struct WriteReplayScreenshotParams_t;
+class IReplayScreenshotSystem;
 
 abstract_class IViewRender
 {
@@ -114,7 +116,10 @@ public:
 	virtual IMaterial	*GetScreenOverlayMaterial( ) = 0;
 
 	virtual void		WriteSaveGameScreenshot( const char *pFilename ) = 0;
-	virtual void		WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height ) = 0;
+	virtual void		WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false ) = 0;
+
+	virtual void		WriteReplayScreenshot( WriteReplayScreenshotParams_t &params ) = 0;
+	virtual void		UpdateReplayScreenshotCache() = 0;
 
 	// Draws another rendering over the top of the screen
 	virtual void		QueueOverlayRenderView( const CViewSetup &view, int nClearFlags, int whatToDraw ) = 0;
@@ -131,6 +136,8 @@ public:
 	virtual bool		UpdateShadowDepthTexture( ITexture *pRenderTarget, ITexture *pDepthTexture, const CViewSetup &shadowView ) = 0;
 
 	virtual void		FreezeFrame( float flFreezeTime ) = 0;
+
+	virtual IReplayScreenshotSystem *GetReplayScreenshotSystem() = 0;
 };
 
 extern IViewRender *view;

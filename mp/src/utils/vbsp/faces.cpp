@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -1139,7 +1139,7 @@ void MergeFaceList(face_t **pList)
 			if (f2->merged || f2->split[0] || f2->split[1])
 				continue;
 
-			plane = &mapplanes[f1->planenum];
+			plane = &g_MainMap->mapplanes[f1->planenum];
 			merged = TryMerge (f1, f2, plane->normal);
 			if (!merged)
 				continue;

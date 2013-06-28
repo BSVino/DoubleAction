@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -53,6 +53,7 @@ public:
 	bool IsInSkybox() const;
 	void Spawn( void );
 	void Precache( void );
+	void SetTransmit( bool bTransmit = true ) { m_bDrawForMoveParent = bTransmit; }
 
 #if defined( CLIENT_DLL ) 
 	// Client only code
@@ -65,9 +66,15 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void GetRenderBounds( Vector& mins, Vector& maxs );
 	virtual void ClientThink();
+
+	virtual bool ValidateEntityAttachedToPlayer( bool &bShouldRetry );
+
 #else
 	// Server only code
+
+	virtual int ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	static CSpriteTrail *SpriteTrailCreate( const char *pSpriteName, const Vector &origin, bool animate );
+
 #endif
 
 private:
@@ -106,6 +113,7 @@ private:
 
 	string_t m_iszSpriteName;
 	bool	m_bAnimate;
+	bool	m_bDrawForMoveParent;
 };
 
 #endif // SPRITETRAIL_H

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -700,6 +700,7 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	params.pCurrentBones = pBoneToWorld;
 	params.jointFrictionScale = 1.0;
 	params.allowStretch = HasSpawnFlags(SF_RAGDOLLPROP_ALLOW_STRETCH);
+	params.fixedConstraints = false;
 	RagdollCreate( m_ragdoll, params, physenv );
 	RagdollApplyAnimationAsVelocity( m_ragdoll, pPrevBones, pBoneToWorld, dt );
 	if ( m_anglesOverrideString != NULL_STRING && Q_strlen(m_anglesOverrideString.ToCStr()) > 0 )
@@ -812,13 +813,13 @@ void CRagdollProp::RecheckCollisionFilter( void )
 }
 
 
-void CRagdollProp::TraceAttack( const CTakeDamageInfo &info, const Vector &dir, trace_t *ptr )
+void CRagdollProp::TraceAttack( const CTakeDamageInfo &info, const Vector &dir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	if ( ptr->physicsbone >= 0 && ptr->physicsbone < m_ragdoll.listCount )
 	{
 		VPhysicsSwapObject( m_ragdoll.list[ptr->physicsbone].pObject );
 	}
-	BaseClass::TraceAttack( info, dir, ptr );
+	BaseClass::TraceAttack( info, dir, ptr, pAccumulator );
 }
 
 void CRagdollProp::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
@@ -831,7 +832,7 @@ void CRagdollProp::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 	}
 
 	// Not really ideal, but it'll work for now
-	UpdateModelWidthScale();
+	UpdateModelScale();
 
 	MDLCACHE_CRITICAL_SECTION();
 	CStudioHdr *pStudioHdr = GetModelPtr( );
@@ -1402,8 +1403,8 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 		
 		// distribute force over mass of entire character
 		float massScale = Studio_GetMass(pAnimating->GetModelPtr());
-		massScale = clamp( massScale, 1, 1e4 );
-		massScale = 1 / massScale;
+		massScale = clamp( massScale, 1.f, 1.e4f );
+		massScale = 1.f / massScale;
 
 		// distribute the force
 		// BUGBUG: This will hit the same bone twice if it has two hitboxes!!!!

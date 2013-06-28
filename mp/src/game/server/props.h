@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -177,6 +177,7 @@ protected:
 	int				m_iInteractions;
 	float			m_explodeDamage;
 	float			m_explodeRadius;
+	string_t		m_iszBreakModelMessage;
 
 	// Count of how many pieces we'll break into, custom or generic
 	int				m_iNumBreakableChunks;
@@ -310,6 +311,7 @@ public:
 	short				m_nPendingSequence;
 
 	bool				m_bStartDisabled;
+	bool				m_bDisableBoneFollowers;
 
 	CNetworkVar( bool, m_bUseHitboxesForRenderBox );
 
@@ -374,6 +376,9 @@ public:
 	// Specific interactions
 	void	HandleAnyCollisionInteractions( int index, gamevcollisionevent_t *pEvent );
 
+	string_t GetPhysOverrideScript( void ) { return m_iszOverrideScript; }
+	float	GetMassScale( void ) { return m_massScale; }
+
 private:
 	// Compute impulse to apply to the enabled entity.
 	void ComputeEnablingImpulse( int index, gamevcollisionevent_t *pEvent );
@@ -421,6 +426,8 @@ public:
 // Used by prop_physics_create and the server benchmark.
 // pModelName should not include the "models/" prefix.
 CPhysicsProp* CreatePhysicsProp( const char *pModelName, const Vector &vTraceStart, const Vector &vTraceEnd, const IHandleEntity *pTraceIgnore, bool bRequireVCollide, const char *pClassName="physics_prop" );
+
+bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale );
 
 float GetBreakableDamage( const CTakeDamageInfo &inputInfo, IBreakableWithPropData *pProp = NULL );
 int PropBreakablePrecacheAll( string_t modelName );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -53,7 +53,6 @@ const VMatrix &CurrentWorldToViewMatrix();
 const Vector &CurrentViewForward();
 const Vector &CurrentViewRight();
 const Vector &CurrentViewUp();
-enum view_id_t CurrentViewID();
 
 void AllowCurrentViewAccess( bool allow );
 bool IsCurrentViewAccessAllowed();

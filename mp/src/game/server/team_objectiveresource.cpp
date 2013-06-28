@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: An entity that networks the state of the game's objectives.
 //			May contain data for objectives that aren't used by your mod, but
@@ -46,7 +46,15 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CBaseTeamObjectiveResource, DT_BaseTeamObjective
 	SendPropArray3( SENDINFO_ARRAY3(m_iWarnOnCap), SendPropInt( SENDINFO_ARRAY(m_iWarnOnCap), 4, SPROP_UNSIGNED ) ),
 	SendPropArray( SendPropStringT( SENDINFO_ARRAY( m_iszWarnSound ) ), m_iszWarnSound ),
 	SendPropArray3( SENDINFO_ARRAY3(m_flPathDistance), SendPropFloat( SENDINFO_ARRAY(m_flPathDistance), 8, 0, 0.0f, 1.0f ) ),
-
+	SendPropArray3( SENDINFO_ARRAY3(m_iCPGroup), SendPropInt( SENDINFO_ARRAY(m_iCPGroup), 5 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_bCPLocked), SendPropBool( SENDINFO_ARRAY(m_bCPLocked) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_nNumNodeHillData), SendPropInt( SENDINFO_ARRAY(m_nNumNodeHillData), 4, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_flNodeHillData), SendPropFloat( SENDINFO_ARRAY(m_flNodeHillData), 8, 0, 0.0f, 1.0f ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_bTrackAlarm), SendPropBool( SENDINFO_ARRAY(m_bTrackAlarm) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_flUnlockTimes), SendPropFloat( SENDINFO_ARRAY(m_flUnlockTimes) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_bHillIsDownhill), SendPropBool( SENDINFO_ARRAY(m_bHillIsDownhill) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_flCPTimerTimes), SendPropFloat( SENDINFO_ARRAY(m_flCPTimerTimes) ) ),
+	
 	// state variables
 	SendPropArray3( SENDINFO_ARRAY3(m_iNumTeamMembers), SendPropInt( SENDINFO_ARRAY(m_iNumTeamMembers), 4, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iCappingTeam), SendPropInt( SENDINFO_ARRAY(m_iCappingTeam), 4, SPROP_UNSIGNED ) ),
@@ -85,6 +93,13 @@ BEGIN_DATADESC( CBaseTeamObjectiveResource )
 	DEFINE_ARRAY( m_iOwner, FIELD_INTEGER, MAX_CONTROL_POINTS ),
 	DEFINE_ARRAY( m_pszCapLayoutInHUD, FIELD_CHARACTER, MAX_CAPLAYOUT_LENGTH ),
 	DEFINE_ARRAY( m_flCapPercentages, FIELD_FLOAT,  MAX_CONTROL_POINTS  ),
+	DEFINE_ARRAY( m_iCPGroup, FIELD_INTEGER, MAX_CONTROL_POINTS ),
+	DEFINE_ARRAY( m_bCPLocked, FIELD_BOOLEAN, MAX_CONTROL_POINTS ),
+	DEFINE_ARRAY( m_nNumNodeHillData, FIELD_INTEGER, TEAM_TRAIN_MAX_TEAMS ),
+	DEFINE_ARRAY( m_flNodeHillData, FIELD_FLOAT, TEAM_TRAIN_HILLS_ARRAY_SIZE ),
+	DEFINE_ARRAY( m_bTrackAlarm, FIELD_BOOLEAN, TEAM_TRAIN_MAX_TEAMS ),
+	DEFINE_ARRAY( m_flUnlockTimes, FIELD_FLOAT,  MAX_CONTROL_POINTS  ),
+	DEFINE_ARRAY( m_flCPTimerTimes, FIELD_FLOAT,  MAX_CONTROL_POINTS  ),
 	DEFINE_THINKFUNC( ObjectiveThink ),
 END_DATADESC()
 
@@ -133,7 +148,11 @@ void CBaseTeamObjectiveResource::Spawn( void )
 		m_iTeamInZone.Set( i, TEAM_UNASSIGNED );
 		m_bInMiniRound.Set( i, true );
 		m_iWarnOnCap.Set( i, CP_WARN_NORMAL );
+		m_iCPGroup.Set( i, TEAM_INVALID );
 		m_flLazyCapPerc.Set( i, 0.0 );
+		m_bCPLocked.Set( i, false );
+		m_flUnlockTimes.Set( i, 0.0 );
+		m_flCPTimerTimes.Set( i, -1.0 );
 
 		for ( int team = 0; team < MAX_CONTROL_POINT_TEAMS; team++ )
 		{
@@ -156,6 +175,25 @@ void CBaseTeamObjectiveResource::Spawn( void )
 	for ( int i = 0; i < MAX_TEAMS; i++ )
 	{
 		m_iBaseControlPoints.Set( i, -1 );
+	}
+
+	int nNumEntriesPerTeam = TEAM_TRAIN_MAX_HILLS * TEAM_TRAIN_FLOATS_PER_HILL;
+	for ( int i = 0; i < TEAM_TRAIN_MAX_TEAMS; i++ )
+	{
+		m_nNumNodeHillData.Set( i, 0 );
+		m_bTrackAlarm.Set( i, false );
+
+		int iStartingIndex = i * nNumEntriesPerTeam;
+		for ( int j = 0 ; j < nNumEntriesPerTeam ; j++ )
+		{
+			m_flNodeHillData.Set( iStartingIndex + j, 0 );
+		}
+
+		iStartingIndex = i * TEAM_TRAIN_MAX_HILLS;
+		for ( int j = 0; j < TEAM_TRAIN_MAX_HILLS; j++ )
+		{
+			m_bHillIsDownhill.Set( iStartingIndex + j, 0 );
+		}
 	}
 
 	SetThink( &CBaseTeamObjectiveResource::ObjectiveThink );
@@ -283,6 +321,15 @@ void CBaseTeamObjectiveResource::SetWarnSound( int index, string_t iszSound )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void CBaseTeamObjectiveResource::SetCPGroup( int index, int iCPGroup )
+{
+	AssertValidIndex(index);
+	m_iCPGroup.Set( index, iCPGroup );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 void CBaseTeamObjectiveResource::SetCPRequiredCappers( int index, int iTeam, int iReqPlayers )
 {
 	AssertValidIndex(index);
@@ -314,6 +361,24 @@ float CBaseTeamObjectiveResource::GetCPCapPercentage( int index )
 {
 	AssertValidIndex(index);
 	return m_flCapPercentages[index];
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseTeamObjectiveResource::SetCPUnlockTime( int index, float flTime )
+{
+	AssertValidIndex(index);
+	m_flUnlockTimes.Set( index, flTime );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseTeamObjectiveResource::SetCPTimerTime( int index, float flTime )
+{
+	AssertValidIndex(index);
+	m_flCPTimerTimes.Set( index, flTime );
 }
 
 //-----------------------------------------------------------------------------
@@ -460,7 +525,6 @@ void CBaseTeamObjectiveResource::UpdateCapHudElement( void )
 	m_iUpdateCapHudParity = (m_iUpdateCapHudParity + 1) & CAPHUD_PARITY_MASK;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -469,4 +533,23 @@ void CBaseTeamObjectiveResource::SetTrainPathDistance( int index, float flDistan
 	AssertValidIndex(index);
 
 	m_flPathDistance.Set( index, flDistance );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseTeamObjectiveResource::SetCPLocked( int index, bool bLocked )
+{
+	// This assert always fires on map load and interferes with daily development
+	//AssertValidIndex(index);
+	m_bCPLocked.Set( index, bLocked );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseTeamObjectiveResource::SetTrackAlarm( int index, bool bAlarm )
+{
+	Assert( index < TEAM_TRAIN_MAX_TEAMS );
+	m_bTrackAlarm.Set( index, bAlarm );
 }

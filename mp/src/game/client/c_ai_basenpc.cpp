@@ -1,12 +1,12 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "c_AI_BaseNPC.h"
-#include "engine/IVDebugOverlay.h"
+#include "c_ai_basenpc.h"
+#include "engine/ivdebugoverlay.h"
 
 #if defined( HL2_DLL ) || defined( HL2_EPISODIC )
 #include "c_basehlplayer.h"

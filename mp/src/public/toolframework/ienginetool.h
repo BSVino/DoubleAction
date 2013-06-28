@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 
 #include "interface.h"
 #include "soundflags.h"
-#include "avi/iavi.h"
+#include "video/ivideoservices.h"
 #include "ispatialpartition.h"
 
 class CViewSetup;
@@ -162,10 +162,10 @@ public:
 	// SINGLE PLAYER/LISTEN SERVER ONLY (just matching the client .dll api for this)
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
-	virtual void		Con_NPrintf( int pos, const char *fmt, ... ) = 0;
+	virtual void		Con_NPrintf( int pos, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 	// SINGLE PLAYER/LISTEN SERVER ONLY(just matching the client .dll api for this)
 	// Similar to Con_NPrintf, but allows specifying custom text color and duration information
-	virtual void		Con_NXPrintf( const struct con_nprint_s *info, const char *fmt, ... ) = 0;
+	virtual void		Con_NXPrintf( const struct con_nprint_s *info, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 
 	// Get the current game directory (hl2, tf2, hl1, cstrike, etc.)
 	virtual void        GetGameDir( char *szGetGameDir, int maxlength ) = 0;
@@ -199,7 +199,7 @@ public:
 	virtual void		StartMovieRecording( KeyValues *pMovieParams ) = 0;
 	virtual void		EndMovieRecording() = 0;
 	virtual void		CancelMovieRecording() = 0;
-	virtual AVIHandle_t GetRecordingAVIHandle() = 0;
+	virtual IVideoRecorder *GetActiveVideoRecorder() = 0;
 
 	virtual void		StartRecordingVoiceToFile( char const *filename, char const *pPathID = 0 ) = 0;
 	virtual void		StopRecordingVoiceToFile() = 0;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,72 +14,48 @@
 
 #include <vgui_controls/Image.h>
 #include <vgui_controls/CheckButton.h>
-#include <vgui_controls/TextImage.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
 using namespace vgui;
 
-//-----------------------------------------------------------------------------
-// Purpose: Check box image
-//-----------------------------------------------------------------------------
-class CheckImage : public TextImage
+void CheckImage::Paint()
 {
-public:
-	CheckImage(CheckButton *CheckButton) : TextImage( "g" )
-	{
-		_CheckButton = CheckButton;
+	DrawSetTextFont(GetFont());
 
-		SetSize(20, 13);
+	// draw background
+	if (_CheckButton->IsEnabled() && _CheckButton->IsCheckButtonCheckable() )
+	{
+		DrawSetTextColor(_bgColor);
 	}
-
-	virtual void Paint()
+	else
 	{
-		DrawSetTextFont(GetFont());
+		DrawSetTextColor(_CheckButton->GetDisabledBgColor());
+	}
+	DrawPrintChar(0, 1, 'g');
 
-		// draw background
-		if (_CheckButton->IsEnabled() && _CheckButton->m_bCheckButtonCheckable)
+	// draw border box
+	DrawSetTextColor(_borderColor1);
+	DrawPrintChar(0, 1, 'e');
+	DrawSetTextColor(_borderColor2);
+	DrawPrintChar(0, 1, 'f');
+
+	// draw selected check
+	if (_CheckButton->IsSelected())
+	{
+		if ( !_CheckButton->IsEnabled() )
 		{
-			DrawSetTextColor(_bgColor);
+			DrawSetTextColor( _CheckButton->GetDisabledFgColor() );
 		}
 		else
 		{
-			DrawSetTextColor(_CheckButton->GetDisabledBgColor());
+			DrawSetTextColor(_checkColor);
 		}
-		DrawPrintChar(0, 1, 'g');
-	
-		// draw border box
-		DrawSetTextColor(_borderColor1);
-		DrawPrintChar(0, 1, 'e');
-		DrawSetTextColor(_borderColor2);
-		DrawPrintChar(0, 1, 'f');
 
-		// draw selected check
-		if (_CheckButton->IsSelected())
-		{
-			if ( !_CheckButton->IsEnabled() )
-			{
-				DrawSetTextColor( _CheckButton->GetDisabledFgColor() );
-			}
-			else
-			{
-				DrawSetTextColor(_checkColor);
-			}
-
-			DrawPrintChar(0, 2, 'b');
-		}
+		DrawPrintChar(0, 2, 'b');
 	}
-
-	Color _borderColor1;
-	Color _borderColor2;
-	Color _checkColor;
-
-	Color _bgColor;
-
-private:
-	CheckButton *_CheckButton;
-};
+}
 
 DECLARE_BUILD_FACTORY_DEFAULT_TEXT( CheckButton, CheckButton );
 
@@ -127,6 +103,14 @@ void CheckButton::ApplySchemeSettings(IScheme *pScheme)
 	_disabledFgColor = GetSchemeColor("CheckButton.DisabledFgColor", Color(130, 130, 130, 255), pScheme);
 	_disabledBgColor = GetSchemeColor("CheckButton.DisabledBgColor", Color(62, 70, 55, 255), pScheme);
 
+	Color bgArmedColor = GetSchemeColor( "CheckButton.ArmedBgColor", Color(62, 70, 55, 255), pScheme); 
+	SetArmedColor( GetFgColor(), bgArmedColor );
+
+	Color bgDepressedColor = GetSchemeColor( "CheckButton.DepressedBgColor", Color(62, 70, 55, 255), pScheme); 
+	SetDepressedColor( GetFgColor(), bgDepressedColor );
+
+	_highlightFgColor = GetSchemeColor( "CheckButton.HighlightFgColor", Color(62, 70, 55, 255), pScheme); 
+
 	SetContentAlignment(Label::a_west);
 
 	_checkBoxImage->SetFont( pScheme->GetFont("Marlett", IsProportional()) );
@@ -172,8 +156,24 @@ void CheckButton::SetCheckButtonCheckable(bool state)
 //-----------------------------------------------------------------------------
 // Purpose: Gets a different foreground text color if we are selected
 //-----------------------------------------------------------------------------
+#ifdef _X360
 Color CheckButton::GetButtonFgColor()
 {
+	if (HasFocus())
+	{
+		return _selectedFgColor;
+	}
+
+	return BaseClass::GetButtonFgColor();
+}
+#else
+Color CheckButton::GetButtonFgColor()
+{
+	if ( IsArmed() )
+	{
+		return _highlightFgColor;
+	}
+
 	if (IsSelected())
 	{
 		return _selectedFgColor;
@@ -181,6 +181,7 @@ Color CheckButton::GetButtonFgColor()
 
 	return BaseClass::GetButtonFgColor();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -188,3 +189,17 @@ Color CheckButton::GetButtonFgColor()
 void CheckButton::OnCheckButtonChecked(Panel *panel)
 {
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CheckButton::SetHighlightColor(Color fgColor)
+{
+	if ( _highlightFgColor != fgColor )
+	{
+		_highlightFgColor = fgColor;
+
+		InvalidateLayout(false);
+	}
+}
+

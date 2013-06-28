@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Special handling for hl2 usable ladders
 //
@@ -43,8 +43,6 @@ public:
 	virtual int GetCheckInterval( IntervalType_t type );
 	virtual void	SetGroundEntity( trace_t *pm );
 	virtual bool CanAccelerate( void );
-
-	virtual unsigned int PlayerSolidMask( bool brushOnly = false );
 
 private:
 

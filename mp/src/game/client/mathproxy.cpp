@@ -1,14 +1,15 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "materialsystem/IMaterial.h"
+#include "sharedInterface.h"
+#include "materialsystem/imaterial.h"
 #include <KeyValues.h>
-#include "materialsystem/IMaterialVar.h"
-#include "FunctionProxy.h"
+#include "materialsystem/imaterialvar.h"
+#include "functionproxy.h"
 #include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1012,3 +1013,81 @@ void CWrapMinMaxProxy::OnBind( void *pC_BaseEntity )
 }
 
 EXPOSE_INTERFACE( CWrapMinMaxProxy, IMaterialProxy, "WrapMinMax" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+
+//-----------------------------------------------------------------------------
+// Selects the first var value if it's non-zero, otherwise goes with the second
+//-----------------------------------------------------------------------------
+
+class CSelectFirstIfNonZeroProxy : public CFunctionProxy
+{
+public:
+	bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	void OnBind( void *pC_BaseEntity );
+};
+
+bool CSelectFirstIfNonZeroProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	// Requires 2 args..
+	bool ok = CFunctionProxy::Init( pMaterial, pKeyValues );
+	ok = ok && m_pSrc2;
+	return ok;
+}
+
+void CSelectFirstIfNonZeroProxy::OnBind( void *pC_BaseEntity )
+{
+	Assert( m_pSrc1 && m_pSrc2 && m_pResult );
+
+	MaterialVarType_t resultType;
+	int vecSize;
+	ComputeResultType( resultType, vecSize );
+
+	switch( resultType )
+	{
+	case MATERIAL_VAR_TYPE_VECTOR:
+		{
+			Vector a, b;
+			m_pSrc1->GetVecValue( a.Base(), vecSize ); 
+			m_pSrc2->GetVecValue( b.Base(), vecSize ); 
+
+			if ( !a.IsZero() )
+			{
+				m_pResult->SetVecValue( a.Base(), vecSize );
+			}
+			else
+			{
+				m_pResult->SetVecValue( b.Base(), vecSize );
+			}
+		}
+		break;
+
+	case MATERIAL_VAR_TYPE_FLOAT:
+		if ( m_pSrc1->GetFloatValue() )
+		{
+			SetFloatResult( m_pSrc1->GetFloatValue() );
+		}
+		else
+		{
+			SetFloatResult( m_pSrc2->GetFloatValue() );
+		}
+		break;
+
+	case MATERIAL_VAR_TYPE_INT:
+		if ( m_pSrc1->GetIntValue() )
+		{
+			m_pResult->SetFloatValue( m_pSrc1->GetIntValue() );
+		}
+		else
+		{
+			m_pResult->SetFloatValue( m_pSrc2->GetIntValue() );
+		}
+		break;
+	}
+
+	if ( ToolsEnabled() )
+	{
+		ToolFramework_RecordMaterialParams( GetMaterial() );
+	}
+}
+
+EXPOSE_INTERFACE( CSelectFirstIfNonZeroProxy, IMaterialProxy, "SelectFirstIfNonZero" IMATERIAL_PROXY_INTERFACE_VERSION );

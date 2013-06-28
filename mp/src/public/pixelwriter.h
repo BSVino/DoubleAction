@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 
 #ifdef _WIN32
 #define FORCEINLINE_PIXEL FORCEINLINE
-#elif _LINUX
+#elif POSIX
 #define FORCEINLINE_PIXEL inline
 #else
 #error "implement me"

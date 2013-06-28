@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "voice_banmgr.h"
-#include "FileSystem.h"
+#include "filesystem.h"
 #include "cdll_client_int.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

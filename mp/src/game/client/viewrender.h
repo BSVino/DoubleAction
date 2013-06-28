@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,7 @@
 #include "tier1/utlstack.h"
 #include "iviewrender.h"
 #include "view_shared.h"
+#include "replay/ireplayscreenshotsystem.h"
 
 
 //-----------------------------------------------------------------------------
@@ -25,11 +26,12 @@ class IClientVehicle;
 class C_PointCamera;
 class C_EnvProjectedTexture;
 class IScreenSpaceEffect;
-enum ScreenSpaceEffectType_t;
 class CClientViewSetup;
 class CViewRender;
 struct ClientWorldListInfo_t;
 class C_BaseEntity;
+struct WriteReplayScreenshotParams_t;
+class CReplayScreenshotTaker;
 
 #ifdef HL2_EPISODIC
 	class CStunEffect;
@@ -75,9 +77,10 @@ enum view_id_t
 	VIEW_INTRO_PLAYER = 5,
 	VIEW_INTRO_CAMERA = 6,
 	VIEW_SHADOW_DEPTH_TEXTURE = 7,
+	VIEW_SSAO = 8,
 	VIEW_ID_COUNT
 };
-
+view_id_t CurrentViewID();
 
 //-----------------------------------------------------------------------------
 // Purpose: Stored pitch drifting variables
@@ -221,11 +224,14 @@ protected:
 	void			DrawWorld( float waterZAdjust );
 
 	// Draws all opaque/translucent renderables in leaves that were rendered
-	void			DrawOpaqueRenderables( bool bShadowDepth );
+	void			DrawOpaqueRenderables( ERenderDepthMode DepthMode );
 	void			DrawTranslucentRenderables( bool bInSkybox, bool bShadowDepth );
 
 	// Renders all translucent entities in the render list
 	void			DrawTranslucentRenderablesNoWorld( bool bInSkybox );
+
+	// Draws translucent renderables that ignore the Z buffer
+	void			DrawNoZBufferTranslucentRenderables( void );
 
 	// Renders all translucent world surfaces in a particular set of leaves
 	void			DrawTranslucentWorldInLeaves( bool bShadowDepth );
@@ -288,7 +294,8 @@ public:
 // Purpose: Implements the interface to view rendering for the client .dll
 //-----------------------------------------------------------------------------
 
-class CViewRender : public IViewRender
+class CViewRender : public IViewRender,
+					public IReplayScreenshotSystem
 {
 	DECLARE_CLASS_NOBASE( CViewRender );
 public:
@@ -310,18 +317,33 @@ public:
 
 	void			AddViewToScene( CRendering3dView *pView ) { m_SimpleExecutor.AddView( pView ); }
 protected:
-	// Sets up the view parameters
-	void			SetUpView();
+	// Sets up the view parameters for all views (left, middle and right eyes).
+    void            SetUpViews();
 
 	// Sets up the view parameters of map overview mode (cl_leveloverview)
 	void			SetUpOverView();
 
 	// generates a low-res screenshot for save games
-	virtual void	WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height );
+	virtual void	WriteSaveGameScreenshotOfSize( const char *pFilename, int width, int height, bool bCreatePowerOf2Padded = false, bool bWriteVTF = false );
 	void			WriteSaveGameScreenshot( const char *filename );
 
-	// This stores all of the view setup parameters that the engine needs to know about
-	CViewSetup		m_View;
+	virtual IReplayScreenshotSystem *GetReplayScreenshotSystem() { return this; }
+
+	// IReplayScreenshot implementation
+	virtual void	WriteReplayScreenshot( WriteReplayScreenshotParams_t &params );
+	virtual void	UpdateReplayScreenshotCache();
+
+    StereoEye_t		GetFirstEye() const;
+    StereoEye_t		GetLastEye() const;
+    CViewSetup &    GetView(StereoEye_t eEye);
+    const CViewSetup &    GetView(StereoEye_t eEye) const ;
+
+
+	// This stores all of the view setup parameters that the engine needs to know about.
+    // Best way to pick the right one is with ::GetView(), rather than directly.
+	CViewSetup		m_View;         // mono <- in stereo mode, this will be between the two eyes and is the "main" view.
+	CViewSetup		m_ViewLeft;     // left (unused for mono)
+	CViewSetup		m_ViewRight;    // right (unused for mono)
 
 	// Pitch drifting data
 	CPitchDrift		m_PitchDrift;
@@ -452,6 +474,10 @@ private:
 	// This stores the current view
  	CViewSetup		m_CurrentView;
 
+	// these will both be mono or they will be left/right
+	StereoEye_t		m_eStartEye;
+	StereoEye_t		m_eLastEye;
+
 	// VIS Overrides
 	// Set to true to turn off client side vis ( !!!! rendering will be slow since everything will draw )
 	bool			m_bForceNoVis;	
@@ -478,6 +504,10 @@ private:
 	int					m_BaseDrawFlags;	// Set in ViewDrawScene and OR'd into m_DrawFlags as it goes.
 	C_BaseEntity		*m_pCurrentlyDrawingEntity;
 
+#if defined( CSTRIKE_DLL )
+	float				m_flLastFOV;
+#endif
+
 #ifdef PORTAL
 	friend class CPortalRender; //portal drawing needs muck with views in weird ways
 	friend class CPortalRenderable;
@@ -491,8 +521,12 @@ private:
 	CBase3dView *m_pActiveRenderer;
 	CSimpleRenderExecutor m_SimpleExecutor;
 
-	bool			m_bTakeFreezeFrame;
+	bool			m_rbTakeFreezeFrame[ STEREO_EYE_MAX ];
 	float			m_flFreezeFrameUntil;
+
+#if defined( REPLAY_ENABLED )
+	CReplayScreenshotTaker	*m_pReplayScreenshotTaker;
+#endif
 };
 
 #endif // VIEWRENDER_H

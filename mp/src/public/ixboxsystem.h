@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Interface to Xbox 360 system functions. Helps deal with the async system and Live
 //			functions by either providing a handle for the caller to check results or handling
@@ -19,8 +19,7 @@
 typedef void* AsyncHandle_t;
 typedef void* XboxHandle_t;
 
-#ifdef _LINUX
-typedef void *HANDLE;
+#ifdef POSIX
 #define ERROR_SUCCESS 0
 #define ERROR_IO_PENDING 1
 #define ERROR_IO_INCOMPLETE 2

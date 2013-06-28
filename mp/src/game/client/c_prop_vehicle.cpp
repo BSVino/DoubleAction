@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,9 +12,15 @@
 #include <vgui_controls/Controls.h>
 #include <Color.h>
 #include "view.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "movevars_shared.h"
 #include "iviewrender.h"
+#include "vgui/ISurface.h"
+#include "client_virtualreality.h"
+#include "../hud_crosshair.h"
+#include "headtrack/isourcevirtualreality.h"
+// NVNT haptic utils
+#include "haptics/haptic_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -143,9 +149,12 @@ void C_PropVehicleDriveable::OnDataChanged( DataUpdateType_t updateType )
 	{
 		OnEnteredVehicle( m_hPlayer );
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+		g_ClientVirtualReality.AlignTorsoAndViewToWeapon();
 	}
 	else if ( !m_hPlayer && m_hPrevPlayer )
 	{
+		// NVNT notify haptics system of navigation exit
+		OnExitedVehicle( m_hPrevPlayer );
 		// They have just exited the vehicle.
 		// Sometimes we never reach the end of our exit anim, such as if the
 		// animation doesn't have fadeout 0 specified in the QC, so we fail to
@@ -243,16 +252,44 @@ void C_PropVehicleDriveable::DrawHudElements( )
 		if ( pIcon != NULL )
 		{
 			float x, y;
-			Vector screen;
 
-			x = ScreenWidth()/2;
-			y = ScreenHeight()/2;
+			if( UseVR() )
+			{
+				C_BasePlayer *pPlayer = (C_BasePlayer *)GetPassenger( VEHICLE_ROLE_DRIVER );
+				Vector vecStart, vecDirection;
+				pPlayer->EyePositionAndVectors( &vecStart, &vecDirection, NULL, NULL );
+				Vector vecEnd = vecStart + vecDirection * MAX_TRACE_LENGTH;
 
-		#if TRIANGULATED_CROSSHAIR
-			ScreenTransform( m_vecGunCrosshair, screen );
-			x += 0.5 * screen[0] * ScreenWidth() + 0.5;
-			y -= 0.5 * screen[1] * ScreenHeight() + 0.5;
-		#endif
+				trace_t tr;
+				UTIL_TraceLine( vecStart, vecEnd, MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
+
+				Vector screen;
+				screen.Init();
+				ScreenTransform(tr.endpos, screen);
+
+				int vx, vy, vw, vh;
+				vgui::surface()->GetFullscreenViewport( vx, vy, vw, vh );
+
+				float screenWidth = vw;
+				float screenHeight = vh;
+
+				x = 0.5f * ( 1.0f + screen[0] ) * screenWidth + 0.5f;
+				y = 0.5f * ( 1.0f - screen[1] ) * screenHeight + 0.5f;
+			}
+			else
+			{
+				Vector screen;
+
+				x = ScreenWidth()/2;
+				y = ScreenHeight()/2;
+
+#if TRIANGULATED_CROSSHAIR
+				ScreenTransform( m_vecGunCrosshair, screen );
+				x += 0.5 * screen[0] * ScreenWidth() + 0.5;
+				y -= 0.5 * screen[1] * ScreenHeight() + 0.5;
+#endif
+			}
+
 
 			x -= pIcon->Width() / 2; 
 			y -= pIcon->Height() / 2; 
@@ -368,5 +405,18 @@ void C_PropVehicleDriveable::UpdateViewAngles( C_BasePlayer *pLocalPlayer, CUser
 //-----------------------------------------------------------------------------
 void C_PropVehicleDriveable::OnEnteredVehicle( C_BaseCombatCharacter *pPassenger )
 {
+#if defined( WIN32 ) && !defined( _X360 )
+	// NVNT notify haptics system of navigation change
+	HapticsEnteredVehicle(this,pPassenger);
+#endif
+}
+
+// NVNT - added function
+void C_PropVehicleDriveable::OnExitedVehicle( C_BaseCombatCharacter *pPassenger )
+{
+#if defined( WIN32 ) && !defined( _X360 )
+	// NVNT notify haptics system of navigation exit
+	HapticsExitedVehicle(this,pPassenger);
+#endif
 }
 

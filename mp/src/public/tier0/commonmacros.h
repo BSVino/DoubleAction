@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,6 +11,8 @@
 #ifdef _WIN32
 #pragma once
 #endif
+
+#include "tier0/platform.h"
 
 // -------------------------------------------------------
 //
@@ -28,16 +30,19 @@
 #define STRING_MATCHES_ID( p, id )		( (*((int *)(p)) == (id) ) ? true : false )
 #define ID_TO_STRING( id, p )			( (p)[3] = (((id)>>24) & 0xFF), (p)[2] = (((id)>>16) & 0xFF), (p)[1] = (((id)>>8) & 0xFF), (p)[0] = (((id)>>0) & 0xFF) )
 
-#define Q_ARRAYSIZE(p)		(sizeof(p)/sizeof(p[0]))
-
 #define SETBITS(iBitVector, bits)		((iBitVector) |= (bits))
 #define CLEARBITS(iBitVector, bits)		((iBitVector) &= ~(bits))
-#define FBitSet(iBitVector, bit)		((iBitVector) & (bit))
+#define FBitSet(iBitVector, bits)		((iBitVector) & (bits))
 
-inline bool IsPowerOfTwo( int value )
+template <typename T>
+inline bool IsPowerOfTwo( T value )
 {
-	return (value & ( value - 1 )) == 0;
+	return (value & ( value - (T)1 )) == (T)0;
 }
+
+#ifndef REFERENCE
+#define REFERENCE(arg) ((void)arg)
+#endif
 
 #define CONST_INTEGER_AS_STRING(x) #x //Wraps the integer in quotes, allowing us to form constant strings with it
 #define __HACK_LINE_AS_STRING__(x) CONST_INTEGER_AS_STRING(x) //__LINE__ can only be converted to an actual number by going through this, otherwise the output is literally "__LINE__"
@@ -58,7 +63,6 @@ inline bool IsPowerOfTwo( int value )
 #if defined(__cplusplus) && \
     !defined(MIDL_PASS) && \
     !defined(RC_INVOKED) && \
-    !defined(_PREFAST_) && \
     (_MSC_FULL_VER >= 13009466) && \
     !defined(SORTPP_PASS)
 
@@ -96,7 +100,14 @@ extern "C++" // templates cannot be declared to have 'C' linkage
 template <typename T, size_t N>
 char (*RtlpNumberOf( UNALIGNED T (&)[N] ))[N];
 
+#ifdef _PREFAST_
+// The +0 is so that we can go:
+// size = ARRAYSIZE(array) * sizeof(array[0]) without triggering a /analyze
+// warning about multiplying sizeof.
+#define RTL_NUMBER_OF_V2(A) (sizeof(*RtlpNumberOf(A))+0)
+#else
 #define RTL_NUMBER_OF_V2(A) (sizeof(*RtlpNumberOf(A)))
+#endif
 
 // This does not work with:
 //
@@ -140,5 +151,23 @@ char (*RtlpNumberOf( UNALIGNED T (&)[N] ))[N];
 // _ARRAYSIZE is a version useful for anonymous types
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
 #define _ARRAYSIZE(A)   RTL_NUMBER_OF_V1(A)
+
+#define Q_ARRAYSIZE(p)		ARRAYSIZE(p)
+
+template< typename IndexType, typename T, unsigned int N >
+IndexType ClampedArrayIndex( const T (&buffer)[N], IndexType index )
+{
+	NOTE_UNUSED( buffer );
+	return clamp( index, 0, (IndexType)N - 1 );
+}
+
+template< typename T, unsigned int N >
+T ClampedArrayElement( const T (&buffer)[N], unsigned int uIndex )
+{
+	// Put index in an unsigned type to halve the clamping.
+	if ( uIndex >= N )
+		uIndex = N - 1;
+	return buffer[ uIndex ];
+}
 
 #endif // COMMONMACROS_H

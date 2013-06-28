@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,10 +13,26 @@
 #pragma once
 #endif
 
+//==================================================================================================
+// **this goes into both platforms which run the translator, either the real Mac client or
+// the Windows client running with r_emulategl mode **
+//
+// size of the VS register bank in ARB / GLSL we expose
+// it's not 256, because you can't use all 256 slots in 10.5.x.
+// use this constant everywhere you might normally use "256" in reference to a parameter array size.
+// The highest shader constant is c218, plus we allocate c219 and c220 for two clip planes
+#define	DXABSTRACT_VS_PARAM_SLOTS	219
+#define DXABSTRACT_VS_FIRST_BONE_SLOT VERTEX_SHADER_MODEL
+
+// user clip plane 0 goes in DXABSTRACT_VS_CLIP_PLANE_BASE... plane 1 goes in the slot after that
+// dxabstract uses these constants to check plane index limit and to deliver planes to shader for DP4 -> oCLP[n]
+#define	DXABSTRACT_VS_CLIP_PLANE_BASE (DXABSTRACT_VS_PARAM_SLOTS-2)
+
+//==================================================================================================
+
 
 #include "materialsystem/imaterialsystem.h"
 #include "materialsystem/ishaderapi.h"
-
 
 //-----------------------------------------------------------------------------
 // forward declarations
@@ -67,11 +83,12 @@ enum
 	VERTEX_SHADER_MATH_CONSTANTS0 = 0,
 	VERTEX_SHADER_MATH_CONSTANTS1 = 1,
 	VERTEX_SHADER_CAMERA_POS = 2,
-	VERTEX_SHADER_LIGHT_INDEX = 3,
+	VERTEX_SHADER_FLEXSCALE = 3,		// used by DX9 only!
+	VERTEX_SHADER_LIGHT_INDEX = 3,		// used by DX8 only!
 	VERTEX_SHADER_MODELVIEWPROJ = 4,
 	VERTEX_SHADER_VIEWPROJ = 8,
-	VERTEX_SHADER_UNUSED = 12,
-	VERTEX_SHADER_FLEXSCALE = 13,
+	VERTEX_SHADER_MODELVIEWPROJ_THIRD_ROW = 12,
+	VERTEX_SHADER_VIEWPROJ_THIRD_ROW = 13,
 	VERTEX_SHADER_SHADER_SPECIFIC_CONST_10 = 14,
 	VERTEX_SHADER_SHADER_SPECIFIC_CONST_11 = 15,
 	VERTEX_SHADER_FOG_PARAMS = 16,
@@ -92,10 +109,18 @@ enum
 	VERTEX_SHADER_SHADER_SPECIFIC_CONST_9 = 57,
 	VERTEX_SHADER_MODEL = 58,
 
+	//
+	// We reserve up through 216 for the 53 bones
+	//
+
+	// 219		ClipPlane0				|------ OpenGL will jam clip planes into these two
+	// 220		ClipPlane1				|	
+
 	VERTEX_SHADER_FLEX_WEIGHTS = 1024,
 	VERTEX_SHADER_MAX_FLEX_WEIGHT_COUNT = 512,
 };
 
+#define VERTEX_SHADER_BONE_TRANSFORM( k )	( VERTEX_SHADER_MODEL + 3 * (k) )
 
 //-----------------------------------------------------------------------------
 // Standard vertex shader constants

@@ -1,4 +1,4 @@
-//====== Copyright © 2007-2007, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Functions for spherical geometry.
 //

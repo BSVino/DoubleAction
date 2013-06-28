@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 
 #include <vgui_controls/WizardSubPanel.h>
 #include <vgui_controls/Button.h>
-#include <UtlVector.h>
+#include <utlvector.h>
 #include "mouseoverpanelbutton.h"
 
 class CBuyMenu;

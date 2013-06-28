@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -31,18 +31,23 @@ public:
 	virtual ~Image();
 
 	// Set the position of the image
-	virtual void SetPos(int x,int y);
+	virtual void SetPos( int x, int y );
 	// Get the position of the image
-	virtual void GetPos(int& x,int& y);
+	virtual void GetPos( int &x, int &y );
 	// Get the size of the image
-	virtual void GetSize(int& wide,int& tall);
-	virtual void GetContentSize(int& wide,int& tall);
+	virtual void GetSize( int &wide, int &tall );
+	virtual void GetContentSize( int &wide, int &tall );
 	// Set the draw color 
-	virtual void SetColor(Color color);
+	virtual void SetColor( Color color );
 	// set the background color
-	virtual void SetBkColor(Color color) { DrawSetColor(color); }
+	virtual void SetBkColor( Color color ) { DrawSetColor( color ); }
 	// Get the draw color 
 	virtual Color GetColor();
+	virtual bool Evict();
+	virtual int GetNumFrames();
+	virtual void SetFrame( int nFrame );
+	virtual HTexture GetID();
+	virtual void SetRotation( int iRotation ) { return; };
 
 protected:
 	virtual void SetSize(int wide, int tall);

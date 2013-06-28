@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,6 +24,8 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual int DrawModel( int flags );
 	virtual void ClientThink( void );
+
+	virtual bool ShouldUseLargeViewModelVROverride() OVERRIDE { return true; }
 
 private:
 

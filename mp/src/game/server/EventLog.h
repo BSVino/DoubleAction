@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,7 +30,7 @@ public: // IGameEventListener Interface
 public: // CBaseGameSystem overrides
 
 	virtual bool Init();
-	//virtual void Shutdown() {}
+	virtual void Shutdown();
 
 protected:
 

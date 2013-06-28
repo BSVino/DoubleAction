@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2007, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,8 +7,8 @@
 #include "bsplib.h"
 #include "vbsp.h"
 #include "tier1/UtlBuffer.h"
-#include "tier1/UtlVector.h"
-#include "keyvalues.h"
+#include "tier1/utlvector.h"
+#include "KeyValues.h"
 #include "materialpatch.h"
 
 struct entitySideList_t
@@ -19,7 +19,7 @@ struct entitySideList_t
 
 static bool SideIsNotDispAndHasDispMaterial( int iSide )
 {
-	side_t *pSide = &brushsides[iSide];
+	side_t *pSide = &g_MainMap->brushsides[iSide];
 
 	// If it's a displacement, then it's fine to have a displacement-only material.
 	if ( pSide->pMapDisp )
@@ -164,29 +164,29 @@ const char *GetShaderNameForTexInfo( int iTexInfo )
 void WorldVertexTransitionFixup( void )
 {
 	CUtlVector<entitySideList_t> sideList;
-	sideList.SetCount( num_entities );
+	sideList.SetCount( g_MainMap->num_entities );
 	int i;
-	for ( i = 0; i < num_entities; i++ )
+	for ( i = 0; i < g_MainMap->num_entities; i++ )
 	{
 		sideList[i].firstBrushSide = 0;
 		sideList[i].brushSideCount = 0;
 	}
 
-	for ( i = 0; i < nummapbrushes; i++ )
+	for ( i = 0; i < g_MainMap->nummapbrushes; i++ )
 	{
-		sideList[mapbrushes[i].entitynum].brushSideCount += mapbrushes[i].numsides;
+		sideList[g_MainMap->mapbrushes[i].entitynum].brushSideCount += g_MainMap->mapbrushes[i].numsides;
 	}
 	int curSide = 0;
-	for ( i = 0; i < num_entities; i++ )
+	for ( i = 0; i < g_MainMap->num_entities; i++ )
 	{
 		sideList[i].firstBrushSide = curSide;
 		curSide += sideList[i].brushSideCount;
 	}
 
 	int currentEntity = 0;
-	for ( int iSide = 0; iSide < nummapbrushsides; ++iSide )
+	for ( int iSide = 0; iSide < g_MainMap->nummapbrushsides; ++iSide )
 	{
-		side_t *pSide = &brushsides[iSide];
+		side_t *pSide = &g_MainMap->brushsides[iSide];
 
 		// skip displacments
 		if ( pSide->pMapDisp )
@@ -201,7 +201,7 @@ void WorldVertexTransitionFixup( void )
 			continue;
 		}
 
-		while ( currentEntity < num_entities-1 && 
+		while ( currentEntity < g_MainMap->num_entities-1 && 
 			iSide > sideList[currentEntity].firstBrushSide + sideList[currentEntity].brushSideCount )
 		{
 			currentEntity++;

@@ -1,4 +1,4 @@
-//===== Copyright © 2005-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A higher level link library for general use in the game and tools.
 //
@@ -22,11 +22,11 @@ class IStudioRender;
 class IMatSystemSurface;
 class IDataCache;
 class IMDLCache;
-class IAvi;
-class IBik;
+class IVideoServices;
 class IDmeMakefileUtils;
 class IPhysicsCollision;
 class ISoundEmitterSystemBase;
+class IVTex;
 
 namespace vgui
 {
@@ -59,11 +59,11 @@ extern vgui::ISystem *g_pVGuiSystem;
 extern IDataCache *g_pDataCache;	// FIXME: Should IDataCache be in tier2?
 extern IMDLCache *g_pMDLCache;
 extern IMDLCache *mdlcache;
-extern IAvi *g_pAVI;
-extern IBik *g_pBIK;
+extern IVideoServices *g_pVideo;
 extern IDmeMakefileUtils *g_pDmeMakefileUtils;
 extern IPhysicsCollision *g_pPhysicsCollision;
 extern ISoundEmitterSystemBase *g_pSoundEmitterSystem;
+extern IVTex *g_pVTex;
 
 
 //-----------------------------------------------------------------------------
@@ -92,7 +92,7 @@ public:
 		if ( !BaseClass::Connect( factory ) )
 			return false;
 
-		if ( IsPrimaryAppSystem() )
+		if ( BaseClass::IsPrimaryAppSystem() )
 		{
 			ConnectTier3Libraries( &factory, 1 );
 		}
@@ -101,7 +101,7 @@ public:
 
 	virtual void Disconnect() 
 	{
-		if ( IsPrimaryAppSystem() )
+		if ( BaseClass::IsPrimaryAppSystem() )
 		{
 			DisconnectTier3Libraries();
 		}

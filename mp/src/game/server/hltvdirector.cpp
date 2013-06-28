@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,7 +25,7 @@ static ConVar tv_delay( "tv_delay", "30", 0, "SourceTV broadcast delay in second
 static ConVar tv_allow_static_shots( "tv_allow_static_shots", "1", 0, "Auto director uses fixed level cameras for shots" );
 static ConVar tv_allow_camera_man( "tv_allow_camera_man", "1", 0, "Auto director allows spectators to become camera man" );
 
-static bool GameEventLessFunc( CGameEvent const &e1, CGameEvent const &e2 )
+static bool GameEventLessFunc( CHLTVGameEvent const &e1, CHLTVGameEvent const &e2 )
 {
 	return e1.m_Tick < e2.m_Tick;
 }
@@ -124,7 +124,7 @@ void CHLTVDirector::FireGameEvent( IGameEvent * event )
 	if ( !m_pHLTVServer )
 		return;	// don't do anything
 
-	CGameEvent gameevent;
+	CHLTVGameEvent gameevent;
 
 	gameevent.m_Event = gameeventmanager->DuplicateEvent( event );
 	gameevent.m_Priority = event->GetInt( "priority", -1 ); // priorities are leveled between 0..10, -1 means ignore
@@ -232,7 +232,7 @@ void CHLTVDirector::UpdateSettings()
 		}
 	}
 
-   	m_nBroadcastTick = max( 0, newBroadcastTick );
+   	m_nBroadcastTick = MAX( 0, newBroadcastTick );
 }
 
 const char** CHLTVDirector::GetModEvents()
@@ -370,7 +370,7 @@ void CHLTVDirector::StartBestPlayerCameraShot()
 
 	while( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		if ( dc.m_Tick >= m_nNextShotTick )
 			break; 
@@ -479,7 +479,7 @@ void CHLTVDirector::StartBestFixedCameraShot( bool bForce )
 
 	while( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		if ( dc.m_Tick >= m_nNextShotTick )
 			break; 
@@ -517,7 +517,7 @@ void CHLTVDirector::StartBestFixedCameraShot( bool bForce )
 void CHLTVDirector::StartRandomShot() 
 {
 	int toTick = m_nBroadcastTick + TIME_TO_TICKS ( DEF_SHOT_LENGTH );
-	m_nNextShotTick = min( m_nNextShotTick, toTick );
+	m_nNextShotTick = MIN( m_nNextShotTick, toTick );
 
 	if ( RandomFloat(0,1) < 0.25 && tv_allow_static_shots.GetBool() )
 	{
@@ -531,7 +531,7 @@ void CHLTVDirector::StartRandomShot()
 	}
 }
 
-void CHLTVDirector::CreateShotFromEvent( CGameEvent *event )
+void CHLTVDirector::CreateShotFromEvent( CHLTVGameEvent *event )
 {
 	// show event at least for 2 more seconds after it occured
 	const char *name = event->m_Event->GetName();
@@ -562,7 +562,7 @@ void CHLTVDirector::CreateShotFromEvent( CGameEvent *event )
 			// if we show ineye view, show it more likely from killer
 			if ( RandomFloat(0,1) > (bInEye?0.3f:0.7f)  )
 			{
-				swap( attacker, victim );
+				::V_swap( attacker, victim );
 			}
 						
 			// hurting a victim is shown as chase more often
@@ -573,7 +573,7 @@ void CHLTVDirector::CreateShotFromEvent( CGameEvent *event )
 		}
 				
 		// shot 2 seconds after death/hurt
-		m_nNextShotTick = min( m_nNextShotTick, (event->m_Tick+TIME_TO_TICKS(2.0)) );
+		m_nNextShotTick = MIN( m_nNextShotTick, (event->m_Tick+TIME_TO_TICKS(2.0)) );
 	}
 	else if ( bRoundStart || bRoundEnd )
 	{
@@ -592,7 +592,7 @@ void CHLTVDirector::CheckHistory()
 
 	while ( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		Assert( lastTick <= dc.m_Tick );
 		lastTick = dc.m_Tick;
@@ -607,7 +607,7 @@ void CHLTVDirector::RemoveEventsFromHistory(int tick)
 
 	while ( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		if ( (dc.m_Tick < tick) || (tick == -1) )
 		{
@@ -636,7 +636,7 @@ int CHLTVDirector::FindFirstEvent( int tick )
 	if ( index == m_EventHistory.InvalidIndex() )
 		return index; // no commands in list
 
-	CGameEvent *event = &m_EventHistory[index];
+	CHLTVGameEvent *event = &m_EventHistory[index];
 
 	while ( event->m_Tick < tick )
 	{
@@ -730,7 +730,7 @@ void CHLTVDirector::FinishCameraManShot()
 	//check if camera turns camera off within broadcast time and game time
 	while( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		if ( dc.m_Tick >= m_nNextShotTick )
 			break;
@@ -771,7 +771,7 @@ bool CHLTVDirector::StartCameraManShot()
 	// check for cameraman mode
 	while( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		// only check if this is the current tick
 		if ( dc.m_Tick > m_nBroadcastTick )
@@ -832,7 +832,7 @@ void CHLTVDirector::StartInstantBroadcastShot()
 void CHLTVDirector::StartNewShot()
 {
 	// we can remove all events the
-	int smallestTick = max(0, gpGlobals->tickcount - TIME_TO_TICKS(HLTV_MAX_DELAY) );
+	int smallestTick = MAX(0, gpGlobals->tickcount - TIME_TO_TICKS(HLTV_MAX_DELAY) );
     RemoveEventsFromHistory( smallestTick );
 
 	// if the delay time is to short for autodirector, just show next best thing
@@ -886,7 +886,7 @@ void CHLTVDirector::StartNewShot()
 
 	while( index != m_EventHistory.InvalidIndex() )
 	{
-		CGameEvent &dc = m_EventHistory[index];
+		CHLTVGameEvent &dc = m_EventHistory[index];
 
 		if ( dc.m_Tick >= m_nNextShotTick )
 			break; // we have searched enough
@@ -911,7 +911,7 @@ void CHLTVDirector::StartNewShot()
 		return;	// not enough time for a new shot
 
 	// find the most interesting game event for next shot
-	CGameEvent *dc = FindBestGameEvent();
+	CHLTVGameEvent *dc = FindBestGameEvent();
 
 	if ( dc )
 	{
@@ -925,7 +925,7 @@ void CHLTVDirector::StartNewShot()
 	}
 }
 
-CGameEvent *CHLTVDirector::FindBestGameEvent()
+CHLTVGameEvent *CHLTVDirector::FindBestGameEvent()
 {
 	int	bestEvent[4];
 	int	bestEventPrio[4];
@@ -949,7 +949,7 @@ CGameEvent *CHLTVDirector::FindBestGameEvent()
 		// sum all action for the next time
 		while ( index != m_EventHistory.InvalidIndex()  )
 		{
-			CGameEvent &event = m_EventHistory[index];
+			CHLTVGameEvent &event = m_EventHistory[index];
 
 			if ( event.m_Tick > tillTick )
 				break;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -29,7 +29,7 @@ using namespace vgui;
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
 
-#include "ConVar.h"
+#include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -117,7 +117,7 @@ void CHudHealth::OnThink()
 	if ( local )
 	{
 		// Never below zero
-		newHealth = max( local->GetHealth(), 0 );
+		newHealth = MAX( local->GetHealth(), 0 );
 	}
 
 	// Only update the fade if we've changed health

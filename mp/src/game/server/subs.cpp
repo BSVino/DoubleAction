@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Frequently used global functions.
 //
@@ -60,10 +60,7 @@ END_DATADESC()
 
 
 // These are the new entry points to entities. 
-#if !defined( SDK_DLL )		//Tony; don't use the normal info_player_deathmatch in the SDK, use the custom one.
 LINK_ENTITY_TO_CLASS(info_player_deathmatch,CBaseDMStart);
-#endif
-
 LINK_ENTITY_TO_CLASS(info_player_start,CPointEntity);
 LINK_ENTITY_TO_CLASS(info_landmark,CPointEntity);
 

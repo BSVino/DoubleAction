@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,16 +13,19 @@
 
 #include <hud_basechat.h>
 
-
 class CHudChatLine : public CBaseHudChatLine
 {
 	DECLARE_CLASS_SIMPLE( CHudChatLine, CBaseHudChatLine );
 
 public:
-
-	CHudChatLine( vgui::Panel *parent, const char *panelName );
+	CHudChatLine( vgui::Panel *parent, const char *panelName ) : CBaseHudChatLine( parent, panelName ) {}
 
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
+
+	void			PerformFadeout( void );
+
+	void			MsgFunc_SayText(bf_read &msg);
+
 private:
 	CHudChatLine( const CHudChatLine & ); // not defined, not accessible
 };
@@ -48,20 +51,18 @@ public:
 	CHudChat( const char *pElementName );
 
 	virtual void	CreateChatInputLine( void );
+	virtual void	CreateChatLines( void );
 
 	virtual void	Init( void );
 	virtual void	Reset( void );
+	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
+
+	void			MsgFunc_SayText( bf_read &msg );
+	void			MsgFunc_TextMsg( bf_read &msg );
+	
+	void			ChatPrintf( int iPlayerIndex, PRINTF_FORMAT_STRING const char *fmt, ... );
+
 	int				GetChatInputOffset( void );
-	void			CreateChatLines( void );
-
-	virtual bool	ShouldDraw( void );
-
-	virtual Color	GetTextColorForClient( TextColor colorNum, int clientIndex );
-	virtual Color	GetClientColor( int clientIndex );
-
-	virtual int		GetFilterForString( const char *pString );
-	virtual bool IsVisible();
-
 };
 
 #endif	//SDK_HUD_CHAT_H

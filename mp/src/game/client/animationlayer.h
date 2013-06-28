@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,6 +13,7 @@
 
 #include "rangecheckedvar.h"
 #include "lerp_functions.h"
+#include "networkvar.h"
 
 class C_AnimationLayer
 {
@@ -41,13 +42,19 @@ public:
 
 	float GetFadeout( float flCurTime );
 
+	void BlendWeight();
+
 	float	m_flLayerAnimtime;
 	float	m_flLayerFadeOuttime;
+
+	float   m_flBlendIn;
+	float   m_flBlendOut;
+
+	bool    m_bClientBlend;
 };
 #ifdef CLIENT_DLL
 	#define CAnimationLayer C_AnimationLayer
 #endif
-
 
 inline C_AnimationLayer::C_AnimationLayer()
 {
@@ -63,6 +70,9 @@ inline void C_AnimationLayer::Reset()
 	m_flCycle = 0;
 	m_flLayerAnimtime = 0;
 	m_flLayerFadeOuttime = 0;
+	m_flBlendIn = 0;
+	m_flBlendOut = 0;
+	m_bClientBlend = false;
 }
 
 
@@ -168,6 +178,36 @@ inline void Lerp_Clamp( C_AnimationLayer &val )
 	Lerp_Clamp( val.m_nOrder );
 	Lerp_Clamp( val.m_flLayerAnimtime );
 	Lerp_Clamp( val.m_flLayerFadeOuttime );
+}
+
+inline void C_AnimationLayer::BlendWeight()
+{
+	if ( !m_bClientBlend )
+		return;
+
+	m_flWeight = 1;
+
+	// blend in?
+	if ( m_flBlendIn != 0.0f )
+	{
+		if (m_flCycle < m_flBlendIn)
+		{
+			m_flWeight = m_flCycle / m_flBlendIn;
+		}
+	}
+
+	// blend out?
+	if ( m_flBlendOut != 0.0f )
+	{
+		if (m_flCycle > 1.0 - m_flBlendOut)
+		{
+			m_flWeight = (1.0 - m_flCycle) / m_flBlendOut;
+		}
+	}
+
+	m_flWeight = 3.0 * m_flWeight * m_flWeight - 2.0 * m_flWeight * m_flWeight * m_flWeight;
+	if (m_nSequence == 0)
+		m_flWeight = 0;
 }
 
 #endif // ANIMATIONLAYER_H

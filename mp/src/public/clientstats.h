@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -35,7 +35,7 @@ struct IClientStatsTime
 struct IClientStatsTextDisplay
 {
 	// Draws the stats
-	virtual void DrawStatsText( const char *fmt, ... ) = 0;
+	virtual void DrawStatsText( PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 
 	virtual void SetDrawColor( unsigned char r, unsigned char g, unsigned char b ) = 0;
 

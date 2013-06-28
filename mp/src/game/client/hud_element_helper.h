@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Helper for the CHudElement class to add themselves to the list of hud elements
 //
@@ -47,32 +47,32 @@ private:
 // It them hooks that function up to the helper list so that the CHud objects can create
 //  the elements by name, with no header file dependency, etc.
 #define DECLARE_HUDELEMENT( className )											\
-	static CHudElement *Create_##className##( void )							\
+	static CHudElement *Create_##className( void )							\
 		{																		\
 			return new className( #className );									\
 		};																		\
-	static CHudElementHelper g_##className##_Helper( Create_##className##, 50 );
+	static CHudElementHelper g_##className##_Helper( Create_##className, 50 );
 
 #define DECLARE_HUDELEMENT_DEPTH( className, depth )											\
-	static CHudElement *Create_##className##( void )							\
+	static CHudElement *Create_##className( void )							\
 		{																		\
 			return new className( #className );									\
 		};																		\
-	static CHudElementHelper g_##className##_Helper( Create_##className##, depth );
+	static CHudElementHelper g_##className##_Helper( Create_##className, depth );
 
 #define DECLARE_NAMED_HUDELEMENT( className, panelName )						\
-	static CHudElement *Create_##panelName##( void )							\
+	static CHudElement *Create_##panelName( void )							\
 		{																		\
 			return new className( #panelName );									\
 		};																		\
-	static CHudElementHelper g_##panelName##_Helper( Create_##panelName##, 50 );
+	static CHudElementHelper g_##panelName##_Helper( Create_##panelName, 50 );
 
 // This macro can be used to get a pointer to a specific hud element
 #define GET_HUDELEMENT( className )												\
-	(##className##*)gHUD.FindElement( #className )
+	( className *)gHUD.FindElement( #className )
 
 #define GET_NAMED_HUDELEMENT( className, panelName )							\
-	(##className##*)gHUD.FindElement( #panelName )
+	( className *)gHUD.FindElement( #panelName )
 
 
 // Things that inherit from vgui::Panel, too, will have ambiguous new operators

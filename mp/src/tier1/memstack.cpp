@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -114,7 +114,7 @@ bool CMemoryStack::Init( unsigned maxSize, unsigned commitSize, unsigned initial
 	}
 
 #else
-	m_pBase = MemAlloc_AllocAligned( m_maxSize, alignment ? alignment : 1 );
+	m_pBase = (byte *)MemAlloc_AllocAligned( m_maxSize, alignment ? alignment : 1 );
 	m_pNextAlloc = m_pBase;
 	m_pCommitLimit = m_pBase + m_maxSize;
 #endif

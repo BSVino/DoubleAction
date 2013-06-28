@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 
 
 #include "vgui_controls/EditablePanel.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 #include "tier2/camerautils.h"
 
 
@@ -45,6 +45,7 @@ public:
 	virtual ~CPotteryWheelPanel();
 
 	// Overriden methods of vgui::Panel
+	virtual void Init( int x, int y, int wide, int tall );
 	virtual void Paint();
 
 	virtual void OnKeyCodePressed ( vgui::KeyCode code );
@@ -73,8 +74,10 @@ public:
 	// Camera.
 	int	 GetCameraFOV( void );
 	void SetCameraFOV( float flFOV );
-	void SetCameraPositionAndAngles( const Vector &vecPos, const QAngle &angDir );
+	void SetCameraPositionAndAngles( const Vector &vecPos, const QAngle &angDir, bool syncManipulators = true );
+	void GetCameraPositionAndAngles( Vector &vecPos, QAngle &angDir );
 	void SetCameraOffset( const Vector &vecOffset );
+	void GetCameraOffset( Vector &vecOffset );
 	void ResetCameraPivot( void );
 	void ComputeCameraTransform( matrix3x4_t *pWorldToCamera );
 	void UpdateCameraTransform();
@@ -115,10 +118,18 @@ protected:
 	IManipulator		*m_pCurrentManip;
 	int m_nManipStartX, m_nManipStartY;
 
+	// Re-apply the manipulators on a new model
+	void ApplyManipulation();
+
+	// Synchronize the manipulators with the current transform
+	void SyncManipulation();
+
 	bool HasLightProbe() const;
 	ITexture *GetLightProbeCubemap( bool bHDR );
 	void DrawGrid();
 	CMaterialReference	m_Wireframe;
+
+	bool	m_bRenderToTexture;
 
 private:
 	void SetupRenderState( int nDisplayWidth, int nDisplayHeight );

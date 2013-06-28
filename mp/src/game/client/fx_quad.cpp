@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "view.h"
-#include "materialsystem/IMesh.h"
+#include "materialsystem/imesh.h"
 #include "fx_quad.h"
 #include "tier0/vprof.h"
 

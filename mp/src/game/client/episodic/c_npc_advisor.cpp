@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Definition for client-side advisor.
 //
@@ -15,7 +15,7 @@
 #include "particles_simple.h"
 #include "citadel_effects_shared.h"
 #include "particles_attractor.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "c_te_effect_dispatch.h"
 
 #include "c_ai_basenpc.h"

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -215,6 +215,7 @@ CAI_Expresser::CAI_Expresser( CBaseFlex *pOuter )
  :	m_pOuter( pOuter ),
 	m_pSink( NULL ),
 	m_flStopTalkTime( 0 ),
+	m_flLastTimeAcceptedSpeak( 0 ),
 	m_flBlockedTalkTime( 0 ),
 	m_flStopTalkTimeWithoutDelay( 0 ),
 	m_voicePitch( 100 )
@@ -557,7 +558,7 @@ bool CAI_Expresser::Speak( AIConcept_t concept, const char *modifiers /*= NULL*/
 		return false;
 	}
 
-	SpeechMsg( GetOuter(), "%s (%x) spoke %s (%f)\n", STRING(GetOuter()->GetEntityName()), GetOuter(), concept, gpGlobals->curtime );
+	SpeechMsg( GetOuter(), "%s (%p) spoke %s (%f)\n", STRING(GetOuter()->GetEntityName()), GetOuter(), concept, gpGlobals->curtime );
 
 	bool spoke = SpeakDispatchResponse( concept, result, filter );
 	if ( pszOutResponseChosen )
@@ -723,7 +724,7 @@ bool CAI_Expresser::CanSpeak()
 	if ( m_flLastTimeAcceptedSpeak == gpGlobals->curtime ) // only one speak accepted per think
 		return false;
 
-	float timeOk = max( m_flStopTalkTime, m_flBlockedTalkTime );
+	float timeOk = MAX( m_flStopTalkTime, m_flBlockedTalkTime );
 	return ( timeOk <= gpGlobals->curtime );
 }
 
@@ -738,7 +739,7 @@ bool CAI_Expresser::CanSpeakAfterMyself()
 	if ( m_flLastTimeAcceptedSpeak == gpGlobals->curtime ) // only one speak accepted per think
 		return false;
 
-	float timeOk = max( m_flStopTalkTimeWithoutDelay, m_flBlockedTalkTime );
+	float timeOk = MAX( m_flStopTalkTimeWithoutDelay, m_flBlockedTalkTime );
 	return ( timeOk <= gpGlobals->curtime );
 }
 
@@ -863,7 +864,7 @@ bool CAI_Expresser::IsValidResponse( ResponseType_t type, const char *pszValue )
 CAI_TimedSemaphore *CAI_Expresser::GetMySpeechSemaphore( CBaseEntity *pNpc ) 
 {
 	if ( !pNpc->MyNPCPointer() )
-		return false;
+		return NULL;
 
 	return (pNpc->MyNPCPointer()->IsPlayerAlly() ? &g_AIFriendliesTalkSemaphore : &g_AIFoesTalkSemaphore );
 }
@@ -876,15 +877,21 @@ void CAI_Expresser::SpeechMsg( CBaseEntity *pFlex, const char *pszFormat, ... )
 	if ( !DebuggingSpeech() )
 		return;
 
+	char string[ 2048 ];
+	va_list argptr;
+	va_start( argptr, pszFormat );
+	Q_vsnprintf( string, sizeof(string), pszFormat, argptr );
+	va_end( argptr );
+
 	if ( pFlex->MyNPCPointer() )
 	{
-		DevMsg( pFlex->MyNPCPointer(), CFmtStr( &pszFormat ) );
+		DevMsg( pFlex->MyNPCPointer(), string );
 	}
 	else 
 	{
-		DevMsg( CFmtStr( &pszFormat ) );
+		DevMsg( "%s", string );
 	}
-	UTIL_LogPrintf( (char *) ( (const char *) CFmtStr( &pszFormat ) ) );
+	UTIL_LogPrintf( string );
 }
 
 
@@ -964,9 +971,17 @@ void CAI_ExpresserHost_NPC_DoModifyOrAppendCriteria( CAI_BaseNPC *pSpeaker, AI_C
 
 //-----------------------------------------------------------------------------
 
+//=============================================================================
+// HPE_BEGIN:
+// [Forrest] Remove npc_speakall from Counter-Strike.
+//=============================================================================
+#ifndef CSTRIKE_DLL
 extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
 CON_COMMAND( npc_speakall, "Force the npc to try and speak all their responses" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBaseEntity *pEntity;
 
 	if ( args[1] && *args[1] )
@@ -996,6 +1011,10 @@ CON_COMMAND( npc_speakall, "Force the npc to try and speak all their responses" 
 		}
 	}
 }
+#endif
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 //-----------------------------------------------------------------------------
 

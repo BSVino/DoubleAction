@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -235,14 +235,18 @@ public:
         //ReadMSR(counterPort, int64); 
 
         // we need to copy this into a temp for some reason
+#ifdef COMPILER_MSVC64
+	return __readpmc((unsigned long) eventSelectNum);
+#else
         int temp = eventSelectNum;
         _asm 
         {
             mov ecx, temp
             RDPMC 
         }
+#endif
 
-    }
+	}
 
 
 };

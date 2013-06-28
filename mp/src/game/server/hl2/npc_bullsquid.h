@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base combat character with no AI
 //
@@ -14,7 +14,7 @@
 #ifndef NPC_BULLSQUID_H
 #define NPC_BULLSQUID_H
 
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 
 
 class CNPC_Bullsquid : public CAI_BaseNPC

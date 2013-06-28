@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -69,6 +69,9 @@ private:
 		 unsigned int instance	: 4;	// 32
 	} m_PredictableID;
 };
+
+// This can be empty, the class has a proper constructor
+FORCEINLINE void NetworkVarConstruct( CPredictableId &x ) {}
 
 #endif
 

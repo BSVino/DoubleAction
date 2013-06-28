@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,6 +13,8 @@
 #include "basemultiplayerplayer.h"
 #include "triggers.h"
 #include "team_control_point.h"
+
+class CTeamTrainWatcher;
 
 #define AREA_ATTEND_TIME 0.7f
 
@@ -53,7 +55,7 @@ public:
 	bool	IsActive( void );
 	bool	CheckIfDeathCausesBlock( CBaseMultiplayerPlayer *pVictim, CBaseMultiplayerPlayer *pKiller );
 
-	void	UpdateNumPlayers( void );
+	void	UpdateNumPlayers( bool bBlocked = false );
 	void	UpdateOwningTeam( void );
 	void	UpdateCappingTeam( int iTeam );
 	void	UpdateTeamInZone( void );
@@ -67,6 +69,9 @@ public:
 	int		GetOwningTeam( void ) { return m_nOwningTeam; }
 
 	bool	IsBlocked( void ) { return m_bBlocked; }
+
+	void	SetTrainWatcher( CTeamTrainWatcher *pTrainWatcher ){ m_hTrainWatcher = pTrainWatcher; } // used for train watchers that control train movement
+	CTeamTrainWatcher *GetTrainWatcher( void ) const { return m_hTrainWatcher; }
 
 private:
 	void	StartTouch(CBaseEntity *pOther);
@@ -93,6 +98,8 @@ private:
 	void	HandleRespawnTimeAdjustments( int oldTeam, int newTeam );
 	void	GetNumCappingPlayers( int team, int &numcappers, int *cappingplayers );
 
+	void	SetNumCappers( int nNumCappers, bool bBlocked = false );
+
 private:
 	int		m_iCapMode;			//which capture mode we're in
 	bool	m_bCapturing;
@@ -113,6 +120,7 @@ private:
 			iBlockedTouching = 0;
 			bCanCap = false;
 			iSpawnAdjust = 0;
+			iNumRequiredToStartCap = 0;
 		}
 
 		int		iNumRequiredToCap;
@@ -120,6 +128,7 @@ private:
 		int		iBlockedTouching;		// Number of capping players on the cap while it's being blocked
 		bool	bCanCap;
 		int		iSpawnAdjust;
+		int		iNumRequiredToStartCap;
 	};
 	CUtlVector<perteamdata_t>	m_TeamData;
 
@@ -145,6 +154,7 @@ private:
 	COutputEvent m_CapOutput;
 	
 	COutputInt m_OnNumCappersChanged;
+	COutputInt m_OnNumCappersChanged2;
 
 	int		m_iAreaIndex;	//index of this area among all other areas
 
@@ -156,6 +166,8 @@ private:
 
 	int	m_iCapAttemptNumber;	// number used to keep track of discrete cap attempts, for block tracking
 	bool m_bStartTouch;
+
+	CHandle<CTeamTrainWatcher>	m_hTrainWatcher;	// used for train watchers that control train movement
 
 	DECLARE_DATADESC();
 };

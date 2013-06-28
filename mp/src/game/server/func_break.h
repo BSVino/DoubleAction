@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines a class for objects that break after taking a certain amount
 //			of damage.
@@ -63,7 +63,7 @@ public:
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 
 	// To spark when hit
-	void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	bool IsBreakable( void );
 	bool SparkWhenHit( void );

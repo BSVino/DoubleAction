@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include "weapon_sdkbase.h"
-#include "sdk_gamerules.h"
+#include "gamerules.h"
 #include "npcevent.h"
 #include "engine/IEngineSound.h"
 #include "weapon_basesdkgrenade.h"
@@ -25,7 +25,7 @@
 #endif
 
 
-#define GRENADE_RADIUS	2.0f // inches
+#define GRENADE_TIMER	1.5f //Seconds
 
 
 IMPLEMENT_NETWORKCLASS_ALIASED( BaseSDKGrenade, DT_BaseSDKGrenade )
@@ -127,9 +127,7 @@ void CBaseSDKGrenade::PrimaryAttack()
 	// Don't let weapon idle interfere in the middle of a throw!
 	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 
-	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -160,9 +158,7 @@ void CBaseSDKGrenade::SecondaryAttack()
 	// Don't let weapon idle interfere in the middle of a throw!
 	SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 
-	//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration();
 }
 
 //-----------------------------------------------------------------------------
@@ -177,9 +173,8 @@ bool CBaseSDKGrenade::Reload()
 		SendWeaponAnim( ACT_VM_DRAW );
 
 		//Update our times
-		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
+		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
+		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration();
 
 		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
 	}
@@ -203,42 +198,37 @@ void CBaseSDKGrenade::ItemPostFrame()
 	// If they let go of the fire button, they want to throw the grenade.
 	if ( m_bPinPulled && !(pPlayer->m_nButtons & IN_ATTACK) ) 
 	{
-		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-//		if (m_bSecondary)
-//			DropGrenade();
-//		else
-			ThrowGrenade();
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_THROW_GRENADE );
+
+		StartGrenadeThrow();
 		
 		DecrementAmmo( pPlayer );
 	
 		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
 		SetWeaponIdleTime( gpGlobals->curtime + SequenceDuration() );
-
-		m_bPinPulled = false;
-//		m_bSecondary = false;
+	}
+	else if ((m_fThrowTime > 0) && (m_fThrowTime < gpGlobals->curtime))
+	{
+		ThrowGrenade();
 	}
 	else if( m_bRedraw )
 	{
 		// Has the throw animation finished playing
 		if( m_flTimeWeaponIdle < gpGlobals->curtime )
 		{
+#ifdef GAME_DLL
 			// if we're officially out of grenades, ditch this weapon
 			if( pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
 			{
-#ifdef GAME_DLL
 				pPlayer->Weapon_Drop( this, NULL, NULL );
 				UTIL_Remove(this);
-#endif
-				pPlayer->SwitchToNextBestWeapon( NULL ); //Tony; now switch! cuz we rans outs!
 			}
 			else
 			{
-				m_bRedraw = false;
-				m_flNextPrimaryAttack = gpGlobals->curtime + 1.2;
-				m_flNextSecondaryAttack = gpGlobals->curtime + 1.2;
-				SendWeaponAnim( GetDeployActivity() );			
+				pPlayer->SwitchToNextBestWeapon( this );
 			}
+#endif
 			return;	//don't animate this grenade any more!
 		}	
 	}
@@ -260,18 +250,12 @@ void CBaseSDKGrenade::ItemPostFrame()
 	{
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
-		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
 	}
 
 	void CBaseSDKGrenade::ThrowGrenade()
 	{
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
-		//Tony; updated; minimum grenade tossing time is 1 second delay! + sequence
-		m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
-		m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration() + 1.0;
 	}
 
 	void CBaseSDKGrenade::StartGrenadeThrow()
@@ -303,19 +287,6 @@ void CBaseSDKGrenade::ItemPostFrame()
 	{
 		m_fThrowTime = gpGlobals->curtime + 0.1f;
 	}
-	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
-	void CBaseSDKGrenade::CheckThrowPosition( CBasePlayer *pPlayer, const Vector &vecEye, Vector &vecSrc )
-	{
-		trace_t tr;
-
-		UTIL_TraceHull( vecEye, vecSrc, -Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), Vector(GRENADE_RADIUS+2,GRENADE_RADIUS+2,GRENADE_RADIUS+2), 
-			pPlayer->PhysicsSolidMaskForEntity(), pPlayer, pPlayer->GetCollisionGroup(), &tr );
-
-		if ( tr.DidHit() )
-		{
-			vecSrc = tr.endpos;
-		}
-	}
 
 	void CBaseSDKGrenade::ThrowGrenade()
 	{
@@ -338,10 +309,10 @@ void CBaseSDKGrenade::ItemPostFrame()
 			angThrow.x = -10 + angThrow.x * -((90 - 10) / 90.0);
 		}
 
-		float flVel = (90 - angThrow.x) * 8;
+		float flVel = (90 - angThrow.x) * 6;
 
-		if (flVel > 850)
-			flVel = 850;
+		if (flVel > 750)
+			flVel = 750;
 
 		AngleVectors( angThrow, &vForward, &vRight, &vUp );
 
@@ -351,7 +322,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 	
 		Vector vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
 
-		EmitGrenade( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this );
+		EmitGrenade( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer );
 
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
@@ -366,42 +337,19 @@ void CBaseSDKGrenade::ItemPostFrame()
 			return;
 		}
 
-		// BUGBUG: Hardcoded grenade width of 4 - better not change the model :)
-		Vector vecSrc;
-		pPlayer->CollisionProp()->NormalizedToWorldSpace( Vector( 0.5f, 0.5f, 0.0f ), &vecSrc );
-		vecSrc.z += GRENADE_RADIUS;
+		Vector vForward;
+		pPlayer->EyeVectors( &vForward );
+		Vector vecSrc = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset() + vForward * 16; 
 
-		Vector vecFacing = pPlayer->BodyDirection2D( );
-		// no up/down direction
-		vecFacing.z = 0;
-		VectorNormalize( vecFacing );
-		trace_t tr;
-		UTIL_TraceLine( vecSrc, vecSrc - Vector(0,0,16), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_NONE, &tr );
-		if ( tr.fraction != 1.0 )
-		{
-			// compute forward vec parallel to floor plane and roll grenade along that
-			Vector tangent;
-			CrossProduct( vecFacing, tr.plane.normal, tangent );
-			CrossProduct( tr.plane.normal, tangent, vecFacing );
-		}
-		vecSrc += (vecFacing * 18.0);
-		CheckThrowPosition( pPlayer, pPlayer->WorldSpaceCenter(), vecSrc );
+		Vector vecVel = pPlayer->GetAbsVelocity();
 
-		Vector vecThrow;
-		pPlayer->GetVelocity( &vecThrow, NULL );
-		vecThrow += vecFacing * 300;
-		// put it on its side
-		QAngle orientation(0,pPlayer->GetLocalAngles().y,-90);
-		// roll it
-		AngularImpulse rotSpeed(0,0,320);
-
-		EmitGrenade( vecSrc, orientation, vecThrow, rotSpeed, pPlayer, this );
+		EmitGrenade( vecSrc, vec3_angle, vecVel, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer );
 
 		m_bRedraw = true;
 		m_fThrowTime = 0.0f;
 	}
 
-	void CBaseSDKGrenade::EmitGrenade( Vector vecSrc, QAngle vecAngles, Vector vecVel, AngularImpulse angImpulse, CBasePlayer *pPlayer, CWeaponSDKBase *pWeapon )
+	void CBaseSDKGrenade::EmitGrenade( Vector vecSrc, QAngle vecAngles, Vector vecVel, AngularImpulse angImpulse, CBasePlayer *pPlayer )
 	{
 		Assert( 0 && "CBaseSDKGrenade::EmitGrenade should not be called. Make sure to implement this in your subclass!\n" );
 	}

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base NPC character with AI
 //
@@ -931,7 +931,7 @@ public:
 	Activity			GetIdealActivity( void ) { return m_IdealActivity; }
 	void				SetIdealActivity( Activity NewActivity );
 	void				ResetIdealActivity( Activity newIdealActivity );
-	void				SetSequenceByName( char *szSequence );
+	void				SetSequenceByName( const char *szSequence );
 	void				SetSequenceById( int iSequence );
 	Activity			GetScriptCustomMoveActivity( void );
 	int					GetScriptCustomMoveSequence( void );
@@ -1517,7 +1517,7 @@ public:
 	//
 	//-----------------------------------------------------
 
-	void				AddSceneLock( float flDuration = 0.2f ) { m_flSceneTime = max( gpGlobals->curtime + flDuration, m_flSceneTime ); };
+	void				AddSceneLock( float flDuration = 0.2f ) { m_flSceneTime = MAX( gpGlobals->curtime + flDuration, m_flSceneTime ); };
 	void				ClearSceneLock( float flDuration = 0.2f ) { m_flSceneTime = gpGlobals->curtime + flDuration; };
 	bool				IsInLockedScene( void ) { return m_flSceneTime > gpGlobals->curtime; };
 	float				m_flSceneTime;
@@ -1746,9 +1746,9 @@ public:
 
 	void				MakeDamageBloodDecal( int cCount, float flNoise, trace_t *ptr, Vector vecDir );
 	virtual float		GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamageInfo &info );
-	void				TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void				TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	void				DecalTrace( trace_t *pTrace, char const *decalName );
-	void				ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
+	void				ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName );
 	virtual	bool		PlayerInSpread( const Vector &sourcePos, const Vector &targetPos, float flSpread, float maxDistOffCenter, bool ignoreHatedPlayers = true );
 	CBaseEntity *		PlayerInRange( const Vector &vecLocation, float flDist );
 	bool				PointInSpread( CBaseCombatCharacter *pCheckEntity, const Vector &sourcePos, const Vector &targetPos, const Vector &testPoint, float flSpread, float maxDistOffCenter );
@@ -1805,7 +1805,7 @@ public:
 
 	virtual void	PickupWeapon( CBaseCombatWeapon *pWeapon );
 	virtual void	PickupItem( CBaseEntity *pItem ) { };
-	CBaseEntity*	DropItem( char *pszItemName, Vector vecPos, QAngle vecAng );// drop an item.
+	CBaseEntity*	DropItem( const char *pszItemName, Vector vecPos, QAngle vecAng );// drop an item.
 
 
 	//---------------------------------
@@ -2151,7 +2151,7 @@ inline void CAI_BaseNPC::FireBullets( int cShots, const Vector &vecSrc,
 	info.m_flDistance = flDistance;
 	info.m_iAmmoType = iAmmoType;
 	info.m_iTracerFreq = iTracerFreq;
-	info.m_iDamage = iDamage;
+	info.m_flDamage = iDamage;
 	info.m_pAttacker = pAttacker;
 	info.m_nFlags = bFirstShotAccurate ? FIRE_BULLETS_FIRST_SHOT_ACCURATE : 0;
 
@@ -2304,7 +2304,7 @@ typedef CHandle<CAI_BaseNPC> AIHANDLE;
 		typedef derivedClass CNpc; \
 		const char *pszClassName = #derivedClass; \
 		\
-		CUtlVector<char *> schedulesToLoad; \
+		CUtlVector<const char *> schedulesToLoad; \
 		CUtlVector<AIScheduleLoadFunc_t> reqiredOthers; \
 		CAI_NamespaceInfos scheduleIds; \
 		CAI_NamespaceInfos taskIds; \
@@ -2320,7 +2320,7 @@ typedef CHandle<CAI_BaseNPC> AIHANDLE;
 		typedef derivedClass CNpc; \
 		const char *pszClassName = #derivedClass; \
 		\
-		CUtlVector<char *> schedulesToLoad; \
+		CUtlVector<const char *> schedulesToLoad; \
 		CUtlVector<AIScheduleLoadFunc_t> reqiredOthers; \
 		CAI_NamespaceInfos scheduleIds; \
 		CAI_NamespaceInfos taskIds; \
@@ -2332,18 +2332,18 @@ typedef CHandle<CAI_BaseNPC> AIHANDLE;
 #define EXTERN_SCHEDULE( id ) \
 	scheduleIds.PushBack( #id, id ); \
 	extern const char * g_psz##id; \
-	schedulesToLoad.AddToTail( (char *)g_psz##id );
+	schedulesToLoad.AddToTail( g_psz##id );
 
 //-----------------
 
 #define DEFINE_SCHEDULE( id, text ) \
 	scheduleIds.PushBack( #id, id ); \
-	char * g_psz##id = \
+	const char * g_psz##id = \
 		"\n	Schedule" \
 		"\n		" #id \
 		text \
 		"\n"; \
-	schedulesToLoad.AddToTail( (char *)g_psz##id );
+	schedulesToLoad.AddToTail( g_psz##id );
 	
 //-----------------
 

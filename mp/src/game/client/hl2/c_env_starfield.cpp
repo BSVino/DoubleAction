@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "engine/IEngineTrace.h"
-#include "FX_Sparks.h"
+#include "fx_sparks.h"
 #include "particles_ez.h"
 #include "view.h"
 

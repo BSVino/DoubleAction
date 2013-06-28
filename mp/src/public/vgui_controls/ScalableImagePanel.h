@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,8 +25,10 @@ namespace vgui
 		DECLARE_CLASS_SIMPLE( ScalableImagePanel, Panel );
 	public:
 		ScalableImagePanel(Panel *parent, const char *name);
+		~ScalableImagePanel();
 
 		virtual void SetImage(const char *imageName);
+		void		 SetDrawColor( Color color ) { m_DrawColor = color; }
 
 	protected:
 		virtual void PaintBackground();
@@ -47,6 +49,9 @@ namespace vgui
 		float m_flCornerHeightPercent;	// same for height
 
 		char *m_pszImageName;
+
+		char *m_pszDrawColorName;
+		Color m_DrawColor;
 	};
 
 } // namespace vgui

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -1687,7 +1687,9 @@ public:
 		m_moveTypes( buildFlags & ( bits_BUILD_GROUND | bits_BUILD_FLY | bits_BUILD_JUMP | bits_BUILD_CLIMB ) ),
 		m_pRoute( NULL )
 	{
-		COMPILE_TIME_ASSERT( bits_BUILD_GROUND == bits_CAP_MOVE_GROUND && bits_BUILD_FLY == bits_CAP_MOVE_FLY && bits_BUILD_JUMP == bits_CAP_MOVE_JUMP && bits_BUILD_CLIMB == bits_CAP_MOVE_CLIMB );
+		// Cast to int in order to indicate that we are intentionally comparing different
+		// enum types, to suppress gcc warnings.
+		COMPILE_TIME_ASSERT( bits_BUILD_GROUND == (int)bits_CAP_MOVE_GROUND && bits_BUILD_FLY == (int)bits_CAP_MOVE_FLY && bits_BUILD_JUMP == (int)bits_CAP_MOVE_JUMP && bits_BUILD_CLIMB == (int)bits_CAP_MOVE_CLIMB );
 	}
 
 	bool IsValid( CAI_Node *pNode )

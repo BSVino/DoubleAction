@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Alyx, the female sidekick and love interest that's taking the world by storm!
 //
@@ -241,9 +241,9 @@ Activity CNPC_Alyx::NPC_TranslateActivity( Activity activity )
 // Purpose:
 //-----------------------------------------------------------------------------
 
-void CNPC_Alyx::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_Alyx::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 
 	// FIXME: hack until some way of removing decals after healing
 	m_fNoDamageDecal = true;

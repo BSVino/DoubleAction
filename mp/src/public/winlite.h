@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,10 +10,13 @@
 #define WINLITE_H
 #pragma once
 
+#ifdef _WIN32
 // 
 // Prevent tons of unused windows definitions
 //
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #define NOWINRES
 #define NOSERVICE
 #define NOMCX
@@ -28,4 +31,5 @@
 
 #pragma warning( disable: 4800 )	// forcing value to bool 'true' or 'false' (performance warning)
 
+#endif // WIN32
 #endif // WINLITE_H

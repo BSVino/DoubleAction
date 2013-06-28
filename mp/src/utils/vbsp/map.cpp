@@ -1,20 +1,20 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
-#include "ChunkFile.h"
 #include "vbsp.h"
 #include "map_shared.h"
 #include "disp_vbsp.h"
 #include "tier1/strtools.h"
 #include "builddisp.h"
 #include "tier0/icommandline.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 #include "materialsub.h"
-
+#include "fgdlib/fgdlib.h"
+#include "manifest.h"
 
 #ifdef VSVMFIO
 #include "VmfImport.h"
@@ -47,31 +47,47 @@ struct LoadSide_t
 extern qboolean onlyents;
 
 
-int			nummapbrushes;
-mapbrush_t	mapbrushes[MAX_MAP_BRUSHES];
+CUtlVector< CMapFile * >	g_Maps;
+CMapFile					*g_MainMap = NULL;
+CMapFile					*g_LoadingMap = NULL;
 
-int			nummapbrushsides;
-side_t		brushsides[MAX_MAP_BRUSHSIDES];
-brush_texture_t	side_brushtextures[MAX_MAP_BRUSHSIDES];
+char CMapFile::m_InstancePath[ MAX_PATH ] = "";
+int	CMapFile::m_InstanceCount = 0;
+int	CMapFile::c_areaportals = 0;
 
-int			nummapplanes;
-plane_t		mapplanes[MAX_MAP_PLANES];
+void CMapFile::Init( void )
+{
+	entity_num = 0;
+	num_entities = 0;
 
-#define	PLANE_HASHES	1024
-plane_t		*planehash[PLANE_HASHES];
+	nummapplanes = 0;
+	memset( mapplanes, 0, sizeof( mapplanes ) );
 
-Vector		map_mins(0,0,0), map_maxs(0,0,0);
+	nummapbrushes = 0;
+	memset( mapbrushes, 0, sizeof( mapbrushes ) );
+
+	nummapbrushsides = 0;
+	memset( brushsides, 0, sizeof( brushsides ) );
+
+	memset( side_brushtextures, 0, sizeof( side_brushtextures ) );
+
+	memset( planehash, 0, sizeof( planehash ) );
+
+	m_ConnectionPairs = NULL;
+
+	m_StartMapOverlays = g_aMapOverlays.Count();
+	m_StartMapWaterOverlays = g_aMapWaterOverlays.Count();
+
+	c_boxbevels = 0;
+	c_edgebevels = 0;
+	c_clipbrushes = 0;
+	g_ClipTexinfo = -1;
+}
 
 
 // All the brush sides referenced by info_no_dynamic_shadow entities.
 CUtlVector<int> g_NoDynamicShadowSides;
 
-
-int		c_boxbevels;
-int		c_edgebevels;
-int		c_areaportals;
-int		c_clipbrushes;
-int		g_ClipTexinfo = -1;
 
 void TestExpandBrushes (void);
 
@@ -173,7 +189,7 @@ qboolean	PlaneEqual (plane_t *p, Vector& normal, vec_t dist, float normalEpsilon
 AddPlaneToHash
 ================
 */
-void	AddPlaneToHash (plane_t *p)
+void CMapFile::AddPlaneToHash (plane_t *p)
 {
 	int		hash;
 
@@ -189,7 +205,7 @@ void	AddPlaneToHash (plane_t *p)
 CreateNewFloatPlane
 ================
 */
-int CreateNewFloatPlane (Vector& normal, vec_t dist)
+int CMapFile::CreateNewFloatPlane (Vector& normal, vec_t dist)
 {
 	plane_t	*p, temp;
 
@@ -317,7 +333,7 @@ FindFloatPlane
 =============
 */
 #ifndef USE_HASHING
-int		FindFloatPlane (Vector& normal, vec_t dist)
+int CMapFile::FindFloatPlane (Vector& normal, vec_t dist)
 {
 	int		i;
 	plane_t	*p;
@@ -332,7 +348,7 @@ int		FindFloatPlane (Vector& normal, vec_t dist)
 	return CreateNewFloatPlane (normal, dist);
 }
 #else
-int		FindFloatPlane (Vector& normal, vec_t dist)
+int	CMapFile::FindFloatPlane (Vector& normal, vec_t dist)
 {
 	int		i;
 	plane_t	*p;
@@ -365,7 +381,7 @@ int		FindFloatPlane (Vector& normal, vec_t dist)
 // Input  : p0, p1, p2 - Three points on the plane.
 // Output : Returns the index of the plane in the planes list.
 //-----------------------------------------------------------------------------
-int PlaneFromPoints(const Vector &p0, const Vector &p1, const Vector &p2)
+int CMapFile::PlaneFromPoints(const Vector &p0, const Vector &p1, const Vector &p2)
 {
 	Vector	t1, t2, normal;
 	vec_t	dist;
@@ -452,7 +468,7 @@ Adds any additional planes necessary to allow the brush to be expanded
 against axial bounding boxes
 =================
 */
-void AddBrushBevels (mapbrush_t *b)
+void CMapFile::AddBrushBevels (mapbrush_t *b)
 {
 	int		axis, dir;
 	int		i, j, k, l, order;
@@ -594,7 +610,6 @@ void AddBrushBevels (mapbrush_t *b)
 	}
 }
 
-
 /*
 ================
 MakeBrushWindings
@@ -602,7 +617,7 @@ MakeBrushWindings
 makes basewindigs for sides and mins / maxs for the brush
 ================
 */
-qboolean MakeBrushWindings (mapbrush_t *ob)
+qboolean CMapFile::MakeBrushWindings (mapbrush_t *ob)
 {
 	int			i, j;
 	winding_t	*w;
@@ -649,13 +664,13 @@ qboolean MakeBrushWindings (mapbrush_t *ob)
 	return true;
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Takes all of the brushes from the current entity and adds them to the
 //			world's brush list. Used by func_detail and func_areaportal.
+//			THIS ROUTINE MAY ONLY BE USED DURING ENTITY LOADING.
 // Input  : mapent - Entity whose brushes are to be moved to the world.
 //-----------------------------------------------------------------------------
-void MoveBrushesToWorld( entity_t *mapent )
+void CMapFile::MoveBrushesToWorld( entity_t *mapent )
 {
 	int			newbrushes;
 	int			worldbrushes;
@@ -694,6 +709,64 @@ void MoveBrushesToWorld( entity_t *mapent )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Takes all of the brushes from the current entity and adds them to the
+//			world's brush list. Used by func_detail and func_areaportal.
+// Input  : mapent - Entity whose brushes are to be moved to the world.
+//-----------------------------------------------------------------------------
+void CMapFile::MoveBrushesToWorldGeneral( entity_t *mapent )
+{
+	int			newbrushes;
+	int			worldbrushes;
+	mapbrush_t	*temp;
+	int			i;
+
+	for( i = 0; i < nummapdispinfo; i++ )
+	{
+		if ( mapdispinfo[ i ].entitynum == ( mapent - entities ) )
+		{
+			mapdispinfo[ i ].entitynum = 0;
+		}
+	}
+
+	// this is pretty gross, because the brushes are expected to be
+	// in linear order for each entity
+	newbrushes = mapent->numbrushes;
+	worldbrushes = entities[0].numbrushes;
+
+	temp = (mapbrush_t *)malloc(newbrushes*sizeof(mapbrush_t));
+	memcpy (temp, mapbrushes + mapent->firstbrush, newbrushes*sizeof(mapbrush_t));
+
+#if	0		// let them keep their original brush numbers
+	for (i=0 ; i<newbrushes ; i++)
+		temp[i].entitynum = 0;
+#endif
+
+	// make space to move the brushes (overlapped copy)
+	memmove (mapbrushes + worldbrushes + newbrushes,
+		mapbrushes + worldbrushes,
+		sizeof(mapbrush_t) * (mapent->firstbrush - worldbrushes) );
+
+
+	// wwwxxxmmyyy
+
+	// copy the new brushes down
+	memcpy (mapbrushes + worldbrushes, temp, sizeof(mapbrush_t) * newbrushes);
+
+	// fix up indexes
+	entities[0].numbrushes += newbrushes;
+	for (i=1 ; i<num_entities ; i++)
+	{
+		if ( entities[ i ].firstbrush < mapent->firstbrush ) // if we use <=, then we'll remap the passed in ent, which we don't want to
+		{
+			entities[ i ].firstbrush += newbrushes;
+		}
+	}
+	free (temp);
+
+	mapent->numbrushes = 0;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Iterates the sides of brush and removed CONTENTS_DETAIL from each side
 // Input  : *brush - 
 //-----------------------------------------------------------------------------
@@ -720,7 +793,7 @@ void RemoveContentsDetailFromBrush( mapbrush_t *brush )
 // Purpose: Iterates all brushes in an entity and removes CONTENTS_DETAIL from all brushes
 // Input  : *mapent - 
 //-----------------------------------------------------------------------------
-void RemoveContentsDetailFromEntity( entity_t *mapent )
+void CMapFile::RemoveContentsDetailFromEntity( entity_t *mapent )
 {
 	int i;
 	for ( i = 0; i < mapent->numbrushes; i++ )
@@ -1143,7 +1216,7 @@ ChunkFileResult_t LoadDispTriangleTagsKeyCallback(const char *szKey, const char 
 // Input  : brushSideID - 
 // Output : int
 //-----------------------------------------------------------------------------
-int SideIDToIndex( int brushSideID )
+int CMapFile::SideIDToIndex( int brushSideID )
 {
 	int i;
 	for ( i = 0; i < nummapbrushsides; i++ )
@@ -1185,7 +1258,7 @@ void ConvertSideList( entity_t *mapent, char *key )
 
 			if ( sscanf( pszScan, "%d", &nSideID ) == 1 )
 			{
-				int nIndex = SideIDToIndex(nSideID);
+				int nIndex = g_LoadingMap->SideIDToIndex(nSideID);
 				if (nIndex != -1)
 				{
 					if (!bFirst)
@@ -1360,7 +1433,7 @@ static ChunkFileResult_t LoadOverlayTransitionCallback( CChunkFile *pFile, int n
 //          These are stored in the object, since the brushes are going to go away.
 // Input  : *mapent - 
 //-----------------------------------------------------------------------------
-void AddLadderKeys( entity_t *mapent )
+void CMapFile::AddLadderKeys( entity_t *mapent )
 {
 	Vector mins, maxs;
 	ClearBounds( mins, maxs );
@@ -1396,13 +1469,18 @@ void AddLadderKeys( entity_t *mapent )
 	SetKeyValue( mapent, "maxs.z", buf );
 }
 
+ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
+{
+	return g_LoadingMap->LoadEntityCallback( pFile, nParam );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pFile - 
 //			ulParam - 
 // Output : ChunkFileResult_t
 //-----------------------------------------------------------------------------
-ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
+ChunkFileResult_t CMapFile::LoadEntityCallback(CChunkFile *pFile, int nParam)
 {
 	if (num_entities == MAX_MAP_ENTITIES)
 	{
@@ -1429,7 +1507,7 @@ ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
 	// Set up handlers for the subchunks that we are interested in.
 	//
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler("solid", (ChunkHandler_t)LoadSolidCallback, &LoadEntity);
+	Handlers.AddHandler("solid", (ChunkHandler_t)::LoadSolidCallback, &LoadEntity);
 	Handlers.AddHandler("connections", (ChunkHandler_t)LoadConnectionsCallback, &LoadEntity);
 	Handlers.AddHandler( "overlaytransition", ( ChunkHandler_t )LoadOverlayTransitionCallback, 0 );
 
@@ -1591,6 +1669,13 @@ ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
 			return HandleNoDynamicShadowsEnt( mapent );
 		}
 
+		if ( Q_stricmp( pClassName, "func_instance_parms" ) == 0 )
+		{
+			// Clear out this entity.
+			mapent->epairs = NULL;
+			return ( ChunkFile_Ok );
+		}
+
 		// areaportal entities move their brushes, but don't eliminate
 		// the entity
 		if( IsAreaPortal( pClassName ) )
@@ -1682,7 +1767,8 @@ ChunkFileResult_t LoadEntityCallback(CChunkFile *pFile, int nParam)
 				pModel,
 				ValueForKey( mapent, "hammerid" ),
 				ValueForKey( mapent, "angles" ),
-				ValueForKey( mapent, "origin" ) );
+				ValueForKey( mapent, "origin" ),
+				MDagPath() );
 		}
 #endif // VSVMFIO
 
@@ -1704,9 +1790,9 @@ entity_t* EntityByName( char const *pTestName )
 	if( !pTestName )
 		return 0;
 
-	for( int i=0; i < num_entities; i++ )
+	for( int i=0; i < g_MainMap->num_entities; i++ )
 	{
-		entity_t *e = &entities[i];
+		entity_t *e = &g_MainMap->entities[i];
 
 		const char *pName = ValueForKey( e, "targetname" );
 		if( stricmp( pName, pTestName ) == 0 )
@@ -1717,7 +1803,7 @@ entity_t* EntityByName( char const *pTestName )
 }
 
 
-void ForceFuncAreaPortalWindowContents()
+void CMapFile::ForceFuncAreaPortalWindowContents()
 {
 	// Now go through all areaportal entities and force CONTENTS_WINDOW
 	// on the brushes of the bmodels they point at.
@@ -1757,130 +1843,829 @@ void ForceFuncAreaPortalWindowContents()
 	}
 }
 
+
+// ============ Instancing ============
+
+// #define MERGE_INSTANCE_DEBUG_INFO	1
+
+#define INSTANCE_VARIABLE_KEY			"replace"
+
+static GameData	GD;
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will read in a standard key / value file
+// Input  : pFilename - the absolute name of the file to read
+// Output : returns the KeyValues of the file, NULL if the file could not be read.
+//-----------------------------------------------------------------------------
+static KeyValues *ReadKeyValuesFile( const char *pFilename )
+{
+	// Read in the gameinfo.txt file and null-terminate it.
+	FILE *fp = fopen( pFilename, "rb" );
+	if ( !fp )
+		return NULL;
+	CUtlVector<char> buf;
+	fseek( fp, 0, SEEK_END );
+	buf.SetSize( ftell( fp ) + 1 );
+	fseek( fp, 0, SEEK_SET );
+	fread( buf.Base(), 1, buf.Count()-1, fp );
+	fclose( fp );
+	buf[buf.Count()-1] = 0;
+
+	KeyValues *kv = new KeyValues( "" );
+	if ( !kv->LoadFromBuffer( pFilename, buf.Base() ) )
+	{
+		kv->deleteThis();
+		return NULL;
+	}
+
+	return kv;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will set a secondary lookup path for instances.
+// Input  : pszInstancePath - the secondary lookup path
+//-----------------------------------------------------------------------------
+void CMapFile::SetInstancePath( const char *pszInstancePath )
+{
+	strcpy( m_InstancePath, pszInstancePath );
+	V_strlower( m_InstancePath );
+	V_FixSlashes( m_InstancePath );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: This function will attempt to find a full path given the base and relative names.
+// Input  : pszBaseFileName - the base file that referenced this instance
+//			pszInstanceFileName - the relative file name of this instance
+// Output : Returns true if it was able to locate the file
+//			pszOutFileName - the full path to the file name if located
+//-----------------------------------------------------------------------------
+bool CMapFile::DeterminePath( const char *pszBaseFileName, const char *pszInstanceFileName, char *pszOutFileName )
+{
+	char		szInstanceFileNameFixed[ MAX_PATH ];
+	const char *pszMapPath = "\\maps\\";
+
+	strcpy( szInstanceFileNameFixed, pszInstanceFileName );
+	V_SetExtension( szInstanceFileNameFixed, ".vmf", sizeof( szInstanceFileNameFixed ) );
+	V_FixSlashes( szInstanceFileNameFixed );
+
+	// first, try to find a relative location based upon the Base file name
+	strcpy( pszOutFileName, pszBaseFileName );
+	V_StripFilename( pszOutFileName );
+
+	strcat( pszOutFileName, "\\" );
+	strcat( pszOutFileName, szInstanceFileNameFixed );
+
+	if ( g_pFullFileSystem->FileExists( pszOutFileName ) )
+	{
+		return true;
+	}
+
+	// second, try to find the master 'maps' directory and make it relative from that
+	strcpy( pszOutFileName, pszBaseFileName );
+	V_StripFilename( pszOutFileName );
+	V_RemoveDotSlashes( pszOutFileName );
+	V_FixDoubleSlashes( pszOutFileName );
+	V_strlower( pszOutFileName );
+	strcat( pszOutFileName, "\\" );
+
+	char *pos = strstr( pszOutFileName, pszMapPath );
+	if ( pos )
+	{
+		pos += strlen( pszMapPath );
+		*pos = 0;
+		strcat( pszOutFileName, szInstanceFileNameFixed );
+
+		if ( g_pFullFileSystem->FileExists( pszOutFileName ) )
+		{
+			return true;
+		}
+	}
+
+	if ( m_InstancePath[ 0 ] != 0 )
+	{
+		sprintf( szInstanceFileNameFixed, "%s%s", m_InstancePath, pszInstanceFileName );
+
+		if ( g_pFullFileSystem->FileExists( szInstanceFileNameFixed, "GAME" ) )
+		{
+			char FullPath[ MAX_PATH ];
+			g_pFullFileSystem->RelativePathToFullPath( szInstanceFileNameFixed, "GAME", FullPath, sizeof( FullPath ) );
+			strcpy( pszOutFileName, FullPath );
+
+			return true;
+		}
+	}
+
+	pszOutFileName[ 0 ] = 0;
+
+	return false;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will check the main map for any func_instances.  It will
+//			also attempt to load in the gamedata file for instancing remapping help.
+// Input  : none
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::CheckForInstances( const char *pszFileName )
+{
+	if ( this != g_MainMap )
+	{	// all sub-instances will be appended to the main map master list as they are read in
+		// so the main loop below will naturally get to the appended ones.
+		return;
+	}
+
+	char	GameInfoPath[ MAX_PATH ];
+
+	g_pFullFileSystem->RelativePathToFullPath( "gameinfo.txt", "MOD", GameInfoPath, sizeof( GameInfoPath ) );
+	KeyValues *GameInfoKV = ReadKeyValuesFile( GameInfoPath );
+	if ( !GameInfoKV )
+	{
+		Msg( "Could not locate gameinfo.txt for Instance Remapping at %s\n", GameInfoPath );
+		return;
+	}
+
+	const char *InstancePath = GameInfoKV->GetString( "InstancePath", NULL );
+	if ( InstancePath )
+	{
+		CMapFile::SetInstancePath( InstancePath );
+	}
+
+	const char *GameDataFile = GameInfoKV->GetString( "GameData", NULL );
+	if ( !GameDataFile )
+	{
+		Msg( "Could not locate 'GameData' key in %s\n", GameInfoPath );
+		return;
+	}
+
+	char	FDGPath[ MAX_PATH ];
+	if ( !g_pFullFileSystem->RelativePathToFullPath( GameDataFile, "EXECUTABLE_PATH", FDGPath, sizeof( FDGPath ) ) )
+	{
+		if ( !g_pFullFileSystem->RelativePathToFullPath( GameDataFile, "", FDGPath, sizeof( FDGPath ) ) )
+		{
+			Msg( "Could not locate GameData file %s\n", GameDataFile );
+		}
+	}
+
+	GD.Load( FDGPath );
+
+	// this list will grow as instances are merged onto it.  sub-instances are merged and 
+	// automatically done in this processing.
+	for ( int i = 0; i < num_entities; i++ )
+	{
+		char *pEntity = ValueForKey( &entities[ i ], "classname" );
+		if ( !strcmp( pEntity, "func_instance" ) )
+		{
+			char *pInstanceFile = ValueForKey( &entities[ i ], "file" );
+			if ( pInstanceFile[ 0 ] )
+			{
+				char	InstancePath[ MAX_PATH ];
+				bool	bLoaded = false;
+
+				if ( DeterminePath( pszFileName, pInstanceFile, InstancePath ) )
+				{
+					if ( LoadMapFile( InstancePath ) )
+					{
+						MergeInstance( &entities[ i ], g_LoadingMap );
+						delete g_LoadingMap;
+						bLoaded = true;
+					}
+				}
+
+				if ( bLoaded == false )
+				{
+					Color red( 255, 0, 0, 255 );
+
+					ColorSpewMessage( SPEW_ERROR, &red, "Could not open instance file %s\n", pInstanceFile );
+				}
+			}
+
+			entities[ i ].numbrushes = 0;
+			entities[ i ].epairs = NULL;
+		}
+	}
+
+	g_LoadingMap = this;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will do all of the necessary work to merge the instance
+//			into the main map.
+// Input  : pInstanceEntity - the entity of the func_instance
+//			Instance - the map file of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergeInstance( entity_t *pInstanceEntity, CMapFile *Instance )
+{
+	matrix3x4_t	mat;
+	QAngle		angles;
+	Vector		OriginOffset = pInstanceEntity->origin;
+
+	m_InstanceCount++;
+
+	GetAnglesForKey( pInstanceEntity, "angles", angles );
+	AngleMatrix( angles, OriginOffset, mat );
+
+#ifdef MERGE_INSTANCE_DEBUG_INFO
+	Msg( "Instance Remapping: O:( %g, %g, %g ) A:( %g, %g, %g )\n", OriginOffset.x, OriginOffset.y, OriginOffset.z, angles.x, angles.y, angles.z );
+#endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
+	MergePlanes( pInstanceEntity, Instance, OriginOffset, angles, mat );
+	MergeBrushes( pInstanceEntity, Instance, OriginOffset, angles, mat );
+	MergeBrushSides( pInstanceEntity, Instance, OriginOffset, angles, mat );
+	MergeEntities( pInstanceEntity, Instance, OriginOffset, angles, mat );
+	MergeOverlays( pInstanceEntity, Instance, OriginOffset, angles, mat );
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will merge in the map planes from the instance into
+//			the main map.
+// Input  : pInstanceEntity - the entity of the func_instance
+//			Instance - the map file of the instance
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngle - the rotation of the instance
+//			InstanceMatrix - the translation / rotation matrix of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergePlanes( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix )
+{
+	// Each pair of planes needs to be added to the main map
+	for ( int i = 0; i < Instance->nummapplanes; i += 2 )
+	{
+		FindFloatPlane( Instance->mapplanes[i].normal, Instance->mapplanes[i].dist );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will merge in the map brushes from the instance into
+//			the main map.
+// Input  : pInstanceEntity - the entity of the func_instance
+//			Instance - the map file of the instance
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngle - the rotation of the instance
+//			InstanceMatrix - the translation / rotation matrix of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergeBrushes( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix )
+{
+	int		max_brush_id = 0;
+
+	for( int i = 0; i < nummapbrushes; i++ )
+	{
+		if ( mapbrushes[ i ].id > max_brush_id )
+		{
+			max_brush_id = mapbrushes[ i ].id;
+		}
+	}
+
+	for( int i = 0; i < Instance->nummapbrushes; i++ )
+	{
+		mapbrushes[ nummapbrushes + i ] = Instance->mapbrushes[ i ];
+
+		mapbrush_t	*brush = &mapbrushes[ nummapbrushes + i ];
+		brush->entitynum += num_entities;
+		brush->brushnum += nummapbrushes;
+
+		if ( i < Instance->entities[ 0 ].numbrushes || ( brush->contents & CONTENTS_LADDER ) != 0 )
+		{	// world spawn brushes as well as ladders we physically move
+			Vector	minsIn = brush->mins;
+			Vector	maxsIn = brush->maxs;
+
+			TransformAABB( InstanceMatrix, minsIn, maxsIn, brush->mins, brush->maxs );
+		}
+		else
+		{
+		}
+		brush->id += max_brush_id;
+		
+		int index = brush->original_sides - Instance->brushsides;
+		brush->original_sides = &brushsides[ nummapbrushsides + index ];
+	}
+
+	nummapbrushes += Instance->nummapbrushes;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will merge in the map sides from the instance into
+//			the main map.
+// Input  : pInstanceEntity - the entity of the func_instance
+//			Instance - the map file of the instance
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngle - the rotation of the instance
+//			InstanceMatrix - the translation / rotation matrix of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergeBrushSides( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix )
+{
+	int		max_side_id = 0;
+
+	for( int i = 0; i < nummapbrushsides; i++ )
+	{
+		if ( brushsides[ i ].id > max_side_id )
+		{
+			max_side_id = brushsides[ i ].id;
+		}
+	}
+
+	for( int i = 0; i < Instance->nummapbrushsides; i++ )
+	{
+		brushsides[ nummapbrushsides + i ] = Instance->brushsides[ i ];
+
+		side_t	*side = &brushsides[ nummapbrushsides + i ];
+		// The planes got merged & remapped.  So you need to search for the output plane index on each side
+		// NOTE: You could optimize this by saving off an index map in MergePlanes
+		side->planenum = FindFloatPlane( Instance->mapplanes[side->planenum].normal, Instance->mapplanes[side->planenum].dist );
+		side->id += max_side_id; 
+
+		// this could be pre-processed into a list for quicker checking
+		bool	bNeedsTranslation = ( side->pMapDisp && side->pMapDisp->entitynum == 0 );
+		if ( !bNeedsTranslation )
+		{	// check for sides that are part of the world spawn - those need translating
+			for( int j = 0; j < Instance->entities[ 0 ].numbrushes; j++ )
+			{
+				int loc = Instance->mapbrushes[ j ].original_sides - Instance->brushsides;
+
+				if ( i >= loc && i < ( loc + Instance->mapbrushes[ j ].numsides ) )
+				{
+					bNeedsTranslation = true;
+					break;
+				}
+			}
+		}
+		if ( !bNeedsTranslation )
+		{	// sides for ladders are outside of the world spawn, but also need translating
+			for( int j = Instance->entities[ 0 ].numbrushes; j < Instance->nummapbrushes; j++ )
+			{
+				int loc = Instance->mapbrushes[ j ].original_sides - Instance->brushsides;
+
+				if ( i >= loc && i < ( loc + Instance->mapbrushes[ j ].numsides ) && ( Instance->mapbrushes[ j ].contents & CONTENTS_LADDER ) != 0 )
+				{
+					bNeedsTranslation = true;
+					break;
+				}
+			}
+		}
+		if ( bNeedsTranslation )
+		{	// we only want to do the adjustment on world spawn brushes, not entity brushes
+			if ( side->winding )
+			{
+				for( int point = 0; point < side->winding->numpoints; point++ )
+				{
+					Vector	inPoint = side->winding->p[ point ];
+					VectorTransform( inPoint, InstanceMatrix, side->winding->p[ point ] );
+				}
+			}
+
+			int		planenum = side->planenum;
+			cplane_t inPlane, outPlane;
+			inPlane.normal = mapplanes[ planenum ].normal;
+			inPlane.dist = mapplanes[ planenum ].dist; 
+
+			MatrixTransformPlane( InstanceMatrix, inPlane, outPlane );
+			planenum = FindFloatPlane( outPlane.normal, outPlane.dist );
+			side->planenum = planenum;
+
+			brush_texture_t	bt = Instance->side_brushtextures[ i ];
+
+			VectorRotate( Instance->side_brushtextures[ i ].UAxis, InstanceMatrix, bt.UAxis );
+			VectorRotate( Instance->side_brushtextures[ i ].VAxis, InstanceMatrix, bt.VAxis );
+			bt.shift[ 0 ] -= InstanceOrigin.Dot( bt.UAxis ) / bt.textureWorldUnitsPerTexel[ 0 ];
+			bt.shift[ 1 ] -= InstanceOrigin.Dot( bt.VAxis ) / bt.textureWorldUnitsPerTexel[ 1 ];
+
+			if ( !onlyents )
+			{
+				side->texinfo = TexinfoForBrushTexture ( &mapplanes[ side->planenum ], &bt, vec3_origin );
+			}
+		}
+
+		if ( side->pMapDisp )
+		{
+			mapdispinfo_t	*disp = side->pMapDisp;
+				
+			disp->brushSideID = side->id;
+			Vector	inPoint = disp->startPosition;
+			VectorTransform( inPoint, InstanceMatrix, disp->startPosition );
+
+			disp->face.originalface = side;
+			disp->face.texinfo = side->texinfo;
+			disp->face.planenum = side->planenum;
+			disp->entitynum += num_entities; 
+
+			for( int point = 0; point < disp->face.w->numpoints; point++ )
+			{
+				Vector	inPoint = disp->face.w->p[ point ];
+				VectorTransform( inPoint, InstanceMatrix, disp->face.w->p[ point ] );
+			}
+
+		}
+	}
+
+	nummapbrushsides += Instance->nummapbrushsides;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will look for replace parameters in the function instance
+//			to see if there is anything in the epair that should be replaced.
+// Input  : pPair - the epair with the value
+//			pInstanceEntity - the func_instance that may ahve replace keywords
+// Output : pPair - the value field may be updated
+//-----------------------------------------------------------------------------
+void CMapFile::ReplaceInstancePair( epair_t *pPair, entity_t *pInstanceEntity )
+{
+	char	Value[ MAX_KEYVALUE_LEN ], NewValue[ MAX_KEYVALUE_LEN ];
+	bool	Overwritten = false;
+
+	strcpy( NewValue, pPair->value );
+	for ( epair_t *epInstance = pInstanceEntity->epairs; epInstance != NULL; epInstance = epInstance->next )
+	{
+		if ( strnicmp( epInstance->key, INSTANCE_VARIABLE_KEY, strlen( INSTANCE_VARIABLE_KEY ) ) == 0 )
+		{
+			char InstanceVariable[ MAX_KEYVALUE_LEN ];
+
+			strcpy( InstanceVariable, epInstance->value );
+
+			char *ValuePos = strchr( InstanceVariable, ' ' );
+			if ( !ValuePos )
+			{
+				continue;
+			}
+			*ValuePos = 0;
+			ValuePos++;
+
+			strcpy( Value, NewValue );
+			if ( !V_StrSubst( Value, InstanceVariable, ValuePos, NewValue, sizeof( NewValue ), false ) )
+			{
+				Overwritten = true;
+				break;
+			}
+		}
+	}
+
+	if ( !Overwritten && strcmp( pPair->value, NewValue ) != 0 )
+	{
+		free( pPair->value );
+		pPair->value = copystring( NewValue );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will merge in the entities from the instance into
+//			the main map.
+// Input  : pInstanceEntity - the entity of the func_instance
+//			Instance - the map file of the instance
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngle - the rotation of the instance
+//			InstanceMatrix - the translation / rotation matrix of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergeEntities( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix )
+{
+	int						max_entity_id = 0;
+	char					temp[ 2048 ];
+	char					NameFixup[ 128 ];
+	entity_t				*WorldspawnEnt = NULL;
+	GameData::TNameFixup	FixupStyle;
+
+	char *pTargetName = ValueForKey( pInstanceEntity, "targetname" );
+	char *pName = ValueForKey( pInstanceEntity, "name" );
+	if ( pTargetName[ 0 ] )
+	{
+		sprintf( NameFixup, "%s", pTargetName );
+	}
+	else if ( pName[ 0 ] )
+	{
+		sprintf( NameFixup, "%s", pName );
+	}
+	else
+	{
+		sprintf( NameFixup, "InstanceAuto%d", m_InstanceCount );
+	}
+
+	for( int i = 0; i < num_entities; i++ )
+	{
+		char *pID = ValueForKey( &entities[ i ], "hammerid" );
+		if ( pID[ 0 ] )
+		{
+			int value = atoi( pID );
+			if ( value > max_entity_id )
+			{
+				max_entity_id = value;
+			}
+		}
+	}
+
+	FixupStyle = ( GameData::TNameFixup )( IntForKey( pInstanceEntity, "fixup_style" ) );
+
+	for( int i = 0; i < Instance->num_entities; i++ )
+	{
+		entities[ num_entities + i ] = Instance->entities[ i ];
+
+		entity_t *entity = &entities[ num_entities + i ];
+		entity->firstbrush += ( nummapbrushes - Instance->nummapbrushes );
+
+		char *pID = ValueForKey( entity, "hammerid" );
+		if ( pID[ 0 ] )
+		{
+			int value = atoi( pID );
+			value += max_entity_id;
+			sprintf( temp, "%d", value );
+
+			SetKeyValue( entity, "hammerid", temp );
+		}
+
+		char *pEntity = ValueForKey( entity, "classname" );
+		if ( strcmpi( pEntity, "worldspawn" ) == 0 )
+		{
+			WorldspawnEnt = entity;
+		}
+		else
+		{
+			Vector	inOrigin = entity->origin;
+			VectorTransform( inOrigin, InstanceMatrix, entity->origin );
+
+			// search for variables coming from the func_instance to replace inside of the instance
+			// this is done before entity fixup, so fixup may occur on the replaced value.  Not sure if this is a desired order of operation yet.
+			for ( epair_t *ep = entity->epairs; ep != NULL; ep = ep->next )
+			{
+				ReplaceInstancePair( ep, pInstanceEntity );
+			}
+
+#ifdef MERGE_INSTANCE_DEBUG_INFO
+			Msg( "Remapping class %s\n", pEntity );
+#endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
+			GDclass *EntClass = GD.BeginInstanceRemap( pEntity, NameFixup, InstanceOrigin, InstanceAngle );
+			if ( EntClass )
+			{
+				for( int i = 0; i < EntClass->GetVariableCount(); i++ )
+				{
+					GDinputvariable *EntVar = EntClass->GetVariableAt( i );
+					char *pValue = ValueForKey( entity, ( char * )EntVar->GetName() );
+					if ( GD.RemapKeyValue( EntVar->GetName(), pValue, temp, FixupStyle ) )
+					{
+#ifdef MERGE_INSTANCE_DEBUG_INFO
+						Msg( "   %d. Remapped %s: from %s to %s\n", i, EntVar->GetName(), pValue, temp );
+#endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
+						SetKeyValue( entity, EntVar->GetName(), temp );
+					}
+					else
+					{
+#ifdef MERGE_INSTANCE_DEBUG_INFO
+						Msg( "   %d. Ignored %s: %s\n", i, EntVar->GetName(), pValue );
+#endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
+					}
+				}
+			}
+
+			if ( strcmpi( pEntity, "func_simpleladder" ) == 0 )
+			{	// hate having to do this, but the key values are so screwed up
+				AddLadderKeys( entity );
+/*				Vector	vInNormal, vOutNormal;
+
+				vInNormal.x = FloatForKey( entity, "normal.x" );
+				vInNormal.y = FloatForKey( entity, "normal.y" );
+				vInNormal.z = FloatForKey( entity, "normal.z" );
+				VectorRotate( vInNormal, InstanceMatrix, vOutNormal );
+
+				Q_snprintf( temp, sizeof( temp ), "%f", vOutNormal.x );
+				SetKeyValue( entity, "normal.x", temp );
+
+				Q_snprintf( temp, sizeof( temp ), "%f", vOutNormal.y );
+				SetKeyValue( entity, "normal.y", temp );
+
+				Q_snprintf( temp, sizeof( temp ), "%f", vOutNormal.z );
+				SetKeyValue( entity, "normal.z", temp );*/
+			}
+		}
+
+#ifdef MERGE_INSTANCE_DEBUG_INFO
+		Msg( "Instance Entity %d remapped to %d\n", i, num_entities + i );
+		Msg( "   FirstBrush: from %d to %d\n", Instance->entities[ i ].firstbrush, entity->firstbrush );
+		Msg( "   KV Pairs:\n" );
+		for ( epair_t *ep = entity->epairs; ep->next != NULL; ep = ep->next )
+		{
+			Msg( "      %s %s\n", ep->key, ep->value );
+		}
+#endif // #ifdef MERGE_INSTANCE_DEBUG_INFO
+	}
+
+	// search for variables coming from the func_instance to replace inside of the instance
+	// this is done before connection fix up, so fix up may occur on the replaced value.  Not sure if this is a desired order of operation yet.
+	for( CConnectionPairs *Connection = Instance->m_ConnectionPairs; Connection; Connection = Connection->m_Next )
+	{
+		ReplaceInstancePair( Connection->m_Pair, pInstanceEntity );
+	}
+
+	for( CConnectionPairs *Connection = Instance->m_ConnectionPairs; Connection; Connection = Connection->m_Next )
+	{
+		char	*newValue, *oldValue;
+		char	origValue[ 4096 ];
+		int		extraLen = 0;
+
+		oldValue = Connection->m_Pair->value;
+		strcpy( origValue, oldValue );
+		char *pos = strchr( origValue, ',' );
+		if ( pos )
+		{	// null terminate the first field
+			*pos = NULL;
+			extraLen = strlen( pos + 1) + 1;	// for the comma we just null'd
+		}
+
+		if ( GD.RemapNameField( origValue, temp, FixupStyle ) )
+		{
+			newValue = new char [ strlen( temp ) + extraLen + 1 ];
+			strcpy( newValue, temp );
+			if ( pos )
+			{
+				strcat( newValue, "," );
+				strcat( newValue, pos + 1 );
+			}
+
+			Connection->m_Pair->value = newValue;
+			delete oldValue;
+		}
+	}
+
+	num_entities += Instance->num_entities;
+
+	MoveBrushesToWorldGeneral( WorldspawnEnt );
+	WorldspawnEnt->numbrushes = 0;
+	WorldspawnEnt->epairs = NULL;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function will translate overlays from the instance into
+//			the main map.
+// Input  : InstanceEntityNum - the entity number of the func_instance
+//			Instance - the map file of the instance
+//			InstanceOrigin - the translation of the instance
+//			InstanceAngle - the rotation of the instance
+//			InstanceMatrix - the translation / rotation matrix of the instance
+// Output : none
+//-----------------------------------------------------------------------------
+void CMapFile::MergeOverlays( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix )
+{
+	for( int i = Instance->m_StartMapOverlays; i < g_aMapOverlays.Count(); i++ )
+	{
+		Overlay_Translate( &g_aMapOverlays[ i ], InstanceOrigin, InstanceAngle, InstanceMatrix );
+	}
+	for( int i = Instance->m_StartMapWaterOverlays; i < g_aMapWaterOverlays.Count(); i++ )
+	{
+		Overlay_Translate( &g_aMapWaterOverlays[ i ], InstanceOrigin, InstanceAngle, InstanceMatrix );
+	}
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Loads a VMF or MAP file. If the file has a .MAP extension, the MAP
 //			loader is used, otherwise the file is assumed to be in VMF format.
 // Input  : pszFileName - Full path of the map file to load.
 //-----------------------------------------------------------------------------
-void LoadMapFile(const char *pszFileName)
+bool LoadMapFile( const char *pszFileName )
 {
-#ifdef VSVMFIO
-	{
-		// All of the crazy global state
-		// This seems to more or less handle it... not sure if this is all of it or not
-		entity_num = 0;
-
-		nummapplanes = 0;
-		memset( mapplanes, 0, sizeof( mapplanes ) );
-
-		nummapbrushes = 0;
-		memset( mapbrushes, 0, sizeof( mapbrushes ) );
-
-		nummapbrushsides = 0;
-		memset( brushsides, 0, sizeof( brushsides ) );
-
-		memset( side_brushtextures, 0, sizeof( side_brushtextures ) );
-
-		memset( planehash, 0, sizeof( planehash ) );
-	}
-#endif // VSVMFIO
-
+	bool				bLoadingManifest = false;
+	CManifest			*pMainManifest = NULL;
+	ChunkFileResult_t	eResult;
+	
 	//
 	// Dummy this up for the texture handling. This can be removed when old .MAP file
 	// support is removed.
 	//
 	g_nMapFileVersion = 400;
 
-	//
-	// Open the file.
-	//
-	CChunkFile File;
-	ChunkFileResult_t eResult = File.Open(pszFileName, ChunkFile_Read);
-
-	// Clear out the cubemap samples since they will be reparsed even with -onlyents
-	g_nCubemapSamples = 0;
-	
-	//
-	// Read the file.
-	//
-	if (eResult == ChunkFile_Ok)
+	const char *pszExtension =V_GetFileExtension( pszFileName );
+	if ( pszExtension && strcmpi( pszExtension, "vmm" ) == 0 )
 	{
-		Msg("Loading %s\n", pszFileName);
-
-		nummapbrushsides = 0;
-		num_entities = 0;
-
-		// reset the displacement info count
-		nummapdispinfo = 0;
-
-		//
-		// Set up handlers for the subchunks that we are interested in.
-		//
-		CChunkHandlerMap Handlers;
-		Handlers.AddHandler("world", (ChunkHandler_t)LoadEntityCallback, 0);
-		Handlers.AddHandler("entity", (ChunkHandler_t)LoadEntityCallback, 0);
-
-		File.PushHandlers(&Handlers);
-
-		//
-		// Read the sub-chunks. We ignore keys in the root of the file.
-		//
-		while (eResult == ChunkFile_Ok)
+		pMainManifest = new CManifest();
+		if ( pMainManifest->LoadVMFManifest( pszFileName ) )
 		{
-			eResult = File.ReadChunk();
+			eResult = ChunkFile_Ok;
+			pszFileName = pMainManifest->GetInstancePath();
 		}
-
-		File.PopHandlers();
+		else
+		{
+			eResult = ChunkFile_Fail;
+		}
+		bLoadingManifest = true;
 	}
 	else
 	{
-		Error("Error opening %s: %s.\n", pszFileName, File.GetErrorText(eResult));
+		//
+		// Open the file.
+		//
+		CChunkFile File;
+		eResult = File.Open(pszFileName, ChunkFile_Read);
+
+		//
+		// Read the file.
+		//
+		if (eResult == ChunkFile_Ok)
+		{
+			int index = g_Maps.AddToTail( new CMapFile() );
+			g_LoadingMap = g_Maps[ index ];
+			if ( g_MainMap == NULL )
+			{
+				g_MainMap = g_LoadingMap;
+			}
+
+			if ( g_MainMap == g_LoadingMap || verbose )
+			{
+				Msg( "Loading %s\n", pszFileName );
+			}
+
+
+			// reset the displacement info count
+	//		nummapdispinfo = 0;
+
+			//
+			// Set up handlers for the subchunks that we are interested in.
+			//
+			CChunkHandlerMap Handlers;
+			Handlers.AddHandler("world", (ChunkHandler_t)LoadEntityCallback, 0);
+			Handlers.AddHandler("entity", (ChunkHandler_t)LoadEntityCallback, 0);
+
+			File.PushHandlers(&Handlers);
+
+			//
+			// Read the sub-chunks. We ignore keys in the root of the file.
+			//
+			while (eResult == ChunkFile_Ok)
+			{
+				eResult = File.ReadChunk();
+			}
+
+			File.PopHandlers();
+		}
+		else
+		{
+			Error("Error opening %s: %s.\n", pszFileName, File.GetErrorText(eResult));
+		}
 	}
 
 	if ((eResult == ChunkFile_Ok) || (eResult == ChunkFile_EOF))
 	{
-		ClearBounds (map_mins, map_maxs);
-		for (int i=0 ; i<entities[0].numbrushes ; i++)
+		// Update the overlay/side list(s).
+		Overlay_UpdateSideLists( g_LoadingMap->m_StartMapOverlays );
+		OverlayTransition_UpdateSideLists( g_LoadingMap->m_StartMapWaterOverlays );
+
+		g_LoadingMap->CheckForInstances( pszFileName );
+
+		if ( pMainManifest )
+		{
+			pMainManifest->CordonWorld();
+		}
+
+		ClearBounds (g_LoadingMap->map_mins, g_LoadingMap->map_maxs);
+		for (int i=0 ; i<g_MainMap->entities[0].numbrushes ; i++)
 		{
 			// HLTOOLS: Raise map limits
-			if (mapbrushes[i].mins[0] > MAX_COORD_INTEGER)
+			if (g_LoadingMap->mapbrushes[i].mins[0] > MAX_COORD_INTEGER)
 			{
 				continue;	// no valid points
 			}
 
-			AddPointToBounds (mapbrushes[i].mins, map_mins, map_maxs);
-			AddPointToBounds (mapbrushes[i].maxs, map_mins, map_maxs);
+			AddPointToBounds (g_LoadingMap->mapbrushes[i].mins, g_LoadingMap->map_mins, g_LoadingMap->map_maxs);
+			AddPointToBounds (g_LoadingMap->mapbrushes[i].maxs, g_LoadingMap->map_mins, g_LoadingMap->map_maxs);
 		}
 
-		qprintf ("%5i brushes\n", nummapbrushes);
-		qprintf ("%5i clipbrushes\n", c_clipbrushes);
-		qprintf ("%5i total sides\n", nummapbrushsides);
-		qprintf ("%5i boxbevels\n", c_boxbevels);
-		qprintf ("%5i edgebevels\n", c_edgebevels);
-		qprintf ("%5i entities\n", num_entities);
-		qprintf ("%5i planes\n", nummapplanes);
-		qprintf ("%5i areaportals\n", c_areaportals);
-		qprintf ("size: %5.0f,%5.0f,%5.0f to %5.0f,%5.0f,%5.0f\n", map_mins[0],map_mins[1],map_mins[2],
-			map_maxs[0],map_maxs[1],map_maxs[2]);
+		qprintf ("%5i brushes\n", g_LoadingMap->nummapbrushes);
+		qprintf ("%5i clipbrushes\n", g_LoadingMap->c_clipbrushes);
+		qprintf ("%5i total sides\n", g_LoadingMap->nummapbrushsides);
+		qprintf ("%5i boxbevels\n", g_LoadingMap->c_boxbevels);
+		qprintf ("%5i edgebevels\n", g_LoadingMap->c_edgebevels);
+		qprintf ("%5i entities\n", g_LoadingMap->num_entities);
+		qprintf ("%5i planes\n", g_LoadingMap->nummapplanes);
+		qprintf ("%5i areaportals\n", g_LoadingMap->c_areaportals);
+		qprintf ("size: %5.0f,%5.0f,%5.0f to %5.0f,%5.0f,%5.0f\n", g_LoadingMap->map_mins[0],g_LoadingMap->map_mins[1],g_LoadingMap->map_mins[2],
+			g_LoadingMap->map_maxs[0],g_LoadingMap->map_maxs[1],g_LoadingMap->map_maxs[2]);
 
 		//TestExpandBrushes();
 		
 		// Clear the error reporting
 		g_MapError.ClearState();
-
-		// Update the overlay/side list(s).
-		Overlay_UpdateSideLists();
-		OverlayTransition_UpdateSideLists();
 	}
-	else
+
+	if ( g_MainMap == g_LoadingMap )
 	{
-		g_MapError.ReportError(File.GetErrorText(eResult));
+		num_entities = g_MainMap->num_entities;
+		memcpy( entities, g_MainMap->entities, sizeof( g_MainMap->entities ) );
 	}
+	g_LoadingMap->ForceFuncAreaPortalWindowContents();
 
-
-	ForceFuncAreaPortalWindowContents();
+	return ( ( eResult == ChunkFile_Ok ) || ( eResult == ChunkFile_EOF ) );
 }
 
+ChunkFileResult_t LoadSideCallback(CChunkFile *pFile, LoadSide_t *pSideInfo)
+{
+	return g_LoadingMap->LoadSideCallback( pFile, pSideInfo );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1888,7 +2673,7 @@ void LoadMapFile(const char *pszFileName)
 //			pParent - 
 // Output : ChunkFileResult_t
 //-----------------------------------------------------------------------------
-ChunkFileResult_t LoadSideCallback(CChunkFile *pFile, LoadSide_t *pSideInfo)
+ChunkFileResult_t CMapFile::LoadSideCallback(CChunkFile *pFile, LoadSide_t *pSideInfo)
 {
 	if (nummapbrushsides == MAX_MAP_BRUSHSIDES)
 	{
@@ -2125,6 +2910,11 @@ ChunkFileResult_t LoadConnectionsCallback(CChunkFile *pFile, LoadEntity_t *pLoad
 //-----------------------------------------------------------------------------
 ChunkFileResult_t LoadConnectionsKeyCallback(const char *szKey, const char *szValue, LoadEntity_t *pLoadEntity)
 {
+	return g_LoadingMap->LoadConnectionsKeyCallback( szKey, szValue, pLoadEntity );
+}
+
+ChunkFileResult_t CMapFile::LoadConnectionsKeyCallback(const char *szKey, const char *szValue, LoadEntity_t *pLoadEntity)
+{
 	//
 	// Create new input and fill it out.
 	//
@@ -2136,6 +2926,8 @@ ChunkFileResult_t LoadConnectionsKeyCallback(const char *szKey, const char *szVa
 	strcpy(pOutput->key, szKey);
 	strcpy(pOutput->value, szValue);
 
+	m_ConnectionPairs = new CConnectionPairs( pOutput, m_ConnectionPairs );
+	
 	//
 	// Append it to the end of epairs list.
 	//
@@ -2158,13 +2950,18 @@ ChunkFileResult_t LoadConnectionsKeyCallback(const char *szKey, const char *szVa
 }
 
 
+ChunkFileResult_t LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity)
+{
+	return g_LoadingMap->LoadSolidCallback( pFile, pLoadEntity );
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : pFile - 
 //			pParent - 
 // Output : ChunkFileResult_t
 //-----------------------------------------------------------------------------
-ChunkFileResult_t LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity)
+ChunkFileResult_t CMapFile::LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity)
 {
 	if (nummapbrushes == MAX_MAP_BRUSHES)
 	{
@@ -2186,7 +2983,7 @@ ChunkFileResult_t LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity
 	// Set up handlers for the subchunks that we are interested in.
 	//
 	CChunkHandlerMap Handlers;
-	Handlers.AddHandler("side", (ChunkHandler_t)LoadSideCallback, &SideInfo);
+	Handlers.AddHandler("side", (ChunkHandler_t)::LoadSideCallback, &SideInfo);
 
 	//
 	// Read the solid chunk.
@@ -2330,7 +3127,7 @@ TestExpandBrushes
 Expands all the brush planes and saves a new map out
 ================
 */
-void TestExpandBrushes (void)
+void CMapFile::TestExpandBrushes (void)
 {
 	FILE	*f;
 	side_t	*s;

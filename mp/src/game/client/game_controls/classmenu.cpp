@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,7 +18,7 @@
 #include <vgui/ISurface.h>
 #include <KeyValues.h>
 #include <vgui_controls/ImageList.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
@@ -30,10 +30,6 @@
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 #endif
 #include <game/client/iviewport.h>
-
-#if defined( TF_CLIENT_DLL )
-#include "item_inventory.h"
-#endif // TF_CLIENT_DLL
 
 #include <stdlib.h> // MAX_PATH define
 
@@ -170,15 +166,6 @@ void CClassMenu::OnCommand( const char *command )
 {
 	if ( Q_stricmp( command, "vguicancel" ) )
 	{
-#if defined( TF_CLIENT_DLL )
-		// PREITEMHACK: Until Steam has the loadout backend up, just tell the server 
-		//				what we're using before we pick a class.
-		if ( !Q_strnicmp( command, "joinclass", 9 ) )
-		{
-			InventoryManager()->UpdateServerLoadout();
-		}
-#endif
-
 		engine->ClientCmd( const_cast<char *>( command ) );
 
 #if !defined( CSTRIKE_DLL ) && !defined( TF_CLIENT_DLL )
@@ -267,10 +254,54 @@ void CClassMenu::SetVisibleButton(const char *textEntryName, bool state)
 
 void CClassMenu::OnKeyCodePressed(KeyCode code)
 {
+	int nDir = 0;
+
+	switch ( code )
+	{
+	case KEY_XBUTTON_UP:
+	case KEY_XSTICK1_UP:
+	case KEY_XSTICK2_UP:
+	case KEY_UP:
+	case KEY_XBUTTON_LEFT:
+	case KEY_XSTICK1_LEFT:
+	case KEY_XSTICK2_LEFT:
+	case KEY_LEFT:
+		nDir = -1;
+		break;
+
+	case KEY_XBUTTON_DOWN:
+	case KEY_XSTICK1_DOWN:
+	case KEY_XSTICK2_DOWN:
+	case KEY_DOWN:
+	case KEY_XBUTTON_RIGHT:
+	case KEY_XSTICK1_RIGHT:
+	case KEY_XSTICK2_RIGHT:
+	case KEY_RIGHT:
+		nDir = 1;
+		break;
+	}
+
 	if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
 	{
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
 		gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );
+	}
+	else if ( nDir != 0 )
+	{
+		CUtlSortVector< SortedPanel_t, CSortedPanelYLess > vecSortedButtons;
+		VguiPanelGetSortedChildButtonList( this, (void*)&vecSortedButtons, "&", 0 );
+
+		int nNewArmed = VguiPanelNavigateSortedChildButtonList( (void*)&vecSortedButtons, nDir );
+
+		if ( nNewArmed != -1 )
+		{
+			// Handled!
+			if ( nNewArmed < m_mouseoverButtons.Count() )
+			{
+				m_mouseoverButtons[ nNewArmed ]->OnCursorEntered();
+			}
+			return;
+		}
 	}
 	else
 	{

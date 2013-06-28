@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2006, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -232,7 +232,7 @@ bool CCommandBuffer::AddText( const char *pText, int nTickDelay )
 			continue;
 
 		// Deal with the special 'wait' command
-		if ( !Q_stricmp( pArgV0, "wait" ) )
+		if ( !Q_stricmp( pArgV0, "wait" ) && IsWaitEnabled() )
 		{
 			int nDelay = pArgS ? atoi( pArgS ) : m_nWaitDelayTicks;
 			nTick += nDelay;
@@ -396,7 +396,7 @@ void CCommandBuffer::EndProcessingCommands()
 
 		AssertMsgOnce( false, "CCommandBuffer::EndProcessingCommands() called before all appropriate commands were dequeued.\n" );
 		int nNext = i;
-		Msg( "Warning: Skipping command %s\n", m_pArgSBuffer[ m_Commands[i].m_nFirstArgS ] );
+		Msg( "Warning: Skipping command %s\n", &m_pArgSBuffer[ m_Commands[i].m_nFirstArgS ] );
 		m_Commands.Remove( i );
 		i = nNext;
 	}

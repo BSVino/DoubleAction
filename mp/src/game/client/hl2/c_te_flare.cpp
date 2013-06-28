@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Flare effects
 //
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "particles_simple.h"
 #include "iefx.h"
 #include "dlight.h"

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -168,6 +168,8 @@ public:
 	virtual bool	UsesFlexDelayedWeights() = 0;
 
 	virtual void	RecordToolMessage() = 0;
+
+	virtual bool	IgnoresZBuffer( void ) const = 0;
 };
 
 
@@ -256,6 +258,7 @@ public:
 	virtual float *GetRenderClipPlane() { return NULL; }
 
 	virtual void RecordToolMessage() {}
+	virtual bool IgnoresZBuffer( void ) const { return false; }
 
 // IClientUnknown implementation.
 public:

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -93,6 +93,10 @@ public:
 abstract_class IBSPTreeData
 {
 public:
+	// Add a virtual destructor so that the derived class destructors will
+	// be called.
+	virtual ~IBSPTreeData() {}
+
 	// Initializes, shuts down
 	virtual void Init( ISpatialQuery* pBSPTree ) = 0;
 	virtual void Shutdown() = 0;

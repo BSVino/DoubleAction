@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,6 +32,8 @@
 #include "tier0/memdbgon.h"
 
 void Host_Say( edict_t *pEdict, bool teamonly );
+
+ConVar sv_motd_unload_on_dismissal( "sv_motd_unload_on_dismissal", "0", 0, "If enabled, the MOTD contents will be unloaded when the player closes the MOTD." );
 
 extern CBaseEntity*	FindPickerEntityClass( CBasePlayer *pPlayer, char *classname );
 extern bool			g_fGameOver;
@@ -68,6 +70,7 @@ void FinishClientPutInServer( CHL2MP_Player *pPlayer )
 	data->SetString( "title", title );		// info panel title
 	data->SetString( "type", "1" );			// show userdata from stringtable entry
 	data->SetString( "msg",	"motd" );		// use this stringtable entry
+	data->SetBool( "unload", sv_motd_unload_on_dismissal.GetBool() );
 
 	pPlayer->ShowViewPortPanel( PANEL_INFO, true, data );
 

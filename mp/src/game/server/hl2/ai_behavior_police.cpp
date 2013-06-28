@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -321,7 +321,7 @@ void CAI_PolicingBehavior::StartTask( const Task_t *pTask )
 			// Find a point on our policing radius to stand on
 			if ( IntersectInfiniteRayWithSphere( GetAbsOrigin(), harassDir, m_hPoliceGoal->GetAbsOrigin(), m_hPoliceGoal->GetRadius(), &flInter1, &flInter2 ) )
 			{
-				Vector vPos = m_hPoliceGoal->GetAbsOrigin() + harassDir * ( max( flInter1, flInter2 ) );
+				Vector vPos = m_hPoliceGoal->GetAbsOrigin() + harassDir * ( MAX( flInter1, flInter2 ) );
 
 				// See how far away the default one is
 				float testDist = UTIL_DistApprox2D( m_hPoliceGoal->GetAbsOrigin(), harassPos );

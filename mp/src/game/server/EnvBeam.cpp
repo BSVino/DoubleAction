@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements visual effects entities: sprites, beams, bubbles, etc.
 //
@@ -143,7 +143,7 @@ void CEnvBeam::Spawn( void )
 
 	BaseClass::Spawn();
 
-	m_noiseAmplitude = min(MAX_BEAM_NOISEAMPLITUDE, m_noiseAmplitude);
+	m_noiseAmplitude = MIN(MAX_BEAM_NOISEAMPLITUDE, m_noiseAmplitude);
 
 	// Check for tapering
 	if ( HasSpawnFlags( SF_BEAM_TAPEROUT ) )
@@ -381,7 +381,7 @@ void CEnvBeam::Strike( void )
 	if ( pStart == NULL || pEnd == NULL )
 		return;
 
-	m_speed = clamp( m_speed, 0, MAX_BEAM_SCROLLSPEED );
+	m_speed = clamp( (int) m_speed, 0, (int) MAX_BEAM_SCROLLSPEED );
 	
 	int pointStart = IsStaticPointEntity( pStart );
 	int pointEnd = IsStaticPointEntity( pEnd );
@@ -710,7 +710,7 @@ void CEnvBeam::BeamUpdateVars( void )
 
 	m_nNumBeamEnts = 2;
 
-	m_speed = clamp( m_speed, 0, MAX_BEAM_SCROLLSPEED );
+	m_speed = clamp( (int) m_speed, 0, (int) MAX_BEAM_SCROLLSPEED );
 
 	// NOTE: If the end entity is the beam itself (and the start entity
 	// isn't *also* the beam itself, we've got problems. This is a problem
@@ -747,8 +747,8 @@ void CEnvBeam::BeamUpdateVars( void )
 
 	RelinkBeam();
 
-	SetWidth( min(MAX_BEAM_WIDTH, m_boltWidth) );
-	SetNoise( min(MAX_BEAM_NOISEAMPLITUDE, m_noiseAmplitude) );
+	SetWidth( MIN(MAX_BEAM_WIDTH, m_boltWidth) );
+	SetNoise( MIN(MAX_BEAM_NOISEAMPLITUDE, m_noiseAmplitude) );
 	SetFrame( m_frameStart );
 	SetScrollRate( m_speed );
 	if ( m_spawnflags & SF_BEAM_SHADEIN )

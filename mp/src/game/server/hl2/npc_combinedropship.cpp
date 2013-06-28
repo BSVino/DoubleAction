@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Large vehicle what delivers combine troops.
 //
@@ -1194,7 +1194,7 @@ void CNPC_CombineDropship::Flight( void )
 		}
 
 		float flCurrentSpeed = GetAbsVelocity().Length();
-		float flDist = min( flCurrentSpeed + accelRate, maxSpeed );
+		float flDist = MIN( flCurrentSpeed + accelRate, maxSpeed );
 
 		Vector deltaPos;
 		if ( GetLandingState() == LANDING_SWOOPING )
@@ -2047,8 +2047,8 @@ void CNPC_CombineDropship::PrescheduleThink( void )
 #define MIN_LAND_VEL	-75.0f
 #define ALTITUDE_CAP	512.0f
 
-			float flFactor = min( 1.0,  flAltitude / ALTITUDE_CAP );
-			float flDescendVelocity = min( -75, MAX_LAND_VEL * flFactor );
+			float flFactor = MIN( 1.0,  flAltitude / ALTITUDE_CAP );
+			float flDescendVelocity = MIN( -75, MAX_LAND_VEL * flFactor );
 
 			vecVelocity.z = flDescendVelocity;
 

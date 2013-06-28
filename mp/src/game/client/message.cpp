@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -21,7 +21,7 @@
 #include "vgui/IScheme.h"
 #include "vgui/ISurface.h"
 #include "client_textmessage.h"
-#include "VguiMatSurface/IMatSystemSurface.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -152,13 +152,17 @@ private:
 //-----------------------------------------------------------------------------
 void DispatchHudText( const char *pszText )
 {
-	if ( pszText == NULL )
+	CHudMessage *pHudMessage = (CHudMessage *)GET_HUDELEMENT( CHudMessage );
+	if ( pHudMessage )
 	{
-		(GET_HUDELEMENT( CHudMessage ))->Reset();
-	}
-	else
-	{
-		(GET_HUDELEMENT( CHudMessage ))->MessageAdd( pszText );
+		if ( pszText == NULL )
+		{
+			pHudMessage->Reset();
+		}
+		else
+		{
+			pHudMessage->MessageAdd( pszText );
+		}
 	}
 }
 
@@ -469,7 +473,7 @@ void CHudMessage::MessageDrawScan( client_textmessage_t *pMessage, float time )
 		int tempLen = len + 2;
 		char *localString = (char *)_alloca( tempLen );
 		Q_strncpy( localString, pMessage->pMessage, tempLen );
-		if (iscntrl(localString[len - 1]))
+		if (V_iscntrl(localString[len - 1]))
 		{
 			localString[len - 1] = 0;
 		}

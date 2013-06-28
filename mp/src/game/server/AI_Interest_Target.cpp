@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Hooks and classes for the support of humanoid NPCs with 
 //			groovy facial animation capabilities, aka, "Actors"
@@ -74,7 +74,7 @@ void CAI_InterestTarget::Add( CBaseEntity *pTarget, float flImportance, float fl
 		{
 			if (target.m_flStartTime == gpGlobals->curtime)
 			{
-				flImportance = max( flImportance, target.m_flInterest );
+				flImportance = MAX( flImportance, target.m_flInterest );
 			}
 			Remove( i );
 			break;
@@ -114,7 +114,7 @@ void CAI_InterestTarget::Add( CBaseEntity *pTarget, const Vector &vecPosition, f
 		{
 			if (target.m_flStartTime == gpGlobals->curtime)
 			{
-				flImportance = max( flImportance, target.m_flInterest );
+				flImportance = MAX( flImportance, target.m_flInterest );
 			}
 			Remove( i );
 			break;

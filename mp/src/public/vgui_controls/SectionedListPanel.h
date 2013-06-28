@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,16 +12,18 @@
 #pragma once
 #endif
 
-#include <UtlVector.h>
-#include <UtlLinkedList.h>
+#include <utlvector.h>
+#include <utllinkedlist.h>
 #include <vgui/VGUI.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/PHandle.h>
+#include <vgui_controls/Label.h>
 
 namespace vgui
 {
 
-class CSectionHeader;
+class SectionedListPanel;
+class SectionedListPanelHeader;
 class CItemButton;
 
 // sorting function, should return true if itemID1 should be displayed before itemID2
@@ -41,6 +43,7 @@ public:
 	// adds a new section; returns false if section already exists
 	virtual void AddSection(int sectionID, const char *name, SectionSortFunc_t sortFunc = NULL);
 	virtual void AddSection(int sectionID, const wchar_t *name, SectionSortFunc_t sortFunc = NULL);
+	virtual void AddSection(int sectionID, SectionedListPanelHeader *pHeader, SectionSortFunc_t sortFunc = NULL);
 
 	// clears all the sections - leaves the items in place
 	virtual void RemoveAllSections();
@@ -50,6 +53,7 @@ public:
 	virtual void SetSectionDividerColor( int sectionID, Color color);
 	// forces a section to always be visible
 	virtual void SetSectionAlwaysVisible(int sectionID, bool visible = true);
+	virtual void SetSectionMinimumHeight(int sectionID, int iMinimumHeight);
 
 	// adds a new column to a section
 	enum ColumnFlags_e
@@ -82,7 +86,18 @@ public:
 
 	// set the text color of an item
 	virtual void SetItemFgColor(int itemID, Color color);
+	//=============================================================================
+	// HPE_BEGIN:
+	// [menglish] Getters and setters for several item and section objects
+	//=============================================================================	 
+	virtual void SetItemBgColor( int itemID, Color color );
+	virtual int GetColumnIndexByName(int sectionID, char* name);
+	virtual int GetLineSpacing() { return m_iLineSpacing; }
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
 	virtual void SetItemFont( int itemID, HFont font );
+	virtual void SetItemEnabled( int itemID, bool bEnabled );
 
 	/* MESSAGES SENT:
 		"RowSelected"
@@ -140,6 +155,32 @@ public:
 	// gets the local coordinates of a cell
 	virtual bool GetCellBounds(int itemID, int column, int &x, int &y, int &wide, int &tall);
 
+	// Gets the coordinates of a section header
+	virtual bool GetSectionHeaderBounds(int sectionID, int &x, int &y, int &wide, int &tall);
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [menglish] Get the bounds of an item or column.
+	//=============================================================================
+	 
+	// gets the local coordinates of a cell using the max width for every column
+	virtual bool GetMaxCellBounds(int itemID, int column, int &x, int &y, int &wide, int &tall);
+
+	// gets the local coordinates of an item
+	virtual bool GetItemBounds(int itemID, int &x, int &y, int &wide, int &tall);
+
+	// [tj] Accessors for clickability
+	void SetClickable(bool clickable) { m_clickable = clickable; }
+	bool IsClickable() { return m_clickable; }
+
+	// [tj] Accessors for header drawing
+	void SetDrawHeaders(bool drawHeaders) { m_bDrawSectionHeaders = drawHeaders; }
+	bool GetDrawHeaders() { return m_bDrawSectionHeaders; }
+	 
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
 	// set up a field for editing
 	virtual void EnterEditMode(int itemID, int column, vgui::Panel *editPanel);
 
@@ -162,6 +203,10 @@ public:
 
 	virtual void SetProportional(bool state);
 
+	HFont GetHeaderFont( void ) const;
+	void SetHeaderFont( HFont hFont );
+	HFont GetRowFont( void ) const;
+	void SetRowFont( HFont hFont );
 	void MoveSelectionDown( void );
 	void MoveSelectionUp( void );
 
@@ -172,7 +217,8 @@ protected:
 	virtual void OnSizeChanged(int wide, int tall);
 	virtual void OnMouseWheeled(int delta);
 	virtual void OnMousePressed( MouseCode code);
-	virtual void OnKeyCodeTyped( KeyCode code);
+	virtual void NavigateTo( void );
+	virtual void OnKeyCodePressed( KeyCode code );
 	virtual void OnSetFocus();						// called after the panel receives the keyboard focus
 
 public:
@@ -180,14 +226,13 @@ public:
 private:
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" );
 
-	void AddSectionHelper(int sectionID, CSectionHeader *header, SectionSortFunc_t sortFunc);
 	int GetSectionTall();
 	void LayoutPanels(int &contentTall);
 
 	// Returns the index of a new item button, reusing an existing item button if possible
 	int GetNewItemButton();
 
-	friend CItemButton;
+	friend class CItemButton;
 	void SetSelectedItem(CItemButton *item);
 	DHANDLE<CItemButton> m_hSelectedItem;
 
@@ -203,9 +248,10 @@ private:
 	{
 		int m_iID;
 		bool m_bAlwaysVisible;
-		CSectionHeader *m_pHeader;
+		SectionedListPanelHeader *m_pHeader;
 		CUtlVector<column_t> m_Columns;
 		SectionSortFunc_t m_pSortFunc;
+		int m_iMinimumHeight;
 	};
 
 	CUtlVector<section_t> 				m_Sections;
@@ -218,6 +264,7 @@ private:
 	int m_iEditModeColumn;
 	int m_iContentHeight;
 	int m_iLineSpacing;
+	int m_iSectionGap;
 
 	int FindSectionIndexByID(int sectionID);
     void ReSortList();
@@ -228,7 +275,41 @@ private:
 	bool m_bSortNeeded;
 	bool m_bVerticalScrollbarEnabled;
 
+	HFont m_hHeaderFont;
+	HFont m_hRowFont;
+	//=============================================================================
+	// HPE_BEGIN:	
+	//=============================================================================
+	// [tj] Whether or not this list should respond to the mouse
+	bool m_clickable;
+	// [tj] Whether or not this list should draw the headers for the sections
+	bool m_bDrawSectionHeaders;
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
 	CPanelAnimationVar( bool, m_bShowColumns, "show_columns", "false" );
+};
+
+class SectionedListPanelHeader : public Label
+{
+	DECLARE_CLASS_SIMPLE( SectionedListPanelHeader, Label );
+
+public:
+	SectionedListPanelHeader(SectionedListPanel *parent, const char *name, int sectionID);
+	SectionedListPanelHeader(SectionedListPanel *parent, const wchar_t *name, int sectionID);
+
+	virtual void ApplySchemeSettings(IScheme *pScheme) OVERRIDE;
+	virtual void Paint() OVERRIDE;
+	virtual void PerformLayout() OVERRIDE;
+
+	void SetColor(Color col);
+	void SetDividerColor(Color col );
+
+protected:
+	int m_iSectionID;
+	Color m_SectionDividerColor;
+	SectionedListPanel *m_pListPanel;
 };
 
 } // namespace vgui

@@ -1,17 +1,17 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================//
 
 #include "cbase.h"
-#include <vgui/isurface.h>
+#include <vgui/ISurface.h>
 #include "hud_numericdisplay.h"
 #include "iclientmode.h"
 #include <coordsize.h>
 #include "hud_macros.h"
-#include "vgui/ivgui.h"
-#include "vgui/ilocalize.h"
+#include "vgui/IVGui.h"
+#include "vgui/ILocalize.h"
 #include "mapoverview.h"
 #include "hud_radar.h"
 #include "iclientvehicle.h"

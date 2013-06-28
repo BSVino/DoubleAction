@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,15 +13,13 @@
 #include "cliententitylist.h"
 #endif
 
+#include "qlimits.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 
 #define SUBINCH_PRECISION	3
-
-// Note, must match common/qlimits.h!!!
-#define MAX_MODEL_INDEX_BITS	10 
-
 
 #ifdef CLIENT_DLL
 
@@ -63,6 +61,17 @@
 		RecvPropInt( RECVINFO( m_nColor ) ),
 
 		RecvPropFloat( RECVINFO( m_flRadius ) ),
+
+		RecvPropBool( RECVINFO( m_bCustomColors ) ),
+		RecvPropVector( RECVINFO( m_CustomColors.m_vecColor1 ) ),
+		RecvPropVector( RECVINFO( m_CustomColors.m_vecColor2 ) ),
+
+		RecvPropBool( RECVINFO( m_bControlPoint1 ) ),
+		RecvPropInt( RECVINFO( m_ControlPoint1.m_eParticleAttachment ) ),
+		RecvPropFloat( RECVINFO( m_ControlPoint1.m_vecOffset[0] ) ),
+		RecvPropFloat( RECVINFO( m_ControlPoint1.m_vecOffset[1] ) ),
+		RecvPropFloat( RECVINFO( m_ControlPoint1.m_vecOffset[2] ) ),
+
 	END_RECV_TABLE()
 
 #else
@@ -114,6 +123,16 @@
 		SendPropInt( SENDINFO_NOCHECK( m_nColor ), 8, SPROP_UNSIGNED ),
 
 		SendPropFloat( SENDINFO_NOCHECK( m_flRadius ), 10, SPROP_ROUNDDOWN, 0.0f, 1023.0f ),
+
+		SendPropBool( SENDINFO_NOCHECK( m_bCustomColors) ),
+		SendPropVector( SENDINFO_NOCHECK( m_CustomColors.m_vecColor1 ), 8, 0, 0, 1 ),
+		SendPropVector( SENDINFO_NOCHECK( m_CustomColors.m_vecColor2 ), 8, 0, 0, 1 ),
+
+		SendPropBool( SENDINFO_NOCHECK( m_bControlPoint1) ),
+		SendPropInt( SENDINFO_NOCHECK( m_ControlPoint1.m_eParticleAttachment ), 5, SPROP_UNSIGNED ),
+		SendPropFloat( SENDINFO_NOCHECK( m_ControlPoint1.m_vecOffset[0] ), -1, SPROP_COORD ),
+		SendPropFloat( SENDINFO_NOCHECK( m_ControlPoint1.m_vecOffset[1] ), -1, SPROP_COORD ),
+		SendPropFloat( SENDINFO_NOCHECK( m_ControlPoint1.m_vecOffset[2] ), -1, SPROP_COORD ),
 
 	END_SEND_TABLE()
 

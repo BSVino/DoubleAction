@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -58,7 +58,7 @@ public:
 
 	void FireTeamWinOutput( int iWinningTeam );
 
-	bool PointCanBeCapped( CTeamControlPoint *pPoint );
+	bool IsInRound( CTeamControlPoint *pPoint );
 	void CheckWinConditions( void );
 
 	bool WouldNewCPOwnerWinGame( CTeamControlPoint *pPoint, int iNewOwner );
@@ -121,11 +121,14 @@ public:
 
 	bool ShouldScorePerCapture( void ){ return m_bScorePerCapture; }
 	bool ShouldPlayAllControlPointRounds( void ){ return m_bPlayAllRounds; }
-	bool FindControlPointRoundToPlay( void ); // checks to see if there are any more rounds to play (but doesn't actually "get" one to play)
+	int NumPlayableControlPointRounds( void ); // checks to see if there are any more rounds to play (but doesn't actually "get" one to play)
 	
 //	void ListRounds( void );
 
 	float GetPartialCapturePointRate( void );
+
+	void SetLastOwnershipChangeTime( float m_flTime ) { m_flLastOwnershipChangeTime = m_flTime; }
+	float GetLastOwnershipChangeTime( void ) { return m_flLastOwnershipChangeTime; }
 
 private:
 	void EXPORT CPMThink( void );
@@ -199,6 +202,7 @@ private:
 	COutputEvent m_OnWonByTeam2;
 
 	float m_flPartialCapturePointsRate;
+	float m_flLastOwnershipChangeTime;
 };
 
 extern CUtlVector< CHandle<CTeamControlPointMaster> >		g_hControlPointMasters;

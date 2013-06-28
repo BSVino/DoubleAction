@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -65,7 +65,7 @@ bool CSceneTokenProcessor::GetToken( bool crossline )
 {
 	// NOTE: crossline is ignored here, may need to implement if needed
 	m_pBuffer = engine->ParseFile( m_pBuffer, m_szToken, sizeof( m_szToken ) );
-	if ( strlen( m_szToken ) >= 0 )
+	if ( m_szToken[0] )
 		return true;
 	return false;
 }

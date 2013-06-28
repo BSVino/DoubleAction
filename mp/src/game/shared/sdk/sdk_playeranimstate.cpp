@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,644 +13,609 @@
 #include "utldict.h"
 
 #include "sdk_playeranimstate.h"
-#include "base_playeranimstate.h"
-#include "datacache/imdlcache.h"
+#include "weapon_sdkbase.h"
+#include "weapon_basesdkgrenade.h"
 
 #ifdef CLIENT_DLL
-#include "c_sdk_player.h"
+	#include "c_sdk_player.h"
+	#include "bone_setup.h"
+	#include "interpolatedvar.h"
 #else
-#include "sdk_player.h"
+	#include "sdk_player.h"
 #endif
 
-#define SDK_RUN_SPEED				320.0f
-#define SDK_WALK_SPEED				75.0f
-#define SDK_CROUCHWALK_SPEED		110.0f
+#define ANIM_TOPSPEED_WALK			100
+#define ANIM_TOPSPEED_RUN			250
+#define ANIM_TOPSPEED_RUN_CROUCH	85
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPlayer - 
-// Output : CMultiPlayerAnimState*
-//-----------------------------------------------------------------------------
-CSDKPlayerAnimState* CreateSDKPlayerAnimState( CSDKPlayer *pPlayer )
+#define DEFAULT_IDLE_NAME "idle_upper_"
+#define DEFAULT_CROUCH_IDLE_NAME "crouch_idle_upper_"
+#define DEFAULT_CROUCH_WALK_NAME "crouch_walk_upper_"
+#define DEFAULT_WALK_NAME "walk_upper_"
+#define DEFAULT_RUN_NAME "run_upper_"
+
+#define DEFAULT_FIRE_IDLE_NAME "idle_shoot_"
+#define DEFAULT_FIRE_CROUCH_NAME "crouch_idle_shoot_"
+#define DEFAULT_FIRE_CROUCH_WALK_NAME "crouch_walk_shoot_"
+#define DEFAULT_FIRE_WALK_NAME "walk_shoot_"
+#define DEFAULT_FIRE_RUN_NAME "run_shoot_"
+
+
+#define FIRESEQUENCE_LAYER		(AIMSEQUENCE_LAYER+NUM_AIMSEQUENCE_LAYERS)
+#define RELOADSEQUENCE_LAYER	(FIRESEQUENCE_LAYER + 1)
+#define GRENADESEQUENCE_LAYER	(RELOADSEQUENCE_LAYER + 1)
+#define NUM_LAYERS_WANTED		(GRENADESEQUENCE_LAYER + 1)
+
+
+
+// ------------------------------------------------------------------------------------------------ //
+// CSDKPlayerAnimState declaration.
+// ------------------------------------------------------------------------------------------------ //
+
+class CSDKPlayerAnimState : public CBasePlayerAnimState, public ISDKPlayerAnimState
 {
-	MDLCACHE_CRITICAL_SECTION();
+public:
+	DECLARE_CLASS( CSDKPlayerAnimState, CBasePlayerAnimState );
+	friend ISDKPlayerAnimState* CreatePlayerAnimState( CBaseAnimatingOverlay *pEntity, ISDKPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences );
 
-	// Setup the movement data.
-	MultiPlayerMovementData_t movementData;
-	movementData.m_flBodyYawRate = 720.0f;
-	movementData.m_flRunSpeed = SDK_RUN_SPEED;
-	movementData.m_flWalkSpeed = SDK_WALK_SPEED;
-	movementData.m_flSprintSpeed = -1.0f;
+	CSDKPlayerAnimState();
 
-	// Create animation state for this player.
-	CSDKPlayerAnimState *pRet = new CSDKPlayerAnimState( pPlayer, movementData );
+	virtual void DoAnimationEvent( PlayerAnimEvent_t event, int nData );
+	virtual bool IsThrowingGrenade();
+	virtual int CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle );
+	virtual void ClearAnimationState();
+	virtual bool CanThePlayerMove();
+	virtual float GetCurrentMaxGroundSpeed();
+	virtual Activity CalcMainActivity();
+	virtual void DebugShowAnimState( int iStartLine );
+	virtual void ComputeSequences( CStudioHdr *pStudioHdr );
+	virtual void ClearAnimationLayers();
+	
 
-	// Specific SDK player initialization.
-	pRet->InitSDKAnimState( pPlayer );
+	void InitSDK( CBaseAnimatingOverlay *pPlayer, ISDKPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences );
+	
+protected:
 
+	int CalcFireLayerSequence(PlayerAnimEvent_t event);
+	void ComputeFireSequence(CStudioHdr *pStudioHdr);
+
+	void ComputeReloadSequence(CStudioHdr *pStudioHdr);
+	int CalcReloadLayerSequence();
+
+	bool IsOuterGrenadePrimed();
+	void ComputeGrenadeSequence( CStudioHdr *pStudioHdr );
+	int CalcGrenadePrimeSequence();
+	int CalcGrenadeThrowSequence();
+	int GetOuterGrenadeThrowCounter();
+
+	const char* GetWeaponSuffix();
+	bool HandleJumping();
+
+	void UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
+
+private:
+
+	// Current state variables.
+	bool m_bJumping;			// Set on a jump event.
+	float m_flJumpStartTime;
+	bool m_bFirstJumpFrame;
+
+	// Aim sequence plays reload while this is on.
+	bool m_bReloading;
+	float m_flReloadCycle;
+	int m_iReloadSequence;
+	
+	// This is set to true if ANY animation is being played in the fire layer.
+	bool m_bFiring;						// If this is on, then it'll continue the fire animation in the fire layer
+										// until it completes.
+	int m_iFireSequence;				// (For any sequences in the fire layer, including grenade throw).
+	float m_flFireCycle;
+
+	// These control grenade animations.
+	bool m_bThrowingGrenade;
+	bool m_bPrimingGrenade;
+	float m_flGrenadeCycle;
+	int m_iGrenadeSequence;
+	int m_iLastThrowGrenadeCounter;	// used to detect when the guy threw the grenade.
+	
+	ISDKPlayerAnimStateHelpers *m_pHelpers;
+};
+
+
+ISDKPlayerAnimState* CreatePlayerAnimState( CBaseAnimatingOverlay *pEntity, ISDKPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences )
+{
+	CSDKPlayerAnimState *pRet = new CSDKPlayerAnimState;
+	pRet->InitSDK( pEntity, pHelpers, legAnimType, bUseAimSequences );
 	return pRet;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  :  - 
-//-----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ //
+// CSDKPlayerAnimState implementation.
+// ------------------------------------------------------------------------------------------------ //
+
 CSDKPlayerAnimState::CSDKPlayerAnimState()
 {
-	m_pSDKPlayer = NULL;
-
-	// Don't initialize SDK specific variables here. Init them in InitSDKAnimState()
+	m_pOuter = NULL;
+	m_bReloading = false;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pPlayer - 
-//			&movementData - 
-//-----------------------------------------------------------------------------
-CSDKPlayerAnimState::CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData )
-: CMultiPlayerAnimState( pPlayer, movementData )
-{
-	m_pSDKPlayer = NULL;
 
-	// Don't initialize SDK specific variables here. Init them in InitSDKAnimState()
+void CSDKPlayerAnimState::InitSDK( CBaseAnimatingOverlay *pEntity, ISDKPlayerAnimStateHelpers *pHelpers, LegAnimType_t legAnimType, bool bUseAimSequences )
+{
+	CModAnimConfig config;
+	config.m_flMaxBodyYawDegrees = 90;
+	config.m_LegAnimType = legAnimType;
+	config.m_bUseAimSequences = bUseAimSequences;
+
+	m_pHelpers = pHelpers;
+
+	BaseClass::Init( pEntity, config );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  :  - 
-//-----------------------------------------------------------------------------
-CSDKPlayerAnimState::~CSDKPlayerAnimState()
-{
-}
 
-//-----------------------------------------------------------------------------
-// Purpose: Initialize Team Fortress specific animation state.
-// Input  : *pPlayer - 
-//-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
+void CSDKPlayerAnimState::ClearAnimationState()
 {
-	m_pSDKPlayer = pPlayer;
-#if defined ( SDK_USE_PRONE )
-	m_iProneActivity = ACT_MP_STAND_TO_PRONE;
-	m_bProneTransition = false;
-	m_bProneTransitionFirstFrame = false;
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::ClearAnimationState( void )
-{
-#if defined ( SDK_USE_PRONE )
-	m_bProneTransition = false;
-	m_bProneTransitionFirstFrame = false;
-#endif
+	m_bJumping = false;
+	m_bFiring = false;
+	m_bReloading = false;
+	m_bThrowingGrenade = m_bPrimingGrenade = false;
+	m_iLastThrowGrenadeCounter = GetOuterGrenadeThrowCounter();
+	
 	BaseClass::ClearAnimationState();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : actDesired - 
-// Output : Activity
-//-----------------------------------------------------------------------------
-Activity CSDKPlayerAnimState::TranslateActivity( Activity actDesired )
-{
-	Activity translateActivity = BaseClass::TranslateActivity( actDesired );
 
-	if ( GetSDKPlayer()->GetActiveWeapon() )
-	{
-		translateActivity = GetSDKPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, false );
-	}
-
-	return translateActivity;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
-{
-	// Profile the animation update.
-	VPROF( "CMultiPlayerAnimState::Update" );
-
-	// Get the SDK player.
-	CSDKPlayer *pSDKPlayer = GetSDKPlayer();
-	if ( !pSDKPlayer )
-		return;
-
-	// Get the studio header for the player.
-	CStudioHdr *pStudioHdr = pSDKPlayer->GetModelPtr();
-	if ( !pStudioHdr )
-		return;
-
-	// Check to see if we should be updating the animation state - dead, ragdolled?
-	if ( !ShouldUpdateAnimState() )
-	{
-		ClearAnimationState();
-		return;
-	}
-
-	// Store the eye angles.
-	m_flEyeYaw = AngleNormalize( eyeYaw );
-	m_flEyePitch = AngleNormalize( eyePitch );
-
-	// Compute the player sequences.
-	ComputeSequences( pStudioHdr );
-
-	if ( SetupPoseParameters( pStudioHdr ) )
-	{
-		// Pose parameter - what direction are the player's legs running in.
-		ComputePoseParam_MoveYaw( pStudioHdr );
-
-		// Pose parameter - Torso aiming (up/down).
-		ComputePoseParam_AimPitch( pStudioHdr );
-
-		// Pose parameter - Torso aiming (rotation).
-		ComputePoseParam_AimYaw( pStudioHdr );
-	}
-
-#ifdef CLIENT_DLL 
-	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
-	{
-		m_pSDKPlayer->SetPlaybackRate( 1.0f );
-	}
-#endif
-}
-extern ConVar mp_slammoveyaw;
-float SnapYawTo( float flValue );
-void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
-{
-	// Get the estimated movement yaw.
-	EstimateYaw();
-
-	// Get the view yaw.
-	float flAngle = AngleNormalize( m_flEyeYaw );
-
-	// Calc side to side turning - the view vs. movement yaw.
-	float flYaw = flAngle - m_PoseParameterData.m_flEstimateYaw;
-	flYaw = AngleNormalize( -flYaw );
-
-	// Get the current speed the character is running.
-	bool bIsMoving;
-	float flPlaybackRate = CalcMovementPlaybackRate( &bIsMoving );
-
-	// Setup the 9-way blend parameters based on our speed and direction.
-	Vector2D vecCurrentMoveYaw( 0.0f, 0.0f );
-	if ( bIsMoving )
-	{
-		if ( mp_slammoveyaw.GetBool() )
-		{
-			flYaw = SnapYawTo( flYaw );
-		}
-		vecCurrentMoveYaw.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
-		vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
-	}
-
-	// Set the 9-way blend movement pose parameters.
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, vecCurrentMoveYaw.x );
-	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, -vecCurrentMoveYaw.y ); //Tony; flip it
-
-	m_DebugAnimData.m_vecMoveYaw = vecCurrentMoveYaw;
-}
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : event - 
-//-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 {
-	Activity iGestureActivity = ACT_INVALID;
+	Assert( event != PLAYERANIMEVENT_THROW_GRENADE );
 
-	switch( event )
+	if ( event == PLAYERANIMEVENT_FIRE_GUN_PRIMARY || 
+		 event == PLAYERANIMEVENT_FIRE_GUN_SECONDARY )
 	{
-	case PLAYERANIMEVENT_ATTACK_PRIMARY:
+		// Regardless of what we're doing in the fire layer, restart it.
+		m_flFireCycle = 0;
+		m_iFireSequence = CalcFireLayerSequence( event );
+		m_bFiring = m_iFireSequence != -1;
+	}
+	else if ( event == PLAYERANIMEVENT_JUMP )
+	{
+		// Play the jump animation.
+		m_bJumping = true;
+		m_bFirstJumpFrame = true;
+		m_flJumpStartTime = gpGlobals->curtime;
+	}
+	else if ( event == PLAYERANIMEVENT_RELOAD )
+	{
+		m_iReloadSequence = CalcReloadLayerSequence();
+		if ( m_iReloadSequence != -1 )
 		{
-			// Weapon primary fire.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_PRIMARYFIRE );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_PRIMARYFIRE );
-			}
-
-			iGestureActivity = ACT_VM_PRIMARYATTACK;
-			break;
-		}
-
-	case PLAYERANIMEVENT_VOICE_COMMAND_GESTURE:
-		{
-			if ( !IsGestureSlotActive( GESTURE_SLOT_ATTACK_AND_RELOAD ) )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, (Activity)nData );
-			}
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_SECONDARY:
-		{
-			// Weapon secondary fire.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_SECONDARYFIRE );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_SECONDARYFIRE );
-			}
-
-			iGestureActivity = ACT_VM_PRIMARYATTACK;
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_PRE:
-		{
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING ) 
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc in crouch.
-				iGestureActivity = ACT_MP_ATTACK_CROUCH_PREFIRE;
-			}
-			else
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc.
-				iGestureActivity = ACT_MP_ATTACK_STAND_PREFIRE;
-			}
-
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, iGestureActivity, false );
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_POST:
-		{
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_POSTFIRE );
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-			break;
-		}
-
-	case PLAYERANIMEVENT_RELOAD:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND );
-			}
-			iGestureActivity = ACT_VM_RELOAD; //Make view reload if it isn't already
-			break;
-		}
-	case PLAYERANIMEVENT_RELOAD_LOOP:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_LOOP );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_LOOP );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
-			}
-			iGestureActivity = ACT_INVALID; //TODO: fix
-			break;
-		}
-	case PLAYERANIMEVENT_RELOAD_END:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_END );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_END );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
-			}
-			iGestureActivity = ACT_INVALID; //TODO: fix
-			break;
-		}
-#if defined ( SDK_USE_PRONE )
-	case PLAYERANIMEVENT_STAND_TO_PRONE:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_STAND_TO_PRONE;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->prone so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_CROUCH_TO_PRONE:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_CROUCH_TO_PRONE;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no crouch->prone so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_PRONE_TO_STAND:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_STAND;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->stand so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_PRONE_TO_CROUCH:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_CROUCH;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->crouch so just idle.
-		}
-		break;
-#endif
-
-	default:
-		{
-			BaseClass::DoAnimationEvent( event, nData );
-			break;
+			m_bReloading = true;
+			m_flReloadCycle = 0;
 		}
 	}
+	else
+	{
+		Assert( !"CSDKPlayerAnimState::DoAnimationEvent" );
+	}
+}
+
+
+float g_flThrowGrenadeFraction = 0.25;
+bool CSDKPlayerAnimState::IsThrowingGrenade()
+{
+	if ( m_bThrowingGrenade )
+	{
+		// An animation event would be more appropriate here.
+		return m_flGrenadeCycle < g_flThrowGrenadeFraction;
+	}
+	else
+	{
+		bool bThrowPending = (m_iLastThrowGrenadeCounter != GetOuterGrenadeThrowCounter());
+		return bThrowPending || IsOuterGrenadePrimed();
+	}
+}
+
+
+int CSDKPlayerAnimState::CalcReloadLayerSequence()
+{
+	const char *pSuffix = GetWeaponSuffix();
+	if ( !pSuffix )
+		return -1;
+
+	CWeaponSDKBase *pWeapon = m_pHelpers->SDKAnim_GetActiveWeapon();
+	if ( !pWeapon )
+		return -1;
+
+	// First, look for reload_<weapon name>.
+	char szName[512];
+	Q_snprintf( szName, sizeof( szName ), "reload_%s", pSuffix );
+	int iReloadSequence = m_pOuter->LookupSequence( szName );
+	if ( iReloadSequence != -1 )
+		return iReloadSequence;
+
+	//SDKTODO
+/*
+	// Ok, look for generic categories.. pistol, shotgun, rifle, etc.
+	if ( pWeapon->GetSDKWpnData().m_WeaponType == WEAPONTYPE_PISTOL )
+	{
+		Q_snprintf( szName, sizeof( szName ), "reload_pistol" );
+		iReloadSequence = m_pOuter->LookupSequence( szName );
+		if ( iReloadSequence != -1 )
+			return iReloadSequence;
+	}
+	*/
+			
+	// Fall back to reload_m4.
+	iReloadSequence = CalcSequenceIndex( "reload_m4" );
+	if ( iReloadSequence > 0 )
+		return iReloadSequence;
+
+	return -1;
+}
+
 
 #ifdef CLIENT_DLL
-	// Make the weapon play the animation as well
-	if ( iGestureActivity != ACT_INVALID && GetSDKPlayer() != CSDKPlayer::GetLocalSDKPlayer())
+	void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
 	{
-		CBaseCombatWeapon *pWeapon = GetSDKPlayer()->GetActiveWeapon();
-		if ( pWeapon )
+		if ( !bEnabled )
+			return;
+
+		// Increment the fire sequence's cycle.
+		flCurCycle += m_pOuter->GetSequenceCycleRate( pStudioHdr, iSequence ) * gpGlobals->frametime;
+		if ( flCurCycle > 1 )
 		{
-			pWeapon->EnsureCorrectRenderingModel();
-			pWeapon->SendWeaponAnim( iGestureActivity );
-			// Force animation events!
-			pWeapon->ResetEventsParity();		// reset event parity so the animation events will occur on the weapon. 
-			pWeapon->DoAnimationEvents( pWeapon->GetModelPtr() );
+			if ( bWaitAtEnd )
+			{
+				flCurCycle = 1;
+			}
+			else
+			{
+				// Not firing anymore.
+				bEnabled = false;
+				iSequence = 0;
+				return;
+			}
+		}
+
+		// Now dump the state into its animation layer.
+		C_AnimationLayer *pLayer = m_pOuter->GetAnimOverlay( iLayer );
+
+		pLayer->m_flCycle = flCurCycle;
+		pLayer->m_nSequence = iSequence;
+
+		pLayer->m_flPlaybackRate = 1.0;
+		pLayer->m_flWeight = 1.0f;
+		pLayer->m_nOrder = iLayer;
+	}
+#endif
+
+
+
+bool CSDKPlayerAnimState::IsOuterGrenadePrimed()
+{
+	CBaseCombatCharacter *pChar = m_pOuter->MyCombatCharacterPointer();
+	if ( pChar )
+	{
+		CBaseSDKGrenade *pGren = dynamic_cast<CBaseSDKGrenade*>( pChar->GetActiveWeapon() );
+		return pGren && pGren->IsPinPulled();
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+
+void CSDKPlayerAnimState::ComputeGrenadeSequence( CStudioHdr *pStudioHdr )
+{
+#ifdef CLIENT_DLL
+	if ( m_bThrowingGrenade )
+	{
+		UpdateLayerSequenceGeneric( pStudioHdr, GRENADESEQUENCE_LAYER, m_bThrowingGrenade, m_flGrenadeCycle, m_iGrenadeSequence, false );
+	}
+	else
+	{
+		// Priming the grenade isn't an event.. we just watch the player for it.
+		// Also play the prime animation first if he wants to throw the grenade.
+		bool bThrowPending = (m_iLastThrowGrenadeCounter != GetOuterGrenadeThrowCounter());
+		if ( IsOuterGrenadePrimed() || bThrowPending )
+		{
+			if ( !m_bPrimingGrenade )
+			{
+				// If this guy just popped into our PVS, and he's got his grenade primed, then
+				// let's assume that it's all the way primed rather than playing the prime
+				// animation from the start.
+				if ( TimeSinceLastAnimationStateClear() < 0.4f )
+					m_flGrenadeCycle = 1;
+				else
+					m_flGrenadeCycle = 0;
+					
+				m_iGrenadeSequence = CalcGrenadePrimeSequence();
+			}
+
+			m_bPrimingGrenade = true;
+			UpdateLayerSequenceGeneric( pStudioHdr, GRENADESEQUENCE_LAYER, m_bPrimingGrenade, m_flGrenadeCycle, m_iGrenadeSequence, true );
+			
+			// If we're waiting to throw and we're done playing the prime animation...
+			if ( bThrowPending && m_flGrenadeCycle == 1 )
+			{
+				m_iLastThrowGrenadeCounter = GetOuterGrenadeThrowCounter();
+
+				// Now play the throw animation.
+				m_iGrenadeSequence = CalcGrenadeThrowSequence();
+				if ( m_iGrenadeSequence != -1 )
+				{
+					// Configure to start playing 
+					m_bThrowingGrenade = true;
+					m_bPrimingGrenade = false;
+					m_flGrenadeCycle = 0;
+				}
+			}
+		}
+		else
+		{
+			m_bPrimingGrenade = false;
 		}
 	}
 #endif
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
-{
-	bool bInWater = BaseClass::HandleSwimming( idealActivity );
 
-	return bInWater;
+int CSDKPlayerAnimState::CalcGrenadePrimeSequence()
+{
+	return CalcSequenceIndex( "idle_shoot_gren1" );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
+
+int CSDKPlayerAnimState::CalcGrenadeThrowSequence()
 {
-	return BaseClass::HandleMoving( idealActivity );
+	return CalcSequenceIndex( "idle_shoot_gren2" );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
+
+int CSDKPlayerAnimState::GetOuterGrenadeThrowCounter()
 {
-	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
+	CSDKPlayer *pPlayer = dynamic_cast<CSDKPlayer*>( m_pOuter );
+	if ( pPlayer )
+		return pPlayer->m_iThrowGrenadeCounter;
+	else
+		return 0;
+}
+
+
+void CSDKPlayerAnimState::ComputeReloadSequence( CStudioHdr *pStudioHdr )
+{
+#ifdef CLIENT_DLL
+	UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bReloading, m_flReloadCycle, m_iReloadSequence, false );
+#else
+	// Server doesn't bother with different fire sequences.
+#endif
+}
+
+
+int CSDKPlayerAnimState::CalcAimLayerSequence( float *flCycle, float *flAimSequenceWeight, bool bForceIdle )
+{
+	const char *pSuffix = GetWeaponSuffix();
+	if ( !pSuffix )
+		return 0;
+
+	if ( bForceIdle )
 	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
+		switch ( GetCurrentMainSequenceActivity() )
 		{
-			idealActivity = ACT_MP_CROUCH_IDLE;		
-		}
-		else
-		{
-			idealActivity = ACT_MP_CROUCHWALK;		
-		}
+			case ACT_CROUCHIDLE:
+				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_IDLE_NAME, pSuffix );
 
-		return true;
+			default:
+				return CalcSequenceIndex( "%s%s", DEFAULT_IDLE_NAME, pSuffix );
+		}
 	}
-	
-	return false;
-}
-#if defined ( SDK_USE_PRONE )
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
-{
-	if ( m_pSDKPlayer->m_Shared.IsProne() )
+	else
 	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
+		switch ( GetCurrentMainSequenceActivity() )
 		{
-			idealActivity = ACT_MP_PRONE_IDLE;		
-		}
-		else
-		{
-			idealActivity = ACT_MP_PRONE_CRAWL;		
-		}
+			case ACT_RUN:
+				return CalcSequenceIndex( "%s%s", DEFAULT_RUN_NAME, pSuffix );
 
-		return true;
+			case ACT_WALK:
+			case ACT_RUNTOIDLE:
+			case ACT_IDLETORUN:
+				return CalcSequenceIndex( "%s%s", DEFAULT_WALK_NAME, pSuffix );
+
+			case ACT_CROUCHIDLE:
+				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_IDLE_NAME, pSuffix );
+
+			case ACT_RUN_CROUCH:
+				return CalcSequenceIndex( "%s%s", DEFAULT_CROUCH_WALK_NAME, pSuffix );
+
+			case ACT_IDLE:
+			default:
+				return CalcSequenceIndex( "%s%s", DEFAULT_IDLE_NAME, pSuffix );
+		}
 	}
-	
-	return false;
 }
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
+
+
+const char* CSDKPlayerAnimState::GetWeaponSuffix()
 {
-	if ( m_bProneTransition )
+	// Figure out the weapon suffix.
+	CWeaponSDKBase *pWeapon = m_pHelpers->SDKAnim_GetActiveWeapon();
+	if ( !pWeapon )
+		return "Pistol";
+
+	const char *pSuffix = pWeapon->GetSDKWpnData().m_szAnimExtension;
+
+	return pSuffix;
+}
+
+
+int CSDKPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
+{
+	// Figure out the weapon suffix.
+	CWeaponSDKBase *pWeapon = m_pHelpers->SDKAnim_GetActiveWeapon();
+	if ( !pWeapon )
+		return 0;
+
+	const char *pSuffix = GetWeaponSuffix();
+	if ( !pSuffix )
+		return 0;
+		
+	// Don't rely on their weapon here because the player has usually switched to their 
+	// pistol or rifle by the time the PLAYERANIMEVENT_THROW_GRENADE message gets to the client.
+	if ( event == PLAYERANIMEVENT_THROW_GRENADE )
 	{
-		if (m_bProneTransitionFirstFrame)
-		{
-			m_bProneTransitionFirstFrame = false;
-			RestartMainSequence();	// Reset the animation.
-		}
-
-		//Tony; check the cycle, and then stop overriding
-		if ( GetBasePlayer()->GetCycle() >= 0.99 )
-			m_bProneTransition = false;
-		else
-			idealActivity = m_iProneActivity;
+		pSuffix = "Gren"; 
 	}
 
-	return m_bProneTransition;
-}
-#endif // SDK_USE_PRONE
-
-#if defined ( SDK_USE_SPRINTING )
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleSprinting( Activity &idealActivity )
-{
-	if ( m_pSDKPlayer->m_Shared.IsSprinting() )
+	switch ( GetCurrentMainSequenceActivity() )
 	{
-		idealActivity = ACT_SPRINT;		
+		case ACT_PLAYER_RUN_FIRE:
+		case ACT_RUN:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_RUN_NAME, pSuffix );
 
-		return true;
+		case ACT_PLAYER_WALK_FIRE:
+		case ACT_WALK:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_WALK_NAME, pSuffix );
+
+		case ACT_PLAYER_CROUCH_FIRE:
+		case ACT_CROUCHIDLE:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_CROUCH_NAME, pSuffix );
+
+		case ACT_PLAYER_CROUCH_WALK_FIRE:
+		case ACT_RUN_CROUCH:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_CROUCH_WALK_NAME, pSuffix );
+
+		default:
+		case ACT_PLAYER_IDLE_FIRE:
+			return CalcSequenceIndex( "%s%s", DEFAULT_FIRE_IDLE_NAME, pSuffix );
 	}
-	
-	return false;
 }
-#endif // SDK_USE_SPRINTING
-//-----------------------------------------------------------------------------
-// Purpose: 
-bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
-{
-	Vector vecVelocity;
-	GetOuterAbsVelocity( vecVelocity );
 
+
+bool CSDKPlayerAnimState::CanThePlayerMove()
+{
+	return m_pHelpers->SDKAnim_CanMove();
+}
+
+
+float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()
+{
+	Activity currentActivity = 	m_pOuter->GetSequenceActivity( m_pOuter->GetSequence() );
+	if ( currentActivity == ACT_WALK || currentActivity == ACT_IDLE )
+		return ANIM_TOPSPEED_WALK;
+	else if ( currentActivity == ACT_RUN )
+		return ANIM_TOPSPEED_RUN;
+	else if ( currentActivity == ACT_RUN_CROUCH )
+		return ANIM_TOPSPEED_RUN_CROUCH;
+	else
+		return 0;
+}
+
+
+bool CSDKPlayerAnimState::HandleJumping()
+{
 	if ( m_bJumping )
 	{
-		static bool bNewJump = false; //Tony; the sample dod player models that I'm using don't have the jump anims split up like tf2.
-
 		if ( m_bFirstJumpFrame )
 		{
 			m_bFirstJumpFrame = false;
 			RestartMainSequence();	// Reset the animation.
 		}
 
-		// Reset if we hit water and start swimming.
-		if ( m_pSDKPlayer->GetWaterLevel() >= WL_Waist )
-		{
-			m_bJumping = false;
-			RestartMainSequence();
-		}
 		// Don't check if he's on the ground for a sec.. sometimes the client still has the
 		// on-ground flag set right when the message comes in.
-		else if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
+		if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
 		{
-			if ( m_pSDKPlayer->GetFlags() & FL_ONGROUND )
+			if ( m_pOuter->GetFlags() & FL_ONGROUND )
 			{
 				m_bJumping = false;
-				RestartMainSequence();
-
-				if ( bNewJump )
-				{
-					RestartGesture( GESTURE_SLOT_JUMP, ACT_MP_JUMP_LAND );					
-				}
+				RestartMainSequence();	// Reset the animation.
 			}
 		}
+	}
 
-		// if we're still jumping
-		if ( m_bJumping )
-		{
-			if ( bNewJump )
-			{
-				if ( gpGlobals->curtime - m_flJumpStartTime > 0.5 )
-				{
-					idealActivity = ACT_MP_JUMP_FLOAT;
-				}
-				else
-				{
-					idealActivity = ACT_MP_JUMP_START;
-				}
-			}
-			else
-			{
-				idealActivity = ACT_MP_JUMP;
-			}
-		}
-	}	
-
-	if ( m_bJumping )
-		return true;
-
-	return false;
+	// Are we still jumping? If so, keep playing the jump animation.
+	return m_bJumping;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Overriding CMultiplayerAnimState to add prone and sprinting checks as necessary.
-// Input  :  - 
-// Output : Activity
-//-----------------------------------------------------------------------------
-#ifdef CLIENT_DLL
-extern ConVar anim_showmainactivity;
-#endif
 
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
-	Activity idealActivity = ACT_MP_STAND_IDLE;
+	float flOuterSpeed = GetOuterXYSpeed();
 
-	if ( HandleJumping( idealActivity ) || 
-#if defined ( SDK_USE_PRONE )
-		//Tony; handle these before ducking !!
-		HandleProneTransition( idealActivity ) ||
-		HandleProne( idealActivity ) ||
-#endif
-		HandleDucking( idealActivity ) || 
-		HandleSwimming( idealActivity ) || 
-		HandleDying( idealActivity ) 
-#if defined ( SDK_USE_SPRINTING )
-		|| HandleSprinting( idealActivity )
-#endif
-		)
+	if ( HandleJumping() )
 	{
-		// intentionally blank
+		return ACT_HOP;
 	}
 	else
 	{
-		HandleMoving( idealActivity );
+		Activity idealActivity = ACT_IDLE;
+
+		if ( m_pOuter->GetFlags() & FL_DUCKING )
+		{
+			if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
+				idealActivity = ACT_RUN_CROUCH;
+			else
+				idealActivity = ACT_CROUCHIDLE;
+		}
+		else
+		{
+			if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
+			{
+				if ( flOuterSpeed > ARBITRARY_RUN_SPEED )
+					idealActivity = ACT_RUN;
+				else
+					idealActivity = ACT_WALK;
+			}
+			else
+			{
+				idealActivity = ACT_IDLE;
+			}
+		}
+
+		return idealActivity;
 	}
+}
 
-	ShowDebugInfo();
 
-	// Client specific.
+void CSDKPlayerAnimState::DebugShowAnimState( int iStartLine )
+{
 #ifdef CLIENT_DLL
-
-	if ( anim_showmainactivity.GetBool() )
-	{
-		DebugShowActivity( idealActivity );
-	}
-
+	engine->Con_NPrintf( iStartLine++, "fire  : %s, cycle: %.2f\n", m_bFiring ? GetSequenceName( m_pOuter->GetModelPtr(), m_iFireSequence ) : "[not firing]", m_flFireCycle );
+	engine->Con_NPrintf( iStartLine++, "reload: %s, cycle: %.2f\n", m_bReloading ? GetSequenceName( m_pOuter->GetModelPtr(), m_iReloadSequence ) : "[not reloading]", m_flReloadCycle );
+	BaseClass::DebugShowAnimState( iStartLine );
 #endif
+}
 
-	return idealActivity;
+
+void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
+{
+	BaseClass::ComputeSequences( pStudioHdr );
+
+	ComputeFireSequence( pStudioHdr );
+	ComputeReloadSequence( pStudioHdr );
+	ComputeGrenadeSequence( pStudioHdr );
+}
+
+
+void CSDKPlayerAnimState::ClearAnimationLayers()
+{
+	if ( !m_pOuter )
+		return;
+
+	m_pOuter->SetNumAnimOverlays( NUM_LAYERS_WANTED );
+	for ( int i=0; i < m_pOuter->GetNumAnimOverlays(); i++ )
+	{
+		m_pOuter->GetAnimOverlay( i )->SetOrder( CBaseAnimatingOverlay::MAX_OVERLAYS );
+	}
+}
+
+
+void CSDKPlayerAnimState::ComputeFireSequence( CStudioHdr *pStudioHdr )
+{
+#ifdef CLIENT_DLL
+	UpdateLayerSequenceGeneric( pStudioHdr, FIRESEQUENCE_LAYER, m_bFiring, m_flFireCycle, m_iFireSequence, false );
+#else
+	// Server doesn't bother with different fire sequences.
+#endif
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,7 +18,7 @@ node_t *NodeForPoint (node_t *node, Vector& origin)
 
 	while (node->planenum != PLANENUM_LEAF)
 	{
-		plane = &mapplanes[node->planenum];
+		plane = &g_MainMap->mapplanes[node->planenum];
 		d = DotProduct (origin, plane->normal) - plane->dist;
 		if (d >= 0)
 			node = node->children[0];
@@ -134,7 +134,7 @@ void PrintTree_r (node_t *node, int depth)
 		return;
 	}
 
-	plane = &mapplanes[node->planenum];
+	plane = &g_MainMap->mapplanes[node->planenum];
 	Msg ("#%i (%5.2f %5.2f %5.2f):%5.2f\n", node->planenum,
 		plane->normal[0], plane->normal[1], plane->normal[2],
 		plane->dist);

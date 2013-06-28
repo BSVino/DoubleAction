@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -287,7 +287,11 @@ void CHudWeaponSelection::Paint()
 					// setup our localized string
 					if ( tempString )
 					{
+#ifdef WIN32
 						_snwprintf(text, sizeof(text)/sizeof(wchar_t) - 1, L"%s", tempString);
+#else
+						_snwprintf(text, sizeof(text)/sizeof(wchar_t) - 1, L"%S", tempString);
+#endif
 						text[sizeof(text)/sizeof(wchar_t) - 1] = 0;
 					}
 					else

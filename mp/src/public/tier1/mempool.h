@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,9 +28,9 @@
 // Purpose: Optimized pool memory allocator
 //-----------------------------------------------------------------------------
 
-typedef void (*MemoryPoolReportFunc_t)( char const* pMsg, ... );
+typedef void (*MemoryPoolReportFunc_t)( PRINTF_FORMAT_STRING char const* pMsg, ... );
 
-class CMemoryPool
+class CUtlMemoryPool
 {
 public:
 	// Ways the memory pool can grow when it needs to make a new blob.
@@ -42,8 +42,8 @@ public:
 		GROW_SLOW=2			// New blob size is numElements.
 	};
 
-				CMemoryPool( int blockSize, int numElements, int growMode = GROW_FAST, const char *pszAllocOwner = NULL, int nAlignment = 0 );
-				~CMemoryPool();
+				CUtlMemoryPool( int blockSize, int numElements, int growMode = GROW_FAST, const char *pszAllocOwner = NULL, int nAlignment = 0 );
+				~CUtlMemoryPool();
 
 	void*		Alloc();	// Allocate the element size you specified in the constructor.
 	void*		Alloc( size_t amount );
@@ -68,6 +68,7 @@ protected:
 		CBlob	*m_pPrev, *m_pNext;
 		int		m_NumBytes;		// Number of bytes in this blob.
 		char	m_Data[1];
+		char	m_Padding[3]; // to int align the struct
 	};
 
 	// Resets the pool
@@ -80,14 +81,17 @@ protected:
 
 	int			m_GrowMode;	// GROW_ enum.
 
-	// FIXME: Change m_ppMemBlob into a growable array?
-	CBlob			m_BlobHead;
-	void			*m_pHeadOfFreeList;
+	// Put m_BlocksAllocated in front of m_pHeadOfFreeList for better
+	// packing on 64-bit where pointers are 8-byte aligned.
 	int				m_BlocksAllocated;
+	// FIXME: Change m_ppMemBlob into a growable array?
+	void			*m_pHeadOfFreeList;
 	int				m_PeakAlloc;
 	unsigned short	m_nAlignment;
 	unsigned short	m_NumBlobs;
 	const char *	m_pszAllocOwner;
+	// CBlob could be not a multiple of 4 bytes so stuff it at the end here to keep us otherwise aligned
+	CBlob			m_BlobHead;
 
 	static MemoryPoolReportFunc_t g_ReportFunc;
 };
@@ -96,20 +100,20 @@ protected:
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------
-class CMemoryPoolMT : public CMemoryPool
+class CMemoryPoolMT : public CUtlMemoryPool
 {
 public:
-	CMemoryPoolMT(int blockSize, int numElements, int growMode = GROW_FAST, const char *pszAllocOwner = NULL) : CMemoryPool( blockSize, numElements, growMode, pszAllocOwner) {}
+	CMemoryPoolMT(int blockSize, int numElements, int growMode = GROW_FAST, const char *pszAllocOwner = NULL) : CUtlMemoryPool( blockSize, numElements, growMode, pszAllocOwner) {}
 
 
-	void*		Alloc()	{ AUTO_LOCK( m_mutex ); return CMemoryPool::Alloc(); }
-	void*		Alloc( size_t amount )	{ AUTO_LOCK( m_mutex ); return CMemoryPool::Alloc( amount ); }
-	void*		AllocZero()	{ AUTO_LOCK( m_mutex ); return CMemoryPool::AllocZero(); }	
-	void*		AllocZero( size_t amount )	{ AUTO_LOCK( m_mutex ); return CMemoryPool::AllocZero( amount ); }
-	void		Free(void *pMem) { AUTO_LOCK( m_mutex ); CMemoryPool::Free( pMem ); }
+	void*		Alloc()	{ AUTO_LOCK( m_mutex ); return CUtlMemoryPool::Alloc(); }
+	void*		Alloc( size_t amount )	{ AUTO_LOCK( m_mutex ); return CUtlMemoryPool::Alloc( amount ); }
+	void*		AllocZero()	{ AUTO_LOCK( m_mutex ); return CUtlMemoryPool::AllocZero(); }	
+	void*		AllocZero( size_t amount )	{ AUTO_LOCK( m_mutex ); return CUtlMemoryPool::AllocZero( amount ); }
+	void		Free(void *pMem) { AUTO_LOCK( m_mutex ); CUtlMemoryPool::Free( pMem ); }
 
 	// Frees everything
-	void		Clear() { AUTO_LOCK( m_mutex ); return CMemoryPool::Clear(); }
+	void		Clear() { AUTO_LOCK( m_mutex ); return CUtlMemoryPool::Clear(); }
 private:
 	CThreadFastMutex m_mutex; // @TODO: Rework to use tslist (toml 7/6/2007)
 };
@@ -120,11 +124,17 @@ private:
 // and construction and destruction of objects.
 //-----------------------------------------------------------------------------
 template< class T >
-class CClassMemoryPool : public CMemoryPool
+class CClassMemoryPool : public CUtlMemoryPool
 {
 public:
 	CClassMemoryPool(int numElements, int growMode = GROW_FAST, int nAlignment = 0 ) :
-		CMemoryPool( sizeof(T), numElements, growMode, MEM_ALLOC_CLASSNAME(T), nAlignment ) {}
+		CUtlMemoryPool( sizeof(T), numElements, growMode, MEM_ALLOC_CLASSNAME(T), nAlignment ) {
+			#ifdef PLATFORM_64BITS 
+				COMPILE_TIME_ASSERT( sizeof(CUtlMemoryPool) == 64 );
+			#else
+				COMPILE_TIME_ASSERT( sizeof(CUtlMemoryPool) == 48 );
+			#endif
+		}
 
 	T*		Alloc();
 	T*		AllocZero();
@@ -142,7 +152,7 @@ class CAlignedMemPool
 {
 	enum
 	{
-		BLOCK_SIZE = max( ALIGN_VALUE( ITEM_SIZE, ALIGNMENT ), 8 ),
+		BLOCK_SIZE = ALIGN_VALUE( ITEM_SIZE, ALIGNMENT ) > 8 ? ALIGN_VALUE( ITEM_SIZE, ALIGNMENT ) : 8
 	};
 
 public:
@@ -173,7 +183,7 @@ private:
 		byte		reserved[ BLOCK_SIZE - sizeof( FreeBlock_t *) ];
 	};
 
-	CUtlVector<void *>	m_Chunks;		// Chunks are tracked outside blocks (unlike CMemoryPool) to simplify alignment issues
+	CUtlVector<void *>	m_Chunks;		// Chunks are tracked outside blocks (unlike CUtlMemoryPool) to simplify alignment issues
 	FreeBlock_t *		m_pFirstFree;
 	int					m_nFree;
 	CAllocator			m_Allocator;
@@ -244,7 +254,7 @@ inline T* CClassMemoryPool<T>::Alloc()
 
 	{
 	MEM_ALLOC_CREDIT_(MEM_ALLOC_CLASSNAME(T));
-	pRet = (T*)CMemoryPool::Alloc();
+	pRet = (T*)CUtlMemoryPool::Alloc();
 	}
 
 	if ( pRet )
@@ -261,7 +271,7 @@ inline T* CClassMemoryPool<T>::AllocZero()
 
 	{
 	MEM_ALLOC_CREDIT_(MEM_ALLOC_CLASSNAME(T));
-	pRet = (T*)CMemoryPool::AllocZero();
+	pRet = (T*)CUtlMemoryPool::AllocZero();
 	}
 
 	if ( pRet )
@@ -279,7 +289,7 @@ inline void CClassMemoryPool<T>::Free(T *pMem)
 		Destruct( pMem );
 	}
 
-	CMemoryPool::Free( pMem );
+	CUtlMemoryPool::Free( pMem );
 }
 
 template< class T >
@@ -309,7 +319,7 @@ inline void CClassMemoryPool<T>::Clear()
 		}
 	}
 
-	CMemoryPool::Clear();
+	CUtlMemoryPool::Clear();
 }
 
 
@@ -325,13 +335,13 @@ inline void CClassMemoryPool<T>::Clear()
 		inline void  operator delete( void* p ) { s_Allocator.Free(p); }		\
 		inline void  operator delete( void* p, int nBlockUse, const char *pFileName, int nLine ) { s_Allocator.Free(p); }   \
 	private:																		\
-		static   CMemoryPool   s_Allocator
+		static   CUtlMemoryPool   s_Allocator
     
 #define DEFINE_FIXEDSIZE_ALLOCATOR( _class, _initsize, _grow )					\
-	CMemoryPool   _class::s_Allocator(sizeof(_class), _initsize, _grow, #_class " pool")
+	CUtlMemoryPool   _class::s_Allocator(sizeof(_class), _initsize, _grow, #_class " pool")
 
 #define DEFINE_FIXEDSIZE_ALLOCATOR_ALIGNED( _class, _initsize, _grow, _alignment )		\
-	CMemoryPool   _class::s_Allocator(sizeof(_class), _initsize, _grow, #_class " pool", _alignment )
+	CUtlMemoryPool   _class::s_Allocator(sizeof(_class), _initsize, _grow, #_class " pool", _alignment )
 
 #define DECLARE_FIXEDSIZE_ALLOCATOR_MT( _class )									\
 	public:																		\
@@ -358,10 +368,10 @@ inline void CClassMemoryPool<T>::Clear()
       inline void* operator new( size_t size, int nBlockUse, const char *pFileName, int nLine )  { MEM_ALLOC_CREDIT_(#_class " pool"); return s_pAllocator->Alloc(size); }   \
       inline void  operator delete( void* p )   { s_pAllocator->Free(p); }		\
    private:																		\
-      static   CMemoryPool*   s_pAllocator
+      static   CUtlMemoryPool*   s_pAllocator
 
 #define DEFINE_FIXEDSIZE_ALLOCATOR_EXTERNAL( _class, _allocator )				\
-   CMemoryPool*   _class::s_pAllocator = _allocator
+   CUtlMemoryPool*   _class::s_pAllocator = _allocator
 
 
 template <int ITEM_SIZE, int ALIGNMENT, int CHUNK_SIZE, class CAllocator, int COMPACT_THRESHOLD >

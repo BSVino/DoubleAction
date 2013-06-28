@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 //=============================================================================
 #ifndef BASEMULTIPLAYERPLAYER_H
@@ -33,6 +33,7 @@ public:
 
 	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 	virtual bool		CanSpeak( void ) { return true; }
+	virtual bool		CanBeAutobalanced() { return true; }
 
 	virtual void		Precache( void )
 	{
@@ -71,7 +72,7 @@ public:
 
 	virtual int	CalculateTeamBalanceScore( void );
 
-	void AwardAchievement( int iAchievement );
+	void AwardAchievement( int iAchievement, int iCount = 1 );
 	int	GetPerLifeCounterKV( const char *name );
 	void SetPerLifeCounterKV( const char *name, int value );
 	void ResetPerLifeCounters( void );
@@ -88,13 +89,6 @@ public:
 
 	// Command rate limiting.
 	bool ShouldRunRateLimitedCommand( const CCommand &args );
-
-#if !defined(NO_STEAM)
-	//----------------------------
-	// Steam handling
-	bool		GetSteamID( CSteamID *pID );
-	uint64		GetSteamIDAsUInt64( void );
-#endif
 
 protected:
 	virtual CAI_Expresser *CreateExpresser( void );

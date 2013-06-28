@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,12 +13,12 @@
 #include "materialsystem/imesh.h"
 #include "materialsystem/imaterialvar.h"
 #include "mempool.h"
-#include "IClientMode.h"
+#include "iclientmode.h"
 #include "view_scene.h"
 #include "tier0/vprof.h"
 #include "engine/ivdebugoverlay.h"
 #include "view.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 #include "particles/particles.h"							// get new particle system access
 #include "tier1/utlintrusivelist.h"
 #include "particles_new.h"
@@ -26,7 +26,10 @@
 #include "filesystem.h"
 #include "particle_parse.h"
 #include "model_types.h"
-#include "tier0/ICommandLine.h"
+#ifdef TF_CLIENT_DLL
+#include "rtime.h"
+#endif
+#include "tier0/icommandline.h"
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -38,7 +41,22 @@ static int g_nParticlesDrawn;
 ConVar r_DrawParticles("r_drawparticles", "1", FCVAR_CHEAT, "Enable/disable particle rendering");
 static ConVar particle_simulateoverflow( "particle_simulateoverflow", "0", FCVAR_CHEAT, "Used for stress-testing particle systems. Randomly denies creation of particles." );
 ConVar cl_particleeffect_aabb_buffer( "cl_particleeffect_aabb_buffer", "2", FCVAR_CHEAT, "Add this amount to a particle effect's bbox in the leaf system so if it's growing slowly, it won't have to be reinserted as often." );
-ConVar cl_particles_show_bbox( "cl_particles_show_bbox", "0", FCVAR_CHEAT );
+ConVar cl_particle_show_bbox( "cl_particle_show_bbox", "0", FCVAR_CHEAT );
+ConVar cl_particle_show_bbox_cost( "cl_particle_show_bbox_cost", "0", FCVAR_CHEAT, "Show # of particles: green->blue->red. Use a negative number to show ALL particles even cheap ones" );
+
+// These reflect the convars so we don't parse the string every particle!
+bool g_cl_particle_show_bbox = false;
+int g_cl_particle_show_bbox_cost = 0;
+
+
+static void StatsParticlesStart();
+static void StatsParticlesStop();
+
+static ConCommand cl_particle_stats_start( "cl_particle_stats_start", StatsParticlesStart, "Start or restart particle stats - also dumps to particle_stats.csv") ;
+static ConCommand cl_particle_stats_stop( "cl_particle_stats_stop", StatsParticlesStop, "Stop particle stats, or snapshot this frame - also dumps to particle_stats.csv") ;
+static ConVar cl_particle_stats_trigger_count( "cl_particle_stats_trigger_count", "0", 0, "Dump stats if the particle count exceeds this number." );
+
+
 
 #define BUCKET_SORT_EVERY_N		8			// It does a bucket sort for each material approximately every N times.
 #define BBOX_UPDATE_EVERY_N		8			// It does a full bbox update (checks all particles instead of every eighth one).
@@ -297,8 +315,10 @@ int CParticleEffectBinding::DrawModel( int flags )
 
 	//Avoid drawing particles while building depth textures. Perf win.
 	//At the very least, we absolutely should not do refraction updates below. So if this gets removed, be sure to wrap the refract/screen texture updates.
-	if( flags & STUDIO_SHADOWDEPTHTEXTURE )
+	if( flags & ( STUDIO_SHADOWDEPTHTEXTURE | STUDIO_SSAODEPTHTEXTURE ) )
+	{
 		return 0;
+	}
 
 	SetDrawn( true );
 	
@@ -360,28 +380,100 @@ int CParticleEffectBinding::DrawModel( int flags )
 		}
 	}
 
-	if ( !IsRetail() && cl_particles_show_bbox.GetBool() )
+
+	if ( !IsRetail() )
 	{
-		Vector center = (m_Min + m_Max)/2;
-		Vector mins   = m_Min - center;
-		Vector maxs   = m_Max - center;
-	
-		int r, g;
-		if ( m_Flags & FLAGS_AUTOUPDATEBBOX )
+		CParticleMgr *pMgr = ParticleMgr();
+		if ( pMgr->m_bStatsRunning )
 		{
-			// red is bad, the bbox update is costly
-			r = 255;
-			g = 0;
+			pMgr->StatsOldParticleEffectDrawn ( this );
 		}
-		else
+
+		if ( g_cl_particle_show_bbox || ( g_cl_particle_show_bbox_cost != 0 ) )
 		{
-			// green, this effect presents less cpu load 
-			r = 0;
-			g = 255;
-		}
+			int nParticlesShowBboxCost = g_cl_particle_show_bbox_cost;
+			bool bShowCheapSystems = false;
+			if ( nParticlesShowBboxCost < 0 )
+			{
+				nParticlesShowBboxCost = -nParticlesShowBboxCost;
+				bShowCheapSystems = true;
+			}
+
+			Vector center = (m_Min + m_Max)/2;
+			Vector mins   = m_Min - center;
+			Vector maxs   = m_Max - center;
+
+			int r, g, b;
+			bool bDraw = true;
+			if ( nParticlesShowBboxCost > 0 )
+			{
+				float fAmount = (float)m_nActiveParticles / (float)nParticlesShowBboxCost;
+				if ( fAmount < 0.5f )
+				{
+					if ( bShowCheapSystems )
+					{
+						r = 0;
+						g = 255;
+						b = 0;
+					}
+					else
+					{
+						// Prevent the screen getting spammed with low-count particles which aren't that expensive.
+						bDraw = false;
+						r = 0;
+						g = 0;
+						b = 0;
+					}
+				}
+				else if ( fAmount < 1.0f )
+				{
+					// green 0.5-1.0 blue
+					int nBlend = (int)( 512.0f * ( fAmount - 0.5f ) );
+					nBlend = MIN ( 255, MAX ( 0, nBlend ) );
+					r = 0;
+					g = 255 - nBlend;
+					b = nBlend;
+				}
+				else if ( fAmount < 2.0f )
+				{
+					// blue 1.0-2.0 red
+					int nBlend = (int)( 256.0f * ( fAmount - 1.0f ) );
+					nBlend = MIN ( 255, MAX ( 0, nBlend ) );
+					r = nBlend;
+					g = 0;
+					b = 255 - nBlend;
+				}
+				else
+				{
+					r = 255;
+					g = 0;
+					b = 0;
+				}
+			}
+			else
+			{
+				if ( m_Flags & FLAGS_AUTOUPDATEBBOX )
+				{
+					// red is bad, the bbox update is costly
+					r = 255;
+					g = 0;
+					b = 0;
+				}
+				else
+				{
+					// green, this effect presents less cpu load 
+					r = 0;
+					g = 255;
+					b = 0;
+				}
+			}
 		
-		debugoverlay->AddBoxOverlay( center, mins, maxs, QAngle( 0, 0, 0 ), r, g, 0, 16, 0 );
-		debugoverlay->AddTextOverlayRGB( center, 0, 0, r, g, 0, 64, "%s:(%d)", m_pSim->GetEffectName(), m_nActiveParticles );
+			if ( bDraw )
+			{
+				debugoverlay->AddBoxOverlay( center, mins, maxs, QAngle( 0, 0, 0 ), r, g, b, 16, 0 );
+				debugoverlay->AddTextOverlayRGB( center, 0, 0, r, g, b, 64, "%s:(%d)", m_pSim->GetEffectName(), m_nActiveParticles );
+			}
+		}
 	}
 
 	RenderEnd( mTempModel, mTempView );
@@ -621,6 +713,8 @@ void CParticleEffectBinding::SimulateParticles( float flTimeDelta )
 
 void CParticleEffectBinding::SetDrawThruLeafSystem( int bDraw )
 {
+	// NOTE (2012/11/27, TomF) - this whole system seems to be deprecated - nothing ever checks these flags, and CParticleMgr::DrawBeforeViewModelEffects is never called by anything!
+
 	if ( bDraw )
 	{
 		// If SetDrawBeforeViewModel was called, then they shouldn't be telling it to draw through
@@ -634,6 +728,8 @@ void CParticleEffectBinding::SetDrawThruLeafSystem( int bDraw )
 
 void CParticleEffectBinding::SetDrawBeforeViewModel( int bDraw )
 {
+	// NOTE (2012/11/27, TomF) - this whole system seems to be deprecated - nothing ever checks these flags, and CParticleMgr::DrawBeforeViewModelEffects is never called by anything!
+
 	// Don't draw through the leaf system if they want it to specifically draw before the view model.
 	if ( bDraw )
 		m_Flags &= ~FLAGS_DRAW_THRU_LEAF_SYSTEM;
@@ -973,6 +1069,9 @@ bool CParticleMgr::Init(unsigned long count, IMaterialSystem *pMaterials)
 {
 	Term();
 
+	m_bStatsRunning = false;
+	m_nStatsFramesSinceLastAlert = 0;
+
 	m_pMaterialSystem = pMaterials;
 
 	// Initialize the particle system
@@ -982,7 +1081,7 @@ bool CParticleMgr::Init(unsigned long count, IMaterialSystem *pMaterials)
 	g_pParticleSystemMgr->AddBuiltinRenderingOperators();
 
 	// Send true to load the sheets
-	ParseParticleEffects( true );
+	ParseParticleEffects( true, false );
 
 #ifdef TF_CLIENT_DLL
 	if ( IsX360() )
@@ -1394,6 +1493,9 @@ void CParticleMgr::PostRender()
 
 void CParticleMgr::DrawBeforeViewModelEffects()
 {
+	// NOTE (2012/11/27, TomF) - this whole system seems to be deprecated - nothing ever checks these flags, and CParticleMgr::DrawBeforeViewModelEffects is never called by anything!
+	Assert ( !"Nothing ever calls CParticleMgr::DrawBeforeViewModelEffects any more!" );
+
 	FOR_EACH_LL( m_Effects, i )
 	{
 		CParticleEffectBinding *pEffect = m_Effects[i];
@@ -1440,6 +1542,10 @@ static float s_flThreadedPSystemTimeStep;
 
 static void ProcessPSystem( CNewParticleEffect *&pNewEffect )
 {
+	// Enable FP exceptions here when FP_EXCEPTIONS_ENABLED is defined,
+	// to help track down bad math.
+	FPExceptionEnabler enableExceptions;
+
 	// If this is a new effect, then update its bbox so it goes in the
 	// right leaves (if it has particles).
 	int bFirstUpdate = pNewEffect->GetNeedsBBoxUpdate();
@@ -1482,7 +1588,7 @@ int CParticleMgr::ComputeParticleDefScreenArea( int nInfoCount, RetireInfo_t *pI
 	float flCullRadiusSqr = flCullRadius * flCullRadius;
 	*pTotalArea = 0.0f;
 
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	float flMaxPixels = view.width * view.height;
 #endif
 
@@ -1510,11 +1616,11 @@ int CParticleMgr::ComputeParticleDefScreenArea( int nInfoCount, RetireInfo_t *pI
 		float flProjRadius = ( lSqr > flCullRadiusSqr ) ? 0.5f * flFocalDist * flCullRadius / sqrt( lSqr - flCullRadiusSqr ) : 1.0f;
 		flProjRadius *= view.width;
 
-		float flMinX = max( view.x, vecScreenCenter.x - flProjRadius );
-		float flMaxX = min( view.x + view.width, vecScreenCenter.x + flProjRadius );
+		float flMinX = MAX( view.x, vecScreenCenter.x - flProjRadius );
+		float flMaxX = MIN( view.x + view.width, vecScreenCenter.x + flProjRadius );
 
-		float flMinY = max( view.y, vecScreenCenter.y - flProjRadius );
-		float flMaxY = min( view.y + view.height, vecScreenCenter.y + flProjRadius );
+		float flMinY = MAX( view.y, vecScreenCenter.y - flProjRadius );
+		float flMaxY = MIN( view.y + view.height, vecScreenCenter.y + flProjRadius );
 
 		float flArea = ( flMaxX - flMinX ) * ( flMaxY - flMinY );
 		Assert( flArea <= flMaxPixels );
@@ -1680,35 +1786,16 @@ static int CountChildParticleSystems( CParticleCollection *p )
 	return nCount;
 }
 
-static ConVar cl_particle_max_count( "cl_particle_max_count", "0" );
-
-void CParticleMgr::SpewActiveParticleSystems( )
+static int CountParticleSystemActiveParticles( CParticleCollection *p )
 {
-	struct ParticleInfo_t
+	int nCount = p->m_nActiveParticles;
+	for ( CParticleCollection *pChild = p->m_Children.m_pHead; pChild; pChild = pChild->m_pNext )
 	{
-		ParticleInfo_t() : m_nCount(0), m_nChildCount(0) {}
-		int m_nCount;
-		int m_nChildCount;
-	};
-
-	CUtlStringMap< ParticleInfo_t > histo;
-	for( CNewParticleEffect *pNewEffect=m_NewEffects.m_pHead; pNewEffect;
-		pNewEffect=pNewEffect->m_pNext )
-	{
-		if ( ++histo[ pNewEffect->GetName() ].m_nCount == 1 )
-		{
-			histo[ pNewEffect->GetName() ].m_nChildCount = CountChildParticleSystems( pNewEffect );
-		}
+		nCount += CountParticleSystemActiveParticles( pChild );
 	}
-
-	Msg( "Too many simultaneously active particle systems!\n" );
-	Msg( "Name\t\t\t\t\tCount\t\tChild Count Per Instance\n" );
-	int nCount = histo.GetNumStrings();
-	for ( int i = 0; i < nCount; ++i )
-	{
-		Msg( "%30s\t\t%d\t\t%d\n", histo.String(i), histo[i].m_nCount, histo[i].m_nChildCount );
-	}
+	return nCount;
 }
+
 
 void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 {
@@ -1721,8 +1808,8 @@ void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 
 	g_pParticleSystemMgr->SetLastSimulationTime( gpGlobals->curtime );
 
-	int nParticleSystemCount = 0;
-	int nMaxParticleCount = cl_particle_max_count.GetInt();
+	int nParticleActiveParticlesCount = 0;
+	int nParticleStatsTriggerCount = cl_particle_stats_trigger_count.GetInt();
 
 	BeginSimulateParticles();
 	CUtlVector<CNewParticleEffect *> particlesToSimulate;
@@ -1736,9 +1823,9 @@ void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 	{
 		// this one can call into random entity code which may not be thread-safe
 		particlesToSimulate[i]->Update( s_flThreadedPSystemTimeStep );
-		if ( nMaxParticleCount > 0 )
+		if ( nParticleStatsTriggerCount > 0 )
 		{
-			nParticleSystemCount += CountChildParticleSystems( particlesToSimulate[i] );
+			nParticleActiveParticlesCount += CountParticleSystemActiveParticles( particlesToSimulate[i] );
 		}
 	}
 
@@ -1766,7 +1853,7 @@ void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 			int nAltCore = IsX360() && particle_sim_alt_cores.GetInt();
 			if ( !m_pThreadPool[1] || nAltCore == 0 )
 			{
-				ParallelProcess( particlesToSimulate.Base(), nCount, ProcessPSystem );
+				ParallelProcess( "CParticleMgr::UpdateNewEffects", particlesToSimulate.Base(), nCount, ProcessPSystem );
 			}
 			else
 			{
@@ -1774,7 +1861,7 @@ void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 				{
 					nAltCore = 2;
 				}
-				CParallelProcessor<CNewParticleEffect*, CFuncJobItemProcessor<CNewParticleEffect*> > processor;
+				CParallelProcessor<CNewParticleEffect*, CFuncJobItemProcessor<CNewParticleEffect*> > processor( "CParticleMgr::UpdateNewEffects" );
 				processor.m_ItemProcessor.Init( ProcessPSystem, NULL, NULL );
 				processor.Run( particlesToSimulate.Base(), nCount, INT_MAX, m_pThreadPool[nAltCore-1] );
 			}
@@ -1790,14 +1877,43 @@ void CParticleMgr::UpdateNewEffects( float flTimeDelta )
 
 	EndSimulateParticles();
 
-	if ( nMaxParticleCount > 0 && ( nParticleSystemCount >= nMaxParticleCount ) )
+	if ( m_bStatsRunning )
 	{
-		SpewActiveParticleSystems();
+		StatsAccumulateActiveParticleSystems();
+	}
+
+	bool bFrameWarningNeeded = g_pParticleSystemMgr->Debug_FrameWarningNeededTestAndReset();
+
+	m_nStatsFramesSinceLastAlert++;
+	if ( ( nParticleStatsTriggerCount > 0 && ( nParticleActiveParticlesCount >= nParticleStatsTriggerCount ) ) || bFrameWarningNeeded )
+	{
+		if ( m_nStatsFramesSinceLastAlert >= ( 300 * 3 ) )		// 3 seconds at the clamp of 300 fps (or 15 secs at 60fps). Just stop it spamming too much.
+		{
+			m_nStatsFramesSinceLastAlert = 0;
+			if ( m_bStatsRunning )
+			{
+				// Spew out the existing ones.
+				StatsSpewResults();
+			}
+			// And turn the stats gathering on so we'll have more useful results if it does it again.
+			m_bStatsRunning = true;
+
+			// This single-frame capture doesn't work that well because the "actual drawn" numbers will just be zero. Ah well - better than nothing.
+			StatsReset();
+			StatsAccumulateActiveParticleSystems();
+			StatsSpewResults();
+			StatsReset();
+		}
 	}
 }
 
 void CParticleMgr::UpdateAllEffects( float flTimeDelta )
 {
+	// These reflect the convars so we don't parse the strings every particle.
+	g_cl_particle_show_bbox = cl_particle_show_bbox.GetBool();
+	g_cl_particle_show_bbox_cost = cl_particle_show_bbox_cost.GetInt();
+
+
 	m_bUpdatingEffects = true;
 
 	if( flTimeDelta > 0.1f )
@@ -2043,22 +2159,6 @@ void CParticleMgr::SetDirectionalLightInfo( const CParticleLightInfo &info )
 	m_DirectionalLight = info;
 }
 
-#ifndef _RETAIL
-void CParticleMgr::SpewInfo( bool bDetail )
-{
-	DevMsg( "Particle Effect Systems:\n" );
-	FOR_EACH_LL( m_Effects, i )
-	{
-		const char *pEffectName = m_Effects[i]->m_pSim->GetEffectName();
-		DevMsg( "%3d: NumActive: %3d, AutoBBox: %3s \"%s\" \n", i, m_Effects[i]->m_nActiveParticles, m_Effects[i]->GetAutoUpdateBBox() ? "on" : "off", pEffectName );
-	}
-}
-CON_COMMAND( cl_particles_dump_effects, "" )
-{
-	ParticleMgr()->SpewInfo( true );
-}
-#endif
-
 // ------------------------------------------------------------------------------------ //
 // ------------------------------------------------------------------------------------ //
 float Helper_GetTime()
@@ -2114,3 +2214,219 @@ float Helper_GetFrameTime()
 	return gpGlobals->frametime;
 #endif
 }
+
+
+
+
+
+// ------------------------------------------------------------------------------------ //
+// Stats-gathering stuff.
+// ------------------------------------------------------------------------------------ //
+
+static void StatsParticlesStart()
+{
+#ifdef STAGING_ONLY
+	CParticleMgr *pMgr = ParticleMgr();
+	if ( pMgr->m_bStatsRunning )
+	{
+		pMgr->StatsSpewResults();
+	}
+	pMgr->StatsReset();
+	pMgr->m_bStatsRunning = true;
+#endif
+}
+
+static void StatsParticlesStop()
+{
+#ifdef STAGING_ONLY
+	CParticleMgr *pMgr = ParticleMgr();
+	if ( pMgr->m_bStatsRunning )
+	{
+		pMgr->StatsSpewResults();
+		pMgr->StatsReset();
+	}
+	else
+	{
+		// Weren't running, so snapshot this frame.
+		pMgr->StatsReset();
+		pMgr->StatsAccumulateActiveParticleSystems();
+		pMgr->StatsSpewResults();
+		pMgr->StatsReset();
+	}
+	pMgr->m_bStatsRunning = false;
+#endif
+}
+
+
+struct ParticleInfo_t
+{
+	ParticleInfo_t() : m_nCount(0), m_nChildCount(0), m_nTotalActiveParticles(0), m_nTotalDrawnParticles(0), m_nCountMax(0), m_nChildCountMax(0), m_nTotalActiveParticlesMax(0), m_nTotalDrawnParticlesMax(0), pDef(NULL) {}
+	int m_nCount;
+	int m_nChildCount;
+	int m_nTotalActiveParticles;
+	int m_nTotalDrawnParticles;
+
+	// These are only used for the multi-frame stats.
+	int m_nCountMax;
+	int m_nChildCountMax;
+	int m_nTotalActiveParticlesMax;
+	int m_nTotalDrawnParticlesMax;
+
+	CParticleSystemDefinition *pDef;
+};
+
+CUtlStringMap< ParticleInfo_t > ProfilingHistogram;
+CUtlStringMap< ParticleInfo_t > SingleFrameHistogram;
+int Profiling_nFrames;
+int Profiling_nMaxParticles;
+
+
+// These functions will be called by the particles as they're actually drawn. (TODO: thread safety?)
+void CParticleMgr::StatsNewParticleEffectDrawn ( CNewParticleEffect *pParticles )
+{
+#ifdef STAGING_ONLY
+	ParticleInfo_t *pParticleInfo = &(SingleFrameHistogram[ pParticles->GetName() ]);
+	pParticleInfo->m_nTotalDrawnParticles += CountParticleSystemActiveParticles ( pParticles );
+#endif
+}
+
+void CParticleMgr::StatsOldParticleEffectDrawn ( CParticleEffectBinding *pParticles )
+{
+#ifdef STAGING_ONLY
+	ParticleInfo_t *pParticleInfo = &(SingleFrameHistogram[ pParticles->m_pSim->GetEffectName() ]);
+	pParticleInfo->m_nTotalDrawnParticles += pParticles->m_nActiveParticles;
+#endif
+}
+
+void CParticleMgr::StatsAccumulateActiveParticleSystems()
+{
+#ifdef STAGING_ONLY
+	Profiling_nFrames++;
+	Profiling_nMaxParticles = Max ( Profiling_nMaxParticles, g_pParticleSystemMgr->Debug_GetTotalParticleCount() );
+
+	// Accumulate this frame's stats.
+
+	// Count the new particle effects.
+	for( CNewParticleEffect *pNewEffect=m_NewEffects.m_pHead; pNewEffect;
+		pNewEffect=pNewEffect->m_pNext )
+	{
+		ParticleInfo_t *pParticleInfo = &(SingleFrameHistogram[ pNewEffect->GetName() ]);
+		pParticleInfo->m_nCount++;
+		pParticleInfo->m_nTotalActiveParticles += CountParticleSystemActiveParticles( pNewEffect );
+		pParticleInfo->m_nChildCount += CountChildParticleSystems( pNewEffect );
+		pParticleInfo->pDef = pNewEffect->m_pDef;
+	}
+
+	// Count the old types.
+	FOR_EACH_LL( m_Effects, i )
+	{
+		CParticleEffectBinding *pParticleBinding = m_Effects[i];
+		const char *pEffectName = pParticleBinding->m_pSim->GetEffectName();
+		ParticleInfo_t *pParticleInfo = &(SingleFrameHistogram[ pEffectName ]);
+		pParticleInfo->m_nCount++;
+		pParticleInfo->m_nChildCount = 0;
+		pParticleInfo->m_nTotalActiveParticles += pParticleBinding->m_nActiveParticles;
+		pParticleInfo->pDef = NULL;		// These don't have this sort of def.
+	}
+
+	// Now accumulate/max then into the multi-frame stats.
+	int nCount = SingleFrameHistogram.GetNumStrings();
+	for ( int i = 0; i < nCount; ++i )
+	{
+		ParticleInfo_t *pSingleInfo = &(SingleFrameHistogram[i]);
+		const char *pName = SingleFrameHistogram.String(i);
+
+		ParticleInfo_t *pGlobalInfo = &(ProfilingHistogram[pName]);
+		pGlobalInfo->m_nCount					+= pSingleInfo->m_nCount;
+		pGlobalInfo->m_nChildCount				+= pSingleInfo->m_nChildCount;
+		pGlobalInfo->m_nTotalActiveParticles	+= pSingleInfo->m_nTotalActiveParticles;
+		pGlobalInfo->m_nTotalDrawnParticles		+= pSingleInfo->m_nTotalDrawnParticles;
+		pGlobalInfo->m_nCountMax				= Max ( pGlobalInfo->m_nCountMax,					pSingleInfo->m_nCount );
+		pGlobalInfo->m_nChildCountMax			= Max ( pGlobalInfo->m_nChildCountMax,				pSingleInfo->m_nChildCount );
+		pGlobalInfo->m_nTotalActiveParticlesMax	= Max ( pGlobalInfo->m_nTotalActiveParticlesMax,	pSingleInfo->m_nTotalActiveParticles );
+		pGlobalInfo->m_nTotalDrawnParticlesMax	= Max ( pGlobalInfo->m_nTotalDrawnParticlesMax,		pSingleInfo->m_nTotalDrawnParticles );
+		pGlobalInfo->pDef = pSingleInfo->pDef;
+	}
+
+	SingleFrameHistogram.Clear();
+#endif
+}
+
+void CParticleMgr::StatsReset()
+{
+#ifdef STAGING_ONLY
+	ProfilingHistogram.Clear();
+	Profiling_nFrames = 0;
+	Profiling_nMaxParticles = 0;
+#endif
+}
+
+void CParticleMgr::StatsSpewResults()
+{
+#ifdef STAGING_ONLY
+#ifdef TF_CLIENT_DLL
+	int nCount = ProfilingHistogram.GetNumStrings();
+
+	Msg( "Active particle systems. Numbers are averages over %d frames. Max num particles %d.\n", Profiling_nFrames, Profiling_nMaxParticles );
+	Msg( "Name\t\t\t\t\t\tSystems\t\tActive\t\tDrawn\tAv Children\t\tMaximums per frame\t\t\tMax draw dist\n" );
+	for ( int i = 0; i < nCount; ++i )
+	{
+		ParticleInfo_t *pParticleInfo = &(ProfilingHistogram[i]);
+		if ( pParticleInfo->m_nTotalActiveParticles > 0 )
+		{
+			Msg( "%38s\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t%d\t%d\t%d\t\t%.1f\n",
+				ProfilingHistogram.String(i),
+				pParticleInfo->m_nCount / Profiling_nFrames,
+				pParticleInfo->m_nTotalActiveParticles / Profiling_nFrames,
+				pParticleInfo->m_nTotalDrawnParticles / Profiling_nFrames,
+				pParticleInfo->m_nChildCount / pParticleInfo->m_nCount,
+				pParticleInfo->m_nCountMax,
+				pParticleInfo->m_nTotalActiveParticlesMax,
+				pParticleInfo->m_nTotalDrawnParticlesMax,
+				pParticleInfo->m_nChildCountMax / pParticleInfo->m_nCountMax,
+				( pParticleInfo->pDef == NULL ) ? 0.0f : pParticleInfo->pDef->m_flMaxDrawDistance
+				);
+		}
+	}
+
+	CRTime CurrentTime;
+	CurrentTime.SetToCurrentTime();
+
+	// Also dump to CSV.
+	FileHandle_t fh = g_pFullFileSystem->Open( "particle_stats.csv", "at" );	// at = append + text mode
+	g_pFullFileSystem->FPrintf( fh, "\nNumframes,%d,Max particles,%d\n", Profiling_nFrames, Profiling_nMaxParticles );
+	g_pFullFileSystem->FPrintf( fh, "Date,%d,%d,%d,Time,%d,%d,%d\n",
+		CurrentTime.GetYear(),
+		CurrentTime.GetMonth()+1,		// GetMonth() returns 0...11
+		CurrentTime.GetDayOfMonth(),	// GetDay() returns 1...31
+		CurrentTime.GetHour(),
+		CurrentTime.GetMinute(),
+		CurrentTime.GetSecond() );
+	g_pFullFileSystem->FPrintf( fh, "Name, Systems, Particles active, Particles drawn, Av Children, Max systems, Max particles active, Max particles drawn, Max children, Max draw distance\n" );
+	for ( int i = 0; i < nCount; ++i )
+	{
+		ParticleInfo_t *pParticleInfo = &(ProfilingHistogram[i]);
+		if ( pParticleInfo->m_nTotalActiveParticles > 0 )
+		{
+			g_pFullFileSystem->FPrintf( fh, "%s,%d,%d,%d,%d,%d,%d,%d,%d,%.1f\n",
+				ProfilingHistogram.String(i),
+				pParticleInfo->m_nCount / Profiling_nFrames,
+				pParticleInfo->m_nTotalActiveParticles / Profiling_nFrames,
+				pParticleInfo->m_nTotalDrawnParticles / Profiling_nFrames,
+				pParticleInfo->m_nChildCount / pParticleInfo->m_nCount,
+				pParticleInfo->m_nCountMax,
+				pParticleInfo->m_nTotalActiveParticlesMax,
+				pParticleInfo->m_nTotalDrawnParticlesMax,
+				pParticleInfo->m_nChildCountMax / pParticleInfo->m_nCountMax,
+				( pParticleInfo->pDef == NULL ) ? 0.0f : pParticleInfo->pDef->m_flMaxDrawDistance
+				);
+		}
+	}
+	g_pFullFileSystem->Close( fh );
+#endif
+#endif
+}
+
+
+
+

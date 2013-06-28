@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 // Implements local hooks into named renderable textures.
@@ -7,7 +7,7 @@
 //=============================================================================//
 
 #include "materialsystem/imesh.h"
-#include "materialsystem/ITexture.h"
+#include "materialsystem/itexture.h"
 #include "materialsystem/MaterialSystemUtil.h"
 #include "tier1/strtools.h"
 #include "rendertexture.h"

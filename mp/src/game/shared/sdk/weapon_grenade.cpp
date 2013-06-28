@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,15 +25,15 @@
 
 #define GRENADE_TIMER	3.0f //Seconds
 
-IMPLEMENT_NETWORKCLASS_ALIASED( WeaponGrenade, DT_WeaponGrenade )
+IMPLEMENT_NETWORKCLASS_ALIASED( SDKGrenade, DT_SDKGrenade )
 
-BEGIN_NETWORK_TABLE(CWeaponGrenade, DT_WeaponGrenade)
+BEGIN_NETWORK_TABLE(CSDKGrenade, DT_SDKGrenade)
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA( CWeaponGrenade )
+BEGIN_PREDICTION_DATA( CSDKGrenade )
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS( weapon_grenade, CWeaponGrenade );
+LINK_ENTITY_TO_CLASS( weapon_grenade, CSDKGrenade );
 PRECACHE_WEAPON_REGISTER( weapon_grenade );
 
 
@@ -46,8 +46,6 @@ class CGrenadeProjectile : public CBaseGrenadeProjectile
 public:
 	DECLARE_CLASS( CGrenadeProjectile, CBaseGrenadeProjectile );
 
-	//Tony; by default projectiles don't have one, so make sure derived weapons do!!
-	virtual SDKWeaponID GetWeaponID( void ) const		{	return SDK_WEAPON_GRENADE; }
 
 	// Overrides.
 public:
@@ -71,17 +69,15 @@ public:
 		const QAngle &angles, 
 		const Vector &velocity, 
 		const AngularImpulse &angVelocity, 
-		CBaseCombatCharacter *pOwner,
-		CWeaponSDKBase *pWeapon,
+		CBaseCombatCharacter *pOwner, 
 		float timer )
 	{
 		CGrenadeProjectile *pGrenade = (CGrenadeProjectile*)CBaseEntity::Create( "grenade_projectile", position, angles, pOwner );
 
 		// Set the timer for 1 second less than requested. We're going to issue a SOUND_DANGER
 		// one second before detonation.
-		pGrenade->SetVelocity( velocity, angVelocity );
 
-		pGrenade->SetDetonateTimerLength( timer );
+		pGrenade->SetDetonateTimerLength( 1.5 );
 		pGrenade->SetAbsVelocity( velocity );
 		pGrenade->SetupInitialTransmittedGrenadeVelocity( velocity );
 		pGrenade->SetThrower( pOwner ); 
@@ -90,7 +86,7 @@ public:
 		pGrenade->SetFriction( BaseClass::GetGrenadeFriction() );
 		pGrenade->SetElasticity( BaseClass::GetGrenadeElasticity() );
 
-		pGrenade->m_flDamage = pWeapon->GetSDKWpnData().m_iDamage;
+		pGrenade->m_flDamage = 100;
 		pGrenade->m_DmgRadius = pGrenade->m_flDamage * 3.5f;
 		pGrenade->ChangeTeam( pOwner->GetTeamNumber() );
 		pGrenade->ApplyLocalAngularVelocityImpulse( angVelocity );	
@@ -106,32 +102,13 @@ public:
 LINK_ENTITY_TO_CLASS( grenade_projectile, CGrenadeProjectile );
 PRECACHE_WEAPON_REGISTER( grenade_projectile );
 
-BEGIN_DATADESC( CWeaponGrenade )
+BEGIN_DATADESC( CSDKGrenade )
 END_DATADESC()
 
-void CWeaponGrenade::EmitGrenade( Vector vecSrc, QAngle vecAngles, Vector vecVel, AngularImpulse angImpulse, CBasePlayer *pPlayer, CWeaponSDKBase *pWeapon )
+void CSDKGrenade::EmitGrenade( Vector vecSrc, QAngle vecAngles, Vector vecVel, AngularImpulse angImpulse, CBasePlayer *pPlayer )
 {
-	CGrenadeProjectile::Create( vecSrc, vecAngles, vecVel, angImpulse, pPlayer, pWeapon, GRENADE_TIMER );
+	CGrenadeProjectile::Create( vecSrc, vecAngles, vecVel, angImpulse, pPlayer, GRENADE_TIMER );
 }
 	
 #endif
 
-//Tony; todo; add ACT_MP_PRONE* activities, so we have them.
-acttable_t CWeaponGrenade::m_acttable[] = 
-{
-	{ ACT_MP_STAND_IDLE,					ACT_DOD_STAND_AIM_GREN_FRAG,				false },
-	{ ACT_MP_CROUCH_IDLE,					ACT_DOD_CROUCH_AIM_GREN_FRAG,				false },
-	{ ACT_MP_PRONE_IDLE,					ACT_DOD_PRONE_AIM_GREN_FRAG,				false },
-
-	{ ACT_MP_RUN,							ACT_DOD_RUN_AIM_GREN_FRAG,					false },
-	{ ACT_MP_WALK,							ACT_DOD_WALK_AIM_GREN_FRAG,					false },
-	{ ACT_MP_CROUCHWALK,					ACT_DOD_CROUCHWALK_AIM_GREN_FRAG,			false },
-	{ ACT_MP_PRONE_CRAWL,					ACT_DOD_PRONEWALK_AIM_GREN_FRAG,			false },
-	{ ACT_SPRINT,							ACT_DOD_SPRINT_AIM_GREN_FRAG,				false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_GREN_FRAG,			false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_GREN_FRAG,			false },
-	{ ACT_MP_ATTACK_PRONE_PRIMARYFIRE,		ACT_DOD_PRIMARYATTACK_PRONE_GREN_FRAG,		false },
-};
-
-IMPLEMENT_ACTTABLE( CWeaponGrenade );

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: String Tools
 //
@@ -46,7 +46,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#ifdef _LINUX
+#ifdef POSIX
+#include <iconv.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -68,12 +69,28 @@
 #include "tier1/strtools.h"
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "tier0/basetypes.h"
 #include "tier1/utldict.h"
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
 #include "tier0/memdbgon.h"
+
+static int FastToLower( char c )
+{
+	int i = (unsigned char) c;
+	if ( i < 0x80 )
+	{
+		// Brutally fast branchless ASCII tolower():
+		i += (((('A'-1) - i) & (i - ('Z'+1))) >> 26) & 0x20;
+	}
+	else
+	{
+		i += isupper( i ) ? 0x20 : 0;
+	}
+	return i;
+}
 
 void _V_memset (const char* file, int line, void *dest, int fill, int count)
 {
@@ -149,27 +166,19 @@ int _V_strcmp (const char* file, int line, const char *s1, const char *s2)
 
 int _V_wcscmp (const char* file, int line, const wchar_t *s1, const wchar_t *s2)
 {
-	while (1)
+	AssertValidReadPtr( s1 );
+	AssertValidReadPtr( s2 );
+
+	while ( *s1 == *s2 )
 	{
-		if (*s1 != *s2)
-			return -1;              // strings not equal    
-		if (!*s1)
-			return 0;               // strings are equal
+		if ( !*s1 )
+			return 0;			// strings are equal
+
 		s1++;
 		s2++;
 	}
-	
-	return -1;
-}
 
-
-
-int	_V_stricmp(const char* file, int line,  const char *s1, const char *s2 )
-{
-	AssertValidStringPtr( s1 );
-	AssertValidStringPtr( s2 );
-
-	return stricmp( s1, s2 );
+	return *s1 > *s2 ? 1 : -1;	// strings not equal
 }
 
 
@@ -185,107 +194,145 @@ char *_V_strstr(const char* file, int line,  const char *s1, const char *search 
 #endif
 }
 
-char *_V_strupr (const char* file, int line, char *start)
+wchar_t *_V_wcsupr (const char* file, int line, wchar_t *start)
 {
-	AssertValidStringPtr( start );
-	return strupr( start );
+	return _wcsupr( start );
 }
 
 
-char *_V_strlower (const char* file, int line, char *start)
+wchar_t *_V_wcslower (const char* file, int line, wchar_t *start)
 {
-	AssertValidStringPtr( start );
-	return strlwr(start);
+	return _wcslwr(start);
 }
 
-int V_strncmp (const char *s1, const char *s2, int count)
-{
-	Assert( count >= 0 );
-	AssertValidStringPtr( s1, count );
-	AssertValidStringPtr( s2, count );
 
-	while ( count-- > 0 )
+
+char *V_strupr( char *start )
+{
+	unsigned char *str = (unsigned char*)start;
+	while( *str )
 	{
-		if ( *s1 != *s2 )
-			return *s1 < *s2 ? -1 : 1; // string different
-		if ( *s1 == '\0' )
-			return 0; // null terminator hit - strings the same
-		s1++;
-		s2++;
+		if ( (unsigned char)(*str - 'a') <= ('z' - 'a') )
+			*str -= 'a' - 'A';
+		else if ( (unsigned char)*str >= 0x80 ) // non-ascii, fall back to CRT
+			*str = toupper( *str );
+		str++;
 	}
+	return start;
+}
 
-	return 0; // count characters compared the same
+char *V_strlower( char *start )
+{
+	unsigned char *str = (unsigned char*)start;
+	while( *str )
+	{
+		if ( (unsigned char)(*str - 'A') <= ('Z' - 'A') )
+			*str += 'a' - 'A';
+		else if ( (unsigned char)*str >= 0x80 ) // non-ascii, fall back to CRT
+			*str = tolower( *str );
+		str++;
+	}
+	return start;
 }
 
 char *V_strnlwr(char *s, size_t count)
 {
-	Assert( count >= 0 );
+	// Assert( count >= 0 ); tautology since size_t is unsigned
 	AssertValidStringPtr( s, count );
 
 	char* pRet = s;
-	if ( !s )
+	if ( !s || !count )
 		return s;
 
-	while ( --count >= 0 )
+	while ( -- count > 0 )
 	{
 		if ( !*s )
-			break;
+			return pRet; // reached end of string
 
 		*s = tolower( *s );
 		++s;
 	}
 
-	if ( count > 0 )
-	{
-		s[count-1] = 0;
-	}
-
+	*s = 0; // null-terminate original string at "count-1"
 	return pRet;
 }
 
-
-int V_strncasecmp (const char *s1, const char *s2, int n)
+int V_stricmp( const char *str1, const char *str2 )
 {
-	Assert( n >= 0 );
-	AssertValidStringPtr( s1 );
-	AssertValidStringPtr( s2 );
-	
-	while ( n-- > 0 )
+	// It is not uncommon to compare a string to itself. See
+	// VPanelWrapper::GetPanel which does this a lot. Since stricmp
+	// is expensive and pointer comparison is cheap, this simple test
+	// can save a lot of cycles, and cache pollution.
+	if ( str1 == str2 )
 	{
-		int c1 = *s1++;
-		int c2 = *s2++;
-
-		if (c1 != c2)
-		{
-			if (c1 >= 'a' && c1 <= 'z')
-				c1 -= ('a' - 'A');
-			if (c2 >= 'a' && c2 <= 'z')
-				c2 -= ('a' - 'A');
-			if (c1 != c2)
-				return c1 < c2 ? -1 : 1;
-		}
-		if ( c1 == '\0' )
-			return 0; // null terminator hit - strings the same
+		return 0;
 	}
-	
-	return 0; // n characters compared the same
+	const unsigned char *s1 = (const unsigned char*)str1;
+	const unsigned char *s2 = (const unsigned char*)str2;
+	for ( ; *s1; ++s1, ++s2 )
+	{
+		if ( *s1 != *s2 )
+		{
+			// in ascii char set, lowercase = uppercase | 0x20
+			unsigned char c1 = *s1 | 0x20;
+			unsigned char c2 = *s2 | 0x20;
+			if ( c1 != c2 || (unsigned char)(c1 - 'a') > ('z' - 'a') )
+			{
+				// if non-ascii mismatch, fall back to CRT for locale
+				if ( (c1 | c2) >= 0x80 ) return stricmp( (const char*)s1, (const char*)s2 );
+				// ascii mismatch. only use the | 0x20 value if alphabetic.
+				if ((unsigned char)(c1 - 'a') > ('z' - 'a')) c1 = *s1;
+				if ((unsigned char)(c2 - 'a') > ('z' - 'a')) c2 = *s2;
+				return c1 > c2 ? 1 : -1;
+			}
+		}
+	}
+	return *s2 ? -1 : 0;
 }
 
-int V_strcasecmp( const char *s1, const char *s2 )
+int V_strnicmp( const char *str1, const char *str2, int n )
 {
-	AssertValidStringPtr( s1 );
-	AssertValidStringPtr( s2 );
-
-	return stricmp( s1, s2 );
+	const unsigned char *s1 = (const unsigned char*)str1;
+	const unsigned char *s2 = (const unsigned char*)str2;
+	for ( ; n > 0 && *s1; --n, ++s1, ++s2 )
+	{
+		if ( *s1 != *s2 )
+		{
+			// in ascii char set, lowercase = uppercase | 0x20
+			unsigned char c1 = *s1 | 0x20;
+			unsigned char c2 = *s2 | 0x20;
+			if ( c1 != c2 || (unsigned char)(c1 - 'a') > ('z' - 'a') )
+			{
+				// if non-ascii mismatch, fall back to CRT for locale
+				if ( (c1 | c2) >= 0x80 ) return strnicmp( (const char*)s1, (const char*)s2, n );
+				// ascii mismatch. only use the | 0x20 value if alphabetic.
+				if ((unsigned char)(c1 - 'a') > ('z' - 'a')) c1 = *s1;
+				if ((unsigned char)(c2 - 'a') > ('z' - 'a')) c2 = *s2;
+				return c1 > c2 ? 1 : -1;
+			}
+		}
+	}
+	return (n > 0 && *s2) ? -1 : 0;
 }
 
-int V_strnicmp (const char *s1, const char *s2, int n)
+int V_strncmp( const char *s1, const char *s2, int count )
 {
-	Assert( n >= 0 );
-	AssertValidStringPtr(s1);
-	AssertValidStringPtr(s2);
+	Assert( count >= 0 );
+	AssertValidStringPtr( s1, count );
+	AssertValidStringPtr( s2, count );
 
-	return V_strncasecmp( s1, s2, n );
+	while ( count > 0 )
+	{
+		if ( *s1 != *s2 )
+			return (unsigned char)*s1 < (unsigned char)*s2 ? -1 : 1; // string different
+		if ( *s1 == '\0' )
+			return 0; // null terminator hit - strings the same
+		s1++;
+		s2++;
+		count--;
+	}
+
+	return 0; // count characters compared the same
 }
 
 
@@ -298,7 +345,7 @@ const char *StringAfterPrefix( const char *str, const char *prefix )
 		if ( !*prefix )
 			return str;
 	}
-	while ( tolower( *str++ ) == tolower( *prefix++ ) );
+	while ( FastToLower( *str++ ) == FastToLower( *prefix++ ) );
 	return NULL;
 }
 
@@ -316,13 +363,13 @@ const char *StringAfterPrefixCaseSensitive( const char *str, const char *prefix 
 }
 
 
-int V_atoi (const char *str)
+int64 V_atoi64( const char *str )
 {
 	AssertValidStringPtr( str );
 
-	int             val;
-	int             sign;
-	int             c;
+	int64             val;
+	int64             sign;
+	int64             c;
 	
 	Assert( str );
 	if (*str == '-')
@@ -377,6 +424,63 @@ int V_atoi (const char *str)
 	return 0;
 }
 
+uint64 V_atoui64( const char *str )
+{
+	AssertValidStringPtr( str );
+
+	uint64             val;
+	uint64             c;
+
+	Assert( str );
+
+	val = 0;
+
+	//
+	// check for hex
+	//
+	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
+	{
+		str += 2;
+		while (1)
+		{
+			c = *str++;
+			if (c >= '0' && c <= '9')
+				val = (val<<4) + c - '0';
+			else if (c >= 'a' && c <= 'f')
+				val = (val<<4) + c - 'a' + 10;
+			else if (c >= 'A' && c <= 'F')
+				val = (val<<4) + c - 'A' + 10;
+			else
+				return val;
+		}
+	}
+
+	//
+	// check for character
+	//
+	if (str[0] == '\'')
+	{
+		return str[1];
+	}
+
+	//
+	// assume decimal
+	//
+	while (1)
+	{
+		c = *str++;
+		if (c <'0' || c > '9')
+			return val;
+		val = val*10 + c - '0';
+	}
+
+	return 0;
+}
+
+int V_atoi( const char *str )
+{ 
+	return (int)V_atoi64( str );
+}
 
 float V_atof (const char *str)
 {
@@ -385,20 +489,27 @@ float V_atof (const char *str)
 	int             sign;
 	int             c;
 	int             decimal, total;
-	
+
 	if (*str == '-')
 	{
 		sign = -1;
 		str++;
 	}
-	else
+	else if (*str == '+')
+	{
 		sign = 1;
-		
+		str++;
+	}
+	else
+	{
+		sign = 1;
+	}
+
 	val = 0;
 
-//
-// check for hex
-//
+	//
+	// check for hex
+	//
 	if (str[0] == '0' && (str[1] == 'x' || str[1] == 'X') )
 	{
 		str += 2;
@@ -415,34 +526,50 @@ float V_atof (const char *str)
 				return val*sign;
 		}
 	}
-	
-//
-// check for character
-//
+
+	//
+	// check for character
+	//
 	if (str[0] == '\'')
 	{
 		return sign * str[1];
 	}
-	
-//
-// assume decimal
-//
+
+	//
+	// assume decimal
+	//
 	decimal = -1;
 	total = 0;
+	int exponent = 0;
 	while (1)
 	{
 		c = *str++;
 		if (c == '.')
 		{
+			if ( decimal != -1 )
+			{
+				break;
+			}
+
 			decimal = total;
 			continue;
 		}
 		if (c <'0' || c > '9')
+		{
+			if ( c == 'e' || c == 'E' )
+			{
+				exponent = V_atoi(str);
+			}
 			break;
+		}
 		val = val*10 + c - '0';
 		total++;
 	}
 
+	if ( exponent != 0 )
+	{
+		val *= pow( 10.0, exponent );
+	}
 	if (decimal == -1)
 		return val*sign;
 	while (total > decimal)
@@ -450,7 +577,7 @@ float V_atof (const char *str)
 		val /= 10;
 		total--;
 	}
-	
+
 	return val*sign;
 }
 
@@ -501,7 +628,7 @@ char const* V_stristr( char const* pStr, char const* pSearch )
 	while (*pLetter != 0)
 	{
 		// Skip over non-matches
-		if (tolower((unsigned char)*pLetter) == tolower((unsigned char)*pSearch))
+		if (FastToLower((unsigned char)*pLetter) == FastToLower((unsigned char)*pSearch))
 		{
 			// Check for match
 			char const* pMatch = pLetter + 1;
@@ -512,7 +639,7 @@ char const* V_stristr( char const* pStr, char const* pSearch )
 				if (*pMatch == 0)
 					return 0;
 
-				if (tolower((unsigned char)*pMatch) != tolower((unsigned char)*pTest))
+				if (FastToLower((unsigned char)*pMatch) != FastToLower((unsigned char)*pTest))
 					break;
 
 				++pMatch;
@@ -541,6 +668,7 @@ char* V_stristr( char* pStr, char const* pSearch )
 //-----------------------------------------------------------------------------
 // Finds a string in another string with a case insensitive test w/ length validation
 //-----------------------------------------------------------------------------
+
 char const* V_strnistr( char const* pStr, char const* pSearch, int n )
 {
 	AssertValidStringPtr(pStr);
@@ -558,7 +686,7 @@ char const* V_strnistr( char const* pStr, char const* pSearch, int n )
 			return 0;
 
 		// Skip over non-matches
-		if (tolower(*pLetter) == tolower(*pSearch))
+		if (FastToLower(*pLetter) == FastToLower(*pSearch))
 		{
 			int n1 = n - 1;
 
@@ -574,7 +702,7 @@ char const* V_strnistr( char const* pStr, char const* pSearch, int n )
 				if (*pMatch == 0)
 					return 0;
 
-				if (tolower(*pMatch) != tolower(*pTest))
+				if (FastToLower(*pMatch) != FastToLower(*pTest))
 					break;
 
 				++pMatch;
@@ -611,7 +739,7 @@ const char* V_strnchr( const char* pStr, char c, int n )
 
 void V_strncpy( char *pDest, char const *pSrc, int maxLen )
 {
-	Assert( maxLen >= 0 );
+	Assert( maxLen >= sizeof( *pDest ) );
 	AssertValidWritePtr( pDest, maxLen );
 	AssertValidStringPtr( pSrc );
 
@@ -622,9 +750,19 @@ void V_strncpy( char *pDest, char const *pSrc, int maxLen )
 	}
 }
 
+// warning C6053: Call to 'wcsncpy' might not zero-terminate string 'pDest'
+// warning C6059: Incorrect length parameter in call to 'strncat'. Pass the number of remaining characters, not the buffer size of 'argument 1'
+// warning C6386: Buffer overrun: accessing 'argument 1', the writable size is 'destBufferSize' bytes, but '1000' bytes might be written
+// These warnings were investigated through code inspection and writing of tests and they are
+// believed to all be spurious.
+#ifdef _PREFAST_
+#pragma warning( push )
+#pragma warning( disable : 6053 6059 6386 )
+#endif
+
 void V_wcsncpy( wchar_t *pDest, wchar_t const *pSrc, int maxLenInBytes )
 {
-	Assert( maxLenInBytes >= 0 );
+	Assert( maxLenInBytes >= sizeof( *pDest ) );
 	AssertValidWritePtr( pDest, maxLenInBytes );
 	AssertValidReadPtr( pSrc );
 
@@ -641,7 +779,7 @@ void V_wcsncpy( wchar_t *pDest, wchar_t const *pSrc, int maxLenInBytes )
 
 int V_snwprintf( wchar_t *pDest, int maxLen, const wchar_t *pFormat, ... )
 {
-	Assert( maxLen >= 0 );
+	Assert( maxLen > 0 );
 	AssertValidWritePtr( pDest, maxLen );
 	AssertValidReadPtr( pFormat );
 
@@ -649,16 +787,16 @@ int V_snwprintf( wchar_t *pDest, int maxLen, const wchar_t *pFormat, ... )
 
 	va_start( marker, pFormat );
 #ifdef _WIN32
-	int len = _snwprintf( pDest, maxLen, pFormat, marker );
-#elif _LINUX
-	int len = swprintf( pDest, maxLen, pFormat, marker );
+	int len = _vsnwprintf( pDest, maxLen, pFormat, marker );
+#elif POSIX
+	int len = vswprintf( pDest, maxLen, pFormat, marker );
 #else
 #error "define vsnwprintf type."
 #endif
 	va_end( marker );
 
-	// Len < 0 represents an overflow
-	if( len < 0 )
+	// Len > maxLen represents an overflow on POSIX, < 0 is an overflow on windows
+	if( len < 0 || len >= maxLen )
 	{
 		len = maxLen;
 		pDest[maxLen-1] = 0;
@@ -668,9 +806,34 @@ int V_snwprintf( wchar_t *pDest, int maxLen, const wchar_t *pFormat, ... )
 }
 
 
+int V_vsnwprintf( wchar_t *pDest, int maxLen, const wchar_t *pFormat, va_list params )
+{
+	Assert( maxLen > 0 );
+
+#ifdef _WIN32
+	int len = _vsnwprintf( pDest, maxLen, pFormat, params );
+#elif POSIX
+	int len = vswprintf( pDest, maxLen, pFormat, params );
+#else
+#error "define vsnwprintf type."
+#endif
+
+	// Len < 0 represents an overflow
+	// Len == maxLen represents exactly fitting with no NULL termination
+	// Len >= maxLen represents overflow on POSIX
+	if ( len < 0 || len >= maxLen )
+	{
+		len = maxLen;
+		pDest[maxLen-1] = 0;
+	}
+
+	return len;
+}
+
+
 int V_snprintf( char *pDest, int maxLen, char const *pFormat, ... )
 {
-	Assert( maxLen >= 0 );
+	Assert( maxLen > 0 );
 	AssertValidWritePtr( pDest, maxLen );
 	AssertValidStringPtr( pFormat );
 
@@ -679,15 +842,15 @@ int V_snprintf( char *pDest, int maxLen, char const *pFormat, ... )
 	va_start( marker, pFormat );
 #ifdef _WIN32
 	int len = _vsnprintf( pDest, maxLen, pFormat, marker );
-#elif _LINUX
+#elif POSIX
 	int len = vsnprintf( pDest, maxLen, pFormat, marker );
 #else
 	#error "define vsnprintf type."
 #endif
 	va_end( marker );
 
-	// Len < 0 represents an overflow
-	if( len < 0 )
+	// Len > maxLen represents an overflow on POSIX, < 0 is an overflow on windows
+	if( len < 0 || len >= maxLen )
 	{
 		len = maxLen;
 		pDest[maxLen-1] = 0;
@@ -705,7 +868,31 @@ int V_vsnprintf( char *pDest, int maxLen, char const *pFormat, va_list params )
 
 	int len = _vsnprintf( pDest, maxLen, pFormat, params );
 
-	if( len < 0 )
+	// Len > maxLen represents an overflow on POSIX, < 0 is an overflow on windows
+	if( len < 0 || len >= maxLen )
+	{
+		len = maxLen;
+		pDest[maxLen-1] = 0;
+	}
+
+	return len;
+}
+
+
+int V_vsnprintfRet( char *pDest, int maxLen, const char *pFormat, va_list params, bool *pbTruncated )
+{
+	Assert( maxLen > 0 );
+	AssertValidWritePtr( pDest, maxLen );
+	AssertValidStringPtr( pFormat );
+
+	int len = _vsnprintf( pDest, maxLen, pFormat, params );
+
+	if ( pbTruncated )
+	{
+		*pbTruncated = ( len < 0 || len >= maxLen );
+	}
+
+	if	( len < 0 || len >= maxLen )
 	{
 		len = maxLen;
 		pDest[maxLen-1] = 0;
@@ -729,7 +916,7 @@ char *V_strncat(char *pDest, const char *pSrc, size_t destBufferSize, int max_ch
 {
 	size_t charstocopy = (size_t)0;
 
-	Assert( destBufferSize >= 0 );
+	Assert( (ptrdiff_t)destBufferSize >= 0 );
 	AssertValidStringPtr( pDest);
 	AssertValidStringPtr( pSrc );
 	
@@ -749,13 +936,45 @@ char *V_strncat(char *pDest, const char *pSrc, size_t destBufferSize, int max_ch
 		charstocopy = destBufferSize - len - 1;
 	}
 
-	if ( !charstocopy )
+	if ( (int)charstocopy <= 0 )
 	{
 		return pDest;
 	}
 
+	ANALYZE_SUPPRESS( 6059 ); // warning C6059: : Incorrect length parameter in call to 'strncat'. Pass the number of remaining characters, not the buffer size of 'argument 1'
 	char *pOut = strncat( pDest, pSrc, charstocopy );
-	pOut[destBufferSize-1] = 0;
+	return pOut;
+}
+
+wchar_t *V_wcsncat( INOUT_Z_CAP(cchDest) wchar_t *pDest, const wchar_t *pSrc, size_t cchDest, int max_chars_to_copy )
+{
+	size_t charstocopy = (size_t)0;
+
+	Assert( (ptrdiff_t)cchDest >= 0 );
+	
+	size_t len = wcslen(pDest);
+	size_t srclen = wcslen( pSrc );
+	if ( max_chars_to_copy <= COPY_ALL_CHARACTERS )
+	{
+		charstocopy = srclen;
+	}
+	else
+	{
+		charstocopy = (size_t)min( max_chars_to_copy, (int)srclen );
+	}
+
+	if ( len + charstocopy >= cchDest )
+	{
+		charstocopy = cchDest - len - 1;
+	}
+
+	if ( (int)charstocopy <= 0 )
+	{
+		return pDest;
+	}
+
+	ANALYZE_SUPPRESS( 6059 ); // warning C6059: : Incorrect length parameter in call to 'strncat'. Pass the number of remaining characters, not the buffer size of 'argument 1'
+	wchar_t *pOut = wcsncat( pDest, pSrc, charstocopy );
 	return pOut;
 }
 
@@ -865,74 +1084,258 @@ char *V_pretifymem( float value, int digitsafterdecimal /*= 2*/, bool usebinaryo
 // Input  : value -		Value to convert
 // Output : Pointer to a static buffer containing the output
 //-----------------------------------------------------------------------------
-#define NUM_PRETIFYNUM_BUFFERS 8
-char *V_pretifynum( int64 value )
+#define NUM_PRETIFYNUM_BUFFERS 8 // Must be a power of two
+char *V_pretifynum( int64 inputValue )
 {
 	static char output[ NUM_PRETIFYMEM_BUFFERS ][ 32 ];
 	static int  current;
 
-	char *out = output[ current ];
+	// Point to the output buffer.
+	char * const out = output[ current ];
+	// Track the output buffer end for easy calculation of bytes-remaining.
+	const char* const outEnd = out + sizeof( output[ current ] );
+
+	// Point to the current output location in the output buffer.
+	char *pchRender = out;
+	// Move to the next output pointer.
 	current = ( current + 1 ) & ( NUM_PRETIFYMEM_BUFFERS -1 );
 
 	*out = 0;
 
-	// Render the leading -, if necessary
-	if ( value < 0 )
+	// In order to handle the most-negative int64 we need to negate it
+	// into a uint64.
+	uint64 value;
+	// Render the leading minus sign, if necessary
+	if ( inputValue < 0 )
 	{
-		char *pchRender = out + V_strlen( out );
 		V_snprintf( pchRender, 32, "-" );
-		value = -value;
+		value = (uint64)-inputValue;
+		// Advance our output pointer.
+		pchRender += V_strlen( pchRender );
 	}
-
-	// Render quadrillions
-	if ( value >= 1000000000000 )
-	{
-		char *pchRender = out + V_strlen( out );
-		V_snprintf( pchRender, 32, "%d,", value / 1000000000000 );
-	}
-
-	// Render trillions
-	if ( value >= 1000000000000 )
-	{
-		char *pchRender = out + V_strlen( out );
-		V_snprintf( pchRender, 32, "%d,", value / 1000000000000 );
-	}
-
-	// Render billions
-	if ( value >= 1000000000 )
-	{
-		char *pchRender = out + V_strlen( out );
-		V_snprintf( pchRender, 32, "%d,", value / 1000000000 );
-	}
-
-	// Render millions
-	if ( value >= 1000000 )
-	{
-		char *pchRender = out + V_strlen( out );
-		if ( value >= 1000000000 )
-			V_snprintf( pchRender, 32, "%03d,", ( value / 1000000 ) % 1000 );
-		else
-			V_snprintf( pchRender, 32, "%d,", ( value / 1000000 ) % 1000 );
-	}
-
-	// Render thousands
-	if ( value >= 1000 )
-	{
-		char *pchRender = out + V_strlen( out );
-		if ( value >= 1000000 )
-			V_snprintf( pchRender, 32, "%03d,", ( value / 1000 ) % 1000 );
-		else
-			V_snprintf( pchRender, 32, "%d,", ( value / 1000 ) % 1000 );
-	}
-
-	// Render units
-	char *pchRender = out + V_strlen( out );
-	if ( value > 1000 )
-		V_snprintf( pchRender, 32, "%03d", value % 1000 );
 	else
-		V_snprintf( pchRender, 32, "%d", value % 1000 );
+	{
+		value = (uint64)inputValue;
+	}
+
+	// Now let's find out how big our number is. The largest number we can fit
+	// into 63 bits is about 9.2e18. So, there could potentially be six
+	// three-digit groups.
+
+	// We need the initial value of 'divisor' to be big enough to divide our
+	// number down to 1-999 range.
+	uint64 divisor = 1;
+	// Loop more than six times to avoid integer overflow.
+	for ( int i = 0; i < 6; ++i )
+	{
+		// If our divisor is already big enough then stop.
+		if ( value < divisor * 1000 )
+			break;
+
+		divisor *= 1000;
+	}
+
+	// Print the leading batch of one to three digits.
+	int toPrint = value / divisor;
+	V_snprintf( pchRender, outEnd - pchRender, "%d", toPrint );
+
+	for (;;)
+	{
+		// Advance our output pointer.
+		pchRender += V_strlen( pchRender );
+		// Adjust our value to be printed and our divisor.
+		value -= toPrint * divisor;
+		divisor /= 1000;
+		if ( !divisor )
+			break;
+
+		// The remaining blocks of digits always include a comma and three digits.
+		toPrint = value / divisor;
+		V_snprintf( pchRender, outEnd - pchRender, ",%03d", toPrint );
+	}
 
 	return out;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: returns true if a wide character is a "mean" space; that is,
+//			if it is technically a space or punctuation, but causes disruptive
+//			behavior when used in names, web pages, chat windows, etc.
+//
+//			characters in this set are removed from the beginning and/or end of strings
+//			by Q_AggressiveStripPrecedingAndTrailingWhitespaceW() 
+//-----------------------------------------------------------------------------
+bool Q_IsMeanSpaceW( wchar_t wch )
+{
+	bool bIsMean = false;
+
+	switch ( wch )
+	{
+	case L'\x0082':	  // BREAK PERMITTED HERE
+	case L'\x0083':	  // NO BREAK PERMITTED HERE
+	case L'\x00A0':	  // NO-BREAK SPACE
+	case L'\x034F':   // COMBINING GRAPHEME JOINER
+	case L'\x2000':   // EN QUAD
+	case L'\x2001':   // EM QUAD
+	case L'\x2002':   // EN SPACE
+	case L'\x2003':   // EM SPACE
+	case L'\x2004':   // THICK SPACE
+	case L'\x2005':   // MID SPACE
+	case L'\x2006':   // SIX SPACE
+	case L'\x2007':   // figure space
+	case L'\x2008':   // PUNCTUATION SPACE
+	case L'\x2009':   // THIN SPACE
+	case L'\x200A':   // HAIR SPACE
+	case L'\x200B':   // ZERO-WIDTH SPACE
+	case L'\x200C':   // ZERO-WIDTH NON-JOINER
+	case L'\x200D':   // ZERO WIDTH JOINER
+	case L'\x2028':   // LINE SEPARATOR
+	case L'\x2029':   // PARAGRAPH SEPARATOR
+	case L'\x202F':   // NARROW NO-BREAK SPACE
+	case L'\x2060':   // word joiner
+	case L'\xFEFF':   // ZERO-WIDTH NO BREAK SPACE
+	case L'\xFFFC':   // OBJECT REPLACEMENT CHARACTER
+		bIsMean = true;
+		break;
+	}
+
+	return bIsMean;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: strips trailing whitespace; returns pointer inside string just past
+// any leading whitespace.
+//
+// bAggresive = true causes this function to also check for "mean" spaces,
+// which we don't want in persona names or chat strings as they're disruptive
+// to the user experience.
+//-----------------------------------------------------------------------------
+static wchar_t *StripWhitespaceWorker( int cchLength, wchar_t *pwch, bool *pbStrippedWhitespace, bool bAggressive )
+{
+	// walk backwards from the end of the string, killing any whitespace
+	*pbStrippedWhitespace = false;
+
+	wchar_t *pwchEnd = pwch + cchLength;
+	while ( --pwchEnd >= pwch )
+	{
+		if ( !iswspace( *pwchEnd ) && ( !bAggressive || !Q_IsMeanSpaceW( *pwchEnd ) ) )
+			break;
+
+		*pwchEnd = 0;
+		*pbStrippedWhitespace = true;
+	}
+
+	// walk forward in the string
+	while ( pwch < pwchEnd )
+	{
+		if ( !iswspace( *pwch ) )
+			break;
+
+		*pbStrippedWhitespace = true;
+		pwch++;
+	}
+
+	return pwch;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: strips leading and trailing whitespace
+//-----------------------------------------------------------------------------
+bool Q_StripPrecedingAndTrailingWhitespaceW( wchar_t *pwch )
+{
+	// duplicate on stack
+	int cch = Q_wcslen( pwch );
+	int cubDest = ( cch + 1 ) * sizeof( wchar_t );
+	wchar_t *pwchT = (wchar_t *)stackalloc( cubDest );
+	Q_wcsncpy( pwchT, pwch, cubDest );
+
+	bool bStrippedWhitespace = false;
+	pwchT = StripWhitespaceWorker( cch, pwch, &bStrippedWhitespace, false /* not aggressive */ );
+
+	// copy back, if necessary
+	if ( bStrippedWhitespace )
+	{
+		Q_wcsncpy( pwch, pwchT, cubDest );
+	}
+
+	return bStrippedWhitespace;
+}
+
+
+
+//-----------------------------------------------------------------------------
+// Purpose: strips leading and trailing whitespace,
+//		and also strips punctuation and formatting characters with "clear"
+//		representations.
+//-----------------------------------------------------------------------------
+bool Q_AggressiveStripPrecedingAndTrailingWhitespaceW( wchar_t *pwch )
+{
+	// duplicate on stack
+	int cch = Q_wcslen( pwch );
+	int cubDest = ( cch + 1 ) * sizeof( wchar_t );
+	wchar_t *pwchT = (wchar_t *)stackalloc( cubDest );
+	Q_wcsncpy( pwchT, pwch, cubDest );
+
+	bool bStrippedWhitespace = false;
+	pwchT = StripWhitespaceWorker( cch, pwch, &bStrippedWhitespace, true /* is aggressive */ );
+
+	// copy back, if necessary
+	if ( bStrippedWhitespace )
+	{
+		Q_wcsncpy( pwch, pwchT, cubDest );
+	}
+
+	return bStrippedWhitespace;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: strips leading and trailing whitespace
+//-----------------------------------------------------------------------------
+bool Q_StripPrecedingAndTrailingWhitespace( char *pch )
+{
+	// convert to unicode
+	int cch = Q_strlen( pch );
+	int cubDest = (cch + 1 ) * sizeof( wchar_t );
+	wchar_t *pwch = (wchar_t *)stackalloc( cubDest );
+	int cwch = Q_UTF8ToUnicode( pch, pwch, cubDest );
+
+	bool bStrippedWhitespace = false;
+	pwch = StripWhitespaceWorker( cwch-1, pwch, &bStrippedWhitespace, false /* not aggressive */ );
+
+	// copy back, if necessary
+	if ( bStrippedWhitespace )
+	{
+		Q_UnicodeToUTF8( pwch, pch, cch );
+	}
+
+	return bStrippedWhitespace;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: strips leading and trailing whitespace
+//-----------------------------------------------------------------------------
+bool Q_AggressiveStripPrecedingAndTrailingWhitespace( char *pch )
+{
+	// convert to unicode
+	int cch = Q_strlen( pch );
+	int cubDest = (cch + 1 ) * sizeof( wchar_t );
+	wchar_t *pwch = (wchar_t *)stackalloc( cubDest );
+	int cwch = Q_UTF8ToUnicode( pch, pwch, cubDest );
+
+	bool bStrippedWhitespace = false;
+	pwch = StripWhitespaceWorker( cwch-1, pwch, &bStrippedWhitespace, true /* is aggressive */ );
+
+	// copy back, if necessary
+	if ( bStrippedWhitespace )
+	{
+		Q_UnicodeToUTF8( pwch, pch, cch );
+	}
+
+	return bStrippedWhitespace;
 }
 
 
@@ -941,16 +1344,29 @@ char *V_pretifynum( int64 value )
 //-----------------------------------------------------------------------------
 int V_UTF8ToUnicode( const char *pUTF8, wchar_t *pwchDest, int cubDestSizeInBytes )
 {
-	AssertValidStringPtr(pUTF8);
-	AssertValidWritePtr(pwchDest);
+	// pwchDest can be null to allow for getting the length of the string
+	if ( cubDestSizeInBytes > 0 )
+	{
+		AssertValidWritePtr(pwchDest);
+		pwchDest[0] = 0;
+	}
 
-	pwchDest[0] = 0;
+	if ( !pUTF8 )
+		return 0;
+
+	AssertValidStringPtr(pUTF8);
+
 #ifdef _WIN32
 	int cchResult = MultiByteToWideChar( CP_UTF8, 0, pUTF8, -1, pwchDest, cubDestSizeInBytes / sizeof(wchar_t) );
-#elif _LINUX
-	int cchResult = mbstowcs( pwchDest, pUTF8, cubDestSizeInBytes / sizeof(wchar_t) );
+#elif POSIX
+	int cchResult = mbstowcs( pwchDest, pUTF8, cubDestSizeInBytes / sizeof(wchar_t) ) + 1;
 #endif
-	pwchDest[(cubDestSizeInBytes / sizeof(wchar_t)) - 1] = 0;
+
+	if ( cubDestSizeInBytes > 0 )
+	{
+		pwchDest[(cubDestSizeInBytes / sizeof(wchar_t)) - 1] = 0;
+	}
+
 	return cchResult;
 }
 
@@ -959,25 +1375,189 @@ int V_UTF8ToUnicode( const char *pUTF8, wchar_t *pwchDest, int cubDestSizeInByte
 //-----------------------------------------------------------------------------
 int V_UnicodeToUTF8( const wchar_t *pUnicode, char *pUTF8, int cubDestSizeInBytes )
 {
-	AssertValidStringPtr(pUTF8, cubDestSizeInBytes);
+	//AssertValidStringPtr(pUTF8, cubDestSizeInBytes); // no, we are sometimes pasing in NULL to fetch the length of the buffer needed.
 	AssertValidReadPtr(pUnicode);
 
-	pUTF8[0] = 0;
+	if ( cubDestSizeInBytes > 0 )
+	{
+		pUTF8[0] = 0;
+	}
+
 #ifdef _WIN32
 	int cchResult = WideCharToMultiByte( CP_UTF8, 0, pUnicode, -1, pUTF8, cubDestSizeInBytes, NULL, NULL );
-#elif _LINUX
-	int cchResult = wcstombs( pUTF8, pUnicode, cubDestSizeInBytes );
+#elif POSIX
+	int cchResult = 0;
+	if ( pUnicode && pUTF8 )
+		cchResult = wcstombs( pUTF8, pUnicode, cubDestSizeInBytes ) + 1;
 #endif
-	pUTF8[cubDestSizeInBytes - 1] = 0;
+
+	if ( cubDestSizeInBytes > 0 )
+	{
+		pUTF8[cubDestSizeInBytes - 1] = 0;
+	}
+
 	return cchResult;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Converts a ucs2 string to a unicode (wchar_t) one, no-op on win32
+//-----------------------------------------------------------------------------
+int V_UCS2ToUnicode( const ucs2 *pUCS2, wchar_t *pUnicode, int cubDestSizeInBytes )
+{
+	Assert( cubDestSizeInBytes >= sizeof( *pUnicode ) );
+	AssertValidWritePtr(pUnicode);
+	AssertValidReadPtr(pUCS2);
+	
+	pUnicode[0] = 0;
+#ifdef _WIN32
+	int cchResult = V_wcslen( pUCS2 );
+	Q_memcpy( pUnicode, pUCS2, cubDestSizeInBytes );
+#else
+	iconv_t conv_t = iconv_open( "UCS-4LE", "UCS-2LE" );
+	int cchResult = -1;
+	size_t nLenUnicde = cubDestSizeInBytes;
+	size_t nMaxUTF8 = cubDestSizeInBytes;
+	char *pIn = (char *)pUCS2;
+	char *pOut = (char *)pUnicode;
+	if ( conv_t > 0 )
+	{
+		cchResult = 0;
+		cchResult = iconv( conv_t, &pIn, &nLenUnicde, &pOut, &nMaxUTF8 );
+		iconv_close( conv_t );
+		if ( (int)cchResult < 0 )
+			cchResult = 0;
+		else
+			cchResult = nMaxUTF8;
+	}
+#endif
+	pUnicode[(cubDestSizeInBytes / sizeof(wchar_t)) - 1] = 0;
+	return cchResult;	
+
+}
+
+#ifdef _PREFAST_
+#pragma warning( pop ) // Restore the /analyze warnings
+#endif
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Converts a wchar_t string into a UCS2 string -noop on windows
+//-----------------------------------------------------------------------------
+int V_UnicodeToUCS2( const wchar_t *pUnicode, int cubSrcInBytes, char *pUCS2, int cubDestSizeInBytes )
+{
+#ifdef _WIN32
+	// Figure out which buffer is smaller and convert from bytes to character
+	// counts.
+	int cchResult = min( (size_t)cubSrcInBytes/sizeof(wchar_t), cubDestSizeInBytes/sizeof(wchar_t) );
+	wchar_t *pDest = (wchar_t*)pUCS2;
+	wcsncpy( pDest, pUnicode, cchResult );
+	// Make sure we NULL-terminate.
+	pDest[ cchResult - 1 ] = 0;
+#elif defined (POSIX)
+	iconv_t conv_t = iconv_open( "UCS-2LE", "UTF-32LE" );
+	size_t cchResult = -1;
+	size_t nLenUnicde = cubSrcInBytes;
+	size_t nMaxUCS2 = cubDestSizeInBytes;
+	char *pIn = (char*)pUnicode;
+	char *pOut = pUCS2;
+	if ( conv_t > 0 )
+	{
+		cchResult = 0;
+		cchResult = iconv( conv_t, &pIn, &nLenUnicde, &pOut, &nMaxUCS2 );
+		iconv_close( conv_t );
+		if ( (int)cchResult < 0 )
+			cchResult = 0;
+		else
+			cchResult = cubSrcInBytes / sizeof( wchar_t );
+	}
+#endif
+	return cchResult;	
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Converts a ucs-2 (windows wchar_t) string into a UTF8 (standard) string
+//-----------------------------------------------------------------------------
+int V_UCS2ToUTF8( const ucs2 *pUCS2, char *pUTF8, int cubDestSizeInBytes )
+{
+	AssertValidStringPtr(pUTF8, cubDestSizeInBytes);
+	AssertValidReadPtr(pUCS2);
+	
+	pUTF8[0] = 0;
+#ifdef _WIN32
+	// under win32 wchar_t == ucs2, sigh
+	int cchResult = WideCharToMultiByte( CP_UTF8, 0, pUCS2, -1, pUTF8, cubDestSizeInBytes, NULL, NULL );
+#elif defined(POSIX)
+	iconv_t conv_t = iconv_open( "UTF-8", "UCS-2LE" );
+	size_t cchResult = -1;
+	size_t nLenUnicde = cubDestSizeInBytes;
+	size_t nMaxUTF8 = cubDestSizeInBytes;
+	char *pIn = (char *)pUCS2;
+	char *pOut = (char *)pUTF8;
+	if ( conv_t > 0 )
+	{
+		cchResult = 0;
+		cchResult = iconv( conv_t, &pIn, &nLenUnicde, &pOut, &nMaxUTF8 );
+		iconv_close( conv_t );
+		if ( (int)cchResult < 0 )
+			cchResult = 0;
+		else
+			cchResult = nMaxUTF8;
+	}
+#endif
+	pUTF8[cubDestSizeInBytes - 1] = 0;
+	return cchResult;	
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Converts a UTF8 to ucs-2 (windows wchar_t)
+//-----------------------------------------------------------------------------
+int V_UTF8ToUCS2( const char *pUTF8, int cubSrcInBytes, ucs2 *pUCS2, int cubDestSizeInBytes )
+{
+	Assert( cubDestSizeInBytes >= sizeof(pUCS2[0]) );
+	AssertValidStringPtr(pUTF8, cubDestSizeInBytes);
+	AssertValidReadPtr(pUCS2);
+
+	pUCS2[0] = 0;
+#ifdef _WIN32
+	// under win32 wchar_t == ucs2, sigh
+	int cchResult = MultiByteToWideChar( CP_UTF8, 0, pUTF8, -1, pUCS2, cubDestSizeInBytes / sizeof(wchar_t) );
+#elif defined( _PS3 ) // bugbug JLB
+	int cchResult = 0;
+	Assert( 0 );
+#elif defined(POSIX)
+	iconv_t conv_t = iconv_open( "UCS-2LE", "UTF-8" );
+	size_t cchResult = -1;
+	size_t nLenUnicde = cubSrcInBytes;
+	size_t nMaxUTF8 = cubDestSizeInBytes;
+	char *pIn = (char *)pUTF8;
+	char *pOut = (char *)pUCS2;
+	if ( conv_t > 0 )
+	{
+		cchResult = 0;
+		cchResult = iconv( conv_t, &pIn, &nLenUnicde, &pOut, &nMaxUTF8 );
+		iconv_close( conv_t );
+		if ( (int)cchResult < 0 )
+			cchResult = 0;
+		else
+			cchResult = cubSrcInBytes;
+
+	}
+#endif
+	pUCS2[ (cubDestSizeInBytes/sizeof(ucs2)) - 1] = 0;
+	return cchResult;	
+}
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns the 4 bit nibble for a hex character
 // Input  : c - 
 // Output : unsigned char
 //-----------------------------------------------------------------------------
-static unsigned char V_nibble( char c )
+unsigned char V_nibble( char c )
 {
 	if ( ( c >= '0' ) &&
 		 ( c <= '9' ) )
@@ -1054,11 +1634,14 @@ void V_binarytohex( const byte *in, int inputbytes, char *out, int outsize )
 	}
 }
 
-#if defined( _WIN32 ) || defined( WIN32 )
-#define PATHSEPARATOR(c) ((c) == '\\' || (c) == '/')
-#else	//_WIN32
-#define PATHSEPARATOR(c) ((c) == '/')
-#endif	//_WIN32
+// Even though \ on Posix (Linux&Mac) isn't techincally a path separator we are
+// now counting it as one even Posix since so many times our filepaths aren't actual
+// paths but rather text strings passed in from data files, treating \ as a pathseparator
+// covers the full range of cases
+bool PATHSEPARATOR( char c )
+{
+	return c == '\\' || c == '/';
+}
 
 
 //-----------------------------------------------------------------------------
@@ -1249,7 +1832,7 @@ void  V_StripFilename (char *path)
 #ifdef _WIN32
 #define CORRECT_PATH_SEPARATOR '\\'
 #define INCORRECT_PATH_SEPARATOR '/'
-#elif _LINUX
+#elif POSIX
 #define CORRECT_PATH_SEPARATOR '/'
 #define INCORRECT_PATH_SEPARATOR '\\'
 #endif
@@ -1366,6 +1949,7 @@ const char * V_UnqualifiedFileName( const char * in )
 void V_ComposeFileName( const char *path, const char *filename, char *dest, int destSize )
 {
 	V_strncpy( dest, path, destSize );
+	V_FixSlashes( dest );
 	V_AppendSlash( dest, destSize );
 	V_strncat( dest, filename, destSize, COPY_ALL_CHARACTERS );
 	V_FixSlashes( dest );
@@ -1447,90 +2031,97 @@ const char * V_GetFileExtension( const char * path )
 	return src;
 }
 
-bool V_RemoveDotSlashes( char *pFilename, char separator )
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns a pointer to the filename part of a path string
+// Input:	in - file name 
+// Output:	pointer to beginning of filename (after the "/"). If there were no /, 
+//          output is identical to input
+//-----------------------------------------------------------------------------
+const char * V_GetFileName( const char * path )
 {
-	// Remove '//' or '\\'
+	return V_UnqualifiedFileName( path );
+}
+
+
+bool V_RemoveDotSlashes( char *pFilename, char separator, bool bRemoveDoubleSlashes /* = true */ )
+{
 	char *pIn = pFilename;
 	char *pOut = pFilename;
-	bool bPrevPathSep = false;
+	bool bRetVal = true;
+
+	bool bBoundary = true;
 	while ( *pIn )
 	{
-		bool bIsPathSep = PATHSEPARATOR( *pIn );
-		if ( !bIsPathSep || !bPrevPathSep )
+		if ( bBoundary && pIn[0] == '.' && pIn[1] == '.' && ( PATHSEPARATOR( pIn[2] ) || !pIn[2] ) )
 		{
-			*pOut++ = *pIn;
-		}
-		bPrevPathSep = bIsPathSep;
-		++pIn;
-	}
-	*pOut = 0;
+			// Get rid of /../ or trailing /.. by backing pOut up to previous separator
 
-	// Get rid of "./"'s
-	pIn = pFilename;
-	pOut = pFilename;
-	while ( *pIn )
-	{
-		// The logic on the second line is preventing it from screwing up "../"
-		if ( pIn[0] == '.' && PATHSEPARATOR( pIn[1] ) &&
-			(pIn == pFilename || pIn[-1] != '.') )
-		{
-			pIn += 2;
-		}
-		else
-		{
-			*pOut = *pIn;
-			++pIn;
-			++pOut;
-		}
-	}
-	*pOut = 0;
-
-	// Get rid of a trailing "/." (needless).
-	int len = strlen( pFilename );
-	if ( len > 2 && pFilename[len-1] == '.' && PATHSEPARATOR( pFilename[len-2] ) )
-	{
-		pFilename[len-2] = 0;
-	}
-
-	// Each time we encounter a "..", back up until we've read the previous directory name,
-	// then get rid of it.
-	pIn = pFilename;
-	while ( *pIn )
-	{
-		if ( pIn[0] == '.' && 
-			 pIn[1] == '.' && 
-			 (pIn == pFilename || PATHSEPARATOR(pIn[-1])) &&	// Preceding character must be a slash.
-			 (pIn[2] == 0 || PATHSEPARATOR(pIn[2])) )			// Following character must be a slash or the end of the string.
-		{
-			char *pEndOfDots = pIn + 2;
-			char *pStart = pIn - 2;
-
-			// Ok, now scan back for the path separator that starts the preceding directory.
-			while ( 1 )
+			// Eat the last separator (or repeated separators) we wrote out
+			while ( pOut != pFilename && pOut[-1] == separator )
 			{
-				if ( pStart < pFilename )
-					return false;
-
-				if ( PATHSEPARATOR( *pStart ) )
-					break;
-
-				--pStart;
+				--pOut;
 			}
 
-			// Now slide the string down to get rid of the previous directory and the ".."
-			memmove( pStart, pEndOfDots, strlen( pEndOfDots ) + 1 );
+			while ( true )
+			{
+				if ( pOut == pFilename )
+				{
+					bRetVal = false; // backwards compat. return value, even though we continue handling
+					break;
+				}
+				--pOut;
+				if ( *pOut == separator )
+				{
+					break;
+				}
+			}
 
-			// Start over.
-			pIn = pFilename;
+			// Skip the '..' but not the slash, next loop iteration will handle separator
+			pIn += 2;
+			bBoundary = ( pOut == pFilename );
+		}
+		else if ( bBoundary && pIn[0] == '.' && ( PATHSEPARATOR( pIn[1] ) || !pIn[1] ) )
+		{
+			// Handle "./" by simply skipping this sequence. bBoundary is unchanged.
+			if ( PATHSEPARATOR( pIn[1] ) )
+			{
+				pIn += 2;
+			}
+			else
+			{
+				// Special case: if trailing "." is preceded by separator, eg "path/.",
+				// then the final separator should also be stripped. bBoundary may then
+				// be in an incorrect state, but we are at the end of processing anyway
+				// so we don't really care (the processing loop is about to terminate).
+				if ( pOut != pFilename && pOut[-1] == separator )
+				{
+					--pOut;
+				}
+				pIn += 1;
+			}
+		}
+		else if ( PATHSEPARATOR( pIn[0] ) )
+		{
+			*pOut = separator;
+			pOut += 1 - (bBoundary & bRemoveDoubleSlashes & (pOut != pFilename));
+			pIn += 1;
+			bBoundary = true;
 		}
 		else
 		{
-			++pIn;
+			if ( pOut != pIn )
+			{
+				*pOut = *pIn;
+			}
+			pOut += 1;
+			pIn += 1;
+			bBoundary = false;
 		}
 	}
-	
-	V_FixSlashes( pFilename, separator );	
-	return true;
+	*pOut = 0;
+
+	return bRetVal;
 }
 
 
@@ -1582,7 +2173,7 @@ void V_MakeAbsolutePath( char *pOut, int outLen, const char *pPath, const char *
 	if ( !V_RemoveDotSlashes( pOut ) )
 		Error( "V_MakeAbsolutePath: tried to \"..\" past the root." );
 
-	V_FixSlashes( pOut );
+	//V_FixSlashes( pOut ); - handled by V_RemoveDotSlashes
 }
 
 
@@ -1599,7 +2190,7 @@ bool V_MakeRelativePath( const char *pFullPath, const char *pDirectory, char *pR
 	// Strip out common parts of the path
 	const char *pLastCommonPath = NULL;
 	const char *pLastCommonDir = NULL;
-	while ( *pPath && ( tolower( *pPath ) == tolower( *pDir ) || 
+	while ( *pPath && ( FastToLower( *pPath ) == FastToLower( *pDir ) || 
 						( PATHSEPARATOR( *pPath ) && ( PATHSEPARATOR( *pDir ) || (*pDir == 0) ) ) ) )
 	{
 		if ( PATHSEPARATOR( *pPath ) )
@@ -1713,10 +2304,10 @@ static bool CopyToMaxChars( char *pOut, int outSize, const char *pIn, int nChars
 void V_FixupPathName( char *pOut, size_t nOutLen, const char *pPath )
 {
 	V_strncpy( pOut, pPath, nOutLen );
-	V_FixSlashes( pOut );
-	V_RemoveDotSlashes( pOut );
-	V_FixDoubleSlashes( pOut );
+	V_RemoveDotSlashes( pOut, CORRECT_PATH_SEPARATOR, true );
+#ifdef WIN32
 	V_strlower( pOut );
+#endif
 }
 
 
@@ -1839,21 +2430,13 @@ void V_SplitString( const char *pString, const char *pSeparator, CUtlVector<char
 
 bool V_GetCurrentDirectory( char *pOut, int maxLen )
 {
-#ifdef LINUX
-	return getcwd( pOut, maxLen ) == pOut;
-#else
 	return _getcwd( pOut, maxLen ) == pOut;
-#endif
 }
 
 
 bool V_SetCurrentDirectory( const char *pDirName )
 {
-#ifdef LINUX
-	return chdir( pDirName ) == 0;
-#else
 	return _chdir( pDirName ) == 0;
-#endif
 }
 
 
@@ -1938,30 +2521,77 @@ void V_StrRight( const char *pStr, int nChars, char *pOut, int outSize )
 //-----------------------------------------------------------------------------
 // Convert multibyte to wchar + back
 //-----------------------------------------------------------------------------
-void V_strtowcs( const char *pString, int nInSize, wchar_t *pWString, int nOutSize )
+void V_strtowcs( const char *pString, int nInSize, wchar_t *pWString, int nOutSizeInBytes )
 {
+	Assert( nOutSizeInBytes >= sizeof(pWString[0]) );
 #ifdef _WIN32
-	if ( !MultiByteToWideChar( CP_UTF8, 0, pString, nInSize, pWString, nOutSize ) )
+	int nOutSizeInChars = nOutSizeInBytes / sizeof(pWString[0]);
+	int result = MultiByteToWideChar( CP_UTF8, 0, pString, nInSize, pWString, nOutSizeInChars );
+	// If the string completely fails to fit then MultiByteToWideChar will return 0.
+	// If the string exactly fits but with no room for a null-terminator then MultiByteToWideChar
+	// will happily fill the buffer and omit the null-terminator, returning nOutSizeInChars.
+	// Either way we need to return an empty string rather than a bogus and possibly not
+	// null-terminated result.
+	if ( result <= 0 || result >= nOutSizeInChars )
 	{
-		*pWString = L'\0';
+		// If nInSize includes the null-terminator then a result of nOutSizeInChars is
+		// legal. We check this by seeing if the last character in the output buffer is
+		// a zero.
+		if ( result == nOutSizeInChars && pWString[ nOutSizeInChars - 1 ] == 0)
+		{
+			// We're okay! Do nothing.
+		}
+		else
+		{
+			// The string completely to fit. Null-terminate the buffer.
+			*pWString = L'\0';
+		}
 	}
-#elif _LINUX
-	if ( mbstowcs( pWString, pString, nOutSize / sizeof(wchar_t) ) <= 0 )
+	else
+	{
+		// We have successfully converted our string. Now we need to null-terminate it, because
+		// MultiByteToWideChar will only do that if nInSize includes the source null-terminator!
+		pWString[ result ] = 0;
+	}
+#elif POSIX
+	if ( mbstowcs( pWString, pString, nOutSizeInBytes / sizeof(pWString[0]) ) <= 0 )
 	{
 		*pWString = 0;
 	}
 #endif
 }
 
-void V_wcstostr( const wchar_t *pWString, int nInSize, char *pString, int nOutSize )
+void V_wcstostr( const wchar_t *pWString, int nInSize, char *pString, int nOutSizeInChars )
 {
 #ifdef _WIN32
-	if ( !WideCharToMultiByte( CP_UTF8, 0, pWString, nInSize, pString, nOutSize, NULL, NULL ) )
+	int result = WideCharToMultiByte( CP_UTF8, 0, pWString, nInSize, pString, nOutSizeInChars, NULL, NULL );
+	// If the string completely fails to fit then MultiByteToWideChar will return 0.
+	// If the string exactly fits but with no room for a null-terminator then MultiByteToWideChar
+	// will happily fill the buffer and omit the null-terminator, returning nOutSizeInChars.
+	// Either way we need to return an empty string rather than a bogus and possibly not
+	// null-terminated result.
+	if ( result <= 0 || result >= nOutSizeInChars )
 	{
-		*pString = '\0';
+		// If nInSize includes the null-terminator then a result of nOutSizeInChars is
+		// legal. We check this by seeing if the last character in the output buffer is
+		// a zero.
+		if ( result == nOutSizeInChars && pWString[ nOutSizeInChars - 1 ] == 0)
+		{
+			// We're okay! Do nothing.
+		}
+		else
+		{
+			*pString = '\0';
+		}
 	}
-#elif _LINUX
-	if ( wcstombs( pString, pWString, nOutSize ) <= 0 )
+	else
+	{
+		// We have successfully converted our string. Now we need to null-terminate it, because
+		// MultiByteToWideChar will only do that if nInSize includes the source null-terminator!
+		pString[ result ] = '\0';
+	}
+#elif POSIX
+	if ( wcstombs( pString, pWString, nOutSizeInChars ) <= 0 )
 	{
 		*pString = '\0';
 	}
@@ -2012,4 +2642,110 @@ char *V_AddBackSlashesToSpecialChars( char const *pSrc )
 	}
 	*( pOut++ ) = 0;
 	return pRet;
+}
+#if defined( LINUX ) || defined( _PS3 )
+extern "C" void qsort_s( void *base, size_t num, size_t width, int (*compare )(void *, const void *, const void *), void * context );
+#endif
+
+void V_qsort_s( void *base, size_t num, size_t width, int ( __cdecl *compare )(void *, const void *, const void *), void * context ) 
+{
+#if defined OSX
+	// the arguments are swapped 'round on the mac - awesome, huh?
+	return qsort_r( base, num, width, context, compare );
+#else
+	return qsort_s( base, num, width, compare, context );
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: format the time and/or date with the user's current locale
+// If timeVal is 0, gets the current time
+//
+// This is generally for use with chatroom dialogs, etc. which need to be
+// able to say "Last message received: %date% at %time%"
+//
+// Note that this uses time_t because RTime32 is not hooked-up on the client
+//-----------------------------------------------------------------------------
+bool BGetLocalFormattedDateAndTime( time_t timeVal, char *pchDate, int cubDate, char *pchTime, int cubTime )
+{
+	if ( 0 == timeVal || timeVal < 0 )
+	{
+		// get the current time
+		time( &timeVal );
+	}
+
+	if ( timeVal )
+	{
+		// Convert it to our local time
+		struct tm tmStruct;
+		struct tm tmToDisplay = *( Plat_localtime( ( const time_t* )&timeVal, &tmStruct ) );
+#ifdef POSIX
+		if ( pchDate != NULL )
+		{
+			pchDate[ 0 ] = 0;
+			if ( 0 == strftime( pchDate, cubDate, "%A %b %d", &tmToDisplay ) )
+				return false;
+		}
+
+		if ( pchTime != NULL )
+		{
+			pchTime[ 0 ] = 0;
+			if ( 0 == strftime( pchTime, cubTime - 6, "%I:%M ", &tmToDisplay ) )
+				return false;
+
+			// append am/pm in lower case (since strftime doesn't have a lowercase formatting option)
+			if (tmToDisplay.tm_hour >= 12)
+			{
+				Q_strcat( pchTime, "p.m.", cubTime );
+			}
+			else
+			{
+				Q_strcat( pchTime, "a.m.", cubTime );
+			}
+		}
+#else // WINDOWS
+		// convert time_t to a SYSTEMTIME
+		SYSTEMTIME st;
+		st.wHour = tmToDisplay.tm_hour;
+		st.wMinute = tmToDisplay.tm_min;
+		st.wSecond = tmToDisplay.tm_sec;
+		st.wDay = tmToDisplay.tm_mday;
+		st.wMonth = tmToDisplay.tm_mon + 1;
+		st.wYear = tmToDisplay.tm_year + 1900;
+		st.wDayOfWeek = tmToDisplay.tm_wday;
+		st.wMilliseconds = 0;
+
+		WCHAR rgwch[ MAX_PATH ];
+
+		if ( pchDate != NULL )
+		{
+			pchDate[ 0 ] = 0;
+			if ( !GetDateFormatW( LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, rgwch, MAX_PATH ) )
+				return false;
+			Q_strncpy( pchDate, CStrAutoEncode( rgwch ).ToString(), cubDate );
+		}
+
+		if ( pchTime != NULL )
+		{
+			pchTime[ 0 ] = 0;
+			if ( !GetTimeFormatW( LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, rgwch, MAX_PATH ) )
+				return false;
+			Q_strncpy( pchTime, CStrAutoEncode( rgwch ).ToString(), cubTime );
+		}
+#endif
+		return true;
+	}
+
+	return false;
+}
+
+
+// And a couple of helpers so people don't have to remember the order of the parameters in the above function
+bool BGetLocalFormattedDate( time_t timeVal, char *pchDate, int cubDate )
+{
+	return BGetLocalFormattedDateAndTime( timeVal, pchDate, cubDate, NULL, 0 );
+}
+bool BGetLocalFormattedTime( time_t timeVal, char *pchTime, int cubTime )
+{
+	return BGetLocalFormattedDateAndTime( timeVal, NULL, 0, pchTime, cubTime );
 }

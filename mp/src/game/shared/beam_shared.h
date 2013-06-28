@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -172,6 +172,7 @@ public:
 	virtual int			DrawModel( int flags );
 	virtual bool		IsTransparent( void );
 	virtual bool		ShouldDraw();
+	virtual bool		IgnoresZBuffer( void ) const { return true; }
 	virtual void		OnDataChanged( DataUpdateType_t updateType );
 
 	virtual bool		OnPredictedEntityRemove( bool isbeingremoved, C_BaseEntity *predicted );
@@ -316,13 +317,13 @@ inline void CBeam::SetHaloScale( float haloScale )
 inline void CBeam::SetWidth( float width )				
 {
 	Assert( width <= MAX_BEAM_WIDTH );
-	m_fWidth = min( MAX_BEAM_WIDTH, width );
+	m_fWidth = MIN( MAX_BEAM_WIDTH, width );
 }
 
 inline void CBeam::SetEndWidth( float endWidth )		
 { 
 	Assert( endWidth <= MAX_BEAM_WIDTH );
-	m_fEndWidth	= min( MAX_BEAM_WIDTH, endWidth );
+	m_fEndWidth	= MIN( MAX_BEAM_WIDTH, endWidth );
 }
 
 inline void CBeam::SetFadeLength( float fadeLength )	

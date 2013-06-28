@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -147,7 +147,10 @@ void FX_FireBullets(
 	// Do the firing animation event.
 	if ( pPlayer && !pPlayer->IsDormant() )
 	{
-		pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		if ( iMode == Primary_Mode )
+			pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_FIRE_GUN_PRIMARY );
+		else
+			pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_FIRE_GUN_SECONDARY );
 	}
 #else
 	// if this is server code, send the effect over to client as temp entity

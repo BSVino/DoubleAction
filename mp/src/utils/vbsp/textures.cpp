@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #include <malloc.h>
 #include "tier1/strtools.h"
 #include "materialpatch.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 
 void LoadSurfaceProperties( void );
 

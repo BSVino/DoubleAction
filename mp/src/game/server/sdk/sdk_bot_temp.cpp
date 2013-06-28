@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Basic BOT handling.
 //
@@ -30,7 +30,6 @@ ConVar bot_flipout( "bot_flipout", "0", 0, "When on, all bots fire their guns." 
 ConVar bot_changeclass( "bot_changeclass", "0", 0, "Force all bots to change to the specified class." );
 static ConVar bot_mimic( "bot_mimic", "0", 0, "Bot uses usercmd of player by index." );
 static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw." );
-ConVar bot_frozen( "bot_frozen", "0", 0, "Don't do anything." );
 
 ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
@@ -111,19 +110,13 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 	pPlayer->RemoveAllItems( true );
 	pPlayer->Spawn();
 
-	CCommand args;
-	args.Tokenize( "jointeam 0" );
-	pPlayer->ClientCommand( args );
-	args.Tokenize( "joinclass -2" );
-	pPlayer->ClientCommand( args );
-
 	g_CurBotNumber++;
 
 	return pPlayer;
 }
 
 // Handler for the "bot" command.
-CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_CHEAT )
+CON_COMMAND_F( "bot_add", "Add a bot.", FCVAR_CHEAT )
 {
 	// Look at -count.
 	int count = args.FindArgInt( "-count", 1 );
@@ -149,8 +142,7 @@ void Bot_RunAll( void )
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
 
-		// Ignore plugin bots
-		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) && !pPlayer->IsEFlagSet( EFL_PLUGIN_BASED_BOT ) )
+		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) )
 		{
 			CSDKBot *pBot = dynamic_cast< CSDKBot* >( pPlayer );
 			if ( pBot )
@@ -276,7 +268,7 @@ void Bot_UpdateDirection( CSDKBot *pBot )
 
 		vecEnd = vecSrc + forward * 10;
 
-		UTIL_TraceHull( vecSrc, vecEnd, VEC_HULL_MIN, VEC_HULL_MAX, 
+		UTIL_TraceHull( vecSrc, vecEnd, VEC_HULL_MIN_SCALED( pBot ), VEC_HULL_MAX_SCALED( pBot ), 
 			MASK_PLAYERSOLID, pBot, COLLISION_GROUP_NONE, &trace );
 
 		if ( trace.fraction == 1.0 )
@@ -348,7 +340,7 @@ void Bot_HandleSendCmd( CSDKBot *pBot )
 	if ( strlen( bot_sendcmd.GetString() ) > 0 )
 	{
 		//send the cmd from this bot
-//		pBot->ClientCommand( bot_sendcmd.GetString() );
+		pBot->ClientCommand( bot_sendcmd.GetString() );
 
 		bot_sendcmd.SetValue("");
 	}
@@ -442,7 +434,7 @@ void Bot_Think( CSDKBot *pBot )
 	
 	
 	// Finally, override all this stuff if the bot is being forced to mimic a player.
-	if ( !Bot_RunMimicCommand( cmd ) && !bot_frozen.GetBool() )
+	if ( !Bot_RunMimicCommand( cmd ) )
 	{
 		cmd.sidemove = pBot->m_flSideMove;
 
@@ -468,16 +460,10 @@ void Bot_Think( CSDKBot *pBot )
 
 		Bot_FlipOut( pBot, cmd );
 
-		// Fix up the m_fEffects flags
-		pBot->PostClientMessagesSent();
-
-		
-		
 		cmd.viewangles = pBot->GetLocalAngles();
 		cmd.upmove = 0;
 		cmd.impulse = 0;
 	}
-
 
 	float frametime = gpGlobals->frametime;
 	RunPlayerMove( pBot, cmd, frametime );

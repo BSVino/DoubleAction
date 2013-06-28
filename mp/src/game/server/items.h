@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -48,8 +48,10 @@ public:
 	virtual void Spawn( void );
 	virtual void Precache();
 
+	unsigned int PhysicsSolidMaskForEntity( void ) const;
+
 	virtual CBaseEntity* Respawn( void );
-	void ItemTouch( CBaseEntity *pOther );
+	virtual void ItemTouch( CBaseEntity *pOther );
 	virtual void Materialize( void );
 	virtual bool MyTouch( CBasePlayer *pPlayer ) { return false; };
 
@@ -57,7 +59,7 @@ public:
 	virtual void OnEntityEvent( EntityEvent_t event, void *pEventData );
 
 	// Activate when at rest, but don't allow pickup until then
-	void ActivateWhenAtRest();
+	void ActivateWhenAtRest( float flTime = 0.5f );
 
 	// IPlayerPickupVPhysics
 	virtual void OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup_t reason = PICKED_UP_BY_CANNON );
@@ -70,16 +72,16 @@ public:
 	void	SetOriginalSpawnOrigin( const Vector& origin ) { m_vOriginalSpawnOrigin = origin; }
 	void	SetOriginalSpawnAngles( const QAngle& angles ) { m_vOriginalSpawnAngles = angles; }
 	bool	CreateItemVPhysicsObject( void );
-	bool	ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer );
+	virtual bool	ItemCanBeTouchedByPlayer( CBasePlayer *pPlayer );
 
-#if defined( HL2MP )
+#if defined( HL2MP ) || defined( TF_DLL )
 	void	FallThink( void );
 	float  m_flNextResetCheckTime;
 #endif
 
 	DECLARE_DATADESC();
-private:
-	void ComeToRest( void );
+protected:
+	virtual void ComeToRest( void );
 
 private:
 	bool		m_bActivateWhenAtRest;

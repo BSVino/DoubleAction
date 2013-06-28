@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,7 +18,10 @@
 #pragma warning(disable:4701 4702 4530)
 #endif
 
+#undef min
+#undef max
 #include <fstream>
+#include "valve_minmax_on.h"
 
 #ifdef _WIN32
 #pragma warning(pop)
@@ -66,19 +69,10 @@ public:
 
 	inline int GetErrorCount(void);
 
-	inline TokenReader(TokenReader const &)
-	{
-		// prevent vc7 warning. compiler can't generate a copy constructor since descended from
-		// std::ifstream
-		assert(0);
-	}
-	inline int operator=(TokenReader const &)
-	{
-		// prevent vc7 warning. compiler can't generate an assignment operator since descended from
-		// std::ifstream
-		assert(0);
-	}
 private:
+	// compiler can't generate an assignment operator since descended from std::ifstream
+	inline TokenReader(TokenReader const &);
+	inline int operator=(TokenReader const &);
 
 	trtoken_t GetString(char *pszStore, int nSize);
 	bool SkipWhiteSpace(void);

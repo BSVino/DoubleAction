@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,9 +24,10 @@
 #endif
 #include "tier0/memdbgon.h"
 
-
+#ifndef NDEBUG
 // Comment this out when we release.
-//#define ALLOW_DEVELOPMENT_CVARS
+#define ALLOW_DEVELOPMENT_CVARS
+#endif
 
 
 
@@ -78,6 +79,7 @@ void ConVar_Register( int nCVarFlag, IConCommandBaseAccessor *pAccessor )
 		pCur = pNext;
 	}
 
+	g_pCVar->ProcessQueuedMaterialThreadConVarSets();
 	ConCommandBase::s_pConCommandBases = NULL;
 }
 
@@ -749,6 +751,15 @@ void ConVar::Init()
 //-----------------------------------------------------------------------------
 void ConVar::InternalSetValue( const char *value )
 {
+	if ( IsFlagSet( FCVAR_MATERIAL_THREAD_MASK ) )
+	{
+		if ( g_pCVar && !g_pCVar->IsMaterialThreadSetAllowed() )
+		{
+			g_pCVar->QueueMaterialThreadSetValue( this, value );
+			return;
+		}
+	}
+
 	float fNewValue;
 	char  tempVal[ 32 ];
 	char  *val;
@@ -758,7 +769,10 @@ void ConVar::InternalSetValue( const char *value )
 	float flOldValue = m_fValue;
 
 	val = (char *)value;
-	fNewValue = ( float )atof( value );
+	if ( !value )
+		fNewValue = 0.0f;
+	else
+		fNewValue = ( float )atof( value );
 
 	if ( ClampValue( fNewValue ) )
 	{
@@ -787,20 +801,27 @@ void ConVar::ChangeStringValue( const char *tempVal, float flOldValue )
  	char* pszOldValue = (char*)stackalloc( m_StringLength );
 	memcpy( pszOldValue, m_pszString, m_StringLength );
 	
-	int len = Q_strlen(tempVal) + 1;
-
-	if ( len > m_StringLength)
+	if ( tempVal )
 	{
-		if (m_pszString)
+		int len = Q_strlen(tempVal) + 1;
+
+		if ( len > m_StringLength)
 		{
-			delete[] m_pszString;
+			if (m_pszString)
+			{
+				delete[] m_pszString;
+			}
+
+			m_pszString	= new char[len];
+			m_StringLength = len;
 		}
 
-		m_pszString	= new char[len];
-		m_StringLength = len;
+		memcpy( m_pszString, tempVal, len );
 	}
-
-	memcpy( m_pszString, tempVal, len );
+	else 
+	{
+		*m_pszString = 0;
+	}
 
 	// Invoke any necessary callback function
 	if ( m_fnChangeCallback )
@@ -844,6 +865,15 @@ void ConVar::InternalSetFloatValue( float fNewValue )
 	if ( fNewValue == m_fValue )
 		return;
 
+	if ( IsFlagSet( FCVAR_MATERIAL_THREAD_MASK ) )
+	{
+		if ( g_pCVar && !g_pCVar->IsMaterialThreadSetAllowed() )
+		{
+			g_pCVar->QueueMaterialThreadSetValue( this, fNewValue );
+			return;
+		}
+	}
+
 	Assert( m_pParent == this ); // Only valid for root convars.
 
 	// Check bounds
@@ -874,6 +904,15 @@ void ConVar::InternalSetIntValue( int nValue )
 {
 	if ( nValue == m_nValue )
 		return;
+
+	if ( IsFlagSet( FCVAR_MATERIAL_THREAD_MASK ) )
+	{
+		if ( g_pCVar && !g_pCVar->IsMaterialThreadSetAllowed() )
+		{
+			g_pCVar->QueueMaterialThreadSetValue( this, nValue );
+			return;
+		}
+	}
 
 	Assert( m_pParent == this ); // Only valid for root convars.
 
@@ -907,13 +946,10 @@ void ConVar::Create( const char *pName, const char *pDefaultValue, int flags /*=
 	const char *pHelpString /*= NULL*/, bool bMin /*= false*/, float fMin /*= 0.0*/,
 	bool bMax /*= false*/, float fMax /*= false*/, FnChangeCallback_t callback /*= NULL*/ )
 {
-	static char *empty_string = "";
-
 	m_pParent = this;
 
 	// Name should be static data
-	m_pszDefaultValue = pDefaultValue ? pDefaultValue : empty_string;
-	Assert( m_pszDefaultValue );
+	SetDefault( pDefaultValue );
 
 	m_StringLength = strlen( m_pszDefaultValue ) + 1;
 	m_pszString = new char[m_StringLength];
@@ -1014,6 +1050,12 @@ const char *ConVar::GetDefault( void ) const
 	return m_pParent->m_pszDefaultValue;
 }
 
+void ConVar::SetDefault( const char *pszDefault ) 
+{ 
+	static char *empty_string = "";
+	m_pszDefaultValue = pszDefault ? pszDefault : empty_string;
+	Assert( m_pszDefaultValue );
+}
 
 //-----------------------------------------------------------------------------
 // This version is simply used to make reading convars simpler.

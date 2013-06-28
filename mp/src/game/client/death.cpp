@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Draws the death notices
 //
@@ -9,13 +9,13 @@
 #include "hudelement.h"
 #include "c_playerresource.h"
 #include "iclientmode.h"
-#include <vgui_controls/controls.h>
+#include <vgui_controls/Controls.h>
 #include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <game/client/iviewport.h>
 #include <igameevents.h>
-#include <keyvalues.h>
+#include <KeyValues.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -33,7 +33,7 @@ public:
 	bool ShouldDraw( void );
 	virtual void Paint();
 
-	virtual void CHudDeathNotice::ApplySchemeSettings( vgui::IScheme *scheme );
+	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 
 	void FireGameEvent( KeyValues * event);
 
@@ -145,7 +145,7 @@ void CHudDeathNotice::Paint()
 			continue;
 		}
 
-		rgDeathNoticeList[i].flDisplayTime = min( rgDeathNoticeList[i].flDisplayTime, gpGlobals->curtime + DEATHNOTICE_DISPLAY_TIME );
+		rgDeathNoticeList[i].flDisplayTime = MIN( rgDeathNoticeList[i].flDisplayTime, gpGlobals->curtime + DEATHNOTICE_DISPLAY_TIME );
 
 		// Draw the death notice
 		y = DEATHNOTICE_TOP + (20 * i) + 100;  //!!!

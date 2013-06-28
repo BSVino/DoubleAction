@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -39,20 +39,7 @@
 
 extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 
-// Utility function
-bool FindInList( const char **pStrings, const char *pToFind )
-{
-	int i = 0;
-	while ( pStrings[i][0] != 0 )
-	{
-		if ( Q_stricmp( pStrings[i], pToFind ) == 0 )
-			return true;
-		i++;
-	}
-
-	return false;
-}
-
+extern bool FindInList( const char **pStrings, const char *pToFind );
 
 ConVar sv_hl2mp_weapon_respawn_time( "sv_hl2mp_weapon_respawn_time", "20", FCVAR_GAMEDLL | FCVAR_NOTIFY );
 ConVar sv_hl2mp_item_respawn_time( "sv_hl2mp_item_respawn_time", "30", FCVAR_GAMEDLL | FCVAR_NOTIFY );
@@ -218,6 +205,7 @@ CHL2MPRules::CHL2MPRules()
 	m_bCompleteReset = false;
 	m_bHeardAllPlayersReady = false;
 	m_bAwaitingReadyRestart = false;
+	m_bChangelevelDone = false;
 
 #endif
 }
@@ -252,7 +240,7 @@ void CHL2MPRules::CreateStandardEntities( void )
 	g_pLastCombineSpawn = NULL;
 	g_pLastRebelSpawn = NULL;
 
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	CBaseEntity *pEnt = 
 #endif
 	CBaseEntity::Create( "hl2mp_gamerules", vec3_origin, vec3_angle );
@@ -314,7 +302,11 @@ void CHL2MPRules::Think( void )
 		// check to see if we should change levels now
 		if ( m_flIntermissionEndTime < gpGlobals->curtime )
 		{
-			ChangeLevel(); // intermission is over
+			if ( !m_bChangelevelDone )
+			{
+				ChangeLevel(); // intermission is over
+				m_bChangelevelDone = true;
+			}
 		}
 
 		return;
@@ -879,7 +871,7 @@ bool CHL2MPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ( collisionGroup0 > collisionGroup1 )
 	{
 		// swap so that lowest is always first
-		swap(collisionGroup0,collisionGroup1);
+		V_swap(collisionGroup0,collisionGroup1);
 	}
 
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
@@ -999,7 +991,6 @@ CAmmoDef *GetAmmoDef()
 
 #ifndef CLIENT_DLL
 
-//Tony; Re-working restart game so that it cleans up safely, and then respawns everyone.
 void CHL2MPRules::RestartGame()
 {
 	// bounds check
@@ -1014,7 +1005,9 @@ void CHL2MPRules::RestartGame()
 		m_flGameStartTime.GetForModify() = 0.0f;
 	}
 
-	// Pre Map Cleanup
+	CleanUpMap();
+	
+	// now respawn all players
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
@@ -1022,45 +1015,16 @@ void CHL2MPRules::RestartGame()
 		if ( !pPlayer )
 			continue;
 
-		//Tony; if they aren't a spectator, make sure they get cleaned up before entities are removed!
-		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
+		if ( pPlayer->GetActiveWeapon() )
 		{
-				// If they're in a vehicle, make sure they get out!
-				if ( pPlayer->IsInAVehicle() )
-					pPlayer->LeaveVehicle();
-
-				QAngle angles = pPlayer->GetLocalAngles();
-
-				angles.x = 0;
-				angles.z = 0;
-
-				pPlayer->SetLocalAngles( angles );
-				CBaseCombatWeapon *pWeapon = (CBaseCombatWeapon*)pPlayer->GetActiveWeapon();
-				if (pWeapon)
-				{
-					pPlayer->Weapon_Detach( pWeapon );
-					UTIL_Remove( pWeapon );
-				}
+			pPlayer->GetActiveWeapon()->Holster();
 		}
-		pPlayer->RemoveAllItems(true);
-		pPlayer->ClearActiveWeapon();
+		pPlayer->RemoveAllItems( true );
+		respawn( pPlayer, false );
 		pPlayer->Reset();
 	}
 
-	CleanUpMap();
-	
-	// now that everything is cleaned up, respawn everyone.
-	for (int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CHL2MP_Player *pPlayer = (CHL2MP_Player*) UTIL_PlayerByIndex( i );
-
-		if ( !pPlayer )
-			continue;
-
-		//Tony; if they aren't a spectator, respawn them.
-		if ( pPlayer->GetTeamNumber() != TEAM_SPECTATOR )
-			pPlayer->Spawn();
-	}
+	// Respawn entities (glass, doors, etc..)
 
 	CTeam *pRebels = GetGlobalTeam( TEAM_REBELS );
 	CTeam *pCombine = GetGlobalTeam( TEAM_COMBINE );

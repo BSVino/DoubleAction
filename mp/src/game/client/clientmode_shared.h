@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #endif
 
 #include "iclientmode.h"
-#include "gameeventlistener.h"
+#include "GameEventListener.h"
 #include <baseviewport.h>
 
 class CBaseHudChat;
@@ -26,6 +26,19 @@ namespace vgui
 {
 class Panel;
 }
+
+//=============================================================================
+// HPE_BEGIN:
+// [tj] Moved this from the .cpp file so derived classes could access it
+//=============================================================================
+ 
+#define ACHIEVEMENT_ANNOUNCEMENT_MIN_TIME 10
+ 
+//=============================================================================
+// HPE_END
+//=============================================================================
+
+class CReplayReminderPanel;
 
 #define USERID2PLAYER(i) ToBasePlayer( ClientEntityList().GetEnt( engine->GetPlayerForUserID( i ) ) )	
 
@@ -61,6 +74,8 @@ public:
 	virtual bool	ShouldDrawViewModel();
 	virtual bool	ShouldDrawParticles( );
 	virtual bool	ShouldDrawCrosshair( void );
+	virtual bool	ShouldBlackoutAroundHUD() OVERRIDE;
+	virtual HeadtrackMovementMode_t ShouldOverrideHeadtrackControl() OVERRIDE;
 	virtual void	AdjustEngineViewport( int& x, int& y, int& width, int& height );
 	virtual void	PreRender(CViewSetup *pSetup);
 	virtual void	PostRender();
@@ -94,10 +109,46 @@ public:
 
 	virtual int HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 
+	virtual void	ComputeVguiResConditions( KeyValues *pkvConditions ) OVERRIDE;
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [menglish] Save server information shown to the client in a persistent place
+	//=============================================================================
+	 
+	virtual wchar_t* GetServerName() { return NULL; }
+	virtual void SetServerName(wchar_t* name) {};
+	virtual wchar_t* GetMapName() { return NULL; }
+	virtual void SetMapName(wchar_t* name) {};
+	 
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
+	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup );
+
+	virtual void	DisplayReplayMessage( const char *pLocalizeName, float flDuration, bool bUrgent,
+										  const char *pSound, bool bDlg );
+
+	virtual bool	IsInfoPanelAllowed() OVERRIDE { return true; }
+	virtual void	InfoPanelDisplayed() OVERRIDE { }
+
 protected:
 	CBaseViewport			*m_pViewport;
 
+	void			DisplayReplayReminder();
+
 private:
+	virtual void	UpdateReplayMessages();
+
+	void			ClearReplayMessageList();
+
+#if defined( REPLAY_ENABLED )
+	float					m_flReplayStartRecordTime;
+	float					m_flReplayStopRecordTime;
+	CReplayReminderPanel	*m_pReplayReminderPanel;
+#endif
+
 	// Message mode handling
 	// All modes share a common chat interface
 	CBaseHudChat			*m_pChatElement;

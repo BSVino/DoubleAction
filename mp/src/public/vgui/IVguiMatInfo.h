@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,11 @@
 class IVguiMatInfo
 {
 public:	
+	// Add a virtual destructor to silence the clang warning.
+	// This is harmless but not important since the only derived class
+	// doesn't have a destructor.
+	virtual ~IVguiMatInfo() {}
+
 	// make sure to delete the returned object after use!
 	virtual IVguiMatInfoVar* FindVarFactory ( const char *varName, bool *found ) = 0;
 

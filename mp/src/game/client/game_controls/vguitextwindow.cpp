@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 #include <KeyValues.h>
 #include <convar.h>
 #include <vgui_controls/ImageList.h>
@@ -31,8 +31,15 @@ extern INetworkStringTable *g_pStringTableInfoPanel;
 
 #define TEMP_HTML_FILE	"textwindow_temp.html"
 
+ConVar cl_disablehtmlmotd( "cl_disablehtmlmotd", "0", FCVAR_ARCHIVE, "Disable HTML motds." );
 
-CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command>]" )
+//=============================================================================
+// HPE_BEGIN:
+// [Forrest] Replaced text window command string with TEXTWINDOW_CMD enumeration
+// of options.  Passing a command string is dangerous and allowed a server network
+// message to run arbitrary commands on the client.
+//=============================================================================
+CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command number>]" )
 {
 	if ( !gViewPortInterface )
 		return;
@@ -63,6 +70,9 @@ CON_COMMAND( showinfo, "Shows a info panel: <type> <title> <message> [<command>]
 		 Msg("Couldn't find info panel.\n" );
 	 }
 }
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -76,7 +86,10 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 
 	m_szTitle[0] = '\0';
 	m_szMessage[0] = '\0';
-	m_szExitCommand[0] = '\0';
+	m_szMessageFallback[0] = '\0';
+	m_nExitCommand = TEXTWINDOW_CMD_NONE;
+	m_bShownURL = false;
+	m_bUnloadOnDismissal = false;
 	
 	// load the new scheme early!!
 	SetScheme("ClientScheme");
@@ -87,9 +100,11 @@ CTextWindow::CTextWindow(IViewPort *pViewPort) : Frame(NULL, PANEL_INFO	)
 	// hide the system buttons
 	SetTitleBarVisible( false );
 
-	m_pTextMessage = new TextEntry(this, "TextMessage");
-#if defined( ENABLE_HTMLWINDOW )
-	m_pHTMLMessage = new HTML(this,"HTMLMessage");;
+	m_pTextMessage = new TextEntry( this, "TextMessage" );
+#if defined( ENABLE_CHROMEHTMLWINDOW )
+	m_pHTMLMessage = new CMOTDHTML( this,"HTMLMessage" );
+#else
+	m_pHTMLMessage = NULL;
 #endif
 	m_pTitleLabel  = new Label( this, "MessageTitle", "Message Title" );
 	m_pOK		   = new Button(this, "ok", "#PropertyDialog_OK");
@@ -122,29 +137,62 @@ CTextWindow::~CTextWindow()
 
 void CTextWindow::Reset( void )
 {
-	Q_strcpy( m_szTitle, "This could be your Title." );
-	Q_strcpy( m_szMessage, "Just for 10 Euros a week!" );
-	m_szExitCommand[0] = 0;
+	//=============================================================================
+	// HPE_BEGIN:
+	// [Forrest] Replace strange hard-coded default message with hard-coded error message.
+	//=============================================================================
+	Q_strcpy( m_szTitle, "Error loading info message." );
+	Q_strcpy( m_szMessage, "" );
+	Q_strcpy( m_szMessageFallback, "" );
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
+	m_nExitCommand = TEXTWINDOW_CMD_NONE;
 	m_nContentType = TYPE_TEXT;
+	m_bShownURL = false;
+	m_bUnloadOnDismissal = false;
 	Update();
 }
 
-void CTextWindow::ShowText( const char *text)
+void CTextWindow::ShowText( const char *text )
 {
 	m_pTextMessage->SetVisible( true );
 	m_pTextMessage->SetText( text );
 	m_pTextMessage->GotoTextStart();
 }
 
-void CTextWindow::ShowURL( const char *URL)
+void CTextWindow::ShowURL( const char *URL, bool bAllowUserToDisable )
 {
-#if defined( ENABLE_HTMLWINDOW )
+#if defined( ENABLE_CHROMEHTMLWINDOW )
+	if ( bAllowUserToDisable && cl_disablehtmlmotd.GetBool() )
+	{
+		// User has disabled HTML TextWindows. Show the fallback as text only.
+		if ( g_pStringTableInfoPanel )
+		{
+			int index = g_pStringTableInfoPanel->FindStringIndex( "motd_text" );
+			if ( index != ::INVALID_STRING_INDEX )
+			{
+				int length = 0;
+				const char *data = (const char *)g_pStringTableInfoPanel->GetStringUserData( index, &length );
+				if ( data && data[0] )
+				{
+					m_pHTMLMessage->SetVisible( false );
+					ShowText( data );
+				}
+			}
+		}
+		return;
+	} 
+
 	m_pHTMLMessage->SetVisible( true );
-	m_pHTMLMessage->OpenURL( URL );
+	m_pHTMLMessage->OpenURL( URL, NULL );
+	m_bShownURL = true;
+
 #endif
 }
 
-void CTextWindow::ShowIndex( const char *entry)
+void CTextWindow::ShowIndex( const char *entry )
 {
 	const char *data = NULL;
 	int length = 0;
@@ -161,7 +209,7 @@ void CTextWindow::ShowIndex( const char *entry)
 		return; // nothing to show
 
 	// is this a web URL ?
-	if ( !Q_strncmp( data, "http://", 7 ) )
+	if ( !Q_strncmp( data, "http://", 7 ) || !Q_strncmp( data, "https://", 8 ) )
 	{
 		ShowURL( data );
 		return;
@@ -213,7 +261,7 @@ void CTextWindow::ShowFile( const char *filename )
 
 		char buffer[2048];
 			
-		int size = min( g_pFullFileSystem->Size( f ), sizeof(buffer)-1 ); // just allow 2KB
+		int size = MIN( g_pFullFileSystem->Size( f ), sizeof(buffer)-1 ); // just allow 2KB
 
 		g_pFullFileSystem->Read( buffer, size, f );
 		g_pFullFileSystem->Close( f );
@@ -230,7 +278,7 @@ void CTextWindow::Update( void )
 
 	m_pTitleLabel->SetText( m_szTitle );
 
-#if defined( ENABLE_HTMLWINDOW )
+#if defined( ENABLE_CHROMEHTMLWINDOW )
 	m_pHTMLMessage->SetVisible( false );
 #endif
 	m_pTextMessage->SetVisible( false );
@@ -257,14 +305,58 @@ void CTextWindow::Update( void )
 	}
 }
 
-void CTextWindow::OnCommand( const char *command)
+void CTextWindow::OnCommand( const char *command )
 {
-    if (!Q_strcmp(command, "okay"))
-    {
-		if ( m_szExitCommand[0] )
+	if (!Q_strcmp(command, "okay"))
+	{
+		//=============================================================================
+		// HPE_BEGIN:
+		// [Forrest] Replaced text window command string with TEXTWINDOW_CMD enumeration
+		// of options.  Passing a command string is dangerous and allowed a server network
+		// message to run arbitrary commands on the client.
+		//=============================================================================
+		const char *pszCommand = NULL;
+		switch ( m_nExitCommand )
 		{
-			engine->ClientCmd( m_szExitCommand );
+			case TEXTWINDOW_CMD_NONE:
+				break;
+
+			case TEXTWINDOW_CMD_JOINGAME:
+				pszCommand = "joingame";
+				break;
+
+			case TEXTWINDOW_CMD_CHANGETEAM:
+				pszCommand = "changeteam";
+				break;
+
+			case TEXTWINDOW_CMD_IMPULSE101:
+				pszCommand = "impulse 101";
+				break;
+
+			case TEXTWINDOW_CMD_MAPINFO:
+				pszCommand = "mapinfo";
+				break;
+
+			case TEXTWINDOW_CMD_CLOSED_HTMLPAGE:
+				pszCommand = "closed_htmlpage";
+				break;
+
+			case TEXTWINDOW_CMD_CHOOSETEAM:
+				pszCommand = "chooseteam";
+				break;
+
+			default:
+				DevMsg("CTextWindow::OnCommand: unknown exit command value %i\n", m_nExitCommand );
+				break;
 		}
+
+		if ( pszCommand != NULL )
+		{
+			engine->ClientCmd_Unrestricted( pszCommand );
+		}
+		//=============================================================================
+		// HPE_END
+		//=============================================================================
 		
 		m_pViewPort->ShowPanel( this, false );
 	}
@@ -272,26 +364,32 @@ void CTextWindow::OnCommand( const char *command)
 	BaseClass::OnCommand(command);
 }
 
-void CTextWindow::SetData(KeyValues *data)
+void CTextWindow::OnKeyCodePressed( vgui::KeyCode code )
 {
-	SetData( data->GetInt( "type" ), data->GetString( "title"), data->GetString( "msg" ), data->GetString( "cmd" ) );
+	if ( code == KEY_XBUTTON_A || code == KEY_XBUTTON_B )
+	{
+		OnCommand( "okay" );
+		return;
+	}
+
+	BaseClass::OnKeyCodePressed(code);
 }
 
-void CTextWindow::SetData( int type, const char *title, const char *message, const char *command )
+void CTextWindow::SetData(KeyValues *data)
+{
+	SetData( data->GetInt( "type" ), data->GetString( "title" ), data->GetString( "msg" ), data->GetString( "msg_fallback" ), data->GetInt( "cmd" ), data->GetBool( "unload" ) );
+}
+
+void CTextWindow::SetData( int type, const char *title, const char *message, const char *message_fallback, int command, bool bUnload )
 {
 	Q_strncpy(  m_szTitle, title, sizeof( m_szTitle ) );
 	Q_strncpy(  m_szMessage, message, sizeof( m_szMessage ) );
-	
-	if ( command )
-	{
-		Q_strncpy( m_szExitCommand, command, sizeof(m_szExitCommand) );
-	}
-	else
-	{
-		m_szExitCommand[0]=0;
-	}
+	Q_strncpy(  m_szMessageFallback, message_fallback, sizeof( m_szMessageFallback ) );
+
+	m_nExitCommand = command;
 
 	m_nContentType = type;
+	m_bUnloadOnDismissal = bUnload;
 
 	Update();
 }
@@ -312,5 +410,21 @@ void CTextWindow::ShowPanel( bool bShow )
 	{
 		SetVisible( false );
 		SetMouseInputEnabled( false );
+
+#if defined( ENABLE_CHROMEHTMLWINDOW )
+		if ( m_bUnloadOnDismissal && m_bShownURL )
+		{
+			m_pHTMLMessage->OpenURL( "about:blank", NULL );
+			m_bShownURL = false;
+		}
+#endif
 	}
+}
+
+bool CTextWindow::CMOTDHTML::OnStartRequest( const char *url, const char *target, const char *pchPostData, bool bIsRedirect )
+{
+	if ( Q_strstr( url, "steam://" ) )
+		return false;
+
+	return BaseClass::OnStartRequest( url, target, pchPostData, bIsRedirect );
 }

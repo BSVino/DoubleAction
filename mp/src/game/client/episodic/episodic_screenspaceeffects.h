@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-#include "screenspaceeffects.h"
+#include "ScreenSpaceEffects.h"
 
 class CStunEffect : public IScreenSpaceEffect
 {

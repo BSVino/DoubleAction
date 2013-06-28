@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,10 +7,11 @@
 //=============================================================================//
 #include "cbase.h"
 #include "smoke_fog_overlay.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMesh.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imesh.h"
 #include "view.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
+#include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -55,6 +56,8 @@ void DrawSmokeFogOverlay()
 	if(g_SmokeFogOverlayAlpha == 0 || !g_pSmokeFogMaterial || !materials)
 		return;
 
+	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
+
 	// Hard-coded for now..
 	g_SmokeFogOverlayColor.Init( 0.3, 0.3, 0.3 );
 	
@@ -76,10 +79,10 @@ void DrawSmokeFogOverlay()
 	static float dist = 10;
 
 	Vector vColor = g_SmokeFogOverlayColor;
-	vColor.x = min(max(vColor.x, 0), 1);
-	vColor.y = min(max(vColor.y, 0), 1);
-	vColor.z = min(max(vColor.z, 0), 1);
-	float alpha = min(max(g_SmokeFogOverlayAlpha, 0), 1);
+	vColor.x = MIN(MAX(vColor.x, 0), 1);
+	vColor.y = MIN(MAX(vColor.y, 0), 1);
+	vColor.z = MIN(MAX(vColor.z, 0), 1);
+	float alpha = MIN(MAX(g_SmokeFogOverlayAlpha, 0), 1);
 
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 

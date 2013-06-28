@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,58 +14,25 @@
 #include "nav_node.h"
 #include "nav_pathfind.h"
 #include "nav_colors.h"
+#ifdef TERROR
+#include "TerrorShared.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 extern ConVar nav_area_bgcolor;
 
-LINK_ENTITY_TO_CLASS( info_ladder, CInfoLadder );
-
-BEGIN_DATADESC( CInfoLadder )
-
-	DEFINE_FIELD( mins, FIELD_VECTOR ),
-	DEFINE_FIELD( maxs, FIELD_VECTOR ),
-
-END_DATADESC()
-
 unsigned int CNavLadder::m_nextID = 1;
 
 //--------------------------------------------------------------------------------------------------------------
-bool CInfoLadder::KeyValue( const char *szKeyName, const char *szValue )
+/**
+ * Shift the nav area
+ */
+void CNavLadder::Shift( const Vector &shift )
 {
-	if ( FStrEq( szKeyName, "mins.x" ) )
-	{
-		mins.x = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-	else if ( FStrEq( szKeyName, "mins.y" ) )
-	{
-		mins.y = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-	else if ( FStrEq( szKeyName, "mins.z" ) )
-	{
-		mins.z = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-	else if ( FStrEq( szKeyName, "maxs.x" ) )
-	{
-		maxs.x = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-	else if ( FStrEq( szKeyName, "maxs.y" ) )
-	{
-		maxs.y = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-	else if ( FStrEq( szKeyName, "maxs.z" ) )
-	{
-		maxs.z = atof( szValue );
-		SetCollisionBounds( mins, maxs );
-	}
-
-	return BaseClass::KeyValue( szKeyName, szValue );
+	m_top += shift;
+	m_bottom += shift;
 }
 
 
@@ -76,9 +43,9 @@ void CNavLadder::CompressIDs( void )
 
 	if ( TheNavMesh )
 	{
-		FOR_EACH_LL( TheNavMesh->GetLadders(), id )
+		for ( int i=0; i<TheNavMesh->GetLadders().Count(); ++i )
 		{
-			CNavLadder *ladder = TheNavMesh->GetLadders()[id];
+			CNavLadder *ladder = TheNavMesh->GetLadders()[i];
 			ladder->m_id = m_nextID++;
 		}
 	}
@@ -200,9 +167,9 @@ void CNavLadder::ConnectTo( CNavArea *area )
 CNavLadder::~CNavLadder()
 {
 	// tell the other areas we are going away
-	FOR_EACH_LL( TheNavAreaList, it )
+	FOR_EACH_VEC( TheNavAreas, it )
 	{
-		CNavArea *area = TheNavAreaList[ it ];
+		CNavArea *area = TheNavAreas[ it ];
 
 		area->OnDestroyNotify( this );
 	}
@@ -288,7 +255,12 @@ void CNavLadder::SetDir( NavDirType dir )
 	Vector to = from - m_normal * 32.0f;
 
 	trace_t result;
-	UTIL_TraceLine( from, to, MASK_PLAYERSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+#ifdef TERROR
+	// TERROR: use the MASK_ZOMBIESOLID_BRUSHONLY contents, since that's what zombies use
+	UTIL_TraceLine( from, to, MASK_ZOMBIESOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+#else
+	UTIL_TraceLine( from, to, MASK_NPCSOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &result );
+#endif
 
 	if (result.fraction != 1.0f)
 	{
@@ -325,10 +297,17 @@ void CNavLadder::DrawLadder( void ) const
 	bool isMarked = ( this == TheNavMesh->GetMarkedLadder() );
 	bool isFront = DotProduct2D( eyeDir, GetNormal().AsVector2D() ) > 0;
 
-	if ( TheNavMesh->IsPlaceMode() )
+	if ( TheNavMesh->IsEditMode( CNavMesh::PLACE_PAINTING ) )
 	{
 		isSelected = isMarked = false;
 		isFront = true;
+	}
+
+	// Highlight ladder entity ------------------------------------------------
+	CBaseEntity *ladderEntity = m_ladderEntity.Get();
+	if ( ladderEntity )
+	{
+		ladderEntity->DrawAbsBoxOverlay();
 	}
 
 	// Draw 'ladder' lines ----------------------------------------------------
@@ -359,6 +338,12 @@ void CNavLadder::DrawLadder( void ) const
 
 	Vector right(0, 0, 0), up( 0, 0, 0 );
 	VectorVectors( GetNormal(), right, up );
+	if ( up.z <= 0.0f )
+	{
+		AssertMsg( false, "A nav ladder has an invalid normal" );
+		up.Init( 0, 0, 1 );
+	}
+
 	right *= m_width * 0.5f;
 
 	Vector bottomLeft = m_bottom - right;
@@ -392,7 +377,7 @@ void CNavLadder::DrawLadder( void ) const
 	}
 
 	// Draw connector lines ---------------------------------------------------
-	if ( !TheNavMesh->IsPlaceMode() )
+	if ( !TheNavMesh->IsEditMode( CNavMesh::PLACE_PAINTING ) )
 	{
 		Vector bottom = m_bottom;
 		Vector top = m_top;
@@ -451,7 +436,7 @@ void CNavLadder::DrawConnectedAreas( void )
 
 		adj->Draw();
 
-		if ( ! TheNavMesh->IsPlaceMode() )
+		if ( !TheNavMesh->IsEditMode( CNavMesh::PLACE_PAINTING ) )
 		{
 			adj->DrawHidingSpots();
 		}
@@ -461,44 +446,65 @@ void CNavLadder::DrawConnectedAreas( void )
 
 //--------------------------------------------------------------------------------------------------------------
 /**
+ * invoked when a game round restarts
+ */
+void CNavLadder::OnRoundRestart( void )
+{
+	FindLadderEntity();
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+void CNavLadder::FindLadderEntity( void )
+{
+	m_ladderEntity = gEntList.FindEntityByClassnameNearest( "func_simpleladder", (m_top + m_bottom) * 0.5f, HalfHumanWidth );
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
+/**
  * Save a navigation ladder to the opened binary stream
  */
-void CNavLadder::Save( FileHandle_t file, unsigned int version ) const
+void CNavLadder::Save( CUtlBuffer &fileBuffer, unsigned int version ) const
 {
 	// save ID
-	filesystem->Write( &m_id, sizeof(unsigned int), file );
+	fileBuffer.PutUnsignedInt( m_id );
 
 	// save extent of ladder
-	filesystem->Write( &m_width, sizeof(float), file );
+	fileBuffer.PutFloat( m_width );
 
 	// save top endpoint of ladder
-	filesystem->Write( &m_top, 3*sizeof(float), file );
+	fileBuffer.PutFloat( m_top.x );
+	fileBuffer.PutFloat( m_top.y );
+	fileBuffer.PutFloat( m_top.z );
 
 	// save bottom endpoint of ladder
-	filesystem->Write( &m_bottom, 3*sizeof(float), file );
+	fileBuffer.PutFloat( m_bottom.x );
+	fileBuffer.PutFloat( m_bottom.y );
+	fileBuffer.PutFloat( m_bottom.z );
 
 	// save ladder length
-	filesystem->Write( &m_length, sizeof(float), file );
+	fileBuffer.PutFloat( m_length );
 
 	// save direction
-	filesystem->Write( &m_dir, sizeof(m_dir), file );
+	fileBuffer.PutUnsignedInt( m_dir );
 
 	// save IDs of connecting areas
 	unsigned int id;
 	id = ( m_topForwardArea ) ? m_topForwardArea->GetID() : 0;
-	filesystem->Write( &id, sizeof(id), file );
+	fileBuffer.PutUnsignedInt( id );
 
 	id = ( m_topLeftArea ) ? m_topLeftArea->GetID() : 0;
-	filesystem->Write( &id, sizeof(id), file );
+	fileBuffer.PutUnsignedInt( id );
 
 	id = ( m_topRightArea ) ? m_topRightArea->GetID() : 0;
-	filesystem->Write( &id, sizeof(id), file );
+	fileBuffer.PutUnsignedInt( id );
 
 	id = ( m_topBehindArea ) ? m_topBehindArea->GetID() : 0;
-	filesystem->Write( &id, sizeof(id), file );
+	fileBuffer.PutUnsignedInt( id );
 
 	id = ( m_bottomArea ) ? m_bottomArea->GetID() : 0;
-	filesystem->Write( &id, sizeof(id), file );
+	fileBuffer.PutUnsignedInt( id );
 }
 
 
@@ -506,62 +512,70 @@ void CNavLadder::Save( FileHandle_t file, unsigned int version ) const
 /**
  * Load a navigation ladder from the opened binary stream
  */
-void CNavLadder::Load( FileHandle_t file, unsigned int version )
+void CNavLadder::Load( CUtlBuffer &fileBuffer, unsigned int version )
 {
 	// load ID
-	filesystem->Read( &m_id, sizeof(unsigned int), file );
+	m_id = fileBuffer.GetUnsignedInt();
 
 	// update nextID to avoid collisions
 	if (m_id >= m_nextID)
 		m_nextID = m_id+1;
 
 	// load extent of ladder
-	filesystem->Read( &m_width, sizeof(float), file );
+	m_width = fileBuffer.GetFloat();
 
 	// load top endpoint of ladder
-	filesystem->Read( &m_top, 3*sizeof(float), file );
+	m_top.x = fileBuffer.GetFloat();
+	m_top.y = fileBuffer.GetFloat();
+	m_top.z = fileBuffer.GetFloat();
 
 	// load bottom endpoint of ladder
-	filesystem->Read( &m_bottom, 3*sizeof(float), file );
+	m_bottom.x = fileBuffer.GetFloat();
+	m_bottom.y = fileBuffer.GetFloat();
+	m_bottom.z = fileBuffer.GetFloat();
 
 	// load ladder length
-	filesystem->Read( &m_length, sizeof(float), file );
+	m_length = fileBuffer.GetFloat();
 
 	// load direction
-	filesystem->Read( &m_dir, sizeof(m_dir), file );
+	m_dir = (NavDirType)fileBuffer.GetUnsignedInt();
 	SetDir( m_dir ); // regenerate the surface normal
 
 	// load dangling status
 	if ( version == 6 )
 	{
 		bool m_isDangling;
-		filesystem->Read( &m_isDangling, sizeof(m_isDangling), file );
+		fileBuffer.Get( &m_isDangling, sizeof(m_isDangling) );
 	}
 
 	// load IDs of connecting areas
 	unsigned int id;
-	filesystem->Read( &id, sizeof(id), file );
+	id = fileBuffer.GetUnsignedInt();
 	m_topForwardArea = TheNavMesh->GetNavAreaByID( id );
 
-	filesystem->Read( &id, sizeof(id), file );
+	id = fileBuffer.GetUnsignedInt();
 	m_topLeftArea = TheNavMesh->GetNavAreaByID( id );
 
-	filesystem->Read( &id, sizeof(id), file );
+	id = fileBuffer.GetUnsignedInt();
 	m_topRightArea = TheNavMesh->GetNavAreaByID( id );
 
-	filesystem->Read( &id, sizeof(id), file );
+	id = fileBuffer.GetUnsignedInt();
 	m_topBehindArea = TheNavMesh->GetNavAreaByID( id );
 
-	filesystem->Read( &id, sizeof(id), file );
+	id = fileBuffer.GetUnsignedInt();
 	m_bottomArea = TheNavMesh->GetNavAreaByID( id );
 	if ( !m_bottomArea )
 	{
 		DevMsg( "ERROR: Unconnected ladder #%d bottom at ( %g, %g, %g )\n", m_id, m_bottom.x, m_bottom.y, m_bottom.z );
+		DevWarning( "nav_unmark; nav_mark ladder %d; nav_warp_to_mark\n", m_id );
+	}
+	else if (!m_topForwardArea && !m_topLeftArea && !m_topRightArea)	// can't include behind area, since it is not used when going up a ladder
+	{
+		DevMsg( "ERROR: Unconnected ladder #%d top at ( %g, %g, %g )\n", m_id, m_top.x, m_top.y, m_top.z );
+		DevWarning( "nav_unmark; nav_mark ladder %d; nav_warp_to_mark\n", m_id );
 	}
 
-	// can't include behind area, since it is not used when going up a ladder
-	if (!m_topForwardArea && !m_topLeftArea && !m_topRightArea)
-		DevMsg( "ERROR: Unconnected ladder #%d top at ( %g, %g, %g )\n", m_id, m_top.x, m_top.y, m_top.z );
+	FindLadderEntity();
 }
 
 

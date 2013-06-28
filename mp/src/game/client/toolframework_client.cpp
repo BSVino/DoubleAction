@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =====//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,11 +7,11 @@
 #include "cbase.h"
 #include "toolframework_client.h"
 #include "igamesystem.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "toolframework/iclientenginetools.h"
 #include "client_factorylist.h"
 #include "iviewrender.h"
-#include "materialsystem/IMaterialVar.h"
+#include "materialsystem/imaterialvar.h"
 
 extern IViewRender *view;
 

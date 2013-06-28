@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -40,7 +40,7 @@ public:
 	virtual SR_RESULT Extract( 
 		const char *wavfile,
 		int numsamples,
-		void (*pfnPrint)( const char *fmt, ... ),
+		void (*pfnPrint)( PRINTF_FORMAT_STRING const char *fmt, ... ),
 		CSentence& inwords,
 		CSentence& outwords ) = 0;
 };

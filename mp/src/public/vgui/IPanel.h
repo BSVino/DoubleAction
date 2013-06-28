@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,7 @@
 
 #include <vgui/VGUI.h>
 #include "tier1/interface.h"
+#include "tier1/utlvector.h"
 
 #ifdef SendMessage
 #undef SendMessage
@@ -58,6 +59,7 @@ public:
 	virtual void SetParent(VPANEL vguiPanel, VPANEL newParent) = 0;
 	virtual int GetChildCount(VPANEL vguiPanel) = 0;
 	virtual VPANEL GetChild(VPANEL vguiPanel, int index) = 0;
+	virtual CUtlVector< VPANEL > &GetChildren( VPANEL vguiPanel ) = 0;
 	virtual VPANEL GetParent(VPANEL vguiPanel) = 0;
 	virtual void MoveToFront(VPANEL vguiPanel) = 0;
 	virtual void MoveToBack(VPANEL vguiPanel) = 0;
@@ -123,6 +125,10 @@ public:
 	// Used by the drag/drop manager to always draw on top
 	virtual bool IsTopmostPopup( VPANEL vguiPanel) = 0;
 	virtual void SetTopmostPopup( VPANEL vguiPanel, bool state ) = 0;
+
+	// sibling pins
+	virtual void SetSiblingPin(VPANEL vguiPanel, VPANEL newSibling, byte iMyCornerToPin = 0, byte iSiblingCornerToPinTo = 0 ) = 0;
+
 };
 
 #define VGUI_PANEL_INTERFACE_VERSION "VGUI_Panel009"

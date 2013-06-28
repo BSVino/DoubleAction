@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -33,12 +33,17 @@ public:
 	// names that match our bones.
 	void MergeMatchingBones( int boneMask );
 
+	// copy bones instead of matrices
+	void CopyParentToChild( const Vector parentPos[], const Quaternion parentQ[], Vector childPos[], Quaternion childQ[], int boneMask );
+	void CopyChildToParent( const Vector childPos[], const Quaternion childQ[], Vector parentPos[], Quaternion parentQ[], int boneMask );
+
 	// Returns true if the specified bone is one that gets merged in MergeMatchingBones.
-	int CBoneMergeCache::IsBoneMerged( int iBone ) const;
+	int IsBoneMerged( int iBone ) const;
 
 	// Gets the origin for the first merge bone on the parent.
 	bool GetAimEntOrigin( Vector *pAbsOrigin, QAngle *pAbsAngles );
 
+	bool GetRootBone( matrix3x4_t &rootBone );
 
 private:
 
@@ -49,6 +54,7 @@ private:
 	// These are either all valid pointers or all NULL.
 	C_BaseAnimating *m_pFollow;
 	CStudioHdr		*m_pFollowHdr;
+	const studiohdr_t	*m_pFollowRenderHdr;
 	CStudioHdr		*m_pOwnerHdr;
 
 	// This is the mask we need to use to set up bones on the followed entity to do the bone merge

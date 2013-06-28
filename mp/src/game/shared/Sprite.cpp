@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements visual effects entities: sprites, beams, bubbles, etc.
 //
@@ -232,11 +232,9 @@ void CSprite::Spawn( void )
 	if ( scale < 0 || scale > MAX_SPRITE_SCALE )
 	{
 #if !defined( CLIENT_DLL ) 
-#ifndef _LINUX
-		DevMsg( "LEVEL DESIGN ERROR: Sprite %s with bad scale %f [0..%f]\n", GetDebugName(), m_flSpriteScale, MAX_SPRITE_SCALE );
+		DevMsg( "LEVEL DESIGN ERROR: Sprite %s with bad scale %f [0..%f]\n", GetDebugName(), m_flSpriteScale.Get(), MAX_SPRITE_SCALE );
 #endif
-#endif
-		scale = clamp( m_flSpriteScale, 0, MAX_SPRITE_SCALE );
+		scale = clamp( (float) m_flSpriteScale, 0.f, MAX_SPRITE_SCALE );
 	}
 
 	//Set our state
@@ -271,7 +269,7 @@ void CSprite::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pV
 		// Find the height and width of the source of the sprite
 		float width = modelinfo->GetModelSpriteWidth( GetModel() );
 		float height = modelinfo->GetModelSpriteHeight( GetModel() );
-		flScale *= max( width, height );
+		flScale *= MAX( width, height );
 	}
 
 	pVecWorldMins->Init( -flScale, -flScale, -flScale );
@@ -605,19 +603,19 @@ void CSprite::InputShowSprite( inputdata_t &inputdata )
 
 void CSprite::InputColorRedValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor = clamp( FastFloatToSmallInt( inputdata.value.Float() ), 0, 255 );
 	SetColor( nNewColor, m_clrRender->g, m_clrRender->b );
 }
 
 void CSprite::InputColorGreenValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor = clamp( FastFloatToSmallInt( inputdata.value.Float() ), 0, 255 );
 	SetColor( m_clrRender->r, nNewColor, m_clrRender->b );
 }
 
 void CSprite::InputColorBlueValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor = clamp( FastFloatToSmallInt( inputdata.value.Float() ), 0, 255 );
 	SetColor( m_clrRender->r, m_clrRender->g, nNewColor );
 }
 
@@ -669,7 +667,7 @@ void CSprite::GetRenderBounds( Vector &vecMins, Vector &vecMaxs )
 		CEngineSprite *psprite = (CEngineSprite *) modelinfo->GetModelExtraData( GetModel() );
 		if ( psprite )
 		{
-			float flSize = max( psprite->GetWidth(), psprite->GetHeight() );
+			float flSize = MAX( psprite->GetWidth(), psprite->GetHeight() );
 			flScale *= flSize;
 		}
 	}
@@ -786,7 +784,7 @@ int CSprite::DrawModel( int flags )
 	if ( m_bWorldSpaceScale )
 	{
 		CEngineSprite *psprite = ( CEngineSprite * )modelinfo->GetModelExtraData( GetModel() );
-		float flMinSize = min( psprite->GetWidth(), psprite->GetHeight() );
+		float flMinSize = MIN( psprite->GetWidth(), psprite->GetHeight() );
 		renderscale /= flMinSize;
 	}
 

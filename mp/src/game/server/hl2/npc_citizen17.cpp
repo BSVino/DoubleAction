@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The downtrodden citizens of City 17.
 //
@@ -32,7 +32,7 @@
 #include "ai_interactions.h"
 #include "ai_looktarget.h"
 #include "sceneentity.h"
-#include "tier0/ICommandLine.h"
+#include "tier0/icommandline.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1029,7 +1029,7 @@ void CNPC_Citizen::PrescheduleThink()
 
 		const float TIME_FADE = 1.0;
 		float timeInSquad = gpGlobals->curtime - m_flTimeJoinedPlayerSquad;
-		timeInSquad = min( TIME_FADE, max( timeInSquad, 0 ) );
+		timeInSquad = MIN( TIME_FADE, MAX( timeInSquad, 0 ) );
 
 		float fade = ( 1.0 - timeInSquad / TIME_FADE );
 
@@ -1868,7 +1868,7 @@ void CNPC_Citizen::HandleAnimEvent( animevent_t *pEvent )
 			// If I have a name, make my weapon match it with "_weapon" appended
 			if ( GetEntityName() != NULL_STRING )
 			{
-				pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", GetEntityName())) );
+				pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", STRING(GetEntityName()) )) );
 			}
 			Weapon_Equip( pWeapon );
 		}
@@ -2184,7 +2184,7 @@ bool CNPC_Citizen::ShouldLookForBetterWeapon()
 			return false;
 		}
 
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 		// Cached off to make sure you change this if you ask the code to defer.
 		float flOldWeaponSearchTime = m_flNextWeaponSearchTime;
 #endif
@@ -3621,7 +3621,7 @@ void CNPC_Citizen::Heal()
 		{
 			if ( pTarget->IsPlayer() && npc_citizen_medic_emit_sound.GetBool() )
 			{
-				CPASAttenuationFilter filter( pTarget, "HealthKit.Touch" ); //gcc hated this being inline in the function.
+				CPASAttenuationFilter filter( pTarget, "HealthKit.Touch" );
 				EmitSound( filter, pTarget->entindex(), "HealthKit.Touch" );
 			}
 

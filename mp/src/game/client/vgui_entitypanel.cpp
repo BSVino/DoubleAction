@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This is a panel which is rendered on top of an entity
 //
@@ -102,7 +102,7 @@ void CEntityPanel::ComputeAndSetSize( void )
 		// Get distance to entity
 		float flDistance = (m_pBaseEntity->GetRenderOrigin() - MainViewOrigin()).Length();
 		flDistance *= 2;
-  		m_flScale = 0.25 + max( 0, 2.0 - (flDistance / 2048) );
+  		m_flScale = 0.25 + MAX( 0, 2.0 - (flDistance / 2048) );
 	}
 
 	// Update the size

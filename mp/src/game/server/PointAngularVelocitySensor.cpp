@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Used to fire events based on the orientation of a given entity.
 //
@@ -227,9 +227,9 @@ float CPointAngularVelocitySensor::SampleAngularVelocity(CBaseEntity *pEntity)
 	else
 	{
 		QAngle vecAngVel = pEntity->GetLocalAngularVelocity();
-		float flMax = max(fabs(vecAngVel[PITCH]), fabs(vecAngVel[YAW]));
+		float flMax = MAX(fabs(vecAngVel[PITCH]), fabs(vecAngVel[YAW]));
 
-		return max(flMax, fabs(vecAngVel[ROLL]));
+		return MAX(flMax, fabs(vecAngVel[ROLL]));
 	}
 
 	return 0;

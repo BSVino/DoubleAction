@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,16 +24,12 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 {
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
-	m_iDamage			= pKeyValuesData->GetInt( "Damage", 42 ); // Douglas Adams 1952 - 2001
-	m_iBullets			= pKeyValuesData->GetInt( "Bullets", 1 );
-	m_flCycleTime		= pKeyValuesData->GetFloat( "CycleTime", 0.15 );
-	
-	m_iDefaultAmmoClips = pKeyValuesData->GetInt( "NumClips", 2 );
+	m_iDamage		= pKeyValuesData->GetInt( "Damage", 42 ); // Douglas Adams 1952 - 2001
+	m_iBullets		= pKeyValuesData->GetInt( "Bullets", 1 );
+	m_flCycleTime	= pKeyValuesData->GetFloat( "CycleTime", 0.15 );
 
 	const char *pAnimEx = pKeyValuesData->GetString( "PlayerAnimationExtension", "mp5" );
 	Q_strncpy( m_szAnimExtension, pAnimEx, sizeof( m_szAnimExtension ) );
-
-	m_flWeaponFOV	= pKeyValuesData->GetFloat( "fov", 74.0f );
 }
 
 

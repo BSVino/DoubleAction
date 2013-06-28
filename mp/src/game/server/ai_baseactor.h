@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Hooks and classes for the support of humanoid NPCs with 
 //			groovy facial animation capabilities, aka, "Actors"
@@ -63,7 +63,7 @@ public:
 		// Make this fatal!!!
 		if ( !IsServerSideFlexController( szName ) )
 		{
-			Error( "You forgot to add flex controller %s to list in CAI_BaseActor::IsServerSideFlexController()." );
+			Error( "You forgot to add flex controller %s to list in CAI_BaseActor::IsServerSideFlexController().", szName );
 		}
 
 		index = (FlexWeight_t)FindFlexController( szName ); 

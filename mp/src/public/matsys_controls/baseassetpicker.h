@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -50,7 +50,7 @@ public:
 	virtual void OnCommand( const char *pCommand );
 
 	// Purpose: 
-	virtual void OnKeyCodeTyped( vgui::KeyCode code );
+	virtual void OnKeyCodePressed( vgui::KeyCode code );
 
 	// Returns the selected asset name
 	int GetSelectedAssetCount();
@@ -91,12 +91,14 @@ protected:
 	// Rescan assets
 	void RescanAssets();
 
+	const char	*GetModPath( int nModIndex );
+
 	MESSAGE_FUNC_PARAMS( OnTextChanged, "TextChanged", kv );
 	MESSAGE_FUNC_PARAMS( OnItemSelected, "ItemSelected", kv );
 	MESSAGE_FUNC_PARAMS( OnCheckButtonChecked, "CheckButtonChecked", kv );
 	MESSAGE_FUNC( OnFileSelected, "TreeViewItemSelected" );
 	
-private:
+protected:
 	struct AssetInfo_t
 	{
 		int m_nAssetIndex;

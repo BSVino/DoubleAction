@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,16 +11,16 @@
 #include "bsplib.h"
 #include "zip_utils.h"
 #include "scriplib.h"
-#include "UtlLinkedList.h"
-#include "BSPTreeData.h"
-#include "CModel.h"
-#include "GameBSPFile.h"
+#include "utllinkedlist.h"
+#include "bsptreedata.h"
+#include "cmodel.h"
+#include "gamebspfile.h"
 #include "materialsystem/imaterial.h"
 #include "materialsystem/hardwareverts.h"
-#include "UtlBuffer.h"
-#include "UtlRBTree.h"
-#include "UtlSymbol.h"
-#include "UtlString.h"
+#include "utlbuffer.h"
+#include "utlrbtree.h"
+#include "utlsymbol.h"
+#include "utlstring.h"
 #include "checksum_crc.h"
 #include "physdll.h"
 #include "tier0/dbg.h"
@@ -460,7 +460,7 @@ BEGIN_BYTESWAP_DATADESC( FileHeader_t )
 END_BYTESWAP_DATADESC()
 } // end namespace
 
-static char *s_LumpNames[] = {
+static const char *s_LumpNames[] = {
 	"LUMP_ENTITIES",						// 0
 	"LUMP_PLANES",							// 1
 	"LUMP_TEXDATA",							// 2
@@ -703,7 +703,7 @@ template< class T > static void AddLump( int lumpnum, CUtlVector<T> &data, int v
 dheader_t		*g_pBSPHeader;
 FileHandle_t	g_hBSPFile;
 
-struct 
+struct Lump_t
 {
 	void	*pLumps[HEADER_LUMPS];
 	int		size[HEADER_LUMPS];
@@ -2730,11 +2730,44 @@ void WriteLumpToFile( char *filename, int lump )
 	SafeWrite (lumpfile, (byte *)g_pBSPHeader + ofs, length);
 }
 
+void	WriteLumpToFile( char *filename, int lump, int nLumpVersion, void *pBuffer, size_t nBufLen )
+{
+	char lumppre[MAX_PATH];	
+	if ( !GenerateNextLumpFileName( filename, lumppre, MAX_PATH ) )
+	{
+		Warning( "Failed to find valid lump filename for bsp %s.\n", filename );
+		return;
+	}
+
+	// Open the file
+	FileHandle_t lumpfile = g_pFileSystem->Open(lumppre, "wb");
+	if ( !lumpfile )
+	{
+		Error ("Error opening %s! (Check for write enable)\n",filename);
+		return;
+	}
+
+	// Write the header
+	lumpfileheader_t lumpHeader;
+	lumpHeader.lumpID = lump;
+	lumpHeader.lumpVersion = nLumpVersion;
+	lumpHeader.lumpLength = nBufLen;
+	lumpHeader.mapRevision = LittleLong( g_MapRevision );
+	lumpHeader.lumpOffset = sizeof(lumpfileheader_t);	// Lump starts after the header
+	SafeWrite( lumpfile, &lumpHeader, sizeof(lumpfileheader_t));
+
+	// Write the lump
+	SafeWrite( lumpfile, pBuffer, nBufLen );
+
+	g_pFileSystem->Close( lumpfile );
+}
+
+
 //============================================================================
 #define ENTRIES(a)		(sizeof(a)/sizeof(*(a)))
 #define ENTRYSIZE(a)	(sizeof(*(a)))
 
-int ArrayUsage( char *szItem, int items, int maxitems, int itemsize )
+int ArrayUsage( const char *szItem, int items, int maxitems, int itemsize )
 {
 	float	percentage = maxitems ? items * 100.0 / maxitems : 0.0;
 
@@ -2751,7 +2784,7 @@ int ArrayUsage( char *szItem, int items, int maxitems, int itemsize )
 	return items * itemsize;
 }
 
-int GlobUsage( char *szItem, int itemstorage, int maxstorage )
+int GlobUsage( const char *szItem, int itemstorage, int maxstorage )
 {
 	float	percentage = maxstorage ? itemstorage * 100.0 / maxstorage : 0.0;
     Msg("%-17.17s     [variable]    %8i/%-8i (%4.1f%%) ", 
@@ -2912,6 +2945,7 @@ epair_t *ParseEpair (void)
 	if (strlen(token) >= MAX_KEY-1)
 		Error ("ParseEpar: token too long");
 	e->key = copystring(token);
+
 	GetToken (false);
 	if (strlen(token) >= MAX_VALUE-1)
 		Error ("ParseEpar: token too long");
@@ -3080,6 +3114,14 @@ vec_t	FloatForKeyWithDefault (entity_t *ent, char *key, float default_value)
 int		IntForKey (entity_t *ent, char *key)
 {
 	char *k = ValueForKey (ent, key);
+	return atol(k);
+}
+
+int		IntForKeyWithDefault(entity_t *ent, char *key, int nDefault )
+{
+	char *k = ValueForKey (ent, key);
+	if ( !k[0] )
+		return nDefault;
 	return atol(k);
 }
 
@@ -3829,7 +3871,7 @@ const char *ResolveStaticPropToModel( const char *pPropName )
 //-----------------------------------------------------------------------------
 void ConvertPakFileContents( const char *pInFilename )
 {
-	IZip *newPakFile = IZip::CreateZip( false );
+	IZip *newPakFile = IZip::CreateZip( NULL );
 
 	CUtlBuffer sourceBuf;
 	CUtlBuffer targetBuf;

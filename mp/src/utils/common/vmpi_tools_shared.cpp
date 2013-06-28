@@ -1,10 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================//
 
 #include <windows.h>
+#include <dbghelp.h>
 #include "vmpi.h"
 #include "cmdlib.h"
 #include "vmpi_tools_shared.h"

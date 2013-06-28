@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,6 +17,7 @@ class IServerBenchmark
 public:
 	virtual bool StartBenchmark() = 0;
 	virtual void UpdateBenchmark() = 0;
+	virtual void EndBenchmark() = 0;
 	
 	virtual bool IsBenchmarkRunning() = 0;
 	virtual bool IsLocalBenchmarkPlayer( CBasePlayer *pPlayer ) = 0;
@@ -46,6 +47,7 @@ public:
 
 	virtual void StartBenchmark()  {}
 	virtual void UpdateBenchmark() {}
+	virtual void EndBenchmark() {}
 
 	// Give a list of model names that can be spawned in for physics props during the simulation.
 	virtual void GetPhysicsModelNames( CUtlVector<char*> &modelNames ) = 0;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -166,7 +166,7 @@ AIMotorMoveResult_t CAI_Motor::MoveGroundStep( const Vector &newPos, CBaseEntity
 		// skip tiny steps, but notify the shadow object of any large steps
 		if ( moveTrace.flStepUpDistance > 0.1f )
 		{
-			float height = clamp( moveTrace.flStepUpDistance, 0, StepHeight() );
+			float height = clamp( moveTrace.flStepUpDistance, 0.f, StepHeight() );
 			IPhysicsObject *pPhysicsObject = GetOuter()->VPhysicsGetObject();
 			if ( pPhysicsObject )
 			{
@@ -298,7 +298,7 @@ AIMoveResult_t CAI_Motor::MoveClimbExecute( const Vector &climbDest, const Vecto
 	if (m_nDismountSequence != ACT_INVALID)
 	{
 		// catch situations where the climb mount/dismount finished before reaching goal
-		climbSpeed = max( climbSpeed, 30.0 );
+		climbSpeed = MAX( climbSpeed, 30.0 );
 	}
 	else
 	{
@@ -758,7 +758,7 @@ void CAI_Motor::UpdateYaw( int yawSpeed )
 	ideal = UTIL_AngleMod( GetIdealYaw() );
 
 	// FIXME: this needs a proper interval
-	float dt = min( 0.2, gpGlobals->curtime - GetLastThink() );
+	float dt = MIN( 0.2, gpGlobals->curtime - GetLastThink() );
 	
 	newYaw = AI_ClampYaw( (float)yawSpeed * 10.0, current, ideal, dt );
 		
@@ -928,7 +928,7 @@ float CAI_Motor::MinCheckDist( void )
 {
 	// Take the groundspeed into account
 	float flMoveDist = GetMoveInterval() * GetIdealSpeed();
-	float flMinDist = max( MinStoppingDist(), flMoveDist);
+	float flMinDist = MAX( MinStoppingDist(), flMoveDist);
 	if ( flMinDist < GetHullWidth() )
 		flMinDist = GetHullWidth();
 	return flMinDist;

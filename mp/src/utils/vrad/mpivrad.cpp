@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -265,7 +265,7 @@ void RunMPIBuildFacelights()
 	else
 	{
 		if ( g_iVMPIVerboseLevel >= 1 )
-			Msg( "\n\n%.1f%% CPU utilization during BuildFaceLights\n\n", (int)( g_CPUTime.GetSeconds() * 100 / elapsed ) );
+			Msg( "\n\n%.1f%% CPU utilization during BuildFaceLights\n\n", ( g_CPUTime.GetSeconds() * 100 / elapsed ) );
 	}
 }
 

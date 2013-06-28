@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -58,7 +58,7 @@ public:
 		bool savemanifest = false
 	)
 		: m_Elements( 0, 0, FileNameHandleLessFunc ),
-		m_pszRepositoryFileName( repositoryFileName ),
+		m_sRepositoryFileName( repositoryFileName ),
 		m_nVersion( version ),
 		m_pfnMetaChecksum( checksumfunc ),
 		m_bDirty( false ),
@@ -69,7 +69,7 @@ public:
 		m_bReadOnly( readonly ),
 		m_bSaveManifest( savemanifest )
 	{
-		Assert( m_pszRepositoryFileName && m_pszRepositoryFileName[ 0 ] );
+		Assert( !m_sRepositoryFileName.IsEmpty() );
 	}
 
 	virtual ~CUtlCachedFileData()
@@ -159,6 +159,8 @@ public:
 	void	SaveManifest();
 	bool	ManifestExists();
 
+	const char *GetRepositoryFileName() const { return m_sRepositoryFileName; }
+
 	long	GetFileInfo( char const *filename )
 	{
 		ElementType_t element;
@@ -238,7 +240,7 @@ private:
 
 	CUtlRBTree< ElementType_t >		m_Elements;
 	CUtlVector< T * >				m_Data;
-	char const						*m_pszRepositoryFileName;
+	CUtlString						m_sRepositoryFileName;
 	int								m_nVersion;
 	PFNCOMPUTECACHEMETACHECKSUM		m_pfnMetaChecksum;
 	unsigned int					m_uCurrentMetaChecksum;
@@ -346,7 +348,7 @@ bool CUtlCachedFileData<T>::IsUpToDate()
 	// Don't call Init/Shutdown if using this method!!!
 	Assert( !m_bInitialized );
 
-	if ( !m_pszRepositoryFileName || !m_pszRepositoryFileName[ 0 ] )
+	if ( m_sRepositoryFileName.IsEmpty() )
 	{
 		Error( "CUtlCachedFileData:  Can't IsUpToDate, no repository file specified." );
 		return false;
@@ -357,7 +359,7 @@ bool CUtlCachedFileData<T>::IsUpToDate()
 
 	FileHandle_t fh;
 
-	fh = g_pFullFileSystem->Open( m_pszRepositoryFileName, "rb", "MOD" );
+	fh = g_pFullFileSystem->Open( m_sRepositoryFileName, "rb", "MOD" );
 	if ( fh == FILESYSTEM_INVALID_HANDLE )
 	{
 		return false;
@@ -372,11 +374,11 @@ bool CUtlCachedFileData<T>::IsUpToDate()
 
 	if ( UTL_CACHE_SYSTEM_VERSION != cacheversion )
 	{
-		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_pszRepositoryFileName );
+		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_sRepositoryFileName.String() );
 		Assert( !m_bReadOnly );
 		if ( !m_bReadOnly )
 		{
-			g_pFullFileSystem->RemoveFile( m_pszRepositoryFileName, "MOD" );
+			g_pFullFileSystem->RemoveFile( m_sRepositoryFileName, "MOD" );
 		}
 		return false;
 	}
@@ -385,11 +387,11 @@ bool CUtlCachedFileData<T>::IsUpToDate()
 	int version = *( int *)&header[ 4 ];
 	if ( version != m_nVersion )
 	{
-		DevMsg( "Discarding repository '%s' due to version change\n", m_pszRepositoryFileName );
+		DevMsg( "Discarding repository '%s' due to version change\n", m_sRepositoryFileName.String() );
 		Assert( !m_bReadOnly );
 		if ( !m_bReadOnly )
 		{
-			g_pFullFileSystem->RemoveFile( m_pszRepositoryFileName, "MOD" );
+			g_pFullFileSystem->RemoveFile( m_sRepositoryFileName, "MOD" );
 		}
 		return false;
 	}
@@ -400,11 +402,11 @@ bool CUtlCachedFileData<T>::IsUpToDate()
 
 	if ( cache_meta_checksum != m_uCurrentMetaChecksum )
 	{
-		DevMsg( "Discarding repository '%s' due to meta checksum change\n", m_pszRepositoryFileName );
+		DevMsg( "Discarding repository '%s' due to meta checksum change\n", m_sRepositoryFileName.String() );
 		Assert( !m_bReadOnly );
 		if ( !m_bReadOnly )
 		{
-			g_pFullFileSystem->RemoveFile( m_pszRepositoryFileName, "MOD" );
+			g_pFullFileSystem->RemoveFile( m_sRepositoryFileName, "MOD" );
 		}
 		return false;
 	}
@@ -486,19 +488,19 @@ void CUtlCachedFileData<T>::InitSmallBuffer( FileHandle_t& fh, int fileSize, boo
 			}
 			else
 			{
-				Msg( "Discarding repository '%s' due to meta checksum change\n", m_pszRepositoryFileName );
+				Msg( "Discarding repository '%s' due to meta checksum change\n", m_sRepositoryFileName.String() );
 				deleteFile = true;
 			}
 		}
 		else
 		{
-			Msg( "Discarding repository '%s' due to version change\n", m_pszRepositoryFileName );
+			Msg( "Discarding repository '%s' due to version change\n", m_sRepositoryFileName.String() );
 			deleteFile = true;
 		}
 	}
 	else
 	{
-		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_pszRepositoryFileName );
+		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_sRepositoryFileName.String() );
 		deleteFile = true;
 	}
 }
@@ -541,6 +543,13 @@ void CUtlCachedFileData<T>::InitLargeBuffer( FileHandle_t& fh, bool& deleteFile 
 					g_pFullFileSystem->Read( &bufsize, sizeof( bufsize ), fh );
 
 					Assert( bufsize < 1000000 );
+					if ( bufsize > 1000000 )
+					{
+						Msg( "Discarding repository '%s' due to corruption\n", m_sRepositoryFileName.String() );
+						deleteFile = true;
+						break;
+					}
+
 
 					buf.Clear();
 					buf.EnsureCapacity( bufsize );
@@ -579,19 +588,19 @@ void CUtlCachedFileData<T>::InitLargeBuffer( FileHandle_t& fh, bool& deleteFile 
 			}
 			else
 			{
-				Msg( "Discarding repository '%s' due to meta checksum change\n", m_pszRepositoryFileName );
+				Msg( "Discarding repository '%s' due to meta checksum change\n", m_sRepositoryFileName.String() );
 				deleteFile = true;
 			}
 		}
 		else
 		{
-			Msg( "Discarding repository '%s' due to version change\n", m_pszRepositoryFileName );
+			Msg( "Discarding repository '%s' due to version change\n", m_sRepositoryFileName.String() );
 			deleteFile = true;
 		}
 	}
 	else
 	{
-		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_pszRepositoryFileName );
+		DevMsg( "Discarding repository '%s' due to cache system version change\n", m_sRepositoryFileName.String() );
 		deleteFile = true;
 	}
 
@@ -608,7 +617,7 @@ bool CUtlCachedFileData<T>::Init()
 
 	m_bInitialized = true;
 
-	if ( !m_pszRepositoryFileName || !m_pszRepositoryFileName[ 0 ] )
+	if ( m_sRepositoryFileName.IsEmpty() )
 	{
 		Error( "CUtlCachedFileData:  Can't Init, no repository file specified." );
 		return false;
@@ -619,14 +628,14 @@ bool CUtlCachedFileData<T>::Init()
 
 	FileHandle_t fh;
 
-	fh = g_pFullFileSystem->Open( m_pszRepositoryFileName, "rb", "MOD" );
+	fh = g_pFullFileSystem->Open( m_sRepositoryFileName, "rb", "MOD" );
 	if ( fh == FILESYSTEM_INVALID_HANDLE )
 	{
 		// Nothing on disk, we'll recreate everything from scratch...
 		SetDirty( true );
 		return true;
 	}
-	long fileTime = g_pFullFileSystem->GetFileTime( m_pszRepositoryFileName, "MOD" );
+	long fileTime = g_pFullFileSystem->GetFileTime( m_sRepositoryFileName, "MOD" );
 	int size = g_pFullFileSystem->Size( fh );
 
 	bool deletefile = false;
@@ -645,7 +654,7 @@ bool CUtlCachedFileData<T>::Init()
 		Assert( !m_bReadOnly );
 		if ( !m_bReadOnly )
 		{
-			g_pFullFileSystem->RemoveFile( m_pszRepositoryFileName, "MOD" );
+			g_pFullFileSystem->RemoveFile( m_sRepositoryFileName, "MOD" );
 		}
 		SetDirty( true );
 	}
@@ -657,23 +666,23 @@ template <class T>
 void CUtlCachedFileData<T>::Save()
 {
 	char path[ 512 ];
-	Q_strncpy( path, m_pszRepositoryFileName, sizeof( path ) );
+	Q_strncpy( path, m_sRepositoryFileName, sizeof( path ) );
 	Q_StripFilename( path );
 
 	g_pFullFileSystem->CreateDirHierarchy( path, "MOD" );
 
-	if ( g_pFullFileSystem->FileExists( m_pszRepositoryFileName, "MOD" ) && 
-		!g_pFullFileSystem->IsFileWritable( m_pszRepositoryFileName, "MOD" ) )
+	if ( g_pFullFileSystem->FileExists( m_sRepositoryFileName, "MOD" ) && 
+		!g_pFullFileSystem->IsFileWritable( m_sRepositoryFileName, "MOD" ) )
 	{
-		g_pFullFileSystem->SetFileWritable( m_pszRepositoryFileName, true, "MOD" );
+		g_pFullFileSystem->SetFileWritable( m_sRepositoryFileName, true, "MOD" );
 	}
 
 	// Now write to file
 	FileHandle_t fh;
-	fh = g_pFullFileSystem->Open( m_pszRepositoryFileName, "wb" );
+	fh = g_pFullFileSystem->Open( m_sRepositoryFileName, "wb" );
 	if ( FILESYSTEM_INVALID_HANDLE == fh )
 	{
-		Warning( "Unable to persist cache '%s', check file permissions\n", m_pszRepositoryFileName );
+		Warning( "Unable to persist cache '%s', check file permissions\n", m_sRepositoryFileName.String() );
 	}
 	else
 	{
@@ -753,7 +762,7 @@ template <class T>
 bool CUtlCachedFileData<T>::ManifestExists()
 {
 	char manifest_name[ 512 ];
-	Q_strncpy( manifest_name, m_pszRepositoryFileName, sizeof( manifest_name ) );
+	Q_strncpy( manifest_name, m_sRepositoryFileName, sizeof( manifest_name ) );
 
 	Q_SetExtension( manifest_name, ".manifest", sizeof( manifest_name ) );
 
@@ -777,13 +786,13 @@ void CUtlCachedFileData<T>::SaveManifest()
 	}
 
 	char path[ 512 ];
-	Q_strncpy( path, m_pszRepositoryFileName, sizeof( path ) );
+	Q_strncpy( path, m_sRepositoryFileName, sizeof( path ) );
 	Q_StripFilename( path );
 
 	g_pFullFileSystem->CreateDirHierarchy( path, "MOD" );
 
 	char manifest_name[ 512 ];
-	Q_strncpy( manifest_name, m_pszRepositoryFileName, sizeof( manifest_name ) );
+	Q_strncpy( manifest_name, m_sRepositoryFileName, sizeof( manifest_name ) );
 
 	Q_SetExtension( manifest_name, ".manifest", sizeof( manifest_name ) );
 

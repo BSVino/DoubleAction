@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Weapon selection handling
 //
@@ -59,22 +59,22 @@ public:
 	virtual void OnWeaponPickup( C_BaseCombatWeapon *pWeapon );
 	virtual bool IsInSelectionMode();
 
-	void _cdecl UserCmd_Slot1( void );
-	void _cdecl UserCmd_Slot2( void );
-	void _cdecl UserCmd_Slot3( void );
-	void _cdecl UserCmd_Slot4( void );
-	void _cdecl UserCmd_Slot5( void );
-	void _cdecl UserCmd_Slot6( void );
-	void _cdecl UserCmd_Slot7( void );
-	void _cdecl UserCmd_Slot8( void );
-	void _cdecl UserCmd_Slot9( void );
-	void _cdecl UserCmd_Slot0( void );
-	void _cdecl UserCmd_Slot10( void );
-	void _cdecl UserCmd_Close( void );
-	void _cdecl UserCmd_NextWeapon( void );
-	void _cdecl UserCmd_PrevWeapon( void );
-	void _cdecl UserCmd_LastWeapon( void );
-	void _cdecl UserCmd_DropPrimary( void );
+	void UserCmd_Slot1( void );
+	void UserCmd_Slot2( void );
+	void UserCmd_Slot3( void );
+	void UserCmd_Slot4( void );
+	void UserCmd_Slot5( void );
+	void UserCmd_Slot6( void );
+	void UserCmd_Slot7( void );
+	void UserCmd_Slot8( void );
+	void UserCmd_Slot9( void );
+	void UserCmd_Slot0( void );
+	void UserCmd_Slot10( void );
+	void UserCmd_Close( void );
+	void UserCmd_NextWeapon( void );
+	void UserCmd_PrevWeapon( void );
+	void UserCmd_LastWeapon( void );
+	void UserCmd_DropPrimary( void );
 
 	virtual void		SelectSlot( int iSlot );
 
@@ -86,7 +86,7 @@ public:
 	static CBaseHudWeaponSelection *GetInstance();
 
 	// these functions are exposed as virtual so that the tf_hints system can redraw the weapon selection
-	virtual void DrawWList( C_BasePlayer *pPlayer, C_BaseCombatWeapon *pSelectedWeapon, bool drawOutline = false, int or = 0, int og = 0, int ob = 0, int oa = 0 ) {}
+	virtual void DrawWList( C_BasePlayer *pPlayer, C_BaseCombatWeapon *pSelectedWeapon, bool drawOutline = false, int ora = 0, int og = 0, int ob = 0, int oa = 0 ) {}
 	virtual bool ComputeRect( C_BasePlayer *pPlayer, C_BaseCombatWeapon *pSelectedWeapon, wrect_t *outrect ) { return false; }
 	
 	virtual int	KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );

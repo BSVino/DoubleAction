@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A base class for the client-side representation of entities.
 //
@@ -16,10 +16,11 @@
 #endif
 
 #include "mathlib/vector.h"
-#include "IClientEntityInternal.h"
-#include "engine/IVModelRender.h"
+#include "icliententityinternal.h"
+#include "engine/ivmodelinfo.h"
+#include "engine/ivmodelrender.h"
 #include "client_class.h"
-#include "IClientShadowMgr.h"
+#include "iclientshadowmgr.h"
 #include "ehandle.h"
 #include "iclientunknown.h"
 #include "client_thinklist.h"
@@ -56,6 +57,7 @@ class CTakeDamageInfo;
 class C_BaseCombatCharacter;
 class CEntityMapData;
 class ConVar;
+class CDmgAccumulator;
 
 struct CSoundParameters;
 
@@ -99,7 +101,7 @@ struct VarMapping_t
 
 																	
 
-#define DECLARE_INTERPOLATION
+#define DECLARE_INTERPOLATION()
 
 
 // How many data slots to use when in multiplayer.
@@ -166,7 +168,6 @@ struct thinkfunc_t
 #define ENTCLIENTFLAG_DONTUSEIK					0x0002		// Don't use IK on this entity even if its model has IK.
 #define ENTCLIENTFLAG_ALWAYS_INTERPOLATE		0x0004		// Used by view models.
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Base client side entity object
 //-----------------------------------------------------------------------------
@@ -190,13 +191,14 @@ public:
 	
 	// FireBullets uses shared code for prediction.
 	virtual void					FireBullets( const FireBulletsInfo_t &info );
+	virtual void					ModifyFireBulletsDamage( CTakeDamageInfo* dmgInfo ) {}
 	virtual bool					ShouldDrawUnderwaterBulletBubbles();
 	virtual bool					ShouldDrawWaterImpacts( void ) { return true; }
 	virtual bool					HandleShotImpactingWater( const FireBulletsInfo_t &info, 
 		const Vector &vecEnd, ITraceFilter *pTraceFilter, Vector *pVecTracerDest );
 	virtual ITraceFilter*			GetBeamTraceFilter( void );
-	virtual void					DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
-	virtual void					TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void					DispatchTraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator = NULL );
+	virtual void					TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator = NULL );
 	virtual void					DoImpactEffect( trace_t &tr, int nDamageType );
 	virtual void					MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 	virtual int						GetTracerAttachment( void );
@@ -295,6 +297,7 @@ public:
 	virtual bool					IsTwoPass( void );
 	virtual bool					UsesPowerOfTwoFrameBufferTexture();
 	virtual bool					UsesFullFrameBufferTexture();
+	virtual bool					IgnoresZBuffer( void ) const;
 	virtual const model_t			*GetModel( void ) const;
 	virtual int						DrawModel( int flags );
 	virtual void					ComputeFxBlend( void );
@@ -482,6 +485,7 @@ public:
 
 	int								GetModelIndex( void ) const;
 	void							SetModelIndex( int index );
+	virtual int						CalcOverrideModelIndex() { return -1; }
 
 	// These methods return a *world-aligned* box relative to the absorigin of the entity.
 	// This is used for collision purposes and is *not* guaranteed
@@ -574,9 +578,11 @@ public:
 
 	// ID Target handling
 	virtual bool					IsValidIDTarget( void ) { return false; }
-	virtual char					*GetIDString( void ) { return ""; };
+	virtual const char				*GetIDString( void ) { return ""; };
 
 	// See CSoundEmitterSystem
+	virtual void ModifyEmitSoundParams( EmitSound_t &params );
+
 	void	EmitSound( const char *soundname, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
 	void	EmitSound( const char *soundname, HSOUNDSCRIPTHANDLE& handle, float soundtime = 0.0f, float *duration = NULL );  // Override for doing the general case of CPASAttenuationFilter( this ), and EmitSound( filter, entindex(), etc. );
 	void	StopSound( const char *soundname );
@@ -723,7 +729,7 @@ public:
 	// Reset internal fields
 	virtual void					Clear( void );
 	// Helper to draw raw brush models
-	virtual int						DrawBrushModel( bool bSort, bool bShadowDepth );
+	virtual int						DrawBrushModel( bool bTranslucent, int nFlags, bool bTwoPass );
 
 	// returns the material animation start time
 	virtual float					GetTextureAnimationStartTime();
@@ -814,7 +820,7 @@ public:
 
 	virtual char const *			DamageDecal( int bitsDamageType, int gameMaterial );
 	virtual void					DecalTrace( trace_t *pTrace, char const *decalName );
-	virtual void					ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
+	virtual void					ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName );
 
 	virtual bool					ShouldPredict( void ) { return false; };
 	// interface function pointers
@@ -985,16 +991,19 @@ public:
 
 	bool							IsInWorld( void ) { return true; }
 
+	bool							IsWorld() { return entindex() == 0; }
 	/////////////////
 
 	virtual bool					IsPlayer( void ) const { return false; };
-	virtual bool					IsBot( void ) const { return ((GetFlags() & FL_FAKECLIENT) == FL_FAKECLIENT) ? true : false; }
 	virtual bool					IsBaseCombatCharacter( void ) { return false; };
 	virtual C_BaseCombatCharacter	*MyCombatCharacterPointer( void ) { return NULL; }
 	virtual bool					IsNPC( void ) { return false; }
 	C_AI_BaseNPC					*MyNPCPointer( void ); 
+	virtual bool					IsNextBot() { return false; }
 	// TF2 specific
 	virtual bool					IsBaseObject( void ) const { return false; }
+	virtual bool					IsBaseCombatWeapon( void ) const { return false; }
+	virtual class C_BaseCombatWeapon		*MyCombatWeaponPointer() { return NULL; }
 
 	virtual bool					IsBaseTrain( void ) const { return false; }
 
@@ -1024,10 +1033,11 @@ public:
 	void				SetModelByIndex( int nModelIndex );
 
 	// Set model... (NOTE: Should only be used by client-only entities
-	// Returns false if the model name is bogus
+	// Returns false if the model name is bogus or otherwise can't be loaded
 	bool				SetModel( const char *pModelName );
 
 	void				SetModelPointer( const model_t *pModel );
+
 
 	// Access movetype and solid.
 	void				SetMoveType( MoveType_t val, MoveCollide_t moveCollide = MOVECOLLIDE_DEFAULT );	// Set to one of the MOVETYPE_ defines.
@@ -1056,8 +1066,16 @@ public:
 	const Vector&		GetBaseVelocity() const;
 	void				SetBaseVelocity( const Vector& v );
 
-	const Vector&		GetViewOffset() const;
-	void				SetViewOffset( const Vector& v );
+	virtual const Vector &GetViewOffset() const;
+	virtual void		  SetViewOffset( const Vector& v );
+
+#ifdef SIXENSE
+	const Vector&		GetEyeOffset() const;
+	void				SetEyeOffset( const Vector& v );
+
+	const QAngle &		GetEyeAngleOffset() const;
+	void				SetEyeAngleOffset( const QAngle & qa );
+#endif
 
 	// Invalidates the abs state of all children
 	void InvalidatePhysicsRecursive( int nChangeFlags );
@@ -1119,6 +1137,9 @@ public:
 	float	GetSimulationTime() const;
 	void	SetSimulationTime( float st );
 
+	float	GetCreateTime()										{ return m_flCreateTime; }
+	void	SetCreateTime( float flCreateTime )					{ m_flCreateTime = flCreateTime; }
+
 	int		GetCreationTick() const;
 
 #ifdef _DEBUG
@@ -1179,8 +1200,8 @@ protected:
 
 	// Returns INTERPOLATE_STOP or INTERPOLATE_CONTINUE.
 	// bNoMoreChanges is set to 1 if you can call RemoveFromInterpolationList on the entity.
-	int BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles, int &bNoMoreChanges );
-	void BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, int nChangeFlags );
+	int BaseInterpolatePart1( float &currentTime, Vector &oldOrigin, QAngle &oldAngles, Vector &oldVel, int &bNoMoreChanges );
+	void BaseInterpolatePart2( Vector &oldOrigin, QAngle &oldAngles, Vector &oldVel, int nChangeFlags );
 
 
 public:
@@ -1251,8 +1272,7 @@ public:
 private:
 	
 	// Model for rendering
-	const model_t					*model;	
-
+	const model_t					*model;
 
 public:
 	// Time animation sequence or frame was last changed
@@ -1262,6 +1282,10 @@ public:
 	float							m_flSimulationTime;
 	float							m_flOldSimulationTime;
 	
+	float							m_flCreateTime;
+
+	byte							m_ubInterpolationFrame;
+	byte							m_ubOldInterpolationFrame;
 
 private:
 	// Effects to apply
@@ -1280,6 +1304,8 @@ public:
 	// Should we be interpolating?
 	static bool						IsInterpolationEnabled();
 
+	// Should we interpolate this tick?  (Used to be EF_NOINTERP)
+	bool							IsNoInterpolationFrame();
 
 	// 
 	int								m_nNextThinkTick;
@@ -1287,6 +1313,10 @@ public:
 
 	// Object model index
 	short							m_nModelIndex;
+
+#ifdef TF_CLIENT_DLL
+	int								m_nModelIndexOverrides[MAX_MODEL_INDEX_OVERRIDES];
+#endif
 
 	char							m_takedamage;
 	char							m_lifeState;
@@ -1342,6 +1372,8 @@ public:
 	// used by SourceTV since move-parents may be missing when child spawns.
 	void							HierarchyUpdateMoveParent();
 
+	virtual bool					IsDeflectable() { return false; }
+
 protected:
 	int								m_nFXComputeFrame;
 
@@ -1378,15 +1410,20 @@ protected:
 	// Object eye position
 	Vector							m_vecViewOffset;
 
+#if defined(SIXENSE)
+	Vector							m_vecEyeOffset;
+	QAngle							m_EyeAngleOffset;    
+#endif
 	// Allow studio models to tell us what their m_nBody value is
 	virtual int						GetStudioBody( void ) { return 0; }
 
-private:
-	friend void OnRenderStart();
-
+public:
 	// This can be used to setup the entity as a client-only entity. It gets an entity handle,
 	// a render handle, and is put into the spatial partition.
 	bool InitializeAsClientEntityByIndex( int iIndex, RenderGroup_t renderGroup );
+
+private:
+	friend void OnRenderStart();
 
 	// Figure out the smoothly interpolated origin for all server entities. Happens right before
 	// letting all entities simulate.
@@ -1453,6 +1490,7 @@ private:
 
 	// Object velocity
 	Vector							m_vecVelocity;
+	CInterpolatedVar< Vector >		m_iv_vecVelocity;
 
 	Vector							m_vecAbsVelocity;
 
@@ -1628,6 +1666,20 @@ protected:
 
 	CThreadFastMutex m_CalcAbsolutePositionMutex;
 	CThreadFastMutex m_CalcAbsoluteVelocityMutex;
+
+#ifdef TF_CLIENT_DLL
+	// TF prevents drawing of any entity attached to players that aren't items in the inventory of the player.
+	// This is to prevent servers creating fake cosmetic items and attaching them to players.
+public:
+	virtual bool ValidateEntityAttachedToPlayer( bool &bShouldRetry );
+	bool EntityDeemedInvalid( void ) { return (m_bValidatedOwner && m_bDeemedInvalid); }
+protected:
+	bool m_bValidatedOwner;
+	bool m_bDeemedInvalid;
+	bool m_bWasDeemedInvalid;
+	RenderMode_t m_PreviousRenderMode;
+	color32 m_PreviousRenderColor;
+#endif
 };
 
 EXTERN_RECV_TABLE(DT_BaseEntity);
@@ -1702,6 +1754,26 @@ inline const matrix3x4_t &C_BaseEntity::EntityToWorldTransform() const
 	Assert( s_bAbsQueriesValid );
 	const_cast<C_BaseEntity*>(this)->CalcAbsolutePosition();
 	return m_rgflCoordinateFrame; 
+}
+
+inline const Vector& C_BaseEntity::GetNetworkOrigin() const
+{
+	return m_vecNetworkOrigin;
+}
+
+inline const QAngle& C_BaseEntity::GetNetworkAngles() const
+{
+	return m_angNetworkAngles;
+}
+
+inline const model_t *C_BaseEntity::GetModel( void ) const
+{
+	return model;
+}
+
+inline int C_BaseEntity::GetModelIndex( void ) const
+{
+	return m_nModelIndex;
 }
 
 //-----------------------------------------------------------------------------
@@ -1985,16 +2057,6 @@ inline unsigned char CBaseEntity::GetParentAttachment() const
 	return m_iParentAttachment;
 }
 
-inline const Vector& CBaseEntity::GetViewOffset() const 
-{ 
-	return m_vecViewOffset; 
-}
-
-inline void CBaseEntity::SetViewOffset( const Vector& v ) 
-{ 
-	m_vecViewOffset = v; 
-}
-
 inline ClientRenderHandle_t CBaseEntity::GetRenderHandle() const 
 { 
 	return m_hRender; 
@@ -2004,6 +2066,30 @@ inline ClientRenderHandle_t& CBaseEntity::RenderHandle()
 {
 	return m_hRender;
 }
+
+#ifdef SIXENSE
+
+inline const Vector& CBaseEntity::GetEyeOffset() const 
+{ 
+	return m_vecEyeOffset; 
+}
+
+inline void CBaseEntity::SetEyeOffset( const Vector& v ) 
+{ 
+	m_vecEyeOffset = v; 
+}
+
+inline const QAngle & CBaseEntity::GetEyeAngleOffset() const 
+{ 
+	return m_EyeAngleOffset; 
+}
+
+inline void CBaseEntity::SetEyeAngleOffset( const QAngle & qa ) 
+{ 
+	m_EyeAngleOffset = qa; 
+}
+
+#endif
 
 //-----------------------------------------------------------------------------
 // Methods to cast away const
@@ -2039,6 +2125,14 @@ inline VarMapping_t* C_BaseEntity::GetVarMapping()
 inline bool	C_BaseEntity::IsInterpolationEnabled()
 {
 	return s_bInterpolate;
+}
+
+//-----------------------------------------------------------------------------
+// Should we be interpolating during this frame? (was EF_NOINTERP)
+//-----------------------------------------------------------------------------
+inline bool C_BaseEntity::IsNoInterpolationFrame()
+{
+	return m_ubOldInterpolationFrame != m_ubInterpolationFrame;
 }
 
 //-----------------------------------------------------------------------------

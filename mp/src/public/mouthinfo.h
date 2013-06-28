@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,6 +18,7 @@
 
 class CAudioSource;
 
+#pragma pack(push,4)
 class CVoiceData
 {
 public:
@@ -101,10 +102,12 @@ private:
 		MAX_VOICE_DATA = 4
 	};
 
-	CVoiceData				m_VoiceSources[ MAX_VOICE_DATA ];
 	short					m_nVoiceSources;
-	short					m_needsEnvelope;
+	short					m_needsEnvelope; 
+	CVoiceData				m_VoiceSources[ MAX_VOICE_DATA ];
 };
+#pragma pack(pop)
+
 
 inline bool CMouthInfo::IsActive( void )
 {

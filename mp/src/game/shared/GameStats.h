@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,18 +13,21 @@
 #include "tier1/utldict.h"
 #include "tier1/utlbuffer.h"
 #include "igamesystem.h"
+//#include "steamworks_gamestats.h"
 
 const int GAMESTATS_VERSION = 1;
 
 enum StatSendType_t
 {
 	STATSEND_LEVELSHUTDOWN,
-	STATSEND_APPSHUTDOWN
+	STATSEND_APPSHUTDOWN,
+	STATSEND_NOTENOUGHPLAYERS,
 };
 
 struct StatsBufferRecord_t
 {
 	float m_flFrameRate;									// fps
+	float m_flServerPing;									// client ping to server
 
 };
 
@@ -168,7 +171,10 @@ public:
 	virtual void Event_SaveGame( void );
 	virtual void Event_LoadGame( void );
 
-	void StatsLog( char const *fmt, ... );
+	void		CollectData( StatSendType_t sendType );
+	void		SendData();
+
+	void StatsLog( PRINTF_FORMAT_STRING char const *fmt, ... );
 	
 	// This is the first call made, so that we can "subclass" the CBaseGameStats based on gamedir as needed (e.g., ep2 vs. episodic)
 	virtual CBaseGameStats *OnInit( CBaseGameStats *pCurrentGameStats, char const *gamedir ) { return pCurrentGameStats; }
@@ -189,12 +195,17 @@ public:
 
 	virtual bool UserPlayedAllTheMaps( void ) { return false; } //be sure to override this to determine user completion time
 
+#ifdef CLIENT_DLL
+	virtual void Event_AchievementProgress( int achievementID, const char* achievementName ) {}
+#endif
+
 #ifdef GAME_DLL
 	virtual void Event_PlayerKilled( CBasePlayer *pPlayer, const CTakeDamageInfo &info );	
 	virtual void Event_PlayerConnected( CBasePlayer *pBasePlayer );
 	virtual void Event_PlayerDisconnected( CBasePlayer *pBasePlayer );
 	virtual void Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDamageInfo &info );
 	virtual void Event_PlayerKilledOther( CBasePlayer *pAttacker, CBaseEntity *pVictim, const CTakeDamageInfo &info );
+	virtual void Event_PlayerSuicide( CBasePlayer* pPlayer ) {}
 	virtual void Event_Credits();
 	virtual void Event_Commentary();
 	virtual void Event_CrateSmashed();
@@ -207,7 +218,17 @@ public:
 	virtual void Event_PlayerEnteredGodMode( CBasePlayer *pBasePlayer );
 	virtual void Event_PlayerEnteredNoClip( CBasePlayer *pBasePlayer );
 	virtual void Event_DecrementPlayerEnteredNoClip( CBasePlayer *pBasePlayer );
-	virtual void Event_IncrementCountedStatistic( const Vector& vecAbsOrigin, char const *pchStatisticName, float flIncrementAmount );	
+	virtual void Event_IncrementCountedStatistic( const Vector& vecAbsOrigin, char const *pchStatisticName, float flIncrementAmount );
+
+    //=============================================================================
+    // HPE_BEGIN
+    // [dwenger] Functions necessary for cs-specific stats
+    //=============================================================================
+    virtual void Event_WindowShattered( CBasePlayer *pPlayer );
+    //=============================================================================
+    // HPE_END
+    //=============================================================================
+
 	//custom data to tack onto existing stats if you're not doing a complete overhaul
 	virtual void AppendCustomDataToSaveBuffer( CUtlBuffer &SaveBuffer ) { } //custom data you want thrown into the default save and upload path
 	virtual void LoadCustomDataFromBuffer( CUtlBuffer &LoadBuffer ) { }; //when loading the saved stats file, this will point to where you started saving data to the save buffer
@@ -330,8 +351,106 @@ inline void CBaseGameStats::LoadLump( CUtlBuffer &LoadBuffer, unsigned short iLu
 	LoadBuffer.Get( pData, iLumpCount * nSize );
 }
 
+#endif // GAME_DLL
+
+// Moving the extern out of the GAME_DLL block so that the client can access it
 extern CBaseGameStats *gamestats; //starts out pointing at a singleton of the class above, overriding this in any constructor should work for replacing it
 
-#endif // GAME_DLL
+//used to drive most of the game stat event handlers as well as track basic stats under the hood of CBaseGameStats
+class CBaseGameStats_Driver : public CAutoGameSystemPerFrame
+{
+public:
+	CBaseGameStats_Driver( void );
+
+	typedef CAutoGameSystemPerFrame BaseClass;
+
+	// IGameSystem overloads
+	virtual bool Init();
+	virtual void Shutdown();
+
+	// Level init, shutdown
+	virtual void LevelInitPreEntity();
+	virtual void LevelShutdownPreEntity();
+	virtual void LevelShutdownPreClearSteamAPIContext();
+	virtual void LevelShutdown();
+	// Called during game save
+	virtual void OnSave();
+	// Called during game restore, after the local player has connected and entities have been fully restored
+	virtual void OnRestore();
+
+	virtual void FrameUpdatePostEntityThink();
+
+	void PossibleMapChange( void );
+
+	void CollectData( StatSendType_t sendType );
+	void SendData();
+	void ResetData();
+	bool AddBaseDataForSend( KeyValues *pKV, StatSendType_t sendType );
+
+	StatsBufferRecord_t m_StatsBuffer[STATS_WINDOW_SIZE];
+	bool m_bBufferFull;
+	int m_nWriteIndex;
+	float m_flLastRealTime;
+	float m_flLastSampleTime;
+	float m_flTotalTimeInLevels;
+	int m_iNumLevels;
+	bool m_bDidVoiceChat;	// Did the player use voice chat at ALL this map?
+
+	template<class T> T AverageStat( T StatsBufferRecord_t::*field ) const
+	{
+		T sum = 0;
+		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
+			sum += m_StatsBuffer[i].*field;
+		return sum / STATS_WINDOW_SIZE;
+	}
+
+	template<class T> T MaxStat( T StatsBufferRecord_t::*field ) const
+	{
+		T maxsofar = -16000000;
+		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
+			maxsofar = MAX( maxsofar, m_StatsBuffer[i].*field );
+		return maxsofar;
+	}
+
+	template<class T> T MinStat( T StatsBufferRecord_t::*field ) const
+	{
+		T minsofar = 16000000;
+		for( int i = 0; i < STATS_WINDOW_SIZE; i++ )
+			minsofar = MIN( minsofar, m_StatsBuffer[i].*field );
+		return minsofar;
+	}
+
+	inline void AdvanceIndex( void )
+	{
+		m_nWriteIndex++;
+		if ( m_nWriteIndex == STATS_WINDOW_SIZE )
+		{
+			m_nWriteIndex = 0;
+			m_bBufferFull = true;
+		}
+	}
+
+	void UpdatePerfStats( void );
+
+	CUtlString		m_PrevMapName; //used to track "OnMapChange" events
+	int				m_iLoadedVersion;
+	char			m_szLoadedUserID[ 17 ];	// GUID
+
+	bool			m_bEnabled; //false if incapable of uploading or the user doesn't want to enable stat tracking
+	bool			m_bShuttingDown;
+	bool			m_bInLevel;
+	bool			m_bFirstLevel;
+	time_t			m_tLastUpload;
+
+	float			m_flLevelStartTime;
+
+	bool			m_bStationary;
+	float			m_flLastMovementTime;
+	CUserCmd		m_LastUserCmd;
+	bool			m_bGamePaused;
+	float			m_flPauseStartTime;
+
+	CGamestatsData	*m_pGamestatsData;
+};
 
 #endif // GAMESTATS_H

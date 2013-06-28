@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -26,12 +26,12 @@
 
 //-----------------------------------------------------------------------------
 
-#ifdef UTLMEMORY_TRACK
-#define UTLMEMORY_TRACK_ALLOC()		MemAlloc_RegisterAllocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
-#define UTLMEMORY_TRACK_FREE()		if ( !m_pMemory ) ; else MemAlloc_RegisterDeallocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
+#ifdef UTBLOCKLMEMORY_TRACK
+#define UTLBLOCKMEMORY_TRACK_ALLOC()		MemAlloc_RegisterAllocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
+#define UTLBLOCKMEMORY_TRACK_FREE()		if ( !m_pMemory ) ; else MemAlloc_RegisterDeallocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
 #else
-#define UTLMEMORY_TRACK_ALLOC()		((void)0)
-#define UTLMEMORY_TRACK_FREE()		((void)0)
+#define UTLBLOCKMEMORY_TRACK_ALLOC()		((void)0)
+#define UTLBLOCKMEMORY_TRACK_FREE()		((void)0)
 #endif
 
 
@@ -240,17 +240,17 @@ void CUtlBlockMemory<T,I>::Grow( int num )
 template< class T, class I >
 void CUtlBlockMemory<T,I>::ChangeSize( int nBlocks )
 {
-	UTLMEMORY_TRACK_FREE(); // this must stay before the recalculation of m_nBlocks, since it implicitly uses the old value
+	UTLBLOCKMEMORY_TRACK_FREE(); // this must stay before the recalculation of m_nBlocks, since it implicitly uses the old value
 
 	int nBlocksOld = m_nBlocks;
 	m_nBlocks = nBlocks;
 
-	UTLMEMORY_TRACK_ALLOC(); // this must stay after the recalculation of m_nBlocks, since it implicitly uses the new value
+	UTLBLOCKMEMORY_TRACK_ALLOC(); // this must stay after the recalculation of m_nBlocks, since it implicitly uses the new value
 
 	// free old blocks if shrinking
 	for ( int i = m_nBlocks; i < nBlocksOld; ++i )
 	{
-		UTLMEMORY_TRACK_FREE();
+		UTLBLOCKMEMORY_TRACK_FREE();
 		free( (void*)m_pMemory[ i ] );
 	}
 
@@ -304,12 +304,12 @@ void CUtlBlockMemory<T,I>::Purge()
 
 	for ( int i = 0; i < m_nBlocks; ++i )
 	{
-		UTLMEMORY_TRACK_FREE();
+		UTLBLOCKMEMORY_TRACK_FREE();
 		free( (void*)m_pMemory[ i ] );
 	}
 	m_nBlocks = 0;
 
-	UTLMEMORY_TRACK_FREE();
+	UTLBLOCKMEMORY_TRACK_FREE();
 	free( (void*)m_pMemory );
 	m_pMemory = 0;
 }

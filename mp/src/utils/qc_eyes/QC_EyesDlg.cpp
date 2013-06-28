@@ -1,3 +1,4 @@
+//========= Copyright Valve Corporation, All rights reserved. ============//
 // QC_EyesDlg.cpp : implementation file
 //
 
@@ -71,6 +72,7 @@ void CQC_EyesDlg::AddText( const char *pFormat, ... )
 	va_list marker;
 	va_start( marker, pFormat );
 	_vsnprintf( tempMsg, sizeof( tempMsg ), pFormat, marker );
+	tempMsg[ ARRAYSIZE(tempMsg) - 1 ] = 0;
 	va_end( marker );
 
 	size_t nCharsInBuf = strlen( m_Buf );
@@ -507,6 +509,7 @@ void CQC_EyesDlg::SetupBitmapLabel( UINT iBitmapResourceID, const char *pString,
 	va_list marker;
 	va_start( marker, pString );
 	_vsnprintf( msg, sizeof( msg ), pString, marker );
+	msg[ ARRAYSIZE(msg) - 1 ] = 0;
 	va_end( marker );
 
 	m_PictureControl.SetBitmap( GetCachedBitmap( iBitmapResourceID ) );

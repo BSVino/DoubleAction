@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -42,7 +42,7 @@ public:
 	int		m_nPVSSize;		// PVS size in bytes
 
 	CBitVec<MAX_EDICTS>	*m_pTransmitEdict;	// entity n is already marked for transmission
-	CBitVec<MAX_EDICTS>	*m_pTransmitAlways; // entity n is always send even if not in PVS (HLTV only)
+	CBitVec<MAX_EDICTS>	*m_pTransmitAlways; // entity n is always sent even if not in PVS (HLTV and Replay only)
 	
 	int 	m_AreasNetworked; // number of networked areas 
 	int		m_Areas[MAX_WORLD_AREAS]; // the areas

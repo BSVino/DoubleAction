@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -603,7 +603,7 @@ void CNPC_CraneDriver::DriveVehicle( void )
 	// Start slowing if we're going to hit the point soon
 	float flTurnInDeg = RAD2DEG( acos(flDotForward) );
 	float flSpeed = m_hCrane->GetMaxTurnRate() * (flTurnInDeg / 15.0);
-	flSpeed = min( m_hCrane->GetMaxTurnRate(), flSpeed );
+	flSpeed = MIN( m_hCrane->GetMaxTurnRate(), flSpeed );
 	if ( fabs(flSpeed) < 0.05 )
 	{
 		// We're approaching the target, so stop turning

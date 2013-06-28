@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,7 +16,7 @@
 #include "c_baseanimatingoverlay.h"
 #include "sceneentity_shared.h"
 
-#include "UtlVector.h"
+#include "utlvector.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Item in list of loaded scene files
@@ -37,10 +37,93 @@ public:
 struct Emphasized_Phoneme;
 class CSentence;
 
+enum
+{
+	PHONEME_CLASS_WEAK = 0,
+	PHONEME_CLASS_NORMAL,
+	PHONEME_CLASS_STRONG,
+
+	NUM_PHONEME_CLASSES
+};
+
+// Mapping for each loaded scene file used by this actor
+struct FS_LocalToGlobal_t
+{
+	explicit FS_LocalToGlobal_t() :
+	m_Key( 0 ),
+		m_nCount( 0 ),
+		m_Mapping( 0 )
+	{
+	}
+
+	explicit FS_LocalToGlobal_t( const flexsettinghdr_t *key ) :
+	m_Key( key ),
+		m_nCount( 0 ),
+		m_Mapping( 0 )
+	{
+	}		
+
+	void SetCount( int count )
+	{
+		Assert( !m_Mapping );
+		Assert( count > 0 );
+		m_nCount = count;
+		m_Mapping = new int[ m_nCount ];
+		Q_memset( m_Mapping, 0, m_nCount * sizeof( int ) );
+	}
+
+	FS_LocalToGlobal_t( const FS_LocalToGlobal_t& src )
+	{
+		m_Key = src.m_Key;
+		delete m_Mapping;
+		m_Mapping = new int[ src.m_nCount ];
+		Q_memcpy( m_Mapping, src.m_Mapping, src.m_nCount * sizeof( int ) );
+
+		m_nCount = src.m_nCount;
+	}
+
+	~FS_LocalToGlobal_t()
+	{
+		delete m_Mapping;
+		m_nCount = 0;
+		m_Mapping = 0;
+	}
+
+	const flexsettinghdr_t	*m_Key;
+	int						m_nCount;
+	int						*m_Mapping;	
+};
+
+bool FlexSettingLessFunc( const FS_LocalToGlobal_t& lhs, const FS_LocalToGlobal_t& rhs );
+
+class IHasLocalToGlobalFlexSettings
+{
+public:
+	virtual void		EnsureTranslations( const flexsettinghdr_t *pSettinghdr ) = 0;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class C_BaseFlex : public C_BaseAnimatingOverlay
+struct Emphasized_Phoneme
+{
+	// Global fields, setup at start
+	char			classname[ 64 ];
+	bool			required;
+	// Global fields setup first time tracks played
+	bool			basechecked;
+	const flexsettinghdr_t *base;
+	const flexsetting_t *exp;
+
+	// Local fields, processed for each sentence
+	bool			valid;
+	float			amount;
+};
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+class C_BaseFlex : public C_BaseAnimatingOverlay, public IHasLocalToGlobalFlexSettings
 {
 	DECLARE_CLASS( C_BaseFlex, C_BaseAnimatingOverlay );
 public:
@@ -64,10 +147,14 @@ public:
 	virtual void OnThreadedDrawSetup();
 
 	// model specific
+	static void		LinkToGlobalFlexControllers( CStudioHdr *hdr );
 	virtual	void	SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
+	virtual	bool	SetupGlobalWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
+	static void		RunFlexDelay( int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights, float &flFlexDelayTime );
+	virtual	void	SetupLocalWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
 	virtual bool	UsesFlexDelayedWeights();
 
-	virtual void	RunFlexRules( CStudioHdr *pStudioHdr, float *dest );
+	static	void	RunFlexRules( CStudioHdr *pStudioHdr, float *dest );
 
 	virtual Vector	SetViewTarget( CStudioHdr *pStudioHdr );
 
@@ -93,7 +180,7 @@ public:
 
 	int				m_blinktoggle;
 
-	static int		AddGlobalFlexController( char *szName );
+	static int		AddGlobalFlexController( const char *szName );
 	static char const *GetGlobalFlexControllerName( int idx );
 
 	// bah, this should be unified with all prev/current stuff.
@@ -138,7 +225,9 @@ public:
 	virtual bool		CheckSceneEventCompletion( CSceneEventInfo *info, float currenttime, CChoreoScene *scene, CChoreoEvent *event );
 
 	int					FlexControllerLocalToGlobal( const flexsettinghdr_t *pSettinghdr, int key );
-	void				EnsureTranslations( const flexsettinghdr_t *pSettinghdr );
+
+	// IHasLocalToGlobalFlexSettings
+	virtual void		EnsureTranslations( const flexsettinghdr_t *pSettinghdr );
 
 	// For handling scene files
 	void				*FindSceneFile( const char *filename );
@@ -159,56 +248,6 @@ private:
 	bool				HasSceneEvents() const;
 
 private:
-// Mapping for each loaded scene file used by this actor
-	struct FS_LocalToGlobal_t
-	{
-		explicit FS_LocalToGlobal_t() :
-			m_Key( 0 ),
-			m_nCount( 0 ),
-			m_Mapping( 0 )
-		{
-		}
-
-		explicit FS_LocalToGlobal_t( const flexsettinghdr_t *key ) :
-			m_Key( key ),
-			m_nCount( 0 ),
-			m_Mapping( 0 )
-		{
-		}		
-
-		void SetCount( int count )
-		{
-			Assert( !m_Mapping );
-			Assert( count > 0 );
-			m_nCount = count;
-			m_Mapping = new int[ m_nCount ];
-			Q_memset( m_Mapping, 0, m_nCount * sizeof( int ) );
-		}
-
-		FS_LocalToGlobal_t( const FS_LocalToGlobal_t& src )
-		{
-			m_Key = src.m_Key;
-			delete m_Mapping;
-			m_Mapping = new int[ src.m_nCount ];
-			Q_memcpy( m_Mapping, src.m_Mapping, src.m_nCount * sizeof( int ) );
-
-			m_nCount = src.m_nCount;
-		}
-
-		~FS_LocalToGlobal_t()
-		{
-			delete m_Mapping;
-			m_nCount = 0;
-			m_Mapping = 0;
-		}
-
-		const flexsettinghdr_t	*m_Key;
-		int						m_nCount;
-		int						*m_Mapping;	
-	};
-
-	static bool FlexSettingLessFunc( const FS_LocalToGlobal_t& lhs, const FS_LocalToGlobal_t& rhs );
-	
 	CUtlRBTree< FS_LocalToGlobal_t, unsigned short > m_LocalToGlobal;
 
 	float			m_blinktime;
@@ -220,7 +259,9 @@ private:
 	bool			m_bSearchedForEyeFlexes;
 	int				m_iMouthAttachment;
 
+	float			m_flFlexDelayTime;
 	float			*m_flFlexDelayedWeight;
+	int				m_cFlexDelayedWeight;
 
 	// shared flex controllers
 	static int		g_numflexcontrollers;
@@ -228,33 +269,6 @@ private:
 	static float	g_flexweight[MAXSTUDIOFLEXDESC];
 
 protected:
-
-	enum
-	{
-		PHONEME_CLASS_WEAK = 0,
-		PHONEME_CLASS_NORMAL,
-		PHONEME_CLASS_STRONG,
-
-		NUM_PHONEME_CLASSES
-	};
-
-	//-----------------------------------------------------------------------------
-	// Purpose: 
-	//-----------------------------------------------------------------------------
-	struct Emphasized_Phoneme
-	{
-		// Global fields, setup at start
-		char			classname[ 64 ];
-		bool			required;
-		// Global fields setup first time tracks played
-		bool			basechecked;
-		const flexsettinghdr_t *base;
-		const flexsetting_t *exp;
-
-		// Local fields, processed for each sentence
-		bool			valid;
-		float			amount;
-	};
 
 	Emphasized_Phoneme m_PhonemeClasses[ NUM_PHONEME_CLASSES ];
 
@@ -282,6 +296,30 @@ public:
 
 
 //-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+class CFlexSceneFileManager : CAutoGameSystem
+{
+public:
+
+	CFlexSceneFileManager() : CAutoGameSystem( "CFlexSceneFileManager" )
+	{
+	}
+
+	virtual bool Init();
+	virtual void Shutdown();
+
+	void EnsureTranslations( IHasLocalToGlobalFlexSettings *instance, const flexsettinghdr_t *pSettinghdr );
+	void *FindSceneFile( IHasLocalToGlobalFlexSettings *instance, const char *filename, bool allowBlockingIO );
+
+private:
+	void DeleteSceneFiles();
+
+	CUtlVector< CFlexSceneFile * > m_FileList;
+};
+
+
+//-----------------------------------------------------------------------------
 // Do we have active expressions?
 //-----------------------------------------------------------------------------
 inline bool C_BaseFlex::HasSceneEvents() const
@@ -293,6 +331,7 @@ inline bool C_BaseFlex::HasSceneEvents() const
 EXTERN_RECV_TABLE(DT_BaseFlex);
 
 float *GetVisemeWeights( int phoneme );
+
 
 #endif // C_STUDIOFLEX_H
 
