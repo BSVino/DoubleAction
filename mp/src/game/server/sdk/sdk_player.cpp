@@ -2352,7 +2352,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		HandleCommand_JoinTeam( TEAM_SPECTATOR );
 		return true;
 	}
-	else if ( FStrEq( pcmd, "showmapinfo" ) )
+	else if ( FStrEq( pcmd, "mapinfo" ) )
 	{
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_WELCOME )
@@ -3001,7 +3001,7 @@ void CSDKPlayer::State_Enter_WELCOME()
 		data->SetString( "title", title );		// info panel title
 		data->SetString( "type", "1" );			// show userdata from stringtable entry
 		data->SetString( "msg",	"motd" );		// use this stringtable entry
-		data->SetString( "cmd", "showmapinfo" );// exec this command if panel closed
+		data->SetInt( "cmd", TEXTWINDOW_CMD_MAPINFO );// exec this command if panel closed
 
 		ShowViewPortPanel( PANEL_INFO, true, data );
 
