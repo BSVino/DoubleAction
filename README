@@ -6,20 +6,21 @@ Follow development of this project here: http://forums.doubleactiongame.com/view
 
 How to build it:
 
-1. You need Visual Studio 2010 Express. You also need Git. TortoiseGit will do. You then need to download the Source SDK Base 2007 from Steam.
+1. You need Visual Studio 2010 Express. You also need Git. TortoiseGit will do. You then need to download the Source SDK Base 2013 from Steam.
 2. Use TortoiseGit to download the source to your hard drive.
-3. Make sure that you have the latest testing build installed in \source\steamapps\sourcemods\actionboogaloo
+3. Make sure that you have the latest testing build installed in \Dropbox\ActionBoogaloo\dab
 4. Open the project file.
 5. Right click on "Client SDK" and tell it "Set startup project". This specifies which project in your solution that Visual Studio will try to run when you hit F5. 
 6. Right click "Client SDK" and go to properties. Then go to "Debugging" Set "Configuration" (at the top) to "Debug" Set the following variables:
 
-Command: C:\Steam\steamapps\yourusername\source sdk base 2007\hl2.exe
-Command arguments: -allowdebug -dev -sw -game "C:\Steam\SteamApps\SourceMods\actionboogaloo"
-Working directory: C:\Steam\steamapps\yourusername\source sdk base 2007
+Command: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer\hl2.exe
+Command arguments: -allowdebug -dev -sw -game "D:\Dropbox\ActionBoogaloo\dab"
+Working directory: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer
 
-You may need to modify these to point to your Steam directory.
-7. Verify that the "Custom build step" also points to your correct Steam directory.
-8. Right click on "Solution" in the Solution explorer and choose "Configuration Manager" and set that to "Debug"
+You may need to modify these to point to the proper directories.
+
+7. Verify that the "Build Events" > "Post-Build Event" also points to your correct Steam directory.
+8. In the top of the screen there's a dropdown next to the green "run" arrow that lets you choose the build configuration. Make sure it's set to "Debug"
 9. Press F7 to build it. This takes a while.
 10. Press F5 to run it.
 

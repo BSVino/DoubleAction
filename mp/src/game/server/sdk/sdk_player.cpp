@@ -1014,6 +1014,8 @@ void CSDKPlayer::Spawn()
 		}
 	}
 
+	MDLCACHE_CRITICAL_SECTION();
+
 	if (STRING(m_iszCharacter.Get())[0])
 		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else

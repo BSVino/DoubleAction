@@ -122,12 +122,12 @@
       <OutputFile>$(OutDir)/server.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Message>Publishing to ..\..\..\game\mod_hl2mp\bin</Message>
-      <Command>if not exist "..\..\..\game\mod_hl2mp\bin" mkdir "..\..\..\game\mod_hl2mp\bin"
-copy "$(TargetDir)"$(TargetFileName) "..\..\..\game\mod_hl2mp\bin\$(TargetFileName)"
+      <Message>Publishing to \Dropbox\ActionBoogaloo\dab\debug_bin</Message>
+      <Command>if not exist "\Dropbox\ActionBoogaloo\dab\debug_bin" mkdir "\Dropbox\ActionBoogaloo\dab\debug_bin"
+copy "$(TargetDir)"$(TargetFileName) "\Dropbox\ActionBoogaloo\dab\debug_bin\$(TargetFileName)"
 if ERRORLEVEL 1 goto BuildEventFailed
-if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map ..\..\..\game\mod_hl2mp\bin\$(TargetName).map
-copy "$(TargetDir)"$(TargetName).pdb ..\..\..\game\mod_hl2mp\bin\$(TargetName).pdb
+if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map \Dropbox\ActionBoogaloo\dab\debug_bin\$(TargetName).map
+copy "$(TargetDir)"$(TargetName).pdb \Dropbox\ActionBoogaloo\dab\debug_bin\$(TargetName).pdb
 if ERRORLEVEL 1 goto BuildEventFailed
 goto BuildEventOK
 :BuildEventFailed

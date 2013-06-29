@@ -8,6 +8,7 @@
 #include "usermessages.h"
 #include "shake.h"
 #include "voice_gamemgr.h"
+#include "haptics/haptic_msgs.h"
 
 void RegisterUserMessages()
 {
@@ -15,6 +16,7 @@ void RegisterUserMessages()
 	usermessages->Register( "Train", 1 );		// train control data
 	usermessages->Register( "HudText", -1 );	
 	usermessages->Register( "SayText", -1 );	
+	usermessages->Register( "SayText2", -1 );	
 	usermessages->Register( "TextMsg", -1 );
 	usermessages->Register( "HudMsg", -1 );
 	usermessages->Register( "ResetHUD", 1 );	// called every respawn
@@ -24,6 +26,7 @@ void RegisterUserMessages()
 	usermessages->Register( "Shake", 13 );		// shake view
 	usermessages->Register( "Fade", 10 );	// fade HUD in/out
 	usermessages->Register( "VGUIMenu", -1 );	// Show VGUI menu
+	usermessages->Register( "Rumble", 3 );	// Send a rumble to a controller
 	usermessages->Register( "CloseCaption", -1 ); // Show a caption (by string id number)(duration in 10th of a second)
 
 	usermessages->Register( "SendAudio", -1 );	// play radion command
@@ -49,5 +52,10 @@ void RegisterUserMessages()
 	usermessages->Register( "StyleAnnouncement", 9 );
 	usermessages->Register( "Notice", 4 );
 	usermessages->Register( "LessonLearned", -1 );
+
+#ifndef _X360
+	// NVNT register haptic user messages
+	RegisterHapticMessages();
+#endif
 }
 
