@@ -1075,6 +1075,8 @@ void CVisibleShadowList::EnumShadow( unsigned short clientShadowHandle )
 
 	IClientRenderable *pRenderable = ClientEntityList().GetClientRenderableFromHandle( shadow.m_Entity );
 	Assert( pRenderable );
+	if (!pRenderable)
+		return;
 
 	// Don't bother with children of hierarchy; they will be drawn with their parents
 	if ( s_ClientShadowMgr.ShouldUseParentShadow( pRenderable ) || s_ClientShadowMgr.WillParentRenderBlobbyShadow( pRenderable ) )
