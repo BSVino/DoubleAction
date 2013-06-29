@@ -9,6 +9,7 @@
 #include "input.h"
 #include "sdk_in_main.h"
 #include "tier0/vprof.h"
+#include "cam_thirdperson.h"
 
 #include "c_sdk_player.h"
 
@@ -106,7 +107,7 @@ void CSDKInput::CAM_Think( void )
 	
 	// Move the CameraOffset "towards" the idealAngles
 	// Note: CameraOffset = viewangle + idealAngle
-	CAM_GetCameraOffset( camOffset );
+	camOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 
 	camOffset[ YAW ] = viewangles[ YAW ];
 	camOffset[ PITCH ] = viewangles[ PITCH ];

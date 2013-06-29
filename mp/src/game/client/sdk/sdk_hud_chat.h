@@ -22,9 +22,9 @@ public:
 
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 
-	void			PerformFadeout( void );
-
 	void			MsgFunc_SayText(bf_read &msg);
+
+
 
 private:
 	CHudChatLine( const CHudChatLine & ); // not defined, not accessible
@@ -57,12 +57,9 @@ public:
 	virtual void	Reset( void );
 	virtual void	ApplySchemeSettings(vgui::IScheme *pScheme);
 
-	void			MsgFunc_SayText( bf_read &msg );
-	void			MsgFunc_TextMsg( bf_read &msg );
-	
-	void			ChatPrintf( int iPlayerIndex, PRINTF_FORMAT_STRING const char *fmt, ... );
-
 	int				GetChatInputOffset( void );
+
+	virtual Color	GetClientColor( int clientIndex );
 };
 
 #endif	//SDK_HUD_CHAT_H

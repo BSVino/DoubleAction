@@ -62,8 +62,8 @@
     <ClCompile>
       <AdditionalOptions> /MP</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;hl2mp\ui;.\hl2mp;..\..\game\shared\hl2mp;.\hl2;.\hl2\elements;..\..\game\shared\hl2</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;..\..\game\shared\sdk;.\sdk;.\sdk\vgui</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -152,8 +152,8 @@ exit 1
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;hl2mp\ui;.\hl2mp;..\..\game\shared\hl2mp;.\hl2;.\hl2\elements;..\..\game\shared\hl2</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;HL2MP;HL2_CLIENT_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;..\..\game\shared\sdk;.\sdk;.\sdk\vgui</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -848,13 +848,13 @@ exit 1
     <ClInclude Include="toolframework_client.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
-    <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_shareddefs.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp" />
@@ -875,6 +875,7 @@ exit 1
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
+    <ClCompile Include="hud_basedeathnotice.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="replay\cdll_replay.cpp" />
     <ClCompile Include="replay\replaycamera.cpp" />
@@ -1259,6 +1260,17 @@ exit 1
     <ClCompile Include="sdk\sdk_in_main.cpp" />
     <ClCompile Include="sdk\sdk_prediction.cpp" />
     <ClCompile Include="sdk\sdk_scoreboard.cpp" />
+    <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
+    <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />
+    <ClCompile Include="sdk\vgui\dab_skillmenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_instructor.cpp" />
+    <ClCompile Include="sdk\vgui\folder_gui.cpp" />
+    <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
+    <ClCompile Include="sdk\vgui\sdk_mapinfo.cpp" />
+    <ClCompile Include="sdk\vgui\sdk_spectatorgui.cpp" />
+    <ClCompile Include="sdk\vgui\sdk_teammenu.cpp" />
+    <ClCompile Include="sdk\vgui\sdk_textwindow.cpp" />
+    <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

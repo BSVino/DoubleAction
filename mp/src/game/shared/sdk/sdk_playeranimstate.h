@@ -12,7 +12,7 @@
 
 
 #include "convar.h"
-#include "multiplayer_animstate.h"
+#include "Multiplayer/multiplayer_animstate.h"
 
 #if defined( CLIENT_DLL )
 class C_SDKPlayer;

@@ -21,7 +21,7 @@
 
 class CProjectedLightEffect;
 
-class C_SDKPlayer : public C_BasePlayer, public ISDKPlayerAnimStateHelpers
+class C_SDKPlayer : public C_BasePlayer
 {
 public:
 	class CLessonProgress
@@ -114,10 +114,6 @@ public:
 public:
 	SDKPlayerState State_Get() const;
 	
-	// ISDKPlayerAnimState overrides.
-	virtual CWeaponSDKBase* SDKAnim_GetActiveWeapon();
-	virtual bool SDKAnim_CanMove();
-
 	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 	virtual bool ShouldDraw();
 

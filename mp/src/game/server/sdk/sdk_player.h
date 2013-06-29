@@ -28,6 +28,8 @@ public:
 	void (CSDKPlayer::*pfnPreThink)();	// Do a PreThink() in this state.
 };
 
+FORCEINLINE void NetworkVarConstruct( CArmament &x ) { x = CArmament(); }
+
 extern ConVar bot_mimic;
 
 //=============================================================================
@@ -101,7 +103,7 @@ public:
 	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo );
 	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
 	virtual void Event_Killed( const CTakeDamageInfo &info );
-	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
+	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	virtual void        OnDamagedByExplosion( const CTakeDamageInfo &info );
 
@@ -263,8 +265,6 @@ public:
 #endif // SDK_USE_SPRINTING
 	// Returns true if the player is allowed to attack.
 	bool CanAttack( void );
-
-	virtual int GetPlayerStance();
 
 	// Called whenever this player fires a shot.
 	void NoteWeaponFired();

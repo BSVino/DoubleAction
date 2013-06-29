@@ -21,8 +21,9 @@
 #include "in_buttons.h"
 #include "vprof.h"
 #include "engine/IEngineSound.h"
-#include "weapon_akimbobase.h"
+#include "datacache/imdlcache.h"
 
+#include "weapon_akimbobase.h"
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
 #include "igamemovement.h"
@@ -190,6 +191,14 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
 	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 END_SEND_TABLE()
+
+void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
+{
+	pRecipients->SetAllRecipients();
+	pRecipients->ClearRecipient( objectID - 1 );
+	return ( void * )pVarData;
+}
+REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
 
 
 // main table
@@ -1315,7 +1324,7 @@ void CSDKPlayer::OnDive()
 	m_bDamagedEnemyDuringDive = false;
 }
 
-void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
+void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	Vector vecToDamagePoint = ptr->endpos - GetAbsOrigin();
 	float flDistance = vecToDamagePoint.Length2D();
@@ -1329,7 +1338,7 @@ void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &ve
 
 	//Tony; disable prediction filtering, and call the baseclass.
 	CDisablePredictionFiltering disabler;
-	BaseClass::TraceAttack( inputInfo, vecDir, ptr );
+	BaseClass::TraceAttack( inputInfo, vecDir, ptr, pAccumulator );
 }
 
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -3330,23 +3339,6 @@ void CSDKPlayer::State_PreThink_ACTIVE()
 
 		SwitchToNextBestWeapon( NULL );
 	}
-}
-
-int CSDKPlayer::GetPlayerStance()
-{
-#if defined ( SDK_USE_PRONE )
-	if (m_Shared.IsProne() || ( m_Shared.IsGoingProne() || m_Shared.IsGettingUpFromProne() ))
-		return PINFO_STANCE_PRONE;
-#endif
-
-#if defined ( SDK_USE_SPRINTING )
-	if (IsSprinting())
-		return PINFO_STANCE_SPRINTING;
-#endif
-	if (m_Local.m_bDucking)
-		return PINFO_STANCE_DUCKING;
-	else
-		return PINFO_STANCE_STANDING;
 }
 
 void CSDKPlayer::NoteWeaponFired( void )

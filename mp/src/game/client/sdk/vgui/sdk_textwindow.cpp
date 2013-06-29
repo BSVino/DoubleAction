@@ -18,7 +18,6 @@
 #include <FileSystem.h>
 #include <convar.h>
 
-#include "sdk_backgroundpanel.h"
 #include "folder_gui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

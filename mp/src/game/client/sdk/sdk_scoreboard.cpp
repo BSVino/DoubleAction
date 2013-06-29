@@ -11,7 +11,6 @@
 #include "sdk_scoreboard.h"
 #include "c_sdk_player_resource.h"
 #include "sdk_gamerules.h"
-#include "sdk_backgroundpanel.h"
 #include "folder_gui.h"
 #include "c_sdk_player.h"
 

@@ -43,16 +43,16 @@
     <Filter Include="Tool Framework">
       <UniqueIdentifier>{C8FC1989-2499-2137-2EEA-17663813D98F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DA">
+    <Filter Include="DA">
       <UniqueIdentifier>{36a12d82-b983-4a9c-8fdf-6c46d2e5db09}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DA\Weapons">
+    <Filter Include="DA\Weapons">
       <UniqueIdentifier>{1065ac30-8e01-4b7c-96ac-3a8ceb2188b4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DA\UI">
+    <Filter Include="DA\UI">
       <UniqueIdentifier>{1eb435a4-ef6f-4c8d-a3c1-d2f8232f0e03}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\DA\Player">
+    <Filter Include="DA\Player">
       <UniqueIdentifier>{8860a5bf-7ec9-4ada-81ea-38da70feabf3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -3161,157 +3161,193 @@
       <Filter>Tool Framework</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_in_main.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_prediction.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_sdk_env_sparkler.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_sdk_team.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_te_firebullets.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\clientmode_sdk.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\projectedlighteffect.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_fx_impacts.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_fx_weaponfx.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp">
-      <Filter>Source Files\DA</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_shareddefs.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp">
-      <Filter>Source Files\DA</Filter>
+      <Filter>DA</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_weapon_melee.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_crowbar.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_ammo.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_weaponselection.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_chat.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_damage.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_health.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_message.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_notices.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_slowmo.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_stylebar.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_targetid.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="sdk\hud_sdkdeathnotice.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp">
-      <Filter>Source Files\DA\Player</Filter>
+      <Filter>DA\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp">
-      <Filter>Source Files\DA\Player</Filter>
+      <Filter>DA\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp">
-      <Filter>Source Files\DA\Player</Filter>
+      <Filter>DA\Player</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_sdk_player_resource.cpp">
-      <Filter>Source Files\DA\Player</Filter>
+      <Filter>DA\Player</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_sdk_player.cpp">
-      <Filter>Source Files\DA\Player</Filter>
+      <Filter>DA\Player</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
-      <Filter>Source Files\DA\Weapons</Filter>
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
     <ClCompile Include="sdk\da_hud_crosshair.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_scoreboard.cpp">
-      <Filter>Source Files\DA\UI</Filter>
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp">
+      <Filter>DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\da_instructor.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\dab_buymenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\dab_charactermenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\dab_skillmenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\folder_gui.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\sdk_mapinfo.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\sdk_spectatorgui.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\sdk_teammenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\sdk_textwindow.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\sdkviewport.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="hud_basedeathnotice.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -31,6 +31,8 @@
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
 #include "in_buttons.h"
+#include "cam_thirdperson.h"
+#include "headtrack/isourcevirtualreality.h"
 
 #include "dab_buymenu.h"
 #include "sdk_teammenu.h"
@@ -1043,9 +1045,25 @@ bool C_SDKPlayer::CanShowSkillMenu( void )
 	return ( GetTeamNumber() != TEAM_SPECTATOR );
 }
 
-bool C_BasePlayer::ShouldDrawLocalPlayer()
+/*static*/ bool C_BasePlayer::ShouldDrawLocalPlayer()
 {
-	return C_SDKPlayer::GetLocalSDKPlayer()->IsInThirdPerson() || ( ToolsEnabled() && ToolFramework_IsThirdPersonCamera() );
+	if ( UseVR() )
+	{
+		static ConVarRef vr_first_person_uses_world_model( "vr_first_person_uses_world_model" );
+		return !LocalPlayerInFirstPersonView() || vr_first_person_uses_world_model.GetBool();
+	}
+	else
+	{
+		if (C_SDKPlayer::GetLocalSDKPlayer()->IsInThirdPerson())
+			return true;
+		
+		if (ToolsEnabled() && ToolFramework_IsThirdPersonCamera())
+			return true;
+
+		static ConVarRef cl_first_person_uses_world_model( "cl_first_person_uses_world_model" );
+
+		return !LocalPlayerInFirstPersonView() || cl_first_person_uses_world_model.GetBool();
+	}
 }
 
 ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "15.0" );
@@ -1487,8 +1505,7 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 {
 	if (C_SDKPlayer::GetLocalSDKPlayer() == this && IsInThirdPerson())
 	{
-		Vector vecOffset;
-		::input->CAM_GetCameraOffset( vecOffset );
+		Vector vecOffset = g_ThirdPersonManager.GetCameraOffsetAngles();
 
 		QAngle angCamera;
 		angCamera[ PITCH ] = vecOffset[ PITCH ];

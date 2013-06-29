@@ -100,13 +100,13 @@ public:
 	void SetUnSlideEyeOffset( float flFraction );
 	void SetRollEyeOffset( float flFraction );
 
-	virtual const Vector&	GetPlayerMins( void ) const; // uses local player
-	virtual const Vector&	GetPlayerMaxs( void ) const; // uses local player
+	virtual Vector	GetPlayerMins( void ) const; // uses local player
+	virtual Vector	GetPlayerMaxs( void ) const; // uses local player
 
 	// IGameMovement interface
-	virtual const Vector&	GetPlayerMins( bool ducked ) const { return BaseClass::GetPlayerMins(ducked); }
-	virtual const Vector&	GetPlayerMaxs( bool ducked ) const { return BaseClass::GetPlayerMaxs(ducked); }
-	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const;
+	virtual Vector	GetPlayerMins( bool ducked ) const { return BaseClass::GetPlayerMins(ducked); }
+	virtual Vector	GetPlayerMaxs( bool ducked ) const { return BaseClass::GetPlayerMaxs(ducked); }
+	virtual Vector	GetPlayerViewOffset( bool ducked ) const;
 
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );
 
@@ -444,7 +444,7 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	if (player->pl.deadflag)
 		return;
 	
-	if (player->m_flWaterJumpTime)
+	if (player->GetWaterJumpTime())
 		return;
 
 	wishspd = wishspeed;
@@ -2283,7 +2283,7 @@ unsigned int CSDKGameMovement::PlayerSolidMask( bool brushOnly )
 // Input  : 
 // Output : const Vector
 //-----------------------------------------------------------------------------
-const Vector& CSDKGameMovement::GetPlayerMins( void ) const
+Vector CSDKGameMovement::GetPlayerMins( void ) const
 {
 	if ( !player )
 	{
@@ -2323,7 +2323,7 @@ const Vector& CSDKGameMovement::GetPlayerMins( void ) const
 // Input  : 
 // Output : const Vector
 //-----------------------------------------------------------------------------
-const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
+Vector CSDKGameMovement::GetPlayerMaxs( void ) const
 {	
 	if ( !player )
 	{
@@ -2357,10 +2357,11 @@ const Vector& CSDKGameMovement::GetPlayerMaxs( void ) const
 	}
 }
 
-const Vector& CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
+Vector CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 {
 	return BaseClass::GetPlayerViewOffset(ducked);
 }
+
 inline void
 CSDKGameMovement::TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
 {
@@ -2554,7 +2555,7 @@ void CSDKGameMovement::FullWalkMove ()
 			m_pSDKPlayer->m_Shared.kongtime = 0;
 		}
 	}
-	if (player->m_flWaterJumpTime)
+	if (player->GetWaterJumpTime())
 	{// If we are leaping out of the water, just update the counters.
 		WaterJump();
 		TryPlayerMove();
@@ -2567,9 +2568,9 @@ void CSDKGameMovement::FullWalkMove ()
 		{
 			CheckWaterJump();
 		}
-		if (mv->m_vecVelocity[2] < 0 && player->m_flWaterJumpTime)
+		if (mv->m_vecVelocity[2] < 0 && player->GetWaterJumpTime())
 		{//If we are falling again, then we must not be trying to jump out of water any more.
-			player->m_flWaterJumpTime = 0;
+			player->SetWaterJumpTime(0);
 		}
 		if (mv->m_nButtons & IN_JUMP)
 		{

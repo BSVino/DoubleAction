@@ -31,8 +31,6 @@
 
 #include "basemodelpanel.h"
 
-#include "sdk_backgroundpanel.h"
-
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
 #include "c_sdk_team.h"

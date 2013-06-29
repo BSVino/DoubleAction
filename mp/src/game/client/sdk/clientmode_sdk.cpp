@@ -32,6 +32,7 @@
 #include "weapon_sdkbase.h"
 #include "c_sdk_player.h"
 #include "c_weapon__stubs.h"		//Tony; add stubs
+#include "cam_thirdperson.h"
 #include "sdk_in_main.h"
 
 class CHudChat;
@@ -44,14 +45,6 @@ IClientMode *g_pClientMode = NULL;
 STUB_WEAPON_CLASS( cycler_weapon,   WeaponCycler,   C_BaseCombatWeapon );
 STUB_WEAPON_CLASS( weapon_cubemap,  WeaponCubemap,  C_BaseCombatWeapon );
 
-//-----------------------------------------------------------------------------
-// HACK: the detail sway convars are archive, and default to 0.  Existing CS:S players thus have no detail
-// prop sway.  We'll force them to DoD's default values for now.  What we really need in the long run is
-// a system to apply changes to archived convars' defaults to existing players.
-extern ConVar cl_detail_max_sway;
-extern ConVar cl_detail_avoid_radius;
-extern ConVar cl_detail_avoid_force;
-extern ConVar cl_detail_avoid_recover_speed;
 // --------------------------------------------------------------------------------- //
 // CSDKModeManager.
 // --------------------------------------------------------------------------------- //
@@ -85,6 +78,12 @@ void CSDKModeManager::Init()
 void CSDKModeManager::LevelInit( const char *newmap )
 {
 	g_pClientMode->LevelInit( newmap );
+
+	ConVarRef cl_detail_max_sway("cl_detail_max_sway");
+	ConVarRef cl_detail_avoid_radius("cl_detail_avoid_radius");
+	ConVarRef cl_detail_avoid_force("cl_detail_avoid_force");
+	ConVarRef cl_detail_avoid_recover_speed("cl_detail_avoid_recover_speed");
+
 	// HACK: the detail sway convars are archive, and default to 0.  Existing CS:S players thus have no detail
 	// prop sway.  We'll force them to DoD's default values for now.
 	if ( !cl_detail_max_sway.GetFloat() &&
@@ -177,9 +176,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 
 	if( ::input->CAM_IsThirdPerson() )
 	{
-		Vector cam_ofs;
-
-		::input->CAM_GetCameraOffset( cam_ofs );
+		Vector cam_ofs = g_ThirdPersonManager.GetCameraOffsetAngles();
 
 		camAngles[ PITCH ] = cam_ofs[ PITCH ];
 		camAngles[ YAW ] = cam_ofs[ YAW ];

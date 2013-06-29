@@ -11,6 +11,7 @@
 #include "weapon_sdkbase.h"
 #include "ammodef.h"
 #include "weapon_akimbobase.h"
+#include "datacache/imdlcache.h"
 
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"

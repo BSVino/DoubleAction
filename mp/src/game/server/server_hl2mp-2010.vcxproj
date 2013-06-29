@@ -60,8 +60,8 @@
     <ClCompile>
       <AdditionalOptions> /MP</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;..\..\game\shared\hl2;.\hl2;.\hl2mp;..\..\game\shared\hl2mp</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;HL2MP;HL2_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;.\sdk;..\..\game\shared\sdk;.\sdk\bot;..\shared\sdk\bot</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -149,8 +149,8 @@ exit 1
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;..\..\game\shared\hl2;.\hl2;.\hl2mp;..\..\game\shared\hl2mp</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;HL2MP;HL2_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;..\..\game\shared\sdk;.\sdk;.\sdk\bot</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -731,85 +731,6 @@ exit 1
     <ClInclude Include="..\..\game\shared\weapon_parse.h" />
     <ClInclude Include="..\..\game\shared\weapon_proficiency.h" />
     <ClInclude Include="world.h" />
-    <ClInclude Include="hl2\ai_behavior_actbusy.h" />
-    <ClInclude Include="hl2\ai_behavior_functank.h" />
-    <ClInclude Include="hl2\ai_behavior_holster.h" />
-    <ClInclude Include="hl2\ai_behavior_police.h" />
-    <ClInclude Include="hl2\ai_goal_police.h" />
-    <ClInclude Include="hl2\ai_interactions.h" />
-    <ClInclude Include="hl2\ai_spotlight.h" />
-    <ClInclude Include="hl2\antlion_dust.h" />
-    <ClInclude Include="hl2\antlion_maker.h" />
-    <ClInclude Include="hl2\ar2_explosion.h" />
-    <ClInclude Include="basebludgeonweapon.h" />
-    <ClInclude Include="hl2\basehlcombatweapon.h" />
-    <ClInclude Include="..\..\game\shared\hl2\basehlcombatweapon_shared.h" />
-    <ClInclude Include="hl2\cbasehelicopter.h" />
-    <ClInclude Include="hl2\cbasespriteprojectile.h" />
-    <ClInclude Include="..\..\game\shared\hl2\citadel_effects_shared.h" />
-    <ClInclude Include="hl2\combine_mine.h" />
-    <ClInclude Include="hl2\energy_wave.h" />
-    <ClInclude Include="..\..\game\shared\hl2\env_alyxemp_shared.h" />
-    <ClInclude Include="..\..\game\shared\hl2\env_headcrabcanister_shared.h" />
-    <ClInclude Include="hl2\func_tank.h" />
-    <ClInclude Include="hl2\grenade_ar2.h" />
-    <ClInclude Include="hl2\grenade_bugbait.h" />
-    <ClInclude Include="hl2\grenade_frag.h" />
-    <ClInclude Include="..\..\game\shared\hl2\hl2_gamerules.h" />
-    <ClInclude Include="hl2\hl2_player.h" />
-    <ClInclude Include="..\..\game\shared\hl2\hl2_player_shared.h" />
-    <ClInclude Include="hl2\hl2_playerlocaldata.h" />
-    <ClInclude Include="..\..\game\shared\hl2\hl2_shareddefs.h" />
-    <ClInclude Include="..\..\game\shared\hl2\hl_gamemovement.h" />
-    <ClInclude Include="..\..\game\shared\hl2\hl_movedata.h" />
-    <ClInclude Include="hl2\item_dynamic_resupply.h" />
-    <ClInclude Include="hl2\npc_alyx.h" />
-    <ClInclude Include="hl2\npc_antlion.h" />
-    <ClInclude Include="hl2\npc_attackchopper.h" />
-    <ClInclude Include="hl2\npc_barnacle.h" />
-    <ClInclude Include="hl2\npc_basescanner.h" />
-    <ClInclude Include="hl2\npc_BaseZombie.h" />
-    <ClInclude Include="hl2\npc_bullseye.h" />
-    <ClInclude Include="hl2\npc_citizen17.h" />
-    <ClInclude Include="hl2\npc_combine.h" />
-    <ClInclude Include="hl2\npc_combines.h" />
-    <ClInclude Include="hl2\npc_crow.h" />
-    <ClInclude Include="hl2\npc_headcrab.h" />
-    <ClInclude Include="hl2\npc_manhack.h" />
-    <ClInclude Include="hl2\npc_metropolice.h" />
-    <ClInclude Include="hl2\npc_playercompanion.h" />
-    <ClInclude Include="hl2\npc_rollermine.h" />
-    <ClInclude Include="hl2\npc_stalker.h" />
-    <ClInclude Include="hl2\npc_strider.h" />
-    <ClInclude Include="npc_talker.h" />
-    <ClInclude Include="hl2\npc_vortigaunt_episodic.h" />
-    <ClInclude Include="hl2\prop_combine_ball.h" />
-    <ClInclude Include="hl2\rotorwash.h" />
-    <ClInclude Include="hl2\script_intro.h" />
-    <ClInclude Include="hl2\vehicle_apc.h" />
-    <ClInclude Include="hl2\vehicle_crane.h" />
-    <ClInclude Include="hl2\weapon_alyxgun.h" />
-    <ClInclude Include="hl2\weapon_crowbar.h" />
-    <ClInclude Include="hl2\grenade_beam.h" />
-    <ClInclude Include="hl2\grenade_homer.h" />
-    <ClInclude Include="hl2\grenade_pathfollower.h" />
-    <ClInclude Include="hl2\weapon_flaregun.h" />
-    <ClInclude Include="hl2mp\hl2mp_bot_temp.h" />
-    <ClInclude Include="hl2mp\hl2mp_gameinterface.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_gamerules.h" />
-    <ClInclude Include="hl2mp\hl2mp_player.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_player_shared.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.h" />
-    <ClInclude Include="hl2mp\grenade_satchel.h" />
-    <ClInclude Include="hl2mp\grenade_tripmine.h" />
-    <ClInclude Include="hl2mp\te_hl2mp_shotgun_shot.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_ar2.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbase.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_physcannon.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_rpg.h" />
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_slam.h" />
     <ClInclude Include="plasma.h" />
     <ClInclude Include="smoke_trail.h" />
     <ClInclude Include="smokestack.h" />
@@ -820,13 +741,13 @@ exit 1
     <ClInclude Include="toolframework_server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
-    <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_shareddefs.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp" />
@@ -1215,32 +1136,6 @@ exit 1
     </ClCompile>
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
-    <ClCompile Include="sdk\bot\da_bot.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_chatter.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_event.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_event_player.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_event_weapon.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_init.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_listen.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_manager.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_nav.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_pathfind.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_radio.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_statemachine.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_update.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_vision.cpp" />
-    <ClCompile Include="sdk\bot\da_bot_weapon.cpp" />
-    <ClCompile Include="sdk\bot\da_gamestate.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_attack.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_buy.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_follow.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_hide.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_hunt.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_idle.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_investigate_noise.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_move_to.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp" />
-    <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp" />
     <ClCompile Include="sdk\da_ammo_pickup.cpp" />
     <ClCompile Include="sdk\da_powerup.cpp" />
     <ClCompile Include="sdk\da_spawngenerator.cpp" />
@@ -1344,143 +1239,6 @@ exit 1
     <ClCompile Include="..\..\game\shared\weapon_proficiency.cpp" />
     <ClCompile Include="weight_button.cpp" />
     <ClCompile Include="world.cpp" />
-    <ClCompile Include="hl2\ai_allymanager.cpp" />
-    <ClCompile Include="hl2\ai_behavior_actbusy.cpp" />
-    <ClCompile Include="hl2\ai_behavior_functank.cpp" />
-    <ClCompile Include="hl2\ai_behavior_holster.cpp" />
-    <ClCompile Include="hl2\ai_behavior_police.cpp" />
-    <ClCompile Include="hl2\ai_goal_police.cpp" />
-    <ClCompile Include="hl2\ai_spotlight.cpp" />
-    <ClCompile Include="hl2\antlion_dust.cpp" />
-    <ClCompile Include="hl2\antlion_maker.cpp" />
-    <ClCompile Include="hl2\ar2_explosion.cpp" />
-    <ClCompile Include="basebludgeonweapon.cpp" />
-    <ClCompile Include="hl2\basehlcombatweapon.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2\basehlcombatweapon_shared.cpp" />
-    <ClCompile Include="hl2\cbasehelicopter.cpp" />
-    <ClCompile Include="hl2\cbasespriteprojectile.cpp" />
-    <ClCompile Include="hl2\citadel_effects.cpp" />
-    <ClCompile Include="hl2\combine_mine.cpp" />
-    <ClCompile Include="hl2\env_alyxemp.cpp" />
-    <ClCompile Include="hl2\env_headcrabcanister.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2\env_headcrabcanister_shared.cpp" />
-    <ClCompile Include="hl2\env_speaker.cpp" />
-    <ClCompile Include="hl2\env_starfield.cpp" />
-    <ClCompile Include="hl2\func_recharge.cpp" />
-    <ClCompile Include="hl2\func_tank.cpp" />
-    <ClCompile Include="hl2\grenade_ar2.cpp" />
-    <ClCompile Include="hl2\grenade_bugbait.cpp" />
-    <ClCompile Include="hl2\grenade_frag.cpp" />
-    <ClCompile Include="hl2\hl2_ai_network.cpp" />
-    <ClCompile Include="hl2\hl2_eventlog.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2\hl2_gamerules.cpp" />
-    <ClCompile Include="hl2\hl2_player.cpp" />
-    <ClCompile Include="hl2\hl2_playerlocaldata.cpp" />
-    <ClCompile Include="hl2\hl2_triggers.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2\hl2_usermessages.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2\hl_gamemovement.cpp" />
-    <ClCompile Include="hl2\hl_playermove.cpp" />
-    <ClCompile Include="hl2\info_teleporter_countdown.cpp" />
-    <ClCompile Include="hl2\item_ammo.cpp" />
-    <ClCompile Include="hl2\item_battery.cpp" />
-    <ClCompile Include="hl2\item_dynamic_resupply.cpp" />
-    <ClCompile Include="hl2\item_healthkit.cpp" />
-    <ClCompile Include="hl2\item_itemcrate.cpp" />
-    <ClCompile Include="hl2\item_suit.cpp" />
-    <ClCompile Include="hl2\look_door.cpp" />
-    <ClCompile Include="hl2\monster_dummy.cpp" />
-    <ClCompile Include="hl2\npc_alyx.cpp" />
-    <ClCompile Include="hl2\npc_antlion.cpp" />
-    <ClCompile Include="hl2\npc_antlionguard.cpp" />
-    <ClCompile Include="hl2\npc_apcdriver.cpp" />
-    <ClCompile Include="hl2\npc_attackchopper.cpp" />
-    <ClCompile Include="hl2\npc_barnacle.cpp" />
-    <ClCompile Include="hl2\npc_barney.cpp" />
-    <ClCompile Include="hl2\npc_basescanner.cpp" />
-    <ClCompile Include="hl2\npc_BaseZombie.cpp" />
-    <ClCompile Include="hl2\npc_breen.cpp" />
-    <ClCompile Include="hl2\npc_bullseye.cpp" />
-    <ClCompile Include="hl2\npc_citizen17.cpp" />
-    <ClCompile Include="hl2\npc_combine.cpp" />
-    <ClCompile Include="hl2\npc_combinecamera.cpp" />
-    <ClCompile Include="hl2\npc_combinedropship.cpp" />
-    <ClCompile Include="hl2\npc_combinegunship.cpp" />
-    <ClCompile Include="hl2\npc_combines.cpp" />
-    <ClCompile Include="hl2\npc_cranedriver.cpp" />
-    <ClCompile Include="hl2\npc_crow.cpp" />
-    <ClCompile Include="hl2\npc_dog.cpp" />
-    <ClCompile Include="hl2\npc_eli.cpp" />
-    <ClCompile Include="hl2\npc_enemyfinder.cpp" />
-    <ClCompile Include="hl2\npc_fisherman.cpp" />
-    <ClCompile Include="hl2\npc_gman.cpp" />
-    <ClCompile Include="hl2\npc_headcrab.cpp" />
-    <ClCompile Include="hl2\npc_ichthyosaur.cpp" />
-    <ClCompile Include="hl2\npc_kleiner.cpp" />
-    <ClCompile Include="hl2\npc_launcher.cpp" />
-    <ClCompile Include="hl2\npc_manhack.cpp" />
-    <ClCompile Include="hl2\npc_metropolice.cpp" />
-    <ClCompile Include="hl2\npc_monk.cpp" />
-    <ClCompile Include="hl2\npc_mossman.cpp" />
-    <ClCompile Include="hl2\npc_playercompanion.cpp" />
-    <ClCompile Include="hl2\npc_PoisonZombie.cpp" />
-    <ClCompile Include="hl2\npc_rollermine.cpp" />
-    <ClCompile Include="hl2\npc_scanner.cpp" />
-    <ClCompile Include="hl2\npc_stalker.cpp" />
-    <ClCompile Include="hl2\npc_strider.cpp" />
-    <ClCompile Include="npc_talker.cpp" />
-    <ClCompile Include="hl2\npc_turret_ceiling.cpp" />
-    <ClCompile Include="hl2\npc_turret_floor.cpp" />
-    <ClCompile Include="hl2\npc_turret_ground.cpp" />
-    <ClCompile Include="hl2\npc_vortigaunt_episodic.cpp" />
-    <ClCompile Include="hl2\npc_zombie.cpp" />
-    <ClCompile Include="hl2\point_apc_controller.cpp" />
-    <ClCompile Include="hl2\prop_combine_ball.cpp" />
-    <ClCompile Include="hl2\prop_thumper.cpp" />
-    <ClCompile Include="hl2\proto_sniper.cpp" />
-    <ClCompile Include="hl2\rotorwash.cpp" />
-    <ClCompile Include="hl2\script_intro.cpp" />
-    <ClCompile Include="..\..\game\shared\script_intro_shared.cpp" />
-    <ClCompile Include="hl2\vehicle_airboat.cpp" />
-    <ClCompile Include="hl2\vehicle_crane.cpp" />
-    <ClCompile Include="hl2\vehicle_prisoner_pod.cpp" />
-    <ClCompile Include="hl2\vehicle_viewcontroller.cpp" />
-    <ClCompile Include="hl2\weapon_annabelle.cpp" />
-    <ClCompile Include="hl2\weapon_bugbait.cpp" />
-    <ClCompile Include="weapon_cubemap.cpp" />
-    <ClCompile Include="hl2\grenade_beam.cpp" />
-    <ClCompile Include="hl2\grenade_homer.cpp" />
-    <ClCompile Include="hl2\grenade_pathfollower.cpp" />
-    <ClCompile Include="hl2\npc_missiledefense.cpp" />
-    <ClCompile Include="hl2\vehicle_apc.cpp" />
-    <ClCompile Include="hl2\weapon_cguard.cpp" />
-    <ClCompile Include="hl2\weapon_flaregun.cpp" />
-    <ClCompile Include="hl2mp\hl2mp_bot_temp.cpp" />
-    <ClCompile Include="hl2mp\hl2mp_client.cpp" />
-    <ClCompile Include="hl2mp\hl2mp_cvars.cpp" />
-    <ClCompile Include="hl2mp\hl2mp_gameinterface.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_gamerules.cpp" />
-    <ClCompile Include="hl2mp\hl2mp_player.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_player_shared.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.cpp" />
-    <ClCompile Include="hl2mp\grenade_satchel.cpp" />
-    <ClCompile Include="hl2mp\grenade_tripmine.cpp" />
-    <ClCompile Include="hl2mp\te_hl2mp_shotgun_shot.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_357.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_ar2.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crossbow.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crowbar.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_frag.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbase.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_physcannon.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_pistol.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_rpg.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_shotgun.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_slam.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_smg1.cpp" />
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_stunstick.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

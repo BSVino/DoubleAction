@@ -97,7 +97,7 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_flCharacterEyePitch = 0;
 
 #if defined ( SDK_USE_PRONE )
-	m_iProneActivity = ACT_MP_STAND_TO_PRONE;
+	m_iProneActivity = ACT_DAB_STAND_IDLE;
 	m_bProneTransition = false;
 	m_bProneTransitionFirstFrame = false;
 #endif
@@ -735,7 +735,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bProneTransition = true;
 			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_STAND_TO_PRONE;
+			//m_iProneActivity = ACT_MP_STAND_TO_PRONE;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->prone so just idle.
 		}
@@ -744,7 +744,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bProneTransition = true;
 			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_CROUCH_TO_PRONE;
+			//m_iProneActivity = ACT_MP_CROUCH_TO_PRONE;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no crouch->prone so just idle.
 		}
@@ -762,7 +762,7 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		{
 			m_bProneTransition = true;
 			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_CROUCH;
+			//m_iProneActivity = ACT_MP_PRONE_TO_CROUCH;
 			RestartMainSequence();
 			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->crouch so just idle.
 		}
@@ -863,10 +863,10 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		CBaseCombatWeapon *pWeapon = GetSDKPlayer()->GetActiveWeapon();
 		if ( pWeapon )
 		{
-			pWeapon->EnsureCorrectRenderingModel();
+			//pWeapon->EnsureCorrectRenderingModel();
 			pWeapon->SendWeaponAnim( iGestureActivity );
 			// Force animation events!
-			pWeapon->ResetEventsParity();		// reset event parity so the animation events will occur on the weapon. 
+			//pWeapon->ResetEventsParity();		// reset event parity so the animation events will occur on the weapon. 
 			pWeapon->DoAnimationEvents( pWeapon->GetModelPtr() );
 		}
 	}

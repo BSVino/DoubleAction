@@ -18,7 +18,6 @@
 #include <FileSystem.h>
 #include <convar.h>
 
-#include "sdk_backgroundpanel.h"
 #include "folder_gui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -97,7 +96,7 @@ void CSDKMapInfo::Update( void )
 			Q_strncat( szLocalURL, szPathData, sizeof( szLocalURL ), COPY_ALL_CHARACTERS );
 
 			m_pMapMessage->SetVisible( true );
-			m_pMapMessage->OpenURL( szLocalURL );
+			m_pMapMessage->OpenURL( szLocalURL, nullptr );
 
 			CFolderLabel* pMapName = dynamic_cast<CFolderLabel *>(FindChildByName("MapName"));
 			pMapName->SetText(szMapName);

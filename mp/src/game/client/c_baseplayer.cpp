@@ -1858,6 +1858,7 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	}
 }
 
+#ifndef SDK_DLL
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the local player should draw
 //-----------------------------------------------------------------------------
@@ -1873,6 +1874,7 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 		return !LocalPlayerInFirstPersonView() || vr_first_person_uses_world_model.GetBool();
 	}
 }
+#endif
 
 
 
