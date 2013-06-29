@@ -285,3 +285,4 @@ bool CBoneMergeCache::GetRootBone( matrix3x4_t &rootBone )
 	return true;
 }
 
+

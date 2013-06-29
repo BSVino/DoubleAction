@@ -1858,7 +1858,6 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	}
 }
 
-#ifndef SDK_DLL
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the local player should draw
 //-----------------------------------------------------------------------------
@@ -1924,7 +1923,6 @@ bool C_BasePlayer::ShouldDrawThisPlayer()
 	}
 	return false;
 }
-#endif
 
 
 
@@ -2079,6 +2077,7 @@ void C_BasePlayer::Simulate()
 	//Frame updates
 	if ( this == C_BasePlayer::GetLocalPlayer() )
 	{
+		//Update the flashlight
 		Flashlight();
 
 		// Update the player's fog data if necessary.

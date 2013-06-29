@@ -220,7 +220,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 	case TRACER_TYPE_DEFAULT:
 		{
 			pszSoundName = "Bullets.DefaultNearmiss";
-			//flWhizDist = 24;
+			flWhizDist = 24;
 
 			Ray_t bullet, listener;
 			bullet.Init( start, end );

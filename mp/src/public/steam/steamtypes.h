@@ -1,8 +1,7 @@
-//========= Copyright © 1996-2004, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
-// $NoKeywords: $
 //=============================================================================
 
 #ifndef STEAMTYPES_H
@@ -16,9 +15,20 @@
 typedef unsigned char uint8;
 #endif
 
+#if defined( __GNUC__ ) && !defined(POSIX)
+	#if __GNUC__ < 4
+		#error "Steamworks requires GCC 4.X (4.2 or 4.4 have been tested)"
+	#endif
+	#define POSIX 1
+#endif
 
 #if defined(__x86_64__) || defined(_WIN64)
 #define X64BITS
+#endif
+
+// Make sure VALVE_BIG_ENDIAN gets set on PS3, may already be set previously in Valve internal code.
+#if !defined(VALVE_BIG_ENDIAN) && defined(_PS3)
+#define VALVE_BIG_ENDIAN
 #endif
 
 typedef unsigned char uint8;
@@ -59,17 +69,68 @@ typedef unsigned int uintp;
 
 #endif // else _WIN32
 
-const int k_cubDigestSize = 20;							// CryptoPP::SHA::DIGESTSIZE
 const int k_cubSaltSize   = 8;
-
-typedef	uint8 SHADigest_t[ k_cubDigestSize ];
 typedef	uint8 Salt_t[ k_cubSaltSize ];
 
-typedef uint64 GID_t;		// globally unique identifier
+//-----------------------------------------------------------------------------
+// GID (GlobalID) stuff
+// This is a globally unique identifier.  It's guaranteed to be unique across all
+// racks and servers for as long as a given universe persists.
+//-----------------------------------------------------------------------------
+// NOTE: for GID parsing/rendering and other utils, see gid.h
+typedef uint64 GID_t;
+
+const GID_t k_GIDNil = 0xffffffffffffffffull;
+
+// For convenience, we define a number of types that are just new names for GIDs
+typedef GID_t JobID_t;			// Each Job has a unique ID
+typedef GID_t TxnID_t;			// Each financial transaction has a unique ID
+
+const GID_t k_TxnIDNil = k_GIDNil;
+const GID_t k_TxnIDUnknown = 0;
+
+
+// this is baked into client messages and interfaces as an int, 
+// make sure we never break this.
+typedef uint32 PackageId_t;
+const PackageId_t k_uPackageIdFreeSub = 0x0;
+const PackageId_t k_uPackageIdInvalid = 0xFFFFFFFF;
+
+
+// this is baked into client messages and interfaces as an int, 
+// make sure we never break this.
+typedef uint32 AppId_t;
+const AppId_t k_uAppIdInvalid = 0x0;
+
+typedef uint64 AssetClassId_t;
+const AssetClassId_t k_ulAssetClassIdInvalid = 0x0;
+
+typedef uint32 PhysicalItemId_t;
+const PhysicalItemId_t k_uPhysicalItemIdInvalid = 0x0;
+
+
+// this is baked into client messages and interfaces as an int, 
+// make sure we never break this.  AppIds and DepotIDs also presently
+// share the same namespace, but since we'd like to change that in the future
+// I've defined it seperately here.
+typedef uint32 DepotId_t;
+const DepotId_t k_uDepotIdInvalid = 0x0;
 
 // RTime32
 // We use this 32 bit time representing real world time.
 // It offers 1 second resolution beginning on January 1, 1970 (Unix time)
 typedef uint32 RTime32;
+
+typedef uint32 CellID_t;
+const CellID_t k_uCellIDInvalid = 0xFFFFFFFF;
+
+// handle to a Steam API call
+typedef uint64 SteamAPICall_t;
+const SteamAPICall_t k_uAPICallInvalid = 0x0;
+
+typedef uint32 AccountID_t;
+
+typedef uint32 PartnerId_t;
+const PartnerId_t k_uPartnerIdInvalid = 0;
 
 #endif // STEAMTYPES_H

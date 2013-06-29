@@ -175,7 +175,6 @@ bool C_BaseViewModel::Interpolate( float currentTime )
 	}
 
 	float dt = elapsed_time * GetSequenceCycleRate( pStudioHdr, GetSequence() ) * GetPlaybackRate();
-
 	if ( dt >= 1.0f )
 	{
 		if ( !IsSequenceLooping( GetSequence() ) )

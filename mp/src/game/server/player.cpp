@@ -1407,8 +1407,8 @@ int CBasePlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 // Input  : &info - 
 //			damageAmount - 
 //-----------------------------------------------------------------------------
-#define MIN_SHOCK_AND_CONFUSION_DAMAGE	75.0f
-#define MIN_EAR_RINGING_DISTANCE		180.0f  // 15 feet
+#define MIN_SHOCK_AND_CONFUSION_DAMAGE	30.0f
+#define MIN_EAR_RINGING_DISTANCE		240.0f  // 20 feet
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1433,7 +1433,7 @@ void CBasePlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 	if ( !shock && !ear_ringing )
 		return;
 
-	int effect = ear_ringing ? 
+	int effect = shock ? 
 		random->RandomInt( 35, 37 ) : 
 		random->RandomInt( 32, 34 );
 
@@ -4640,6 +4640,7 @@ void CBasePlayer::PostThinkVPhysics( void )
 		frametime = 0.1f;
 
 	IPhysicsObject *pPhysGround = GetGroundVPhysics();
+
 	if ( !pPhysGround && m_touchedPhysObject && g_pMoveData->m_outStepHeight <= 0.f && (GetFlags() & FL_ONGROUND) )
 	{
 		newPosition = m_oldOrigin + frametime * g_pMoveData->m_outWishVel;
@@ -4712,6 +4713,7 @@ void CBasePlayer::UpdateVPhysicsPosition( const Vector &position, const Vector &
 	{
 		pPhysGround = NULL;
 	}
+
 	m_pPhysicsController->Update( position, velocity, secondsToArrival, onground, pPhysGround );
 }
 
@@ -8000,7 +8002,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName )
 {
 	solid_t solid;
-	/*Any changes here must be reflected in CSDKPlayer::InitVCollision*/
 	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
 	solid.params = g_PhysDefaultObjectParams;
 	solid.params.mass = 85.0f;
@@ -8307,14 +8308,9 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 	if ( sv_turbophysics.GetBool() )
 		return;
 	
-<<<<<<< HEAD:mp/src/game/server/player.cpp
-	CPhysCollide *pModel = PhysCreateBbox( VEC_HULL_MIN, VEC_HULL_MAX );
-	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
-=======
 	CPhysCollide *pModel = PhysCreateBbox( VEC_HULL_MIN_SCALED( this ), VEC_HULL_MAX_SCALED( this ) );
 	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN_SCALED( this ), VEC_DUCK_HULL_MAX_SCALED( this ) );
 
->>>>>>> valve:mp/src/game/server/player.cpp
 	SetupVPhysicsShadow( vecAbsOrigin, vecAbsVelocity, pModel, "player_stand", pCrouchModel, "player_crouch" );
 }
 
@@ -8357,11 +8353,10 @@ void CBasePlayer::VPhysicsDestroyObject()
 void CBasePlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, int collisionState )
 {
 	m_vphysicsCollisionState = collisionState;
-	Vector test;
 	switch( collisionState )
 	{
 	case VPHYS_WALK:
- 		m_pShadowStand->SetPosition(vecAbsOrigin, vec3_angle, true );
+ 		m_pShadowStand->SetPosition( vecAbsOrigin, vec3_angle, true );
 		m_pShadowStand->SetVelocity( &vecAbsVelocity, NULL );
 		m_pShadowCrouch->EnableCollisions( false );
 		m_pPhysicsController->SetObject( m_pShadowStand );
