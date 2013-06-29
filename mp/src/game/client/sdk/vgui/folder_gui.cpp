@@ -365,8 +365,6 @@ void CPanelTexture::SetImage(const char* pszName)
 
 void CPanelTexture::PaintBackground()
 {
-	BaseClass::PaintBackground();
-
 	if (m_pImage)
 	{
 		int x, y;
