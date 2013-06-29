@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -923,7 +923,7 @@ void CAI_LeadBehavior::RunTask( const Task_t *pTask )
 					if ( distance > m_retrievedistance )
 					{
 						Activity followActivity = ACT_WALK;
-						if ( GetOuter()->GetState() == NPC_STATE_COMBAT || (!bWithinZ || distance < (m_retrievedistance*4)) && GetOuter()->GetState() != NPC_STATE_COMBAT ) 
+						if ( GetOuter()->GetState() == NPC_STATE_COMBAT || ( (!bWithinZ || distance < (m_retrievedistance*4)) && GetOuter()->GetState() != NPC_STATE_COMBAT ) )
 						{
 							followActivity = ACT_RUN;
 						}

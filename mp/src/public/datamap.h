@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -111,7 +111,12 @@ DECLARE_FIELD_SIZE( FIELD_TICK,			sizeof(int))
 DECLARE_FIELD_SIZE( FIELD_MODELNAME,	sizeof(int))
 DECLARE_FIELD_SIZE( FIELD_SOUNDNAME,	sizeof(int))
 DECLARE_FIELD_SIZE( FIELD_INPUT,		sizeof(int))
+#ifdef POSIX
+// pointer to members under gnuc are 8bytes if you have a virtual func
+DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(uint64))
+#else
 DECLARE_FIELD_SIZE( FIELD_FUNCTION,		sizeof(int *))
+#endif
 DECLARE_FIELD_SIZE( FIELD_VMATRIX,		16 * sizeof(float))
 DECLARE_FIELD_SIZE( FIELD_VMATRIX_WORLDSPACE,	16 * sizeof(float))
 DECLARE_FIELD_SIZE( FIELD_MATRIX3X4_WORLDSPACE,	12 * sizeof(float))
@@ -119,10 +124,6 @@ DECLARE_FIELD_SIZE( FIELD_INTERVAL,		2 * sizeof( float) )  // NOTE:  Must match 
 DECLARE_FIELD_SIZE( FIELD_MODELINDEX,	sizeof(int) )
 DECLARE_FIELD_SIZE( FIELD_MATERIALINDEX,	sizeof(int) )
 
-
-#if !defined(offsetof) || defined(_LINUX)
-#define offsetof(s,m)	(size_t)&(((s *)0)->m)
-#endif
 
 #define ARRAYSIZE2D(p)		(sizeof(p)/sizeof(p[0][0]))
 #define SIZE_OF_ARRAY(p)	_ARRAYSIZE(p)

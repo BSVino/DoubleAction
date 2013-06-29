@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -69,6 +69,8 @@ public:
 	void UpdateOnRemove();
 	void MoveDone();
 
+	virtual int OnTakeDamage( const CTakeDamageInfo &info );
+
 	void Blocked( CBaseEntity *pOther );
 	bool KeyValue( const char *szKeyName, const char *szValue );
 
@@ -94,6 +96,7 @@ public:
 	void SetDirForward( bool bForward );
 	void SetSpeed( float flSpeed, bool bAccel = false );
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
+	void SetSpeedDirAccel( float flNewSpeed );
 	
 	// Input handlers
 	void InputSetSpeed( inputdata_t &inputdata );
@@ -106,8 +109,17 @@ public:
 	void InputStartBackward( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );
 	void InputSetSpeedDirAccel( inputdata_t &inputdata );
+	void InputTeleportToPathTrack( inputdata_t &inputdata );
+	void InputSetSpeedForwardModifier( inputdata_t &inputdata );
 
 	static CFuncTrackTrain *Instance( edict_t *pent );
+
+#ifdef TF_DLL
+	int UpdateTransmitState()
+	{
+		return SetTransmitState( FL_EDICT_ALWAYS );
+	}
+#endif
 
 	DECLARE_DATADESC();
 
@@ -120,6 +132,10 @@ public:
 	float GetDesiredSpeed() const { return m_flDesiredSpeed;}
 
 	virtual bool IsBaseTrain( void ) const { return true; }
+
+	void SetSpeedForwardModifier( float flModifier );
+	void SetBlockDamage( float flDamage ) { m_flBlockDamage = flDamage; }
+	void SetDamageChild( bool bDamageChild ) { m_bDamageChild = bDamageChild; }
 
 private:
 
@@ -190,6 +206,11 @@ private:
 	bool		m_bAccelToSpeed;
 
 	float		m_flNextMPSoundTime;
+	
+	float		m_flSpeedForwardModifier;
+	float		m_flUnmodifiedDesiredSpeed;
+
+	bool		m_bDamageChild;
 };
 
 

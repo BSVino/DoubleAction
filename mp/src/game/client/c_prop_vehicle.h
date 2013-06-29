@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #define C_PROP_VEHICLE_H
 #pragma once
 
-#include "IClientVehicle.h"
+#include "iclientvehicle.h"
 #include "vehicle_viewblend_shared.h"
 class C_PropVehicleDriveable : public C_BaseAnimating, public IClientVehicle
 {
@@ -77,10 +77,15 @@ public:
 public:
 
 	bool	IsRunningEnterExitAnim( void ) { return m_bEnterAnimOn || m_bExitAnimOn; }
+	// NVNT added to check if the vehicle needs to aim
+	virtual bool HasGun(void){return m_bHasGun;}
 
 protected:
 
 	virtual void OnEnteredVehicle( C_BaseCombatCharacter *pPassenger );
+	// NVNT added to notify haptics system of vehicle exit.
+	virtual void OnExitedVehicle( C_BaseCombatCharacter *pPassenger );
+
 	virtual void RestrictView( float *pYawBounds, float *pPitchBounds, float *pRollBounds, QAngle &vecViewAngles );
 	virtual void SetVehicleFOV( float flFOV ) { m_flFOV = flFOV; }
 

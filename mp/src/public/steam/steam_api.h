@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,6 +17,16 @@
 #include "isteammatchmaking.h"
 #include "isteamuserstats.h"
 #include "isteamapps.h"
+#include "isteamnetworking.h"
+#include "isteamremotestorage.h"
+#include "isteamscreenshots.h"
+#include "isteamhttp.h"
+#include "isteamunifiedmessages.h"
+#include "isteamcontroller.h"
+
+#if defined( _PS3 )
+#include "steamps3params.h"
+#endif
 
 // Steam API export macro
 #if defined( _WIN32 ) && !defined( _X360 )
@@ -27,6 +37,12 @@
 	#else
 	#define S_API extern "C" __declspec( dllimport ) 
 	#endif // STEAM_API_EXPORTS
+#elif defined( GNUC )
+	#if defined( STEAM_API_EXPORTS )
+	#define S_API extern "C" __attribute__ ((visibility("default"))) 
+	#else
+	#define S_API extern "C" 
+	#endif // STEAM_API_EXPORTS
 #else // !WIN32
 	#if defined( STEAM_API_EXPORTS )
 	#define S_API extern "C"  
@@ -36,16 +52,32 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
-//	Steam API setup & teardown
+//	Steam API setup & shutdown
 //
 //	These functions manage loading, initializing and shutdown of the steamclient.dll
 //
-//  bugbug johnc: seperate defining these to defining game server interface more cleanly
-//
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 
+// S_API void SteamAPI_Init(); (see below)
 S_API void SteamAPI_Shutdown();
 
+// checks if a local Steam client is running 
+S_API bool SteamAPI_IsSteamRunning();
+
+// Detects if your executable was launched through the Steam client, and restarts your game through 
+// the client if necessary. The Steam client will be started if it is not running.
+//
+// Returns: true if your executable was NOT launched through the Steam client. This function will
+//          then start your application through the client. Your current process should exit.
+//
+//          false if your executable was started through the Steam client or a steam_appid.txt file
+//          is present in your game's directory (for development). Your current process should continue.
+//
+// NOTE: This function should be used only if you are using CEG or not using Steam's DRM. Once applied
+//       to your executable, Steam's DRM will handle restarting through Steam if necessary.
+S_API bool SteamAPI_RestartAppIfNecessary( uint32 unOwnAppID );
+
+// crash dump recording functions
 S_API void SteamAPI_WriteMiniDump( uint32 uStructuredExceptionCode, void* pvExceptionInfo, uint32 uBuildID );
 S_API void SteamAPI_SetMiniDumpComment( const char *pchMsg );
 
@@ -66,7 +98,12 @@ S_API ISteamClient *SteamClient();
 #ifdef VERSION_SAFE_STEAM_API_INTERFACES
 S_API bool SteamAPI_InitSafe();
 #else
+
+#if defined(_PS3)
+S_API bool SteamAPI_Init( SteamPS3Params_t *pParams );
+#else
 S_API bool SteamAPI_Init();
+#endif
 
 S_API ISteamUser *SteamUser();
 S_API ISteamFriends *SteamFriends();
@@ -74,16 +111,24 @@ S_API ISteamUtils *SteamUtils();
 S_API ISteamMatchmaking *SteamMatchmaking();
 S_API ISteamUserStats *SteamUserStats();
 S_API ISteamApps *SteamApps();
+S_API ISteamNetworking *SteamNetworking();
 S_API ISteamMatchmakingServers *SteamMatchmakingServers();
+S_API ISteamRemoteStorage *SteamRemoteStorage();
+S_API ISteamScreenshots *SteamScreenshots();
+S_API ISteamHTTP *SteamHTTP();
+S_API ISteamUnifiedMessages *SteamUnifiedMessages();
+#ifdef _PS3
+S_API ISteamPS3OverlayRender * SteamPS3OverlayRender();
+#endif
 #endif // VERSION_SAFE_STEAM_API_INTERFACES
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 //	steam callback helper functions
 //
-//	These following classes/macros are used to be able to easily multiplex callbacks 
+//	The following classes/macros are used to be able to easily multiplex callbacks 
 //	from the Steam API into various objects in the app in a thread-safe manner
 //
-//	This functors are triggered via the SteamAPI_RunCallbacks() function, mapping the callback
+//	These functors are triggered via the SteamAPI_RunCallbacks() function, mapping the callback
 //  to as many functions/objects as are registered to it
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
 
@@ -94,6 +139,10 @@ S_API void SteamAPI_RunCallbacks();
 // functions used by the utility CCallback objects to receive callbacks
 S_API void SteamAPI_RegisterCallback( class CCallbackBase *pCallback, int iCallback );
 S_API void SteamAPI_UnregisterCallback( class CCallbackBase *pCallback );
+// functions used by the utility CCallResult objects to receive async call results
+S_API void SteamAPI_RegisterCallResult( class CCallbackBase *pCallback, SteamAPICall_t hAPICall );
+S_API void SteamAPI_UnregisterCallResult( class CCallbackBase *pCallback, SteamAPICall_t hAPICall );
+
 
 //-----------------------------------------------------------------------------
 // Purpose: base for callbacks, 
@@ -102,17 +151,97 @@ S_API void SteamAPI_UnregisterCallback( class CCallbackBase *pCallback );
 class CCallbackBase
 {
 public:
-	CCallbackBase() { m_nCallbackFlags = 0; }
+	CCallbackBase() { m_nCallbackFlags = 0; m_iCallback = 0; }
 	// don't add a virtual destructor because we export this binary interface across dll's
 	virtual void Run( void *pvParam ) = 0;
+	virtual void Run( void *pvParam, bool bIOFailure, SteamAPICall_t hSteamAPICall ) = 0;
+	int GetICallback() { return m_iCallback; }
+	virtual int GetCallbackSizeBytes() = 0;
 
 protected:
 	enum { k_ECallbackFlagsRegistered = 0x01, k_ECallbackFlagsGameServer = 0x02 };
 	uint8 m_nCallbackFlags;
-private:
 	int m_iCallback;
 	friend class CCallbackMgr;
 };
+
+
+//-----------------------------------------------------------------------------
+// Purpose: maps a steam async call result to a class member function
+//			template params: T = local class, P = parameter struct
+//-----------------------------------------------------------------------------
+template< class T, class P >
+class CCallResult : private CCallbackBase
+{
+public:
+	typedef void (T::*func_t)( P*, bool );
+
+	CCallResult()
+	{
+		m_hAPICall = k_uAPICallInvalid;
+		m_pObj = NULL;
+		m_Func = NULL;
+		m_iCallback = P::k_iCallback;
+	}
+
+	void Set( SteamAPICall_t hAPICall, T *p, func_t func )
+	{
+		if ( m_hAPICall )
+			SteamAPI_UnregisterCallResult( this, m_hAPICall );
+
+		m_hAPICall = hAPICall;
+		m_pObj = p;
+		m_Func = func;
+
+		if ( hAPICall )
+			SteamAPI_RegisterCallResult( this, hAPICall );
+	}
+
+	bool IsActive() const
+	{
+		return ( m_hAPICall != k_uAPICallInvalid );
+	}
+
+	void Cancel()
+	{
+		if ( m_hAPICall != k_uAPICallInvalid )
+		{
+			SteamAPI_UnregisterCallResult( this, m_hAPICall );
+			m_hAPICall = k_uAPICallInvalid;
+		}
+		
+	}
+
+	~CCallResult()
+	{
+		Cancel();
+	}
+
+	void SetGameserverFlag() { m_nCallbackFlags |= k_ECallbackFlagsGameServer; }
+private:
+	virtual void Run( void *pvParam )
+	{
+		m_hAPICall = k_uAPICallInvalid; // caller unregisters for us
+		(m_pObj->*m_Func)( (P *)pvParam, false );		
+	}
+	void Run( void *pvParam, bool bIOFailure, SteamAPICall_t hSteamAPICall )
+	{
+		if ( hSteamAPICall == m_hAPICall )
+		{
+			m_hAPICall = k_uAPICallInvalid; // caller unregisters for us
+			(m_pObj->*m_Func)( (P *)pvParam, bIOFailure );			
+		}
+	}
+	int GetCallbackSizeBytes()
+	{
+		return sizeof( P );
+	}
+
+	SteamAPICall_t m_hAPICall;
+	T *m_pObj;
+	func_t m_Func;
+};
+
 
 
 //-----------------------------------------------------------------------------
@@ -120,7 +249,7 @@ private:
 //			template params: T = local class, P = parameter struct
 //-----------------------------------------------------------------------------
 template< class T, class P, bool bGameServer >
-class CCallback : private CCallbackBase
+class CCallback : protected CCallbackBase
 {
 public:
 	typedef void (T::*func_t)( P* );
@@ -128,47 +257,85 @@ public:
 	// If you can't support constructing a callback with the correct parameters
 	// then uncomment the empty constructor below and manually call
 	// ::Register() for your object
-	//CCallback() {}
+	// Or, just call the regular constructor with (NULL, NULL)
+	// CCallback() {}
 	
 	// constructor for initializing this object in owner's constructor
 	CCallback( T *pObj, func_t func ) : m_pObj( pObj ), m_Func( func )
 	{
-		if ( bGameServer )
-		{
-			m_nCallbackFlags |= k_ECallbackFlagsGameServer;
-		}
-
-		Register( pObj, func );
+		if ( pObj && func )
+			Register( pObj, func );
 	}
 
 	~CCallback()
 	{
-		SteamAPI_UnregisterCallback( this );
+		if ( m_nCallbackFlags & k_ECallbackFlagsRegistered )
+			Unregister();
 	}
 
 	// manual registration of the callback
 	void Register( T *pObj, func_t func )
 	{
+		if ( !pObj || !func )
+			return;
+
+		if ( m_nCallbackFlags & k_ECallbackFlagsRegistered )
+			Unregister();
+
+		if ( bGameServer )
+		{
+			m_nCallbackFlags |= k_ECallbackFlagsGameServer;
+		}
 		m_pObj = pObj;
 		m_Func = func;
+		// SteamAPI_RegisterCallback sets k_ECallbackFlagsRegistered
 		SteamAPI_RegisterCallback( this, P::k_iCallback );
 	}
 
-private:
+	void Unregister()
+	{
+		// SteamAPI_UnregisterCallback removes k_ECallbackFlagsRegistered
+		SteamAPI_UnregisterCallback( this );
+	}
+
+	void SetGameserverFlag() { m_nCallbackFlags |= k_ECallbackFlagsGameServer; }
+protected:
 	virtual void Run( void *pvParam )
 	{
 		(m_pObj->*m_Func)( (P *)pvParam );
+	}
+	virtual void Run( void *pvParam, bool, SteamAPICall_t )
+	{
+		(m_pObj->*m_Func)( (P *)pvParam );
+	}
+	int GetCallbackSizeBytes()
+	{
+		return sizeof( P );
 	}
 
 	T *m_pObj;
 	func_t m_Func;
 };
 
+// Allows you to defer registration of the callback
+template< class T, class P, bool bGameServer >
+class CCallbackManual : public CCallback< T, P, bGameServer >
+{
+public:
+	CCallbackManual() : CCallback< T, P, bGameServer >( NULL, NULL ) {}
+};
 
 // utility macro for declaring the function and callback object together
 #define STEAM_CALLBACK( thisclass, func, param, var ) CCallback< thisclass, param, false > var; void func( param *pParam )
 
+// same as above, but lets you defer the callback binding by calling Register later
+#define STEAM_CALLBACK_MANUAL( thisclass, func, param, var ) CCallbackManual< thisclass, param, false > var; void func( param *pParam )
 
+
+#ifdef _WIN32
+// disable this warning; this pattern need for steam callback registration
+#pragma warning( disable: 4355 )	// 'this' : used in base member initializer list
+#endif
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -189,6 +356,15 @@ S_API HSteamUser Steam_GetHSteamUserCurrent();
 // returns the filename path of the current running Steam process, used if you need to load an explicit steam dll by name
 S_API const char *SteamAPI_GetSteamInstallPath();
 
+// returns the pipe we are communicating to Steam with
+S_API HSteamPipe SteamAPI_GetHSteamPipe();
+
+// sets whether or not Steam_RunCallbacks() should do a try {} catch (...) {} around calls to issuing callbacks
+S_API void SteamAPI_SetTryCatchCallbacks( bool bTryCatchCallbacks );
+
+// backwards compat export, passes through to SteamAPI_ variants
+S_API HSteamPipe GetHSteamPipe();
+S_API HSteamUser GetHSteamUser();
 
 #ifdef VERSION_SAFE_STEAM_API_INTERFACES
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
@@ -198,10 +374,8 @@ S_API const char *SteamAPI_GetSteamInstallPath();
 // It's important that these stay inlined in the header so the calling module specifies the interface versions
 // for whatever Steam API version it has.
 //----------------------------------------------------------------------------------------------------------------------------------------------------------//
-#if defined( _WIN32 ) && !defined( _X360 )
-	S_API HSteamPipe GetHSteamPipe();
-	S_API HSteamUser GetHSteamUser();
-#endif
+
+S_API HSteamUser SteamAPI_GetHSteamUser();
 
 class CSteamAPIContext
 {
@@ -218,6 +392,14 @@ public:
 	ISteamUserStats*	SteamUserStats()					{ return m_pSteamUserStats; }
 	ISteamApps*			SteamApps()							{ return m_pSteamApps; }
 	ISteamMatchmakingServers*	SteamMatchmakingServers()	{ return m_pSteamMatchmakingServers; }
+	ISteamNetworking*	SteamNetworking()					{ return m_pSteamNetworking; }
+	ISteamRemoteStorage* SteamRemoteStorage()				{ return m_pSteamRemoteStorage; }
+	ISteamScreenshots*	SteamScreenshots()					{ return m_pSteamScreenshots; }
+	ISteamHTTP*			SteamHTTP()							{ return m_pSteamHTTP; }
+	ISteamUnifiedMessages*	SteamUnifiedMessages()			{ return m_pSteamUnifiedMessages; }
+#ifdef _PS3
+	ISteamPS3OverlayRender* SteamPS3OverlayRender()		{ return m_pSteamPS3OverlayRender; }
+#endif
 
 private:
 	ISteamUser		*m_pSteamUser;
@@ -227,6 +409,15 @@ private:
 	ISteamUserStats		*m_pSteamUserStats;
 	ISteamApps			*m_pSteamApps;
 	ISteamMatchmakingServers	*m_pSteamMatchmakingServers;
+	ISteamNetworking	*m_pSteamNetworking;
+	ISteamRemoteStorage *m_pSteamRemoteStorage;
+	ISteamScreenshots	*m_pSteamScreenshots;
+	ISteamHTTP			*m_pSteamHTTP;
+	ISteamUnifiedMessages*m_pSteamUnifiedMessages;
+	ISteamController	*m_pController;
+#ifdef _PS3
+	ISteamPS3OverlayRender *m_pSteamPS3OverlayRender;
+#endif
 };
 
 inline CSteamAPIContext::CSteamAPIContext()
@@ -243,18 +434,24 @@ inline void CSteamAPIContext::Clear()
 	m_pSteamUserStats = NULL;
 	m_pSteamApps = NULL;
 	m_pSteamMatchmakingServers = NULL;
+	m_pSteamNetworking = NULL;
+	m_pSteamRemoteStorage = NULL;
+	m_pSteamHTTP = NULL;
+	m_pSteamScreenshots = NULL;
+	m_pSteamUnifiedMessages = NULL;
+#ifdef _PS3
+	m_pSteamPS3OverlayRender = NULL;
+#endif
 }
 
 // This function must be inlined so the module using steam_api.dll gets the version names they want.
 inline bool CSteamAPIContext::Init()
 {
-#if defined( _WIN32 ) && !defined( _X360 )
-
 	if ( !SteamClient() )
 		return false;
 
-	HSteamUser hSteamUser = GetHSteamUser();
-	HSteamPipe hSteamPipe = GetHSteamPipe();
+	HSteamUser hSteamUser = SteamAPI_GetHSteamUser();
+	HSteamPipe hSteamPipe = SteamAPI_GetHSteamPipe();
 
 	m_pSteamUser = SteamClient()->GetISteamUser( hSteamUser, hSteamPipe, STEAMUSER_INTERFACE_VERSION );
 	if ( !m_pSteamUser )
@@ -264,7 +461,7 @@ inline bool CSteamAPIContext::Init()
 	if ( !m_pSteamFriends )
 		return false;
 
-	m_pSteamUtils = SteamClient()->GetISteamUtils( hSteamUser, STEAMUTILS_INTERFACE_VERSION );
+	m_pSteamUtils = SteamClient()->GetISteamUtils( hSteamPipe, STEAMUTILS_INTERFACE_VERSION );
 	if ( !m_pSteamUtils )
 		return false;
 
@@ -284,12 +481,44 @@ inline bool CSteamAPIContext::Init()
 	if ( !m_pSteamApps )
 		return false;
 
-	return true;
-#else
-	return false;
+	m_pSteamNetworking = SteamClient()->GetISteamNetworking( hSteamUser, hSteamPipe, STEAMNETWORKING_INTERFACE_VERSION );
+	if ( !m_pSteamNetworking )
+		return false;
+
+	m_pSteamRemoteStorage = SteamClient()->GetISteamRemoteStorage( hSteamUser, hSteamPipe, STEAMREMOTESTORAGE_INTERFACE_VERSION );
+	if ( !m_pSteamRemoteStorage )
+		return false;
+
+	m_pSteamScreenshots = SteamClient()->GetISteamScreenshots( hSteamUser, hSteamPipe, STEAMSCREENSHOTS_INTERFACE_VERSION );
+	if ( !m_pSteamScreenshots )
+		return false;
+
+	m_pSteamHTTP = SteamClient()->GetISteamHTTP( hSteamUser, hSteamPipe, STEAMHTTP_INTERFACE_VERSION );
+	if ( !m_pSteamHTTP )
+		return false;
+
+	m_pSteamUnifiedMessages = SteamClient()->GetISteamUnifiedMessages( hSteamUser, hSteamPipe, STEAMUNIFIEDMESSAGES_INTERFACE_VERSION );
+	if ( !m_pSteamUnifiedMessages )
+		return false;
+
+#ifdef _PS3
+	m_pSteamPS3OverlayRender = SteamClient()->GetISteamPS3OverlayRender();
 #endif
+
+	return true;
 }
 
 #endif // VERSION_SAFE_STEAM_API_INTERFACES
+
+#if defined(USE_BREAKPAD_HANDLER) || defined(STEAM_API_EXPORTS)
+// this should be called before the game initialized the steam APIs
+// pchDate should be of the format "Mmm dd yyyy" (such as from the __DATE__ macro )
+// pchTime should be of the format "hh:mm:ss" (such as from the __TIME__ macro )
+// bFullMemoryDumps (Win32 only) -- writes out a uuid-full.dmp in the client/dumps folder
+// pvContext-- can be NULL, will be the void * context passed into m_pfnPreMinidumpCallback
+// PFNPreMinidumpCallback m_pfnPreMinidumpCallback   -- optional callback which occurs just before a .dmp file is written during a crash.  Applications can hook this to allow adding additional information into the .dmp comment stream.
+S_API void SteamAPI_UseBreakpadCrashHandler( char const *pchVersion, char const *pchDate, char const *pchTime, bool bFullMemoryDumps, void *pvContext, PFNPreMinidumpCallback m_pfnPreMinidumpCallback );
+S_API void SteamAPI_SetBreakpadAppID( uint32 unAppID );
+#endif
 
 #endif // STEAM_API_H

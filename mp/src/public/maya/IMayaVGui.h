@@ -15,6 +15,7 @@
 
 #include "tier0/platform.h"
 #include "appframework/iappsystem.h"
+#include "vgui_controls/Frame.h"
 
 
 //-----------------------------------------------------------------------------
@@ -25,6 +26,8 @@ namespace vgui
 	class EditablePanel;
 }
 
+class CVsVGuiWindowBase;
+
 
 //-----------------------------------------------------------------------------
 // Factory for creating vgui windows
@@ -34,6 +37,8 @@ abstract_class IMayaVguiWindowFactory
 public:
 	virtual void CreateVguiWindow( const char *pPanelName ) = 0; 
 	virtual void DestroyVguiWindow( const char *pPanelName ) = 0; 
+	virtual vgui::Frame *GetVGuiPanel( const char *pPanelName = NULL ) = 0;
+	virtual CVsVGuiWindowBase *GetVGuiWindow( const char *pPanelName = NULL ) = 0;
 };
 
 

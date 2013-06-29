@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,8 +14,8 @@
 
 
 #include <vgui_controls/EditablePanel.h>
-#include "C_BaseEntity.h"
-#include "PanelMetaClassMgr.h"
+#include "c_baseentity.h"
+#include "panelmetaclassmgr.h"
 
 class KeyValues;
 
@@ -48,7 +48,7 @@ public:
 	CVGuiScreenPanel( vgui::Panel *parent, const char *panelName, vgui::HScheme hScheme );
 	virtual bool Init( KeyValues* pKeyValues, VGuiScreenInitData_t* pInitData );
 	vgui::Panel *CreateControlByName(const char *controlName);
-	virtual void CVGuiScreenPanel::OnCommand( const char *command );
+	virtual void OnCommand( const char *command );
 
 protected:
 	C_BaseEntity *GetEntity() const { return m_hEntity.Get(); }

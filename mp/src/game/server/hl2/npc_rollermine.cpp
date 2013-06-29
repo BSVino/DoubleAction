@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -242,7 +242,7 @@ public:
 	}
 
 	int		OnTakeDamage( const CTakeDamageInfo &info );
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	Class_T	Classify() 
 	{ 
@@ -2814,7 +2814,7 @@ float CNPC_RollerMine::VehicleHeading( CBaseEntity *pVehicle )
 //			&vecDir - 
 //			*ptr - 
 //-----------------------------------------------------------------------------
-void CNPC_RollerMine::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_RollerMine::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	if ( info.GetDamageType() & (DMG_BULLET | DMG_CLUB) )
 	{
@@ -2830,11 +2830,11 @@ void CNPC_RollerMine::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 			newInfo.SetDamageForce( info.GetDamageForce() * 20 );
 		}
 
-		BaseClass::TraceAttack( newInfo, vecDir, ptr );
+		BaseClass::TraceAttack( newInfo, vecDir, ptr, pAccumulator );
 		return;
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------

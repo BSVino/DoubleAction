@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -63,4 +63,4 @@ private:
 	bool		m_bHeadlightIsOn;
 };
 
-#endif C_VEHICLE_JEEP_H
+#endif // C_VEHICLE_JEEP_H

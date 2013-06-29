@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -38,6 +38,7 @@ public:
 
 	// Public interface
 	virtual int			GetDecalIndexForName( char const *decalname );
+	virtual const char *GetDecalNameForIndex( int nIndex );
 	virtual char const *TranslateDecalForGameMaterial( char const *decalName, unsigned char gamematerial );
 
 private:
@@ -143,6 +144,19 @@ int CDecalEmitterSystem::GetDecalIndexForName( char const *decalname )
 	}
 
 	return m_AllDecals[ slot ].precache_index;
+}
+
+const char *CDecalEmitterSystem::GetDecalNameForIndex( int nIndex )
+{
+	for ( int nDecal = 0; nDecal < m_AllDecals.Count(); ++nDecal )
+	{
+		if ( m_AllDecals[ nDecal ].precache_index == nIndex )
+		{
+			return m_DecalFileNames.String( m_AllDecals[ nDecal ].name );
+		}
+	}
+
+	return "";
 }
 
 //-----------------------------------------------------------------------------

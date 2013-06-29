@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Allows you to browse a directory structure, showing perforce files
 //
@@ -13,7 +13,7 @@
 #endif
 
 
-#include "tier1\utlstring.h"
+#include "tier1/utlstring.h"
 #include "vgui_controls/Frame.h"
 
 

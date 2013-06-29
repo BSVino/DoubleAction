@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -44,6 +44,7 @@ qboolean GetExprToken (qboolean crossline);
 void UnGetToken (void);
 qboolean TokenAvailable (void);
 qboolean GetTokenizerStatus( char **pFilename, int *pLine );
+bool SetCheckSingleCharTokens( bool bCheck );
 
 // SCRIPT_LOADED_CALLBACK:
 //	Is called after the contents of a file is loaded.
@@ -59,6 +60,8 @@ SCRIPT_LOADED_CALLBACK SetScriptLoadedCallback( SCRIPT_LOADED_CALLBACK pfnNewScr
 
 #include "tier1/utlstring.h"
 #include "tier1/utlvector.h"
+
+CUtlString SetSingleCharTokenList( const char *pszSingleCharTokenList );
 
 class CUtlBuffer;
 

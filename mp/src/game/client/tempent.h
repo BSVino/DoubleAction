@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -50,6 +50,7 @@
 #define FTENT_ALIGNTOMOTION			0x04000000	// Change angles to always point in the direction of motion
 #define FTENT_CLIENTSIDEPARTICLES	0x08000000	// The object has a clientside particle system.
 #define FTENT_USEFASTCOLLISIONS		0x10000000	// Use fast collisions (cl_fasttempentcollision).
+#define FTENT_COLLIDEPROPS			0x20000000	// Collide with the world and props
 
 class C_LocalTempEntity;
 
@@ -65,7 +66,7 @@ public:
 
 	C_LocalTempEntity();
 
-	virtual void					Prepare( model_t *pmodel, float time );
+	virtual void					Prepare( const model_t *pmodel, float time );
 
 	virtual bool					IsActive( void );
 	virtual bool					Frame( float frametime, int framenumber );
@@ -85,7 +86,7 @@ public:
 	void							OnRemoveTempEntity();
 
 	void							SetImpactEffect( const char *pszImpactEffect ) { m_pszImpactEffect = pszImpactEffect; }
-	void							AddParticleEffect( const char *pszParticleEffect );
+	CNewParticleEffect*				AddParticleEffect( const char *pszParticleEffect );
 	void							SetParticleEffect( const char *pszParticleEffect ) { m_pszParticleEffect = pszParticleEffect; }
 
 protected:

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,15 +8,15 @@
 #include "cbase.h"
 #include "c_smoke_trail.h"
 #include "fx.h"
-#include "engine/IVDebugOverlay.h"
-#include "engine/ienginesound.h"
+#include "engine/ivdebugoverlay.h"
+#include "engine/IEngineSound.h"
 #include "c_te_effect_dispatch.h"
 #include "glow_overlay.h"
 #include "fx_explosion.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "toolframework_client.h"
 #include "view.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -323,7 +323,7 @@ void C_SmokeTrail::Update( float fTimeDelta )
 		VectorMA( pParticle->m_vecVelocity, flDirectedVel, vecForward, pParticle->m_vecVelocity );
 
 		offsetColor = m_StartColor;
-		float flMaxVal = max( m_StartColor[0], m_StartColor[1] );
+		float flMaxVal = MAX( m_StartColor[0], m_StartColor[1] );
 		if ( flMaxVal < m_StartColor[2] )
 		{
 			flMaxVal = m_StartColor[2];
@@ -445,10 +445,11 @@ void C_SmokeTrail::CleanupToolRecordingState( KeyValues *msg )
  		pRollSpeed->SetFloat( "maxRollSpeed", 1.0f );
 
 		KeyValues *pColor = pInitializers->FindKey( "DmeRandomValueColorInitializer", true );
-		Color c( 
-			clamp( m_StartColor.x * 255.0f, 0, 255 ),
-			clamp( m_StartColor.y * 255.0f, 0, 255 ),
-			clamp( m_StartColor.z * 255.0f, 0, 255 ), 255 );
+		Color c(
+			FastFToC( clamp( m_StartColor.x, 0.f, 1.f ) ),
+			FastFToC( clamp( m_StartColor.y, 0.f, 1.f ) ),
+			FastFToC( clamp( m_StartColor.z, 0.f, 1.f ) ),
+			255 );
 		pColor->SetColor( "startColor", c );
 		pColor->SetFloat( "minStartValueDelta", -0.2f );
  		pColor->SetFloat( "maxStartValueDelta", 0.2f );
@@ -1839,7 +1840,7 @@ void C_DustTrail::Update( float fTimeDelta )
 		VectorMA( pParticle->m_vecVelocity, flDirectedVel, vecForward, pParticle->m_vecVelocity );
 
 		offsetColor = m_Color;
-		float flMaxVal = max( m_Color[0], m_Color[1] );
+		float flMaxVal = MAX( m_Color[0], m_Color[1] );
 		if ( flMaxVal < m_Color[2] )
 		{
 			flMaxVal = m_Color[2];
@@ -1960,9 +1961,10 @@ void C_DustTrail::CleanupToolRecordingState( KeyValues *msg )
 
 		KeyValues *pColor = pInitializers->FindKey( "DmeRandomValueColorInitializer", true );
 		Color c( 
-			clamp( m_Color.x * 255.0f, 0, 255 ),
-			clamp( m_Color.y * 255.0f, 0, 255 ),
-			clamp( m_Color.z * 255.0f, 0, 255 ), 255 );
+			FastFToC( clamp( m_Color.x, 0.f, 1.f ) ),
+			FastFToC( clamp( m_Color.y, 0.f, 1.f ) ),
+			FastFToC( clamp( m_Color.z, 0.f, 1.f ) ),
+			255 );
 		pColor->SetColor( "startColor", c );
 		pColor->SetFloat( "minStartValueDelta", 0.0f );
  		pColor->SetFloat( "maxStartValueDelta", 0.0f );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implementation of entities that cause NPCs to participate in
 //			scripted events. These entities find and temporarily possess NPCs
@@ -728,7 +728,7 @@ void CAI_ScriptedSequence::StartScript( void )
 			m_bIsTeleportingDueToMoveTo = false;
 			pTarget->GetMotor()->SetIdealYaw( GetLocalAngles().y );
 			pTarget->SetLocalAngularVelocity( vec3_angle );
-			pTarget->AddEffects( EF_NOINTERP );
+			pTarget->IncrementInterpolationFrame();
 			QAngle angles = pTarget->GetLocalAngles();
 			angles.y = GetLocalAngles().y;
 			pTarget->SetLocalAngles( angles );
@@ -839,7 +839,7 @@ bool CAI_ScriptedSequence::StartSequence( CAI_BaseNPC *pTarget, string_t iszSeq,
 		// Show it
 		pTarget->RemoveEffects( EF_NODRAW );
 		// Don't blend...
-		pTarget->AddEffects( EF_NOINTERP );
+		pTarget->IncrementInterpolationFrame();
 	}
 	//DevMsg( 2, "%s (%s): started \"%s\":INT:%s\n", STRING( pTarget->m_iName ), pTarget->GetClassname(), STRING( iszSeq), (m_spawnflags & SF_SCRIPT_NOINTERRUPT) ? "No" : "Yes" );
 
@@ -865,7 +865,7 @@ void CAI_ScriptedSequence::SynchronizeSequence( CAI_BaseNPC *pNPC )
 
 	// Msg("%.2f \"%s\"  %s : %f (%f): interval %f\n", gpGlobals->curtime, GetEntityName().ToCStr(), pNPC->GetClassname(), pNPC->m_flAnimTime.Get(), m_startTime, flInterval );
 	//Assert( flInterval >= 0.0 && flInterval <= 0.15 );
-	flInterval = clamp( flInterval, 0, 0.15 );
+	flInterval = clamp( flInterval, 0.f, 0.15f );
 
 	if (flInterval == 0)
 		return;

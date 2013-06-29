@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2007, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 //	LZSS Codec. Designed for fast cheap gametime encoding/decoding. Compression results
 //	are	not aggresive as other alogrithms, but gets 2:1 on most arbitrary uncompressed data.
@@ -9,11 +9,8 @@
 #define _LZSS_H
 #pragma once
 
-#if !defined( _X360 )
-#define LZSS_ID				(('S'<<24)|('S'<<16)|('Z'<<8)|('L'))
-#else
-#define LZSS_ID				(('L'<<24)|('Z'<<16)|('S'<<8)|('S'))
-#endif
+#define LZSS_ID   uint32( BigLong( ('L'<<24)|('Z'<<16)|('S'<<8)|('S') ) )
+#define SNAPPY_ID uint32( BigLong( ('S'<<24)|('N'<<16)|('A'<<8)|('P') ) )
 
 // bind the buffer for correct identification
 struct lzss_header_t
@@ -29,13 +26,14 @@ class CUtlBuffer;
 class CLZSS
 {
 public:
-	unsigned char*	Compress( unsigned char *pInput, int inputlen, unsigned int *pOutputSize );
-	unsigned char*	CompressNoAlloc( unsigned char *pInput, int inputlen, unsigned char *pOutput, unsigned int *pOutputSize );
-	unsigned int	Uncompress( unsigned char *pInput, unsigned char *pOutput );
+	unsigned char*	Compress( const unsigned char *pInput, int inputlen, unsigned int *pOutputSize );
+	unsigned char*	CompressNoAlloc( const unsigned char *pInput, int inputlen, unsigned char *pOutput, unsigned int *pOutputSize );
+	unsigned int	Uncompress( const unsigned char *pInput, unsigned char *pOutput );
 	//unsigned int	Uncompress( unsigned char *pInput, CUtlBuffer &buf );
-	unsigned int	SafeUncompress( unsigned char *pInput, unsigned char *pOutput, unsigned int unBufSize );
-	bool			IsCompressed( unsigned char *pInput );
-	unsigned int	GetActualSize( unsigned char *pInput );
+	unsigned int	SafeUncompress( const unsigned char *pInput, unsigned char *pOutput, unsigned int unBufSize );
+
+	static bool			IsCompressed( const unsigned char *pInput );
+	static unsigned int	GetActualSize( const unsigned char *pInput );
 
 	// windowsize must be a power of two.
 	FORCEINLINE CLZSS( int nWindowSize = DEFAULT_LZSS_WINDOW_SIZE );
@@ -44,7 +42,7 @@ private:
 	// expected to be sixteen bytes
 	struct lzss_node_t
 	{
-		unsigned char	*pData;
+		const unsigned char	*pData;
 		lzss_node_t		*pPrev;
 		lzss_node_t		*pNext;
 		char			empty[4];
@@ -56,7 +54,7 @@ private:
 		lzss_node_t *pEnd;
 	};
 
-	void			BuildHash( unsigned char *pData );
+	void			BuildHash( const unsigned char *pData );
 	lzss_list_t		*m_pHashTable;	
 	lzss_node_t		*m_pHashTarget;
 	int             m_nWindowSize;

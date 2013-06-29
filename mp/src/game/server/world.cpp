@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Precaches and defs for entities and other data that must always be available.
 //
@@ -39,7 +39,7 @@ extern CBaseEntity				*g_pLastSpawn;
 void InitBodyQue(void);
 extern void W_Precache(void);
 extern void ActivityList_Free( void );
-extern CMemoryPool g_EntityListPool;
+extern CUtlMemoryPool g_EntityListPool;
 
 #define SF_DECAL_NOTINDEATHMATCH		2048
 
@@ -188,7 +188,7 @@ void CDecal::StaticDecal( void )
 
 	bool canDraw = true;
 
-	entityIndex = (short)trace.m_pEnt ? trace.m_pEnt->entindex() : 0;
+	entityIndex = trace.m_pEnt ? (short)trace.m_pEnt->entindex() : 0;
 	if ( entityIndex )
 	{
 		CBaseEntity *ent = trace.m_pEnt;

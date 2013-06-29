@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#include "ISpatialPartition.h"
+#include "ispatialpartition.h"
 
 //Enumator class for ragdolls being affected by explosive forces
 class CRagdollExplosionEnumerator : public IPartitionEnumerator

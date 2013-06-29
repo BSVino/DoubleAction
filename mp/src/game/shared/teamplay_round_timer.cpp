@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Team gamerules round timer 
 //
@@ -10,13 +10,20 @@
 #include "teamplayroundbased_gamerules.h"
 
 #ifdef CLIENT_DLL
-#include "IClientMode.h"
+#include "iclientmode.h"
 #include "vgui_controls/AnimationController.h"
 #include "c_playerresource.h"
 #include "c_team_objectiveresource.h"
+#if defined( TF_CLIENT_DLL )
+#include "tf_gamerules.h"
+#include "c_tf_player.h"
+#endif // TF_CLIENT_DLL
 #else
 #include "team.h"
 #include "team_objectiveresource.h"
+#if defined( TF_DLL )
+#include "tf_player.h"
+#endif // TF_DLL
 #endif
 
 #define ROUND_TIMER_60SECS	"Announcer.RoundEnds60seconds"
@@ -67,6 +74,10 @@ enum
 
 extern bool IsInCommentaryMode();
 
+#if defined( GAME_DLL ) && defined( TF_DLL )
+ConVar tf_overtime_nag( "tf_overtime_nag", "0", FCVAR_NOTIFY, "Announcer overtime nag." );
+#endif
+
 #ifdef CLIENT_DLL
 
 // Use this proxy to flash the round timer whenever the timer is restarted
@@ -111,6 +122,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CTeamRoundTimer, DT_TeamRoundTimer )
 	RecvPropInt( RECVINFO( m_nSetupTimeLength ) ),
 	RecvPropInt( RECVINFO( m_nState ) ),
 	RecvPropBool( RECVINFO( m_bStartPaused ) ),
+	RecvPropBool( RECVINFO( m_bShowTimeRemaining ) ),
 	RecvPropBool( RECVINFO( m_bInCaptureWatchState ) ),
 	RecvPropBool( RECVINFO( m_bStopWatchTimer ) ),
 	RecvPropTime( RECVINFO( m_flTotalTime ) ),
@@ -129,6 +141,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CTeamRoundTimer, DT_TeamRoundTimer )
 	SendPropInt( SENDINFO( m_nSetupTimeLength ) ),
 	SendPropInt( SENDINFO( m_nState ) ),
 	SendPropBool( SENDINFO( m_bStartPaused ) ),
+	SendPropBool( SENDINFO( m_bShowTimeRemaining ) ),
 	SendPropBool( SENDINFO( m_bStopWatchTimer ) ),
 	SendPropBool( SENDINFO( m_bInCaptureWatchState ) ),
 	SendPropTime( SENDINFO( m_flTotalTime ) ),
@@ -146,6 +159,7 @@ BEGIN_DATADESC(CTeamRoundTimer)
 	DEFINE_KEYFIELD( m_nSetupTimeLength,		FIELD_INTEGER,	"setup_length" ),
 	DEFINE_KEYFIELD( m_bResetTimeOnRoundStart,	FIELD_BOOLEAN,	"reset_time" ),
 	DEFINE_KEYFIELD( m_bStartPaused,			FIELD_BOOLEAN,	"start_paused" ),
+	DEFINE_KEYFIELD( m_bShowTimeRemaining,			FIELD_BOOLEAN,	"show_time_remaining" ),
 
 	DEFINE_FUNCTION( RoundTimerSetupThink ),
 	DEFINE_FUNCTION( RoundTimerThink ),
@@ -162,6 +176,7 @@ BEGIN_DATADESC(CTeamRoundTimer)
 	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetMaxTime",		InputSetMaxTime ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER,	"AutoCountdown",	InputAutoCountdown ),
 	DEFINE_INPUTFUNC( FIELD_STRING,		"AddTeamTime",		InputAddTeamTime ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetSetupTime",		InputSetSetupTime ),
 
 	DEFINE_OUTPUT(	m_OnRoundStart,		"OnRoundStart" ),
 	DEFINE_OUTPUT(	m_OnFinished,		"OnFinished" ),
@@ -203,6 +218,7 @@ CTeamRoundTimer::CTeamRoundTimer( void )
 	m_bAutoCountdown = true;
 	m_nState.Set( RT_STATE_NORMAL );        // we'll assume no setup time for now
 	m_bStartPaused = true;
+	m_bShowTimeRemaining = true;
 
 	m_bFireFinished = true;
 	m_bFire5MinRemain = true;
@@ -222,10 +238,13 @@ CTeamRoundTimer::CTeamRoundTimer( void )
 
 	m_flTotalTime = 0.0f;
 
+	m_nSetupTimeLength = 0;
+
 #ifndef CLIENT_DLL
 	m_bPauseDueToWin = false;
 	m_bResetTimeOnRoundStart = false;
 	m_nTimeToUseAfterSetupFinished = 0;
+	m_flNextOvertimeNag = 0;
 #endif
 }
 
@@ -242,6 +261,7 @@ CTeamRoundTimer::~CTeamRoundTimer( void )
 //-----------------------------------------------------------------------------
 void CTeamRoundTimer::Precache( void )
 {
+#if defined( TF_DLL ) || defined( TF_CLIENT_DLL ) 
 	PrecacheScriptSound( ROUND_TIMER_60SECS );
 	PrecacheScriptSound( ROUND_TIMER_30SECS );
 	PrecacheScriptSound( ROUND_TIMER_10SECS );
@@ -262,6 +282,7 @@ void CTeamRoundTimer::Precache( void )
 	PrecacheScriptSound( ROUND_TIMER_TIME_ADDED_LOSER );
 	PrecacheScriptSound( ROUND_TIMER_TIME_ADDED_WINNER );
 	PrecacheScriptSound( ROUND_START_BELL );
+#endif // TF_DLL || TF_CLIENT_DLL
 }
 
 //-----------------------------------------------------------------------------
@@ -671,16 +692,23 @@ void CTeamRoundTimer::SendTimeWarning( int nWarning )
 				}
 				else 
 				{
-					if( ObjectiveResource()->GetTimerToShowInHUD() == entindex())
+					if( ObjectiveResource()->GetTimerToShowInHUD() == entindex() )
+					{
+						bShouldPlaySound = true;
+					}
+
+					if ( TeamplayRoundBasedRules() && TeamplayRoundBasedRules()->IsInKothMode() )
 					{
 						bShouldPlaySound = true;
 					}
 				}
 
+#ifdef TF_CLIENT_DLL
 				if ( bShouldPlaySound == true )
 				{
 					pPlayer->EmitSound( GetTimeWarningSound( nWarning ) );
 				}
+#endif // TF_CLIENT_DLL
 			}
 		}
 	}
@@ -691,7 +719,7 @@ void CTeamRoundTimer::SendTimeWarning( int nWarning )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTeamRoundTimer::SetState( int nState )
+void CTeamRoundTimer::SetState( int nState, bool bFireOutput )
 {
 	m_nState = nState;
 
@@ -703,7 +731,11 @@ void CTeamRoundTimer::SetState( int nState )
 		}
 
 		SetTimerThink( RT_THINK_SETUP );
-		m_OnSetupStart.FireOutput( this, this );
+
+		if ( bFireOutput )
+		{
+			m_OnSetupStart.FireOutput( this, this );
+		}
 	}
 	else
 	{
@@ -713,7 +745,11 @@ void CTeamRoundTimer::SetState( int nState )
 		}
 
 		SetTimerThink( RT_THINK_NORMAL );
-		m_OnRoundStart.FireOutput( this, this );
+
+		if ( bFireOutput )
+		{
+			m_OnRoundStart.FireOutput( this, this );
+		}
 	}
 }
 
@@ -875,11 +911,31 @@ void CTeamRoundTimer::RoundTimerThink( void )
 			// is this the timer we're showing in the HUD?
 			if ( ShowInHud() )
 			{
-				TeamplayRoundBasedRules()->SetOvertime( true );
+				if ( !TeamplayRoundBasedRules()->InOvertime() )
+				{
+					TeamplayRoundBasedRules()->SetOvertime( true );
+				}
+#if defined( TF_DLL )
+				else
+				{
+					if ( tf_overtime_nag.GetBool() && ( gpGlobals->curtime > m_flNextOvertimeNag ) )
+					{
+						m_flNextOvertimeNag = gpGlobals->curtime + 1.0f;
+
+						if ( RandomInt( 0, 1 ) > 0 )
+						{
+							IGameEvent *event = gameeventmanager->CreateEvent( "overtime_nag" );
+							if ( event )
+							{
+								gameeventmanager->FireEvent( event );
+							}
+						}
+					}
+				}
+#endif
 			}
 
-			// Think slower
-			SetContextThink( &CTeamRoundTimer::RoundTimerThink, gpGlobals->curtime + 1.0, ROUND_TIMER_THINK );
+			SetContextThink( &CTeamRoundTimer::RoundTimerThink, gpGlobals->curtime + 0.05, ROUND_TIMER_THINK );
 			return;
 		}
 
@@ -1107,9 +1163,9 @@ void CTeamRoundTimer::AddTimerSeconds( int iSecondsToAdd, int iTeamResponsible /
 	m_nTimerLength += iSecondsToAdd;
 	CalculateOutputMessages();
 
-	if ( ObjectiveResource() && ObjectiveResource()->GetTimerInHUD() == entindex() )
+	if ( ( ObjectiveResource() && ObjectiveResource()->GetTimerInHUD() == entindex() ) || ( TeamplayRoundBasedRules()->IsInKothMode() ) )
 	{
-		if ( !TeamplayRoundBasedRules()->InStalemate() && !TeamplayRoundBasedRules()->RoundHasBeenWon() )
+		if ( !TeamplayRoundBasedRules()->InStalemate() && !TeamplayRoundBasedRules()->RoundHasBeenWon() && !TeamplayRoundBasedRules()->IsInKothMode() )
 		{
 			if ( iTeamResponsible >= LAST_SHARED_TEAM+1 )
 			{
@@ -1119,6 +1175,7 @@ void CTeamRoundTimer::AddTimerSeconds( int iSecondsToAdd, int iTeamResponsible /
 					{
 						CTeamRecipientFilter filter( iTeam, true );
 						EmitSound( filter, entindex(), ROUND_TIMER_TIME_ADDED_WINNER );
+						
 					}
 					else
 					{
@@ -1301,6 +1358,7 @@ void CTeamRoundTimer::InputShowInHUD( inputdata_t &input )
 	else if ( nShow == 1 )
 	{
 		SetActiveTimer( this );
+		SetState( m_nState, false ); // set our current state again so the gamerules are updated with our setup state
 	}
 
 	m_bShowInHUD = ( nShow == 1 ); 
@@ -1313,6 +1371,26 @@ void CTeamRoundTimer::InputAutoCountdown( inputdata_t &input )
 { 
 	int nAuto = input.value.Int();
 	SetAutoCountdown( nAuto == 1 ); 
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTeamRoundTimer::InputSetSetupTime( inputdata_t &input )
+{ 
+	int nSetupTime = input.value.Int();
+	if ( nSetupTime >= 0 )
+	{
+		m_nSetupTimeLength = nSetupTime;
+	}
+
+	if ( !IsDisabled() )
+	{
+		if ( m_nState == RT_STATE_SETUP )
+		{
+			SetTimeRemaining( m_nSetupTimeLength );
+		}	
+	}
 }
 
 //-----------------------------------------------------------------------------

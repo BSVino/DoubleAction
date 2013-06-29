@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include "cbase.h"
 #include "text_message.h"
 #include "client_textmessage.h"
-#include "vgui_controls/controls.h"
+#include "vgui_controls/Controls.h"
 #include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

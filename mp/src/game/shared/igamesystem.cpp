@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Deals with singleton  
 //
@@ -258,6 +258,11 @@ void IGameSystem::LevelInitPreEntityAllSystems( char const* pMapName )
 void IGameSystem::LevelInitPostEntityAllSystems( void )
 {
 	InvokeMethod( &IGameSystem::LevelInitPostEntity, "LevelInitPostEntity" );
+}
+
+void IGameSystem::LevelShutdownPreClearSteamAPIContextAllSystems()
+{
+	InvokeMethodReverseOrder( &IGameSystem::LevelShutdownPreClearSteamAPIContext );
 }
 
 void IGameSystem::LevelShutdownPreEntityAllSystems()

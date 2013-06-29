@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -15,6 +15,12 @@
 #include "engine/IEngineSound.h"
 #include "soundenvelope.h"
 
+#ifdef TF_DLL
+#include "tf_shareddefs.h"
+#endif
+
+#define CONTROL_POINT_UNLOCK_THINK			"UnlockThink"
+
 BEGIN_DATADESC(CTeamControlPoint)
 	DEFINE_KEYFIELD( m_iszPrintName,			FIELD_STRING,	"point_printname" ),
 	DEFINE_KEYFIELD( m_iCPGroup,				FIELD_INTEGER,	"point_group" ),
@@ -28,6 +34,9 @@ BEGIN_DATADESC(CTeamControlPoint)
 	DEFINE_KEYFIELD( m_iszCaptureInProgress,	FIELD_STRING,	"point_capture_progress_sound" ),
 	DEFINE_KEYFIELD( m_iszCaptureInterrupted,	FIELD_STRING,	"point_capture_interrupted_sound" ),
 	DEFINE_KEYFIELD( m_bRandomOwnerOnRestart,	FIELD_BOOLEAN,	"random_owner_on_restart" ),
+	DEFINE_KEYFIELD( m_bLocked,					FIELD_BOOLEAN,	"point_start_locked" ),
+
+	DEFINE_FUNCTION( UnlockThink ),
 
 //	DEFINE_FIELD( m_iTeam, FIELD_INTEGER ),
 //	DEFINE_FIELD( m_iIndex, FIELD_INTEGER ),
@@ -43,6 +52,8 @@ BEGIN_DATADESC(CTeamControlPoint)
 	DEFINE_INPUTFUNC( FIELD_VOID,		"ShowModel",		InputShowModel ),
 	DEFINE_INPUTFUNC( FIELD_VOID,		"HideModel",		InputHideModel ),
 	DEFINE_INPUTFUNC( FIELD_VOID,		"RoundActivate",	InputRoundActivate ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetLocked",		InputSetLocked ),
+	DEFINE_INPUTFUNC( FIELD_INTEGER,	"SetUnlockTime",	InputSetUnlockTime ),
 
 	DEFINE_OUTPUT(	m_OnCapTeam1,		"OnCapTeam1" ),	// these are fired whenever the point changes modes
 	DEFINE_OUTPUT(	m_OnCapTeam2,		"OnCapTeam2" ),
@@ -53,6 +64,8 @@ BEGIN_DATADESC(CTeamControlPoint)
 
 	DEFINE_OUTPUT(	m_OnRoundStartOwnedByTeam1,	"OnRoundStartOwnedByTeam1" ),	// these are fired when a round is starting
 	DEFINE_OUTPUT(	m_OnRoundStartOwnedByTeam2,	"OnRoundStartOwnedByTeam2" ),
+
+	DEFINE_OUTPUT(	m_OnUnlocked, "OnUnlocked" ),
 
 	DEFINE_THINKFUNC( AnimThink ),
 END_DATADESC();
@@ -66,6 +79,9 @@ CTeamControlPoint::CTeamControlPoint()
 {
 	m_TeamData.SetSize( GetNumberOfTeams() );
 	m_pCaptureInProgressSound = NULL;
+
+	m_bLocked = false;
+	m_flUnlockTime = -1;
 
 #ifdef  TF_DLL
 	UseClientSideAnimation();
@@ -106,6 +122,7 @@ void CTeamControlPoint::Spawn( void )
 	Precache();
 
 	InternalSetOwner( m_iDefaultOwner, false );	//init the owner of this point
+	TeamplayRoundBasedRules()->RecalculateControlPointState();
 
 	SetActive( !m_bStartDisabled );
 
@@ -128,8 +145,6 @@ void CTeamControlPoint::Spawn( void )
 	m_flLastContestedAt = -1;
 
 	m_pCaptureInProgressSound = NULL;
-
-
 }
 
 //-----------------------------------------------------------------------------
@@ -275,6 +290,7 @@ void CTeamControlPoint::InputReset( inputdata_t &input )
 	m_flLastContestedAt = -1;
 	InternalSetOwner( m_iDefaultOwner, false );
 	ObjectiveResource()->SetOwningTeam( GetPointIndex(), m_iTeam );
+	TeamplayRoundBasedRules()->RecalculateControlPointState();
 }
 
 //-----------------------------------------------------------------------------
@@ -290,8 +306,18 @@ void CTeamControlPoint::HandleScoring( int iTeam )
 		CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
 		if ( pMaster && !pMaster->WouldNewCPOwnerWinGame( this, iTeam ) )
 		{
-			CTeamRecipientFilter filter( iTeam );
-			EmitSound( filter, entindex(), "Hud.EndRoundScored" );
+#ifdef TF_DLL
+			if ( TeamplayRoundBasedRules()->GetGameType() == TF_GAMETYPE_ESCORT )
+			{
+				CBroadcastRecipientFilter filter;
+				EmitSound( filter, entindex(), "Hud.EndRoundScored" );
+			}
+			else
+#endif
+			{
+				CTeamRecipientFilter filter( iTeam );
+				EmitSound( filter, entindex(), "Hud.EndRoundScored" );
+			}
 		}
 	}
 }
@@ -306,6 +332,9 @@ void CTeamControlPoint::InputSetOwner( inputdata_t &input )
 	Assert( iCapTeam >= 0 && iCapTeam < GetNumberOfTeams() );
 
 	Assert( input.pCaller );
+
+	if ( !input.pCaller )
+		return;
 
 	if ( GetOwner() == iCapTeam )
 		return;
@@ -326,6 +355,7 @@ void CTeamControlPoint::InputSetOwner( inputdata_t &input )
 		}
 
 		ObjectiveResource()->SetOwningTeam( GetPointIndex(), m_iTeam );
+		TeamplayRoundBasedRules()->RecalculateControlPointState();
 	}
 }
 
@@ -399,6 +429,7 @@ void CTeamControlPoint::ForceOwner( int iTeam )
 {
 	InternalSetOwner( iTeam, false, 0, 0 );
 	ObjectiveResource()->SetOwningTeam( GetPointIndex(), m_iTeam );
+	TeamplayRoundBasedRules()->RecalculateControlPointState();
 }
 
 //-----------------------------------------------------------------------------
@@ -413,6 +444,7 @@ void CTeamControlPoint::SetOwner( int iCapTeam, bool bMakeSound, int iNumCappers
 
 		InternalSetOwner( iCapTeam, bMakeSound, iNumCappers, pCappingPlayers );
 		ObjectiveResource()->SetOwningTeam( GetPointIndex(), m_iTeam );
+		TeamplayRoundBasedRules()->RecalculateControlPointState();
 	}
 }
 
@@ -423,6 +455,18 @@ void CTeamControlPoint::CaptureStart( int iCapTeam, int iNumCappingPlayers, int 
 {
 	int iNumCappers = iNumCappingPlayers;
 
+	float flLastOwnershipChangeTime = -1.f;
+	CBaseEntity *pEnt =	gEntList.FindEntityByClassname( NULL, GetControlPointMasterName() );
+	while( pEnt )
+	{
+		CTeamControlPointMaster *pMaster = dynamic_cast<CTeamControlPointMaster *>( pEnt );
+		if ( pMaster && pMaster->IsActive() )
+		{
+			flLastOwnershipChangeTime = pMaster->GetLastOwnershipChangeTime();
+		}
+		pEnt = gEntList.FindEntityByClassname( pEnt, GetControlPointMasterName() );
+	}
+
 	IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_point_startcapture" );
 	if ( event )
 	{
@@ -430,6 +474,7 @@ void CTeamControlPoint::CaptureStart( int iCapTeam, int iNumCappingPlayers, int 
 		event->SetString( "cpname", STRING( m_iszPrintName ) );
 		event->SetInt( "team", m_iTeam );
 		event->SetInt( "capteam", iCapTeam );
+		event->SetFloat( "captime", gpGlobals->curtime - flLastOwnershipChangeTime );
 
 		// safety check
 		if ( iNumCappers > 8 )
@@ -638,6 +683,7 @@ void CTeamControlPoint::InternalSetOwner( int iCapTeam, bool bMakeSound, int iNu
 		if ( pMaster->IsActive() )
 		{
 			pMaster->CheckWinConditions();
+			pMaster->SetLastOwnershipChangeTime( gpGlobals->curtime );
 		}
 
 		pEnt = gEntList.FindEntityByClassname( pEnt, GetControlPointMasterName() );
@@ -765,6 +811,15 @@ void CTeamControlPoint::SetActive( bool active )
 void CTeamControlPoint::SetCappersRequiredForTeam( int iGameTeam, int iCappers )
 {
 	m_TeamData[iGameTeam].iPlayersRequired = iCappers;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Return true if this point has ever been contested, false if the enemy has never contested this point yet
+//-----------------------------------------------------------------------------
+bool CTeamControlPoint::HasBeenContested( void ) const
+{
+	return m_flLastContestedAt > 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -915,4 +970,108 @@ void CTeamControlPoint::InputRoundActivate( inputdata_t &inputdata )
 		m_OnRoundStartOwnedByTeam2.FireOutput( this, this );
 		break;
 	}
+
+	InternalSetLocked( m_bLocked );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTeamControlPoint::InputSetLocked( inputdata_t &inputdata )
+{
+	// never lock/unlock the point if we're in waiting for players
+	if ( TeamplayRoundBasedRules() && TeamplayRoundBasedRules()->IsInWaitingForPlayers() )
+		return;
+
+	bool bLocked = inputdata.value.Int() > 0;
+	InternalSetLocked( bLocked );
+}
+ 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTeamControlPoint::InternalSetLocked( bool bLocked )
+{
+	if ( !bLocked && m_bLocked )
+	{
+		// unlocked this point
+		IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_point_unlocked" );
+		if ( event )
+		{
+			event->SetInt( "cp", m_iPointIndex );
+			event->SetString( "cpname", STRING( m_iszPrintName ) );
+			event->SetInt( "team", m_iTeam );
+			gameeventmanager->FireEvent( event );
+		}
+	}
+	else if ( bLocked && !m_bLocked )
+	{
+		// locked this point
+		IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_point_locked" );
+		if ( event )
+		{
+			event->SetInt( "cp", m_iPointIndex );
+			event->SetString( "cpname", STRING( m_iszPrintName ) );
+			event->SetInt( "team", m_iTeam );
+			gameeventmanager->FireEvent( event );
+		}
+	}
+
+	m_bLocked = bLocked;
+
+	if ( ObjectiveResource() && GetPointIndex() < ObjectiveResource()->GetNumControlPoints() )
+	{
+		ObjectiveResource()->SetCPLocked( GetPointIndex(), m_bLocked );
+		ObjectiveResource()->SetCPUnlockTime( GetPointIndex(), 0.0f );
+	}
+
+	if ( !m_bLocked )
+	{
+		m_flUnlockTime = -1;
+		m_OnUnlocked.FireOutput( this, this );
+		SetContextThink( NULL, 0, CONTROL_POINT_UNLOCK_THINK );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTeamControlPoint::InputSetUnlockTime( inputdata_t &inputdata )
+{
+	// never lock/unlock the point if we're in waiting for players
+	if ( TeamplayRoundBasedRules() && TeamplayRoundBasedRules()->IsInWaitingForPlayers() )
+		return;
+
+	int nTime = inputdata.value.Int();
+
+	if ( nTime <= 0 )
+	{
+		InternalSetLocked( false );
+		return;
+	}
+
+	m_flUnlockTime = gpGlobals->curtime + nTime;
+
+	if ( ObjectiveResource() )
+	{
+		ObjectiveResource()->SetCPUnlockTime( GetPointIndex(), m_flUnlockTime );
+	}
+
+	SetContextThink( &CTeamControlPoint::UnlockThink, gpGlobals->curtime + 0.1, CONTROL_POINT_UNLOCK_THINK );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTeamControlPoint::UnlockThink( void )
+{
+	if ( m_flUnlockTime > 0 && 
+		 m_flUnlockTime < gpGlobals->curtime && 
+		 ( TeamplayRoundBasedRules() && TeamplayRoundBasedRules()->State_Get() == GR_STATE_RND_RUNNING ) )
+	{
+		InternalSetLocked( false );
+		return;
+	}
+
+	SetContextThink( &CTeamControlPoint::UnlockThink, gpGlobals->curtime + 0.1, CONTROL_POINT_UNLOCK_THINK );
 }

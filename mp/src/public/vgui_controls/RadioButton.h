@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,11 +14,42 @@
 
 #include <vgui/VGUI.h>
 #include <vgui_controls/ToggleButton.h>
-
-class RadioImage;
+#include <vgui_controls/TextImage.h>
 
 namespace vgui
 {
+
+//-----------------------------------------------------------------------------
+// Purpose: Radio buton image
+//-----------------------------------------------------------------------------
+class RadioImage : public TextImage
+{
+public:
+	RadioImage(RadioButton *radioButton) : TextImage( "n" )
+	{
+		_radioButton = radioButton;
+
+		SetSize(20, 13);
+	}
+
+	virtual void Paint();
+
+	virtual void SetColor(Color color)
+	{
+		_borderColor1 = color;
+		_borderColor2 = color;
+		_checkColor = color;
+	}
+
+	Color _borderColor1;
+	Color _borderColor2;
+	Color _checkColor;
+
+	Color _bgColor;
+
+private:
+	RadioButton *_radioButton;
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Radio buttons are automatically selected into groups by who their
@@ -45,6 +76,10 @@ public:
 	// Return the RadioButton's real tab position (its Panel one changes)
 	virtual int GetRadioTabPosition();
 
+	// Set the selection state of the radio button, but don't fire
+	// any action signals or messages to other radio buttons
+	virtual void SilentSetSelected(bool state);
+
 protected:
 	virtual void DoClick();
 
@@ -68,6 +103,8 @@ private:
 	Color _selectedFgColor;
 
 	int _subTabPosition;	// tab position with the radio button list
+
+	void InternalSetSelected(bool state, bool bFireEvents);
 };
 
 }; // namespace vgui

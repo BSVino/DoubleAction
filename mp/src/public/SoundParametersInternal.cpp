@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -33,6 +33,7 @@ static SoundChannels g_pChannelNames[] =
 	{ CHAN_BODY, "CHAN_BODY" },
 	{ CHAN_STREAM, "CHAN_STREAM" },
 	{ CHAN_STATIC, "CHAN_STATIC" },
+	{ CHAN_VOICE2, "CHAN_VOICE2" },
 };
 
 struct VolumeLevel
@@ -345,23 +346,30 @@ CSoundParametersInternal::CSoundParametersInternal( const CSoundParametersIntern
 {
 	m_pSoundNames = NULL;
 	m_pConvertedNames = NULL;
+	m_nSoundNames = 0;
+	m_nConvertedNames = 0;
 	CopyFrom( src );
 }
 
 CSoundParametersInternal::~CSoundParametersInternal()
 {
 	if ( m_nSoundNames > 1 )
-		delete m_pSoundNames;
+		free(m_pSoundNames );
 	if ( m_nConvertedNames > 1 )
-		delete m_pConvertedNames;
+		free( m_pConvertedNames);
+
+	m_pConvertedNames = NULL;
+	m_pSoundNames = NULL;
+	m_nSoundNames = 0;
+	m_nConvertedNames = 0;
 }
 
 void CSoundParametersInternal::CopyFrom( const CSoundParametersInternal& src )
 {
 	if ( m_nSoundNames > 1 )
-		delete m_pSoundNames;
+		free(m_pSoundNames);
 	if ( m_nConvertedNames > 1 )
-		delete m_pConvertedNames;
+		free(m_pConvertedNames);
 
 	channel = src.channel;
 	volume = src.volume;
@@ -375,7 +383,7 @@ void CSoundParametersInternal::CopyFrom( const CSoundParametersInternal& src )
 	{
 		if ( m_nSoundNames > 1 )
 		{
-			m_pSoundNames = new SoundFile[m_nSoundNames];
+			m_pSoundNames = (SoundFile*)malloc( sizeof(SoundFile)*m_nSoundNames);
 			memcpy( m_pSoundNames, src.m_pSoundNames, m_nSoundNames * sizeof(SoundFile) );
 		}
 		else
@@ -393,7 +401,7 @@ void CSoundParametersInternal::CopyFrom( const CSoundParametersInternal& src )
 	{
 		if ( m_nConvertedNames > 1 )
 		{
-			m_pConvertedNames = new SoundFile[m_nConvertedNames];
+			m_pConvertedNames = (SoundFile*)malloc( sizeof(SoundFile)*m_nConvertedNames);
 			memcpy( m_pConvertedNames, src.m_pConvertedNames, m_nConvertedNames * sizeof(SoundFile) );
 		}
 		else

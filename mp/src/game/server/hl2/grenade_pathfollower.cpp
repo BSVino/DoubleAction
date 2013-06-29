@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This is the brickbat weapon
 //
@@ -265,7 +265,7 @@ void CGrenadePathfollower::AimThink( void )
 		while (flTimeToUse > 0)
 		{
 			vecNewVelocity += vTargetDir;
-			flTimeToUse =- 0.1;
+			flTimeToUse = -0.1;
 		}
 		vecNewVelocity *= m_flFlySpeed;
 		SetAbsVelocity( vecNewVelocity );

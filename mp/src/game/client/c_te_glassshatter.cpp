@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,8 +7,8 @@
 //===========================================================================//
 #include "cbase.h"
 #include "c_basetempentity.h"
-#include "particle_simple3D.h"
-#include "tier1/keyvalues.h"
+#include "particle_simple3d.h"
+#include "tier1/KeyValues.h"
 #include "toolframework_client.h"
 #include "fx.h"
 #include "tier0/vprof.h"
@@ -24,7 +24,7 @@
 #define GLASS_SHARD_GRAVITY  500
 #define GLASS_SHARD_DAMPING	 0.3
 
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectGlassShatter )
 CLIENTEFFECT_MATERIAL( "effects/fleck_glass1" )
@@ -202,7 +202,7 @@ void C_TEShatterSurface::PostDataUpdate( DataUpdateType_t updateType )
 	vCurPos.x += 0.5*m_flShardSize;
 	vCurPos.z += 0.5*m_flShardSize;
 
-	float flMinSpeed = 9999999999;
+	float flMinSpeed = 9999999999.0f;
 	float flMaxSpeed = 0;
 
 	Particle3D *pParticle = NULL;

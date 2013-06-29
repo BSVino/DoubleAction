@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -205,7 +205,7 @@ void CPointSpotlight::ComputeRenderInfo()
 
 	// Adjust end width to keep beam width constant
 	float flNewWidth = m_flSpotlightGoalWidth * (m_flSpotlightCurLength / m_flSpotlightMaxLength);
-	flNewWidth = clamp(flNewWidth, 0, MAX_BEAM_WIDTH );
+	flNewWidth = clamp(flNewWidth, 0.f, MAX_BEAM_WIDTH );
 	m_hSpotlight->SetEndWidth(flNewWidth);
 
 	// Adjust width of light on the end.  

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -1072,7 +1072,7 @@ int CPhysExplosion::DrawDebugTextOverlays( void )
 		text_offset++;
 
 		// print target entity
-		Q_snprintf(tempstr,sizeof(tempstr),"    limit to: %s", m_targetEntityName);
+		Q_snprintf(tempstr,sizeof(tempstr),"    limit to: %s", STRING(m_targetEntityName));
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 	}
@@ -1168,7 +1168,14 @@ void CPhysImpact::InputImpact( inputdata_t &inputdata )
 	Vector	end		= start + ( dir * dist );
 
 	//Trace out
-	UTIL_TraceLine( start, end, MASK_SHOT, this, 0, &trace );
+	UTIL_TraceLine( start, end, MASK_SHOT, this, COLLISION_GROUP_NONE, &trace );
+	if ( trace.startsolid )
+	{
+		// ep1_citadel_04 has a phys_impact just behind another entity, so if we startsolid then
+		// bump out just a little and retry the trace
+		Vector startOffset = start +  ( dir * 0.1 );
+		UTIL_TraceLine( startOffset , end, MASK_SHOT, this, COLLISION_GROUP_NONE, &trace );
+	}
 
 	if( debug_physimpact.GetBool() )
 	{

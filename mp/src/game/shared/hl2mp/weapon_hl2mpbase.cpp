@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,7 +22,7 @@ extern IVModelInfo* modelinfo;
 #if defined( CLIENT_DLL )
 
 	#include "vgui/ISurface.h"
-	#include "vgui_controls/controls.h"
+	#include "vgui_controls/Controls.h"
 	#include "c_hl2mp_player.h"
 	#include "hud_crosshair.h"
 
@@ -105,17 +105,7 @@ bool CWeaponHL2MPBase::IsPredicted() const
 { 
 	return true;
 }
-//Tony; override for animation purposes.
-bool CWeaponHL2MPBase::Reload( void )
-{
-	bool fRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD );
-	if ( fRet )
-	{
-//		WeaponSound( RELOAD );
-		ToHL2MPPlayer(GetOwner())->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
-	}
-	return fRet;
-}
+
 void CWeaponHL2MPBase::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
 {
 #ifdef CLIENT_DLL

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -119,13 +119,13 @@ void CLightGlow::Activate()
 
 	if ( m_nMaxDist > LIGHTGLOW_MAXDIST_MAX_VALUE )
 	{
-		Warning( "env_lightglow maxdist too large (%d should be %d).\n", m_nMaxDist, LIGHTGLOW_MAXDIST_MAX_VALUE );
+		Warning( "env_lightglow maxdist too large (%d should be %d).\n", m_nMaxDist.Get(), LIGHTGLOW_MAXDIST_MAX_VALUE );
 		m_nMaxDist = LIGHTGLOW_MAXDIST_MAX_VALUE;
 	}
 
 	if ( m_nOuterMaxDist > LIGHTGLOW_OUTERMAXDIST_MAX_VALUE )
 	{
-		Warning( "env_lightglow outermaxdist too large (%d should be %d).\n", m_nOuterMaxDist, LIGHTGLOW_OUTERMAXDIST_MAX_VALUE );
+		Warning( "env_lightglow outermaxdist too large (%d should be %d).\n", m_nOuterMaxDist.Get(), LIGHTGLOW_OUTERMAXDIST_MAX_VALUE );
 		m_nOuterMaxDist = LIGHTGLOW_OUTERMAXDIST_MAX_VALUE;
 	}
 }

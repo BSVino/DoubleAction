@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: NOTE: This file is for backward compat!
 // We'll get rid of it soon. Most of the contents of this file were moved
@@ -34,9 +34,9 @@ abstract_class IShaderInit
 {
 public:
 	// Loads up a texture
-	virtual void LoadTexture( IMaterialVar *pTextureVar, const char *pTextureGroupName ) = 0; 
+	virtual void LoadTexture( IMaterialVar *pTextureVar, const char *pTextureGroupName, int nAdditionalCreationFlags = 0 ) = 0; 
 	virtual void LoadBumpMap( IMaterialVar *pTextureVar, const char *pTextureGroupName ) = 0;
-	virtual void LoadCubeMap( IMaterialVar **ppParams, IMaterialVar *pTextureVar ) = 0;
+	virtual void LoadCubeMap( IMaterialVar **ppParams, IMaterialVar *pTextureVar, int nAdditionalCreationFlags = 0 ) = 0;
 };
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -783,7 +783,7 @@ void CProtoSniper::PaintTarget( const Vector &vecTarget, float flPaintTime )
 	float P;
 
 	// keep painttime from hitting 0 exactly.
-	flPaintTime = max( flPaintTime, 0.000001f );
+	flPaintTime = MAX( flPaintTime, 0.000001f );
 
 	P = GetPositionParameter( flPaintTime, false );
 
@@ -1439,7 +1439,7 @@ int CProtoSniper::SelectSchedule ( void )
 	if( HasCondition( COND_SNIPER_SWEEP_TARGET ) )
 	{
 		// Sweep a target. Scripted by level designers!
-		if( m_hSweepTarget && m_hSweepTarget->HasSpawnFlags( SF_SNIPERTARGET_NOINTERRUPT ) || m_bSweepHighestPriority )
+		if( ( m_hSweepTarget && m_hSweepTarget->HasSpawnFlags( SF_SNIPERTARGET_NOINTERRUPT ) ) || m_bSweepHighestPriority )
 		{
 			return SCHED_PSNIPER_SWEEP_TARGET_NOINTERRUPT;
 		}

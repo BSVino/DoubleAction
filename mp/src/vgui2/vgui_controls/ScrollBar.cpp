@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,12 +10,14 @@
 #include <vgui/IScheme.h>
 #include <vgui/ISystem.h>
 #include <vgui/IInput.h>
+#include <vgui/IImage.h>
 #include <KeyValues.h>
 
 #include <vgui_controls/ScrollBar.h>
 #include <vgui_controls/ScrollBarSlider.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Controls.h>
+#include <vgui_controls/ImagePanel.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
@@ -103,6 +105,11 @@ public:
 			// lock mouse input to going to this button
 			input()->SetMouseCapture(NULL);
 		}
+
+		if( input()->GetMouseOver() == GetVPanel() )
+		{
+			SetArmed( true );
+		}
     }
 
 };
@@ -134,13 +141,20 @@ ScrollBar::ScrollBar(Panel *parent, const char *panelName, bool vertical) : Pane
 	_button[1]=null;
 	_scrollDelay = SCROLL_BAR_DELAY;
 	_respond = true;
+	m_pUpArrow = NULL;
+	m_pLine = NULL;
+	m_pDownArrow = NULL;
+	m_pBox = NULL;
+	m_bNoButtons = false;
+	m_pOverriddenButtons[0] = NULL;
+	m_pOverriddenButtons[1] = NULL;
 
 	if (vertical)
 	{
 		// FIXME: proportional changes needed???
-		SetSlider(new ScrollBarSlider(NULL, NULL, true));
-		SetButton(new ScrollBarButton(NULL, NULL, "t"), 0);
-		SetButton(new ScrollBarButton(NULL, NULL, "u"), 1);
+		SetSlider(new ScrollBarSlider(NULL, "Slider", true));
+		SetButton(new ScrollBarButton(NULL, "UpButton", "t"), 0);
+		SetButton(new ScrollBarButton(NULL, "DownButton", "u"), 1);
 		_button[0]->SetTextInset(0, 1);
 		_button[1]->SetTextInset(0, -1);
 
@@ -194,6 +208,8 @@ void ScrollBar::ApplySchemeSettings(IScheme *pScheme)
 			SetSize( GetWide(), value );
 		}
 	}
+
+	UpdateButtonsForImages();
 }
 
 //-----------------------------------------------------------------------------
@@ -240,18 +256,58 @@ void ScrollBar::PerformLayout()
 		GetPaintSize(wide,tall);
 		if(_slider->IsVertical())
 		{
-			_slider->SetBounds(0, wide, wide, tall-(wide*2)+1);
-			_button[0]->SetBounds(0,0, wide-1, wide );
-			_button[1]->SetBounds(0,tall-wide ,wide-1, wide );
+			if ( m_bNoButtons )
+			{
+				_slider->SetBounds(0, 0, wide, tall + 1);
+			}
+			else
+			{
+				_slider->SetBounds(0, wide, wide, tall-(wide*2)+1);
+				_button[0]->SetBounds(0,0, wide, wide );
+				_button[1]->SetBounds(0,tall-wide ,wide, wide );
+			}
 		}
 		else
 		{
-			_slider->SetBounds(tall, -1, wide-(tall*2)+1, tall + 1 );
-			_button[0]->SetBounds(0, 0, tall, tall);
-			_button[1]->SetBounds(wide-tall, 0, tall, tall);
+			if ( m_bNoButtons )
+			{
+				_slider->SetBounds(tall, 0, wide, tall + 1);
+			}
+			else
+			{
+				_slider->SetBounds(tall, -1, wide-(tall*2)+1, tall + 1 );
+				_button[0]->SetBounds(0, 0, tall, tall);
+				_button[1]->SetBounds(wide-tall, 0, tall, tall);
+			}
 		}
+
+		// Place the images over the appropriate controls
+		int x,y;
+		if ( m_pUpArrow )
+		{
+			_button[0]->GetBounds( x,y,wide,tall );
+			m_pUpArrow->SetBounds( x,y,wide,tall );
+		}
+		if ( m_pDownArrow )
+		{
+			_button[1]->GetBounds( x,y,wide,tall );
+			m_pDownArrow->SetBounds( x,y,wide,tall );
+		}
+		if ( m_pLine )
+		{
+			_slider->GetBounds( x,y,wide,tall );
+			m_pLine->SetBounds( x,y,wide,tall );
+		}
+		if ( m_pBox )
+		{
+			m_pBox->SetBounds( 0, wide, wide, wide );
+		}
+
+		_slider->MoveToFront();
 		// after resizing our child, we should remind it to perform a layout
 		_slider->InvalidateLayout();
+
+		UpdateSliderImages();
 	}
 
 	if ( m_bAutoHideButtons )
@@ -313,6 +369,7 @@ void ScrollBar::SendSliderMoveMessage(int value)
 void ScrollBar::OnSliderMoved(int value)
 {
 	SendSliderMoveMessage(value);
+	UpdateSliderImages();
 }
 
 //-----------------------------------------------------------------------------
@@ -387,6 +444,13 @@ ScrollBarSlider *ScrollBar::GetSlider()
 	return _slider;
 }
 
+Button *ScrollBar::GetDepressedButton( int iIndex )
+{
+	if ( iIndex == 0 )
+		return ( m_pOverriddenButtons[0] ? m_pOverriddenButtons[0] : _button[0] );
+	return ( m_pOverriddenButtons[1] ? m_pOverriddenButtons[1] : _button[1] );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Scrolls in response to clicking and holding on up or down arrow
 // The idea is to have the slider move one step then delay a bit and then
@@ -398,12 +462,12 @@ void ScrollBar::OnMouseFocusTicked()
 	int direction = 0;
 	
 	// top button is down
-	if ( _button[0]->IsDepressed() )
+	if ( GetDepressedButton(0)->IsDepressed() )
 	{
 		direction = -1;
 	}
 	// bottom top button is down
-	else if (_button[1]->IsDepressed())
+	else if (GetDepressedButton(1)->IsDepressed())
 	{
 		direction = 1;
 	}
@@ -531,6 +595,208 @@ void ScrollBar::SetScrollbarButtonsVisible(bool visible)
 		if( _button[i] != null )
 		{
 			_button[i]->SetShouldPaint( visible );
+			_button[i]->SetEnabled( visible );
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void ScrollBar::UseImages( const char *pszUpArrow, const char *pszDownArrow, const char *pszLine, const char *pszBox )
+{
+	if ( pszUpArrow )
+	{
+		if ( !m_pUpArrow )
+		{
+			m_pUpArrow = new vgui::ImagePanel( this, "UpArrow" );
+			if ( m_pUpArrow )
+			{
+				m_pUpArrow->SetImage( pszUpArrow );
+				m_pUpArrow->SetShouldScaleImage( true );
+				m_pUpArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
+				m_pUpArrow->SetAlpha( 255 );
+				m_pUpArrow->SetZPos( -1 );
+			}
+		}
+
+		m_pUpArrow->SetImage( pszUpArrow );
+		m_pUpArrow->SetRotation( IsVertical() ? ROTATED_UNROTATED : ROTATED_CLOCKWISE_90 );
+	}
+	else if ( m_pUpArrow )
+	{
+		m_pUpArrow->DeletePanel();
+		m_pUpArrow = NULL;
+	}
+
+	if ( pszDownArrow )
+	{
+		if ( !m_pDownArrow )
+		{
+			m_pDownArrow = new vgui::ImagePanel( this, "DownArrow" );
+			if ( m_pDownArrow )
+			{
+				m_pDownArrow->SetShouldScaleImage( true );
+				m_pDownArrow->SetFgColor( Color( 255, 255, 255, 255 ) );
+				m_pDownArrow->SetAlpha( 255 );
+				m_pDownArrow->SetZPos( -1 );
+			}
+		}
+
+		m_pDownArrow->SetImage( pszDownArrow );
+		m_pDownArrow->SetRotation( IsVertical() ? ROTATED_UNROTATED : ROTATED_CLOCKWISE_90 );
+	}
+	else if ( m_pDownArrow )
+	{
+		m_pDownArrow->DeletePanel();
+		m_pDownArrow = NULL;
+	}
+
+	if ( pszLine )
+	{
+		if ( !m_pLine )
+		{
+			m_pLine = new ImagePanel( this, "Line" );
+			if ( m_pLine )
+			{
+				m_pLine->SetShouldScaleImage( true );
+				m_pLine->SetZPos( -1 );
+			}
+		}
+
+		m_pLine->SetImage( pszLine );
+		m_pLine->SetRotation( IsVertical() ? ROTATED_UNROTATED : ROTATED_CLOCKWISE_90 );
+	}
+	else if ( m_pLine )
+	{
+		m_pLine->DeletePanel();
+		m_pLine = NULL;
+	}
+
+	if ( pszBox )
+	{
+		if ( !m_pBox )
+		{
+			m_pBox = new ImagePanel( this, "Box" );
+			if ( m_pBox )
+			{
+				m_pBox->SetShouldScaleImage( true );
+				m_pBox->SetZPos( -1 );
+			}
+		}
+
+		m_pBox->SetImage( pszBox );
+		m_pBox->SetRotation( IsVertical() ? ROTATED_UNROTATED : ROTATED_CLOCKWISE_90 );
+	}
+	else if ( m_pBox )
+	{
+		m_pBox->DeletePanel();
+		m_pBox = NULL;
+	}
+
+	UpdateButtonsForImages();
+	InvalidateLayout();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void ScrollBar::UpdateButtonsForImages( void )
+{
+	// Turn off parts of our drawing based on which images we're replacing it with
+	if ( m_pUpArrow || m_pDownArrow )
+	{
+		SetScrollbarButtonsVisible( false );
+		_button[0]->SetPaintBorderEnabled( false );
+		_button[1]->SetPaintBorderEnabled( false );
+		m_bAutoHideButtons = false;
+	}
+	if ( m_pLine || m_pBox )
+	{
+		SetPaintBackgroundEnabled( false );
+		SetPaintBorderEnabled( false );
+
+		if ( _slider )
+		{
+			_slider->SetPaintEnabled( false );
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+void ScrollBar::UpdateSliderImages( void )
+{
+	if ( m_pUpArrow && m_pDownArrow )
+	{
+		// set the alpha on the up arrow
+		int nMin, nMax;
+		GetRange( nMin, nMax );
+		int nScrollPos = GetValue();
+		int nRangeWindow = GetRangeWindow();
+		int nBottom = nMax - nRangeWindow;
+		if ( nBottom < 0 )
+		{
+			nBottom = 0;
+		}
+
+		// set the alpha on the up arrow
+		int nAlpha = ( nScrollPos - nMin <= 0 ) ? 90 : 255;
+		m_pUpArrow->SetAlpha( nAlpha );
+
+		// set the alpha on the down arrow
+		nAlpha = ( nScrollPos >= nBottom ) ? 90 : 255;
+		m_pDownArrow->SetAlpha( nAlpha );
+	}
+
+	if ( m_pLine && m_pBox )
+	{
+		ScrollBarSlider *pSlider = GetSlider();
+		if ( pSlider && pSlider->GetRangeWindow() > 0 )
+		{
+			int x, y, w, t, min, max;
+			m_pLine->GetBounds( x, y, w, t );
+
+			// If our slider needs layout, force it to do it now
+			if ( pSlider->IsLayoutInvalid() )
+			{
+				pSlider->InvalidateLayout( true );
+			}
+			pSlider->GetNobPos( min, max );
+
+			if ( IsVertical() )
+			{
+				m_pBox->SetBounds( x, y + min, w, ( max - min ) );
+			}
+			else
+			{
+				m_pBox->SetBounds( x + min, 0, (max-min), t );
+			}
+		}
+	}
+}
+void ScrollBar::ApplySettings( KeyValues *pInResourceData )
+{
+	BaseClass::ApplySettings( pInResourceData );
+
+	m_bNoButtons = pInResourceData->GetBool( "nobuttons", false );
+
+	KeyValues *pSliderKV = pInResourceData->FindKey( "Slider" );
+	if ( pSliderKV && _slider )
+	{
+		_slider->ApplySettings( pSliderKV );
+	}
+
+	KeyValues *pDownButtonKV = pInResourceData->FindKey( "DownButton" );
+	if ( pDownButtonKV && _button[0] )
+	{
+		_button[0]->ApplySettings( pDownButtonKV );
+	}
+
+	KeyValues *pUpButtonKV = pInResourceData->FindKey( "UpButton" );
+	if ( pUpButtonKV && _button[0] )
+	{
+		_button[1]->ApplySettings( pUpButtonKV );
 	}
 }

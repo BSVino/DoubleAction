@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,7 +16,7 @@
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "iclientmode.h"
-#include <vgui_controls/controls.h>
+#include <vgui_controls/Controls.h>
 #include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 

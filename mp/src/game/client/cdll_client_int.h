@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -35,8 +35,6 @@ class ISpatialPartition;
 class IFileSystem;
 class IStaticPropMgrClient;
 class IShadowMgr;
-class IUniformRandomStream;
-class CGaussianRandomStream;
 class IEngineSound;
 class IMatSystemSurface;
 class IMaterialSystemHardwareConfig;
@@ -53,9 +51,25 @@ class IInputSystem;
 class ISceneFileCache;
 class IXboxSystem;	// Xbox 360 only
 class IMatchmaking;
-class IAvi;
-class IBik;
+class IVideoServices;
 class CSteamAPIContext;
+class IClientReplayContext;
+class IReplayManager;
+class IEngineReplay;
+class IEngineClientReplay;
+class IReplayScreenshotManager;
+class CSteamID;
+
+//=============================================================================
+// HPE_BEGIN
+// [dwenger] Necessary for stats display
+//=============================================================================
+
+class AchievementsAndStatsInterface;
+
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 extern IVModelRender *modelrender;
 extern IVEngineClient	*engine;
@@ -75,8 +89,6 @@ extern IBaseClientDLL *clientdll;
 extern IFileSystem *filesystem;
 extern IStaticPropMgrClient *staticpropmgr;
 extern IShadowMgr *shadowmgr;
-extern IUniformRandomStream *random;
-extern CGaussianRandomStream *randomgaussian;
 extern IEngineSound *enginesound;
 extern IMatSystemSurface *g_pMatSystemSurface;
 extern IEngineTrace *enginetrace;
@@ -89,15 +101,37 @@ extern IInputSystem *inputsystem;
 extern ISceneFileCache *scenefilecache;
 extern IXboxSystem *xboxsystem;	// Xbox 360 only
 extern IMatchmaking *matchmaking;
-extern IAvi *avi;
-extern IBik *bik;
+extern IVideoServices *g_pVideo;
 extern IUploadGameStats *gamestatsuploader;
 extern CSteamAPIContext *steamapicontext;
+extern IReplaySystem *g_pReplay;
+extern IClientReplayContext *g_pClientReplayContext;
+extern IReplayManager *g_pReplayManager;
+extern IReplayScreenshotManager *g_pReplayScreenshotManager;
+extern IEngineReplay *g_pEngineReplay;
+extern IEngineClientReplay *g_pEngineClientReplay;
 
+//=============================================================================
+// HPE_BEGIN
+// [dwenger] Necessary for stats display
+//=============================================================================
+
+extern AchievementsAndStatsInterface* g_pAchievementsAndStatsInterface;
+
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 // Set to true between LevelInit and LevelShutdown.
 extern bool	g_bLevelInitialized;
 extern bool g_bTextMode;
+
+// Kyle says: this is here to obsfucate our accessing of the g_bTextMode variable and for no other purpose.
+//			  See the mess of TF_ANTI_IDLEBOT_VERIFICATION code. If that code doesn't exist anymore, this
+//			  probably also doesn't need to exist anymore.
+//
+//			  On a suggestion from Joe, we also point it to an incomplete type.
+extern class IClientPurchaseInterfaceV2 *g_pClientPurchaseInterface;
 
 
 // Returns true if a new OnDataChanged event is registered for this frame.
@@ -134,5 +168,13 @@ const char *GetParticleSystemNameFromIndex( int nIndex );
 void TrackBoneSetupEnt( C_BaseAnimating *pEnt );
 
 bool IsEngineThreaded();
+
+#ifndef NO_STEAM
+
+/// Returns Steam ID, given player index.   Returns an invalid SteamID upon
+/// failure
+extern CSteamID GetSteamIDForPlayerIndex( int iPlayerIndex );
+
+#endif
 
 #endif // CDLL_CLIENT_INT_H

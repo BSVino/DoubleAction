@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -36,5 +36,6 @@
 #define IN_BULLRUSH		(1 << 22)
 #define IN_GRENADE1		(1 << 23)	// grenade 1
 #define IN_GRENADE2		(1 << 24)	// grenade 2
+#define	IN_ATTACK3		(1 << 25)
 
 #endif // IN_BUTTONS_H

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Interface layer for ipion IVP physics.
 //
@@ -245,7 +245,7 @@ void CPhysicsHook::LevelInitPreEntity()
 	
 	physenv->SetSimulationTimestep( DEFAULT_TICK_INTERVAL ); // 15 ms per tick
 	// HL Game gravity, not real-world gravity
-	physenv->SetGravity( Vector( 0, 0, -sv_gravity.GetFloat() ) );
+	physenv->SetGravity( Vector( 0, 0, -GetCurrentGravity() ) );
 	g_PhysAverageSimTime = 0;
 
 	g_PhysWorldObject = PhysCreateWorld( GetWorldEntity() );
@@ -1280,16 +1280,25 @@ static void CallbackReport( CBaseEntity *pEntity )
 
 CON_COMMAND(physics_highlight_active, "Turns on the absbox for all active physics objects")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	IterateActivePhysicsEntities( CallbackHighlight );
 }
 
 CON_COMMAND(physics_report_active, "Lists all active physics objects")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	IterateActivePhysicsEntities( CallbackReport );
 }
 
 CON_COMMAND_F(surfaceprop, "Reports the surface properties at the cursor", FCVAR_CHEAT )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	CBasePlayer *pPlayer = UTIL_GetCommandClient();
 
 	trace_t tr;
@@ -1531,21 +1540,33 @@ void PhysicsCommand( const CCommand &args, void (*func)( CBaseEntity *pEntity ) 
 
 CON_COMMAND(physics_constraints, "Highlights constraint system graph for an entity")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	PhysicsCommand( args, DebugConstraints );
 }
 
 CON_COMMAND(physics_debug_entity, "Dumps debug info for an entity")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	PhysicsCommand( args, OutputVPhysicsDebugInfo );
 }
 
 CON_COMMAND(physics_select, "Dumps debug info for an entity")
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	PhysicsCommand( args, MarkVPhysicsDebug );
 }
 
 CON_COMMAND( physics_budget, "Times the cost of each active object" )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	int activeCount = physenv->GetActiveObjectCount();
 
 	IPhysicsObject **pActiveList = NULL;
@@ -1612,7 +1633,7 @@ CON_COMMAND( physics_budget, "Times the cost of each active object" )
 			lastTime = elapsed;
  		}
 
-		totalTime = max( totalTime, 0.001 );
+		totalTime = MAX( totalTime, 0.001 );
 		for ( i = 0; i < ents.Count(); i++ )
 		{
 			float fraction = times[i] / totalTime;
@@ -1822,10 +1843,10 @@ void CCollisionEvent::PreCollision( vcollisionevent_t *pEvent )
 					// so make it fairly small and have a tiny collision instead.
 					pObject->GetVelocity( &velocity, &angVel );
 					float len = VectorNormalize(velocity);
-					len = max( len, 10 );
+					len = MAX( len, 10 );
 					velocity *= len;
 					len = VectorNormalize(angVel);
-					len = max( len, 1 );
+					len = MAX( len, 1 );
 					angVel *= len;
 					pObject->SetVelocity( &velocity, &angVel );
 				}
@@ -2589,7 +2610,7 @@ void PhysCollisionScreenShake( gamevcollisionevent_t *pEvent, int index )
 	if ( mass >= VPHYSICS_LARGE_OBJECT_MASS && pEvent->pObjects[otherIndex]->IsStatic() && 
 		!(pEvent->pObjects[index]->GetGameFlags() & FVPHYSICS_PENETRATING) )
 	{
-		mass = clamp(mass, VPHYSICS_LARGE_OBJECT_MASS, 2000);
+		mass = clamp(mass, VPHYSICS_LARGE_OBJECT_MASS, 2000.f);
 		if ( pEvent->collisionSpeed > 30 && pEvent->deltaCollisionTime > 0.25f )
 		{
 			Vector vecPos;

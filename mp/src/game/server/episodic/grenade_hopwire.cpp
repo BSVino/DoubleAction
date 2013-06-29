@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Gravity well device
 //
@@ -547,14 +547,14 @@ void CGrenadeHopwire::Detonate( void )
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, MAX_HOP_HEIGHT*2 ), MASK_SOLID, this, COLLISION_GROUP_NONE, &tr );
 
 	// Jump half the height to the found ceiling
-	float hopHeight = min( MAX_HOP_HEIGHT, (MAX_HOP_HEIGHT*tr.fraction) );
+	float hopHeight = MIN( MAX_HOP_HEIGHT, (MAX_HOP_HEIGHT*tr.fraction) );
 
 	//Add upwards velocity for the "hop"
 	Vector hopVel( 0.0f, 0.0f, hopHeight );
 	SetVelocity( hopVel, hopAngle );
 
 	// Get the time until the apex of the hop
-	float apexTime = sqrt( hopHeight / sv_gravity.GetFloat() );
+	float apexTime = sqrt( hopHeight / GetCurrentGravity() );
 
 	// Explode at the apex
 	SetThink( &CGrenadeHopwire::CombatThink );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -37,19 +37,18 @@ Vector GetTracerOrigin( const CEffectData &data )
 
 		C_BaseEntity *pEnt = data.GetEntity();
 
-		// This check should probably be for all multiplayer games, investigate later
-		// 10/09/2008: It should.
-		if ( gpGlobals->maxClients > 1 )
-		{
-			if ( pEnt && pEnt->IsDormant() )
-				return vecStart;
-		}
+// This check should probably be for all multiplayer games, investigate later
+#if defined( HL2MP ) || defined( TF_CLIENT_DLL )
+		if ( pEnt && pEnt->IsDormant() )
+			return vecStart;
+#endif
 
 		C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>( pEnt );
-		if ( pWpn && pWpn->IsCarriedByLocalPlayer() )
+		if ( pWpn && pWpn->ShouldDrawUsingViewModel() )
 		{
 			C_BasePlayer *player = ToBasePlayer( pWpn->GetOwner() );
 
+			// Use GetRenderedWeaponModel() instead?
 			pViewModel = player ? player->GetViewModel( 0 ) : NULL;
 			if ( pViewModel )
 			{

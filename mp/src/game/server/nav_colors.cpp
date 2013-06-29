@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,6 +11,10 @@
 #include "cbase.h"
 #include "nav_colors.h"
 #include "Color.h"
+
+// NOTE: This has to be the last file included!
+#include "tier0/memdbgon.h"
+
 
 //--------------------------------------------------------------------------------------------------------------
 /**
@@ -32,7 +36,8 @@ Color NavColors[] =
 	Color( 0, 255, 255 ),		// NavMarkedColor
 	Color( 255, 0, 0 ),			// NavNormalColor
 	Color( 0, 0, 255 ),			// NavCornerColor
-	Color( 0, 0, 255 ),			// NavBlockedColor
+	Color( 0, 0, 255 ),			// NavBlockedByDoorColor
+	Color( 0, 255, 255 ),		// NavBlockedByFuncNavBlockerColor
 
 	// Hiding spot colors
 	Color( 255, 0, 0 ),			// NavIdealSniperColor
@@ -44,12 +49,16 @@ Color NavColors[] =
 	// Connector colors
 	Color( 0, 255, 255 ),		// NavConnectedTwoWaysColor
 	Color( 0, 0, 255 ),			// NavConnectedOneWayColor
+	Color( 0, 255, 0 ),			// NavConnectedContiguous
+	Color( 255, 0, 0 ),			// NavConnectedNonContiguous
 
 	// Editing colors
 	Color( 255, 255, 255 ),		// NavCursorColor
 	Color( 255, 255, 255 ),		// NavSplitLineColor
 	Color( 0, 255, 255 ),		// NavCreationColor
+	Color( 255, 0, 0 ),			// NavInvalidCreationColor
 	Color( 0, 64, 64 ),			// NavGridColor
+	Color( 255, 255, 255 ),		// NavDragSelectionColor
 
 	// Nav attribute colors
 	Color( 0, 0, 255 ),			// NavAttributeCrouchColor
@@ -60,6 +69,7 @@ Color NavColors[] =
 	Color( 0, 0, 255 ),			// NavAttributeRunColor
 	Color( 0, 255, 0 ),			// NavAttributeWalkColor
 	Color( 255, 0, 0 ),			// NavAttributeAvoidColor
+	Color( 0, 200, 0 ),			// NavAttributeStairColor
 };
 
 
@@ -84,13 +94,27 @@ void NavDrawTriangle( const Vector& point1, const Vector& point2, const Vector& 
 
 
 //--------------------------------------------------------------------------------------------------------------
+void NavDrawFilledTriangle( const Vector& point1, const Vector& point2, const Vector& point3, NavEditColor navColor, bool dark )
+{
+	Color color = NavColors[navColor];
+	if ( dark )
+	{
+		color[0] = color[0] / 2;
+		color[1] = color[1] / 2;
+		color[2] = color[2] / 2;
+	}
+	NDebugOverlay::Triangle( point1, point2, point3, color[0], color[1], color[2], 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+}
+
+
+//--------------------------------------------------------------------------------------------------------------
 void NavDrawHorizontalArrow( const Vector& from, const Vector& to, float width, NavEditColor navColor )
 {
 	const Vector offset( 0, 0, 1 );
 
 	Color color = NavColors[navColor];
-	NDebugOverlay::HorzArrow( from + offset, to + offset, width, color[0]/2, color[1]/2, color[2]/2, 255, true, 0.1f );
-	NDebugOverlay::HorzArrow( from + offset, to + offset, width, color[0], color[1], color[2], 255, false, 0.15f );
+	NDebugOverlay::HorzArrow( from + offset, to + offset, width, color[0]/2, color[1]/2, color[2]/2, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+	NDebugOverlay::HorzArrow( from + offset, to + offset, width, color[0], color[1], color[2], 255, false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 }
 
 
@@ -113,15 +137,46 @@ void NavDrawDashedLine( const Vector& from, const Vector& to, NavEditColor navCo
 	{
 		Vector start = from + unit * distance;
 		float endDistance = distance + solidLen;
-		endDistance = min( endDistance, totalDistance );
+		endDistance = MIN( endDistance, totalDistance );
 		Vector end = from + unit * endDistance;
 
 		distance += solidLen + gapLen;
 
-		NDebugOverlay::Line( start + offset, end + offset, color[0]/2, color[1]/2, color[2]/2, true, 0.1f );
-		NDebugOverlay::Line( start + offset, end + offset, color[0], color[1], color[2], false, 0.15f );
+		NDebugOverlay::Line( start + offset, end + offset, color[0]/2, color[1]/2, color[2]/2, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+		NDebugOverlay::Line( start + offset, end + offset, color[0], color[1], color[2], false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 	}
 }
+
+
+//--------------------------------------------------------------------------------------------------------------
+void NavDrawVolume( const Vector &vMin, const Vector &vMax, int zMidline, NavEditColor navColor )
+{
+	// Center rectangle
+	NavDrawLine( Vector( vMax.x, vMax.y, zMidline ), Vector( vMin.x, vMax.y, zMidline ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, zMidline ), Vector( vMin.x, vMax.y, zMidline ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, zMidline ), Vector( vMax.x, vMin.y, zMidline ),	navColor );
+	NavDrawLine( Vector( vMax.x, vMax.y, zMidline ), Vector( vMax.x, vMin.y, zMidline ),	navColor );
+
+	// Bottom rectangle
+	NavDrawLine( Vector( vMax.x, vMax.y, vMin.z ), Vector( vMin.x, vMax.y, vMin.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, vMin.z ), Vector( vMin.x, vMax.y, vMin.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, vMin.z ), Vector( vMax.x, vMin.y, vMin.z ),	navColor );
+	NavDrawLine( Vector( vMax.x, vMax.y, vMin.z ), Vector( vMax.x, vMin.y, vMin.z ),	navColor );
+
+	// Top rectangle
+	NavDrawLine( Vector( vMax.x, vMax.y, vMax.z ), Vector( vMin.x, vMax.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, vMax.z ), Vector( vMin.x, vMax.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, vMax.z ), Vector( vMax.x, vMin.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMax.x, vMax.y, vMax.z ), Vector( vMax.x, vMin.y, vMax.z ),	navColor );
+
+	// Edges
+	NavDrawLine( Vector( vMax.x, vMax.y, vMin.z ), Vector( vMax.x, vMax.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMin.y, vMin.z ), Vector( vMin.x, vMin.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMax.x, vMin.y, vMin.z ), Vector( vMax.x, vMin.y, vMax.z ),	navColor );
+	NavDrawLine( Vector( vMin.x, vMax.y, vMin.z ), Vector( vMin.x, vMax.y, vMax.z ),	navColor );
+}
+
+
 
 
 //--------------------------------------------------------------------------------------------------------------

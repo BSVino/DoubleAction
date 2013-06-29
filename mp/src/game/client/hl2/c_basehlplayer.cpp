@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -53,11 +53,6 @@ void CC_DropPrimary( void )
 
 static ConCommand dropprimary("dropprimary", CC_DropPrimary, "dropprimary: Drops the primary weapon of the player.");
 
-// link to the correct class.
-#if !defined ( HL2MP ) && !defined ( PORTAL )
-LINK_ENTITY_TO_CLASS( player, C_BaseHLPlayer );
-#endif
-
 //-----------------------------------------------------------------------------
 // Constructor
 //-----------------------------------------------------------------------------
@@ -105,7 +100,7 @@ float C_BaseHLPlayer::GetFOV()
 	int min_fov = ( gpGlobals->maxClients == 1 ) ? 5 : default_fov.GetInt();
 	
 	// Don't let it go too low
-	flFOVOffset = max( min_fov, flFOVOffset );
+	flFOVOffset = MAX( min_fov, flFOVOffset );
 
 	return flFOVOffset;
 }
@@ -223,7 +218,7 @@ bool C_BaseHLPlayer::TestMove( const Vector &pos, float fVertDist, float radius,
 			{
 				// check if the endpos intersects with the direction the object is travelling.  if it doesn't, this is a good direction to move.
 				if ( objDir.IsZero() ||
-					IntersectInfiniteRayWithSphere( objPos, objDir, trOver.endpos, radius, &flHit1, &flHit2 ) && ( ( flHit1 >= 0.0f ) || ( flHit2 >= 0.0f ) ) )
+					( IntersectInfiniteRayWithSphere( objPos, objDir, trOver.endpos, radius, &flHit1, &flHit2 ) && ( ( flHit1 >= 0.0f ) || ( flHit2 >= 0.0f ) ) ) )
 				{
 					return false;
 				}
@@ -272,7 +267,7 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 
 	if ( curspeed > 150.0f )
 	{
-		curspeed = min( 2048.0f, curspeed );
+		curspeed = MIN( 2048.0f, curspeed );
 		factor = ( 1.0f + ( curspeed - 150.0f ) / 150.0f );
 
 		//engine->Con_NPrintf( slot++, "scaleup (%f) to radius %f\n", factor, radius * factor );
@@ -524,7 +519,7 @@ void C_BaseHLPlayer::PerformClientSideObstacleAvoidance( float flFrameTime, CUse
 		flSideScale = fabs( cl_sidespeed.GetFloat() ) / fabs( pCmd->sidemove );
 	}
 	
-	float flScale = min( flForwardScale, flSideScale );
+	float flScale = MIN( flForwardScale, flSideScale );
 	pCmd->forwardmove *= flScale;
 	pCmd->sidemove *= flScale;
 
@@ -641,3 +636,14 @@ bool C_BaseHLPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 	return bResult;
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Input handling
+//-----------------------------------------------------------------------------
+void C_BaseHLPlayer::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
+{
+	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
+	BuildFirstPersonMeathookTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed, "ValveBiped.Bip01_Head1" );
+}
+

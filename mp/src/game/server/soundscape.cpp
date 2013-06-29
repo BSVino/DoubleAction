@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -88,9 +88,6 @@ BEGIN_DATADESC( CEnvSoundscape )
 	DEFINE_KEYFIELD( m_positionNames[6], FIELD_STRING, "position6" ),
 	DEFINE_KEYFIELD( m_positionNames[7], FIELD_STRING, "position7" ),
 
-	DEFINE_UTLVECTOR( m_hPlayersInPVS, FIELD_EHANDLE ),
-	DEFINE_FIELD( m_flNextUpdatePlayersInPVS, FIELD_TIME ),
-
 	DEFINE_KEYFIELD( m_bDisabled,	FIELD_BOOLEAN,	"StartDisabled" ),
 
 	DEFINE_INPUTFUNC( FIELD_VOID, "Enable", InputEnable ),
@@ -105,8 +102,8 @@ END_DATADESC()
 CEnvSoundscape::CEnvSoundscape()
 {
 	m_soundscapeName = NULL_STRING;
-	m_flNextUpdatePlayersInPVS = 0;
 	m_soundscapeIndex = -1;
+	m_soundscapeEntityId = -1;
 	m_bDisabled = false;
 	g_SoundscapeSystem.AddSoundscapeEntity( this );
 }
@@ -241,37 +238,6 @@ void CEnvSoundscape::WriteAudioParamsTo( audioparams_t &audio )
 }
 
 
-bool CEnvSoundscape::UpdatePlayersInPVS()
-{
-	// Only update players in PVS every 2 seconds.
-	if ( gpGlobals->curtime < m_flNextUpdatePlayersInPVS )
-		return false;
-
-	m_flNextUpdatePlayersInPVS = gpGlobals->curtime + 2.0f + RandomFloat( -0.3, 0.3 );
-
-	// Find the players in our PVS.
-	unsigned char myPVS[16 * 1024];
-	int pvsLen = engine->GetPVSForCluster( engine->GetClusterForOrigin( GetAbsOrigin() ), sizeof( myPVS ), myPVS );
-
-	m_hPlayersInPVS.Purge();
-	for ( int i=1; i <= gpGlobals->maxClients; i++ )
-	{
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-		if ( !pPlayer )
-			continue;
-
-		Vector vecWorldMins, vecWorldMaxs;
-		pPlayer->CollisionProp()->WorldSpaceAABB( &vecWorldMins, &vecWorldMaxs );
-		if ( engine->CheckBoxInPVS( vecWorldMins, vecWorldMaxs, myPVS, pvsLen ) )
-		{
-			m_hPlayersInPVS.AddToTail( pPlayer );
-		}
-	}
-	return true;
-}
-
-
 //
 // A client that is visible and in range of a sound entity will
 // have its soundscape set by that sound entity.  If two or more
@@ -282,86 +248,88 @@ bool CEnvSoundscape::UpdatePlayersInPVS()
 //
 
 // CONSIDER: if player in water state, autoset and underwater soundscape? 
-void CEnvSoundscape::Update()
+void CEnvSoundscape::UpdateForPlayer( ss_update_t &update )
 {
-	bool bUpdated = UpdatePlayersInPVS();
-
 	if ( !IsEnabled() )
-		return;
-
-	// Only update soundscapes in multiplayer when the PVS gets updated
-	if ( g_pGameRules->IsMultiplayer() && !bUpdated && !soundscape_debug.GetBool() )
-		return;
-
-	bool bDebugThis = soundscape_debug.GetInt() == 1;
-
-	for ( int i=0; i < m_hPlayersInPVS.Count(); i++ )
 	{
-		CBasePlayer *pPlayer = m_hPlayersInPVS[i];
-		if ( !pPlayer )
-			continue;
-
-		if ( !InRangeOfPlayer( pPlayer ) )
-			continue;
-
-		// check to see if this is the sound entity that is 
-		// currently affecting this player
-		audioparams_t &audio = pPlayer->GetAudioParams();
-
-		// if we got this far, we're looking at an entity that is contending
-		// for current player sound. the closest entity to player wins.
-		CEnvSoundscape *pCurrent = (CEnvSoundscape *)audio.ent.Get();
-		if ( !pCurrent || 
-			!pCurrent->IsEnabled() || 
-			!pCurrent->InRangeOfPlayer( pPlayer ) ) 
+		if ( update.pCurrentSoundscape == this )
 		{
-			// The old one is obscured or out of range.. take over.
-			WriteAudioParamsTo( audio );
+			update.pCurrentSoundscape = NULL;
+			update.currentDistance = 0;
+			update.bInRange = false;
 		}
-		else if ( pCurrent && 
-			EarPosition().DistTo( pPlayer->EarPosition() ) < pCurrent->EarPosition().DistTo( pPlayer->EarPosition() ) )
-		{
-			// new entity is closer to player, so it wins.
-			WriteAudioParamsTo( audio );
-		}
+		return;
+	}
 
-		if ( !bDebugThis )
-		{
-			bDebugThis = soundscape_debug.GetInt() == 2;
-		}
-	} 
-
-	if ( bDebugThis )
+	// calc range from sound entity to player
+	Vector target = EarPosition();
+	float range = (update.playerPosition - target).Length();
+	
+	if ( update.pCurrentSoundscape == this )
 	{
+		update.currentDistance = range;
+		update.bInRange = false;
+		if ( m_flRadius > range || m_flRadius == -1 )
+		{
+			trace_t tr;
 
+			update.traceCount++;
+			UTIL_TraceLine( target, update.playerPosition, MASK_SOLID_BRUSHONLY|MASK_WATER, update.pPlayer, COLLISION_GROUP_NONE, &tr );
+			if ( tr.fraction == 1 && !tr.startsolid )
+			{
+				update.bInRange = true;
+			}
+		}
+	}
+	else
+	{
+		if ( (!update.bInRange || range < update.currentDistance ) && (m_flRadius > range || m_flRadius == -1) )
+		{
+			trace_t tr;
+
+			update.traceCount++;
+			UTIL_TraceLine( target, update.playerPosition, MASK_SOLID_BRUSHONLY|MASK_WATER, update.pPlayer, COLLISION_GROUP_NONE, &tr );
+
+			if ( tr.fraction == 1 && !tr.startsolid )
+			{
+				audioparams_t &audio = update.pPlayer->GetAudioParams();
+				WriteAudioParamsTo( audio );
+				update.pCurrentSoundscape = this;
+				update.bInRange = true;
+				update.currentDistance = range;
+			}
+		}
+	}
+
+
+	if ( soundscape_debug.GetBool() )
+	{
 		// draw myself
 		NDebugOverlay::Box(GetAbsOrigin(), Vector(-10,-10,-10), Vector(10,10,10),  255, 0, 255, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 
-		// Don't use GetLocalPlayer(), because that prevents multiplayer games using this for testing with a single client in the game
-		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
- 		if ( pPlayer )
+ 		if ( update.pPlayer )
 		{
-			audioparams_t &audio = pPlayer->GetAudioParams();
+			audioparams_t &audio = update.pPlayer->GetAudioParams();
 			if ( audio.ent.Get() != this )
 			{
-				if ( InRangeOfPlayer( pPlayer ) )
+				if ( InRangeOfPlayer( update.pPlayer ) )
 				{
-					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
+					NDebugOverlay::Line( GetAbsOrigin(), update.pPlayer->WorldSpaceCenter(), 255, 255, 255, true, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 				}
 				else
 				{
-					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 0, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
+					NDebugOverlay::Line( GetAbsOrigin(), update.pPlayer->WorldSpaceCenter(), 255, 0, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
 				}
 			}
 			else
 			{
-				if ( InRangeOfPlayer( pPlayer ) )
+				if ( InRangeOfPlayer( update.pPlayer ) )
 				{
-					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
+					NDebugOverlay::Line( GetAbsOrigin(), update.pPlayer->WorldSpaceCenter(), 0, 255, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
 				}
   				else
 				{
-					NDebugOverlay::Line( GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 170, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
+					NDebugOverlay::Line( GetAbsOrigin(), update.pPlayer->WorldSpaceCenter(), 255, 170, 0, true, NDEBUG_PERSIST_TILL_NEXT_SERVER  );
 				}
 
 				// also draw lines to each sound position.
@@ -382,7 +350,6 @@ void CEnvSoundscape::Update()
 
 		NDebugOverlay::EntityTextAtPosition( GetAbsOrigin(), 0, STRING(m_soundscapeName), NDEBUG_PERSIST_TILL_NEXT_SERVER );
 	}
-
 }
 
 //
@@ -403,7 +370,7 @@ void CEnvSoundscape::Precache()
 {
 	if ( m_soundscapeName == NULL_STRING )
 	{
-		DevMsg("Found soundscape entity with no soundscape name.\n", STRING(m_soundscapeName) );
+		DevMsg("Found soundscape entity with no soundscape name.\n" );
 		return;
 	}
 
@@ -422,13 +389,17 @@ void CEnvSoundscape::DrawDebugGeometryOverlays( void )
 {
 	if ( m_debugOverlays & (OVERLAY_BBOX_BIT|OVERLAY_PIVOT_BIT|OVERLAY_ABSBOX_BIT) )
 	{
-		CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(1);
 		if ( pPlayer )
 		{
 			audioparams_t &audio = pPlayer->GetAudioParams();
-			if ( audio.ent.Get() == this )
+			if ( audio.ent.Get() != this )
 			{
-				NDebugOverlay::Line(GetAbsOrigin(), pPlayer->WorldSpaceCenter(), 255, 0, 255, false, 0 );
+				CBaseEntity *pEnt = pPlayer; // ->GetSoundscapeListener();
+				if ( pEnt )
+				{
+					NDebugOverlay::Line(GetAbsOrigin(), pEnt->WorldSpaceCenter(), 255, 0, 255, false, 0 );
+				}
 			}
 		}
 	}

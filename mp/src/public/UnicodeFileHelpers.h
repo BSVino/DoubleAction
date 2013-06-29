@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,10 +13,10 @@
 #include <stdlib.h>
 
 // helper functions for parsing unicode file buffers
-wchar_t *AdvanceOverWhitespace(wchar_t *start);
-wchar_t *ReadUnicodeToken(wchar_t *start, wchar_t *token, int tokenBufferSize, bool &quoted);
-wchar_t *ReadUnicodeTokenNoSpecial(wchar_t *start, wchar_t *token, int tokenBufferSize, bool &quoted);
-wchar_t *ReadToEndOfLine(wchar_t *start);
+ucs2 *AdvanceOverWhitespace(ucs2 *start);
+ucs2 *ReadUnicodeToken(ucs2 *start, ucs2 *token, int tokenBufferSize, bool &quoted);
+ucs2 *ReadUnicodeTokenNoSpecial(ucs2 *start, ucs2 *token, int tokenBufferSize, bool &quoted);
+ucs2 *ReadToEndOfLine(ucs2 *start);
 
 // writing to unicode files via CUtlBuffer
 class CUtlBuffer;

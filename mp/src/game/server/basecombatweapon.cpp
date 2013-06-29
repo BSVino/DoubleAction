@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -228,7 +228,7 @@ class CWeaponLOSFilter : public CTraceFilterSkipTwoEntities
 {
 	DECLARE_CLASS( CWeaponLOSFilter, CTraceFilterSkipTwoEntities );
 public:
-	CWeaponLOSFilter::CWeaponLOSFilter( IHandleEntity *pHandleEntity, IHandleEntity *pHandleEntity2, int collisionGroup ) :
+	CWeaponLOSFilter( IHandleEntity *pHandleEntity, IHandleEntity *pHandleEntity2, int collisionGroup ) :
 	  CTraceFilterSkipTwoEntities( pHandleEntity, pHandleEntity2, collisionGroup ), m_pVehicle( NULL )
 	{
 		// If the tracing entity is in a vehicle, then ignore it

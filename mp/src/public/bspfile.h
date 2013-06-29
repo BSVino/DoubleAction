@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines and structures for the BSP file format.
 //
@@ -624,6 +624,7 @@ public:
 #define DISPTRI_TAG_BUILDABLE		(1<<2)
 #define DISPTRI_FLAG_SURFPROP1		(1<<3)
 #define DISPTRI_FLAG_SURFPROP2		(1<<4)
+#define DISPTRI_TAG_REMOVE			(1<<5)
 
 class CDispTri
 {
@@ -1028,7 +1029,6 @@ public:
 
 inline void doverlay_t::SetFaceCount( unsigned short count )
 {
-	Assert( count >= 0 && (count & OVERLAY_RENDER_ORDER_MASK) == 0 );
 	m_nFaceCountAndRenderOrder &= OVERLAY_RENDER_ORDER_MASK;
 	m_nFaceCountAndRenderOrder |= (count & ~OVERLAY_RENDER_ORDER_MASK);
 }
@@ -1040,7 +1040,6 @@ inline unsigned short doverlay_t::GetFaceCount() const
 
 inline void doverlay_t::SetRenderOrder( unsigned short order )
 {
-	Assert( order >= 0 && order < OVERLAY_NUM_RENDER_ORDERS );
 	m_nFaceCountAndRenderOrder &= ~OVERLAY_RENDER_ORDER_MASK;
 	m_nFaceCountAndRenderOrder |= (order << (16 - OVERLAY_RENDER_ORDER_NUM_BITS));	// leave 2 bits for render order.
 }
@@ -1092,7 +1091,6 @@ public:
 
 inline void dwateroverlay_t::SetFaceCount( unsigned short count )
 {
-	Assert( count >= 0 && (count & WATEROVERLAY_RENDER_ORDER_MASK) == 0 );
 	m_nFaceCountAndRenderOrder &= WATEROVERLAY_RENDER_ORDER_MASK;
 	m_nFaceCountAndRenderOrder |= (count & ~WATEROVERLAY_RENDER_ORDER_MASK);
 }
@@ -1104,7 +1102,6 @@ inline unsigned short dwateroverlay_t::GetFaceCount() const
 
 inline void dwateroverlay_t::SetRenderOrder( unsigned short order )
 {
-	Assert( order >= 0 && order < WATEROVERLAY_NUM_RENDER_ORDERS );
 	m_nFaceCountAndRenderOrder &= ~WATEROVERLAY_RENDER_ORDER_MASK;
 	m_nFaceCountAndRenderOrder |= ( order << ( 16 - WATEROVERLAY_RENDER_ORDER_NUM_BITS ) );	// leave 2 bits for render order.
 }

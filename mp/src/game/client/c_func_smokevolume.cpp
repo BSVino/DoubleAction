@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -254,7 +254,7 @@ C_FuncSmokeVolume::C_FuncSmokeVolume()
 	m_vLastAngles.Init();
 
 	m_pSmokeParticleInfos = NULL;
-	m_SpacingRadius = 0.0f;;
+	m_SpacingRadius = 0.0f;
 	m_ParticleRadius = 0.0f;
 	m_MinColor.Init( 1.0, 1.0, 1.0 );
 	m_MaxColor.Init( 1.0, 1.0, 1.0 );
@@ -264,6 +264,8 @@ C_FuncSmokeVolume::~C_FuncSmokeVolume()
 {
 	delete [] m_pSmokeParticleInfos;
 }
+
+static ConVar mat_reduceparticles( "mat_reduceparticles", "0" );
 
 void C_FuncSmokeVolume::OnDataChanged( DataUpdateType_t updateType )
 {		
@@ -275,6 +277,12 @@ void C_FuncSmokeVolume::OnDataChanged( DataUpdateType_t updateType )
 	m_MaxColor[1] = ( 1.0f / 255.0f ) * m_Color2.g;
 	m_MaxColor[2] = ( 1.0f / 255.0f ) * m_Color2.b;
 
+	if ( mat_reduceparticles.GetBool() )
+	{
+		m_Density *= 0.5f;
+		m_ParticleSpacingDistance *= 1.5f;
+	}
+
 	m_ParticleRadius = m_ParticleDrawWidth * 0.5f;
 	m_SpacingRadius = m_ParticleSpacingDistance * 0.5f;
 
@@ -283,7 +291,7 @@ void C_FuncSmokeVolume::OnDataChanged( DataUpdateType_t updateType )
 //	Warning( "m_Density: %f\n", m_Density );
 //	Warning( "m_MovementSpeed: %f\n", m_MovementSpeed );
 	
-	if(updateType == DATA_UPDATE_CREATED)
+	if( updateType == DATA_UPDATE_CREATED )
 	{
 		Vector size = WorldAlignMaxs() - WorldAlignMins();
 		m_xCount = 0.5f + ( size.x / ( m_SpacingRadius * 2.0f ) );
@@ -517,14 +525,18 @@ void C_FuncSmokeVolume::RenderParticles( CParticleRenderIterator *pIterator )
 		TransformParticle( ParticleMgr()->GetModelView(), renderPos, tRenderPos );
 		float sortKey = 1;//tRenderPos.z;
 
-		RenderParticle_ColorSizeAngle(
-			pIterator->GetParticleDraw(),
-			tRenderPos,
-			color,
-			alpha * GetAlphaDistanceFade(tRenderPos, 10, 30),	// Alpha
-			m_ParticleRadius,
-			pParticle->m_CurRotation
-			);
+		// If we're reducing particle cost, only render sufficiently opaque particles 
+		if ( ( alpha > 0.05f ) || !mat_reduceparticles.GetBool() )
+		{
+			RenderParticle_ColorSizeAngle(
+				pIterator->GetParticleDraw(),
+				tRenderPos,
+				color,
+				alpha * GetAlphaDistanceFade(tRenderPos, 10, 30),	// Alpha
+				m_ParticleRadius,
+				pParticle->m_CurRotation
+				);
+		}
 
 		pParticle = (const SmokeGrenadeParticle*)pIterator->GetNext( sortKey );
 	}
@@ -576,7 +588,7 @@ void C_FuncSmokeVolume::FillVolume()
 						if(pParticle)
 						{
 							pParticle->m_Pos = vPos;
-							pParticle->m_ColorInterp = (unsigned char)((rand() * 255) / RAND_MAX);
+							pParticle->m_ColorInterp = (unsigned char)((rand() * 255) / VALVE_RAND_MAX);
 							pParticle->m_RotationFactor = FRand( -1.0f, 1.0f ); // Rotation factor.
 							pParticle->m_CurRotation = FRand( -m_RotationSpeed, m_RotationSpeed );
 						}

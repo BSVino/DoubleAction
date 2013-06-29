@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,6 +8,7 @@
 #include "vbsp.h"
 #include "disp_vbsp.h"
 #include "builddisp.h"
+#include "mathlib/vmatrix.h"
 
 void Overlay_BuildBasisOrigin( doverlay_t *pOverlay );
 
@@ -55,7 +56,9 @@ int Overlay_GetFromEntity( entity_t *pMapEnt )
 
 	pMapOverlay->m_nRenderOrder = IntForKey( pMapEnt, "RenderOrder" );
 	if ( pMapOverlay->m_nRenderOrder < 0 || pMapOverlay->m_nRenderOrder >= OVERLAY_NUM_RENDER_ORDERS )
-		Error( "Overlay (%s) at %f %f %f has invalid render order (%d).\n", ValueForKey( pMapEnt, "material" ), pMapOverlay->vecOrigin );
+		Error( "Overlay (%s) at %f %f %f has invalid render order (%d).\n", ValueForKey( pMapEnt, "material" ),
+				pMapOverlay->vecOrigin.x, pMapOverlay->vecOrigin.y, pMapOverlay->vecOrigin.z,
+				pMapOverlay->m_nRenderOrder );
 
 	GetVectorForKey( pMapEnt, "uv0", pMapOverlay->vecUVPoints[0] );
 	GetVectorForKey( pMapEnt, "uv1", pMapOverlay->vecUVPoints[1] );
@@ -102,10 +105,10 @@ int Overlay_GetFromEntity( entity_t *pMapEnt )
 //-----------------------------------------------------------------------------
 side_t *GetSide( int nSideId )
 {
-	for( int iSide = 0; iSide < nummapbrushsides; ++iSide )
+	for( int iSide = 0; iSide < g_LoadingMap->nummapbrushsides; ++iSide )
 	{
-		if ( brushsides[iSide].id == nSideId )
-			return &brushsides[iSide];
+		if ( g_LoadingMap->brushsides[iSide].id == nSideId )
+			return &g_LoadingMap->brushsides[iSide];
 	}
 
 	return NULL;
@@ -113,10 +116,10 @@ side_t *GetSide( int nSideId )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void Overlay_UpdateSideLists( void )
+void Overlay_UpdateSideLists( int StartIndex )
 {
 	int nMapOverlayCount = g_aMapOverlays.Count();
-	for( int iMapOverlay = 0; iMapOverlay < nMapOverlayCount; ++iMapOverlay )
+	for( int iMapOverlay = StartIndex; iMapOverlay < nMapOverlayCount; ++iMapOverlay )
 	{
 		mapoverlay_t *pMapOverlay = &g_aMapOverlays.Element( iMapOverlay );
 		if ( pMapOverlay )
@@ -139,10 +142,10 @@ void Overlay_UpdateSideLists( void )
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void OverlayTransition_UpdateSideLists( void )
+void OverlayTransition_UpdateSideLists( int StartIndex )
 {
 	int nOverlayCount = g_aMapWaterOverlays.Count();
-	for( int iOverlay = 0; iOverlay < nOverlayCount; ++iOverlay )
+	for( int iOverlay = StartIndex; iOverlay < nOverlayCount; ++iOverlay )
 	{
 		mapoverlay_t *pOverlay = &g_aMapWaterOverlays.Element( iOverlay );
 		if ( pOverlay )
@@ -203,7 +206,7 @@ void OverlayTransition_AddFaceToLists( int iFace, side_t *pSide )
 //-----------------------------------------------------------------------------
 void Overlay_EmitOverlayFace( mapoverlay_t *pMapOverlay )
 {
-	Assert( g_nOverlayCount < MAX_MAP_OVERLAYS );
+ 	Assert( g_nOverlayCount < MAX_MAP_OVERLAYS );
 	if ( g_nOverlayCount >= MAX_MAP_OVERLAYS )
 	{
 		Error ( "Too Many Overlays!\nMAX_MAP_OVERLAYS = %d", MAX_MAP_OVERLAYS );
@@ -392,4 +395,93 @@ void OverlayTransition_EmitOverlayFaces( void )
 	{
 		OverlayTransition_EmitOverlayFace( &g_aMapWaterOverlays.Element( iMapOverlay ) );
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// These routines were mostly stolen from MapOverlay.cpp in Hammer
+//-----------------------------------------------------------------------------
+#define OVERLAY_BASIS_U					0
+#define OVERLAY_BASIS_V					1
+#define OVERLAY_BASIS_NORMAL			2	
+#define OVERLAY_HANDLES_COUNT			4
+
+
+inline void TransformPoint( const VMatrix& matrix, Vector &point )
+{
+	Vector orgVector = point;
+	matrix.V3Mul( orgVector, point );
+}
+
+
+inline bool fequal( float value, float target, float delta) { return ( (value<(target+delta))&&(value>(target-delta)) ); }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: this function translate / rotate an overlay.
+// Input  : pOverlay - the overlay to be translated
+//			OriginOffset - the translation
+//			AngleOffset - the rotation
+//			Matrix - the translation / rotation matrix
+// Output : none
+//-----------------------------------------------------------------------------
+void Overlay_Translate( mapoverlay_t *pOverlay, Vector &OriginOffset, QAngle &AngleOffset, matrix3x4_t &Matrix )
+{
+	VMatrix tmpMatrix( Matrix );
+
+	Vector	temp = pOverlay->vecOrigin;
+	VectorTransform( temp, Matrix, pOverlay->vecOrigin );
+
+	// erase move component
+	tmpMatrix.SetTranslation( vec3_origin );
+
+	// check if matrix would still change something 
+	if ( !tmpMatrix.IsIdentity() )
+	{
+		// make sure axes are normalized (they should be anyways)
+		pOverlay->vecBasis[OVERLAY_BASIS_U].NormalizeInPlace();
+		pOverlay->vecBasis[OVERLAY_BASIS_V].NormalizeInPlace();
+
+		Vector vecU = pOverlay->vecBasis[OVERLAY_BASIS_U];
+		Vector vecV = pOverlay->vecBasis[OVERLAY_BASIS_V];
+		Vector vecNormal = pOverlay->vecBasis[OVERLAY_BASIS_NORMAL];
+
+		TransformPoint( tmpMatrix, vecU );
+		TransformPoint( tmpMatrix, vecV );
+		TransformPoint( tmpMatrix, vecNormal );
+
+		float fScaleU = vecU.Length();
+		float fScaleV = vecV.Length();
+		float flScaleNormal = vecNormal.Length();
+
+		bool bIsUnit = ( fequal( fScaleU, 1.0f, 0.0001 ) && fequal( fScaleV, 1.0f, 0.0001 ) && fequal( flScaleNormal, 1.0f, 0.0001 ) );
+		bool bIsPerp = ( fequal( DotProduct( vecU, vecV ), 0.0f, 0.0025 ) && fequal( DotProduct( vecU, vecNormal ), 0.0f, 0.0025 ) && fequal( DotProduct( vecV, vecNormal ), 0.0f, 0.0025 ) );
+
+		//		if ( fequal(fScaleU,1,0.0001) && fequal(fScaleV,1,0.0001) && fequal(DotProduct( vecU, vecV ),0,0.0025) )
+		if ( bIsUnit && bIsPerp )
+		{
+			// transformation doesnt scale or shear anything, so just update base axes
+			pOverlay->vecBasis[OVERLAY_BASIS_U] = vecU;
+			pOverlay->vecBasis[OVERLAY_BASIS_V] = vecV;
+			pOverlay->vecBasis[OVERLAY_BASIS_NORMAL] = vecNormal;
+		}
+		else
+		{
+			// more complex transformation, move UV coordinates, but leave base axes 
+			for ( int iHandle=0; iHandle<OVERLAY_HANDLES_COUNT;iHandle++)
+			{
+				Vector vecUV = pOverlay->vecUVPoints[iHandle];
+				Vector vecPos = ( vecUV.x * pOverlay->vecBasis[OVERLAY_BASIS_U] + vecUV.y * pOverlay->vecBasis[OVERLAY_BASIS_V] );
+
+				// to transform in world space
+				TransformPoint( tmpMatrix, vecPos );
+
+				vecUV.x = pOverlay->vecBasis[OVERLAY_BASIS_U].Dot( vecPos );
+				vecUV.y = pOverlay->vecBasis[OVERLAY_BASIS_V].Dot( vecPos );
+
+				pOverlay->vecUVPoints[iHandle] = vecUV;
+			}
+		}
+	}
+
 }

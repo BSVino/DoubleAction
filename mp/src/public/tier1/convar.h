@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,7 +24,7 @@
 
 #ifdef _WIN32
 #define FORCEINLINE_CVAR FORCEINLINE
-#elif _LINUX
+#elif POSIX
 #define FORCEINLINE_CVAR inline
 #else
 #error "implement me"
@@ -368,6 +368,7 @@ public:
 	bool						GetMin( float& minVal ) const;
 	bool						GetMax( float& maxVal ) const;
 	const char					*GetDefault( void ) const;
+	void						SetDefault( const char *pszDefault );
 
 private:
 	// Called by CCvar when the value of a var is changing.
@@ -385,7 +386,7 @@ private:
 
 	// Used internally by OneTimeInit to initialize.
 	virtual void				Init();
-
+	int GetFlags() { return m_pParent->m_nFlags; }
 private:
 
 	// This either points to "this" or it points to the original declaration of a ConVar.

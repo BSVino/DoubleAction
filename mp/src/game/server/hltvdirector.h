@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,7 +27,7 @@
 #define MAX_SHOT_LENGTH				8.0f  // maximum time of a cut (seconds)
 #define DEF_SHOT_LENGTH				6.0f  // average time of a cut (seconds)
 
-class CGameEvent
+class CHLTVGameEvent
 {
 public:
 		int			m_Tick;		// tick of this command
@@ -89,8 +89,8 @@ protected:
 	virtual void	StartInstantBroadcastShot();
 	virtual void	FinishCameraManShot();
 	virtual void	BuildActivePlayerList();
-	virtual CGameEvent *FindBestGameEvent();
-	virtual void	CreateShotFromEvent( CGameEvent *ge );
+	virtual CHLTVGameEvent *FindBestGameEvent();
+	virtual void	CreateShotFromEvent( CHLTVGameEvent *ge );
 
 	int		FindFirstEvent( int tick ); // finds first event >= tick
 	void	CheckHistory();
@@ -115,7 +115,7 @@ protected:
 	CBasePlayer		*m_pActivePlayers[MAX_PLAYERS]; // fixed cameras (point_viewcontrol)
 	int				m_iCameraManIndex;		// entity index of current camera man or 0
 	
-	CUtlRBTree<CGameEvent>	m_EventHistory;
+	CUtlRBTree<CHLTVGameEvent>	m_EventHistory;
 };
 
 extern IGameSystem* HLTVDirectorSystem();

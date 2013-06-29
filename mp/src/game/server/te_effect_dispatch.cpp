@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -82,5 +82,10 @@ void TE_DispatchEffect( IRecipientFilter& filter, float delay, const Vector &pos
 void DispatchEffect( const char *pName, const CEffectData &data )
 {
 	CPASFilter filter( data.m_vOrigin );
+	DispatchEffect( pName, data, filter );
+}
+
+void DispatchEffect( const char *pName, const CEffectData &data, CRecipientFilter &filter )
+{
 	te->DispatchEffect( filter, 0.0, data.m_vOrigin, pName, data );
 }

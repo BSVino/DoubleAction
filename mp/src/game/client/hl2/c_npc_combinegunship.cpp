@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,14 +7,14 @@
 #include "cbase.h"
 #include "c_basehelicopter.h"
 #include "fx_impact.h"
-#include "ieffects.h"
+#include "IEffects.h"
 #include "simple_keys.h"
 #include "fx_envelope.h"
 #include "fx_line.h"
 #include "iefx.h"
 #include "dlight.h"
 #include "c_sprite.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include <bitbuf.h>
 
 // memdbgon must be the last include file in a .cpp file!!!

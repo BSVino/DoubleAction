@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This is a bastardization of the vehicle code for the choreography
 //			group who want to have smooth view lerping code out of a keyframed

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -141,8 +141,8 @@ public:
 	void DebugShowAnimStateFull( int iStartLine );
 
 	virtual void DebugShowAnimState( int iStartLine );
-	void AnimStatePrintf( int iLine, const char *pMsg, ... );
-	void AnimStateLog( const char *pMsg, ... );
+	void AnimStatePrintf( int iLine, PRINTF_FORMAT_STRING const char *pMsg, ... );
+	void AnimStateLog( PRINTF_FORMAT_STRING const char *pMsg, ... );
 
 	// Calculate the playback rate for movement layer
 	virtual float CalcMovementPlaybackRate( bool *bIsMoving );
@@ -168,7 +168,7 @@ protected:
 
 	// Sets up the string you specify, looks for that sequence and returns the index. 
 	// Complains in the console and returns 0 if it can't find it.
-	virtual int CalcSequenceIndex( const char *pBaseName, ... );
+	virtual int CalcSequenceIndex( PRINTF_FORMAT_STRING const char *pBaseName, ... );
 
 	Activity GetCurrentMainSequenceActivity() const;
 

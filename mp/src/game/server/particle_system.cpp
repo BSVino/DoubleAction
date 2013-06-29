@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: An entity that spawns and controls a particle system
 //
@@ -29,10 +29,12 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CParticleSystem, DT_ParticleSystem)
 
 	SendPropArray3( SENDINFO_ARRAY3(m_hControlPointEnts), SendPropEHandle( SENDINFO_ARRAY(m_hControlPointEnts) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iControlPointParents), SendPropInt( SENDINFO_ARRAY(m_iControlPointParents), 3, SPROP_UNSIGNED ) ),
+	SendPropBool( SENDINFO(m_bWeatherEffect) ),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CParticleSystem )
 	DEFINE_KEYFIELD( m_bStartActive,	FIELD_BOOLEAN, "start_active" ),
+	DEFINE_KEYFIELD( m_bWeatherEffect,	FIELD_BOOLEAN, "flag_as_weather" ),
 	DEFINE_FIELD( m_bActive,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flStartTime,		FIELD_TIME ),
 	DEFINE_KEYFIELD( m_iszEffectName,	FIELD_STRING, "effect_name" ),
@@ -121,6 +123,13 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( info_particle_system, CParticleSystem );
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+CParticleSystem::CParticleSystem()
+{
+	m_bWeatherEffect = false;
+}
 
 //-----------------------------------------------------------------------------
 // Precache 
@@ -128,7 +137,7 @@ LINK_ENTITY_TO_CLASS( info_particle_system, CParticleSystem );
 void CParticleSystem::Precache( void )
 {
 	const char *pParticleSystemName = STRING( m_iszEffectName );
-	if ( pParticleSystemName == NULL || pParticleSystemName[0] == NULL )
+	if ( pParticleSystemName == NULL || pParticleSystemName[0] == '\0' )
 	{
 		Warning( "info_particle_system (%s) has no particle system name specified!\n", GetEntityName().ToCStr() );
 	}

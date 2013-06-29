@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -162,7 +162,7 @@ bool CVoiceGameMgr::ClientCommand( CBasePlayer *pPlayer, const CCommand &args )
 	{
 		for(int i=1; i < args.ArgC(); i++)
 		{
-			unsigned long mask = 0;
+			uint32 mask = 0;
 			sscanf( args[i], "%x", &mask);
 
 			if( i <= VOICE_MAX_PLAYERS_DW )

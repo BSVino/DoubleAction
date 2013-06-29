@@ -1,17 +1,17 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef MENU_H
-#define MENU_H
+#ifndef HUD_MENU_H
+#define HUD_MENU_H
 #ifdef _WIN32
 #pragma once
 #endif
 
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "hudelement.h"
 #include <vgui_controls/Panel.h>
 
@@ -86,4 +86,4 @@ private:
 	CPanelAnimationVar( Color, m_BoxColor, "MenuBoxColor", "MenuBoxBg" );
 };
 
-#endif // MENU_H
+#endif // HUD_MENU_H

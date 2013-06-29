@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,11 +6,11 @@
 //=============================================================================//
 #include "cbase.h"
 #include <KeyValues.h>
-#include "materialsystem/IMaterialVar.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/ITexture.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "FunctionProxy.h"
+#include "materialsystem/imaterialvar.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/itexture.h"
+#include "materialsystem/imaterialsystem.h"
+#include "functionproxy.h"
 #include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -323,7 +323,7 @@ void CEntityRandomProxy::OnBind( void *pC_BaseEntity )
 
 EXPOSE_INTERFACE( CEntityRandomProxy, IMaterialProxy, "EntityRandom" IMATERIAL_PROXY_INTERFACE_VERSION );
 
-#include "UtlRBTree.h"
+#include "utlrbtree.h"
 
 //-----------------------------------------------------------------------------
 // Returns the player speed
@@ -357,6 +357,9 @@ public:
 	}
 
 	virtual IMaterial *GetMaterial();
+
+protected:
+	virtual void	OnLogoBindInternal( int playerindex );
 
 private:
 	IMaterialVar *m_pBaseTextureVar;
@@ -418,6 +421,11 @@ void CPlayerLogoProxy::OnBind( void *pC_BaseEntity )
 	if ( !m_pBaseTextureVar )
 		return;
 
+	OnLogoBindInternal( playerindex );
+}
+
+void CPlayerLogoProxy::OnLogoBindInternal( int playerindex )
+{
 	// Find player
 	player_info_t info;
 	engine->GetPlayerInfo( playerindex, &info );
@@ -478,3 +486,39 @@ IMaterial *CPlayerLogoProxy::GetMaterial()
 }
 
 EXPOSE_INTERFACE( CPlayerLogoProxy, IMaterialProxy, "PlayerLogo" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+/* @note Tom Bui: This is here for reference, but we don't want people to use it!
+//-----------------------------------------------------------------------------
+// 
+//-----------------------------------------------------------------------------
+class CPlayerLogoOnModelProxy : public CPlayerLogoProxy
+{
+public:
+	virtual void OnBind( void *pC_BaseEntity );
+};
+
+void CPlayerLogoOnModelProxy::OnBind( void *pC_BaseEntity )
+{
+	if ( pC_BaseEntity )
+	{
+		IClientRenderable *pRend = (IClientRenderable *)pC_BaseEntity;
+		C_BaseEntity *pEntity = pRend->GetIClientUnknown()->GetBaseEntity();
+		if ( pEntity )
+		{
+			if ( !pEntity->IsPlayer() )
+			{
+				pEntity = pEntity->GetRootMoveParent();
+			}
+
+			if ( pEntity && pEntity->IsPlayer() )
+			{
+				int iPlayerIndex = pEntity->entindex();
+
+				OnLogoBindInternal( iPlayerIndex );
+			}
+		}
+	}
+}
+
+EXPOSE_INTERFACE( CPlayerLogoOnModelProxy, IMaterialProxy, "PlayerLogoOnModel" IMATERIAL_PROXY_INTERFACE_VERSION );
+*/

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,51 +28,47 @@ class Vector;
 //-----------------------------------------------------------------------------
 // Flags for GetVertexFormat
 //-----------------------------------------------------------------------------
-enum VertexFormatFlags_t
-{
-	// Indicates an uninitialized VertexFormat_t value
-	VERTEX_FORMAT_INVALID = 0xFFFFFFFFFFFFFFFFL,
+#define	VERTEX_POSITION					0x0001
+#define	VERTEX_NORMAL					0x0002
+#define	VERTEX_COLOR					0x0004
+#define	VERTEX_SPECULAR					0x0008
 
-	VERTEX_POSITION	= 0x0001,
-	VERTEX_NORMAL	= 0x0002,
-	VERTEX_COLOR	= 0x0004,
-	VERTEX_SPECULAR = 0x0008,
+#define	VERTEX_TANGENT_S				0x0010
+#define	VERTEX_TANGENT_T				0x0020
+#define	VERTEX_TANGENT_SPACE			( VERTEX_TANGENT_S | VERTEX_TANGENT_T )
 
-	VERTEX_TANGENT_S	= 0x0010,
-	VERTEX_TANGENT_T	= 0x0020,
-	VERTEX_TANGENT_SPACE= VERTEX_TANGENT_S | VERTEX_TANGENT_T,
+// Indicates we're using wrinkle
+#define	VERTEX_WRINKLE					0x0040
 
-	// Indicates we're using wrinkle
-	VERTEX_WRINKLE	= 0x0040,
+// Indicates we're using bone indices
+#define	VERTEX_BONE_INDEX				0x0080
 
-	// Indicates we're using bone indices
-	VERTEX_BONE_INDEX = 0x0080,
+// Indicates this is a vertex shader
+#define	VERTEX_FORMAT_VERTEX_SHADER		0x0100
 
-	// Indicates this is a vertex shader
-	VERTEX_FORMAT_VERTEX_SHADER = 0x0100,
+// Indicates this format shouldn't be bloated to cache align it
+// (only used for VertexUsage)
+#define	VERTEX_FORMAT_USE_EXACT_FORMAT	0x0200
 
-	// Indicates this format shouldn't be bloated to cache align it
-	// (only used for VertexUsage)
-	VERTEX_FORMAT_USE_EXACT_FORMAT = 0x0200,
+// Indicates that compressed vertex elements are to be used (see also VertexCompressionType_t)
+#define	VERTEX_FORMAT_COMPRESSED		0x400
 
-	// Indicates that compressed vertex elements are to be used (see also VertexCompressionType_t)
-	VERTEX_FORMAT_COMPRESSED = 0x400,
+// Update this if you add or remove bits...
+#define	VERTEX_LAST_BIT					10
 
-	// Update this if you add or remove bits...
-	VERTEX_LAST_BIT = 10,
+#define	VERTEX_BONE_WEIGHT_BIT			(VERTEX_LAST_BIT + 1)
+#define	USER_DATA_SIZE_BIT				(VERTEX_LAST_BIT + 4)
+#define	TEX_COORD_SIZE_BIT				(VERTEX_LAST_BIT + 7)
 
-	VERTEX_BONE_WEIGHT_BIT = VERTEX_LAST_BIT + 1,
-	USER_DATA_SIZE_BIT = VERTEX_LAST_BIT + 4,
-	TEX_COORD_SIZE_BIT = VERTEX_LAST_BIT + 7,
+#define	VERTEX_BONE_WEIGHT_MASK			( 0x7 << VERTEX_BONE_WEIGHT_BIT )
+#define	USER_DATA_SIZE_MASK				( 0x7 << USER_DATA_SIZE_BIT )
 
-	VERTEX_BONE_WEIGHT_MASK = ( 0x7 << VERTEX_BONE_WEIGHT_BIT ),
-	USER_DATA_SIZE_MASK = ( 0x7 << USER_DATA_SIZE_BIT ),
+#define	VERTEX_FORMAT_FIELD_MASK		0x0FF
 
-	VERTEX_FORMAT_FIELD_MASK = 0x0FF,
+// If everything is off, it's an unknown vertex format
+#define	VERTEX_FORMAT_UNKNOWN			0
 
-	// If everything is off, it's an unknown vertex format
-	VERTEX_FORMAT_UNKNOWN = 0,
-};
+
 
 //-----------------------------------------------------------------------------
 // Macros for construction..
@@ -387,10 +383,11 @@ enum MaterialVarFlags_t
 	MATERIAL_VAR_HALFLAMBERT			  = (1 << 27),
 	MATERIAL_VAR_WIREFRAME                = (1 << 28),
 	MATERIAL_VAR_ALLOWALPHATOCOVERAGE     = (1 << 29),
+	MATERIAL_VAR_IGNORE_ALPHA_MODULATION  = (1 << 30),
 
 	// NOTE: Only add flags here that either should be read from
 	// .vmts or can be set directly from client code. Other, internal
-	// flags should to into the flag enum in IMaterialInternal.h
+	// flags should to into the flag enum in imaterialinternal.h
 };
 
 
@@ -597,9 +594,13 @@ public:
 
 	virtual void			CallBindProxy( void *proxyData ) = 0;
 
+	virtual IMaterial		*CheckProxyReplacement( void *proxyData ) = 0;
+
 	virtual void			RefreshPreservingMaterialVars() = 0;
 
 	virtual bool			WasReloadedFromWhitelist() = 0;
+
+	virtual bool			IsPrecached() const = 0;
 };
 
 
@@ -607,6 +608,5 @@ inline bool IsErrorMaterial( IMaterial *pMat )
 {
 	return !pMat || pMat->IsErrorMaterial();
 }
-
 
 #endif // IMATERIAL_H

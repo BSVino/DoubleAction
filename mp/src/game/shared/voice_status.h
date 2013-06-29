@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,13 +11,16 @@
 
 
 #include <vgui_controls/Label.h>
-//#include "VGUI_Bitmap.h"
+//#include "vgui_bitmap.h"
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Image.h>
 #include "voice_common.h"
 #include "voice_banmgr.h"
 #include "hudelement.h"
 
+#ifdef VOICE_VOX_ENABLE
+extern ConVar voice_vox;
+#endif // VOICE_VOX_ENABLE
 
 class CVoiceStatus;
 class IMaterial;
@@ -179,6 +182,10 @@ private:
 	int					m_nControlSize;
 
 	bool				m_bHeadLabelsDisabled;
+
+#ifdef VOICE_VOX_ENABLE
+	CountdownTimer		m_bAboveThresholdTimer;
+#endif // VOICE_VOX_ENABLE
 };
 
 

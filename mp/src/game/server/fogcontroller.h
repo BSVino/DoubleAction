@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -54,7 +54,7 @@ public:
 
 	void InputStartFogTransition(inputdata_t &data);
 
-	int CFogController::DrawDebugTextOverlays(void);
+	int DrawDebugTextOverlays(void);
 
 	void SetLerpValues( void );
 	void Spawn( void );

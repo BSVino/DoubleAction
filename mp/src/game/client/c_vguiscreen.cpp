@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,22 +8,22 @@
 #include "cbase.h"
 #include "networkstringtable_clientdll.h"
 #include <KeyValues.h>
-#include "PanelMetaClassMgr.h"
+#include "panelmetaclassmgr.h"
 #include <vgui_controls/Controls.h>
-#include "mathlib/VMatrix.h"
-#include "VGUIMatSurface/IMatSystemSurface.h"
+#include "mathlib/vmatrix.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 #include "view.h"
-#include "CollisionUtils.h"
+#include "collisionutils.h"
 #include <vgui/IInput.h>
 #include <vgui/IPanel.h>
 #include <vgui/IVGui.h>
 #include "ienginevgui.h"
 #include "in_buttons.h"
-#include <vgui/Mousecode.h>
-#include "materialsystem/IMesh.h"
-#include "ClientEffectPrecacheSystem.h"
-#include "C_VGuiScreen.h"
-#include "IClientMode.h"
+#include <vgui/MouseCode.h>
+#include "materialsystem/imesh.h"
+#include "clienteffectprecachesystem.h"
+#include "c_vguiscreen.h"
+#include "iclientmode.h"
 #include "vgui_bitmapbutton.h"
 #include "vgui_bitmappanel.h"
 #include "filesystem.h"
@@ -344,11 +344,9 @@ void ScreenToWorld( int mousex, int mousey, float fov,
 	// Invert Y
 	dy = c_y - (float)mousey;
 
-	//Tony; fix for 2008 express. why this is an issue, is unbeknownst to me. - http://developer.valvesoftware.com/cgi-bin/bugzilla/show_bug.cgi?id=214
 	// Convert view plane distance
-	//dist = c_x / tan( M_PI * scaled_fov / 360.0 );
-	float dist_denom = tan(M_PI * scaled_fov / 360.0f); 
-	dist = c_x / dist_denom;
+	dist = c_x / tan( M_PI * scaled_fov / 360.0 );
+
 	// Decompose view angles
 	AngleVectors( vecRenderAngles, &vpn, &vright, &vup );
 

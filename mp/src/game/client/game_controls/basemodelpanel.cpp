@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -476,10 +476,11 @@ void CModelPanel::InitCubeMaps()
 	}
 }
 
+
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: If the panel is marked as dirty, update it and mark it as clean
 //-----------------------------------------------------------------------------
-void CModelPanel::Paint()
+void CModelPanel::UpdateModel()
 {
 	BaseClass::Paint();
 
@@ -510,6 +511,24 @@ void CModelPanel::Paint()
 
 		m_bPanelDirty = false;
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CModelPanel::Paint()
+{
+	BaseClass::Paint();
+
+	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if ( !pLocalPlayer || !m_pModelInfo )
+		return;
+
+	MDLCACHE_CRITICAL_SECTION();
+
+	UpdateModel();
 
 	if ( !m_hModel.Get() )
 		return;
@@ -528,7 +547,7 @@ void CModelPanel::Paint()
 	}
 
 	Vector vecExtraModelOffset( 0, 0, 0 );
-	float flWidthRatio = engine->GetScreenAspectRatio() / ( 4.0f / 3.0f );
+	float flWidthRatio = ((float)w / (float)h ) / ( 4.0f / 3.0f );
 
 	// is this a player model?
 	if ( Q_strstr( GetModelName(), "models/player/" ) )
@@ -554,10 +573,16 @@ void CModelPanel::Paint()
 		m_hModel->FrameAdvance( gpGlobals->frametime );
 	}
 
+	CMatRenderContextPtr pRenderContext( materials );
+	
+	// figure out what our viewport is right now
+	int viewportX, viewportY, viewportWidth, viewportHeight;
+	pRenderContext->GetViewport( viewportX, viewportY, viewportWidth, viewportHeight );
+
 	// Now draw it.
 	CViewSetup view;
-	view.x = x + m_pModelInfo->m_vecViewportOffset.x;
-	view.y = y + m_pModelInfo->m_vecViewportOffset.y;
+	view.x = x + m_pModelInfo->m_vecViewportOffset.x + viewportX; // we actually want to offset by the 
+	view.y = y + m_pModelInfo->m_vecViewportOffset.y + viewportY; // viewport origin here because Push3DView expects global coords below
 	view.width = w;
 	view.height = h;
 
@@ -571,7 +596,7 @@ void CModelPanel::Paint()
 	view.zNear = VIEW_NEARZ;
 	view.zFar = 1000;
 
-	CMatRenderContextPtr pRenderContext( materials );
+	
 
 	// Not supported by queued material system - doesn't appear to be necessary
 //	ITexture *pLocalCube = pRenderContext->GetLocalCubemap();
@@ -699,6 +724,8 @@ bool CModelPanel::SetSequence( const char *pszName )
 //-----------------------------------------------------------------------------
 void CModelPanel::OnSetAnimation( KeyValues *data )
 {
+	UpdateModel();
+
 	// If there's no model, these commands will be ignored.
 	Assert(m_hModel);
 
@@ -787,8 +814,8 @@ void CModelPanel::CalculateFrameDistanceInternal( const model_t *pModel )
 	{
 		float flDistZ = fabs( aXFormPoints[iPoint].z / flTanFOVy - aXFormPoints[iPoint].x );
 		float flDistY = fabs( aXFormPoints[iPoint].y / flTanFOVx - aXFormPoints[iPoint].x );
-		float flTestDist = max( flDistZ, flDistY );
-		flDist = max( flDist, flTestDist );
+		float flTestDist = MAX( flDistZ, flDistY );
+		flDist = MAX( flDist, flTestDist );
 	}
 
 	// Scale the object down by 10%.
@@ -821,10 +848,10 @@ void CModelPanel::CalculateFrameDistanceInternal( const model_t *pModel )
 	Vector2D vecScreenMin( 99999.0f, 99999.0f ), vecScreenMax( -99999.0f, -99999.0f );
 	for ( int iPoint = 0; iPoint < 8; ++iPoint )
 	{
-		vecScreenMin.x = min( vecScreenMin.x, aScreenPoints[iPoint].x );
-		vecScreenMin.y = min( vecScreenMin.y, aScreenPoints[iPoint].y );
-		vecScreenMax.x = max( vecScreenMax.x, aScreenPoints[iPoint].x );
-		vecScreenMax.y = max( vecScreenMax.y, aScreenPoints[iPoint].y );
+		vecScreenMin.x = MIN( vecScreenMin.x, aScreenPoints[iPoint].x );
+		vecScreenMin.y = MIN( vecScreenMin.y, aScreenPoints[iPoint].y );
+		vecScreenMax.x = MAX( vecScreenMax.x, aScreenPoints[iPoint].x );
+		vecScreenMax.y = MAX( vecScreenMax.y, aScreenPoints[iPoint].y );
 	}
 
 	vecScreenMin.x = clamp( vecScreenMin.x, 0.0f, flW );

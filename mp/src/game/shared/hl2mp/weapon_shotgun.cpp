@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -61,7 +61,9 @@ public:
 	void DryFire( void );
 	virtual float GetFireRate( void ) { return 0.7; };
 
+#ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
+#endif
 
 	CWeaponShotgun(void);
 
@@ -97,24 +99,22 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( weapon_shotgun, CWeaponShotgun );
 PRECACHE_WEAPON_REGISTER(weapon_shotgun);
 
+#ifndef CLIENT_DLL
 acttable_t	CWeaponShotgun::m_acttable[] = 
 {
-	{ ACT_MP_STAND_IDLE,				ACT_HL2MP_IDLE_SHOTGUN,					false },
-	{ ACT_MP_CROUCH_IDLE,				ACT_HL2MP_IDLE_CROUCH_SHOTGUN,			false },
-
-	{ ACT_MP_RUN,						ACT_HL2MP_RUN_SHOTGUN,					false },
-	{ ACT_MP_CROUCHWALK,				ACT_HL2MP_WALK_CROUCH_SHOTGUN,			false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
-
-	{ ACT_MP_RELOAD_STAND,				ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,		false },
-	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,		false },
-
-	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_SHOTGUN,					false },
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_SHOTGUN,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_SHOTGUN,					false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_SHOTGUN,			false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_SHOTGUN,			false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,		false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_SHOTGUN,					false },
+	{ ACT_RANGE_ATTACK1,				ACT_RANGE_ATTACK_SHOTGUN,				false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponShotgun);
+
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -139,15 +139,12 @@ bool CWeaponShotgun::StartReload( void )
 		return false;
 
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
 
 	SendWeaponAnim( ACT_SHOTGUN_RELOAD_START );
-
-	//Tony; BUG BUG BUG!!! shotgun does one shell at a time!!! -- player model only has a single reload!!! so I'm just going to dispatch the singular for now.
-	ToHL2MPPlayer( pOwner )->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 
 	// Make shotgun shell visible
 	SetBodygroup(1,0);
@@ -183,7 +180,7 @@ bool CWeaponShotgun::Reload( void )
 	if (m_iClip1 >= GetMaxClip1())
 		return false;
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
@@ -316,8 +313,6 @@ void CWeaponShotgun::PrimaryAttack( void )
 
 	// player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-	ToHL2MPPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-
 
 	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
 	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
@@ -370,9 +365,6 @@ void CWeaponShotgun::SecondaryAttack( void )
 
 	// player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
-	//Tony; does shotgun have a second anim?
-	ToHL2MPPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-
 
 	Vector vecSrc	 = pPlayer->Weapon_ShootPosition();
 	Vector vecAiming = pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
@@ -614,7 +606,7 @@ void CWeaponShotgun::ItemHolsterFrame( void )
 			return;
 
 		// Just load the clip with no animations
-		int ammoFill = min( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
+		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
 		
 		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;

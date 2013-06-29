@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include "recvproxy.h"
 #include "particles_new.h"
 #include "engine/ivdebugoverlay.h"
-
+#include "bone_setup.h"
 #else
 
 #include "baseentity.h"
@@ -87,11 +87,11 @@ int CParticleProperty::GetParticleAttachment( C_BaseEntity *pEntity, const char 
 {
 	Assert( pEntity && pEntity->GetBaseAnimating() );
 	if ( !pEntity || !pEntity->GetBaseAnimating() )
-		return -1;
+		return INVALID_PARTICLE_ATTACHMENT;
 
 	// Find the attachment point index
 	int iAttachment = pEntity->GetBaseAnimating()->LookupAttachment( pszAttachmentName );
-	if ( iAttachment == -1 )
+	if ( iAttachment == INVALID_PARTICLE_ATTACHMENT )
 	{
 		Warning("Model '%s' doesn't have attachment '%s' to attach particle system '%s' to.\n", STRING(pEntity->GetBaseAnimating()->GetModelName()), pszAttachmentName, pszParticleName );
 	}
@@ -105,7 +105,7 @@ int CParticleProperty::GetParticleAttachment( C_BaseEntity *pEntity, const char 
 CNewParticleEffect *CParticleProperty::Create( const char *pszParticleName, ParticleAttachment_t iAttachType, const char *pszAttachmentName )
 {
 	int iAttachment = GetParticleAttachment( GetOuter(), pszAttachmentName, pszParticleName );
-	if ( iAttachment == -1 )
+	if ( iAttachment == INVALID_PARTICLE_ATTACHMENT )
 		return NULL;
 
 	// Create the system
@@ -118,6 +118,11 @@ CNewParticleEffect *CParticleProperty::Create( const char *pszParticleName, Part
 static ConVar cl_particle_batch_mode( "cl_particle_batch_mode", "1" );
 CNewParticleEffect *CParticleProperty::Create( const char *pszParticleName, ParticleAttachment_t iAttachType, int iAttachmentPoint, Vector vecOriginOffset )
 {
+	if ( GameRules() )
+	{
+		pszParticleName = GameRules()->TranslateEffectForVisionFilter( "particles", pszParticleName );
+	}
+
 	int nBatchMode = cl_particle_batch_mode.GetInt();
 	CParticleSystemDefinition *pDef = g_pParticleSystemMgr->FindParticleSystem( pszParticleName );
 	bool bRequestedBatch = ( nBatchMode == 2 ) || ( ( nBatchMode == 1 ) && pDef && pDef->ShouldBatch() ); 
@@ -165,7 +170,7 @@ CNewParticleEffect *CParticleProperty::Create( const char *pszParticleName, Part
 //-----------------------------------------------------------------------------
 void CParticleProperty::AddControlPoint( CNewParticleEffect *pEffect, int iPoint, C_BaseEntity *pEntity, ParticleAttachment_t iAttachType, const char *pszAttachmentName, Vector vecOriginOffset )
 {
-	int iAttachment = -1;
+	int iAttachment = INVALID_PARTICLE_ATTACHMENT;
 	if ( pszAttachmentName )
 	{
 		iAttachment = GetParticleAttachment( pEntity, pszAttachmentName, pEffect->GetEffectName() );
@@ -272,7 +277,7 @@ void CParticleProperty::StopEmissionAndDestroyImmediately( CNewParticleEffect *p
 	if ( pEffect )
 	{
 		int iIndex = FindEffect( pEffect );
-		Assert( iIndex != -1 );
+		//Assert( iIndex != -1 );
 		if ( iIndex != -1 )
 		{
 			m_ParticleEffects.Remove( iIndex );
@@ -325,6 +330,7 @@ void CParticleProperty::StopParticlesInvolving( CBaseEntity *pEntity )
 			if (part.pControlPoints[j].hEntity == entHandle)
 			{
 				part.pParticleEffect->StopEmission( false, bRemoveInstantly );
+				part.pControlPoints.Remove( j );
 				break; // break out of the inner loop (to where it says BREAK TO HERE)
 			}
 		}
@@ -364,6 +370,41 @@ void CParticleProperty::StopParticlesNamed( const char *pszEffectName, bool bFor
 	}
 }
 
+void CParticleProperty::StopParticlesWithNameAndAttachment( const char *pszEffectName, int iAttachmentPoint, bool bForceRemoveInstantly /* =false */ )
+{
+	CParticleSystemDefinition *pDef = g_pParticleSystemMgr->FindParticleSystem( pszEffectName );
+	AssertMsg1(pDef, "Could not find particle definition %s", pszEffectName );
+	if (!pDef)
+		return;
+
+
+	// If we return from dormancy and are then told to stop emitting,
+	// we should have died while dormant. Remove ourselves immediately.
+	bool bRemoveInstantly = (m_iDormancyChangedAtFrame == gpGlobals->framecount);
+	// force remove particles instantly if caller specified
+	bRemoveInstantly |= bForceRemoveInstantly;
+
+	int nCount = m_ParticleEffects.Count();
+	for ( int i = 0; i < nCount; ++i )
+	{
+		// for each effect...
+		ParticleEffectList_t *pParticleEffectList = &m_ParticleEffects[i];
+		CNewParticleEffect *pParticleEffect = pParticleEffectList->pParticleEffect.GetObject();
+		if (pParticleEffect->m_pDef() == pDef)
+		{
+			int nControlPointCount = pParticleEffectList->pControlPoints.Count();
+			for ( int j = 0; j < nControlPointCount; ++j )
+			{
+				if ( pParticleEffectList->pControlPoints[j].iAttachmentPoint == iAttachmentPoint )
+				{
+					pParticleEffect->StopEmission( false, bRemoveInstantly );
+					break;
+				}
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -373,6 +414,10 @@ void CParticleProperty::OnParticleSystemUpdated( CNewParticleEffect *pEffect, fl
 	Assert( iIndex != -1 );
 	if ( iIndex == -1 )
 		return;
+
+	// Enable FP exceptions here when FP_EXCEPTIONS_ENABLED is defined,
+	// to help track down bad math.
+	FPExceptionEnabler enableExceptions;
 
 	UpdateParticleEffect( &m_ParticleEffects[iIndex] );
 
@@ -428,9 +473,9 @@ int	CParticleProperty::FindEffect( CNewParticleEffect *pEffect )
 	return -1;
 }
 
-int CParticleProperty::FindEffect( const char *pEffectName )
+int CParticleProperty::FindEffect( const char *pEffectName, int nStart /*= 0*/ )
 {
-	for ( int i = 0; i < m_ParticleEffects.Count(); i++ )
+	for ( int i = nStart; i < m_ParticleEffects.Count(); i++ )
 	{
 		if ( !Q_stricmp( m_ParticleEffects[i].pParticleEffect->GetName(), pEffectName ) )
 			return i;
@@ -490,46 +535,101 @@ void CParticleProperty::UpdateControlPoint( ParticleEffectList_t *pEffect, int i
 
 	Vector vecOrigin, vecForward, vecRight, vecUp;
 
-	switch ( pPoint->iAttachType )
+	float flOffset = 0.0f;
+	bool bUsingHeadOrigin = false;
+
+#ifdef TF_CLIENT_DLL
+
+	CBaseEntity *pWearable = (CBaseEntity*) pPoint->hEntity.Get();
+	if ( pWearable && dynamic_cast<IHasAttributes*>( pWearable ) && !pWearable->IsPlayer() )
 	{
-	case PATTACH_POINT:
-	case PATTACH_POINT_FOLLOW:
+		C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
+		if ( pAnimating )
 		{
-			C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
-
-			Assert( pAnimating );
-			if ( pAnimating )
+			int bUseHeadOrigin = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pPoint->hEntity.Get(), bUseHeadOrigin, particle_effect_use_head_origin );
+			if ( bUseHeadOrigin > 0 )
 			{
-				matrix3x4_t attachmentToWorld;
-
-				pAnimating->GetAttachment( pPoint->iAttachmentPoint, attachmentToWorld );
-
-
-				MatrixVectors( attachmentToWorld, &vecForward, &vecRight, &vecUp );
-				MatrixPosition( attachmentToWorld, vecOrigin );
-
-				if ( pEffect->pParticleEffect->m_pDef->IsViewModelEffect() )
+				int iBone = Studio_BoneIndexByName( pAnimating->GetModelPtr(), "bip_head" );
+				if ( iBone >= 0 )
 				{
-					FormatViewModelAttachment( vecOrigin, true );
-				}
+					bUsingHeadOrigin = true;
+					const matrix3x4_t headBone = pAnimating->GetBone( iBone );
+					MatrixVectors( headBone, &vecForward, &vecRight, &vecUp );
+					MatrixPosition( headBone, vecOrigin );
 
+					CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pPoint->hEntity.Get(), flOffset, particle_effect_vertical_offset );
+				}
 			}
 		}
-		break;
-
-	case PATTACH_ABSORIGIN:
-	case PATTACH_ABSORIGIN_FOLLOW:
-	default:
-		{
-			vecOrigin = pPoint->hEntity->GetAbsOrigin() + pPoint->vecOriginOffset;
-			pPoint->hEntity->GetVectors( &vecForward, &vecRight, &vecUp );
-		}
-		break;
 	}
+#endif
+
+	if ( !bUsingHeadOrigin )
+	{
+		switch ( pPoint->iAttachType )
+		{
+		case PATTACH_POINT:
+		case PATTACH_POINT_FOLLOW:
+			{
+				C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
+
+				Assert( pAnimating );
+				if ( pAnimating )
+				{
+					matrix3x4_t attachmentToWorld;
+
+					if ( !pAnimating->GetAttachment( pPoint->iAttachmentPoint, attachmentToWorld ) )
+					{
+						Warning( "Cannot update control point %d for effect '%s'.\n", pPoint->iAttachmentPoint, pEffect->pParticleEffect->GetEffectName() );
+						attachmentToWorld = pAnimating->RenderableToWorldTransform();
+					}
+
+					MatrixVectors( attachmentToWorld, &vecForward, &vecRight, &vecUp );
+					MatrixPosition( attachmentToWorld, vecOrigin );
+
+					if ( pEffect->pParticleEffect->m_pDef->IsViewModelEffect() )
+					{
+						FormatViewModelAttachment( vecOrigin, true );
+					}
+
+				}
+			}
+			break;
+
+		case PATTACH_ABSORIGIN:
+		case PATTACH_ABSORIGIN_FOLLOW:
+		default:
+			{
+				vecOrigin = pPoint->hEntity->GetAbsOrigin() + pPoint->vecOriginOffset;
+				pPoint->hEntity->GetVectors( &vecForward, &vecRight, &vecUp );
+			}
+			break;
+
+		case PATTACH_ROOTBONE_FOLLOW:
+			{
+				C_BaseAnimating *pAnimating = pPoint->hEntity->GetBaseAnimating();
+
+				Assert( pAnimating );
+				if ( pAnimating )
+				{
+					matrix3x4_t rootBone;
+					if ( pAnimating->GetRootBone( rootBone ) )
+					{
+						MatrixVectors( rootBone, &vecForward, &vecRight, &vecUp );
+						MatrixPosition( rootBone, vecOrigin );
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	Vector vecForcedOriginOffset( 0, 0, flOffset );
 	pEffect->pParticleEffect->SetControlPointOrientation( pPoint->iControlPoint, vecForward, vecRight, vecUp );
 	pEffect->pParticleEffect->SetControlPointEntity( pPoint->iControlPoint, pPoint->hEntity );
-	pEffect->pParticleEffect->SetControlPoint( pPoint->iControlPoint, vecOrigin );
-	pEffect->pParticleEffect->SetSortOrigin( vecOrigin );
+	pEffect->pParticleEffect->SetControlPoint( pPoint->iControlPoint, vecOrigin + vecForcedOriginOffset );
+	pEffect->pParticleEffect->SetSortOrigin( vecOrigin + vecForcedOriginOffset);
 }
 
 //-----------------------------------------------------------------------------

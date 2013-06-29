@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This is the base version of the vortigaunt
 //
@@ -100,7 +100,7 @@ public:
 	void			DeathSound( const CTakeDamageInfo &info );
 	void			PainSound( const CTakeDamageInfo &info );
 	
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void	SpeakSentence( int sentType );
 
 	virtual int		IRelationPriority( CBaseEntity *pTarget );

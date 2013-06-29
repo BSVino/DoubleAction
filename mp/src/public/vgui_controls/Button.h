@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -107,6 +107,8 @@ public:
 	virtual void SetDefaultColor(Color fgColor, Color bgColor);
 	// Set armed button colors
 	virtual void SetArmedColor(Color fgColor, Color bgColor);
+	// Set selected button colors
+	virtual void SetSelectedColor(Color fgColor, Color bgColor);
 	// Set depressed button colors
 	virtual void SetDepressedColor(Color fgColor, Color bgColor);
 	// Set blink button color
@@ -116,6 +118,18 @@ public:
 	virtual Color GetButtonFgColor();
 	// Get button background color
 	virtual Color GetButtonBgColor();
+
+	Color		  GetButtonDefaultFgColor() { return _defaultFgColor; }
+	Color		  GetButtonDefaultBgColor() { return _defaultBgColor; }
+
+	Color		  GetButtonArmedFgColor() { return _armedFgColor; }
+	Color		  GetButtonArmedBgColor() { return _armedBgColor; }
+
+	Color		  GetButtonSelectedFgColor() { return _selectedFgColor; }
+	Color		  GetButtonSelectedBgColor() { return _selectedBgColor; }
+
+	Color		  GetButtonDepressedFgColor() { return _depressedFgColor; }
+	Color		  GetButtonDepressedBgColor() { return _depressedBgColor; }
 
 	// Set default button border attributes.
 	virtual void SetDefaultBorder(IBorder *border);
@@ -153,6 +167,8 @@ public:
 	void SetShouldPaint( bool paint ){ _paint = paint; }
 
 	virtual void ApplySettings( KeyValues *inResourceData );
+	virtual void NavigateTo();
+	virtual void NavigateFrom();
 
 protected:
 	virtual void DrawFocusBorder(int tx0, int ty0, int tx1, int ty1);
@@ -178,7 +194,7 @@ protected:
 	KeyValues *GetActionMessage();
 	void PlayButtonReleasedSound();
 
-private:
+protected:
 	enum ButtonFlags_t
 	{
 		ARMED					= 0x0001,
@@ -205,6 +221,7 @@ private:
 
 	Color			   _defaultFgColor, _defaultBgColor;
 	Color			   _armedFgColor, _armedBgColor;
+	Color			   _selectedFgColor, _selectedBgColor;
 	Color              _depressedFgColor, _depressedBgColor;
 	Color              _keyboardFocusColor;
 	Color			   _blinkFgColor;
@@ -213,6 +230,7 @@ private:
 
 	unsigned short	   m_sArmedSoundName, m_sDepressedSoundName, m_sReleasedSoundName;
 	bool m_bSelectionStateSaved;
+	bool m_bStaySelectedOnClick;
 };
 
 } // namespace vgui

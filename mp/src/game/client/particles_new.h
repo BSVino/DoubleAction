@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2006, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: provide client-side access to the new particle system, with similar
 // usage to CSimpleEmitter
@@ -14,7 +14,7 @@
 
 #include "particlemgr.h"
 #include "particles/particles.h"
-#include "ParticleSphereRenderer.h"
+#include "particlesphererenderer.h"
 #include "smartptr.h"
 #include "particles_simple.h"
 #include "tier1/utlobjectreference.h"
@@ -77,6 +77,8 @@ public:
 												 const char *pDebugName = NULL );
 	virtual int DrawModel( int flags );
 
+	void DebugDrawBbox ( bool bCulled );
+
 	// CParticleCollection overrides
 public:
 	void StopEmission( bool bInfiniteOnly = false, bool bRemoveAllParticles = false, bool bWakeOnStop = false );
@@ -89,7 +91,7 @@ public:
 	void SetControlPointUpVector( int nWhichPoint, const Vector &v );
 	void SetControlPointRightVector( int nWhichPoint, const Vector &v );
 
-	FORCEINLINE EHANDLE const &CNewParticleEffect::GetControlPointEntity( int nWhichPoint )
+	FORCEINLINE EHANDLE const &GetControlPointEntity( int nWhichPoint )
 	{
 		return m_hControlPointOwners[ nWhichPoint ];
 	}

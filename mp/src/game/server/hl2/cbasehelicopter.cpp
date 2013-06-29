@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Base class for helicopters & helicopter-type vehicles
 //
@@ -491,7 +491,7 @@ bool CBaseHelicopter::DoWashPush( washentity_t *pWash, const Vector &vecWashOrig
 	// This used to be mass independent, which is a bad idea because it blows 200kg engine blocks
 	// as much as it blows cardboard and soda cans. Make this force mass-independent, but clamp at
 	// 30kg. 
-	flMass = min( flMass, 30.0f );
+	flMass = MIN( flMass, 30.0f );
 
 	Vector vecForce = (0.015f / 0.1f) * flWashAmount * flMass * vecToSpot * phys_pushscale.GetFloat();
 	pEntity->VPhysicsTakeDamage( CTakeDamageInfo( this, this, vecForce, vecWashOrigin, flWashAmount, DMG_BLAST ) );
@@ -1264,14 +1264,14 @@ void CBaseHelicopter::DrawDebugGeometryOverlays(void)
 // Input  :
 // Output : 
 //-----------------------------------------------------------------------------
-void CBaseHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBaseHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	// Take no damage from trace attacks unless it's blast damage. RadiusDamage() sometimes calls
 	// TraceAttack() as a means for delivering blast damage. Usually when the explosive penetrates
 	// the target. (RPG missiles do this sometimes).
 	if( info.GetDamageType() & (DMG_BLAST|DMG_AIRBOAT) )
 	{
-		BaseClass::TraceAttack( info, vecDir, ptr );
+		BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 	}
 }
 

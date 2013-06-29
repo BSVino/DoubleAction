@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -44,7 +44,7 @@ namespace OptimizedModel { struct FileHeader_t; }
 class IPooledVBAllocator;
 
 // undone: what's the standard for function type naming?
-typedef void (*StudioRender_Printf_t)( const char *fmt, ... );
+typedef void (*StudioRender_Printf_t)( PRINTF_FORMAT_STRING const char *fmt, ... );
 
 struct StudioRenderConfig_t
 {
@@ -113,7 +113,11 @@ enum
 
 	STUDIORENDER_DRAW_ITEM_BLINK		= 0x100,
 
-	STUDIORENDER_SHADOWDEPTHTEXTURE		= 0x200
+	STUDIORENDER_SHADOWDEPTHTEXTURE		= 0x200,
+
+	STUDIORENDER_SSAODEPTHTEXTURE				= 0x1000,
+
+	STUDIORENDER_GENERATE_STATS					= 0x8000,
 };
 
 
@@ -142,6 +146,7 @@ enum OverrideType_t
 	OVERRIDE_NORMAL = 0,
 	OVERRIDE_BUILD_SHADOWS,
 	OVERRIDE_DEPTH_WRITE,
+	OVERRIDE_SSAO_DEPTH_WRITE,
 };
 
 

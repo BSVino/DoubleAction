@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -50,6 +50,12 @@ RotatingProgressBar::RotatingProgressBar(Panel *parent, const char *panelName) :
 //-----------------------------------------------------------------------------
 RotatingProgressBar::~RotatingProgressBar()
 {
+	if ( vgui::surface() && m_nTextureId != -1 )
+	{
+		vgui::surface()->DestroyTextureID( m_nTextureId );
+		m_nTextureId = -1;
+	}
+
 	delete [] m_pszImageName;
 }
 

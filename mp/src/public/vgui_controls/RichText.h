@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,10 +32,10 @@ public:
 	~RichText();
 
 	// text manipulation
-	void SetText(const char *text);
-	void SetText(const wchar_t *text);
-	void GetText(int offset, wchar_t *buf, int bufLenInBytes);
-	void GetText(int offset, char *pch, int bufLenInBytes);
+	virtual void SetText(const char *text);
+	virtual void SetText(const wchar_t *text);
+	void GetText(int offset, OUT_Z_BYTECAP(bufLenInBytes) wchar_t *buf, int bufLenInBytes);
+	void GetText(int offset, OUT_Z_BYTECAP(bufLenInBytes) char *pch, int bufLenInBytes);
 
 	// configuration
 	void SetFont(HFont font);
@@ -112,7 +112,16 @@ public:
 	virtual void SetDrawOffsets( int ofsx, int ofsy );
 	bool IsScrollbarVisible();
 
+	// sets how URL's are handled
+	// if set, a "URLClicked" "url" "<data>" message will be sent to that panel
+	void SetURLClickedHandler( Panel *pPanelToHandleClickMsg );
+
 	void SetUnderlineFont( HFont font );
+
+	bool IsAllTextAlphaZero() const;
+	bool HasText() const;
+
+	void SetDrawTextOnly();
 
 protected:
 	virtual void OnThink();
@@ -152,13 +161,14 @@ protected:
 	virtual void Validate( CValidator &validator, char *pchName );
 #endif // DBGFLAG_VALIDATE
 	
-	void SetDrawTextOnly();
-
 protected:
 	ScrollBar			*_vertScrollBar;	// the scroll bar used in the window
 
 private:
-	const wchar_t *ResolveLocalizedTextAndVariables( char const *pchLookup, wchar_t *outbuf, size_t outbufsizeinbytes );
+	int GetLineHeight();
+	HFont GetDefaultFont();
+
+	const wchar_t *ResolveLocalizedTextAndVariables( char const *pchLookup, OUT_Z_BYTECAP(outbufsizeinbytes) wchar_t *outbuf, size_t outbufsizeinbytes );
 	void CheckRecalcLineBreaks();
 
 	void GotoWordRight();	// move cursor to start of next word
@@ -213,6 +223,7 @@ private:
 	bool m_bResetFades;
 	bool m_bInteractive;
 	bool m_bUnusedScrollbarInvis;
+	bool m_bAllTextAlphaIsZero;
 
 	// data
 	CUtlVector<wchar_t>   m_TextStream;		// the text in the text window is stored in this buffer
@@ -242,6 +253,7 @@ private:
 	int					_drawOffsetY;
 
 	Panel				*m_pInterior;
+	PHandle				m_hPanelToHandleClickingURLs;
 
 
 	// sub-controls

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -299,6 +299,7 @@ bool	SwapBSPFile( const char *filename, const char *swapFilename, bool bSwapOnLo
 bool	GetPakFileLump( const char *pBSPFilename, void **pPakData, int *pPakSize );
 bool	SetPakFileLump( const char *pBSPFilename, const char *pNewFilename, void *pPakData, int pakSize );
 void	WriteLumpToFile( char *filename, int lump );
+void	WriteLumpToFile( char *filename, int lump, int nLumpVersion, void *pBuffer, size_t nBufLen );
 bool	GetBSPDependants( const char *pBSPFilename, CUtlVector< CUtlString > *pList );
 void	UnloadBSPFile();
 
@@ -310,13 +311,14 @@ void 	SetKeyValue (entity_t *ent, const char *key, const char *value);
 char 	*ValueForKey (entity_t *ent, char *key);
 // will return "" if not present
 int		IntForKey (entity_t *ent, char *key);
+int		IntForKeyWithDefault(entity_t *ent, char *key, int nDefault );
 vec_t	FloatForKey (entity_t *ent, char *key);
 vec_t	FloatForKeyWithDefault (entity_t *ent, char *key, float default_value);
 void 	GetVectorForKey (entity_t *ent, char *key, Vector& vec);
 void 	GetVector2DForKey (entity_t *ent, char *key, Vector2D& vec);
 void 	GetAnglesForKey (entity_t *ent, char *key, QAngle& vec);
 epair_t *ParseEpair (void);
-
+void StripTrailing (char *e);
 
 // Build a list of the face's vertices (index into dvertexes).
 // points must be able to hold pFace->numedges indices.

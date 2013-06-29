@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: CHud handles the message, calculation, and drawing the HUD
 //
@@ -10,10 +10,10 @@
 #pragma once
 #endif
 
-#include "UtlVector.h"
-#include "UtlDict.h"
-#include "ConVar.h"
-#include <vgui/vgui.h>
+#include "utlvector.h"
+#include "utldict.h"
+#include "convar.h"
+#include <vgui/VGUI.h>
 #include <Color.h>
 #include <bitbuf.h>
 
@@ -37,35 +37,9 @@ typedef struct wrect_s
 class CHudTexture
 {
 public:
-	CHudTexture()
-	{
-		Q_memset( szShortName, 0, sizeof( szShortName ) );
-		Q_memset( szTextureFile, 0, sizeof( szTextureFile ) );
-		Q_memset( texCoords, 0, sizeof( texCoords ) );
-		Q_memset( &rc, 0, sizeof( rc ) );
-		textureId = -1;
-		bRenderUsingFont = false;
-		bPrecached = false;
-		cCharacterInFont = 0;
-		hFont = NULL;
-	}
-
-	CHudTexture& operator =( const CHudTexture& src )
-	{
-		if ( this == &src )
-			return *this;
-
-		Q_strncpy( szShortName, src.szShortName, sizeof( szShortName ) );
-		Q_strncpy( szTextureFile, src.szTextureFile, sizeof( szTextureFile ) );
-		Q_memcpy( texCoords, src.texCoords, sizeof( texCoords ) );
-		textureId = src.textureId;
-		rc = src.rc;
-		bRenderUsingFont = src.bRenderUsingFont;
-		cCharacterInFont = src.cCharacterInFont;
-		hFont = src.hFont;
-
-		return *this;
-	}
+	CHudTexture();
+	CHudTexture& operator =( const CHudTexture& src );
+	virtual ~CHudTexture();
 
 	int Width() const
 	{
@@ -84,11 +58,11 @@ public:
 	int EffectiveWidth( float flScale ) const;
 	int EffectiveHeight( float flScale ) const;
 
-	void DrawSelf( int x, int y, Color& clr ) const;
-	void DrawSelf( int x, int y, int w, int h, Color& clr ) const;
-	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color& clr ) const;
+	void DrawSelf( int x, int y, const Color& clr ) const;
+	void DrawSelf( int x, int y, int w, int h, const Color& clr ) const;
+	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color clr ) const;
 	// new version to scale the texture over a finalWidth and finalHeight passed in
-	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color& clr ) const;
+	void DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color clr ) const;
 
 	char		szShortName[ 64 ];
 	char		szTextureFile[ 64 ];
@@ -225,7 +199,7 @@ extern CHud gHUD;
 //-----------------------------------------------------------------------------
 extern vgui::HFont g_hFontTrebuchet24;
 
-void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, char *szFilenameWithoutExtension, const unsigned char *pICEKey );
+void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, const char *szFilenameWithoutExtension, const unsigned char *pICEKey );
 
 void GetHudSize( int& w, int &h );
 

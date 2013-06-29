@@ -1,4 +1,4 @@
-//===== Copyright © 2005-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A higher level link library for general use in the game and tools.
 //
@@ -23,6 +23,13 @@
 //-----------------------------------------------------------------------------
 struct matrix3x4_t;
 
+struct MDLSquenceLayer_t
+{
+	int		m_nSequenceIndex;
+	float	m_flWeight;
+	bool	m_bNoLoop;
+	float	m_flCycleBeganAt;
+};
 
 //-----------------------------------------------------------------------------
 // Class containing simplistic MDL state for use in rendering
@@ -44,7 +51,8 @@ public:
 	// returned by that method needs to be passed into here
 	void Draw( const matrix3x4_t& rootToWorld, const matrix3x4_t *pBoneToWorld );
 
-	void SetUpBones( const matrix3x4_t& shapeToWorld, int nMaxBoneCount, matrix3x4_t *pOutputMatrices );
+
+	void SetUpBones( const matrix3x4_t& shapeToWorld, int nMaxBoneCount, matrix3x4_t *pOutputMatrices, const float *pPoseParameters = NULL, MDLSquenceLayer_t *pSequenceLayers = NULL, int nNumSequenceLayers = 0 );
 	void SetupBonesWithBoneMerge( const CStudioHdr *pMergeHdr, matrix3x4_t *pMergeBoneToWorld, 
 		const CStudioHdr *pFollow, const matrix3x4_t *pFollowBoneToWorld, const matrix3x4_t &matModelToWorld );
 	
@@ -65,6 +73,7 @@ public:
 	float		m_pFlexControls[ MAXSTUDIOFLEXCTRL * 4 ];
 	Vector		m_vecViewTarget;
 	bool		m_bWorldSpaceViewTarget;
+	void		*m_pProxyData;
 };
 
 

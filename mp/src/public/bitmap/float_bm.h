@@ -1,4 +1,4 @@
-//======= Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -349,6 +349,7 @@ public:
 	FloatBitMap_t *Level(int lvl) const
 	{
 		Assert(lvl<m_nLevels);
+		Assert(lvl<ARRAYSIZE(m_pLevels));
 		return m_pLevels[lvl];
 	}
 	// rebuild all levels above the specified level

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -134,7 +134,7 @@ public:
 	}
 
 	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 
 	void			PlayerControlInit( CBasePlayer *pPlayer );

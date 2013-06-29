@@ -197,11 +197,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropExclude( "DT_BaseAnimating", "m_flPoseParameter" ),
 	SendPropExclude( "DT_BaseAnimating", "m_flPlaybackRate" ),	
 	SendPropExclude( "DT_BaseAnimating", "m_nSequence" ),
-	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
-	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
 	SendPropExclude( "DT_BaseEntity", "m_angRotation" ),
 	SendPropExclude( "DT_BaseAnimatingOverlay", "overlay_vars" ),
-	SendPropExclude( "DT_BaseEntity", "m_vecOrigin" ),
 	
 	// playeranimstate and clientside animation takes care of these on the client
 	SendPropExclude( "DT_ServerAnimationData" , "m_flCycle" ),	

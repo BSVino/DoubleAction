@@ -89,13 +89,45 @@
 #ifndef XUNZIP_H
 #define XUNZIP_H
 
+#if !defined( DWORD )
+#ifdef _WIN32
+typedef unsigned long DWORD;
+#else
+typedef unsigned int DWORD;
+#endif
+#endif
 
-#ifndef DECLARE_XZIP_HANDLE
-#define DECLARE_XZIP_HANDLE(name) struct name##__ { int unused; }; typedef struct name##__ *name
+#if !defined( TCHAR )
+typedef char TCHAR;
+#endif
+
+#if defined(POSIX) && !defined(MAX_PATH)
+#include <limits.h>
+#define MAX_PATH PATH_MAX
+typedef bool BOOL;
 #endif
 
 #ifndef XZIP_H
-DECLARE_XZIP_HANDLE(HZIP);	// An HZIP identifies a zip file that has been opened
+#if !defined(DECLARE_HANDLE)
+#if !defined(HANDLE)
+typedef void *HANDLE;
+#endif
+#define DECLARE_HANDLE(name) typedef struct name##__ { int unused; } *name
+#endif
+DECLARE_HANDLE(HZIP);		// An HZIP identifies a zip file that is being created
+#endif
+
+#if defined(_WIN32) && !defined(_WINBASE_) && !defined(_FILETIME_)
+#define _FILETIME_
+typedef struct _FILETIME
+{
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+} FILETIME, * LPFILETIME, *PFILETIME;
+#endif
+
+#if defined(POSIX)
+typedef time_t FILETIME;
 #endif
 
 typedef DWORD ZRESULT;
@@ -384,6 +416,9 @@ bool IsZipHandleU(HZIP hz);
 #define CloseZip CloseZipU
 #define FormatZipMessage FormatZipMessageU
 #endif
+
+// safe defintion of unzip, catches exceptions
+bool SafeUnzipMemory( const void *pvZipped, int cubZipped, void *pvDest, int cubDest /* should be the exact expected unzipped size */ );
 
 
 #endif //XUNZIP_H

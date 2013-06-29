@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -29,6 +29,9 @@ class IScheme;
 class IBorder
 {
 public:
+	IBorder() {}
+	virtual ~IBorder() {}
+
 	virtual void Paint(VPANEL panel) = 0;
 	virtual void Paint(int x0, int y0, int x1, int y1) = 0;
 	virtual void Paint(int x0, int y0, int x1, int y1, int breakSide, int breakStart, int breakStop) = 0;

@@ -1,4 +1,4 @@
-//====== Copyright c 1996-2007, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -495,12 +495,12 @@ void CPoseDebuggerImpl::AccumulatePose( const CStudioHdr *pStudioHdr, CIKContext
 	// Actual processing
 	//
 
-	mstudioseqdesc_t	&seqdesc = pStudioHdr->pSeqdesc( sequence );
+	mstudioseqdesc_t	&seqdesc = ((CStudioHdr *)pStudioHdr)->pSeqdesc( sequence );
 
 	if ( sequence >= pStudioHdr->GetNumSeq() )
 	{
 		sequence = 0;
-		seqdesc = pStudioHdr->pSeqdesc( sequence );
+		seqdesc = ((CStudioHdr *)pStudioHdr)->pSeqdesc( sequence );
 	}
 
 	enum
@@ -546,9 +546,9 @@ void CPoseDebuggerImpl::AccumulatePose( const CStudioHdr *pStudioHdr, CIKContext
 		7,
 		pOldTxt ? pOldTxt->m_flTimeAlive : 0.f,
 		5,
-		cycle * ( pStudioHdr->pAnimdesc( seqdesc.anim( 0, 0 ) ).numframes - 1 ),
+		cycle * ( ((CStudioHdr *)pStudioHdr)->pAnimdesc( seqdesc.anim( 0, 0 ) ).numframes - 1 ),
 		3,
-		pStudioHdr->pAnimdesc( seqdesc.anim( 0, 0 ) ).numframes,
+		((CStudioHdr *)pStudioHdr)->pAnimdesc( seqdesc.anim( 0, 0 ) ).numframes,
 		widthPercent,
 		flWeight * 100.0f
 		);

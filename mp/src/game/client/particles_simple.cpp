@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,10 +7,10 @@
 #include "cbase.h"
 #include "particles_simple.h"
 #include "env_wind_shared.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 #include "toolframework_client.h"
 #include "toolframework/itoolframework.h"
-#include "vstdlib/ikeyvaluessystem.h"
+#include "vstdlib/IKeyValuesSystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -526,7 +526,7 @@ Vector CFireParticle::UpdateColor( const SimpleParticle *pParticle )
 	for ( int i = 0; i < 3; i++ )
 	{
 		//FIXME: This is frame dependant... but I don't want to store off start/end colors yet
-		//pParticle->m_uchColor[i] = max( 0, pParticle->m_uchColor[i]-2 );
+		//pParticle->m_uchColor[i] = MAX( 0, pParticle->m_uchColor[i]-2 );
 	}
 
 	return CSimpleEmitter::UpdateColor( pParticle );

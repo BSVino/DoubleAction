@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -101,7 +101,7 @@ void CUserMessages::Register( const char *name, int size )
 	int idx = m_UserMessages.Find( name );
 	if ( idx != m_UserMessages.InvalidIndex() )
 	{
-		Error( "CUserMessages::Register '%' already registered\n", name );
+		Error( "CUserMessages::Register '%s' already registered\n", name );
 	}
 
 	CUserMessage * entry = new CUserMessage;

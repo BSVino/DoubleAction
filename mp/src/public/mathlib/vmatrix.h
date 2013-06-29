@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -54,6 +54,7 @@ public:
 	// Creates a matrix where the X axis = forward
 	// the Y axis = left, and the Z axis = up
 	VMatrix( const Vector& forward, const Vector& left, const Vector& up );
+	VMatrix( const Vector& forward, const Vector& left, const Vector& up, const Vector& translation );
 	
 	// Construct from a 3x4 matrix
 	VMatrix( const matrix3x4_t& matrix3x4 );
@@ -453,6 +454,16 @@ inline VMatrix::VMatrix( const Vector& xAxis, const Vector& yAxis, const Vector&
 		xAxis.x, yAxis.x, zAxis.x, 0.0f,
 		xAxis.y, yAxis.y, zAxis.y, 0.0f,
 		xAxis.z, yAxis.z, zAxis.z, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+		);
+}
+
+inline VMatrix::VMatrix( const Vector& xAxis, const Vector& yAxis, const Vector& zAxis, const Vector& translation )
+{
+	Init(
+		xAxis.x, yAxis.x, zAxis.x, translation.x,
+		xAxis.y, yAxis.y, zAxis.y, translation.y,
+		xAxis.z, yAxis.z, zAxis.z, translation.z,
 		0.0f, 0.0f, 0.0f, 1.0f
 		);
 }
@@ -902,6 +913,7 @@ inline bool MatricesAreEqual( const VMatrix &src1, const VMatrix &src2, float fl
 void MatrixBuildOrtho( VMatrix& dst, double left, double top, double right, double bottom, double zNear, double zFar );
 void MatrixBuildPerspectiveX( VMatrix& dst, double flFovX, double flAspect, double flZNear, double flZFar );
 void MatrixBuildPerspectiveOffCenterX( VMatrix& dst, double flFovX, double flAspect, double flZNear, double flZFar, double bottom, double top, double left, double right );
+void MatrixBuildPerspectiveZRange( VMatrix& dst, double flZNear, double flZFar );
 
 inline void MatrixOrtho( VMatrix& dst, double left, double top, double right, double bottom, double zNear, double zFar )
 {

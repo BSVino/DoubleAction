@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -36,63 +36,34 @@ enum direction
 //-----------------------------------------------------------------------------
 // Purpose: Check box image
 //-----------------------------------------------------------------------------
-class RadioImage : public Image
+void RadioImage::Paint()
 {
-public:
-	RadioImage(RadioButton *radioButton)
+	DrawSetTextFont(GetFont());
+
+	// draw background
+	if (_radioButton->IsEnabled())
 	{
-		_radioButton = radioButton;
-		_font = INVALID_FONT;
-
-		SetSize(20, 13);
+		DrawSetTextColor(_bgColor);
 	}
-
-	virtual void ApplySchemeSettings(IScheme *pScheme, bool proportional)
+	else
 	{
-		_bgColor = _radioButton->GetSchemeColor("CheckButton.BgColor", Color(150, 150, 150, 0), pScheme);
-		_borderColor1 = _radioButton->GetSchemeColor("CheckButton.Border1", Color(20, 20, 20, 0), pScheme);
-		_borderColor2 = _radioButton->GetSchemeColor("CheckButton.Border2", Color(90, 90, 90, 0), pScheme);
-		_checkColor = _radioButton->GetSchemeColor("CheckButton.Check", Color(20, 20, 20, 0), pScheme);
-		_font = pScheme->GetFont("Marlett", proportional);
+		DrawSetTextColor(_radioButton->GetBgColor());
 	}
+	DrawPrintChar(0, 1, 'n');
 
-	virtual void Paint()
+	// draw border circl
+	DrawSetTextColor(_borderColor1);
+	DrawPrintChar(0, 1, 'j');
+	DrawSetTextColor(_borderColor2);
+	DrawPrintChar(0, 1, 'k');
+
+	// draw selected check
+	if (_radioButton->IsSelected())
 	{
-		DrawSetTextFont(_font);
-
-		// draw background
-		if (_radioButton->IsEnabled())
-		{
-			DrawSetTextColor(_bgColor);
-		}
-		else
-		{
-			DrawSetTextColor(_radioButton->GetBgColor());
-		}
-		DrawPrintChar(0, 1, 'n');
-	
-		// draw border circl
-		DrawSetTextColor(_borderColor1);
-		DrawPrintChar(0, 1, 'j');
-		DrawSetTextColor(_borderColor2);
-		DrawPrintChar(0, 1, 'k');
-
-		// draw selected check
-		if (_radioButton->IsSelected())
-		{
-			DrawSetTextColor(_checkColor);
-			DrawPrintChar(0, 1, 'h');
-		}
+		DrawSetTextColor(_checkColor);
+		DrawPrintChar(0, 1, 'h');
 	}
-
-private:
-	RadioButton *_radioButton;
-	Color _borderColor1;
-	Color _borderColor2;
-	Color _checkColor;
-	Color _bgColor;
-	HFont _font;
-};
+}
 
 DECLARE_BUILD_FACTORY_DEFAULT_TEXT( RadioButton, RadioButton );
 
@@ -129,14 +100,23 @@ RadioButton::~RadioButton()
 void RadioButton::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-	_radioBoxImage->ApplySchemeSettings(pScheme, IsProportional());
+	_radioBoxImage->_bgColor = GetSchemeColor("CheckButton.BgColor", Color(150, 150, 150, 0), pScheme);
+	_radioBoxImage->_borderColor1 = GetSchemeColor("CheckButton.Border1", Color(20, 20, 20, 0), pScheme);
+	_radioBoxImage->_borderColor2 = GetSchemeColor("CheckButton.Border2", Color(90, 90, 90, 0), pScheme);
+	_radioBoxImage->_checkColor = GetSchemeColor("CheckButton.Check", Color(20, 20, 20, 0), pScheme);
 
 	SetFgColor(GetSchemeColor("RadioButton.TextColor", pScheme));
 	_selectedFgColor = GetSchemeColor("RadioButton.SelectedTextColor", GetSchemeColor("ControlText", pScheme), pScheme);
 
+	SetDefaultColor( GetFgColor(), GetBgColor() );
+
+	SetArmedColor( GetSchemeColor("RadioButton.ArmedTextColor", pScheme), GetButtonArmedBgColor() );
+
 	SetContentAlignment(a_west);
 
 	//  reloading the scheme wipes out lists of images
+	_radioBoxImage->SetFont( pScheme->GetFont("Marlett", IsProportional()) );
+	_radioBoxImage->ResizeImageToContent();
 	SetImageAtIndex(0, _radioBoxImage, 0);
 
 	// don't draw a background
@@ -184,6 +164,11 @@ int RadioButton::GetRadioTabPosition()
 //-----------------------------------------------------------------------------
 void RadioButton::SetSelected(bool state)
 {
+	InternalSetSelected( state, true );
+}
+
+void RadioButton::InternalSetSelected(bool state, bool bFireEvents)
+{
 	if (state == true)
 	{
 		if (!IsEnabled())
@@ -192,28 +177,32 @@ void RadioButton::SetSelected(bool state)
 		// restore our tab position
 		SetTabPosition(_oldTabPosition);
 
-		// send a message saying we've signed on
-		KeyValues *msg = new KeyValues("RadioButtonChecked");
-		msg->SetPtr("panel", this);
-		msg->SetInt("tabposition", _oldTabPosition);
-
-		// send a message to all other panels on the same level as heirarchy, 
-		// so that other radio buttons know to shut off
-		VPANEL radioParent = GetVParent();
-		if (radioParent)
+		// Should we send notifications?
+		if ( bFireEvents )
 		{
-			for (int i = 0; i < ipanel()->GetChildCount(radioParent); i++)
+			// send a message
+			KeyValues *msg = new KeyValues("RadioButtonChecked");
+			msg->SetPtr("panel", this);
+			msg->SetInt("tabposition", _oldTabPosition);
+
+			// send a message to all other panels on the same level as heirarchy, 
+			// so that other radio buttons know to shut off
+			VPANEL radioParent = GetVParent();
+			if (radioParent)
 			{
-				VPANEL child = ipanel()->GetChild(radioParent, i);
-				if (child != GetVPanel())
+				for (int i = 0; i < ipanel()->GetChildCount(radioParent); i++)
 				{
-					ivgui()->PostMessage(child, msg->MakeCopy(), GetVPanel());
+					VPANEL child = ipanel()->GetChild(radioParent, i);
+					if (child != GetVPanel())
+					{
+						ivgui()->PostMessage(child, msg->MakeCopy(), GetVPanel());
+					}
 				}
 			}
-		}
 
-		RequestFocus();
-		PostActionSignal(msg);
+			RequestFocus();
+			PostActionSignal(msg);
+		}
 	}
 	else
 	{
@@ -229,6 +218,14 @@ void RadioButton::SetSelected(bool state)
 	Repaint();
 
 	ToggleButton::SetSelected(state);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Set the selection state without firing any events
+//-----------------------------------------------------------------------------
+void RadioButton::SilentSetSelected(bool state)
+{
+	InternalSetSelected( state, false );
 }
 
 //-----------------------------------------------------------------------------

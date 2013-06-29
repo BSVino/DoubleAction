@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #include "hud.h"
 #include "hudelement.h"
 #include "iclientmode.h"
-#include <vgui_controls/controls.h>
+#include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
 #include <vgui_controls/Panel.h>
 #include "hud_crosshair.h"

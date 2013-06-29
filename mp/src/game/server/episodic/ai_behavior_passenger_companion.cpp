@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Companion NPCs riding in cars
 //
@@ -110,7 +110,7 @@ void CAI_PassengerBehaviorCompanion::Enable( CPropJeepEpisodic *pVehicle, bool b
 
 			// This will slam us into the right position and clean up
 			FinishEnterVehicle();
-			GetOuter()->AddEffects( EF_NOINTERP );
+			GetOuter()->IncrementInterpolationFrame();
 
 			// Start our schedule immediately
 			ClearSchedule( "Immediate entry to vehicle" );
@@ -896,7 +896,7 @@ void CAI_PassengerBehaviorCompanion::EnterVehicleImmediately( void )
 
 	// Put us there and get going (no interpolation!)
 	GetOuter()->Teleport( &m_vecTargetPosition, &m_vecTargetAngles, &vec3_origin );
-	GetOuter()->AddEffects( EF_NOINTERP );
+	GetOuter()->IncrementInterpolationFrame();
 }
 
 //-----------------------------------------------------------------------------
@@ -1244,7 +1244,7 @@ bool CAI_PassengerBehaviorCompanion::ExitStuckVehicle( void )
 	// Teleport to the destination 
 	// TODO: Make sure that the player can't see this!
 	GetOuter()->Teleport( &vecExitPos, &vec3_angle, &vec3_origin );
-	GetOuter()->AddEffects( EF_NOINTERP );
+	GetOuter()->IncrementInterpolationFrame();
 
 	return true;
 }

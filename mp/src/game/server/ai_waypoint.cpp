@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -20,7 +20,7 @@
 // Init static variables
 //-----------------------------------------------------------------------------
 
-DEFINE_FIXEDSIZE_ALLOCATOR( AI_Waypoint_t, WAYPOINT_POOL_SIZE, CMemoryPool::GROW_FAST );
+DEFINE_FIXEDSIZE_ALLOCATOR( AI_Waypoint_t, WAYPOINT_POOL_SIZE, CUtlMemoryPool::GROW_FAST );
 
 //-------------------------------------
 

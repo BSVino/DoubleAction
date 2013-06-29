@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -98,7 +98,7 @@ class C_AntlionGib : public C_Gib
 	typedef C_Gib BaseClass;
 public:
 	
-	static C_AntlionGib *C_AntlionGib::CreateClientsideGib( const char *pszModelName, Vector vecOrigin, Vector vecForceDir, AngularImpulse vecAngularImp, float m_flLifetime = DEFAULT_GIB_LIFETIME )
+	static C_AntlionGib *CreateClientsideGib( const char *pszModelName, Vector vecOrigin, Vector vecForceDir, AngularImpulse vecAngularImp, float m_flLifetime = DEFAULT_GIB_LIFETIME )
 	{
 		C_AntlionGib *pGib = new C_AntlionGib;
 

@@ -1,18 +1,23 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 
 // scriplib.c
 
 #include "tier1/strtools.h"
+#include "tier2/tier2.h"
 #include "cmdlib.h"
 #include "scriplib.h"
 #if defined( _X360 )
 #include "xbox\xbox_win32stubs.h"
+#endif
+#if defined(POSIX)
+#include "../../filesystem/linux_support.h"
+#include <sys/stat.h>
 #endif
 /*
 =============================================================================
@@ -35,9 +40,9 @@ typedef struct
 
 } script_t;
 
-#define	MAX_INCLUDES	16
+#define	MAX_INCLUDES	64
 script_t	scriptstack[MAX_INCLUDES];
-script_t	*script;
+script_t	*script = NULL;
 int			scriptline;
 
 char    token[MAXTOKEN];
@@ -126,7 +131,7 @@ void LoadScriptFile (char *filename, ScriptPathMode_t pathMode)
 ==============
 */
 
-script_t	*macrolist[64];
+script_t	*macrolist[256];
 int nummacros;
 
 void DefineMacro( char *macroname )
@@ -360,7 +365,7 @@ bool ExpandVariableToken( char *&token_p )
 		int index;
 		for (index = 0; index < g_definevariable.Count(); index++)
 		{
-			if (Q_strnicmp( g_definevariable[index].param, tp, len - 2 ) == 0)
+			if (Q_strnicmp( g_definevariable[index].param, tp, len ) == 0)
 				break;
 		}
 	
@@ -412,6 +417,58 @@ void ParseFromMemory (char *buffer, int size)
 }
 
 
+//-----------------------------------------------------------------------------
+// Used instead of ParseFromMemory to temporarily add a memory buffer
+// to the script stack.  ParseFromMemory just blows away the stack.
+//-----------------------------------------------------------------------------
+void PushMemoryScript( char *pszBuffer, const int nSize )
+{
+	if ( script == NULL )
+	{
+		script = scriptstack;
+	}
+	script++;
+	if ( script == &scriptstack[MAX_INCLUDES] )
+	{
+		Error ( "script file exceeded MAX_INCLUDES" );
+	}
+	strcpy (script->filename, "memory buffer" );
+
+	script->buffer = pszBuffer;
+	script->line = 1;
+	script->script_p = script->buffer;
+	script->end_p = script->buffer + nSize;
+
+	endofscript = false;
+	tokenready = false;
+}
+
+
+//-----------------------------------------------------------------------------
+// Used after calling PushMemoryScript to clean up the memory buffer
+// added to the script stack.  The normal end of script terminates
+// all parsing at the end of a memory buffer even if there are more scripts
+// remaining on the script stack
+//-----------------------------------------------------------------------------
+bool PopMemoryScript()
+{
+	if ( V_stricmp( script->filename, "memory buffer" ) )
+		return false;
+
+	if ( script == scriptstack )
+	{
+		endofscript = true;
+		return false;
+	}
+	script--;
+	scriptline = script->line;
+
+	endofscript = false;
+
+	return true;
+}
+
+
 /*
 ==============
 UnGetToken
@@ -455,6 +512,69 @@ qboolean EndOfScript (qboolean crossline)
 	// printf ("returning to %s\n", script->filename);
 	return GetToken (crossline);
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Given an absolute path, do a find first find next on it and build
+// a list of files.  Physical file system only
+//-----------------------------------------------------------------------------
+static void FindFileAbsoluteList( CUtlVector< CUtlString > &outAbsolutePathNames, const char *pszFindName )
+{
+	char szPath[MAX_PATH];
+	V_strncpy( szPath, pszFindName, sizeof( szPath ) );
+	V_StripFilename( szPath );
+
+	char szResult[MAX_PATH];
+	FileFindHandle_t hFile = FILESYSTEM_INVALID_FIND_HANDLE;
+
+	for ( const char *pszFoundFile = g_pFullFileSystem->FindFirst( pszFindName, &hFile ); pszFoundFile && hFile != FILESYSTEM_INVALID_FIND_HANDLE; pszFoundFile = g_pFullFileSystem->FindNext( hFile ) )
+	{
+		V_ComposeFileName( szPath, pszFoundFile, szResult, sizeof( szResult ) );
+		outAbsolutePathNames.AddToTail( szResult );
+	}
+
+	g_pFullFileSystem->FindClose( hFile );
+}
+
+
+//-----------------------------------------------------------------------------
+// Data for checking for single character tokens while parsing
+//-----------------------------------------------------------------------------
+bool g_bCheckSingleCharTokens = false;
+CUtlString g_sSingleCharTokens;
+
+
+//-----------------------------------------------------------------------------
+// Sets whether the scriplib parser will do a special check for single
+// character tokens.  Returns previous state of whether single character
+// tokens will be checked.
+//-----------------------------------------------------------------------------
+bool SetCheckSingleCharTokens( bool bCheck )
+{
+	const bool bRetVal = g_bCheckSingleCharTokens;
+
+	g_bCheckSingleCharTokens = bCheck;
+
+	return bRetVal;
+}
+
+
+//-----------------------------------------------------------------------------
+// Sets the list of single character tokens to check if SetCheckSingleCharTokens
+// is turned on.
+//-----------------------------------------------------------------------------
+CUtlString SetSingleCharTokenList( const char *pszSingleCharTokenList )
+{
+	const CUtlString sRetVal = g_sSingleCharTokens;
+
+	if ( pszSingleCharTokenList )
+	{
+		g_sSingleCharTokens = pszSingleCharTokenList;
+	}
+
+	return sRetVal;
+}
+
 
 /*
 ==============
@@ -557,6 +677,10 @@ skipspace:
 		}
 		script->script_p++;
 	}
+	else if ( g_bCheckSingleCharTokens && !g_sSingleCharTokens.IsEmpty() && strchr( g_sSingleCharTokens.String(), *script->script_p ) != NULL )
+	{
+		*token_p++ = *script->script_p++;
+	}
 	else	// regular token
 	while ( *script->script_p > 32 && *script->script_p != ';')
 	{
@@ -578,11 +702,42 @@ skipspace:
 	*token_p = 0;
 
 	// check for other commands
-	if (!stricmp (token, "$include"))
+	if ( !stricmp( token, "$include" ) )
 	{
-		GetToken (false);
-		AddScriptToStack (token);
-		return GetToken (crossline);
+		GetToken( false );
+
+		bool bFallbackToToken = true;
+
+		CUtlVector< CUtlString > expandedPathList;
+
+		if ( CmdLib_ExpandWithBasePaths( expandedPathList, token ) > 0 )
+		{
+			for ( int i = 0; i < expandedPathList.Count(); ++i )
+			{
+				CUtlVector< CUtlString > findFileList;
+				FindFileAbsoluteList( findFileList, expandedPathList[i].String() );
+
+				if ( findFileList.Count() > 0 )
+				{
+					bFallbackToToken = false;
+
+					// Only add the first set of glob matches from the first base path
+					for ( int j = 0; j < findFileList.Count(); ++j )
+					{
+						AddScriptToStack( const_cast< char * >( findFileList[j].String() ) );
+					}
+
+					break;
+				}
+			}
+		}
+
+		if ( bFallbackToToken )
+		{
+			AddScriptToStack( token );
+		}
+
+		return GetToken( crossline );
 	}
 	else if (!stricmp (token, "$definemacro"))
 	{
@@ -676,10 +831,10 @@ skipspace:
 	}
 	else
 	{
-		if ( isalpha( *script->script_p ) || *script->script_p == '_' )
+		if ( V_isalpha( *script->script_p ) || *script->script_p == '_' )
 		{
 			// regular token
-			while ( isalnum( *script->script_p ) || *script->script_p == '_' )
+			while ( V_isalnum( *script->script_p ) || *script->script_p == '_' )
 			{
 				*token_p++ = *script->script_p++;
 				if (script->script_p == script->end_p)
@@ -688,10 +843,10 @@ skipspace:
 					Error ("Token too large on line %i\n",scriptline);
 			}
 		}
-		else if ( isdigit( *script->script_p ) || *script->script_p == '.' )
+		else if ( V_isdigit( *script->script_p ) || *script->script_p == '.' )
 		{
 			// regular token
-			while ( isdigit( *script->script_p ) || *script->script_p == '.' )
+			while ( V_isdigit( *script->script_p ) || *script->script_p == '.' )
 			{
 				*token_p++ = *script->script_p++;
 				if (script->script_p == script->end_p)
@@ -781,14 +936,16 @@ qboolean GetTokenizerStatus( char **pFilename, int *pLine )
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef WIN32
 #include <direct.h>
 #include <io.h>
+#include <sys/utime.h>
+#endif
 #include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/utime.h>
-#include "tier1/UtlBuffer.h"
+#include "tier1/utlbuffer.h"
 
 class CScriptLib : public IScriptLib
 {
@@ -809,6 +966,7 @@ private:
 
 static CScriptLib g_ScriptLib;
 IScriptLib *scriptlib = &g_ScriptLib;
+IScriptLib *g_pScriptLib = &g_ScriptLib;
 
 //-----------------------------------------------------------------------------
 // Existence check
@@ -867,7 +1025,7 @@ bool CScriptLib::WriteBufferToFile( const char *pTargetName, CUtlBuffer &buffer,
 		if ( ptr )
 		{
 			*ptr = '\0';
-			mkdir( dirPath );
+			_mkdir( dirPath );
 			*ptr = '\\';
 		}
 	}
@@ -1013,6 +1171,7 @@ int CScriptLib::GetFileList( const char* pDirPath, const char* pPattern, CUtlVec
 		strcat( fullPath, pPattern );
 	}
 
+#ifdef WIN32
 	struct _finddata_t findData;
 	intptr_t h = _findfirst( fullPath, &findData );
 	if ( h == -1 )
@@ -1053,6 +1212,61 @@ int CScriptLib::GetFileList( const char* pDirPath, const char* pPattern, CUtlVec
 	while ( !_findnext( h, &findData ) );
 
 	_findclose( h );
+#elif defined(POSIX)
+	FIND_DATA findData;
+	Q_FixSlashes( fullPath );
+	void *h = FindFirstFile( fullPath, &findData );
+	if ( (int)h == -1 )
+	{
+		return 0;
+	}
+
+	do
+	{
+		// dos attribute complexities i.e. _A_NORMAL is 0
+		if ( bFindDirs )
+		{
+			// skip non dirs
+			if ( !( findData.dwFileAttributes & S_IFDIR ) )
+				continue;
+		}
+		else
+		{
+			// skip dirs
+			if ( findData.dwFileAttributes & S_IFDIR )
+				continue;
+		}
+
+		if ( !stricmp( findData.cFileName, "." ) )
+			continue;
+
+		if ( !stricmp( findData.cFileName, ".." ) )
+			continue;
+
+		char fileName[MAX_PATH];
+		strcpy( fileName, sourcePath );
+		strcat( fileName, findData.cFileName );
+
+		int j = fileList.AddToTail();
+		fileList[j].fileName.Set( fileName );
+		struct stat statbuf;
+		if ( stat( fileName, &statbuf ) )
+#ifdef OSX
+			fileList[j].timeWrite = statbuf.st_mtimespec.tv_sec;
+#else
+			fileList[j].timeWrite = statbuf.st_mtime;
+#endif
+		else
+			fileList[j].timeWrite = 0;
+	}
+	while ( !FindNextFile( h, &findData ) );
+
+	FindClose( h );
+
+#else
+#error
+#endif
+	
 
 	return fileList.Count();
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,7 @@
 #include <vgui/ISurface.h>
 #include <KeyValues.h>
 #include <vgui_controls/ImageList.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 
 #include <vgui_controls/RichText.h>
 #include <vgui_controls/Label.h>
@@ -223,7 +223,7 @@ void CTeamMenu::LoadMapPage( const char *mapName )
 
 #if defined( ENABLE_HTML_WINDOW )
 		m_pMapInfoHTML->SetVisible( true );
-		m_pMapInfoHTML->OpenURL( localURL );
+		m_pMapInfoHTML->OpenURL( localURL, NULL );
 #endif
 		InvalidateLayout();
 		Repaint();		
@@ -274,9 +274,20 @@ void CTeamMenu::LoadMapPage( const char *mapName )
 		data[ bytesRead+1 ] = 0;
 	}
 
+#ifndef WIN32
+	if ( ((ucs2 *)memBlock)[0] == 0xFEFF )
+	{
+		// convert the win32 ucs2 data to wchar_t
+		dataSize*=2;// need to *2 to account for ucs2 to wchar_t (4byte) growth
+		wchar_t *memBlockConverted = (wchar_t *)malloc(dataSize);	
+		V_UCS2ToUnicode( (ucs2 *)memBlock, memBlockConverted, dataSize );
+		free(memBlock);
+		memBlock = memBlockConverted;
+	}
+#else
 	// null-terminate the stream (redundant, since we memset & then trimmed the transformed buffer already)
 	memBlock[dataSize / sizeof(wchar_t) - 1] = 0x0000;
-
+#endif
 	// ensure little-endian unicode reads correctly on all platforms
 	CByteswap byteSwap;
 	byteSwap.SetTargetBigEndian( false );
@@ -383,14 +394,48 @@ void CTeamMenu::SetLabelText(const char *textEntryName, const char *text)
 
 void CTeamMenu::OnKeyCodePressed(KeyCode code)
 {
-	if( m_iJumpKey != BUTTON_CODE_INVALID && m_iJumpKey == code )
+	int nDir = 0;
+
+	switch ( code )
 	{
-		AutoAssign();
+	case KEY_XBUTTON_UP:
+	case KEY_XSTICK1_UP:
+	case KEY_XSTICK2_UP:
+	case KEY_UP:
+	case KEY_XBUTTON_LEFT:
+	case KEY_XSTICK1_LEFT:
+	case KEY_XSTICK2_LEFT:
+	case KEY_LEFT:
+		nDir = -1;
+		break;
+
+	case KEY_XBUTTON_DOWN:
+	case KEY_XSTICK1_DOWN:
+	case KEY_XSTICK2_DOWN:
+	case KEY_DOWN:
+	case KEY_XBUTTON_RIGHT:
+	case KEY_XSTICK1_RIGHT:
+	case KEY_XSTICK2_RIGHT:
+	case KEY_RIGHT:
+		nDir = 1;
+		break;
 	}
-	else if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
+
+	if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
 	{
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
 		gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );
+	}
+	else if ( nDir != 0 )
+	{
+		CUtlSortVector< SortedPanel_t, CSortedPanelYLess > vecSortedButtons;
+		VguiPanelGetSortedChildButtonList( this, (void*)&vecSortedButtons, "&", 0 );
+
+		if ( VguiPanelNavigateSortedChildButtonList( (void*)&vecSortedButtons, nDir ) != -1 )
+		{
+			// Handled!
+			return;
+		}
 	}
 	else
 	{

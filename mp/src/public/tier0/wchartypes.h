@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:	All of our code is completely Unicode.  Instead of char, you should
 //			use wchar, uint8, or char8, as explained below.
@@ -20,7 +20,7 @@
 // Temporarily turn off Valve defines
 #include "tier0/valve_off.h"
 
-#ifndef _WCHAR_T_DEFINED
+#if !defined(_WCHAR_T_DEFINED) && !defined(GNUC)
 typedef unsigned short wchar_t;
 #define _WCHAR_T_DEFINED
 #endif

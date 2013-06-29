@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics cannon
 //
@@ -17,7 +17,7 @@
 #include "shake.h"
 #include "hl2_player.h"
 #include "beam_shared.h"
-#include "sprite.h"
+#include "Sprite.h"
 #include "util.h"
 #include "weapon_physcannon.h"
 #include "physics_saverestore.h"
@@ -40,6 +40,8 @@
 #include "ai_interactions.h"
 #include "rumble_shared.h"
 #include "gamestats.h"
+// NVNT haptic utils
+#include "haptics/haptic_utils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -512,6 +514,9 @@ private:
 
 	bool			m_bAllowObjectOverhead; // Can the player hold this object directly overhead? (Default is NO)
 
+	// NVNT player controlling this grab controller
+	CBasePlayer*	m_pControllingPlayer;
+
 	friend class CWeaponPhysCannon;
 };
 
@@ -560,6 +565,8 @@ CGrabController::CGrabController( void )
 	m_vecPreferredCarryAngles = vec3_angle;
 	m_bHasPreferredCarryAngles = false;
 	m_flDistanceOffset = 0;
+	// NVNT constructing m_pControllingPlayer to NULL
+	m_pControllingPlayer = NULL;
 }
 
 CGrabController::~CGrabController( void )
@@ -769,6 +776,9 @@ void CGrabController::AttachEntity( CBasePlayer *pPlayer, CBaseEntity *pEntity, 
 		pList[i]->SetMass( REDUCED_CARRY_MASS / flFactor );
 		pList[i]->SetDamping( NULL, &damping );
 	}
+
+	// NVNT setting m_pControllingPlayer to the player attached
+	m_pControllingPlayer = pPlayer;
 	
 	// Give extra mass to the phys object we're actually picking up
 	pPhys->SetMass( REDUCED_CARRY_MASS );
@@ -1037,6 +1047,10 @@ void CPlayerPickupController::Init( CBasePlayer *pPlayer, CBaseEntity *pObject )
 	Pickup_OnPhysGunPickup( pObject, m_pPlayer, PICKED_UP_BY_PLAYER );
 	
 	m_grabController.AttachEntity( pPlayer, pObject, pPhysics, false, vec3_origin, false );
+	// NVNT apply a downward force to simulate the mass of the held object.
+#if defined( WIN32 ) && !defined( _X360 )
+	HapticSetConstantForce(m_pPlayer,clamp(m_grabController.GetLoadWeight()*0.1,1,6)*Vector(0,-1,0));
+#endif
 	
 	m_pPlayer->m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
 	m_pPlayer->SetUseEntity( this );
@@ -1058,7 +1072,11 @@ void CPlayerPickupController::Shutdown( bool bThrown )
 	}
 
 	m_grabController.DetachEntity( bClearVelocity );
-
+	// NVNT if we have a player, issue a zero constant force message
+#if defined( WIN32 ) && !defined( _X360 )
+	if(m_pPlayer)
+		HapticSetConstantForce(m_pPlayer,Vector(0,0,0));
+#endif
 	if ( pObject != NULL )
 	{
 		Pickup_OnPhysGunDrop( pObject, m_pPlayer, bThrown ? THROWN_BY_PLAYER : DROPPED_BY_PLAYER );
@@ -1867,7 +1885,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 			{
 				maxMass *= 2.5;	// 625 for vehicles
 			}
-			float mass = min(totalMass, maxMass); // max 250kg of additional force
+			float mass = MIN(totalMass, maxMass); // max 250kg of additional force
 
 			// Put some spin on the object
 			for ( i = 0; i < listCount; i++ )
@@ -1879,7 +1897,7 @@ void CWeaponPhysCannon::PuntVPhysics( CBaseEntity *pEntity, const Vector &vecFor
 				if ( pList[i] == pEntity->VPhysicsGetObject() )
 				{
 					ratio += hitObjectFactor;
-					ratio = min(ratio,1.0f);
+					ratio = MIN(ratio,1.0f);
 				}
 				else
 				{
@@ -2403,6 +2421,10 @@ bool CWeaponPhysCannon::AttachObject( CBaseEntity *pObject, const Vector &vPosit
 
 	if( pOwner )
 	{
+#if defined( WIN32 ) && !defined( _X360 )
+		// NVNT set the players constant force to simulate holding mass
+		HapticSetConstantForce(pOwner,clamp(m_grabController.GetLoadWeight()*0.05,1,5)*Vector(0,-1,0));
+#endif
 		pOwner->EnableSprint( false );
 
 		float	loadWeight = ( 1.0f - GetLoadPercentage() );
@@ -2859,6 +2881,10 @@ void CWeaponPhysCannon::DetachObject( bool playSound, bool wasLaunched )
 		{
 			pOwner->RumbleEffect( RUMBLE_357, 0, RUMBLE_FLAG_RESTART );
 		}
+#if defined( WIN32 ) && !defined( _X360 )
+		// NVNT clear constant force
+		HapticSetConstantForce(pOwner,Vector(0,0,0));
+#endif
 	}
 
 	CBaseEntity *pObject = m_grabController.GetAttached();

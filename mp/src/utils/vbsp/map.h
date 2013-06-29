@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,6 @@
 
 // All the brush sides referenced by info_no_dynamic_shadow entities.
 extern CUtlVector<int> g_NoDynamicShadowSides;
-extern int g_ClipTexinfo;
 
 
 #endif // MAP_H

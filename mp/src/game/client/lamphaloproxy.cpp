@@ -1,13 +1,13 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "ProxyEntity.h"
-#include "materialsystem/IMaterialVar.h"
-#include "materialsystem/IMaterial.h"
+#include "proxyentity.h"
+#include "materialsystem/imaterialvar.h"
+#include "materialsystem/imaterial.h"
 #include "view.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -86,7 +86,7 @@ void CLampHaloProxy::OnBind( C_BaseEntity *pEnt )
 	}
 	else
 	{
-		fade = min( (fade - 0.25) * 1.35, 1.0f );
+		fade = MIN( (fade - 0.25) * 1.35, 1.0f );
 	}
 
 	m_pFadeValue->SetFloatValue( fade );

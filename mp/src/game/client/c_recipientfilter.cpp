@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -90,6 +90,9 @@ void C_RecipientFilter::AddAllPlayers( void )
 void C_RecipientFilter::AddRecipient( C_BasePlayer *player )
 {
 	Assert( player );
+
+	if ( !player )
+		return;
 
 	int index = player->index;
 

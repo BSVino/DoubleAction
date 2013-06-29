@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #include "c_baseanimatingoverlay.h"
 #include "bone_setup.h"
 #include "tier0/vprof.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "datacache/imdlcache.h"
 #include "eventlist.h"
 
@@ -293,9 +293,9 @@ void C_BaseAnimatingOverlay::CheckForLayerChanges( CStudioHdr *hdr, float curren
 
 
 
-void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Quaternion q[], float poseparam[], float currentTime, int boneMask )
+void C_BaseAnimatingOverlay::AccumulateLayers( IBoneSetup &boneSetup, Vector pos[], Quaternion q[], float currentTime )
 {
-	BaseClass::AccumulateLayers( hdr, pos, q, poseparam, currentTime, boneMask );
+	BaseClass::AccumulateLayers( boneSetup, pos, q, currentTime );
 	int i;
 
 	// resort the layers
@@ -324,9 +324,9 @@ void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Qu
 		}
 	}
 
-	CheckForLayerChanges( hdr, currentTime );
+	CheckForLayerChanges( boneSetup.GetStudioHdr(), currentTime );
 
-	int nSequences = hdr->GetNumSeq();
+	int nSequences = boneSetup.GetStudioHdr()->GetNumSeq();
 
 	// add in the overlay layers
 	int j;
@@ -351,6 +351,8 @@ void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Qu
 					);
 			*/
 
+			m_AnimOverlay[i].BlendWeight();
+
 			float fWeight = m_AnimOverlay[i].m_flWeight;
 
 			if (fWeight > 0)
@@ -366,14 +368,14 @@ void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Qu
 				if (fWeight > 1)
 					fWeight = 1;
 
-				AccumulatePose( hdr, m_pIk, pos, q, m_AnimOverlay[i].m_nSequence, fCycle, poseparam, boneMask, fWeight, currentTime );
+				boneSetup.AccumulatePose( pos, q, m_AnimOverlay[i].m_nSequence, fCycle, fWeight, currentTime, m_pIk );
 
 #if 1 // _DEBUG
 				if (/* Q_stristr( hdr->pszName(), r_sequence_debug.GetString()) != NULL || */ r_sequence_debug.GetInt() == entindex())
 				{
 					if (1)
 					{
-						DevMsgRT( "%8.4f : %30s : %5.3f : %4.2f : %1d\n", currentTime, hdr->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
+						DevMsgRT( "%8.4f : %30s : %5.3f : %4.2f : %1d\n", currentTime, boneSetup.GetStudioHdr()->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
 					}
 					else
 					{
@@ -392,14 +394,14 @@ void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Qu
 
 						if ( pHead && pPrev1 && pPrev2 )
 						{
-							DevMsgRT( "%6.2f : %30s %6.2f (%6.2f:%6.2f:%6.2f) : %6.2f (%6.2f:%6.2f:%6.2f) : %1d\n", currentTime, hdr->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), 
+							DevMsgRT( "%6.2f : %30s %6.2f (%6.2f:%6.2f:%6.2f) : %6.2f (%6.2f:%6.2f:%6.2f) : %1d\n", currentTime, boneSetup.GetStudioHdr()->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), 
 								fCycle, (float)pPrev2->m_flCycle, (float)pPrev1->m_flCycle, (float)pHead->m_flCycle,
 								fWeight, (float)pPrev2->m_flWeight, (float)pPrev1->m_flWeight, (float)pHead->m_flWeight,
 								i );
 						}
 						else
 						{
-							DevMsgRT( "%6.2f : %30s %6.2f : %6.2f : %1d\n", currentTime, hdr->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
+							DevMsgRT( "%6.2f : %30s %6.2f : %6.2f : %1d\n", currentTime, boneSetup.GetStudioHdr()->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
 						}
 
 					}
@@ -408,7 +410,7 @@ void C_BaseAnimatingOverlay::AccumulateLayers( CStudioHdr *hdr, Vector pos[], Qu
 
 //#define DEBUG_TF2_OVERLAYS
 #if defined( DEBUG_TF2_OVERLAYS )
-				engine->Con_NPrintf( 10 + j, "%30s %6.2f : %6.2f : %1d", hdr->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
+				engine->Con_NPrintf( 10 + j, "%30s %6.2f : %6.2f : %1d", boneSetup.GetStudioHdr()->pSeqdesc( m_AnimOverlay[i].m_nSequence ).pszLabel(), fCycle, fWeight, i );
 			}
 			else
 			{
@@ -504,7 +506,7 @@ void C_BaseAnimatingOverlay::DoAnimationEvents( CStudioHdr *pStudioHdr )
 						pevent[i].event,
 						pevent[i].cycle,
 						m_flOverlayPrevEventCycle[j],
-						m_AnimOverlay[j].m_flCycle,
+						(float)m_AnimOverlay[j].m_flCycle,
 						gpGlobals->curtime );
 				}
 					
@@ -532,11 +534,11 @@ void C_BaseAnimatingOverlay::DoAnimationEvents( CStudioHdr *pStudioHdr )
 				{
 					Msg( "%i (seq: %d) FE %i Normal cycle %f, prev %f ev %f (time %.3f)\n",
 						gpGlobals->tickcount,
-						m_AnimOverlay[j].m_nSequence,
+						m_AnimOverlay[j].m_nSequence.GetRaw(),
 						pevent[i].event,
 						pevent[i].cycle,
 						m_flOverlayPrevEventCycle[j],
-						m_AnimOverlay[j].m_flCycle,
+						(float)m_AnimOverlay[j].m_flCycle,
 						gpGlobals->curtime );
 				}
 

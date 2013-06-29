@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,9 +9,9 @@
 #include <stdarg.h>
 #include "hud.h"
 #include "itextmessage.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/ITexture.h"
-#include "materialsystem/IMaterialSystem.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/itexture.h"
+#include "materialsystem/imaterialsystem.h"
 #include "imovehelper.h"
 #include "checksum_crc.h"
 #include "decals.h"
@@ -30,8 +30,9 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-
-
+																						
+ConVar localplayer_visionflags( "localplayer_visionflags", "0", FCVAR_DEVELOPMENTONLY );
+																						
 //-----------------------------------------------------------------------------
 // ConVars
 //-----------------------------------------------------------------------------
@@ -49,7 +50,7 @@ extern ConVar cl_leveloverview;
 //			... - 
 // Output : char
 //-----------------------------------------------------------------------------
-char *VarArgs( char *format, ... )
+char *VarArgs( const char *format, ... )
 {
 	va_list		argptr;
 	static char		string[1024];
@@ -78,7 +79,39 @@ int GetLocalPlayerIndex( void )
 	if ( player )
 		return player->entindex();
 	else
-		return  0;	// game not started yet
+		return 0;	// game not started yet
+}
+
+int GetLocalPlayerVisionFilterFlags( bool bWeaponsCheck /*= false */ )
+{
+	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
+
+	if ( player )
+		return player->GetVisionFilterFlags( bWeaponsCheck );
+	else
+		return 0;
+}
+
+bool IsLocalPlayerUsingVisionFilterFlags( int nFlags, bool bWeaponsCheck /* = false */ )
+{
+	int nLocalPlayerFlags = GetLocalPlayerVisionFilterFlags( bWeaponsCheck );
+
+	if ( !bWeaponsCheck )
+	{
+		// We can only modify the RJ flags with normal checks that won't take the forced kill cam flags that can happen in weapon checks
+		int nRJShaderFlags = nLocalPlayerFlags;
+		if ( nRJShaderFlags != 0 && GameRules() && !GameRules()->AllowMapVisionFilterShaders() )
+		{
+			nRJShaderFlags = 0;
+		}
+
+		if ( nRJShaderFlags != localplayer_visionflags.GetInt() )
+		{
+			localplayer_visionflags.SetValue( nRJShaderFlags );
+		}
+	}
+
+	return ( nLocalPlayerFlags & nFlags ) == nFlags;
 }
 
 bool IsLocalPlayerSpectator( void )
@@ -343,7 +376,7 @@ void UTIL_Tracer( const Vector &vecStart, const Vector &vecEnd, int iEntIndex, i
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
+void UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )
 {
 	C_BaseEntity *pEntity = pTrace->m_pEnt;
 
@@ -486,10 +519,37 @@ bool GetVectorInScreenSpace( Vector pos, int& iX, int& iY, Vector *vecOffset )
 
 	// Transform to screen space
 	int iFacing = ScreenTransform( pos, screen );
-	iX =  0.5 * screen[0] * ScreenWidth();
-	iY = -0.5 * screen[1] * ScreenHeight();
-	iX += 0.5 * ScreenWidth();
-	iY += 0.5 * ScreenHeight();
+	iX = 0.5f * ( 1.0f + screen[0] ) * ScreenWidth();
+	iY = 0.5f * ( 1.0f - screen[1] ) * ScreenHeight();
+
+	// Make sure the player's facing it
+	if ( iFacing )
+	{
+		// We're actually facing away from the Target. Stomp the screen position.
+		iX = -640;
+		iY = -640;
+		return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the x & y positions of a world position in HUD space
+//			Returns true if it's onscreen
+//-----------------------------------------------------------------------------
+bool GetVectorInHudSpace( Vector pos, int& iX, int& iY, Vector *vecOffset )
+{
+	Vector screen;
+
+	// Apply the offset, if one was specified
+	if ( vecOffset != NULL )
+		pos += *vecOffset;
+
+	// Transform to HUD space
+	int iFacing = HudTransform( pos, screen );
+	iX = 0.5f * ( 1.0f + screen[0] ) * ScreenWidth();
+	iY = 0.5f * ( 1.0f - screen[1] ) * ScreenHeight();
 
 	// Make sure the player's facing it
 	if ( iFacing )
@@ -510,6 +570,15 @@ bool GetVectorInScreenSpace( Vector pos, int& iX, int& iY, Vector *vecOffset )
 bool GetTargetInScreenSpace( C_BaseEntity *pTargetEntity, int& iX, int& iY, Vector *vecOffset )
 {
 	return GetVectorInScreenSpace( pTargetEntity->WorldSpaceCenter(), iX, iY, vecOffset );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the x & y positions of an entity in Vgui space
+//			Returns true if it's onscreen
+//-----------------------------------------------------------------------------
+bool GetTargetInHudSpace( C_BaseEntity *pTargetEntity, int& iX, int& iY, Vector *vecOffset )
+{
+	return GetVectorInHudSpace( pTargetEntity->WorldSpaceCenter(), iX, iY, vecOffset );
 }
 
 
@@ -618,6 +687,22 @@ int UTIL_EntitiesInSphere( C_BaseEntity **pList, int listMax, const Vector &cent
 
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Pass in an array of pointers and an array size, it fills the array and returns the number inserted
+// Input  : **pList - 
+//			listMax - 
+//			&ray - 
+//			flagMask - 
+// Output : int
+//-----------------------------------------------------------------------------
+int UTIL_EntitiesAlongRay( C_BaseEntity **pList, int listMax, const Ray_t &ray, int flagMask, int partitionMask )
+{
+	CFlaggedEntitiesEnum rayEnum( pList, listMax, flagMask );
+	partition->EnumerateElementsAlongRay( partitionMask, ray, false, &rayEnum );
+
+	return rayEnum.GetCount();
+}
+
 CEntitySphereQuery::CEntitySphereQuery( const Vector &center, float radius, int flagMask, int partitionMask )
 {
 	m_listIndex = 0;
@@ -681,13 +766,27 @@ const char *nexttoken(char *token, const char *str, char sep)
 //-----------------------------------------------------------------------------
 int UTIL_ComputeStringWidth( vgui::HFont& font, const char *str )
 {
-	int pixels = 0;
-	char *p = (char *)str;
+	float pixels = 0;
+	const char *p = str;
+	const char *pAfter = p + 1;
+	const char *pBefore = "\0";
 	while ( *p )
 	{
-		pixels += vgui::surface()->GetCharacterWidth( font, *p++ );
+#if USE_GETKERNEDCHARWIDTH
+		float wide, abcA;
+		vgui::surface()->GetKernedCharWidth( font, *p, *pBefore, *pAfter, wide, abcA );
+		pixels += wide;
+#else
+		pixels += vgui::surface()->GetCharacterWidth( font, *p );
+#endif
+		pBefore = p;
+		p++;
+		if ( *p )
+			pAfter = p + 1; 
+		else
+			pAfter = "\0";
 	}
-	return pixels;
+	return (int)ceil(pixels);
 }
 
 
@@ -699,13 +798,27 @@ int UTIL_ComputeStringWidth( vgui::HFont& font, const char *str )
 //-----------------------------------------------------------------------------
 int UTIL_ComputeStringWidth( vgui::HFont& font, const wchar_t *str )
 {
-	int pixels = 0;
-	wchar_t *p = (wchar_t *)str;
+	float pixels = 0;
+	const wchar_t *p = str;
+	const wchar_t *pAfter = p + 1;
+	const wchar_t *pBefore = L"\0";
 	while ( *p )
 	{
-		pixels += vgui::surface()->GetCharacterWidth( font, *p++ );
+#if USE_GETKERNEDCHARWIDTH
+		float wide, abcA;
+		vgui::surface()->GetKernedCharWidth( font, *p, *pBefore, *pAfter, wide, abcA );
+		pixels += wide;
+#else
+		pixels += vgui::surface()->GetCharacterWidth( font, *p );
+#endif
+		pBefore = p;
+		p++;
+		if ( *p )
+			pAfter = p + 1; 
+		else
+			pAfter = L"\0";
 	}
-	return pixels;
+	return (int)ceil(pixels);
 }
 
 //-----------------------------------------------------------------------------
@@ -718,6 +831,8 @@ int UTIL_ComputeStringWidth( vgui::HFont& font, const wchar_t *str )
 
 void UTIL_MakeSafeName( const char *oldName, char *newName, int newNameBufSize )
 {
+	Assert( newNameBufSize >= sizeof(newName[0]) );
+
 	int newpos = 0;
 
 	for( const char *p=oldName; *p != 0 && newpos < newNameBufSize-1; p++ )
@@ -777,13 +892,15 @@ const char * UTIL_SafeName( const char *oldName )
 //			input buffer is assumed, or you can pass the size of the input buffer if
 //			not NULL-terminated.
 //-----------------------------------------------------------------------------
-void UTIL_ReplaceKeyBindings( const wchar_t *inbuf, int inbufsizebytes, wchar_t *outbuf, int outbufsizebytes )
+void UTIL_ReplaceKeyBindings( const wchar_t *inbuf, int inbufsizebytes, OUT_Z_BYTECAP(outbufsizebytes) wchar_t *outbuf, int outbufsizebytes )
 {
+	Assert( outbufsizebytes >= sizeof(outbuf[0]) );
+	// copy to a new buf if there are vars
+	outbuf[0]=0;
+
 	if ( !inbuf || !inbuf[0] )
 		return;
 
-	// copy to a new buf if there are vars
-	outbuf[0]=0;
 	int pos = 0;
 	const wchar_t *inbufend = NULL;
 	if ( inbufsizebytes > 0 )
@@ -943,7 +1060,7 @@ static unsigned char ComputeDistanceFade( C_BaseEntity *pEntity, float flMinDist
 
 	if( flMinDist > flMaxDist )
 	{
-		swap( flMinDist, flMaxDist );
+		::V_swap( flMinDist, flMaxDist );
 	}
 
 	// If a negative value is provided for the min fade distance, then base it off the max.
@@ -1192,4 +1309,13 @@ int UTIL_GetMapKeyCount( const char *pszCustomKey )
 	}
 
 	return iCount;
+}
+
+bool UTIL_HasLoadedAnyMap()
+{
+	char szFilename[ _MAX_PATH ];
+	if ( !UTIL_GetMapLoadCountFileName( MAP_KEY_FILE, szFilename, _MAX_PATH ) )
+		return false;
+
+	return g_pFullFileSystem->FileExists( szFilename, "MOD" );
 }

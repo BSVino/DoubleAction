@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -694,6 +694,7 @@ struct CoreDispVert_t
 #define COREDISPTRI_TAG_BUILDABLE				(1<<3)
 #define COREDISPTRI_TAG_FORCE_BUILDABLE_BIT		(1<<4)
 #define COREDISPTRI_TAG_FORCE_BUILDABLE_VAL		(1<<5)
+#define COREDISPTRI_TAG_FORCE_REMOVE_BIT		(1<<6)
 
 struct CoreDispTri_t
 {
@@ -850,6 +851,7 @@ public:
 
 	bool IsTriWalkable( int iTri );
 	bool IsTriBuildable( int iTri );
+	bool IsTriRemove( int iTri );
 
 	inline void SetElevation( float elevation );
 	inline float GetElevation( void );

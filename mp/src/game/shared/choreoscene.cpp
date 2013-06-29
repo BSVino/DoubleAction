@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -100,7 +100,7 @@ void CChoreoScene::choreoprintf( int level, const char *fmt, ... )
 	}
 	else
 	{
-		printf( string );
+		printf( "%s", string );
 	}
 	
 	Msg( "%s", string );
@@ -2627,22 +2627,45 @@ void CChoreoScene::AddPauseEventDependency( CChoreoEvent *pauseEvent, CChoreoEve
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : dt - 
+// Input  : curtime - 
 //-----------------------------------------------------------------------------
 void CChoreoScene::Think( float curtime )
 {
 	CChoreoEvent *e;
 
 	float oldt = m_flCurrentTime;
-	float dt = curtime - oldt;
-
-	bool playing_forward = ( dt >= 0.0f ) ? true : false;
+	float dt;
 
 	m_nActiveEvents = 0;
 
 	ClearPauseEventDependencies();
 
 	CUtlRBTree< ActiveList, int > pending(0,0,EventLess);
+
+	// Handle loop events first:
+	//float flLoopPoint = LoopThink( curtime );
+	LoopThink( curtime );
+	if ( m_flCurrentTime != oldt )
+	{
+		// We hit a loop, we need to adjust the times.
+		//curtime = m_flCurrentTime + ( oldt - flLoopPoint ); // if we overshot, skip by how much we overshot
+		curtime = m_flCurrentTime;
+		Assert( curtime > 0.0f );
+	}
+
+	dt = curtime - oldt;
+	oldt = m_flCurrentTime;
+
+	bool playing_forward = ( dt >= 0.0f ) ? true : false;
+	//if ( !playing_forward )
+	//{
+	//	Msg( "-----dt was negative. %f   oldt: %f   t: %f\n", dt, oldt, curtime );
+	//}
+	//else
+	//{
+	//	Msg( "+++++dt was positive. %f   oldt: %f   t: %f\n", dt, oldt, curtime );
+	//}
+
 
 	// Iterate through all events in the scene
 	int i;
@@ -2657,7 +2680,6 @@ void CChoreoScene::Think( float curtime )
 
 		if ( disposition != PROCESSING_TYPE_IGNORE )
 		{
-
 			ActiveList entry;
 
 			entry.e		= e;
@@ -2668,8 +2690,6 @@ void CChoreoScene::Think( float curtime )
 	}
 
 	// Events are sorted start time and then by channel and actor slot or by name if those aren't equal
-	bool dump = false;
-
 	i = pending.FirstInorder();
 	while ( i != pending.InvalidIndex() )
 	{
@@ -2677,59 +2697,9 @@ void CChoreoScene::Think( float curtime )
 
 		Assert( entry->e );
 
-		if ( dump )
-		{
-			Msg( "%f == %s starting at %f (actor %p channel %p)\n",
-				m_flCurrentTime, entry->e->GetName(), entry->e->GetStartTime(),
-				entry->e->GetActor(), entry->e->GetChannel() );
-		}
-
-		switch ( entry->pt )
-		{
-		default:
-		case PROCESSING_TYPE_IGNORE:
-			{
-				Assert( 0 );
-			}
-			break;
-		case PROCESSING_TYPE_START:
-		case PROCESSING_TYPE_START_RESUMECONDITION:
-			{
-				entry->e->StartProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
-				
-				if ( entry->pt == PROCESSING_TYPE_START_RESUMECONDITION )
-				{
-					Assert( entry->e->IsResumeCondition() );
-					m_ActiveResumeConditions.AddToTail( entry->e );
-				}
-
-				// This event can "pause" the scene, so we need to remember who "paused" the scene so that
-				//  when we resume we can resume any suppressed events dependent on this pauser...
-				if ( entry->e->GetType() == CChoreoEvent::SECTION )
-				{
-					// So this event should be in the pauseevents list, otherwise this'll be -1
-					m_nLastPauseEvent = m_PauseEvents.Find( entry->e );
-				}
-			}
-			break;
-		case PROCESSING_TYPE_CONTINUE:
-			{
-				entry->e->ContinueProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
-			}
-			break;
-		case PROCESSING_TYPE_STOP:
-			{
-				entry->e->StopProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
-			}
-			break;
-		}
+		ProcessActiveListEntry( entry );
 
 		i = pending.NextInorder( i );
-	}
-
-	if ( dump )
-	{
-		Msg( "\n" );
 	}
 
 	// If a Process call slams this time, don't override it!!!
@@ -2742,6 +2712,102 @@ void CChoreoScene::Think( float curtime )
 	if ( m_nActiveEvents )
 	{
 		m_flLastActiveTime = m_flCurrentTime;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Loop points are handled prior to other events
+// Input  : curtime - 
+//-----------------------------------------------------------------------------
+float CChoreoScene::LoopThink( float curtime )
+{
+	float oldt = m_flCurrentTime;
+	float dt = curtime - oldt;
+
+	bool playing_forward = ( dt >= 0.0f ) ? true : false;
+
+	// Iterate through all events in the scene
+	CChoreoEvent *e;
+	int i;
+	for ( i = 0; i < m_Events.Size(); i++ )
+	{
+		e = m_Events[ i ];
+		if ( !e || e->GetType() != CChoreoEvent::LOOP )
+			continue;
+
+		PROCESSING_TYPE disposition;
+		m_nActiveEvents += EventThink( e, m_flCurrentTime, curtime, playing_forward, disposition );
+
+		if ( disposition != PROCESSING_TYPE_IGNORE )
+		{
+			ActiveList entry;
+
+			entry.e		= e;
+			entry.pt	= disposition;
+
+			//float ret = (float)atof( e->GetParameters() );
+			float ret = e->GetStartTime();
+			ProcessActiveListEntry( &entry );
+
+			return ret;
+		}
+	}
+
+	return 0.0f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : entry - 
+//-----------------------------------------------------------------------------
+void CChoreoScene::ProcessActiveListEntry( ActiveList *entry )
+{
+	const bool dump = false;
+	if ( dump )
+	{
+		Msg( "%f == %s starting at %f (actor %p channel %p)\n",
+			m_flCurrentTime, entry->e->GetName(), entry->e->GetStartTime(),
+			entry->e->GetActor(), entry->e->GetChannel() );
+	}
+
+	switch ( entry->pt )
+	{
+	default:
+	case PROCESSING_TYPE_IGNORE:
+		{
+			Assert( 0 );
+		}
+		break;
+	case PROCESSING_TYPE_START:
+	case PROCESSING_TYPE_START_RESUMECONDITION:
+		{
+			entry->e->StartProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
+
+			if ( entry->pt == PROCESSING_TYPE_START_RESUMECONDITION )
+			{
+				Assert( entry->e->IsResumeCondition() );
+				m_ActiveResumeConditions.AddToTail( entry->e );
+			}
+
+			// This event can "pause" the scene, so we need to remember who "paused" the scene so that
+			//  when we resume we can resume any suppressed events dependent on this pauser...
+			if ( entry->e->GetType() == CChoreoEvent::SECTION )
+			{
+				// So this event should be in the pauseevents list, otherwise this'll be -1
+				m_nLastPauseEvent = m_PauseEvents.Find( entry->e );
+			}
+		}
+		break;
+	case PROCESSING_TYPE_CONTINUE:
+		{
+			entry->e->ContinueProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
+		}
+		break;
+	case PROCESSING_TYPE_STOP:
+		{
+			entry->e->StopProcessing( m_pIChoreoEventCallback, this, m_flCurrentTime );
+		}
+		break;
 	}
 }
 

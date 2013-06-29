@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,9 +11,9 @@
 #pragma once
 #endif
 
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "ehandle.h"
-#include "ISpatialPartition.h"
+#include "ispatialpartition.h"
 
 class C_BaseEntity;
 

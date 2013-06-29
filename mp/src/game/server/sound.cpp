@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Entities relating to in-level sound effects.
 //
@@ -27,6 +27,10 @@
 #include "igamesystem.h"
 #include "KeyValues.h"
 #include "filesystem.h"
+
+#ifdef PORTAL
+#include "portal_gamerules.h"
+#endif // PORTAL
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -353,7 +357,7 @@ void CAmbientGeneric::ComputeMaxAudibleDistance( )
 //-----------------------------------------------------------------------------
 void CAmbientGeneric::InputPitch( inputdata_t &inputdata )
 {
-	m_dpv.pitch = clamp( inputdata.value.Float(), 0, 255 );
+	m_dpv.pitch = clamp( FastFloatToSmallInt( inputdata.value.Float() ), 0, 255 );
 
 	SendSound( SND_CHANGE_PITCH );
 }
@@ -368,7 +372,7 @@ void CAmbientGeneric::InputVolume( inputdata_t &inputdata )
 	//
 	// Multiply the input value by ten since volumes are expected to be from 0 - 100.
 	//
-	m_dpv.vol = clamp( inputdata.value.Float(), 0, 10 ) * 10;
+	m_dpv.vol = clamp( RoundFloatToInt( inputdata.value.Float() * 10.f ), 0, 100 );
 	m_dpv.volfrac = m_dpv.vol << 8;
 
 	SendSound( SND_CHANGE_VOL );
@@ -469,6 +473,23 @@ void CAmbientGeneric::Activate( void )
 			}
 		}
 	}
+
+#ifdef PORTAL
+		// This is the only way we can silence the radio sound from the first room without touching them map -- jdw
+		if ( PortalGameRules() && PortalGameRules()->ShouldRemoveRadio() )
+		{		
+			if ( V_strcmp( STRING( gpGlobals->mapname ), "testchmb_a_00" ) == 0 || 
+			    V_strcmp( STRING( gpGlobals->mapname ), "testchmb_a_11" ) == 0 || 
+			    V_strcmp( STRING( gpGlobals->mapname ), "testchmb_a_14" ) == 0 )
+			{
+				if ( V_strcmp( STRING( GetEntityName() ), "radio_sound" ) == 0 )
+				{
+					UTIL_Remove( this );
+					return;
+				}
+			}
+		}
+#endif // PORTAL
 
 	// If active start the sound
 	if ( m_fActive )

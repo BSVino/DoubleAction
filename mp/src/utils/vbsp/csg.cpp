@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -271,9 +271,9 @@ static void ComputeBoundingPlanes( const Vector& clipmins, const Vector& clipmax
 		VectorClear (normal);
 		normal[i] = 1;
 		dist = clipmaxs[i];
-		maxplanenums[i] = FindFloatPlane (normal, dist);
+		maxplanenums[i] = g_MainMap->FindFloatPlane (normal, dist);
 		dist = clipmins[i];
-		minplanenums[i] = FindFloatPlane (normal, dist);
+		minplanenums[i] = g_MainMap->FindFloatPlane (normal, dist);
 	}
 }
 
@@ -286,7 +286,7 @@ void CopyMatchingTexinfos( side_t *pDestSides, int numDestSides, const bspbrush_
 	for ( int i = 0; i < numDestSides; i++ )
 	{
 		side_t *pSide = &pDestSides[i];
-		plane_t *pPlane = &mapplanes[pSide->planenum];
+		plane_t *pPlane = &g_MainMap->mapplanes[pSide->planenum];
 
 		// We have to use the *original sides* because MapBSPBrushList could have generated
 		// splits when cutting the original brush to the block being processed. This
@@ -305,7 +305,7 @@ void CopyMatchingTexinfos( side_t *pDestSides, int numDestSides, const bspbrush_
 			if ( pSourceSide->texinfo == TEXINFO_NODE )
 				continue;
 
-			plane_t *pSourcePlane = &mapplanes[pSourceSide->planenum];
+			plane_t *pSourcePlane = &g_MainMap->mapplanes[pSourceSide->planenum];
 			float flDot = DotProduct( pPlane->normal, pSourcePlane->normal );
 			if ( flDot == 1.0f || pSide->planenum == pSourceSide->planenum )
 			{
@@ -390,7 +390,7 @@ bspbrush_t *MakeBspBrushList (int startbrush, int endbrush, const Vector& clipmi
 	int i;
 	for (i=startbrush ; i<endbrush ; i++)
 	{
-		mapbrush_t *mb = &mapbrushes[i];
+		mapbrush_t *mb = &g_MainMap->mapbrushes[i];
 		if ( detailScreen != FULL_DETAIL )
 		{
 			bool onlyDetail = (detailScreen == ONLY_DETAIL);
@@ -509,7 +509,7 @@ void WriteBrushMap (char *name, bspbrush_t *list)
 		fprintf (f, "{\n");
 		for (i=0,s=list->sides ; i<list->numsides ; i++,s++)
 		{
-			w = BaseWindingForPlane (mapplanes[s->planenum].normal, mapplanes[s->planenum].dist);
+			w = BaseWindingForPlane (g_MainMap->mapplanes[s->planenum].normal, g_MainMap->mapplanes[s->planenum].dist);
 
 			fprintf (f,"( %i %i %i ) ", (int)w->p[0][0], (int)w->p[0][1], (int)w->p[0][2]);
 			fprintf (f,"( %i %i %i ) ", (int)w->p[1][0], (int)w->p[1][1], (int)w->p[1][2]);

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: builds an intended movement command to send to the server
 //
@@ -19,8 +19,23 @@
 #include "bitbuf.h"
 #include "checksum_md5.h"
 #include "hltvcamera.h"
+#if defined( REPLAY_ENABLED )
+#include "replay/replaycamera.h"
+#endif
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
+#include "cam_thirdperson.h"
+
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#endif
+
+#include "client_virtualreality.h"
+#include "headtrack/isourcevirtualreality.h"
+
+// NVNT Include
+#include "haptics/haptic_utils.h"
+#include <vgui/ISurface.h>
 
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
@@ -45,14 +60,21 @@ static int in_impulse = 0;
 static int in_cancel = 0;
 
 ConVar cl_anglespeedkey( "cl_anglespeedkey", "0.67", 0 );
-ConVar cl_yawspeed( "cl_yawspeed", "210", 0 );
-ConVar cl_pitchspeed( "cl_pitchspeed", "225", 0 );
+ConVar cl_yawspeed( "cl_yawspeed", "210", FCVAR_NONE, "Client yaw speed.", true, -100000, true, 100000 );
+ConVar cl_pitchspeed( "cl_pitchspeed", "225", FCVAR_NONE, "Client pitch speed.", true, -100000, true, 100000 );
 ConVar cl_pitchdown( "cl_pitchdown", "89", FCVAR_CHEAT );
 ConVar cl_pitchup( "cl_pitchup", "89", FCVAR_CHEAT );
-ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_CHEAT );
-ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_CHEAT );
-ConVar cl_forwardspeed( "cl_forwardspeed", "450", FCVAR_CHEAT );
-ConVar cl_backspeed( "cl_backspeed", "450", FCVAR_CHEAT );
+#if defined( CSTRIKE_DLL )
+ConVar cl_sidespeed( "cl_sidespeed", "400", FCVAR_CHEAT );
+ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_ARCHIVE|FCVAR_CHEAT );
+ConVar cl_forwardspeed( "cl_forwardspeed", "400", FCVAR_ARCHIVE|FCVAR_CHEAT );
+ConVar cl_backspeed( "cl_backspeed", "400", FCVAR_ARCHIVE|FCVAR_CHEAT );
+#else
+ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar cl_forwardspeed( "cl_forwardspeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
+ConVar cl_backspeed( "cl_backspeed", "450", FCVAR_REPLICATED | FCVAR_CHEAT );
+#endif // CSTRIKE_DLL
 ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
@@ -61,9 +83,9 @@ ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will ai
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
 
 ConVar sv_noclipduringpause( "sv_noclipduringpause", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If cheats are enabled, then you can noclip with the game paused (for doing screenshots, etc.)." );
-static ConVar cl_lagcomp_errorcheck( "cl_lagcomp_errorcheck", "0", 0, "Player index of other player to check for position errors." );
 
 extern ConVar cl_mouselook;
+
 #define UsingMouselook() cl_mouselook.GetBool()
 
 /*
@@ -101,8 +123,8 @@ kbutton_t	in_graph;
 kbutton_t	in_joyspeed;		// auto-speed key from the joystick (only works for player movement, not vehicles)
 
 static	kbutton_t	in_klook;
-static	kbutton_t	in_left;
-static	kbutton_t	in_right;
+kbutton_t	in_left;
+kbutton_t	in_right;
 static	kbutton_t	in_lookup;
 static	kbutton_t	in_lookdown;
 static	kbutton_t	in_use;
@@ -120,6 +142,7 @@ static	kbutton_t	in_break;
 static	kbutton_t	in_zoom;
 static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
+static	kbutton_t	in_attack3;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -181,7 +204,7 @@ int KB_ConvertString( char *in, char **ppout )
 		if ( *p == '+' )
 		{
 			pEnd = binding;
-			while ( *p && ( isalnum( *p ) || ( pEnd == binding ) ) && ( ( pEnd - binding ) < 63 ) )
+			while ( *p && ( V_isalnum( *p ) || ( pEnd == binding ) ) && ( ( pEnd - binding ) < 63 ) )
 			{
 				*pEnd++ = *p++;
 			}
@@ -356,7 +379,7 @@ void KeyDown( kbutton_t *b, const char *c )
 	{
 		if ( c[0] )
 		{
-			DevMsg( 1,"Three keys down for a button '%c' '%c' '%c'!\n", b->down[0], b->down[1], c);
+			DevMsg( 1,"Three keys down for a button '%c' '%c' '%c'!\n", b->down[0], b->down[1], c[0]);
 		}
 		return;
 	}
@@ -465,6 +488,8 @@ void IN_Grenade1Down( const CCommand &args ) { KeyDown( &in_grenade1, args[1] );
 void IN_Grenade2Up( const CCommand &args ) { KeyUp( &in_grenade2, args[1] ); }
 void IN_Grenade2Down( const CCommand &args ) { KeyDown( &in_grenade2, args[1] ); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
+void IN_Attack3Down( const CCommand &args ) { KeyDown(&in_attack3, args[1] );}
+void IN_Attack3Up( const CCommand &args ) { KeyUp(&in_attack3, args[1] );}
 
 void IN_DuckToggle( const CCommand &args ) 
 { 
@@ -621,7 +646,7 @@ float CInput::DetermineKeySpeed( float frametime )
 		if ( m_flKeyboardSampleTime <= 0 )
 			return 0.0f;
 	
-		frametime = min( m_flKeyboardSampleTime, frametime );
+		frametime = MIN( m_flKeyboardSampleTime, frametime );
 		m_flKeyboardSampleTime -= frametime;
 	}
 	
@@ -660,11 +685,11 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 
 		if ( side || forward )
 		{
-			viewangles[YAW] = RAD2DEG(atan2(side, forward)) + m_vecCameraOffset[ YAW ];
+			viewangles[YAW] = RAD2DEG(atan2(side, forward)) + g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ];
 		}
 		if ( side || forward || KeyState (&in_right) || KeyState (&in_left) )
 		{
-			cam_idealyaw.SetValue( m_vecCameraOffset[ YAW ] - viewangles[ YAW ] );
+			cam_idealyaw.SetValue( g_ThirdPersonManager.GetCameraOffsetAngles()[ YAW ] - viewangles[ YAW ] );
 		}
 	}
 }
@@ -921,6 +946,34 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 	}
 
 	JoyStickMove( frametime, cmd);
+
+	// NVNT if we have a haptic device..
+	if(haptics && haptics->HasDevice())
+	{
+		if(engine->IsPaused() || engine->IsLevelMainMenuBackground() || vgui::surface()->IsCursorVisible() || !engine->IsInGame())
+		{
+			// NVNT send a menu process to the haptics system.
+			haptics->MenuProcess();
+			return;
+		}
+#ifdef CSTRIKE_DLL
+		// NVNT cstrike fov grabing.
+		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+		if(player){
+			haptics->UpdatePlayerFOV(player->GetFOV());
+		}
+#endif
+		// NVNT calculate move with the navigation on the haptics system.
+		haptics->CalculateMove(cmd->forwardmove, cmd->sidemove, frametime);
+		// NVNT send a game process to the haptics system.
+		haptics->GameProcess();
+#if defined( WIN32 ) && !defined( _X360 )
+		// NVNT update our avatar effect.
+		UpdateAvatarEffect();
+#endif
+	}
+
+
 }
 
 //-----------------------------------------------------------------------------
@@ -951,6 +1004,8 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 
 
 	QAngle viewangles;
+	engine->GetViewAngles( viewangles );
+	QAngle originalViewangles = viewangles;
 
 	if ( active )
 	{
@@ -972,13 +1027,33 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 
 		// Allow mice and other controllers to add their inputs
 		ControllerMove( frametime, cmd );
+#ifdef SIXENSE
+		g_pSixenseInput->SixenseFrame( frametime, cmd ); 
+
+		if( g_pSixenseInput->IsEnabled() )
+		{
+			g_pSixenseInput->SetView( frametime, cmd );
+		}
+#endif
 	}
 
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
 
 	// Set button and flag bits, don't blow away state
+#ifdef SIXENSE
+	if( g_pSixenseInput->IsEnabled() )
+	{
+		// Some buttons were set in SixenseUpdateKeys, so or in any real keypresses
+		cmd->buttons |= GetButtonBits( 0 );
+	}
+	else
+	{
+		cmd->buttons = GetButtonBits( 0 );
+	}
+#else
 	cmd->buttons = GetButtonBits( 0 );
+#endif
 
 	// Use new view angles if alive, otherwise user last angles we stored off.
 	if ( g_iAlive )
@@ -998,6 +1073,33 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 		engine->SetViewAngles( cmd->viewangles );
 		prediction->SetLocalViewAngles( cmd->viewangles );
 	}
+
+	// Let the headtracker override the view at the very end of the process so
+	// that vehicles and other stuff in g_pClientMode->CreateMove can override 
+	// first
+	if ( active && UseVR() )
+	{
+		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+		if( pPlayer && !pPlayer->GetVehicle() )
+		{
+			QAngle curViewangles, newViewangles;
+			Vector curMotion, newMotion;
+			engine->GetViewAngles( curViewangles );
+			curMotion.Init ( 
+				cmd->forwardmove,
+				cmd->sidemove,
+				cmd->upmove );
+			g_ClientVirtualReality.OverridePlayerMotion ( frametime, originalViewangles, curViewangles, curMotion, &newViewangles, &newMotion );
+			engine->SetViewAngles( newViewangles );
+			cmd->forwardmove = newMotion[0];
+			cmd->sidemove = newMotion[1];
+			cmd->upmove = newMotion[2];
+
+			cmd->viewangles = newViewangles;
+			prediction->SetLocalViewAngles( cmd->viewangles );
+		}
+	}
+
 }
 
 void CInput::CreateMove ( int sequence_number, float input_sample_frametime, bool active )
@@ -1011,6 +1113,8 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	cmd->tick_count = gpGlobals->tickcount;
 
 	QAngle viewangles;
+	engine->GetViewAngles( viewangles );
+	QAngle originalViewangles = viewangles;
 
 	if ( active || sv_noclipduringpause.GetInt() )
 	{
@@ -1032,6 +1136,14 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 
 		// Allow mice and other controllers to add their inputs
 		ControllerMove( input_sample_frametime, cmd );
+#ifdef SIXENSE
+		g_pSixenseInput->SixenseFrame( input_sample_frametime, cmd ); 
+
+		if( g_pSixenseInput->IsEnabled() )
+		{
+			g_pSixenseInput->SetView( input_sample_frametime, cmd );
+		}
+#endif
 	}
 	else
 	{
@@ -1063,10 +1175,27 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	}
 
 	// Set button and flag bits
+#ifdef SIXENSE
+	if( g_pSixenseInput->IsEnabled() )
+	{
+		// Some buttons were set in SixenseUpdateKeys, so or in any real keypresses
+		cmd->buttons |= GetButtonBits( 1 );
+	}
+	else
+	{
+		cmd->buttons = GetButtonBits( 1 );
+	}
+#else
+	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
+#endif
 
 	// Using joystick?
+#ifdef SIXENSE
+	if ( in_joystick.GetInt() || g_pSixenseInput->IsEnabled() )
+#else
 	if ( in_joystick.GetInt() )
+#endif
 	{
 		if ( cmd->forwardmove > 0 )
 		{
@@ -1093,7 +1222,43 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	if ( g_pClientMode->CreateMove( input_sample_frametime, cmd ) )
 	{
 		// Get current view angles after the client mode tweaks with it
+#ifdef SIXENSE
+		// Only set the engine angles if sixense is not enabled. It is done in SixenseInput::SetView otherwise.
+		if( !g_pSixenseInput->IsEnabled() )
+		{
+			engine->SetViewAngles( cmd->viewangles );
+		}
+#else
 		engine->SetViewAngles( cmd->viewangles );
+
+#endif
+
+		if ( UseVR() )
+		{
+			C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+			if( pPlayer && !pPlayer->GetVehicle() )
+			{
+				QAngle curViewangles, newViewangles;
+				Vector curMotion, newMotion;
+				engine->GetViewAngles( curViewangles );
+				curMotion.Init ( 
+					cmd->forwardmove,
+					cmd->sidemove,
+					cmd->upmove );
+				g_ClientVirtualReality.OverridePlayerMotion ( input_sample_frametime, originalViewangles, curViewangles, curMotion, &newViewangles, &newMotion );
+				engine->SetViewAngles( newViewangles );
+				cmd->forwardmove = newMotion[0];
+				cmd->sidemove = newMotion[1];
+				cmd->upmove = newMotion[2];
+				cmd->viewangles = newViewangles;
+			}
+			else
+			{
+				Vector vPos;
+				g_ClientVirtualReality.GetTorsoRelativeAim( &vPos, &cmd->viewangles );
+				engine->SetViewAngles( cmd->viewangles );
+			}
+		}
 	}
 
 	m_flLastForwardMove = cmd->forwardmove;
@@ -1101,6 +1266,9 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	cmd->random_seed = MD5_PseudoRandom( sequence_number ) & 0x7fffffff;
 
 	HLTVCamera()->CreateMove( cmd );
+#if defined( REPLAY_ENABLED )
+	ReplayCamera()->CreateMove( cmd );
+#endif
 
 #if defined( HL2_CLIENT_DLL )
 	// copy backchannel data
@@ -1300,6 +1468,7 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_ZOOM, s_ClearInputState, &in_zoom, bResetState );
 	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
+	CalcButtonBits( bits, IN_ATTACK3, s_ClearInputState, &in_attack3, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1455,6 +1624,8 @@ static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
 static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );
 static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
 static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
+static ConCommand startattack3("+attack3", IN_Attack3Down);
+static ConCommand endattack3("-attack3", IN_Attack3Up);
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );
@@ -1482,12 +1653,13 @@ void CInput::Init_All (void)
 	Q_memset( m_rgNewMouseParms, 0, sizeof( m_rgNewMouseParms ) );
 	Q_memset( m_rgCheckMouseParam, 0, sizeof( m_rgCheckMouseParam ) );
 
-	m_rgNewMouseParms[ MOUSE_ACCEL_THRESHHOLD1 ] = 0; // no 2x
-	m_rgNewMouseParms[ MOUSE_ACCEL_THRESHHOLD2 ] = 0; // no 4x
-	m_rgNewMouseParms[ MOUSE_SPEED_FACTOR ] = 1; // slowest (10 default, 20 max)
+	m_rgNewMouseParms[ MOUSE_ACCEL_THRESHHOLD1 ] = 0;	// no 2x
+	m_rgNewMouseParms[ MOUSE_ACCEL_THRESHHOLD2 ] = 0;	// no 4x
+	m_rgNewMouseParms[ MOUSE_SPEED_FACTOR ] = 1;		// 0 = disabled, 1 = threshold 1 enabled, 2 = threshold 2 enabled
 
 	m_fMouseParmsValid	= false;
 	m_fJoystickAdvancedInit = false;
+	m_fHadJoysticks = false;
 	m_flLastForwardMove = 0.0;
 
 	// Initialize inputs

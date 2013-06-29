@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,9 +28,7 @@ public:
 
 	// Reads a file from the zip - maintains alignement
 	virtual bool			ReadFileFromZip		( const char *pRelativeName, bool bTextMode, CUtlBuffer &buf ) = 0;
-#ifdef _WIN32
 	virtual bool			ReadFileFromZip		( HANDLE hFile, const char *pRelativeName, bool bTextMode, CUtlBuffer &buf ) = 0;
-#endif
 
 	// Removes a single file from the zip - maintains alignment
 	virtual void			RemoveFileFromZip	( const char *relativename ) = 0;
@@ -54,9 +52,7 @@ public:
 	// Writes out zip file to a filestream - uses current alignment size 
 	// (set by file's previous alignment, or a call to ForceAlignment)
 	virtual void			SaveToDisk			( FILE *fout ) = 0;
-#ifdef _WIN32
 	virtual void			SaveToDisk			( HANDLE hFileOut ) = 0;
-#endif
 	
 	// Reads a zip file from a buffer into memory - sets current alignment size to 
 	// the file's alignment size, unless overridden by a ForceAlignment call)
@@ -64,9 +60,7 @@ public:
 
 	// Mounts a zip file from the disk
 	// Only ReadFileFromZip() is supported because the zip file could be >2GB
-#ifdef _WIN32
 	virtual HANDLE			ParseFromDisk		( const char *pFilename ) = 0;
-#endif
 
 	// Forces a specific alignment size for all subsequent file operations, overriding files' previous alignment size.
 	// Return to using files' individual alignment sizes by passing FALSE.

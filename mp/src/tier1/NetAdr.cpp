@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -179,19 +179,14 @@ unsigned short netadr_t::GetPort() const
 	return BigShort( port );
 }
 
-unsigned int netadr_t::GetIP() const
+unsigned int netadr_t::GetIPNetworkByteOrder() const
 {
-	return *(unsigned int *)&ip;;
+	return *(unsigned int *)&ip;
 }
 
-unsigned long netadr_t::addr_ntohl() const
+unsigned int netadr_t::GetIPHostByteOrder() const
 {
-	return ntohl( GetIP() );
-}
-
-unsigned long netadr_t::addr_htonl() const
-{
-	return htonl( GetIP() );
+	return ntohl( GetIPNetworkByteOrder() );
 }
 
 
@@ -262,7 +257,7 @@ void netadr_t::SetFromString( const char *pch, bool bUseDNS )
 
 	if ( pch[0] >= '0' && pch[0] <= '9' && strchr( pch, '.' ) )
 	{
-		int n1, n2, n3, n4, n5;
+		int n1 = 0, n2 = 0, n3 = 0, n4 = 0, n5 = 0;
 		int nRes = sscanf( pch, "%d.%d.%d.%d:%d", &n1, &n2, &n3, &n4, &n5 );
 		if ( nRes >= 4 )
 		{
@@ -321,7 +316,7 @@ void netadr_t::SetFromSocket( int hSocket )
 
 	struct sockaddr address;
 	int namelen = sizeof(address);
-	if ( getsockname( hSocket, (struct sockaddr *)&address, (int *)&namelen) == 0 )
+	if ( getsockname( hSocket, (struct sockaddr *)&address, (socklen_t *)&namelen) == 0 )
 	{
 		SetFromSockadr( &address );
 	}

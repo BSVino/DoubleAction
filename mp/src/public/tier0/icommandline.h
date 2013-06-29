@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -37,6 +37,9 @@ public:
 	virtual int			ParmCount() const = 0;
 	virtual int			FindParm( const char *psz ) const = 0;	// Returns 0 if not found.
 	virtual const char* GetParm( int nIndex ) const = 0;
+	
+	// copies the string passwed
+	virtual void SetParm( int nIndex, char const *pNewParm ) =0;
 };
 
 //-----------------------------------------------------------------------------
@@ -51,3 +54,4 @@ PLATFORM_INTERFACE ICommandLine *CommandLine_Tier0();
 #endif
 
 #endif // TIER0_ICOMMANDLINE_H
+

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Deals with singleton  
 //
@@ -12,11 +12,11 @@
 #pragma once
 #endif
 
-#include "IGameSystem.h"
-#include "IClientEntityInternal.h"
-#include "engine/IVModelRender.h"
+#include "igamesystem.h"
+#include "icliententityinternal.h"
+#include "engine/ivmodelrender.h"
 #include "mathlib/vector.h"
-#include "IVRenderView.h"
+#include "ivrenderview.h"
 
 struct model_t;
 

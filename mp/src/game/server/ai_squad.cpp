@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:	Squad classes
 //
@@ -263,7 +263,7 @@ void CAI_Squad::AddToSquad(CAI_BaseNPC *pNPC)
 
 	if (m_SquadMembers.Count() == MAX_SQUAD_MEMBERS)
 	{
-		DevMsg("Error!! Squad %s is too big!!! Replacing last member\n",this->m_Name);
+		DevMsg("Error!! Squad %s is too big!!! Replacing last member\n", STRING( this->m_Name ));
 		m_SquadMembers.Remove(m_SquadMembers.Count()-1);
 	}
 	m_SquadMembers.AddToTail(pNPC);
@@ -294,7 +294,7 @@ CAI_BaseNPC *CAI_Squad::SquadMemberInRange( const Vector &vecLocation, float flD
 		if (m_SquadMembers[i] != NULL && (vecLocation - m_SquadMembers[i]->GetAbsOrigin() ).Length2D() <= flDist)
 			return m_SquadMembers[i];
 	}
-	return false;
+	return NULL;
 }
 
 //-------------------------------------

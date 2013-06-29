@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,7 +23,7 @@ class CDispVector : public CUtlVector<T, CHunkMemory<T> >
 };
 #else
 template<typename T>
-class CDispVector : public CUtlVector<T, CUtlMemoryAligned<T,16>>
+class CDispVector : public CUtlVector<T, CUtlMemoryAligned<T,16> >
 {
 };
 #endif

@@ -1,4 +1,4 @@
-//========== Copyright © 2005, Valve Corporation, All rights reserved. ========
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A class to wrap data for transport over a boundary like a thread
 //			or window.
@@ -78,9 +78,10 @@ public:
 		m_string = from.m_string;
 	}
 
-	CUtlEnvelope<const char> &operator=( const CUtlEnvelope<const char *> &from )
+	CUtlEnvelope<const char *> &operator=( const CUtlEnvelope<const char *> &from )
 	{
 		m_string = from.m_string;
+		return *this;
 	}
 
 	operator char *()
@@ -190,7 +191,7 @@ inline CUtlDataEnvelope::operator void *() const
 //-----------------------------------------------------------------------------
 
 template <typename T>
-inline CUtlEnvelope<T>::CUtlEnvelope( const T *pData, int nElems = 1  )
+inline CUtlEnvelope<T>::CUtlEnvelope( const T *pData, int nElems )
 	: CUtlDataEnvelope( pData, sizeof(T) * nElems )
 {
 }

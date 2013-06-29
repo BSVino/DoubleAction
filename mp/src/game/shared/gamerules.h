@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -38,6 +38,7 @@ class CBaseCombatCharacter;
 class CBasePlayer;
 class CItem;
 class CAmmoDef;
+class CTacticalMissionManager;
 
 extern ConVar sk_autoaim_mode;
 
@@ -172,14 +173,40 @@ public:
 
 	virtual bool InRoundRestart( void ) { return false; }
 
+	//Allow thirdperson camera.
+	virtual bool AllowThirdPersonCamera( void ) { return false; }
+
+	virtual void ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues ) {} 
+
+	// IsConnectedUserInfoChangeAllowed allows to override FCVAR_NOT_CONNECTED rule when
+	// player is on team spectator or team unassigned for example
+	// Default and previous engine implementation will never allow FCVAR_NOT_CONNECTED cvars
+	// to be changed while connected to a game server
+	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer ) { return !IsMultiplayer(); }
+
 #ifdef CLIENT_DLL
 
 	virtual bool IsBonusChallengeTimeBased( void );
+
+	virtual bool AllowMapParticleEffect( const char *pszParticleEffect ) { return true; }
+
+	virtual bool AllowWeatherParticles( void ) { return true; }
+
+	virtual bool AllowMapVisionFilterShaders( void ) { return false; }
+	virtual const char* TranslateEffectForVisionFilter( const char *pchEffectType, const char *pchEffectName ) { return pchEffectName; }
+
+	virtual bool IsLocalPlayer( int nEntIndex );
+
+	virtual void ModifySentChat( char *pBuf, int iBufSize ) { return; }
+
+	virtual bool ShouldWarnOfAbandonOnQuit() { return false; }
 	
 #else
 
 	virtual void GetTaggedConVarList( KeyValues *pCvarTagList ) {}
 
+	// NVNT see if the client of the player entered is using a haptic device.
+	virtual void CheckHaptics(CBasePlayer* pPlayer);
 
 // CBaseEntity overrides.
 public:
@@ -366,12 +393,31 @@ public:
 	virtual void MarkAchievement ( IRecipientFilter& filter, char const *pchAchievementName );
 
 	virtual void ResetMapCycleTimeStamp( void ){ return; }
-	
+
+	virtual void OnNavMeshLoad( void ) { return; }
+
+	// game-specific factories
+	virtual CTacticalMissionManager *TacticalMissionManagerFactory( void );
+
+	virtual void ProcessVerboseLogOutput( void ){}
+
 #endif
 
 	virtual const char *GetGameTypeName( void ){ return NULL; }
 	virtual int GetGameType( void ){ return 0; }
 
+	virtual bool ShouldDrawHeadLabels(){ return true; }
+
+	virtual void ClientSpawned( edict_t * pPlayer ) { return; }
+
+	virtual void OnFileReceived( const char * fileName, unsigned int transferID ) { return; }
+
+	virtual bool IsHolidayActive( /*EHoliday*/ int eHoliday ) const { return false; }
+
+#ifndef CLIENT_DLL
+private:
+	float m_flNextVerboseLogOutput;
+#endif // CLIENT_DLL
 };
 
 

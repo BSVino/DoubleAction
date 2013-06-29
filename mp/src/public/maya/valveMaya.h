@@ -34,6 +34,9 @@
 #include "tier1/utlstringmap.h"
 #include "tier1/utlvector.h"
 #include "tier1/interface.h"
+#include "mathlib/mathlib.h"
+
+#include "ValveMaya/Undo.h"
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -106,7 +109,7 @@ inline MStatus CreateDagNode(
 	MObject *o_pTransformObj = NULL,
 	MObject *o_pShapeObj = NULL )
 {
-	return CreateDagNode( i_nodeType, i_transformName, i_parentObj, o_pTransformObj, o_pShapeObj );
+	return CreateDagNode( i_nodeType, i_transformName, i_parentObj, o_pTransformObj, o_pShapeObj, &undo.DagModifier() );
 }
 
 bool IsNodeVisible(	const MDagPath &mDagPath, bool bTemplateAsInvisible = true );
@@ -178,6 +181,8 @@ bool IsDefault(	const MPlug &aPlug );
 
 uint NextAvailable( MPlug &mPlug );
 
+MPlug NextAvailablePlug( MPlug &mPlug );
+
 MObject AddColorSetToMesh(
 	const MString &colorSetName,
 	const MDagPath &mDagPath,
@@ -211,10 +216,171 @@ MObject FindInputAttr( const MObject &dstNodeObj, const MString &dstPlugName );
 // Returns the first found node MObject of the specified type in the history of the specified node
 MObject FindInputNodeOfType( const MObject &dstNodeObj, const MString &typeName, const MString &dstPlugName );
 
-MObject FindInputNodeOfType( const MObject &dstNodeObj, const MString &typeName );
+MObject FindInputNodeOfType( const MObject &dstNodeObj, const MString &typeName, MSelectionList &doneList );
 
 // Creates a deformer of the specified type and deforms the specified shape with an optional component
 MObject DeformShape( ValveMaya::CUndo &undo, const MString &deformerType, const MDagPath &inOrigDagPath, MObject &origCompObj = MObject::kNullObj );
+
+bool Substitute( MString &str, const MString &searchStr, const MString &replaceStr );
+
+bool SubstituteCaseInsensitive( MString &str, const MString &searchStr, const MString &replaceStr );
+
+bool SubstituteAll( MString &str, const MString &searchStr, const MString &replaceStr );
+
+bool SubstituteAllCaseInsensitive( MString &str, const MString &searchStr, const MString &replaceStr );
+
+void FixSlashes( MString &str, char correctPathSeparator = '/' );
+
+//-----------------------------------------------------------------------------
+// Converts a Maya MMatrix to a Valve matrix3x4_t (transpose)
+//-----------------------------------------------------------------------------
+inline void MatrixMayaToValve( matrix3x4_t &mValve, const MMatrix &mMaya )
+{
+	mValve[0][0] = mMaya[0][0];	mValve[0][1] = mMaya[1][0];	mValve[0][2] = mMaya[2][0];	mValve[0][3] = mMaya[3][0];
+	mValve[1][0] = mMaya[0][1];	mValve[1][1] = mMaya[1][1];	mValve[1][2] = mMaya[2][1];	mValve[1][3] = mMaya[3][1];
+	mValve[2][0] = mMaya[0][2];	mValve[2][1] = mMaya[1][2];	mValve[2][2] = mMaya[2][2];	mValve[2][3] = mMaya[3][2];
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Valve matrix3x4_t to a Maya MMatrix (transpose)
+//-----------------------------------------------------------------------------
+inline void MatrixValveToMaya( MMatrix &mMaya, const matrix3x4_t &mValve )
+{
+	mMaya[0][0] = mValve[0][0];	mMaya[0][1] = mValve[1][0];	mMaya[0][2] = mValve[2][0]; mMaya[3][0] = 0.0;
+	mMaya[1][0] = mValve[0][1];	mMaya[1][1] = mValve[1][1];	mMaya[1][2] = mValve[2][1]; mMaya[3][1] = 0.0;
+	mMaya[2][0] = mValve[0][2];	mMaya[2][1] = mValve[1][2];	mMaya[2][2] = mValve[2][2]; mMaya[3][2] = 0.0;
+	mMaya[3][0] = mValve[0][3]; mMaya[3][1] = mValve[1][3]; mMaya[3][2] = mValve[2][3]; mMaya[3][3] = 1.0;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Maya MVector to a Valve Vector
+//-----------------------------------------------------------------------------
+inline void VectorMayaToValve( Vector &vValve, const MVector &vMaya )
+{
+	vValve.x = vMaya.x;
+	vValve.y = vMaya.y;
+	vValve.z = vMaya.z;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Valve Vector to a Maya MVector
+//-----------------------------------------------------------------------------
+inline void VectorValveToMaya( MVector &vMaya, const Vector &vValve )
+{
+	vMaya.x = vValve.x;
+	vMaya.y = vValve.y;
+	vMaya.z = vValve.z;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Maya MQuaternion to a Valve Quaternion
+//-----------------------------------------------------------------------------
+inline void QuaternionMayaToValve( Quaternion &qValve, const MQuaternion &qMaya )
+{
+	qValve.x = qMaya.x;
+	qValve.y = qMaya.y;
+	qValve.z = qMaya.z;
+	qValve.w = qMaya.w;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Maya MQuaternion to a Valve Quaternion
+//-----------------------------------------------------------------------------
+inline void QuaternionMayaToValve( Quaternion &qValve, const MEulerRotation &eMaya )
+{
+	const MQuaternion qMaya = eMaya.asQuaternion();
+
+	qValve.x = qMaya.x;
+	qValve.y = qMaya.y;
+	qValve.z = qMaya.z;
+	qValve.w = qMaya.w;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Valve Quaternion to a Maya MQuaternion
+//-----------------------------------------------------------------------------
+inline void QuaternionValveToMaya( MQuaternion &qMaya, const Quaternion &qValve )
+{
+	qMaya.x = qValve.x;
+	qMaya.y = qValve.y;
+	qMaya.z = qValve.z;
+	qMaya.w = qValve.w;
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Valve Quaternion to a Maya MQuaternion
+//-----------------------------------------------------------------------------
+inline void QuaternionValveToMaya( MEulerRotation &eMaya, const Quaternion &qValve )
+{
+	MQuaternion qMaya;
+	QuaternionValveToMaya( qMaya, qValve );
+
+	const MEulerRotation::RotationOrder roTmp = eMaya.order;
+
+	eMaya = qMaya;
+
+	if ( eMaya.order != roTmp )
+	{
+		eMaya.reorder( roTmp );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Maya MEulerRotation to a Valve RadianEuler
+//-----------------------------------------------------------------------------
+inline void RadianEulerMayaToValve( RadianEuler &eValve, const MEulerRotation &eMaya )
+{
+	if ( eMaya.order == MEulerRotation::kXYZ )
+	{
+		eValve.x = eMaya.x;
+		eValve.y = eMaya.y;
+		eValve.z = eMaya.z;
+	}
+	else
+	{
+		MEulerRotation eTmp = eMaya;
+		eTmp.reorder( MEulerRotation::kXYZ );
+
+		eValve.x = eTmp.x;
+		eValve.y = eTmp.y;
+		eValve.z = eTmp.z;
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Converts a Valve RadianEuler to a Maya MEulerRotation
+//-----------------------------------------------------------------------------
+inline void RadianEulerValveToMaya( MEulerRotation &eMaya, const RadianEuler &eValve )
+{
+	const MEulerRotation::RotationOrder roTmp = eMaya.order;
+
+	if ( roTmp == MEulerRotation::kXYZ )
+	{
+		eMaya.x = eValve.x;
+		eMaya.y = eValve.y;
+		eMaya.z = eValve.z;
+	}
+	else
+	{
+		eMaya.reorder( MEulerRotation::kXYZ );
+
+		eMaya.x = eValve.x;
+		eMaya.y = eValve.y;
+		eMaya.z = eValve.z;
+
+		eMaya.reorder( roTmp );
+	}
+}
+
 
 }  // end namespace ValveMaya
 
@@ -391,23 +557,6 @@ inline CMayaStream &CMayaStream::operator<<( const MFloatVector &v )
 
 
 //-----------------------------------------------------------------------------
-// Specialization for MQuaternion
-//-----------------------------------------------------------------------------
-template <>
-inline CMayaStream &CMayaStream::operator<<( const MQuaternion &q )
-{
-	m_string += q.x;
-	m_string += " ";
-	m_string += q.y;
-	m_string += " ";
-	m_string += q.z;
-	m_string += " ";
-	m_string += q.w;
-	return *this;
-}
-
-
-//-----------------------------------------------------------------------------
 // Specialization for MEulerRotation
 //-----------------------------------------------------------------------------
 template <>
@@ -443,6 +592,57 @@ inline CMayaStream &CMayaStream::operator<<( const MEulerRotation &e )
 		break;
 	}
 	return *this;
+}
+
+
+//-----------------------------------------------------------------------------
+// Specialization for MQuaternion
+//-----------------------------------------------------------------------------
+template <>
+inline CMayaStream &CMayaStream::operator<<( const MQuaternion &q )
+{
+	m_string += q.x;
+	m_string += " ";
+	m_string += q.y;
+	m_string += " ";
+	m_string += q.z;
+	m_string += " ";
+	m_string += q.w;
+
+	m_string += " (";
+	operator<<( q.asEulerRotation() );
+	m_string += ")";
+
+	return *this;
+}
+
+
+//-----------------------------------------------------------------------------
+// Specialization for Quaternion
+//-----------------------------------------------------------------------------
+template <>
+inline CMayaStream &CMayaStream::operator<<( const Quaternion &q )
+{
+	return operator<<( MQuaternion( q.x, q.y, q.z, q.w ) );
+}
+
+
+//-----------------------------------------------------------------------------
+// Specialization for RadianEuler
+//-----------------------------------------------------------------------------
+template <>
+inline CMayaStream &CMayaStream::operator<<( const RadianEuler &e )
+{
+	return operator<<( MEulerRotation( e.x, e.y, e.z ) );
+}
+
+//-----------------------------------------------------------------------------
+// Specialization for RadianEuler
+//-----------------------------------------------------------------------------
+template <>
+inline CMayaStream &CMayaStream::operator<<( const Vector &v )
+{
+	return operator<<( MVector( v.x, v.y, v.z ) );
 }
 
 

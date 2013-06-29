@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,11 @@
 
 
 #include "effect_dispatch_data.h"
+#include "recipientfilter.h"
+
 
 void DispatchEffect( const char *pName, const CEffectData &data );
+void DispatchEffect( const char *pName, const CEffectData &data, CRecipientFilter &filter );
+
 
 #endif // TE_EFFECT_DISPATCH_H

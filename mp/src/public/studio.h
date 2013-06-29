@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,10 +27,6 @@
 #include "generichash.h"
 #include "localflexcontroller.h"
 
-
-#ifndef offsetof
-#define offsetof(s,m)	(size_t)&(((s *)0)->m)
-#endif
 
 #define STUDIO_ENABLE_PERF_COUNTERS
 
@@ -161,6 +157,7 @@ private:
 #define JIGGLE_HAS_ANGLE_CONSTRAINT		0x10
 #define JIGGLE_HAS_LENGTH_CONSTRAINT	0x20
 #define JIGGLE_HAS_BASE_SPRING			0x40
+#define JIGGLE_IS_BOING					0x80		// simple squash and stretch sinusoid "boing"
 
 struct mstudiojigglebone_t
 {
@@ -208,6 +205,13 @@ struct mstudiojigglebone_t
 	float			baseMinForward;
 	float			baseMaxForward;
 	float			baseForwardFriction;
+
+	// boing
+	float			boingImpactSpeed;
+	float			boingImpactAngle;
+	float			boingDampingRate;
+	float			boingFrequency;
+	float			boingAmplitude;
 
 private:
 	// No copy constructors allowed
@@ -366,12 +370,12 @@ struct mstudiobbox_t
 	int					szhitboxnameindex;	// offset to the name of the hitbox.
 	int					unused[8];
 
-	char* pszHitboxName()
+	const char* pszHitboxName()
 	{
 		if( szhitboxnameindex == 0 )
 			return "";
 
-		return ((char*)this) + szhitboxnameindex;
+		return ((const char*)this) + szhitboxnameindex;
 	}
 
 	mstudiobbox_t() {}
@@ -1638,8 +1642,20 @@ struct virtualmodel_t
 	void AppendModels( int group, const studiohdr_t *pStudioHdr );
 	void UpdateAutoplaySequences( const studiohdr_t *pStudioHdr );
 
-	virtualgroup_t *pAnimGroup( int animation ) { return &m_group[ m_anim[ animation ].group ]; }; // Note: user must manage mutex for this
-	virtualgroup_t *pSeqGroup( int sequence ) { return &m_group[ m_seq[ sequence ].group ]; }; // Note: user must manage mutex for this
+	virtualgroup_t *pAnimGroup( int animation ) { return &m_group[ m_anim[ animation ].group ]; } // Note: user must manage mutex for this
+	virtualgroup_t *pSeqGroup( int sequence )
+	{
+		// Check for out of range access that is causing crashes on some servers.
+		// Perhaps caused by sourcemod bugs. Typical sequence in these cases is ~292
+		// when the count is 234. Using unsigned math allows for free range
+		// checking against zero.
+		if ( (unsigned)sequence >= (unsigned)m_seq.Count() )
+		{
+			Assert( 0 );
+			return 0;
+		}
+		return &m_group[ m_seq[ sequence ].group ];
+	} // Note: user must manage mutex for this
 
     CThreadFastMutex m_Lock;
 
@@ -1841,7 +1857,11 @@ inline const mstudio_modelvertexdata_t * mstudiomodel_t::GetVertexData( void *pM
 {
 	const vertexFileHeader_t * pVertexHdr = CacheVertexData( pModelData );
 	if ( !pVertexHdr )
+	{
+		vertexdata.pVertexData = NULL;
+		vertexdata.pTangentData = NULL;
 		return NULL;
+	}
 
 	vertexdata.pVertexData  = pVertexHdr->GetVertexData();
 	vertexdata.pTangentData = pVertexHdr->GetTangentData();
@@ -1959,7 +1979,10 @@ struct studiohdr2_t
 	int linearboneindex;
 	inline mstudiolinearbone_t *pLinearBones() const { return (linearboneindex) ? (mstudiolinearbone_t *)(((byte *)this) + linearboneindex) : NULL; }
 
-	int reserved[59];
+	int sznameindex;
+	inline char *pszName() { return (sznameindex) ? (char *)(((byte *)this) + sznameindex ) : NULL; }
+
+	int reserved[58];
 };
 
 struct studiohdr_t
@@ -1969,8 +1992,8 @@ struct studiohdr_t
 	int					version;
 
 	long				checksum;		// this has to be the same in the phy and vtx files to load!
-	
-	inline const char *	pszName( void ) const { return name; }
+
+	inline const char *	pszName( void ) const { if (studiohdr2index && pStudioHdr2()->pszName()) return pStudioHdr2()->pszName(); else return name; }
 	char				name[64];
 	int					length;
 
@@ -2051,10 +2074,10 @@ struct studiohdr_t
 //public:
 	int					GetSequenceActivity( int iSequence );
 	void				SetSequenceActivity( int iSequence, int iActivity );
-	int					GetActivityListVersion( void ) const;
+	int					GetActivityListVersion( void );
 	void				SetActivityListVersion( int version ) const;
-	int					GetEventListVersion( void ) const;
-	void				SetEventListVersion( int version ) const;
+	int					GetEventListVersion( void );
+	void				SetEventListVersion( int version );
 	
 	// raw textures
 	int					numtextures;
@@ -2085,7 +2108,7 @@ struct studiohdr_t
 //public:
 	int					GetNumAttachments( void ) const;
 	const mstudioattachment_t &pAttachment( int i ) const;
-	int					GetAttachmentBone( int i ) const;
+	int					GetAttachmentBone( int i );
 	// used on my tools in hlmv, not persistant
 	void				SetAttachmentBone( int iAttachment, int iBone );
 
@@ -2098,9 +2121,9 @@ struct studiohdr_t
 	inline byte			*pLocalTransition( int i ) const { Assert( i >= 0 && i < (numlocalnodes * numlocalnodes)); return (byte *)(((byte *)this) + localnodeindex) + i; };
 
 //public:
-	int					EntryNode( int iSequence ) const;
-	int					ExitNode( int iSequence ) const;
-	char				*pszNodeName( int iNode ) const;
+	int					EntryNode( int iSequence );
+	int					ExitNode( int iSequence );
+	char				*pszNodeName( int iNode );
 	int					GetTransition( int iFrom, int iTo ) const;
 
 	int					numflexdesc;
@@ -2109,7 +2132,7 @@ struct studiohdr_t
 
 	int					numflexcontrollers;
 	int					flexcontrollerindex;
-	inline mstudioflexcontroller_t *pFlexcontroller( LocalFlexController_t i ) const { Assert( i >= 0 && i < numflexcontrollers); return (mstudioflexcontroller_t *)(((byte *)this) + flexcontrollerindex) + i; };
+	inline mstudioflexcontroller_t *pFlexcontroller( LocalFlexController_t i ) const { Assert( numflexcontrollers == 0 || ( i >= 0 && i < numflexcontrollers ) ); return (mstudioflexcontroller_t *)(((byte *)this) + flexcontrollerindex) + i; };
 
 	int					numflexrules;
 	int					flexruleindex;
@@ -2129,7 +2152,7 @@ struct studiohdr_t
 	inline mstudioposeparamdesc_t *pLocalPoseParameter( int i ) const { Assert( i >= 0 && i < numlocalposeparameters); return (mstudioposeparamdesc_t *)(((byte *)this) + localposeparamindex) + i; };
 //public:
 	int					GetNumPoseParameters( void ) const;
-	const mstudioposeparamdesc_t &pPoseParameter( int i ) const;
+	const mstudioposeparamdesc_t &pPoseParameter( int i );
 	int					GetSharedPoseParameter( int iSequence, int iLocalPose ) const;
 
 	int					surfacepropindex;
@@ -2145,7 +2168,7 @@ struct studiohdr_t
 	inline mstudioiklock_t *pLocalIKAutoplayLock( int i ) const { Assert( i >= 0 && i < numlocalikautoplaylocks); return (mstudioiklock_t *)(((byte *)this) + localikautoplaylockindex) + i; };
 
 	int					GetNumIKAutoplayLocks( void ) const;
-	const mstudioiklock_t &pIKAutoplayLock( int i ) const;
+	const mstudioiklock_t &pIKAutoplayLock( int i );
 	int					CountAutoplaySequences() const;
 	int					CopyAutoplaySequences( unsigned short *pOut, int outCount ) const;
 	int					GetAutoplayList( unsigned short **pOut ) const;
@@ -2261,15 +2284,15 @@ public:
 	inline bool IsReadyForAccess( void ) const { return (m_pStudioHdr != NULL); };
 	inline virtualmodel_t		*GetVirtualModel( void ) const { return m_pVModel; };
 	inline const studiohdr_t	*GetRenderHdr( void ) const { return m_pStudioHdr; };
-	const studiohdr_t *pSeqStudioHdr( int sequence ) const;
-	const studiohdr_t *pAnimStudioHdr( int animation )const;
+	const studiohdr_t *pSeqStudioHdr( int sequence );
+	const studiohdr_t *pAnimStudioHdr( int animation );
 
 private:
 	mutable const studiohdr_t		*m_pStudioHdr;
 	mutable virtualmodel_t	*m_pVModel;
 
 	const virtualmodel_t * ResetVModel( const virtualmodel_t *pVModel ) const;
-	const studiohdr_t *GroupStudioHdr( int group ) const;
+	const studiohdr_t *GroupStudioHdr( int group );
 	mutable CUtlVector< const studiohdr_t * > m_pStudioHdrCache;
 
 	mutable int			m_nFrameUnlockCounter;
@@ -2284,36 +2307,36 @@ public:
 
 	bool				SequencesAvailable() const;
 	int					GetNumSeq( void ) const;
-	mstudioanimdesc_t	&pAnimdesc( int i ) const;
-	mstudioseqdesc_t	&pSeqdesc( int iSequence ) const;
+	mstudioanimdesc_t	&pAnimdesc( int i );
+	mstudioseqdesc_t	&pSeqdesc( int iSequence );
 	int					iRelativeAnim( int baseseq, int relanim ) const;	// maps seq local anim reference to global anim index
 	int					iRelativeSeq( int baseseq, int relseq ) const;		// maps seq local seq reference to global seq index
 
 	int					GetSequenceActivity( int iSequence );
 	void				SetSequenceActivity( int iSequence, int iActivity );
-	int					GetActivityListVersion( void ) const;
+	int					GetActivityListVersion( void );
 	void				SetActivityListVersion( int version );
-	int					GetEventListVersion( void ) const;
+	int					GetEventListVersion( void );
 	void				SetEventListVersion( int version );
 
 	int					GetNumAttachments( void ) const;
-	const mstudioattachment_t &pAttachment( int i ) const;
-	int					GetAttachmentBone( int i ) const;
+	const mstudioattachment_t &pAttachment( int i );
+	int					GetAttachmentBone( int i );
 	// used on my tools in hlmv, not persistant
 	void				SetAttachmentBone( int iAttachment, int iBone );
 
-	int					EntryNode( int iSequence ) const;
-	int					ExitNode( int iSequence ) const;
-	char				*pszNodeName( int iNode ) const;
+	int					EntryNode( int iSequence );
+	int					ExitNode( int iSequence );
+	char				*pszNodeName( int iNode );
 	// FIXME: where should this one be?
 	int					GetTransition( int iFrom, int iTo ) const;
 
 	int					GetNumPoseParameters( void ) const;
-	const mstudioposeparamdesc_t &pPoseParameter( int i ) const;
+	const mstudioposeparamdesc_t &pPoseParameter( int i );
 	int					GetSharedPoseParameter( int iSequence, int iLocalPose ) const;
 
 	int					GetNumIKAutoplayLocks( void ) const;
-	const mstudioiklock_t &pIKAutoplayLock( int i ) const;
+	const mstudioiklock_t &pIKAutoplayLock( int i );
 
 	inline int			CountAutoplaySequences() const { return m_pStudioHdr->CountAutoplaySequences(); };
 	inline int			CopyAutoplaySequences( unsigned short *pOut, int outCount ) const { return m_pStudioHdr->CopyAutoplaySequences( pOut, outCount ); };
@@ -2338,7 +2361,7 @@ public:
 	inline int			numflexcontrollerui() const{ return m_pStudioHdr->numflexcontrollerui; };
 	inline mstudioflexcontrollerui_t *pFlexcontrollerUI( int i ) const { return m_pStudioHdr->pFlexControllerUI( i ); };
 
-	inline const char	*name() const { return m_pStudioHdr->name; }; // deprecated -- remove after full xbox merge
+	//inline const char	*name() const { return m_pStudioHdr->name; }; // deprecated -- remove after full xbox merge
 	inline const char	*pszName() const { return m_pStudioHdr->pszName(); };
 
 	inline int			numbonecontrollers() const { return m_pStudioHdr->numbonecontrollers; };

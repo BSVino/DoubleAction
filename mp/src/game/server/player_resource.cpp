@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Entity that propagates general data needed by clients for every player.
 //
@@ -22,7 +22,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bAlive), SendPropInt( SENDINFO_ARRAY(m_bAlive), 1, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_iHealth), SendPropInt( SENDINFO_ARRAY(m_iHealth), 10, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iHealth), SendPropInt( SENDINFO_ARRAY(m_iHealth), -1, SPROP_VARINT | SPROP_UNSIGNED ) ),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CPlayerResource )
@@ -104,7 +104,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			m_bConnected.Set( i, 1 );
 			m_iTeam.Set( i, pPlayer->GetTeamNumber() );
 			m_bAlive.Set( i, pPlayer->IsAlive()?1:0 );
-			m_iHealth.Set(i, max( 0, pPlayer->GetHealth() ) );
+			m_iHealth.Set(i, MAX( 0, pPlayer->GetHealth() ) );
 
 			// Don't update ping / packetloss everytime
 

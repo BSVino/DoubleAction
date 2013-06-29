@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -120,9 +120,6 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 		FileSystem_AddSearchPath_Platform( g_pFullFileSystem, loadModuleInfo.m_GameInfoPath );
 
 		FileSystem_SetupStandardDirectories( pFilename, loadModuleInfo.m_GameInfoPath );
-		//Tony; add the current directory that we're running from, to the path!!
-		g_pFullFileSystem->AddSearchPath( ".", "GAME" );
-
 	}
 	else
 	{
@@ -210,17 +207,3 @@ CreateInterfaceFn FileSystem_GetFactory()
 #endif
 	return Sys_GetFactory( g_pFullFileSystemModule );
 }
-
-
-bool FileSystem_SetGame( const char *szModDir )
-{
-	g_pFullFileSystem->RemoveAllSearchPaths();
-	if ( FileSystem_SetBasePaths( g_pFullFileSystem ) != FS_OK )
-		return false;
-
-	CFSSearchPathsInit fsInit;
-	fsInit.m_pDirectoryName = szModDir;
-	fsInit.m_pFileSystem = g_pFullFileSystem;
-	return ( FileSystem_LoadSearchPaths( fsInit ) == FS_OK );
-}
-

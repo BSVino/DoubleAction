@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -137,6 +137,7 @@ C_BaseFlex::C_BaseFlex() :
 	SetupMappings( "phonemes" );
 
 	m_flFlexDelayedWeight = NULL;
+	m_cFlexDelayedWeight = 0;
 
 	/// Make sure size is correct
 	Assert( PHONEME_CLASS_STRONG + 1 == NUM_PHONEME_CLASSES );
@@ -201,22 +202,22 @@ CStudioHdr *C_BaseFlex::OnNewModel()
 
 	delete[] m_flFlexDelayedWeight;
 	m_flFlexDelayedWeight = NULL;
+	m_cFlexDelayedWeight = 0;
 
 	if (hdr)
 	{
 		if (hdr->numflexdesc())
 		{
-			m_flFlexDelayedWeight = new float [hdr->numflexdesc()];
-
-			for (int i = 0; i < hdr->numflexdesc(); i++)
-			{
-				m_flFlexDelayedWeight[i] = 0.0;
-			}
+			m_cFlexDelayedWeight = hdr->numflexdesc();
+			m_flFlexDelayedWeight = new float[ m_cFlexDelayedWeight ];
+			memset( m_flFlexDelayedWeight, 0, sizeof( float ) * m_cFlexDelayedWeight );
 		}
 
 		m_iv_flexWeight.SetMaxCount( hdr->numflexcontrollers() );
 
 		m_iMouthAttachment = LookupAttachment( "mouth" );
+
+		LinkToGlobalFlexControllers( hdr );
 	}
 
 	return hdr;
@@ -283,7 +284,7 @@ bool C_BaseFlex::GetSoundSpatialization( SpatializationInfo_t& info )
 	// Default things it's audible, put it at a better spot?
 	if ( bret )
 	{
-		if (info.info.nChannel == CHAN_VOICE && m_iMouthAttachment > 0)
+		if ((info.info.nChannel == CHAN_VOICE || info.info.nChannel == CHAN_VOICE2) && m_iMouthAttachment > 0)
 		{
 			Vector origin;
 			QAngle angles;
@@ -310,7 +311,7 @@ bool C_BaseFlex::GetSoundSpatialization( SpatializationInfo_t& info )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: run the interpreted FAC's expressions, converting flex_controller 
+// Purpose: run the interpreted FAC's expressions, converting global flex_controller 
 //			values into FAC weights
 //-----------------------------------------------------------------------------
 void C_BaseFlex::RunFlexRules( CStudioHdr *hdr, float *dest )
@@ -335,204 +336,202 @@ void C_BaseFlex::RunFlexRules( CStudioHdr *hdr, float *dest )
 	hdr->RunFlexRules( g_flexweight, dest );
 }
 
-class CFlexSceneFileManager : CAutoGameSystem
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CFlexSceneFileManager::Init()
 {
-public:
-
-	CFlexSceneFileManager() : CAutoGameSystem( "CFlexSceneFileManager" )
-	{
-	}
-
-	virtual bool Init()
-	{
-		// Trakcer 16692:  Preload these at startup to avoid hitch first time we try to load them during actual gameplay
-		FindSceneFile( NULL, "phonemes", true );
-		FindSceneFile( NULL, "phonemes_weak", true );
-		FindSceneFile(NULL,  "phonemes_strong", true );
+	// Trakcer 16692:  Preload these at startup to avoid hitch first time we try to load them during actual gameplay
+	FindSceneFile( NULL, "phonemes", true );
+	FindSceneFile( NULL, "phonemes_weak", true );
+	FindSceneFile(NULL,  "phonemes_strong", true );
 
 #if defined( HL2_CLIENT_DLL )
-		FindSceneFile( NULL, "random", true );
-		FindSceneFile( NULL, "randomAlert", true );
+	FindSceneFile( NULL, "random", true );
+	FindSceneFile( NULL, "randomAlert", true );
 #endif
 
 #if defined( TF_CLIENT_DLL )
-		// HACK TO ALL TF TO HAVE PER CLASS OVERRIDES
-		char const *pTFClasses[] = 
+	// HACK TO ALL TF TO HAVE PER CLASS OVERRIDES
+	char const *pTFClasses[] = 
+	{
+		"scout",
+		"sniper",
+		"soldier",
+		"demo",
+		"medic",
+		"heavy",
+		"pyro",
+		"spy",
+		"engineer",
+	};
+
+	char fn[ MAX_PATH ];
+	for ( int i = 0; i < ARRAYSIZE( pTFClasses ); ++i )
+	{
+		Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes", pTFClasses[i] );
+		FindSceneFile( NULL, fn, true );
+		Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes_weak", pTFClasses[i] );
+		FindSceneFile( NULL, fn, true );
+		Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes_strong", pTFClasses[i] );
+		FindSceneFile( NULL, fn, true );
+
+		if ( !IsX360() )
 		{
-			"scout",
-			"sniper",
-			"soldier",
-			"demo",
-			"medic",
-			"heavy",
-			"pyro",
-			"spy",
-			"engineer",
-		};
-
-		char fn[ MAX_PATH ];
-		for ( int i = 0; i < ARRAYSIZE( pTFClasses ); ++i )
-		{
-			Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes", pTFClasses[i] );
+			Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes", pTFClasses[i] );
 			FindSceneFile( NULL, fn, true );
-			Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes_weak", pTFClasses[i] );
+			Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes_weak", pTFClasses[i] );
 			FindSceneFile( NULL, fn, true );
-			Q_snprintf( fn, sizeof( fn ), "player/%s/phonemes/phonemes_strong", pTFClasses[i] );
+			Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes_strong", pTFClasses[i] );
 			FindSceneFile( NULL, fn, true );
-
-			if ( !IsX360() )
-			{
-				Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes", pTFClasses[i] );
-				FindSceneFile( NULL, fn, true );
-				Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes_weak", pTFClasses[i] );
-				FindSceneFile( NULL, fn, true );
-				Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/phonemes/phonemes_strong", pTFClasses[i] );
-				FindSceneFile( NULL, fn, true );
-			}
-
-			Q_snprintf( fn, sizeof( fn ), "player/%s/emotion/emotion", pTFClasses[i] );
-			FindSceneFile( NULL, fn, true );
-			if ( !IsX360() )
-			{
-				Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/emotion/emotion", pTFClasses[i] );
-				FindSceneFile( NULL, fn, true );
-			}
 		}
+
+		Q_snprintf( fn, sizeof( fn ), "player/%s/emotion/emotion", pTFClasses[i] );
+		FindSceneFile( NULL, fn, true );
+		if ( !IsX360() )
+		{
+			Q_snprintf( fn, sizeof( fn ), "player/hwm/%s/emotion/emotion", pTFClasses[i] );
+			FindSceneFile( NULL, fn, true );
+		}
+	}
 #endif
 
-		return true;
-	}
+	return true;
+}
 
-	// Tracker 14992:  We used to load 18K of .vfes for every C_BaseFlex who lipsynced, but now we only load those files once globally.
-	// Note, we could wipe these between levels, but they don't ever load more than the weak/normal/strong phoneme classes that I can tell
-	//  so I'll just leave them loaded forever for now
-	virtual void Shutdown()
-	{
-		DeleteSceneFiles();
-	}
+//-----------------------------------------------------------------------------
+// Tracker 14992:  We used to load 18K of .vfes for every C_BaseFlex who lipsynced, but now we only load those files once globally.
+// Note, we could wipe these between levels, but they don't ever load more than the weak/normal/strong phoneme classes that I can tell
+//  so I'll just leave them loaded forever for now
+//-----------------------------------------------------------------------------
+void CFlexSceneFileManager::Shutdown()
+{
+	DeleteSceneFiles();
+}
 
-	//-----------------------------------------------------------------------------
-	// Purpose: Sets up translations
-	// Input  : *instance - 
-	//			*pSettinghdr - 
-	// Output : 	void
-	//-----------------------------------------------------------------------------
-	void EnsureTranslations( C_BaseFlex *instance, const flexsettinghdr_t *pSettinghdr )
+//-----------------------------------------------------------------------------
+// Purpose: Sets up translations
+// Input  : *instance - 
+//			*pSettinghdr - 
+// Output : 	void
+//-----------------------------------------------------------------------------
+void CFlexSceneFileManager::EnsureTranslations( IHasLocalToGlobalFlexSettings *instance, const flexsettinghdr_t *pSettinghdr )
+{
+	// The only time instance is NULL is in Init() above, where we're just loading the .vfe files off of the hard disk.
+	if ( instance )
 	{
-		// The only time instance is NULL is in Init() above, where we're just loading the .vfe files off of the hard disk.
-		if ( instance )
-		{
-			instance->EnsureTranslations( pSettinghdr );
-		}
+		instance->EnsureTranslations( pSettinghdr );
 	}
+}
 
-	void *FindSceneFile( C_BaseFlex *instance, const char *filename, bool allowBlockingIO )
-	{
-		char szFilename[MAX_PATH];
-		Assert( V_strlen( filename ) < MAX_PATH );
-		V_strcpy( szFilename, filename );
-		
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void *CFlexSceneFileManager::FindSceneFile( IHasLocalToGlobalFlexSettings *instance, const char *filename, bool allowBlockingIO )
+{
+	char szFilename[MAX_PATH];
+	Assert( V_strlen( filename ) < MAX_PATH );
+	V_strcpy( szFilename, filename );
+	
 #if defined( TF_CLIENT_DLL )	
-		char szHWMFilename[MAX_PATH];
-		if ( GetHWMExpressionFileName( szFilename, szHWMFilename ) )
-		{
-			V_strcpy( szFilename, szHWMFilename );
-		}
+	char szHWMFilename[MAX_PATH];
+	if ( GetHWMExpressionFileName( szFilename, szHWMFilename ) )
+	{
+		V_strcpy( szFilename, szHWMFilename );
+	}
 #endif
 
-		Q_FixSlashes( szFilename );
+	Q_FixSlashes( szFilename );
 
-		// See if it's already loaded
-		int i;
-		for ( i = 0; i < m_FileList.Count(); i++ )
-		{
-			CFlexSceneFile *file = m_FileList[ i ];
-			if ( file && !Q_stricmp( file->filename, szFilename ) )
-			{
-				// Make sure translations (local to global flex controller) are set up for this instance
-				EnsureTranslations( instance, ( const flexsettinghdr_t * )file->buffer );
-				return file->buffer;
-			}
-		}
-		
-		if ( !allowBlockingIO )
-		{
-			return NULL;
-		}
-
-		// Load file into memory
-		void *buffer = NULL;
-		int len = filesystem->ReadFileEx( VarArgs( "expressions/%s.vfe", szFilename ), "GAME", &buffer );
-
-		if ( !len )
-			return NULL;
-
-		// Create scene entry
-		CFlexSceneFile *pfile = new CFlexSceneFile;
-		// Remember filename
-		Q_strncpy( pfile->filename, szFilename, sizeof( pfile->filename ) );
-		// Remember data pointer
-		pfile->buffer = buffer;
-		// Add to list
-		m_FileList.AddToTail( pfile );
-
-		// Swap the entire file
-		if ( IsX360() )
-		{
-			CByteswap swap;
-			swap.ActivateByteSwapping( true );
-			byte *pData = (byte*)buffer;
-			flexsettinghdr_t *pHdr = (flexsettinghdr_t*)pData;
-			swap.SwapFieldsToTargetEndian( pHdr );
-
-			// Flex Settings
-			flexsetting_t *pFlexSetting = (flexsetting_t*)((byte*)pHdr + pHdr->flexsettingindex);
-			for ( int i = 0; i < pHdr->numflexsettings; ++i, ++pFlexSetting )
-			{
-				swap.SwapFieldsToTargetEndian( pFlexSetting );
-				
-				flexweight_t *pWeight = (flexweight_t*)(((byte*)pFlexSetting) + pFlexSetting->settingindex );
-				for ( int j = 0; j < pFlexSetting->numsettings; ++j, ++pWeight )
-				{
-					swap.SwapFieldsToTargetEndian( pWeight );
-				}
-			}
-
-			// indexes
-			pData = (byte*)pHdr + pHdr->indexindex;
-			swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numindexes );
-
-			// keymappings
-			pData  = (byte*)pHdr + pHdr->keymappingindex;
-			swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numkeys );
-
-			// keyname indices
-			pData = (byte*)pHdr + pHdr->keynameindex;
-			swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numkeys );
-		}
-
-		// Fill in translation table
-		EnsureTranslations( instance, ( const flexsettinghdr_t * )pfile->buffer );
-
-		// Return data
-		return pfile->buffer;
-	}
-
-private:
-
-	void DeleteSceneFiles()
+	// See if it's already loaded
+	int i;
+	for ( i = 0; i < m_FileList.Count(); i++ )
 	{
-		while ( m_FileList.Count() > 0 )
+		CFlexSceneFile *file = m_FileList[ i ];
+		if ( file && !Q_stricmp( file->filename, szFilename ) )
 		{
-			CFlexSceneFile *file = m_FileList[ 0 ];
-			m_FileList.Remove( 0 );
-			delete[] file->buffer;
-			delete file;
+			// Make sure translations (local to global flex controller) are set up for this instance
+			EnsureTranslations( instance, ( const flexsettinghdr_t * )file->buffer );
+			return file->buffer;
 		}
 	}
+	
+	if ( !allowBlockingIO )
+	{
+		return NULL;
+	}
 
-	CUtlVector< CFlexSceneFile * > m_FileList;
-};
+	// Load file into memory
+	void *buffer = NULL;
+	int len = filesystem->ReadFileEx( VarArgs( "expressions/%s.vfe", szFilename ), "GAME", &buffer );
+
+	if ( !len )
+		return NULL;
+
+	// Create scene entry
+	CFlexSceneFile *pfile = new CFlexSceneFile;
+	// Remember filename
+	Q_strncpy( pfile->filename, szFilename, sizeof( pfile->filename ) );
+	// Remember data pointer
+	pfile->buffer = buffer;
+	// Add to list
+	m_FileList.AddToTail( pfile );
+
+	// Swap the entire file
+	if ( IsX360() )
+	{
+		CByteswap swap;
+		swap.ActivateByteSwapping( true );
+		byte *pData = (byte*)buffer;
+		flexsettinghdr_t *pHdr = (flexsettinghdr_t*)pData;
+		swap.SwapFieldsToTargetEndian( pHdr );
+
+		// Flex Settings
+		flexsetting_t *pFlexSetting = (flexsetting_t*)((byte*)pHdr + pHdr->flexsettingindex);
+		for ( int i = 0; i < pHdr->numflexsettings; ++i, ++pFlexSetting )
+		{
+			swap.SwapFieldsToTargetEndian( pFlexSetting );
+			
+			flexweight_t *pWeight = (flexweight_t*)(((byte*)pFlexSetting) + pFlexSetting->settingindex );
+			for ( int j = 0; j < pFlexSetting->numsettings; ++j, ++pWeight )
+			{
+				swap.SwapFieldsToTargetEndian( pWeight );
+			}
+		}
+
+		// indexes
+		pData = (byte*)pHdr + pHdr->indexindex;
+		swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numindexes );
+
+		// keymappings
+		pData  = (byte*)pHdr + pHdr->keymappingindex;
+		swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numkeys );
+
+		// keyname indices
+		pData = (byte*)pHdr + pHdr->keynameindex;
+		swap.SwapBufferToTargetEndian( (int*)pData, (int*)pData, pHdr->numkeys );
+	}
+
+	// Fill in translation table
+	EnsureTranslations( instance, ( const flexsettinghdr_t * )pfile->buffer );
+
+	// Return data
+	return pfile->buffer;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CFlexSceneFileManager::DeleteSceneFiles()
+{
+	while ( m_FileList.Count() > 0 )
+	{
+		CFlexSceneFile *file = m_FileList[ 0 ];
+		m_FileList.Remove( 0 );
+		free( file->buffer );
+		delete file;
+	}
+}
 
 CFlexSceneFileManager g_FlexSceneFileManager;
 
@@ -688,7 +687,7 @@ void C_BaseFlex::ComputeBlendedSetting( Emphasized_Phoneme *classes, float empha
 		}
 		else
 		{
-			emphasis_intensity = min( emphasis_intensity, STRONG_CROSSFADE_START );
+			emphasis_intensity = MIN( emphasis_intensity, STRONG_CROSSFADE_START );
 			classes[ PHONEME_CLASS_NORMAL ].amount = 2.0f * emphasis_intensity;
 		}
 	}
@@ -705,7 +704,7 @@ void C_BaseFlex::ComputeBlendedSetting( Emphasized_Phoneme *classes, float empha
 		}
 		else
 		{
-			emphasis_intensity = max( emphasis_intensity, WEAK_CROSSFADE_START );
+			emphasis_intensity = MAX( emphasis_intensity, WEAK_CROSSFADE_START );
 			classes[ PHONEME_CLASS_NORMAL ].amount = 2.0f * emphasis_intensity;
 		}
 	}
@@ -872,9 +871,25 @@ void C_BaseFlex::AddVisemesForSentence( Emphasized_Phoneme *classes, float empha
 				if (k < pcount-1)
 				{
 					const CBasePhonemeTag *next = sentence->GetRuntimePhoneme( k + 1 );
+					// if I have a neighbor
 					if ( next )
 					{
-						dt = max( dt, min( next->GetEndTime() - t, phoneme->GetEndTime() - phoneme->GetStartTime() ) );
+						//  and they're touching
+						if (next->GetStartTime() == phoneme->GetEndTime() )
+						{
+							// no gap, so increase the blend length to the end of the next phoneme, as long as it's not longer than the current phoneme
+							dt = MAX( dt, MIN( next->GetEndTime() - t, phoneme->GetEndTime() - phoneme->GetStartTime() ) );
+						}
+						else
+						{
+							// dead space, so increase the blend length to the start of the next phoneme, as long as it's not longer than the current phoneme
+							dt = MAX( dt, MIN( next->GetStartTime() - t, phoneme->GetEndTime() - phoneme->GetStartTime() ) );
+						}
+					}
+					else
+					{
+						// last phoneme in list, increase the blend length to the length of the current phoneme
+						dt = MAX( dt, phoneme->GetEndTime() - phoneme->GetStartTime() );
 					}
 				}
 			}
@@ -1115,11 +1130,42 @@ bool C_BaseFlex::UsesFlexDelayedWeights()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+void C_BaseFlex::LinkToGlobalFlexControllers( CStudioHdr *hdr )
+{
+	if ( hdr && hdr->pFlexcontroller( LocalFlexController_t(0) )->localToGlobal == -1 )
+	{
+		for (LocalFlexController_t i = LocalFlexController_t(0); i < hdr->numflexcontrollers(); i++)
+		{
+			int j = AddGlobalFlexController( hdr->pFlexcontroller( i )->pszName() );
+			hdr->pFlexcontroller( i )->localToGlobal = j;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Rendering callback to allow the client to set up all the model specific flex weights
+//-----------------------------------------------------------------------------
 void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights )
+{
+	// hack in an initialization
+	LinkToGlobalFlexControllers( GetModelPtr() );
+	m_iBlink = AddGlobalFlexController( "UH" );
+
+	if ( SetupGlobalWeights( pBoneToWorld, nFlexWeightCount, pFlexWeights, pFlexDelayedWeights ) )
+	{
+		SetupLocalWeights( pBoneToWorld, nFlexWeightCount, pFlexWeights, pFlexDelayedWeights );
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: process the entities networked state, vcd playback, wav file visemes, and blinks into a global shared flex controller array
+//-----------------------------------------------------------------------------
+bool C_BaseFlex::SetupGlobalWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights )
 {
 	CStudioHdr *hdr = GetModelPtr();
 	if ( !hdr )
-		return;
+		return false;
 
 	memset( g_flexweight, 0, sizeof(g_flexweight) );
 
@@ -1132,23 +1178,14 @@ void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightC
 		{
 			memset( pFlexDelayedWeights, 0, nSizeInBytes );
 		}
-		return;
+		return false;
 	}
 
 	LocalFlexController_t i;
 
 	ProcessSceneEvents( true );
 
-	// FIXME: shouldn't this happen at runtime?
-	// initialize the models local to global flex controller mappings
-	if ( hdr->pFlexcontroller( LocalFlexController_t(0) )->localToGlobal == -1 )
-	{
-		for (i = LocalFlexController_t(0); i < hdr->numflexcontrollers(); i++)
-		{
-			int j = AddGlobalFlexController( hdr->pFlexcontroller( i )->pszName() );
-			hdr->pFlexcontroller( i )->localToGlobal = j;
-		}
-	}
+	Assert( hdr->pFlexcontroller( LocalFlexController_t(0) )->localToGlobal != -1 );
 
 	// get the networked flexweights and convert them from 0..1 to real dynamic range
 	for (i = LocalFlexController_t(0); i < hdr->numflexcontrollers(); i++)
@@ -1190,12 +1227,50 @@ void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightC
 				t = 2.0f - t;
 			t = clamp( t, 0.0f, 1.0f );
 			// add it to whatever the blink track is doing
-			g_flexweight[m_iBlink] = clamp( g_flexweight[m_iBlink] + t, 0.0, 1.0 );
+			g_flexweight[m_iBlink] = clamp( g_flexweight[m_iBlink] + t, 0.0f, 1.0f );
 		}
 	}
 
 	// Drive the mouth from .wav file playback...
 	ProcessVisemes( m_PhonemeClasses );
+
+	return true;
+}
+
+void C_BaseFlex::RunFlexDelay( int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights, float &flFlexDelayTime )
+{
+	// process the delayed version of the flexweights
+	if ( flFlexDelayTime > 0.0f && flFlexDelayTime < gpGlobals->curtime )
+	{
+		float d = clamp( gpGlobals->curtime - flFlexDelayTime, 0.0, gpGlobals->frametime );
+		d = ExponentialDecay( 0.8, 0.033, d );
+
+		for ( int i = 0; i < nFlexWeightCount; i++)
+		{
+			pFlexDelayedWeights[i] = pFlexDelayedWeights[i] * d + pFlexWeights[i] * (1.0f - d);
+		}
+	}
+	flFlexDelayTime = gpGlobals->curtime;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: convert the global flex controllers into model specific flex weights
+//-----------------------------------------------------------------------------
+void C_BaseFlex::SetupLocalWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights )
+{
+	CStudioHdr *hdr = GetModelPtr();
+	if ( !hdr )
+		return;
+
+	// BUGBUG: We have a bug with SetCustomModel that causes a disagreement between the studio header here and the one used in l_studio.cpp CModelRender::DrawModelExecute
+	// So when we hit that case, let's not do any work because otherwise we'd crash since the array sizes (m_flFlexDelayedWeight vs pFlexWeights) don't match.
+	// Note that this check is duplicated in CEconEntity::SetupWeights.
+	AssertMsg( nFlexWeightCount == m_cFlexDelayedWeight, "Disagreement between the number of flex weights. Do the studio headers match?" );
+	if ( nFlexWeightCount != m_cFlexDelayedWeight )
+	{
+		return;
+	}
 
 	// convert the flex controllers into actual flex values
 	RunFlexRules( hdr, pFlexWeights );
@@ -1203,23 +1278,17 @@ void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightC
 	// aim the eyes
 	SetViewTarget( hdr );
 
+	AssertOnce( hdr->pFlexcontroller( LocalFlexController_t(0) )->localToGlobal != -1 );
+
 	if ( pFlexDelayedWeights )
 	{
-		// process the delayed version of the flexweights
-		float d = 1.0;
-		if ( gpGlobals->frametime != 0 )
-		{
-			d = ExponentialDecay( 0.8, 0.033, gpGlobals->frametime );
-		}
-		for ( i = LocalFlexController_t(0); i < hdr->numflexdesc(); i++)
-		{
-			m_flFlexDelayedWeight[i] = m_flFlexDelayedWeight[i] * d + pFlexWeights[i] * (1 - d);
-			pFlexDelayedWeights[i] = m_flFlexDelayedWeight[i];
-		}
-		// debugoverlay->AddTextOverlay( GetAbsOrigin() + Vector( 0, 0, 64 ), i-hdr->numflexcontrollers, 0, "%.3f", d );
+		RunFlexDelay( nFlexWeightCount, pFlexWeights, m_flFlexDelayedWeight, m_flFlexDelayTime );
+		memcpy( pFlexDelayedWeights, m_flFlexDelayedWeight, sizeof( float ) * nFlexWeightCount );
 	}
 
 	/*
+	LocalFlexController_t i;
+
 	for (i = 0; i < hdr->numflexdesc; i++)
 	{
 		debugoverlay->AddTextOverlay( GetAbsOrigin() + Vector( 0, 0, 64 ), i-hdr->numflexcontrollers, 0, "%2d:%s : %3.2f", i, hdr->pFlexdesc( i )->pszFACS(), pFlexWeights[i] );
@@ -1236,12 +1305,15 @@ void C_BaseFlex::SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightC
 }
 
 
+//-----------------------------------------------------------------------------
+// Purpose: Unified set of flex controller entries that all systems can talk to
+//-----------------------------------------------------------------------------
 
 int C_BaseFlex::g_numflexcontrollers;
 char * C_BaseFlex::g_flexcontroller[MAXSTUDIOFLEXCTRL*4];
 float C_BaseFlex::g_flexweight[MAXSTUDIOFLEXDESC];
 
-int C_BaseFlex::AddGlobalFlexController( char *szName )
+int C_BaseFlex::AddGlobalFlexController( const char *szName )
 {
 	int i;
 	for (i = 0; i < g_numflexcontrollers; i++)
@@ -1546,7 +1618,7 @@ void C_BaseFlex::SetFlexWeight( LocalFlexController_t index, float value )
 		if (pflexcontroller->max != pflexcontroller->min)
 		{
 			value = (value - pflexcontroller->min) / (pflexcontroller->max - pflexcontroller->min);
-			value = clamp( value, 0.0, 1.0 );
+			value = clamp( value, 0.0f, 1.0f );
 		}
 
 		m_flexWeight[ index ] = value;
@@ -1679,7 +1751,7 @@ bool C_BaseFlex::ProcessFlexSettingSceneEvent( CSceneEventInfo *info, CChoreoSce
 //			rhs - 
 // Output : Returns true on success, false on failure.
 //-----------------------------------------------------------------------------
-bool C_BaseFlex::FlexSettingLessFunc( const FS_LocalToGlobal_t& lhs, const FS_LocalToGlobal_t& rhs )
+bool FlexSettingLessFunc( const FS_LocalToGlobal_t& lhs, const FS_LocalToGlobal_t& rhs )
 {
 	return lhs.m_Key < rhs.m_Key;
 }
@@ -1762,7 +1834,7 @@ void C_BaseFlex::AddFlexSetting( const char *expr, float scale,
 
 		const char *name = pSetting->pszName();
 
-		if ( !stricmp( name, expr ) )
+		if ( !V_stricmp( name, expr ) )
 			break;
 	}
 
@@ -1879,16 +1951,16 @@ void C_BaseFlex::AddFlexAnimation( CSceneEventInfo *info )
 				Q_strncpy( name, "right_" ,sizeof(name));
 				Q_strncat( name, track->GetFlexControllerName(),sizeof(name), COPY_ALL_CHARACTERS );
 
-				track->SetFlexControllerIndex( max( FindFlexController( name ), LocalFlexController_t(0) ), 0, 0 );
+				track->SetFlexControllerIndex( MAX( FindFlexController( name ), LocalFlexController_t(0) ), 0, 0 );
 
 				Q_strncpy( name, "left_" ,sizeof(name));
 				Q_strncat( name, track->GetFlexControllerName(),sizeof(name), COPY_ALL_CHARACTERS );
 
-				track->SetFlexControllerIndex( max( FindFlexController( name ), LocalFlexController_t(0) ), 0, 1 );
+				track->SetFlexControllerIndex( MAX( FindFlexController( name ), LocalFlexController_t(0) ), 0, 1 );
 			}
 			else
 			{
-				track->SetFlexControllerIndex( max( FindFlexController( (char *)track->GetFlexControllerName() ), LocalFlexController_t(0)), 0 );
+				track->SetFlexControllerIndex( MAX( FindFlexController( (char *)track->GetFlexControllerName() ), LocalFlexController_t(0)), 0 );
 			}
 		}
 
@@ -1963,7 +2035,7 @@ void CSceneEventInfo::InitWeight( C_BaseFlex *pActor )
 
 float CSceneEventInfo::UpdateWeight( C_BaseFlex *pActor )
 {
-	m_flWeight = min( m_flWeight + 0.1, 1.0 );
+	m_flWeight = MIN( m_flWeight + 0.1, 1.0 );
 	return m_flWeight;
 }
 

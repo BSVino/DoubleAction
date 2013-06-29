@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,8 +11,8 @@
 #pragma once
 #endif
 
-
 #include "tier1/utldict.h"
+#include "vstdlib/random.h"
 #include "soundflags.h"
 #include "mathlib/compressed_vector.h"
 #include "appframework/IAppSystem.h"
@@ -26,6 +26,7 @@
 typedef short HSOUNDSCRIPTHANDLE;
 #define SOUNDEMITTER_INVALID_HANDLE	(HSOUNDSCRIPTHANDLE)-1
 
+class IFileList;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -105,7 +106,7 @@ struct sound_interval_t
 
 	interval_t &ToInterval( interval_t &dest ) const	{ dest.start = start; dest.range = range; return dest; }
 	void FromInterval( const interval_t &from )			{ start = from.start; range = from.range; }
-	float Random() const								{ interval_t temp = { start, range }; return RandomInterval( temp ); }
+	float Random() const								{ return RandomFloat( start, start + range ); }
 };
 
 
@@ -123,7 +124,7 @@ struct CSoundParametersInternal
 
 	void CopyFrom( const CSoundParametersInternal& src );
 
-	bool CSoundParametersInternal::operator == ( const CSoundParametersInternal& other ) const;
+	bool operator == ( const CSoundParametersInternal& other ) const;
 
 	const char *VolumeToString( void ) const;
 	const char *ChannelToString( void ) const;
@@ -254,13 +255,15 @@ public:
 
 	// Called from both client and server (single player) or just one (server only in dedicated server and client only if connected to a remote server)
 	// Called by LevelInitPreEntity to override sound scripts for the mod with level specific overrides based on custom mapnames, etc.
-	virtual void			AddSoundOverrides( char const *scriptfile ) = 0;
+	virtual void			AddSoundOverrides( char const *scriptfile, bool bPreload = false ) = 0;
 
 	// Called by either client or server in LevelShutdown to clear out custom overrides
 	virtual void			ClearSoundOverrides() = 0;
 
 	virtual bool			GetParametersForSoundEx( const char *soundname, HSOUNDSCRIPTHANDLE& handle, CSoundParameters& params, gender_t gender, bool isbeingemitted = false ) = 0;
 	virtual soundlevel_t	LookupSoundLevelByHandle( char const *soundname, HSOUNDSCRIPTHANDLE& handle ) = 0;
+
+	virtual void			ReloadSoundEntriesInList( IFileList *pFilesToReload ) = 0;
 };
 
 #endif // ISOUNDEMITTERSYSTEMBASE_H

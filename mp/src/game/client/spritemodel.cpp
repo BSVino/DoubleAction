@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,6 +12,9 @@
 #include "materialsystem/imaterialvar.h"
 #include "c_sprite.h"
 #include "tier1/callqueue.h"
+#include "tier1/KeyValues.h"
+#include "tier2/tier2.h"
+#include "filesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -95,13 +98,13 @@ static int IntersectWRect(const wrect_t *prc1, const wrect_t *prc2, wrect_t *prc
 	if (!prc)
 		prc = &rc;
 
-	prc->left = max(prc1->left, prc2->left);
-	prc->right = min(prc1->right, prc2->right);
+	prc->left = MAX(prc1->left, prc2->left);
+	prc->right = MIN(prc1->right, prc2->right);
 
 	if (prc->left < prc->right)
 	{
-		prc->top = max(prc1->top, prc2->top);
-		prc->bottom = min(prc1->bottom, prc2->bottom);
+		prc->top = MAX(prc1->top, prc2->top);
+		prc->bottom = MIN(prc1->bottom, prc2->bottom);
 
 		if (prc->top < prc->bottom)
 			return 1;
@@ -217,38 +220,97 @@ static unsigned int spriteOriginCache = 0;
 static unsigned int spriteOrientationCache = 0;
 bool CEngineSprite::Init( const char *pName )
 {
-	m_hAVIMaterial = AVIMATERIAL_INVALID;
+	m_VideoMaterial = NULL;
+	for ( int i = 0; i < kRenderModeCount; ++i )
+	{
+		m_material[ i ] = NULL;
+	}
+
 	m_width = m_height = m_numFrames = 1;
 
-	const char *pExt = Q_GetFileExtension( pName );
-	bool bIsAVI = pExt && !Q_stricmp( pExt, "avi" );
-	if ( bIsAVI )
+	Assert( g_pVideo != NULL );
+	
+	if ( g_pVideo != NULL && g_pVideo->LocateVideoSystemForPlayingFile( pName ) != VideoSystem::NONE ) 
 	{
-		m_hAVIMaterial = avi->CreateAVIMaterial( pName, pName, "GAME" );
-		if ( m_hAVIMaterial == AVIMATERIAL_INVALID )
+		m_VideoMaterial = g_pVideo->CreateVideoMaterial( pName, pName, "GAME", VideoPlaybackFlags::DEFAULT_MATERIAL_OPTIONS, VideoSystem::DETERMINE_FROM_FILE_EXTENSION, false ); 
+		
+		if ( m_VideoMaterial == NULL )
 			return false;
 
-		m_material = avi->GetMaterial( m_hAVIMaterial );
-		avi->GetFrameSize( m_hAVIMaterial, &m_width, &m_height );
-		m_numFrames = avi->GetFrameCount( m_hAVIMaterial );
+		IMaterial *pMaterial = m_VideoMaterial->GetMaterial();
+		m_VideoMaterial->GetVideoImageSize( &m_width, &m_height );
+		m_numFrames = m_VideoMaterial->GetFrameCount();
+		for ( int i = 0; i < kRenderModeCount; ++i )
+		{
+			m_material[i] = pMaterial;
+			pMaterial->IncrementReferenceCount();
+		}
 	}
 	else
 	{
-		m_material = materials->FindMaterial( pName, TEXTURE_GROUP_CLIENT_EFFECTS );
-		m_width = m_material->GetMappingWidth();
-		m_height = m_material->GetMappingHeight();
-		m_numFrames = (!bIsAVI) ? m_material->GetNumAnimationFrames() : avi->GetFrameCount( m_hAVIMaterial );
+		char pTemp[MAX_PATH];
+		char pMaterialName[MAX_PATH];
+		char pMaterialPath[MAX_PATH];
+		Q_StripExtension( pName, pTemp, sizeof(pTemp) );
+		Q_strlower( pTemp );
+		Q_FixSlashes( pTemp, '/' );
+
+		// Check to see if this is a UNC-specified material name
+		bool bIsUNC = pTemp[0] == '/' && pTemp[1] == '/' && pTemp[2] != '/';
+		if ( !bIsUNC )
+		{
+			Q_strncpy( pMaterialName, "materials/", sizeof(pMaterialName) );
+			Q_strncat( pMaterialName, pTemp, sizeof(pMaterialName), COPY_ALL_CHARACTERS );
+		}
+		else
+		{
+			Q_strncpy( pMaterialName, pTemp, sizeof(pMaterialName) );
+		}
+		Q_strncpy( pMaterialPath, pMaterialName, sizeof(pMaterialPath) );
+		Q_SetExtension( pMaterialPath, ".vmt", sizeof(pMaterialPath) );
+
+		KeyValues *kv = new KeyValues( "vmt" );
+		if ( !kv->LoadFromFile( g_pFullFileSystem, pMaterialPath, "GAME" ) )
+		{
+			Warning( "Unable to load sprite material %s!\n", pMaterialPath );
+			return false;
+		}
+
+		for ( int i = 0; i < kRenderModeCount; ++i )
+		{	
+			if ( i == kRenderNone || i == kRenderEnvironmental )
+			{
+				m_material[i] = NULL;
+				continue;
+			}
+
+			Q_snprintf( pMaterialPath, sizeof(pMaterialPath), "%s_rendermode_%d", pMaterialName, i );
+			KeyValues *pMaterialKV = kv->MakeCopy();
+			pMaterialKV->SetInt( "$spriteRenderMode", i );
+			m_material[i] = g_pMaterialSystem->FindProceduralMaterial( pMaterialPath, TEXTURE_GROUP_CLIENT_EFFECTS, pMaterialKV );
+			m_material[ i ]->IncrementReferenceCount();
+		}
+
+		kv->deleteThis();
+
+		m_width = m_material[0]->GetMappingWidth();
+		m_height = m_material[0]->GetMappingHeight();
+		m_numFrames = m_material[0]->GetNumAnimationFrames();
 	}
 
-	if ( !m_material )
-		return false;
+	for ( int i = 0; i < kRenderModeCount; ++i )
+	{
+		if ( i == kRenderNone || i == kRenderEnvironmental )
+			continue;
 
-	m_material->IncrementReferenceCount();
+		if ( !m_material[i] )
+			return false;
+	}
 
-	IMaterialVar *orientationVar = m_material->FindVarFast( "$spriteorientation", &spriteOrientationCache );
+	IMaterialVar *orientationVar = m_material[0]->FindVarFast( "$spriteorientation", &spriteOrientationCache );
 	m_orientation = orientationVar ? orientationVar->GetIntValue() : C_SpriteRenderer::SPR_VP_PARALLEL_UPRIGHT;
 
-	IMaterialVar *originVar = m_material->FindVarFast( "$spriteorigin", &spriteOriginCache );
+	IMaterialVar *originVar = m_material[0]->FindVarFast( "$spriteorigin", &spriteOriginCache );
 	Vector origin, originVarValue;
 	if( !originVar || ( originVar->GetType() != MATERIAL_VAR_TYPE_VECTOR ) )
 	{
@@ -276,34 +338,24 @@ bool CEngineSprite::Init( const char *pName )
 //-----------------------------------------------------------------------------
 void CEngineSprite::Shutdown( void )
 {
-	if ( m_hAVIMaterial != AVIMATERIAL_INVALID )
+	if ( g_pVideo != NULL && m_VideoMaterial != NULL )
 	{
-		avi->DestroyAVIMaterial( m_hAVIMaterial );
-		m_hAVIMaterial = AVIMATERIAL_INVALID;
+		g_pVideo->DestroyVideoMaterial( m_VideoMaterial );
+		m_VideoMaterial = NULL;
 	}
 
-	if ( m_material )
-	{
-		m_material->DecrementReferenceCount();
-		m_material = NULL;
-	}
+	UnloadMaterial();
 }
+
 
 
 //-----------------------------------------------------------------------------
-// Is the sprite an AVI?
+// Is the sprite a video sprite?
 //-----------------------------------------------------------------------------
-bool CEngineSprite::IsAVI()
+bool CEngineSprite::IsVideo()
 {
-	return ( m_hAVIMaterial != AVIMATERIAL_INVALID );
+	return ( m_VideoMaterial != NULL );
 }
-
-
-bool CEngineSprite::IsBIK()
-{
-	return ( m_hBIKMaterial != BIKMATERIAL_INVALID );
-}
-
 
 //-----------------------------------------------------------------------------
 // Returns the texture coordinate range	used to draw the sprite
@@ -312,10 +364,11 @@ void CEngineSprite::GetTexCoordRange( float *pMinU, float *pMinV, float *pMaxU, 
 {
 	*pMaxU = 1.0f; 
 	*pMaxV = 1.0f;
-	if ( IsAVI() )
+	if ( IsVideo() )
 	{
-		avi->GetTexCoordRange( m_hAVIMaterial, pMaxU, pMaxV );
+		m_VideoMaterial->GetVideoTexCoordRange( pMaxU, pMaxV );
 	}
+	
 	float flOOWidth = ( m_width != 0 ) ? 1.0f / m_width : 1.0f;
 	float flOOHeight = ( m_height!= 0 ) ? 1.0f / m_height : 1.0f;
 
@@ -349,59 +402,50 @@ void CEngineSprite::GetHUDSpriteColor( float* color )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEngineSprite::SetAdditive( bool additive )
-{
-	SetRenderMode( additive ? kRenderTransAdd : kRenderTransTexture ); 
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
+// Returns the material 
 //-----------------------------------------------------------------------------
 static unsigned int frameCache = 0;
-void CEngineSprite::SetFrame( float frame )
+IMaterial *CEngineSprite::GetMaterial( RenderMode_t nRenderMode, int nFrame ) 
 {
-	if ( IsAVI() )
+	if ( nRenderMode == kRenderNone || nRenderMode == kRenderEnvironmental )
+		return NULL;
+
+	if ( IsVideo() )
 	{
-		avi->SetFrame( m_hAVIMaterial, frame );
+		m_VideoMaterial->SetFrame( nFrame );
 	}
-	else
+	
+	
+	IMaterial *pMaterial = m_material[nRenderMode];
+	IMaterialVar* pFrameVar = pMaterial->FindVarFast( "$frame", &frameCache );
+	if ( pFrameVar )
 	{
-		IMaterialVar* pFrameVar = m_material->FindVarFast( "$frame", &frameCache );
-		if (pFrameVar)
-		{
-			pFrameVar->SetFloatValue( frame );
-		}
+		pFrameVar->SetIntValue( nFrame );
+	}
+
+	return pMaterial;
+} 
+
+void CEngineSprite::SetFrame( RenderMode_t nRenderMode, int nFrame )
+{
+	if ( IsVideo() )
+	{
+		m_VideoMaterial->SetFrame( nFrame );
 		return;
+	}
+
+
+	IMaterial *pMaterial = m_material[nRenderMode];
+	if ( !pMaterial )
+		return;
+
+	IMaterialVar* pFrameVar = pMaterial->FindVarFast( "$frame", &frameCache );
+	if ( pFrameVar )
+	{
+		pFrameVar->SetIntValue( nFrame );
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static unsigned int spriteRenderModeCache = 0;
-void CEngineSprite::SetRenderMode( int renderMode )
-{
-	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
-	if ( pRenderContext->GetCallQueue() ) 
-	{
-		pRenderContext->GetCallQueue()->QueueCall( this, &CEngineSprite::SetRenderMode, renderMode );
-		return;
-	}
-
-	IMaterialVar* pRenderModeVar = m_material->FindVarFast( "$spriteRenderMode", &spriteRenderModeCache );
-	if (pRenderModeVar)
-	{
-		if ( pRenderModeVar->GetIntValue() != renderMode )
-		{
-			pRenderModeVar->SetIntValue( renderMode );
-			m_material->RecomputeStateSnapshots();
-		}
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -418,20 +462,23 @@ int CEngineSprite::GetOrientation( void )
 //-----------------------------------------------------------------------------
 void CEngineSprite::UnloadMaterial( void )
 {
-	if( m_material )
+	for ( int i = 0; i < kRenderModeCount; ++i )
 	{
-		m_material->DecrementReferenceCount();
+		if( m_material[i] )
+		{
+			m_material[i]->DecrementReferenceCount();
+			m_material[i] = NULL;
+		}
 	}
-	m_material = NULL;
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEngineSprite::DrawFrame( int frame, int x, int y, const wrect_t *prcSubRect )
+void CEngineSprite::DrawFrame( RenderMode_t nRenderMode, int frame, int x, int y, const wrect_t *prcSubRect )
 {
-	DrawFrameOfSize( frame, x, y, GetWidth(), GetHeight(), prcSubRect);
+	DrawFrameOfSize( nRenderMode, frame, x, y, GetWidth(), GetHeight(), prcSubRect );
 }
 
 
@@ -442,11 +489,10 @@ void CEngineSprite::DrawFrame( int frame, int x, int y, const wrect_t *prcSubRec
 //			y - 
 //			*prcSubRect - 
 //-----------------------------------------------------------------------------
-void CEngineSprite::DrawFrameOfSize( int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect )
+void CEngineSprite::DrawFrameOfSize( RenderMode_t nRenderMode, int frame, int x, int y, int iWidth, int iHeight, const wrect_t *prcSubRect )
 {
 	// FIXME: If we ever call this with AVIs, need to have it call GetTexCoordRange and make that work
-	Assert( !IsAVI() && !IsBIK() );
-
+	Assert( !IsVideo() );
 	float fLeft = 0;
 	float fRight = 1;
 	float fTop = 0;
@@ -460,10 +506,10 @@ void CEngineSprite::DrawFrameOfSize( int frame, int x, int y, int iWidth, int iH
 	if ( giScissorTest && !Scissor( x, y, iWidth, iHeight, fLeft, fTop, fRight, fBottom ) )
 		return;
 
-	SetFrame( frame );
+	SetFrame( nRenderMode, frame );
 
 	CMatRenderContextPtr pRenderContext( materials );
-	IMesh* pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, GetMaterial() );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, GetMaterial( nRenderMode ) );
 
 	CMeshBuilder meshBuilder;
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );

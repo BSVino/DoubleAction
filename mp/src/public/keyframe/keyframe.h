@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Keyframed animation header
 //			shared between game and tools
@@ -25,7 +25,7 @@ public:
 
 // Time modifiers.
 int Motion_GetNumberOfTimeModifiers( void );
-bool Motion_GetTimeModifierDetails( int timeInterpNum, char **outName );
+bool Motion_GetTimeModifierDetails( int timeInterpNum, const char **outName );
 bool Motion_CalculateModifiedTime( float time, int timeModifierFuncNum, float *outNewTime );
 
 // Position interpolators.

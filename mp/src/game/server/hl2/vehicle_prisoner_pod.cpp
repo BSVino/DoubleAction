@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -97,7 +97,7 @@ public:
 	virtual void	DrawDebugGeometryOverlays( void );
 
 	virtual Vector	BodyTarget( const Vector &posSrc, bool bNoisy = true );
-	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual int		OnTakeDamage( const CTakeDamageInfo &info );
 
 	void			PlayerControlInit( CBasePlayer *pPlayer );
@@ -255,7 +255,7 @@ void CPropVehiclePrisonerPod::Spawn( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropVehiclePrisonerPod::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CPropVehiclePrisonerPod::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	if ( ptr->hitbox == VEHICLE_HITBOX_DRIVER )
 	{

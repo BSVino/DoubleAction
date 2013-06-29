@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Used to create a path that can be followed by NPCs and trains.
 //
@@ -28,6 +28,7 @@ BEGIN_DATADESC( CPathTrack )
 //	DEFINE_FIELD( m_nIterVal,		FIELD_INTEGER ),
 	
 	DEFINE_INPUTFUNC( FIELD_VOID, "InPass", InputPass ),
+	DEFINE_INPUTFUNC( FIELD_VOID, "InTeleport",  InputTeleport ),
 	
 	DEFINE_INPUTFUNC( FIELD_VOID, "EnableAlternatePath", InputEnableAlternatePath ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "DisableAlternatePath", InputDisableAlternatePath ),
@@ -39,6 +40,7 @@ BEGIN_DATADESC( CPathTrack )
 
 	// Outputs
 	DEFINE_OUTPUT(m_OnPass, "OnPass"),
+	DEFINE_OUTPUT(m_OnTeleport,  "OnTeleport"),
 
 END_DATADESC()
 
@@ -69,9 +71,6 @@ void CPathTrack::Spawn( void )
 {
 	SetSolid( SOLID_NONE );
 	UTIL_SetSize(this, Vector(-8, -8, -8), Vector(8, 8, 8));
-
-	m_pnext = NULL;
-	m_pprevious = NULL;
 }
 
 
@@ -90,7 +89,7 @@ void CPathTrack::Activate( void )
 
 
 //-----------------------------------------------------------------------------
-// Connects up the previons + next pointers 
+// Connects up the previous + next pointers 
 //-----------------------------------------------------------------------------
 void CPathTrack::Link( void  )
 {
@@ -342,8 +341,13 @@ void CPathTrack::Project( CPathTrack *pstart, CPathTrack *pend, Vector &origin, 
 CPathTrack *CPathTrack::GetNext( void )
 {
 	if ( m_paltpath && FBitSet( m_spawnflags, SF_PATH_ALTERNATE ) && !FBitSet( m_spawnflags, SF_PATH_ALTREVERSE ) )
+	{
+		Assert( !m_paltpath.IsValid() || m_paltpath.Get() != NULL );
 		return m_paltpath;
+	}
 	
+	// The paths shouldn't normally be getting deleted so assert that if it was set, it's valid.
+	Assert( !m_pnext.IsValid() || m_pnext.Get() != NULL );
 	return m_pnext;
 }
 
@@ -352,8 +356,12 @@ CPathTrack *CPathTrack::GetNext( void )
 CPathTrack *CPathTrack::GetPrevious( void )
 {
 	if ( m_paltpath && FBitSet( m_spawnflags, SF_PATH_ALTERNATE ) && FBitSet( m_spawnflags, SF_PATH_ALTREVERSE ) )
+	{
+		Assert( !m_paltpath.IsValid() || m_paltpath.Get() != NULL );
 		return m_paltpath;
+	}
 	
+	Assert( !m_pprevious.IsValid() || m_pprevious.Get() != NULL );
 	return m_pprevious;
 }
 
@@ -558,4 +566,21 @@ CPathTrack *CPathTrack::Instance( edict_t *pent )
 void CPathTrack::InputPass( inputdata_t &inputdata )
 {
 	m_OnPass.FireOutput( inputdata.pActivator, this );
+
+#ifdef TF_DLL
+	IGameEvent * event = gameeventmanager->CreateEvent( "path_track_passed" );
+	if ( event )
+	{
+		event->SetInt( "index", entindex() );
+		gameeventmanager->FireEvent( event, true );
+	}
+#endif
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CPathTrack::InputTeleport( inputdata_t &inputdata )
+{
+	m_OnTeleport.FireOutput( inputdata.pActivator, this );
 }

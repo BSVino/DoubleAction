@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -192,7 +192,7 @@ void CScriptIntro::InputSetBlendMode( inputdata_t &inputdata )
 
 	if ( cl_spewscriptintro.GetInt() )
 	{
-		DevMsg( 1, "%.2f INPUT: Blend mode set to %d\n", gpGlobals->curtime, m_iBlendMode );
+		DevMsg( 1, "%.2f INPUT: Blend mode set to %d\n", gpGlobals->curtime, m_iBlendMode.Get() );
 	}
 }
 
@@ -284,7 +284,7 @@ void CScriptIntro::InputSetNextBlendTime( inputdata_t &inputdata )
 
 	if ( cl_spewscriptintro.GetInt() )
 	{
-		DevMsg( 1, "%.2f BLEND STARTED: %d to %d, end at %.2f\n", gpGlobals->curtime, m_iBlendMode, m_iNextBlendMode, m_flNextBlendTime.Get() );
+		DevMsg( 1, "%.2f BLEND STARTED: %d to %d, end at %.2f\n", gpGlobals->curtime, m_iBlendMode.Get(), m_iNextBlendMode.Get(), m_flNextBlendTime.Get() );
 	}
 
 	SetContextThink( &CScriptIntro::BlendComplete, m_flNextBlendTime, "BlendComplete" );

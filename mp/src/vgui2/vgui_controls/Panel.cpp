@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,8 +8,11 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <UtlVector.h>
+#include <utlvector.h>
 #include <vstdlib/IKeyValuesSystem.h>
+#include <ctype.h>	// isdigit()
+
+#include <materialsystem/imaterial.h>
 
 #include <vgui/IBorder.h>
 #include <vgui/IInput.h>
@@ -30,10 +33,12 @@
 #include "vgui_controls/Menu.h"
 #include "vgui_controls/MenuItem.h"
 
-#include "UtlDict.h"
-#include "UtlBuffer.h"
-#include "MemPool.h"
-#include "FileSystem.h"
+#include "UtlSortVector.h"
+
+#include "tier1/utldict.h"
+#include "tier1/utlbuffer.h"
+#include "mempool.h"
+#include "filesystem.h"
 #include "tier0/icommandline.h"
 
 #include "tier0/vprof.h"
@@ -44,6 +49,9 @@
 using namespace vgui;
 
 #define TRIPLE_PRESS_MSEC	300
+
+
+extern int GetBuildModeDialogCount();
 
 static char *CopyString( const char *in )
 {
@@ -62,8 +70,9 @@ static char *CopyString( const char *in )
 //-----------------------------------------------------------------------------
 struct vgui::DragDrop_t
 {
-	vgui::DragDrop_t() :
+	DragDrop_t() :
 		m_bDragEnabled( false ),
+		m_bShowDragHelper( true ),
 		m_bDropEnabled( false ),
 		m_bDragStarted( false ),
 		m_nDragStartTolerance( 8 ),
@@ -78,6 +87,7 @@ struct vgui::DragDrop_t
 
 	// Drag related data
 	bool		m_bDragEnabled;
+	bool		m_bShowDragHelper;
 	bool		m_bDragging;
 	bool		m_bDragStarted;
 	// How many pixels the dragged box must move before showing the outline rect...
@@ -626,6 +636,11 @@ Panel::Panel( Panel *parent, const char *panelName, HScheme scheme )
 void Panel::Init( int x, int y, int wide, int tall )
 {
 	_panelName = NULL;
+	_tooltipText = NULL;
+	_pinToSibling = NULL;
+	m_hMouseEventHandler = NULL;
+	_pinCornerToSibling = PIN_TOPLEFT;
+	_pinToSiblingCorner = PIN_TOPLEFT;
 
 	// get ourselves an internal panel
 	_vpanel = ivgui()->AllocPanel();
@@ -648,13 +663,25 @@ void Panel::Init( int x, int y, int wide, int tall )
 	_tabPosition = 0;
 	m_iScheme = 0;
 	m_bIsSilent = false;
+	m_bParentNeedsCursorMoveEvents = false;
 
 	_buildModeFlags = 0; // not editable or deletable in buildmode dialog by default
 
 	m_pTooltips = NULL;
+	m_bToolTipOverridden = false;
 
 	m_flAlpha = 255.0f;
 	m_nPaintBackgroundType = 0;
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [tj] Default to rounding all corners (for draw style 2)
+	//=============================================================================
+	m_roundedCorners = PANEL_ROUND_CORNER_ALL;
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
 	m_nBgTextureId1 = -1;
 	m_nBgTextureId2 = -1;
 	m_nBgTextureId3 = -1;
@@ -672,6 +699,27 @@ void Panel::Init( int x, int y, int wide, int tall )
 
 	REGISTER_COLOR_AS_OVERRIDABLE( _fgColor, "fgcolor_override" );
 	REGISTER_COLOR_AS_OVERRIDABLE( _bgColor, "bgcolor_override" );
+
+	m_bIsConsoleStylePanel = false;
+	m_NavUp = NULL;
+	m_NavDown = NULL;
+	m_NavLeft = NULL;
+	m_NavRight = NULL;
+	m_NavToRelay = NULL;
+	m_NavActivate = NULL;
+	m_NavBack = NULL;
+	m_sNavUpName = NULL;
+	m_sNavDownName = NULL;
+	m_sNavLeftName = NULL;
+	m_sNavRightName = NULL;
+	m_sNavToRelayName = NULL;
+	m_sNavActivateName = NULL;
+	m_sNavBackName = NULL;
+
+	m_PassUnhandledInput = true;
+	m_LastNavDirection = ND_NONE;
+	m_bWorldPositionCurrentFrame = false;
+	m_bForceStereoRenderToFrameBuffer = false;
 }
 
 
@@ -680,6 +728,14 @@ void Panel::Init( int x, int y, int wide, int tall )
 //-----------------------------------------------------------------------------
 Panel::~Panel()
 {
+	// @note Tom Bui: only cleanup if we've created it
+	if ( !m_bToolTipOverridden )
+	{
+		if ( m_pTooltips )
+		{		
+			delete m_pTooltips;
+		}
+	}
 #if defined( VGUI_USEKEYBINDINGMAPS )
 	if ( IsValidKeyBindingsContext() )
 	{
@@ -718,6 +774,13 @@ Panel::~Panel()
 	// free our name
 	delete [] _panelName;
 
+	if ( _tooltipText && _tooltipText[0] )
+	{
+		delete [] _tooltipText;
+	}
+
+	delete [] _pinToSibling;
+
 	_vpanel = NULL;
 #if defined( VGUI_USEDRAGDROP )
 	delete m_pDragDrop;
@@ -730,6 +793,7 @@ Panel::~Panel()
 void Panel::MakeReadyForUse()
 {
 //	PerformApplySchemeSettings();
+	UpdateSiblingPin();
 	surface()->SolveTraverse( GetVPanel(), true );
 }
 
@@ -800,7 +864,10 @@ const char *Panel::GetClassName()
 //-----------------------------------------------------------------------------
 void Panel::SetPos(int x, int y)
 {
-	Assert( abs(x) < 32768 && abs(y) < 32768 );
+	if (!CommandLine()->FindParm("-hushasserts"))
+	{
+		Assert( abs(x) < 32768 && abs(y) < 32768 );
+	}
 	ipanel()->SetPos(GetVPanel(), x, y);
 }
 
@@ -852,7 +919,12 @@ void Panel::GetBounds(int &x, int &y, int &wide, int &tall)
 //-----------------------------------------------------------------------------
 VPANEL Panel::GetVParent()
 {
-	return ipanel()->GetParent(GetVPanel());
+    if ( ipanel() )
+    {
+	    return ipanel()->GetParent(GetVPanel());
+    }
+
+    return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -863,12 +935,15 @@ Panel *Panel::GetParent()
 	// get the parent and convert it to a Panel *
 	// this is OK, the hierarchy is guaranteed to be all from the same module, except for the root node
 	// the root node always returns NULL when a GetParent() is done so everything is OK
-	VPANEL parent = ipanel()->GetParent(GetVPanel());
-	if (parent)
-	{
-		Panel *pParent = ipanel()->GetPanel(parent, GetControlsModuleName());
-		Assert(!pParent || !strcmp(pParent->GetModuleName(), GetControlsModuleName()));
-		return pParent;
+    if ( ipanel() )
+    {
+	    VPANEL parent = ipanel()->GetParent(GetVPanel());
+	    if (parent)
+	    {
+		    Panel *pParent = ipanel()->GetPanel(parent, GetControlsModuleName());
+		    Assert(!pParent || !strcmp(pParent->GetModuleName(), GetControlsModuleName()));
+		    return pParent;
+	    }
 	}
 
 	return NULL;
@@ -918,7 +993,12 @@ void Panel::SetVisible(bool state)
 //-----------------------------------------------------------------------------
 bool Panel::IsVisible()
 {
-	return ipanel()->IsVisible(GetVPanel());
+    if (ipanel())
+    {
+	    return ipanel()->IsVisible(GetVPanel());
+    }
+
+    return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -956,7 +1036,10 @@ bool Panel::IsPopup()
 void Panel::Repaint()
 {
 	_flags.SetFlag( NEEDS_REPAINT );
-	surface()->Invalidate(GetVPanel());
+    if (surface())
+    {
+        surface()->Invalidate(GetVPanel());
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -985,6 +1068,11 @@ void Panel::Think()
 //-----------------------------------------------------------------------------
 void Panel::PaintTraverse( bool repaint, bool allowForce )
 {
+	if ( m_bWorldPositionCurrentFrame )
+	{
+		surface()->SolveTraverse( GetVPanel() );
+	}
+
 	if ( !IsVisible() )
 	{
 		return;
@@ -1001,18 +1089,26 @@ void Panel::PaintTraverse( bool repaint, bool allowForce )
 		return;
 	}
 
-	if( _flags.IsFlagSet( NEEDS_REPAINT ) && allowForce )
+	if ( !repaint &&
+		 allowForce &&
+		 _flags.IsFlagSet( NEEDS_REPAINT ) )
 	{
 		repaint = true;
-	}
-
-	if ( allowForce )
-	{
 		_flags.ClearFlag( NEEDS_REPAINT );
 	}
 
 	VPANEL vpanel = GetVPanel();
 
+	bool bPushedViewport = false;
+	if( GetForceStereoRenderToFrameBuffer()  )
+	{
+		CMatRenderContextPtr pRenderContext( materials );
+		if( pRenderContext->GetRenderTarget() )
+		{
+			surface()->PushFullscreenViewport();
+			bPushedViewport = true;
+		}
+	}
 
 	int clipRect[4];
 	ipanel()->GetClipRect( vpanel, clipRect[0], clipRect[1], clipRect[2], clipRect[3] );
@@ -1035,7 +1131,7 @@ void Panel::PaintTraverse( bool repaint, bool allowForce )
 		surface()->PopMakeCurrent( vpanel );
 	}
 
-	if ( repaint && _flags.IsFlagSet( PAINT_BACKGROUND_ENABLED | PAINT_ENABLED ) )
+	if ( repaint )
 	{
 		// draw the background with no inset
 		if ( _flags.IsFlagSet( PAINT_BACKGROUND_ENABLED ) )
@@ -1055,13 +1151,19 @@ void Panel::PaintTraverse( bool repaint, bool allowForce )
 	}
 
 	// traverse and paint all our children
-	int childCount = ipanel()->GetChildCount( vpanel );
+	CUtlVector< VPANEL > &children = ipanel()->GetChildren( vpanel );
+	int childCount = children.Count();
 	for (int i = 0; i < childCount; i++)
 	{
-		VPANEL child = ipanel()->GetChild( vpanel, i );
+		VPANEL child = children[ i ];
+		bool bVisible = ipanel()->IsVisible( child );
+
 		if ( surface()->ShouldPaintChildPanel( child ) )
 		{
-			ipanel()->PaintTraverse( child, repaint, allowForce );
+			if ( bVisible )
+			{
+				ipanel()->PaintTraverse( child, repaint, allowForce );
+			}
 		}
 		else
 		{
@@ -1069,44 +1171,63 @@ void Panel::PaintTraverse( bool repaint, bool allowForce )
 			surface()->Invalidate( child );
 
 			// keep traversing the tree, just don't allow anyone to paint after here
-			ipanel()->PaintTraverse( child, false, false );
+			if ( bVisible )
+			{
+				ipanel()->PaintTraverse( child, false, false );
+			}
 		}
 	}
 
-	// draw the border last if we didn't paint it first
-	if ( !bBorderPaintFirst && repaint && _flags.IsFlagSet( PAINT_BORDER_ENABLED ) && ( _border != null ) )
+	// draw the border last
+	if ( repaint )
 	{
-		// Paint the border over the background with no inset
-		surface()->PushMakeCurrent( vpanel, false );
-		PaintBorder();
-		surface()->PopMakeCurrent( vpanel );
-	}
-
-	if ( repaint && IsBuildGroupEnabled() ) //&& HasFocus() )
-	{
-		// outline all selected panels 
-		CUtlVector<PHandle> *controlGroup = _buildGroup->GetControlGroup();
-		for (int i=0; i < controlGroup->Size(); ++i)
+		if ( !bBorderPaintFirst && _flags.IsFlagSet( PAINT_BORDER_ENABLED ) && ( _border != null ) )
 		{
-			surface()->PushMakeCurrent( ((*controlGroup)[i].Get())->GetVPanel(), false );
-			((*controlGroup)[i].Get())->PaintBuildOverlay();
-			surface()->PopMakeCurrent( ((*controlGroup)[i].Get())->GetVPanel() );
-		}	
-		
-		_buildGroup->DrawRulers();						
-	}
+			// Paint the border over the background with no inset
+			surface()->PushMakeCurrent( vpanel, false );
+			PaintBorder();
+			surface()->PopMakeCurrent( vpanel );
+		}
 
-	// All of our children have painted, etc, now allow painting in top of them
-	if ( repaint && _flags.IsFlagSet( POST_CHILD_PAINT_ENABLED ) )
-	{
-		surface()->PushMakeCurrent( vpanel, false );
-		PostChildPaint();
-		surface()->PopMakeCurrent( vpanel );
+#ifdef _DEBUG
+		// IsBuildGroupEnabled recurses up all the parents and ends up being very expensive as it wanders all over memory
+		if ( GetBuildModeDialogCount() && IsBuildGroupEnabled() ) //&& HasFocus() )
+		{
+			// outline all selected panels 
+			CUtlVector<PHandle> *controlGroup = _buildGroup->GetControlGroup();
+			for (int i=0; i < controlGroup->Size(); ++i)
+			{
+				// outline all selected panels 
+				CUtlVector<PHandle> *controlGroup = _buildGroup->GetControlGroup();
+				for (int i=0; i < controlGroup->Size(); ++i)
+				{
+					surface()->PushMakeCurrent( ((*controlGroup)[i].Get())->GetVPanel(), false );
+					((*controlGroup)[i].Get())->PaintBuildOverlay();
+					surface()->PopMakeCurrent( ((*controlGroup)[i].Get())->GetVPanel() );
+				}	
+			
+				_buildGroup->DrawRulers();						
+			}
+		}
+#endif
+
+		// All of our children have painted, etc, now allow painting in top of them
+		if ( _flags.IsFlagSet( POST_CHILD_PAINT_ENABLED ) )
+		{
+			surface()->PushMakeCurrent( vpanel, false );
+			PostChildPaint();
+			surface()->PopMakeCurrent( vpanel );
+		}
 	}
 
 	surface()->DrawSetAlphaMultiplier( oldAlphaMultiplier );
 
 	surface()->SwapBuffers( vpanel );
+
+	if( bPushedViewport )
+	{
+		surface()->PopFullscreenViewport();
+	}
 }
 
 
@@ -1248,7 +1369,7 @@ void Panel::SetParent(Panel *newParent)
 {
 	// Assert that the parent is from the same module as the child
 	// FIXME: !!! work out how to handle this properly!
-//	Assert(!newParent || !strcmp(newParent->GetModuleName(), GetControlsModuleName()));
+	//	Assert(!newParent || !strcmp(newParent->GetModuleName(), GetControlsModuleName()));
 
 	if (newParent)
 	{
@@ -1289,6 +1410,8 @@ void Panel::SetParent(VPANEL newParent)
 			SetMouseInputEnabled(ipanel()->IsMouseInputEnabled(GetVParent()));
 		}
 	}
+
+	UpdateSiblingPin();
 }
 
 //-----------------------------------------------------------------------------
@@ -1316,11 +1439,11 @@ void Panel::SetZPos(int z)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose: sets Z ordering - lower numbers are always behind higher z's
 //-----------------------------------------------------------------------------
-int Panel::GetZPos( void )
+int Panel::GetZPos()
 {
-	return ipanel()->GetZPos(GetVPanel());
+	return ( ipanel()->GetZPos( GetVPanel() ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -1399,7 +1522,7 @@ Panel *Panel::FindChildByName(const char *childName, bool recurseDown)
 		if (!pChild)
 			continue;
 
-		if (!stricmp(pChild->GetName(), childName))
+		if (!V_stricmp(pChild->GetName(), childName))
 		{
 			return pChild;
 		}
@@ -1422,6 +1545,9 @@ Panel *Panel::FindChildByName(const char *childName, bool recurseDown)
 //-----------------------------------------------------------------------------
 Panel *Panel::FindSiblingByName(const char *siblingName)
 {
+	if ( !GetVParent() )
+		return NULL;
+
 	int siblingCount = ipanel()->GetChildCount(GetVParent());
 	for (int i = 0; i < siblingCount; i++)
 	{
@@ -1579,6 +1705,10 @@ void Panel::InternalCursorMoved(int x, int y)
 
 	if (m_pTooltips)
 	{
+		if ( _tooltipText )
+		{
+			m_pTooltips->SetText( _tooltipText );
+		}
 		m_pTooltips->ShowTooltip(this);
 	}
 
@@ -1598,6 +1728,11 @@ void Panel::InternalCursorEntered()
 	if (m_pTooltips)
 	{
 		m_pTooltips->ResetDelay();
+
+		if ( _tooltipText )
+		{
+			m_pTooltips->SetText( _tooltipText );
+		}
 		m_pTooltips->ShowTooltip(this);
 	}
 
@@ -1722,8 +1857,17 @@ void Panel::InternalMousePressed(int code)
 			return;
 		}
 	}
-	
-	OnMousePressed((MouseCode)code);
+
+	Panel *pMouseHandler = m_hMouseEventHandler.Get();
+	if ( pMouseHandler )
+	{
+		pMouseHandler->OnMousePressed( (MouseCode)code );
+	}
+	else
+	{
+		OnMousePressed( (MouseCode)code );
+	}
+
 #if defined( VGUI_USEDRAGDROP )
 	DragDropStartDragging();
 #endif
@@ -1741,9 +1885,6 @@ void Panel::InternalMouseDoublePressed(int code)
 	
 	if ( !IsMouseInputEnabled())
 	{
-#if defined( VGUI_USEDRAGDROP )
-		DragDropStartDragging();
-#endif
 		return;
 	}
 	
@@ -1755,10 +1896,15 @@ void Panel::InternalMouseDoublePressed(int code)
 		}
 	}
 
-	OnMouseDoublePressed((MouseCode)code);
-#if defined( VGUI_USEDRAGDROP )
-	DragDropStartDragging();
-#endif
+	Panel *pMouseHandler = m_hMouseEventHandler.Get();
+	if ( pMouseHandler )
+	{
+		pMouseHandler->OnMouseDoublePressed( (MouseCode)code );
+	}
+	else
+	{
+		OnMouseDoublePressed( (MouseCode)code );
+	}
 }
 
 #if defined( VGUI_USEDRAGDROP )
@@ -2233,7 +2379,7 @@ wchar_t const *Panel::KeyCodeModifiersToDisplayString( KeyCode code, int modifie
 	}
 
 	static wchar_t unicode[ 256 ];
-	_snwprintf( unicode, 255, L"%S%s", sz, Panel::KeyCodeToDisplayString( (KeyCode)code ) );
+	V_swprintf_safe( unicode, L"%S%s", sz, Panel::KeyCodeToDisplayString( (KeyCode)code ) );
 	return unicode;
 }
 
@@ -2691,7 +2837,7 @@ void Panel::OnThink()
 			return;
 		}
 
-		if ( m_pDragDrop->m_hCurrentDrop != NULL )
+		if ( m_pDragDrop->m_hCurrentDrop != 0 )
 		{
 			if ( !input()->IsMouseDown( MOUSE_LEFT ) )
 			{
@@ -2763,6 +2909,13 @@ void Panel::OnThink()
 // input messages handlers (designed for override)
 void Panel::OnCursorMoved(int x, int y)
 {
+	if( ParentNeedsCursorMoveEvents() )
+	{
+		// figure out x and y in parent space
+		int thisX, thisY;
+		ipanel()->GetPos( GetVPanel(), thisX, thisY );
+		CallParentFunction( new KeyValues( "OnCursorMoved", "x", x + thisX, "y", y + thisY ) );
+	}
 }
 
 void Panel::OnCursorEntered()
@@ -2797,36 +2950,154 @@ void Panel::OnMouseWheeled(int delta)
 // base implementation forwards Key messages to the Panel's parent - override to 'swallow' the input
 void Panel::OnKeyCodePressed(KeyCode code)
 {
+	static ConVarRef vgui_nav_lock( "vgui_nav_lock" );
+
+	bool handled = false;
+	switch( GetBaseButtonCode( code ) )
+	{
+	case KEY_XBUTTON_UP:
+	case KEY_XSTICK1_UP:
+	case KEY_XSTICK2_UP:
+	case KEY_UP:
+		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateUp() )
+		{
+			vgui_nav_lock.SetValue( 1 );
+			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
+			handled = true;
+		}
+		break;
+	case KEY_XBUTTON_DOWN:
+	case KEY_XSTICK1_DOWN:
+	case KEY_XSTICK2_DOWN:
+	case KEY_DOWN:
+		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateDown() )
+		{
+			vgui_nav_lock.SetValue( 1 );
+			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
+			handled = true;
+		}
+		break;
+	case KEY_XBUTTON_LEFT:
+	case KEY_XSTICK1_LEFT:
+	case KEY_XSTICK2_LEFT:
+	case KEY_LEFT:
+		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateLeft() )
+		{
+			vgui_nav_lock.SetValue( 1 );
+			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
+			handled = true;
+		}
+		break;
+	case KEY_XBUTTON_RIGHT:
+	case KEY_XSTICK1_RIGHT:
+	case KEY_XSTICK2_RIGHT:
+	case KEY_RIGHT:
+		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateRight() )
+		{
+			vgui_nav_lock.SetValue( 1 );
+			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
+			handled = true;
+		}
+		break;
+	case KEY_XBUTTON_B:
+		if ( ( !vgui_nav_lock.IsValid() || vgui_nav_lock.GetInt() == 0 ) && NavigateBack() )
+		{
+			vgui_nav_lock.SetValue( 1 );
+			vgui::surface()->PlaySound( "UI/menu_focus.wav" );
+			handled = true;
+		}
+		break;
+	}
+
+	if( !handled && !m_PassUnhandledInput )
+		return;
+
 	CallParentFunction(new KeyValues("KeyCodePressed", "code", code));
 }
 
-void Panel::OnKeyCodeTyped(KeyCode code)
+void Panel::OnKeyCodeTyped(KeyCode keycode)
 {
+	vgui::KeyCode code = GetBaseButtonCode( keycode );
+
 	// handle focus change
-	if ( IsX360() )
+	if ( IsX360() || IsConsoleStylePanel() )
 	{
+		// eat these typed codes, will get handled in OnKeyCodePressed
+		switch ( code )
+		{
+		case KEY_XBUTTON_UP:
+		case KEY_XSTICK1_UP:
+		case KEY_XSTICK2_UP:
+		case KEY_XBUTTON_DOWN:
+		case KEY_XSTICK1_DOWN:
+		case KEY_XSTICK2_DOWN:
+		case KEY_XBUTTON_LEFT:
+		case KEY_XSTICK1_LEFT:
+		case KEY_XSTICK2_LEFT:
+		case KEY_XBUTTON_RIGHT:
+		case KEY_XSTICK1_RIGHT:
+		case KEY_XSTICK2_RIGHT:
+		case KEY_XBUTTON_A:
+		case KEY_XBUTTON_B:
+		case KEY_XBUTTON_X:
+		case KEY_XBUTTON_Y:
+		case KEY_XBUTTON_LEFT_SHOULDER:
+		case KEY_XBUTTON_RIGHT_SHOULDER:
+		case KEY_XBUTTON_BACK:
+		case KEY_XBUTTON_START:
+		case KEY_XBUTTON_STICK1:
+		case KEY_XBUTTON_STICK2:
+		case KEY_XBUTTON_LTRIGGER:
+		case KEY_XBUTTON_RTRIGGER:
+
+		case KEY_UP:
+		case KEY_DOWN:
+		case KEY_LEFT:
+		case KEY_RIGHT:
+			return;
+		}
+
+		// legacy handling - need to re-enable for older apps?
+		/*
 		if ( code == KEY_XSTICK1_RIGHT || code == KEY_XBUTTON_RIGHT )
 		{
-			RequestFocusNext();
-			return;
+		RequestFocusNext();
+		return;
 		}
 		else if ( code == KEY_XSTICK1_LEFT || code == KEY_XBUTTON_LEFT )
 		{
-			RequestFocusPrev();
-			return;
+		RequestFocusPrev();
+		return;
 		}
+		*/
 	}
-	
+
 	if (code == KEY_TAB)
 	{
-		// if shift is down goto previous tab position, otherwise goto next
-		if (input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT))
+		bool bShiftDown = input()->IsKeyDown(KEY_LSHIFT) || input()->IsKeyDown(KEY_RSHIFT);
+
+		if ( IsConsoleStylePanel() )
 		{
-			RequestFocusPrev();
+			if ( bShiftDown )
+			{
+				NavigateUp();
+			}
+			else
+			{
+				NavigateDown();
+			}
 		}
 		else
 		{
-			RequestFocusNext();
+			// if shift is down goto previous tab position, otherwise goto next
+			if ( bShiftDown )
+			{
+				RequestFocusPrev();
+			}
+			else
+			{
+				RequestFocusNext();
+			}
 		}
 	}
 	else
@@ -2834,9 +3105,9 @@ void Panel::OnKeyCodeTyped(KeyCode code)
 		// forward up
 		if ( GetVPanel() == surface()->GetEmbeddedPanel() )
 		{
-			input()->OnKeyCodeUnhandled( code );
+			input()->OnKeyCodeUnhandled( keycode );
 		}
-		CallParentFunction(new KeyValues("KeyCodeTyped", "code", code));
+		CallParentFunction(new KeyValues("KeyCodeTyped", "code", keycode));
 	}
 }
 
@@ -2870,7 +3141,7 @@ bool Panel::IsWithin(int x,int y)
 	{
 		return false;
 	}
-	
+
 	if (y < clipRect[1])
 	{
 		return false;
@@ -2880,7 +3151,7 @@ bool Panel::IsWithin(int x,int y)
 	{
 		return false;
 	}
-	
+
 	if (y >= clipRect[3])
 	{
 		return false;
@@ -2903,9 +3174,11 @@ VPANEL Panel::IsWithinTraverse(int x, int y, bool traversePopups)
 	{
 		// check popups first
 		int i;
-		for (i = GetChildCount() - 1; i >= 0; i--)
+		CUtlVector< VPANEL > &children = ipanel()->GetChildren( GetVPanel() );
+		int childCount = children.Count();
+		for (i = childCount - 1; i >= 0; i--)
 		{
-			VPANEL panel = ipanel()->GetChild(GetVPanel(), i);
+			VPANEL panel = children[ i ];
 			if (ipanel()->IsPopup(panel))
 			{
 				panel = ipanel()->IsWithinTraverse(panel, x, y, true);
@@ -2919,20 +3192,20 @@ VPANEL Panel::IsWithinTraverse(int x, int y, bool traversePopups)
 		// check children recursive, if you find one, just return first one
 		// this checks in backwards order so the last child drawn for this panel is chosen which
 		// coincides to how it would be visibly displayed
-		for (i = GetChildCount() - 1; i >= 0; i--)
+		for (i = childCount - 1; i >= 0; i--)
 		{
-			VPANEL panel = ipanel()->GetChild(GetVPanel(), i);
+			VPANEL panel = children[ i ];
 			// we've already checked popups so ignore
 			if (!ipanel()->IsPopup(panel))
 			{
 				panel = ipanel()->IsWithinTraverse(panel, x, y, true);
-				if (panel != NULL)
+				if (panel != 0)
 				{
 					return panel;
 				}
 			}
 		}
-		
+
 		// check ourself
 		if ( !IsMouseInputDisabledForThisPanel() && IsWithin(x, y) )
 		{
@@ -2947,20 +3220,22 @@ VPANEL Panel::IsWithinTraverse(int x, int y, bool traversePopups)
 			// check children recursive, if you find one, just return first one
 			// this checks in backwards order so the last child drawn for this panel is chosen which
 			// coincides to how it would be visibly displayed
-			for (int i = GetChildCount() - 1; i >= 0; i--)
+			CUtlVector< VPANEL > &children = ipanel()->GetChildren( GetVPanel() );
+			int childCount = children.Count();
+			for (int i = childCount - 1; i >= 0; i--)
 			{
-				VPANEL panel = ipanel()->GetChild(GetVPanel(), i);
+				VPANEL panel = children[ i ];
 				// ignore popups
 				if (!ipanel()->IsPopup(panel))
 				{
 					panel = ipanel()->IsWithinTraverse(panel, x, y, false);
-					if (panel != NULL)
+					if (panel != 0)
 					{
 						return panel;
 					}
 				}
 			}
-	
+
 			// not a child, must be us
 			if ( !IsMouseInputDisabledForThisPanel() )
 				return GetVPanel();
@@ -3012,6 +3287,11 @@ HCursor Panel::GetCursor()
 	return _cursor;
 }
 
+void Panel::SetCursorAlwaysVisible( bool visible )
+{
+	surface()->SetCursorAlwaysVisible( visible );
+}
+
 void Panel::SetMinimumSize(int wide,int tall)
 {
 	ipanel()->SetMinimumSize(GetVPanel(), wide, tall);
@@ -3024,7 +3304,7 @@ void Panel::GetMinimumSize(int& wide,int &tall)
 
 bool Panel::IsBuildModeEditable()
 {
-   return true;
+	return true;
 }
 
 void Panel::SetBuildModeEditable(bool state)
@@ -3083,7 +3363,12 @@ void Panel::GetClipRect(int& x0,int& y0,int& x1,int& y1)
 //-----------------------------------------------------------------------------
 int Panel::GetChildCount()
 {
-	return ipanel()->GetChildCount(GetVPanel());
+    if (ipanel())
+    {
+	    return ipanel()->GetChildCount(GetVPanel());
+    }
+
+    return 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -3094,6 +3379,11 @@ Panel *Panel::GetChild(int index)
 	// get the child and cast it to a panel
 	// this assumes that the child is from the same module as the this (precondition)
 	return ipanel()->GetPanel(ipanel()->GetChild(GetVPanel(), index), GetControlsModuleName());
+}
+
+CUtlVector< VPANEL > &Panel::GetChildren()
+{
+	return ipanel()->GetChildren(GetVPanel());
 }
 
 //-----------------------------------------------------------------------------
@@ -3129,8 +3419,8 @@ bool Panel::RequestFocusNext(VPANEL panel)
 void Panel::RequestFocus(int direction)
 {
 	// NOTE: This doesn't make any sense if we don't have keyboard input enabled
-	Assert( IsX360() || IsKeyBoardInputEnabled() );
-//	ivgui()->DPrintf2("RequestFocus(%s, %s)\n", GetName(), GetClassName());
+	Assert( ( IsX360() || IsConsoleStylePanel() ) || IsKeyBoardInputEnabled() );
+	//	ivgui()->DPrintf2("RequestFocus(%s, %s)\n", GetName(), GetClassName());
 	OnRequestFocus(GetVPanel(), NULL);
 }
 
@@ -3183,13 +3473,13 @@ int Panel::GetTabPosition()
 //-----------------------------------------------------------------------------
 void Panel::InternalFocusChanged(bool lost)
 {
-/*
+	/*
 	//if focus is gained tell the focusNavGroup about it so its current can be correct
 	if( (!lost) && (_focusNavGroup!=null) )
 	{
-		_focusNavGroup->setCurrentPanel(this);
+	_focusNavGroup->setCurrentPanel(this);
 	}
-*/
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -3409,6 +3699,11 @@ Color Panel::GetFgColor()
 
 void Panel::InternalPerformLayout()
 {
+	// Don't layout if we're still waiting for our scheme to be applied.
+	// At worst, it leads to crashes, at best it does work that we'll redo as soon as the scheme has been applied.
+	if ( _flags.IsFlagSet( NEEDS_SCHEME_UPDATE ) )
+		return;
+
 	_flags.SetFlag( IN_PERFORM_LAYOUT );
 	// make sure the scheme has been applied
 	_flags.ClearFlag( NEEDS_LAYOUT );
@@ -3432,7 +3727,11 @@ void Panel::InvalidateLayout( bool layoutNow, bool reloadScheme )
 	
 		for (int i = 0; i < GetChildCount(); i++)
 		{
-			GetChild(i)->InvalidateLayout(layoutNow, true);
+			vgui::Panel* panel = GetChild(i);
+			if( panel )
+			{
+				panel->InvalidateLayout(layoutNow, true);
+			}
 		}
 		
 		PerformApplySchemeSettings();
@@ -3473,10 +3772,21 @@ bool Panel::IsCursorOver(void)
 //-----------------------------------------------------------------------------
 void Panel::OnCommand(const char *command)
 {
-	// if noone else caught this, pass along to the listeners
-	// (this is useful for generic dialogs - otherwise, commands just get ignored)
-	KeyValues *msg = new KeyValues( command );
-	PostActionSignal( msg );
+	if ( !Q_stricmp( "performlayout", command ) )
+	{
+		InvalidateLayout();
+	}
+	else if ( !Q_stricmp( "reloadscheme", command ) )
+	{
+		InvalidateLayout( false, true );
+	}
+	else
+	{
+		// if noone else caught this, pass along to the listeners
+		// (this is useful for generic dialogs - otherwise, commands just get ignored)
+		KeyValues *msg = new KeyValues( command );
+		PostActionSignal( msg );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3510,10 +3820,12 @@ void Panel::MarkForDeletion()
 	{
 		ivgui()->MarkPanelForDeletion(GetVPanel());
 	}
-	else
+	// direct delete is never safe because even if ivgui is shutdown we manually do RunFrame()
+	// and we can enter here in a think traverse and then delete from underneath ourselves
+	/*else
 	{
 		delete this;
-	}
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -3529,7 +3841,7 @@ bool Panel::IsLayoutInvalid()
 // Sets the pin corner + resize mode for resizing panels
 //-----------------------------------------------------------------------------
 void Panel::SetAutoResize( PinCorner_e pinCorner, AutoResize_e resizeDir, 
-	int nPinOffsetX, int nPinOffsetY, int nUnpinnedCornerOffsetX, int nUnpinnedCornerOffsetY )
+						   int nPinOffsetX, int nPinOffsetY, int nUnpinnedCornerOffsetX, int nUnpinnedCornerOffsetY )
 {
 	_pinCorner = pinCorner;
 	_autoResizeDirection = resizeDir;
@@ -3591,6 +3903,61 @@ void Panel::GetResizeOffset( int &dx, int &dy )
 	dy = m_nResizeDeltaY;
 }
 
+//-----------------------------------------------------------------------------
+// Tells this panel that it should pin itself to the corner of a specified sibling panel
+//-----------------------------------------------------------------------------
+void Panel::PinToSibling( const char *pszSibling, PinCorner_e pinOurCorner, PinCorner_e pinSibling )
+{
+	_pinCornerToSibling = pinOurCorner;
+	_pinToSiblingCorner = pinSibling;
+
+	if ( _pinToSibling && pszSibling && !Q_strcmp( _pinToSibling, pszSibling ) )
+		return;
+
+	if (_pinToSibling)
+	{
+		delete [] _pinToSibling;
+		_pinToSibling = NULL;
+	}
+
+	if (pszSibling)
+	{
+		int len = Q_strlen(pszSibling) + 1;
+		_pinToSibling = new char[ len ];
+		Q_strncpy( _pinToSibling, pszSibling, len );
+	}
+	m_pinSibling = NULL;
+
+	UpdateSiblingPin();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::UpdateSiblingPin( void )
+{
+	if ( !_pinToSibling )
+	{
+		ipanel()->SetSiblingPin(GetVPanel(), NULL);
+		return;
+	}
+
+	if ( !m_pinSibling.Get() )
+	{
+		// Resolve our sibling now
+		m_pinSibling = FindSiblingByName( _pinToSibling );
+	}
+
+	if ( m_pinSibling.Get() )
+	{
+		ipanel()->SetSiblingPin( GetVPanel(), m_pinSibling->GetVPanel(), _pinCornerToSibling, _pinToSiblingCorner );
+	}
+	else
+	{
+		ipanel()->SetSiblingPin(GetVPanel(), NULL);
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -3602,7 +3969,7 @@ void Panel::ApplySchemeSettings(IScheme *pScheme)
 	SetBgColor(GetSchemeColor("Panel.BgColor", pScheme));
 
 #if defined( VGUI_USEDRAGDROP )
-    m_clrDragFrame = pScheme->GetColor("DragDrop.DragFrame", Color(255, 255, 255, 192));
+	m_clrDragFrame = pScheme->GetColor("DragDrop.DragFrame", Color(255, 255, 255, 192));
 	m_clrDropFrame = pScheme->GetColor("DragDrop.DropFrame", Color(150, 255, 150, 255));
 
 	m_infoFont = pScheme->GetFont( "DefaultVerySmall" );
@@ -3638,6 +4005,8 @@ void Panel::PerformApplySchemeSettings()
 			//_needsSchemeUpdate = false;	
 
 			ApplyOverridableColors();
+
+			UpdateSiblingPin();
 		}
 	}
 }
@@ -3676,7 +4045,7 @@ void Panel::ApplyAutoResizeSettings(KeyValues *inResourceData)
 		}
 #endif
 	}
-				    
+
 	int nPinnedCornerOffsetX = 0, nPinnedCornerOffsetY = 0;
 	int nUnpinnedCornerOffsetX = 0, nUnpinnedCornerOffsetY = 0;
 	switch( pinCorner )
@@ -3715,19 +4084,19 @@ void Panel::ApplyAutoResizeSettings(KeyValues *inResourceData)
 	{
 		if ( inResourceData->FindKey( "PinnedCornerOffsetX" ) )
 		{
-            nPinnedCornerOffsetX = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "PinnedCornerOffsetX" ) );
+			nPinnedCornerOffsetX = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "PinnedCornerOffsetX" ) );
 		}
 		if ( inResourceData->FindKey( "PinnedCornerOffsetY" ) )
 		{
-            nPinnedCornerOffsetY =	scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "PinnedCornerOffsetY" ) );
+			nPinnedCornerOffsetY =	scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "PinnedCornerOffsetY" ) );
 		}
 		if ( inResourceData->FindKey( "UnpinnedCornerOffsetX" ) )
 		{
-            nUnpinnedCornerOffsetX = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "UnpinnedCornerOffsetX" ) );
+			nUnpinnedCornerOffsetX = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "UnpinnedCornerOffsetX" ) );
 		}
 		if ( inResourceData->FindKey( "UnpinnedCornerOffsetY" ) )
 		{
-            nUnpinnedCornerOffsetY = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "UnpinnedCornerOffsetY" ) );
+			nUnpinnedCornerOffsetY = scheme()->GetProportionalScaledValueEx( GetScheme(), inResourceData->GetInt( "UnpinnedCornerOffsetY" ) );
 		}
 	}
 	else
@@ -3746,6 +4115,9 @@ void Panel::ApplyAutoResizeSettings(KeyValues *inResourceData)
 	SetAutoResize( pinCorner, autoResize, nPinnedCornerOffsetX, nPinnedCornerOffsetY, nUnpinnedCornerOffsetX, nUnpinnedCornerOffsetY );
 }
 
+ConVar panel_test_title_safe( "panel_test_title_safe", "0", FCVAR_CHEAT, "Test vgui panel positioning with title safe indentation" );
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Loads panel details from the resource info
@@ -3763,15 +4135,45 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 	InternalApplySettings( GetAnimMap(), inResourceData );
 
 	// clear any alignment flags
-	_buildModeFlags &= ~(BUILDMODE_SAVE_XPOS_RIGHTALIGNED | BUILDMODE_SAVE_XPOS_CENTERALIGNED | BUILDMODE_SAVE_YPOS_BOTTOMALIGNED | BUILDMODE_SAVE_YPOS_CENTERALIGNED | BUILDMODE_SAVE_WIDE_FULL);
+	_buildModeFlags &= ~(BUILDMODE_SAVE_XPOS_RIGHTALIGNED | BUILDMODE_SAVE_XPOS_CENTERALIGNED | BUILDMODE_SAVE_YPOS_BOTTOMALIGNED | BUILDMODE_SAVE_YPOS_CENTERALIGNED | BUILDMODE_SAVE_WIDE_FULL | BUILDMODE_SAVE_TALL_FULL | BUILDMODE_SAVE_PROPORTIONAL_TO_PARENT);
 
 	// get the position
-	int screenWide, screenTall;
-	surface()->GetScreenSize(screenWide, screenTall);
+	int alignScreenWide, alignScreenTall;	// screen dimensions used for pinning in splitscreen
+	surface()->GetScreenSize( alignScreenWide, alignScreenTall );
+
+	int screenWide = alignScreenWide;
+	int screenTall = alignScreenTall;
+
+	// temporarily remove the override to get the fullscreen dimensions
+	if ( surface()->IsScreenSizeOverrideActive() )
+	{
+		surface()->ForceScreenSizeOverride( false, 0, 0 );
+		surface()->GetScreenSize( screenWide, screenTall );
+
+		// restore the override
+		surface()->ForceScreenSizeOverride( true, alignScreenWide, alignScreenTall );
+	}
+
+	int parentX = 0;
+	int parentY = 0;
+
+	// flag to cause windows to get screenWide and screenTall from their parents,
+	// this allows children windows to use fill and right/bottom alignment even
+	// if their parent does not use the full screen.
+	if ( inResourceData->GetInt( "proportionalToParent", 0 ) == 1 )
+	{
+		_buildModeFlags |= BUILDMODE_SAVE_PROPORTIONAL_TO_PARENT;
+		if ( GetParent() != NULL )
+		{
+			GetParent()->GetBounds( parentX, parentY, alignScreenWide, alignScreenTall );
+		}
+	}
+
 	int x, y;
 	GetPos(x, y);
 	const char *xstr = inResourceData->GetString( "xpos", NULL );
 	const char *ystr = inResourceData->GetString( "ypos", NULL );
+
 	if (xstr)
 	{
 		// look for alignment flags
@@ -3788,21 +4190,19 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 
 		// get the value
 		x = atoi(xstr);
-
 		// scale the x up to our screen co-ords
 		if ( IsProportional() )
 		{
 			x = scheme()->GetProportionalScaledValueEx(GetScheme(), x);
 		}
-
 		// now correct the alignment
 		if (_buildModeFlags & BUILDMODE_SAVE_XPOS_RIGHTALIGNED)
 		{
-			x = screenWide - x; 
+			x = alignScreenWide - x;
 		}
 		else if (_buildModeFlags & BUILDMODE_SAVE_XPOS_CENTERALIGNED)
 		{
-			x = (screenWide / 2) + x;
+			x = (alignScreenWide / 2) + x;
 		}
 	}
 
@@ -3828,13 +4228,113 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 		// now correct the alignment
 		if (_buildModeFlags & BUILDMODE_SAVE_YPOS_BOTTOMALIGNED)
 		{
-			y = screenTall - y; 
+			y = alignScreenTall - y;
 		}
 		else if (_buildModeFlags & BUILDMODE_SAVE_YPOS_CENTERALIGNED)
 		{
-			y = (screenTall / 2) + y;
+			y = (alignScreenTall / 2) + y;
 		}
 	}
+
+	bool bUsesTitleSafeArea = false;
+	int titleSafeWide = 0;
+	int titleSafeTall = 0;
+
+	Rect_t excludeEdgeFromTitleSafe;	// if a side is set to != 0, don't title safe relative to that edge
+	excludeEdgeFromTitleSafe.x = 0;
+	excludeEdgeFromTitleSafe.y = 0;
+	excludeEdgeFromTitleSafe.width = 0;
+	excludeEdgeFromTitleSafe.height = 0;
+
+	if ( IsX360() || panel_test_title_safe.GetBool() )
+	{
+		// "usetitlesafe" "1" - required inner 90%
+		// "usetitlesafe" "2" - suggested inner 85%
+
+		int iUseTitleSafeValue = 0;
+		if ( inResourceData->FindKey( "usetitlesafe" ) )
+		{
+			iUseTitleSafeValue = inResourceData->GetInt( "usetitlesafe" );
+			bUsesTitleSafeArea = ( iUseTitleSafeValue > 0 );
+		}
+
+		if( bUsesTitleSafeArea )
+		{
+			titleSafeWide = screenWide * ( iUseTitleSafeValue == 1 ? 0.05f : 0.075f );
+			titleSafeTall = screenTall * ( iUseTitleSafeValue == 1 ? 0.05f : 0.075f );
+
+			// Don't title safe internal boundaries for split screen viewports
+			int splitX = 0;
+			int splitY = 0;
+			vgui::surface()->OffsetAbsPos( splitX, splitY );
+
+			bool bHorizontalSplit = ( alignScreenTall != screenTall );
+			bool bVerticalSplit = ( alignScreenWide != screenWide );
+
+			if ( bHorizontalSplit )
+			{
+				// top or bottom?
+				if ( splitY != parentY )
+				{
+					excludeEdgeFromTitleSafe.y = 1;
+				}
+				else
+				{
+					excludeEdgeFromTitleSafe.height = 1;
+				}
+			}
+
+			if ( bVerticalSplit )
+			{
+				// left or right
+				if ( splitX != parentX )
+				{
+					excludeEdgeFromTitleSafe.x = 1;
+				}
+				else
+				{
+					excludeEdgeFromTitleSafe.width = 1;
+				}
+			}
+
+			if ( _buildModeFlags & BUILDMODE_SAVE_XPOS_RIGHTALIGNED )
+			{
+				if ( !excludeEdgeFromTitleSafe.width )
+				{
+					x -= titleSafeWide;	// right edge
+				}
+			}
+			else if (_buildModeFlags & BUILDMODE_SAVE_XPOS_CENTERALIGNED)
+			{
+			}
+			else if ( !excludeEdgeFromTitleSafe.x )
+			{
+				x += titleSafeWide;	// left edge
+			}
+
+			if ( _buildModeFlags & BUILDMODE_SAVE_YPOS_BOTTOMALIGNED )
+			{
+				if ( !excludeEdgeFromTitleSafe.height )
+				{
+					y -= titleSafeTall;	// bottom edge
+				}
+			}
+			else if (_buildModeFlags & BUILDMODE_SAVE_YPOS_CENTERALIGNED)
+			{
+			}
+			else if ( !excludeEdgeFromTitleSafe.y )
+			{
+				y += titleSafeTall;	// top edge
+			}
+		}
+	}
+	SetNavUp( inResourceData->GetString("navUp") );
+	SetNavDown( inResourceData->GetString("navDown") );
+	SetNavLeft( inResourceData->GetString("navLeft") );
+	SetNavRight( inResourceData->GetString("navRight") );
+	SetNavToRelay( inResourceData->GetString("navToRelay") );
+	SetNavActivate( inResourceData->GetString("navActivate") );
+	SetNavBack( inResourceData->GetString("navBack") );
 
 	SetPos(x, y);
 
@@ -3858,23 +4358,59 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 		wide = atoi(wstr);
 		if ( IsProportional() )
 		{
-			// scale the x and y up to our screen co-ords
+			// scale the width up to our screen co-ords
 			wide = scheme()->GetProportionalScaledValueEx(GetScheme(), wide);
 		}
 		// now correct the alignment
 		if (_buildModeFlags & BUILDMODE_SAVE_WIDE_FULL)
 		{
-			wide = screenWide - wide; 
+			wide = alignScreenWide - wide;
 		}
 	}
 
-	tall = inResourceData->GetInt( "tall", tall );
-	if ( IsProportional() )
+	// allow tall to be use the "fill" option, set to the height of the parent/screen
+	wstr = inResourceData->GetString( "tall", NULL );
+	if ( wstr )
 	{
-		// scale the x and y up to our screen co-ords
-		tall = scheme()->GetProportionalScaledValueEx(GetScheme(), tall);
+		if (wstr[0] == 'f' || wstr[0] == 'F')
+		{
+			_buildModeFlags |= BUILDMODE_SAVE_TALL_FULL;
+			wstr++;
+		}
+		tall = atoi(wstr);
+		if ( IsProportional() )
+		{
+			// scale the height up to our screen co-ords
+			tall = scheme()->GetProportionalScaledValueEx(GetScheme(), tall);
+		}
+		// now correct the alignment
+		if (_buildModeFlags & BUILDMODE_SAVE_TALL_FULL)
+		{
+			tall = alignScreenTall - tall;
+		}
 	}
-	
+
+	if( bUsesTitleSafeArea )
+	{
+		if ( _buildModeFlags & BUILDMODE_SAVE_WIDE_FULL )
+		{
+			if ( !excludeEdgeFromTitleSafe.x )
+				wide -= titleSafeWide;
+
+			if ( !excludeEdgeFromTitleSafe.width )
+				wide -= titleSafeWide;
+		}
+
+		if ( _buildModeFlags & BUILDMODE_SAVE_TALL_FULL )
+		{
+			if ( !excludeEdgeFromTitleSafe.y )
+				tall -= titleSafeTall;
+
+			if ( !excludeEdgeFromTitleSafe.height )
+				tall -= titleSafeTall;
+		}
+	}
+
 	SetSize( wide, tall );
 
 	// NOTE: This has to happen after pos + size is set
@@ -3899,6 +4435,12 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 
 	SetEnabled( inResourceData->GetInt("enabled", true) );
 
+	bool bMouseEnabled = inResourceData->GetInt( "mouseinputenabled", true );
+	if ( !bMouseEnabled )
+	{
+		SetMouseInputEnabled( false );
+	}
+
 	// tab order
 	SetTabPosition(inResourceData->GetInt("tabPosition", 0));
 
@@ -3922,6 +4464,14 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 		SetPaintBorderEnabled( nPaintBorder != 0 );
 	}
 
+	// border?
+	const char *pBorder = inResourceData->GetString( "border", "" );
+	if ( *pBorder )
+	{
+		IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+		SetBorder( pScheme->GetBorder( pBorder ) );
+	}
+
 	// check to see if we have a new name assigned
 	const char *newName = inResourceData->GetString("fieldName", NULL);
 	if ( newName )
@@ -3930,16 +4480,63 @@ void Panel::ApplySettings(KeyValues *inResourceData)
 		SetName(newName);
 	}
 
+	// check to see if we need to render to the frame buffer even if 
+	// stereo mode is trying to render all of the ui to a render target
+	m_bForceStereoRenderToFrameBuffer = inResourceData->GetBool( "ForceStereoRenderToFrameBuffer", false );
+ 
+	//=============================================================================
+	// HPE_BEGIN:
+	// [pfreese] Support for reading rounded corner flags
+	//=============================================================================
+	int roundedCorners = inResourceData->GetInt( "RoundedCorners", -1 );
+	if ( roundedCorners >= 0 )
+	{
+		m_roundedCorners = roundedCorners;
+	}
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
+	const char *pszSiblingName = inResourceData->GetString("pin_to_sibling", NULL);
+	PinCorner_e pinOurCornerToSibling = (PinCorner_e)inResourceData->GetInt( "pin_corner_to_sibling", PIN_TOPLEFT );
+	PinCorner_e pinSiblingCorner = (PinCorner_e)inResourceData->GetInt( "pin_to_sibling_corner", PIN_TOPLEFT );
+	PinToSibling( pszSiblingName, pinOurCornerToSibling, pinSiblingCorner );
+
+
 	// Allow overriding of colors. Used mostly by HUD elements, where scheme color usage is often undesired.
+	IScheme *pScheme = vgui::scheme()->GetIScheme( GetScheme() );
 	for ( int i = 0; i < m_OverridableColorEntries.Count(); i++ )
 	{
 		// Need to ensure the key exists, so we don't overwrite existing colors when it's not set.
 		if ( inResourceData->FindKey( m_OverridableColorEntries[i].m_pszScriptName, false ) )
 		{
-			m_OverridableColorEntries[i].m_colFromScript = inResourceData->GetColor( m_OverridableColorEntries[i].m_pszScriptName );
+			// Get the color as a string - test whether it is an actual color or a reference to a scheme color
+			const char *pColorStr = inResourceData->GetString( m_OverridableColorEntries[i].m_pszScriptName );
+			Color &clrDest = m_OverridableColorEntries[i].m_colFromScript;
+			if ( pColorStr[0] == '.' || isdigit( pColorStr[0] ) )
+			{
+				float r = 0.0f, g = 0.0f, b = 0.0f, a = 0.0f;
+				sscanf( pColorStr, "%f %f %f %f", &r, &g, &b, &a );
+				clrDest[0] = (unsigned char)r;
+				clrDest[1] = (unsigned char)g;
+				clrDest[2] = (unsigned char)b;
+				clrDest[3] = (unsigned char)a;
+			}
+			else
+			{
+				// First character wasn't a digit or a decimal - do a scheme color lookup
+				clrDest = pScheme->GetColor( pColorStr, Color( 255, 255, 255, 255 ) );
+			}
+
 			(*m_OverridableColorEntries[i].m_pColor) = m_OverridableColorEntries[i].m_colFromScript;
 			m_OverridableColorEntries[i].m_bOverridden = true;
 		}
+	}
+
+	const char *pKeyboardInputEnabled = inResourceData->GetString( "keyboardinputenabled", NULL );
+	if ( pKeyboardInputEnabled && pKeyboardInputEnabled[0] )
+	{
+		SetKeyBoardInputEnabled( atoi( pKeyboardInputEnabled ) );
 	}
 }
 
@@ -3953,7 +4550,7 @@ void Panel::GetSettings( KeyValues *outResourceData )
 
 	// name
 	outResourceData->SetString( "fieldName", _panelName );
-	
+
 	// positioning
 	int screenWide, screenTall;
 	surface()->GetScreenSize(screenWide, screenTall);
@@ -4039,6 +4636,20 @@ void Panel::GetSettings( KeyValues *outResourceData )
 	outResourceData->SetInt("AutoResize", GetAutoResize());
 	outResourceData->SetInt("PinCorner", GetPinCorner());
 
+	//=============================================================================
+	// HPE_BEGIN:
+	// [pfreese] Support for writing out rounded corner flags
+	//=============================================================================
+	outResourceData->SetInt("RoundedCorners", m_roundedCorners);
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
+	outResourceData->SetString( "pin_to_sibling", _pinToSibling );
+	outResourceData->SetInt("pin_corner_to_sibling", _pinCornerToSibling );
+	outResourceData->SetInt("pin_to_sibling_corner", _pinToSiblingCorner );
+
+
 	// state
 	outResourceData->SetInt( "visible", IsVisible() );
 	outResourceData->SetInt( "enabled", IsEnabled() );
@@ -4073,7 +4684,7 @@ void Panel::ApplyOverridableColors( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void Panel::SetOverridableColor( Color *pColor, Color &newColor )
+void Panel::SetOverridableColor( Color *pColor, const Color &newColor )
 {
 	for ( int i = 0; i < m_OverridableColorEntries.Count(); i++ )
 	{
@@ -4634,6 +5245,31 @@ void Panel::PostMessage(VPANEL target, KeyValues *message, float delaySeconds)
 	ivgui()->PostMessage(target, message, GetVPanel(), delaySeconds);
 }
 
+void Panel::PostMessageToAllSiblings( KeyValues *msg, float delaySeconds /*= 0.0f*/ )
+{
+	VPANEL parent = GetVParent();
+	if ( parent )
+	{
+		VPANEL vpanel = GetVPanel();
+
+		CUtlVector< VPANEL > &children = ipanel()->GetChildren( parent );
+		int nChildCount = children.Count();
+		for ( int i = 0; i < nChildCount; ++i )
+		{
+			VPANEL sibling = children[ i ];
+			if ( sibling == vpanel )
+				continue;
+
+			if ( sibling )
+			{
+				PostMessage( sibling, msg->MakeCopy(), delaySeconds );
+			}
+		}
+	}
+
+	msg->deleteThis();
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Safe call to post a message to a child by name
 //-----------------------------------------------------------------------------
@@ -4694,6 +5330,14 @@ void Panel::SetSilentMode( bool bSilent )
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: mouse events will be send to handler panel instead of this panel
+//-----------------------------------------------------------------------------
+void Panel::InstallMouseHandler( Panel *pHandler )
+{
+	m_hMouseEventHandler = pHandler;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Prepares the hierarchy panel maps for use (with message maps etc)
 //-----------------------------------------------------------------------------
 void Panel::PreparePanelMap( PanelMap_t *panelMap )
@@ -4748,11 +5392,13 @@ void Panel::PreparePanelMap( PanelMap_t *panelMap )
 //-----------------------------------------------------------------------------
 void Panel::OnDelete()
 {
+#ifdef WIN32
 	Assert( IsX360() || ( IsPC() && _heapchk() == _HEAPOK ) );
-
+#endif
 	delete this;
-
+#ifdef WIN32
 	Assert( IsX360() || ( IsPC() && _heapchk() == _HEAPOK ) );
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -4803,7 +5449,10 @@ VPANEL VPanelHandle::Get()
 {
 	if (m_iPanelID != INVALID_PANEL)
 	{
-		return ivgui()->HandleToPanel(m_iPanelID);
+        if (ivgui())
+        {
+		    return ivgui()->HandleToPanel(m_iPanelID);
+        }
 	}
 	return NULL;
 }
@@ -4827,14 +5476,66 @@ VPANEL VPanelHandle::Set(VPANEL pent)
 //-----------------------------------------------------------------------------
 // Purpose: returns a pointer to the tooltip object associated with the panel
 //-----------------------------------------------------------------------------
-Tooltip *Panel::GetTooltip()
+BaseTooltip *Panel::GetTooltip()
 {
 	if (!m_pTooltips)
 	{
-		m_pTooltips = new Tooltip(this, NULL);
+		m_pTooltips = new TextTooltip(this, NULL);
+		m_bToolTipOverridden = false;
+		
+		if ( IsConsoleStylePanel() )
+		{
+			m_pTooltips->SetEnabled( false );
+		}
 	}
 
 	return m_pTooltips;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::SetTooltip( BaseTooltip *pToolTip, const char *pszText )
+{
+	if ( !m_bToolTipOverridden )
+	{
+		// Remove the one we made, we're being overridden.
+		delete m_pTooltips;
+	}
+
+	m_pTooltips = pToolTip;
+	m_bToolTipOverridden = true;
+
+	if ( _tooltipText )
+	{
+		delete [] _tooltipText;
+		_tooltipText = NULL;
+	}
+
+	if ( pszText )
+	{
+		int len = Q_strlen(pszText) + 1;
+		_tooltipText = new char[ len ];
+		Q_strncpy( _tooltipText, pszText, len );
+	}
+}
+
+//-----------------------------------------------------------------------------
+const char *Panel::GetEffectiveTooltipText() const
+{
+	if ( _tooltipText )
+	{
+		return _tooltipText;
+	}
+	if ( m_pTooltips )
+	{
+		const char *result = m_pTooltips->GetText();
+		if ( result )
+		{
+			return result;
+		}
+	}
+	return "";
 }
 
 //-----------------------------------------------------------------------------
@@ -4888,9 +5589,9 @@ void Panel::SetKeyBoardInputEnabled( bool state )
 void Panel::SetMouseInputEnabled( bool state )
 {
 	ipanel()->SetMouseInputEnabled( GetVPanel(), state );
-/*	for(int i=0;i<GetChildCount();i++)
+	/*	for(int i=0;i<GetChildCount();i++)
 	{
-		GetChild(i)->SetMouseInput(state);
+	GetChild(i)->SetMouseInput(state);
 	}*/
 	vgui::surface()->CalculateMouseVisible();
 }
@@ -5001,6 +5702,79 @@ public:
 		int i = atoi( entry->defaultvalue() );
 		i = scheme()->GetProportionalScaledValueEx( panel->GetScheme(), i );
 		*(int *)data = i;
+	}
+};
+
+class CProportionalIntWithScreenspacePropertyX : public vgui::IPanelAnimationPropertyConverter
+{
+public:
+	int	ExtractValue( Panel *panel, const char *pszKey )
+	{
+		int iValue = 0;
+		bool bRightAlign = false;
+		bool bCenterAlign = false;
+		if (pszKey[0] == 'r' || pszKey[0] == 'R')
+		{
+			bRightAlign = true;
+			pszKey++;
+		}
+		else if (pszKey[0] == 'c' || pszKey[0] == 'C')
+		{
+			bCenterAlign = true;
+			pszKey++;
+		}
+
+		// get the value
+		iValue = atoi(pszKey);
+		iValue = scheme()->GetProportionalScaledValueEx(panel->GetScheme(), iValue);
+
+		int screenSize = GetScreenSize();
+		// now correct the alignment
+		if ( bRightAlign )
+		{
+			iValue = screenSize - iValue; 
+		}
+		else if ( bCenterAlign )
+		{
+			iValue = (screenSize / 2) + iValue;
+		}
+
+		return iValue;
+	}
+
+	virtual int GetScreenSize( void )
+	{
+		int screenWide, screenTall;
+		surface()->GetScreenSize(screenWide, screenTall);
+		return screenWide;
+	}
+
+	virtual void GetData( Panel *panel, KeyValues *kv, PanelAnimationMapEntry *entry )
+	{
+		// Won't work with this, don't use it.
+		Assert(0);
+	}
+
+	virtual void SetData( Panel *panel, KeyValues *kv, PanelAnimationMapEntry *entry )
+	{
+		void *data = ( void * )( (*entry->m_pfnLookup)( panel ) );
+		*(int *)data = ExtractValue( panel, kv->GetString( entry->name() ) );
+	}
+	virtual void InitFromDefault( Panel *panel, PanelAnimationMapEntry *entry )
+	{
+		void *data = ( void * )( (*entry->m_pfnLookup)( panel ) );
+		*(int *)data = ExtractValue( panel, entry->defaultvalue() );
+	}
+};
+
+class CProportionalIntWithScreenspacePropertyY : public CProportionalIntWithScreenspacePropertyX
+{
+public:
+	virtual int GetScreenSize( void )
+	{
+		int screenWide, screenTall;
+		surface()->GetScreenSize(screenWide, screenTall);
+		return screenTall;
 	}
 };
 
@@ -5201,11 +5975,15 @@ static CFloatProperty floatconverter;
 static CProportionalFloatProperty p_floatconverter;
 static CIntProperty intconverter;
 static CProportionalIntProperty p_intconverter;
+static CProportionalIntWithScreenspacePropertyX p_screenspace_intconverter_X;
+static CProportionalIntWithScreenspacePropertyY p_screenspace_intconverter_Y;
 static CColorProperty colorconverter;
 static CBoolProperty boolconverter;
 static CStringProperty stringconverter;
 static CHFontProperty fontconverter;
 static CTextureIdProperty textureidconverter;
+//static CProportionalXPosProperty xposconverter;
+//static CProportionalYPosProperty yposconverter;
 
 static CUtlDict< IPanelAnimationPropertyConverter *, int > g_AnimationPropertyConverters;
 
@@ -5244,7 +6022,7 @@ void Panel::InitPropertyConverters( void )
 	AddPropertyConverter( "float", &floatconverter );
 	AddPropertyConverter( "int", &intconverter );
 	AddPropertyConverter( "Color", &colorconverter );
-//	AddPropertyConverter( "vgui::Color", &colorconverter );
+	//AddPropertyConverter( "vgui::Color", &colorconverter );
 	AddPropertyConverter( "bool", &boolconverter );
 	AddPropertyConverter( "char", &stringconverter );
 	AddPropertyConverter( "string", &stringconverter );
@@ -5254,6 +6032,9 @@ void Panel::InitPropertyConverters( void )
 	// This is an aliased type for proportional float
 	AddPropertyConverter( "proportional_float", &p_floatconverter );
 	AddPropertyConverter( "proportional_int", &p_intconverter );
+
+	AddPropertyConverter( "proportional_xpos", &p_screenspace_intconverter_X );
+	AddPropertyConverter( "proportional_ypos", &p_screenspace_intconverter_Y );
 
 	AddPropertyConverter( "textureid", &textureidconverter );
 }
@@ -5440,14 +6221,59 @@ void Panel::DrawBox(int x, int y, int wide, int tall, Color color, float normali
 	surface()->DrawFilledRect(x + cornerWide, y + tall - cornerTall, x + wide - cornerWide, y + tall);
 
 	// draw the corners
-	surface()->DrawSetTexture(m_nBgTextureId1);
-	surface()->DrawTexturedRect(x, y, x + cornerWide, y + cornerTall);
-	surface()->DrawSetTexture(m_nBgTextureId2);
-	surface()->DrawTexturedRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
-	surface()->DrawSetTexture(m_nBgTextureId3);
-	surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
-	surface()->DrawSetTexture(m_nBgTextureId4);
-	surface()->DrawTexturedRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [tj] We now check each individual corner and decide whether to draw it straight or rounded
+	//=============================================================================
+	//TOP-LEFT
+	if (ShouldDrawTopLeftCornerRounded())
+	{
+		surface()->DrawSetTexture(m_nBgTextureId1);
+		surface()->DrawTexturedRect(x, y, x + cornerWide, y + cornerTall);
+	}
+	else
+	{
+		surface()->DrawFilledRect(x, y, x + cornerWide, y + cornerTall);
+	}
+
+
+	//TOP-RIGHT
+	if (ShouldDrawTopRightCornerRounded())
+	{
+		surface()->DrawSetTexture(m_nBgTextureId2);
+		surface()->DrawTexturedRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
+	}
+	else
+	{
+		surface()->DrawFilledRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
+	}
+
+	//BOTTOM-LEFT
+	if (ShouldDrawBottomLeftCornerRounded())
+	{
+		surface()->DrawSetTexture(m_nBgTextureId4);
+		surface()->DrawTexturedRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+	}
+	else
+	{
+		surface()->DrawFilledRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+	}
+
+
+	//BOTTOM-RIGHT
+	if (ShouldDrawBottomRightCornerRounded())
+	{
+		surface()->DrawSetTexture(m_nBgTextureId3);
+		surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
+	}
+	else
+	{
+		surface()->DrawFilledRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
+	}
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
 }
 
 void Panel::DrawBoxFade(int x, int y, int wide, int tall, Color color, float normalizedAlpha, unsigned int alpha0, unsigned int alpha1, bool bHorizontal, bool hollow /*=false*/ )
@@ -5556,6 +6382,46 @@ void Panel::DrawHollowBox(int x, int y, int wide, int tall, Color color, float n
 	DrawBox( x, y, wide, tall, color, normalizedAlpha, true );
 }
 
+//=============================================================================
+// HPE_BEGIN:
+// [menglish] Draws a hollow box similar to the already existing draw hollow box function, but takes the indents as params
+//=============================================================================
+
+void Panel::DrawHollowBox( int x, int y, int wide, int tall, Color color, float normalizedAlpha, int cornerWide, int cornerTall )
+{
+	if ( m_nBgTextureId1 == -1 ||
+		m_nBgTextureId2 == -1 ||
+		m_nBgTextureId3 == -1 ||
+		m_nBgTextureId4 == -1 )
+	{
+		return;
+	}
+
+	color[3] *= normalizedAlpha;
+
+	// draw the background in the areas not occupied by the corners
+	// draw it in three horizontal strips
+	surface()->DrawSetColor(color);
+	surface()->DrawFilledRect(x + cornerWide, y, x + wide - cornerWide,	y + cornerTall);
+	surface()->DrawFilledRect(x, y + cornerTall, x + cornerWide, y + tall - cornerTall);
+	surface()->DrawFilledRect(x + wide - cornerWide, y + cornerTall, x + wide, y + tall - cornerTall);
+	surface()->DrawFilledRect(x + cornerWide, y + tall - cornerTall, x + wide - cornerWide, y + tall);
+
+	// draw the corners
+	surface()->DrawSetTexture(m_nBgTextureId1);
+	surface()->DrawTexturedRect(x, y, x + cornerWide, y + cornerTall);
+	surface()->DrawSetTexture(m_nBgTextureId2);
+	surface()->DrawTexturedRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
+	surface()->DrawSetTexture(m_nBgTextureId3);
+	surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
+	surface()->DrawSetTexture(m_nBgTextureId4);
+	surface()->DrawTexturedRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+}
+
+//=============================================================================
+// HPE_END
+//=============================================================================
+
 //-----------------------------------------------------------------------------
 // Purpose: draws a selection box
 //-----------------------------------------------------------------------------
@@ -5599,6 +6465,13 @@ bool Panel::IsDragEnabled() const
 	return m_pDragDrop->m_bDragEnabled;
 #endif
 	return false;
+}
+
+void Panel::SetShowDragHelper( bool enabled )
+{
+#if defined( VGUI_USEDRAGDROP )
+	m_pDragDrop->m_bShowDragHelper = enabled;
+#endif
 }
 
 // Use this to prevent chaining up from a parent which can mess with mouse functionality if you don't want to chain up from a child panel to the best
@@ -5800,7 +6673,7 @@ void Panel::OnFinishDragging( bool mousereleased, MouseCode code, bool abort /*=
 		Q_strncpy( cmd, "default", sizeof( cmd ) );
 
 		if ( mousereleased &&
-			m_pDragDrop->m_hCurrentDrop != NULL &&
+			m_pDragDrop->m_hCurrentDrop != 0 &&
 			m_pDragDrop->m_hDropContextMenu.Get() )
 		{
 			Menu *menu = m_pDragDrop->m_hDropContextMenu;
@@ -5996,14 +6869,14 @@ void Panel::OnContinueDragging()
 		}
 	}
 
-	if ( !s_DragDropHelper.Get() )
+	if ( !s_DragDropHelper.Get() && m_pDragDrop->m_bShowDragHelper )
 	{
 		s_DragDropHelper = new CDragDropHelperPanel();
 		s_DragDropHelper->SetKeyBoardInputEnabled( false );
 		s_DragDropHelper->SetMouseInputEnabled( false );
+		Assert( s_DragDropHelper.Get() );
 	}
 
-	Assert( s_DragDropHelper.Get() );
 	if ( !s_DragDropHelper.Get() )
 		return;
 
@@ -6059,7 +6932,7 @@ void Panel::OnContinueDragging()
 		}
 	}
 
-	if ( m_pDragDrop->m_hCurrentDrop != NULL &&
+	if ( m_pDragDrop->m_hCurrentDrop != 0 &&
 		m_pDragDrop->m_hDropContextMenu.Get() )
 	{
 		Menu *menu = m_pDragDrop->m_hDropContextMenu;
@@ -6321,10 +7194,11 @@ void Panel::FindDropTargetPanel_R( CUtlVector< VPANEL >& panelList, int x, int y
 		panelList.AddToTail( check );
 	}
 
-	int childcount = ipanel()->GetChildCount( check );
-	for ( int i = 0; i < childcount; i++ )
+	CUtlVector< VPANEL > &children = ipanel()->GetChildren( check );
+	int childCount = children.Count();
+	for ( int i = 0; i < childCount; i++ )
 	{
-		VPANEL child = ipanel()->GetChild( check, i );
+		VPANEL child = children[ i ];
 		FindDropTargetPanel_R( panelList, x, y, child );
 	}
 #endif
@@ -6357,9 +7231,6 @@ Panel *Panel::FindDropTargetPanel()
 		for (int i = c - 1; i >= 0 && hits.Count() == 0; i--)
 		{
 			VPANEL popup = surface()->GetPopup(i);
-			if ( !popup )
-				continue;
-
 			if ( popup == embedded )
 				continue;
 
@@ -6426,7 +7297,7 @@ void Panel::OnDraggablePanelPaint()
 		surface()->DrawSetTextPos( x + 5, y + 2 );
 
 		wchar_t sz[ 64 ];
-		_snwprintf( sz, 64, L"[ %i ]", m_pDragDrop->m_DragPanels.Count() );
+		V_swprintf_safe( sz, L"[ %i ]", m_pDragDrop->m_DragPanels.Count() );
 
 		surface()->DrawPrintText( sz, wcslen( sz ) );
 	}
@@ -6593,7 +7464,7 @@ struct srect_t
 };
 
 // Draws a filled rect of specified bounds, but omits the bounds of the skip panel from those bounds
-void Panel::FillRectSkippingPanel( Color& clr, int x, int y, int w, int h, Panel *skipPanel )
+void Panel::FillRectSkippingPanel( const Color &clr, int x, int y, int w, int h, Panel *skipPanel )
 {
 	int sx = 0, sy = 0, sw, sh;
 	skipPanel->GetSize( sw, sh );
@@ -6670,6 +7541,617 @@ HPanel Panel::ToHandle() const
 {
 	return ivgui()->PanelToHandle( _vpanel );
 }
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::NavigateUp()
+{
+	Panel *target = GetNavUp();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_UP;
+		target->NavigateTo();
+	}
+
+	return target;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::NavigateDown()
+{
+	Panel *target = GetNavDown();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_DOWN;
+		target->NavigateTo();
+	}
+
+	return target;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::NavigateLeft()
+{
+	Panel *target = GetNavLeft();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_LEFT;
+		target->NavigateTo();
+	}
+	return target;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::NavigateRight()
+{
+	Panel *target = GetNavRight();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_RIGHT;
+		target->NavigateTo();
+	}
+	return target;
+}
+
+Panel* Panel::NavigateActivate()
+{
+	Panel *target = GetNavActivate();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_NONE;
+		target->NavigateTo();
+	}
+	return target;
+}
+
+Panel* Panel::NavigateBack()
+{
+	Panel *target = GetNavBack();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_NONE;
+		target->NavigateTo();
+	}
+	return target;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::NavigateTo()
+{
+	if ( IsX360() )
+	{
+		RequestFocus( 0 );
+	}
+
+	CallParentFunction( new KeyValues( "OnNavigateTo", "panelName", GetName() ) );
+
+	Panel *target = GetNavToRelay();
+	if ( target )
+	{
+		NavigateFrom();
+		target->m_LastNavDirection = ND_NONE;
+		NavigateToChild( target );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::NavigateFrom()
+{
+	for ( int i = 0; i < GetChildCount(); ++i )
+	{
+		Panel* currentNav = GetChild(i);
+		if ( currentNav != 0 )
+		{
+			currentNav->NavigateFrom();
+		}
+	}
+
+	CallParentFunction( new KeyValues( "OnNavigateFrom", "panelName", GetName() ) );
+
+	if ( m_pTooltips )
+	{
+		m_pTooltips->HideTooltip();
+	}
+
+	m_LastNavDirection = ND_NONE;
+}
+
+void Panel::NavigateToChild( Panel *pNavigateTo )
+{
+	for( int i = 0; i != GetChildCount(); ++i )
+	{
+		vgui::Panel *pChild = GetChild(i);
+		if( pChild )
+			pChild->NavigateFrom();
+	}
+	pNavigateTo->NavigateTo();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::SetNavUp( Panel* navUp )
+{
+	Panel* lastNav = m_NavUp;
+	m_NavUp = navUp;
+
+	if( navUp )
+		m_sNavUpName = navUp->GetName();
+	else
+		m_sNavUpName.Clear();
+
+	return lastNav;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::SetNavDown( Panel* navDown )
+{
+	Panel* lastNav = m_NavDown;
+	m_NavDown = navDown;
+
+	if( navDown )
+		m_sNavDownName = navDown->GetName();
+	else
+		m_sNavDownName.Clear();
+
+	return lastNav;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::SetNavLeft( Panel* navLeft )
+{
+	Panel* lastNav = m_NavLeft;
+	m_NavLeft = navLeft;
+
+	if( navLeft )
+		m_sNavLeftName = navLeft->GetName();
+	else
+		m_sNavLeftName.Clear();
+
+	return lastNav;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel* Panel::SetNavRight( Panel* navRight )
+{
+	Panel* lastNav = m_NavRight;
+	m_NavRight = navRight;
+
+	if( navRight )
+		m_sNavRightName = navRight->GetName();
+	else
+		m_sNavRightName.Clear();
+
+	return lastNav;
+}
+
+Panel* Panel::SetNavToRelay( Panel* navToRelay )
+{
+	Panel* lastNav = m_NavToRelay;
+	m_NavToRelay = navToRelay;
+
+	return lastNav;
+}
+
+Panel* Panel::SetNavActivate( Panel* navActivate )
+{
+	Panel* lastNav = m_NavActivate;
+	m_NavActivate = navActivate;
+
+	return lastNav;
+}
+
+Panel* Panel::SetNavBack( Panel* navBack )
+{
+	Panel* lastNav = m_NavBack;
+	m_NavBack = navBack;
+
+	return lastNav;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+Panel::NAV_DIRECTION Panel::GetLastNavDirection()
+{
+	return m_LastNavDirection;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::OnNavigateTo( const char* panelName )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::OnNavigateFrom( const char* panelName )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::SetNavUp( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavUp = NULL;
+		m_sNavUpName = controlName;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::SetNavDown( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavDown = NULL;
+		m_sNavDownName = controlName;
+	}
+}
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::SetNavLeft( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavLeft = NULL;
+		m_sNavLeftName = controlName;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void Panel::SetNavRight( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavRight = NULL;
+		m_sNavRightName = controlName;
+	}
+}
+
+void Panel::SetNavToRelay( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavToRelay = NULL;
+		m_sNavToRelayName = controlName;
+	}
+}
+
+void Panel::SetNavActivate( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavActivate = NULL;
+		m_sNavActivateName = controlName;
+	}
+}
+
+void Panel::SetNavBack( const char* controlName )
+{
+	if ( controlName && 0 < Q_strlen( controlName ) && GetParent() != 0 )
+	{
+		m_NavBack = NULL;
+		m_sNavBackName = controlName;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+vgui::Panel* Panel::GetNavUp( Panel *first )
+{
+	if ( !m_NavUp && m_sNavUpName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavUpName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel *foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavUp = foundPanel;
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavUp;
+	if( m_NavUp && m_NavUp != first && !m_NavUp->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavUp( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavDown( Panel *first )
+{
+	if ( !m_NavDown && m_sNavDownName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavDownName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel* foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavDown = foundPanel->GetPanel();
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavDown;
+	if( m_NavDown && m_NavDown != first && !m_NavDown->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavDown( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavLeft( Panel *first )
+{
+	if ( !m_NavLeft && m_sNavLeftName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavLeftName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel* foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavLeft = foundPanel->GetPanel();
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavLeft;
+	if( m_NavLeft && m_NavLeft != first && !m_NavLeft->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavLeft( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavRight( Panel *first )
+{
+	if ( !m_NavRight && m_sNavRightName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavRightName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel* foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavRight = foundPanel->GetPanel();
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavRight;
+	if( m_NavRight && m_NavRight != first && !m_NavRight->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavRight( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavToRelay( Panel *first )
+{
+	if ( !m_NavToRelay && m_sNavToRelayName.Length() > 0 )
+	{
+		Panel *pParent = this;
+		const char *pName = m_sNavToRelayName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel* foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavToRelay = foundPanel->GetPanel();
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavToRelay;
+	if ( m_NavToRelay && m_NavToRelay != first && !m_NavToRelay->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavToRelay( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavActivate( Panel *first )
+{
+	if ( !m_NavActivate && m_sNavActivateName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavActivateName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel* foundPanel = pParent->FindChildByName( pName, true );
+		if ( foundPanel != 0 )
+		{
+			m_NavActivate = foundPanel->GetPanel();
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavActivate;
+	if ( m_NavActivate && m_NavActivate != first && !m_NavActivate->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavActivate( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavBack( Panel *first )
+{
+	if ( !m_NavBack && m_sNavBackName.Length() > 0 )
+	{
+		Panel *pParent = GetParent();
+		const char *pName = m_sNavBackName.String();
+		while ( pParent && pName[ 0 ] == '<' )
+		{
+			pParent = pParent->GetParent();
+			pName++;
+		}
+
+		if ( !pParent )
+		{
+			return NULL;
+		}
+
+		Panel *foundPanel = pParent->FindChildByName( pName );
+		if ( foundPanel )
+		{
+			m_NavBack = foundPanel;
+		}
+	}
+
+	vgui::Panel* nextPanel = m_NavBack;
+	if ( m_NavBack && m_NavBack != first && !m_NavBack->IsVisible() )
+	{
+		Panel *firstPanel = first == NULL ? this : first;
+		nextPanel = nextPanel->GetNavBack( firstPanel );
+	}
+
+	return nextPanel;
+}
+
+vgui::Panel* Panel::GetNavUpPanel()
+{
+	return m_NavUp;
+}
+
+vgui::Panel* Panel::GetNavDownPanel()
+{
+	return m_NavDown;
+}
+
+vgui::Panel* Panel::GetNavLeftPanel()
+{
+	return m_NavLeft;
+}
+
+vgui::Panel* Panel::GetNavRightPanel()
+{
+	return m_NavRight;
+}
+
+vgui::Panel* Panel::GetNavToRelayPanel()
+{
+	return m_NavToRelay;
+}
+
+vgui::Panel* Panel::GetNavActivatePanel()
+{
+	return m_NavActivate;
+}
+
+vgui::Panel* Panel::GetNavBackPanel()
+{
+	return m_NavBack;
+}
+
+void Panel::SetConsoleStylePanel( bool bConsoleStyle )
+{
+	m_bIsConsoleStylePanel = bConsoleStyle;
+}
+
+bool Panel::IsConsoleStylePanel() const
+{
+	return m_bIsConsoleStylePanel;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Utility class for handling message map allocation
@@ -6677,7 +8159,7 @@ HPanel Panel::ToHandle() const
 class CPanelMessageMapDictionary
 {
 public:
-	CPanelMessageMapDictionary() : m_PanelMessageMapPool( sizeof(PanelMessageMap), 32, CMemoryPool::GROW_FAST, "CPanelMessageMapDictionary::m_PanelMessageMapPool" )
+	CPanelMessageMapDictionary() : m_PanelMessageMapPool( sizeof(PanelMessageMap), 32, CUtlMemoryPool::GROW_FAST, "CPanelMessageMapDictionary::m_PanelMessageMapPool" )
 	{
 		m_MessageMaps.RemoveAll();
 	}
@@ -6694,7 +8176,7 @@ private:
 	char const *StripNamespace( char const *className );
 	
 	CUtlDict< PanelMessageMapDictionaryEntry, int > m_MessageMaps;
-	CMemoryPool m_PanelMessageMapPool;
+	CUtlMemoryPool m_PanelMessageMapPool;
 };
 
 
@@ -6746,7 +8228,7 @@ PanelMessageMap *CPanelMessageMapDictionary::FindOrAddPanelMessageMap( char cons
 class CPanelKeyBindingMapDictionary
 {
 public:
-	CPanelKeyBindingMapDictionary() : m_PanelKeyBindingMapPool( sizeof(PanelKeyBindingMap), 32, CMemoryPool::GROW_FAST, "CPanelKeyBindingMapDictionary::m_PanelKeyBindingMapPool" )
+	CPanelKeyBindingMapDictionary() : m_PanelKeyBindingMapPool( sizeof(PanelKeyBindingMap), 32, CUtlMemoryPool::GROW_FAST, "CPanelKeyBindingMapDictionary::m_PanelKeyBindingMapPool" )
 	{
 		m_MessageMaps.RemoveAll();
 	}
@@ -6763,7 +8245,7 @@ private:
 	char const *StripNamespace( char const *className );
 	
 	CUtlDict< PanelKeyBindingMapDictionaryEntry, int > m_MessageMaps;
-	CMemoryPool m_PanelKeyBindingMapPool;
+	CUtlMemoryPool m_PanelKeyBindingMapPool;
 };
 
 
@@ -6826,43 +8308,144 @@ CPanelMessageMapDictionary& GetPanelMessageMapDictionary()
 namespace vgui
 {
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-PanelMessageMap *FindOrAddPanelMessageMap( char const *className )
-{
-	return GetPanelMessageMapDictionary().FindOrAddPanelMessageMap( className );
-}
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	PanelMessageMap *FindOrAddPanelMessageMap( char const *className )
+	{
+		return GetPanelMessageMapDictionary().FindOrAddPanelMessageMap( className );
+	}
 
-//-----------------------------------------------------------------------------
-// Purpose: Find but don't add mapping
-//-----------------------------------------------------------------------------
-PanelMessageMap *FindPanelMessageMap( char const *className )
-{
-	return GetPanelMessageMapDictionary().FindPanelMessageMap( className );
-}
+	//-----------------------------------------------------------------------------
+	// Purpose: Find but don't add mapping
+	//-----------------------------------------------------------------------------
+	PanelMessageMap *FindPanelMessageMap( char const *className )
+	{
+		return GetPanelMessageMapDictionary().FindPanelMessageMap( className );
+	}
 
 #if defined( VGUI_USEKEYBINDINGMAPS )
-CPanelKeyBindingMapDictionary& GetPanelKeyBindingMapDictionary()
+	CPanelKeyBindingMapDictionary& GetPanelKeyBindingMapDictionary()
+	{
+		static CPanelKeyBindingMapDictionary dictionary;
+		return dictionary;
+	}
+	//-----------------------------------------------------------------------------
+	// Purpose: 
+	//-----------------------------------------------------------------------------
+	PanelKeyBindingMap *FindOrAddPanelKeyBindingMap( char const *className )
+	{
+		return GetPanelKeyBindingMapDictionary().FindOrAddPanelKeyBindingMap( className );
+	}
+
+	//-----------------------------------------------------------------------------
+	// Purpose: Find but don't add mapping
+	//-----------------------------------------------------------------------------
+	PanelKeyBindingMap *FindPanelKeyBindingMap( char const *className )
+	{
+		return GetPanelKeyBindingMapDictionary().FindPanelKeyBindingMap( className );
+	}
+#endif // VGUI_USEKEYBINDINGMAPS
+
+SortedPanel_t::SortedPanel_t( Panel *panel )
 {
-	static CPanelKeyBindingMapDictionary dictionary;
-	return dictionary;
-}
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-PanelKeyBindingMap *FindOrAddPanelKeyBindingMap( char const *className )
-{
-	return GetPanelKeyBindingMapDictionary().FindOrAddPanelKeyBindingMap( className );
+	pPanel = panel; pButton = dynamic_cast< Button* >( panel );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Find but don't add mapping
-//-----------------------------------------------------------------------------
-PanelKeyBindingMap *FindPanelKeyBindingMap( char const *className )
+
+void VguiPanelGetSortedChildPanelList( Panel *pParentPanel, void *pSortedPanels )
 {
-	return GetPanelKeyBindingMapDictionary().FindPanelKeyBindingMap( className );
+	CUtlSortVector< SortedPanel_t, CSortedPanelYLess > *pList = reinterpret_cast< CUtlSortVector< SortedPanel_t, CSortedPanelYLess >* >( pSortedPanels );
+
+	for ( int i = 0; i < pParentPanel->GetChildCount(); i++ )
+	{
+		// perform auto-layout on the child panel
+		Panel *pPanel = pParentPanel->GetChild( i );
+		if ( !pPanel || !pPanel->IsVisible() )
+			continue;
+
+		pList->Insert( SortedPanel_t( static_cast< Panel* >( pPanel ) ) );
+	}
 }
-#endif // VGUI_USEKEYBINDINGMAPS
+
+void VguiPanelGetSortedChildButtonList( Panel *pParentPanel, void *pSortedPanels, char *pchFilter /*= NULL*/, int nFilterType /*= 0*/ )
+{
+	CUtlSortVector< SortedPanel_t, CSortedPanelYLess > *pList = reinterpret_cast< CUtlSortVector< SortedPanel_t, CSortedPanelYLess >* >( pSortedPanels );
+
+	for ( int i = 0; i < pParentPanel->GetChildCount(); i++ )
+	{
+		// perform auto-layout on the child panel
+		Button *pPanel = dynamic_cast< Button* >( pParentPanel->GetChild( i ) );
+		if ( !pPanel || !pPanel->IsVisible() )
+			continue;
+
+		if ( pchFilter && pchFilter[ 0 ] != '\0' )
+		{
+			char szBuff[ 128 ];
+			pPanel->GetText( szBuff, sizeof( szBuff ) );
+
+			// Prefix
+			if ( nFilterType == 0 )
+			{
+				if ( !StringHasPrefix( szBuff, pchFilter ) )
+				{
+					continue;
+				}
+			}
+			// Substring
+			else if ( nFilterType == 1 )
+			{
+				if ( V_strstr( szBuff, pchFilter ) == NULL )
+				{
+					continue;
+				}
+			}
+		}
+
+		pList->Insert( SortedPanel_t( pPanel ) );
+	}
+}
+
+int VguiPanelNavigateSortedChildButtonList( void *pSortedPanels, int nDir )
+{
+	CUtlSortVector< SortedPanel_t, CSortedPanelYLess > *pList = reinterpret_cast< CUtlSortVector< SortedPanel_t, CSortedPanelYLess >* >( pSortedPanels );
+
+	if ( pList->Count() <= 0 )
+		return -1;
+
+	if ( nDir != 0 )
+	{
+		int nArmed = -1;
+		for ( int i = 0; i < pList->Count(); i++ )
+		{
+			if ( (*pList)[ i ].pButton->IsArmed() )
+			{
+				nArmed = i;
+				break;
+			}
+		}
+
+		if ( nArmed == -1 )
+		{
+			(*pList)[ 0 ].pButton->SetArmed( true );
+			return 0;
+		}
+		else
+		{
+			int nNewArmed = clamp( nArmed + nDir, 0, pList->Count() - 1 );
+			if ( nNewArmed != nArmed )
+			{
+				(*pList)[ nArmed ].pButton->SetArmed( false );
+			}
+
+			(*pList)[ nNewArmed ].pButton->RequestFocus();
+			(*pList)[ nNewArmed ].pButton->SetArmed( true );
+
+			return nNewArmed;
+		}
+	}
+
+	return -1;
+}
 
 }

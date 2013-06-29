@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #endif
 
 #include "ep1_gamestats.h"
-#include "tier1/UtlString.h"
+#include "tier1/utlstring.h"
 
 // EP2 Game Stats
 enum Ep2GameStatsVersions_t

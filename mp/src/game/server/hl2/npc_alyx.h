@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base combat character with no AI
 //
@@ -26,7 +26,7 @@ public:
 	Class_T Classify ( void );
 	void	HandleAnimEvent( animevent_t *pEvent );
 	Activity NPC_TranslateActivity ( Activity activity );
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	bool	ShouldLookForBetterWeapon() { return false; }
 	bool	IsReadinessCapable() { return false; }
 	void	DeathSound( const CTakeDamageInfo &info );

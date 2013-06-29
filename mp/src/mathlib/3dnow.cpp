@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 3DNow Math primitives.
 //
@@ -15,6 +15,12 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#if !defined(COMPILER_MSVC64) && !defined(LINUX)
+// Implement for 64-bit Windows if needed.
+// Clang hits "fatal error: error in backend:" and other errors when trying
+// to compile the inline assembly below. 3DNow support is highly unlikely to
+// be useful/used, so it's not worth spending time on fixing.
 
 #pragma warning(disable:4244)   // "conversion from 'const int' to 'float', possible loss of data"
 #pragma warning(disable:4730)	// "mixing _m64 and floating point expressions may result in incorrect code"
@@ -37,7 +43,7 @@ float _3DNow_Sqrt(float x)
 		movd		root, mm0
 		femms
 	}
-#elif _LINUX
+#elif LINUX
  	__asm __volatile__( "femms" );
  	__asm __volatile__
 	(
@@ -96,7 +102,7 @@ float FASTCALL _3DNow_VectorNormalize (Vector& vec)
 			movd		radius, mm1
 			femms
 		}
-#elif _LINUX	
+#elif LINUX	
 		long long a,c;
     		int b,d;
     		memcpy(&a,&vec[0],sizeof(a));
@@ -160,7 +166,7 @@ float _3DNow_InvRSquared(const float* v)
 		movd		[r2], mm0
 		femms
 	}
-#elif _LINUX
+#elif LINUX
 		long long a,c;
     		int b;
     		memcpy(&a,&v[0],sizeof(a));
@@ -187,3 +193,5 @@ float _3DNow_InvRSquared(const float* v)
 
 	return r2;
 }
+
+#endif // COMPILER_MSVC64 

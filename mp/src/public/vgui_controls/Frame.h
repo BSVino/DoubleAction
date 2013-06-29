@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,7 +32,7 @@ class Frame : public EditablePanel
 	DECLARE_CLASS_SIMPLE( Frame, EditablePanel );
 
 public:
-	Frame(Panel *parent, const char *panelName, bool showTaskbarIcon = true);
+	Frame(Panel *parent, const char *panelName, bool showTaskbarIcon = true, bool bPopup = true );
 	virtual ~Frame();
 
 	// Set the text in the title bar.  Set surfaceTitle=true if you want this to be the taskbar text as well.
@@ -117,7 +117,7 @@ public:
 	*/
 
 	// Load the control settings 
-	virtual void LoadControlSettings( const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL );
+	virtual void LoadControlSettings( const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL, KeyValues *pConditions = NULL );
 
 	void SetChainKeysToParent( bool state );
 	bool CanChainKeysToParent() const;
@@ -129,6 +129,9 @@ public:
 
 	// Disables the fade-in/out-effect even if configured in the scheme settings
 	void DisableFadeEffect( void );
+
+	// Temporarily enables or disables the fade effect rather than zeroing the fade times as done in DisableFadeEffect
+	void SetFadeEffectDisableOverride( bool disabled );
 
 protected:
 	// Respond to mouse presses
@@ -197,53 +200,59 @@ private:
 	void FinishClose();
 	void OnFrameFocusChanged(bool bHasFocus);
 
-	Color _titleBarBgColor;
-	Color _titleBarDisabledBgColor;
-	Color _titleBarFgColor;
-	Color _titleBarDisabledFgColor;
-	Color m_InFocusBgColor;
-	Color m_OutOfFocusBgColor;
-	TextImage *_title;
-	Panel * _topGrip;
-	Panel *_bottomGrip;
-	Panel *_leftGrip;
-	Panel *_rightGrip;
-	Panel *_topLeftGrip;
-	Panel *_topRightGrip;
-	Panel *_bottomLeftGrip;
-	Panel *_bottomRightGrip;
-	Panel *_captionGrip;
+	Color		_titleBarBgColor;
+	Color		_titleBarDisabledBgColor;
+	Color		_titleBarFgColor;
+	Color		_titleBarDisabledFgColor;
+	Color		m_InFocusBgColor;
+	Color		m_OutOfFocusBgColor;
+	TextImage	*_title;
+
+#if !defined( _X360 )
+	Panel		*_topGrip;
+	Panel		*_bottomGrip;
+	Panel		*_leftGrip;
+	Panel		*_rightGrip;
+	Panel		*_topLeftGrip;
+	Panel		*_topRightGrip;
+	Panel		*_bottomLeftGrip;
+	Panel		*_bottomRightGrip;
+	Panel		*_captionGrip;
 	FrameButton *_minimizeButton;
 	FrameButton	*_maximizeButton;
 	FrameButton *_minimizeToSysTrayButton;
 	FrameButton	*_closeButton;
 	FrameSystemButton *_menuButton;
-	Frame *_resizeable;
-	bool _sizeable;
-	bool _moveable;
-	bool m_bHasFocus;
-	bool _flashWindow;
-	bool _nextFlashState;
-	bool _drawTitleBar;
-	bool m_bPreviouslyVisible;
-	bool m_bFadingOut;
-	bool m_bDeleteSelfOnClose;
-	float m_flTransitionEffectTime;
-	float m_flFocusTransitionEffectTime;
-	int m_iClientInsetX, m_iClientInsetY;
-	bool m_iClientInsetXOverridden;
-	int m_iTitleTextInsetX;
-	Menu *_sysMenu;
-	bool m_bClipToParent;
-	bool m_bSmallCaption;
-	int m_nGripperWidth;
-	bool	m_bChainKeysToParent;
-	bool	m_bPrimed;
+	Menu		*_sysMenu;
+#endif
+
+	float	m_flTransitionEffectTime;
+	float	 m_flFocusTransitionEffectTime;
+	int		m_iClientInsetX;
+	int		m_iClientInsetY;
+	int		m_iTitleTextInsetX;
+	int		m_nGripperWidth;
 	VPANEL	m_hPreviousModal;
 	HFont	m_hCustomTitleFont;
 
+	bool	_sizeable : 1;
+	bool	_moveable : 1;
+	bool	 m_bHasFocus : 1;
+	bool	_flashWindow : 1;
+	bool	_nextFlashState : 1;
+	bool	_drawTitleBar : 1;
+	bool	m_bPreviouslyVisible : 1;
+	bool	m_bFadingOut : 1;
+	bool	m_bDeleteSelfOnClose : 1;
+	bool	m_bDisableFadeEffect : 1;
+	bool	m_bClipToParent : 1;
+	bool	m_bSmallCaption : 1;
+	bool	m_bChainKeysToParent : 1;
+	bool	m_bPrimed : 1;
+	bool	m_iClientInsetXOverridden : 1;
+										 
 	CPanelAnimationVarAliasType( int, m_iTitleTextInsetXOverride, "titletextinsetX", "0", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iTitleTextInsetYOverride, "titletextinsetY", "0", "proportional_int" );
+	CPanelAnimationVar( int, m_iTitleTextInsetYOverride, "titletextinsetY", "0" );
 };
 
 } // namespace vgui

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,26 +9,10 @@
 #define HL2MP_PLAYER_H
 #pragma once
 
-#include "hl2mp_playeranimstate.h"
+class C_HL2MP_Player;
 #include "c_basehlplayer.h"
-#include "baseparticleentity.h"
 #include "hl2mp_player_shared.h"
 #include "beamdraw.h"
-
-#include "flashlighteffect.h"
-
-//Tony; m_pFlashlightEffect is private, so just subclass. We may want to do some more stuff with it later anyway.
-class CHL2MPFlashlightEffect : public CFlashlightEffect
-{
-public:
-	CHL2MPFlashlightEffect(int nIndex = 0) : 
-		CFlashlightEffect( nIndex  )
-	{
-	}
-	~CHL2MPFlashlightEffect() {};
-
-	virtual void UpdateLight(const Vector &vecPos, const Vector &vecDir, const Vector &vecRight, const Vector &vecUp, int nDistance);
-};
 
 //=============================================================================
 // >> HL2MP_Player
@@ -46,12 +30,6 @@ public:
 	C_HL2MP_Player();
 	~C_HL2MP_Player( void );
 
-	// Player avoidance
-	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
-	void AvoidPlayers( CUserCmd *pCmd );
-	float m_fNextThinkPushAway;
-	virtual bool CreateMove( float flInputSampleTime, CUserCmd *pCmd );
-
 	void ClientThink( void );
 
 	static C_HL2MP_Player* GetLocalHL2MPPlayer();
@@ -59,6 +37,7 @@ public:
 	virtual int DrawModel( int flags );
 	virtual void AddEntity( void );
 
+	QAngle GetAnimEyeAngles( void ) { return m_angEyeAngles; }
 	Vector GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 
 
@@ -69,7 +48,8 @@ public:
 	virtual bool ShouldDraw( void );
 	virtual void OnDataChanged( DataUpdateType_t type );
 	virtual float GetFOV( void );
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual CStudioHdr *OnNewModel( void );
+	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
 	virtual float GetMinFOV()	const { return 5.0f; }
@@ -91,6 +71,7 @@ public:
 	void	StopSprinting( void );
 	void	HandleSpeedChanges( void );
 	void	UpdateLookAt( void );
+	void	Initialize( void );
 	int		GetIDTarget() const;
 	void	UpdateIDTarget( void );
 	void	PrecacheFootStepSounds( void );
@@ -103,18 +84,13 @@ public:
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
 
-	virtual void					UpdateClientSideAnimation();
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
-	virtual void CalculateIKLocks( float currentTime );
-
-	//Tony; when model is changed, need to init some stuff.
-	virtual CStudioHdr *OnNewModel( void );
-	void InitializePoseParams( void );
+	virtual void PostThink( void );
 
 private:
 	
 	C_HL2MP_Player( const C_HL2MP_Player & );
-	CHL2MPPlayerAnimState *m_PlayerAnimState;
+
+	CPlayerAnimState m_PlayerAnimState;
 
 	QAngle	m_angEyeAngles;
 
@@ -140,16 +116,13 @@ private:
 
 	CountdownTimer m_blinkTimer;
 
-	bool  m_bSpawnInterpCounter;
-	bool  m_bSpawnInterpCounterCache;
+	int	  m_iSpawnInterpCounter;
+	int	  m_iSpawnInterpCounterCache;
 
 	int	  m_iPlayerSoundType;
 
-	virtual void	UpdateFlashlight( void ); //Tony; override.
 	void ReleaseFlashlight( void );
 	Beam_t	*m_pFlashlightBeam;
-
-	CHL2MPFlashlightEffect *m_pHL2MPFlashLightEffect;
 
 	CNetworkVar( HL2MPPlayerState, m_iPlayerState );	
 
@@ -179,7 +152,7 @@ public:
 	int GetPlayerEntIndex() const;
 	IRagdoll* GetIRagdoll() const;
 
-	void ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
+	void ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName );
 	void UpdateOnRemove( void );
 	virtual void SetupWeights( const matrix3x4_t *pBoneToWorld, int nFlexWeightCount, float *pFlexWeights, float *pFlexDelayedWeights );
 	

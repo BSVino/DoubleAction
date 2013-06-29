@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The system for handling director's commentary style production info in-game.
 //
@@ -19,7 +19,7 @@
 #include "isaverestore.h"
 #include "eventqueue.h"
 #include "saverestore_utlvector.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "ai_basenpc.h"
 #include "Sprite.h"
 
@@ -1244,7 +1244,7 @@ void CPointCommentaryNode::UpdateViewThink( void )
 
 		// Blend to the target position over time. 
  		float flCurTime = (gpGlobals->curtime - m_flStartTime);
- 		float flBlendPerc = clamp( flCurTime / 2.0, 0, 1 );
+ 		float flBlendPerc = clamp( flCurTime * 0.5f, 0.f, 1.f );
 
 		// Figure out the current view position
 		Vector vecCurEye;
@@ -1268,8 +1268,8 @@ void CPointCommentaryNode::UpdateViewPostThink( void )
 	{
  		// Blend back to the player's position over time.
    		float flCurTime = (gpGlobals->curtime - m_flFinishedTime);
-		float flTimeToBlend = min( 2.0, m_flFinishedTime - m_flStartTime ); 
- 		float flBlendPerc = 1.0 - clamp( flCurTime / flTimeToBlend, 0, 1 );
+		float flTimeToBlend = MIN( 2.0, m_flFinishedTime - m_flStartTime ); 
+ 		float flBlendPerc = 1.0f - clamp( flCurTime / flTimeToBlend, 0.f, 1.f );
 
 		//Msg("OUT: CurTime %.2f, BlendTime: %.2f, Blend: %.3f\n", flCurTime, flTimeToBlend, flBlendPerc );
 

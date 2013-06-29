@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,6 +34,12 @@ ScalableImagePanel::ScalableImagePanel(Panel *parent, const char *name) : Panel(
 	m_iCornerWidth = 0;
 
 	m_pszImageName = NULL;
+	m_pszDrawColorName = NULL;
+
+	m_DrawColor = Color(255,255,255,255);
+
+	m_flCornerWidthPercent = 0;
+	m_flCornerHeightPercent = 0;
 
 	m_iTextureID = surface()->CreateNewTextureID();
 }
@@ -41,19 +47,46 @@ ScalableImagePanel::ScalableImagePanel(Panel *parent, const char *name) : Panel(
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void ScalableImagePanel::SetImage(const char *imageName)
+ScalableImagePanel::~ScalableImagePanel()
 {
 	delete [] m_pszImageName;
-	m_pszImageName = NULL;
+	delete [] m_pszDrawColorName;
 
-	if (*imageName)
+	if ( vgui::surface() && m_iTextureID != -1 )
 	{
-		int len = Q_strlen(imageName) + 1 + 5;	// 5 for "vgui/"
+		vgui::surface()->DestroyTextureID( m_iTextureID );
+		m_iTextureID = -1;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void ScalableImagePanel::SetImage(const char *imageName)
+{
+	if ( *imageName )
+	{
+		char szImage[MAX_PATH];
+
+		const char *pszDir = "vgui/";
+		int len = Q_strlen(imageName) + 1;
+		len += strlen(pszDir);
+		Q_snprintf( szImage, len, "%s%s", pszDir, imageName );
+
+		if ( m_pszImageName && V_stricmp( szImage, m_pszImageName ) == 0 )
+			return;
+
 		delete [] m_pszImageName;
 		m_pszImageName = new char[ len ];
-		Q_snprintf( m_pszImageName, len, "vgui/%s", imageName );
-		InvalidateLayout();
-	}	
+		Q_strncpy(m_pszImageName, szImage, len );
+	}
+	else
+	{
+		delete [] m_pszImageName;
+		m_pszImageName = NULL;
+	}
+
+	InvalidateLayout();
 }
 
 //-----------------------------------------------------------------------------
@@ -64,7 +97,7 @@ void ScalableImagePanel::PaintBackground()
 	int wide, tall;
 	GetSize(wide, tall);
 
-	surface()->DrawSetColor( 255, 255, 255, GetAlpha() );
+	surface()->DrawSetColor( m_DrawColor.r(), m_DrawColor.g(), m_DrawColor.b(), GetAlpha() );
 	surface()->DrawSetTexture( m_iTextureID );
 
 	int x = 0;
@@ -72,7 +105,7 @@ void ScalableImagePanel::PaintBackground()
 
 	float uvx = 0;
 	float uvy = 0;
-	float uvw, uvh;
+	float uvw = 0, uvh = 0;
 
 	float drawW, drawH;
 
@@ -141,6 +174,11 @@ void ScalableImagePanel::GetSettings(KeyValues *outResourceData)
 {
 	BaseClass::GetSettings(outResourceData);
 
+	if (m_pszDrawColorName)
+	{
+		outResourceData->SetString("drawcolor", m_pszDrawColorName);
+	}
+
 	outResourceData->SetInt("src_corner_height", m_iSrcCornerHeight);
 	outResourceData->SetInt("src_corner_width", m_iSrcCornerWidth);
 
@@ -159,6 +197,29 @@ void ScalableImagePanel::GetSettings(KeyValues *outResourceData)
 void ScalableImagePanel::ApplySettings(KeyValues *inResourceData)
 {
 	BaseClass::ApplySettings(inResourceData);
+
+	delete [] m_pszDrawColorName;
+	m_pszDrawColorName = NULL;
+
+	const char *pszDrawColor = inResourceData->GetString("drawcolor", "");
+	if (*pszDrawColor)
+	{
+		int r = 0, g = 0, b = 0, a = 255;
+		int len = Q_strlen(pszDrawColor) + 1;
+		m_pszDrawColorName = new char[ len ];
+		Q_strncpy( m_pszDrawColorName, pszDrawColor, len );
+
+		if (sscanf(pszDrawColor, "%d %d %d %d", &r, &g, &b, &a) >= 3)
+		{
+			// it's a direct color
+			m_DrawColor = Color(r, g, b, a);
+		}
+		else
+		{
+			IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+			m_DrawColor = pScheme->GetColor(pszDrawColor, Color(0, 0, 0, 0));
+		}
+	}
 
 	m_iSrcCornerHeight = inResourceData->GetInt( "src_corner_height" );
 	m_iSrcCornerWidth = inResourceData->GetInt( "src_corner_width" );

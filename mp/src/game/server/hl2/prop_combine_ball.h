@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,11 +27,11 @@ class CSpriteTrail;
 //-----------------------------------------------------------------------------
 class CPropCombineBall : public CBaseAnimating, public CDefaultPlayerPickupVPhysics
 {
+public:
 	DECLARE_CLASS( CPropCombineBall, CBaseAnimating );
 	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 
-public:
 	virtual void Precache();
 	virtual void Spawn();
 	virtual void UpdateOnRemove();

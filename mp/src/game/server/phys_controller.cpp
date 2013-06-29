@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -533,7 +533,7 @@ IMotionEvent::simresult_e CMotorController::Simulate( IPhysicsMotionController *
 		if ( deltaSpeed * accel > 0 )
 		{
 			float factor = deltaSpeed / m_lastAcceleration;
-			factor = 1 - clamp( factor, 0, 1 );
+			factor = 1 - clamp( factor, 0.f, 1.f );
 			rotForce += m_lastForce * factor * m_restistanceDamping;
 		}
 		else 

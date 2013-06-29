@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -79,13 +79,13 @@ void PropertyPage::OnKeyCodeTyped(KeyCode code)
         // left and right only get propogated to parents if our tab has focus
 	case KEY_RIGHT:
 		{
-            if (_pageTab != NULL && _pageTab->HasFocus())
+            if (_pageTab != 0 && _pageTab->HasFocus())
                 BaseClass::OnKeyCodeTyped(code);
 			break;
 		}
 	case KEY_LEFT:
 		{
-            if (_pageTab != NULL && _pageTab->HasFocus())
+            if (_pageTab != 0 && _pageTab->HasFocus())
                 BaseClass::OnKeyCodeTyped(code);
 			break;
 		}

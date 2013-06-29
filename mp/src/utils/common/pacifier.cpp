@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,7 @@
 static int g_LastPacifierDrawn = -1;
 static bool g_bPacifierSuppressed = false;
 
+#define clamp(a,b,c) ( (a) > (c) ? (c) : ( (a) < (b) ? (b) : (a) ) )
 
 void StartPacifier( char const *pPrefix )
 {

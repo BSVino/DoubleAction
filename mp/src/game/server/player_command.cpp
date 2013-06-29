@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -21,6 +21,8 @@
 extern IGameMovement *g_pGameMovement;
 extern CMoveData *g_pMoveData;	// This is a global because it is subclassed by each game.
 extern ConVar sv_noclipduringpause;
+
+ConVar sv_maxusrcmdprocessticks_warning( "sv_maxusrcmdprocessticks_warning", "-1", FCVAR_NONE, "Print a warning when user commands get dropped due to insufficient usrcmd ticks allocated, number of seconds to throttle, negative disabled" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -50,24 +52,21 @@ void CPlayerMove::StartCommand( CBasePlayer *player, CUserCmd *cmd )
 #if defined (HL2_DLL)
 	// pull out backchannel data and move this out
 
-	// Let's not bother with IK Ground Contact Info in MP games -- the system needs to be re-worked, every client sends down the same info for each entity, so how would it determine which to use?
-	if ( 1 == gpGlobals->maxClients )
+	int i;
+	for (i = 0; i < cmd->entitygroundcontact.Count(); i++)
 	{
-		int i;
-		for (i = 0; i < cmd->entitygroundcontact.Count(); i++)
+		int entindex =  cmd->entitygroundcontact[i].entindex;
+		CBaseEntity *pEntity = CBaseEntity::Instance( engine->PEntityOfEntIndex( entindex) );
+		if (pEntity)
 		{
-			int entindex =  cmd->entitygroundcontact[i].entindex;
-			CBaseEntity *pEntity = CBaseEntity::Instance( engine->PEntityOfEntIndex( entindex) );
-			if (pEntity)
+			CBaseAnimating *pAnimating = pEntity->GetBaseAnimating();
+			if (pAnimating)
 			{
-				CBaseAnimating *pAnimating = pEntity->GetBaseAnimating();
-				if (pAnimating)
-				{
-					pAnimating->SetIKGroundContactInfo( cmd->entitygroundcontact[i].minheight, cmd->entitygroundcontact[i].maxheight );
-				}
+				pAnimating->SetIKGroundContactInfo( cmd->entitygroundcontact[i].minheight, cmd->entitygroundcontact[i].maxheight );
 			}
 		}
 	}
+
 #endif
 }
 
@@ -207,7 +206,8 @@ void CPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *mo
 {
 	VPROF( "CPlayerMove::FinishMove" );
 
-	player->m_flMaxspeed			= move->m_flClientMaxSpeed;
+	// NOTE: Don't copy this.  the movement code modifies its local copy but is not expecting to be authoritative
+	//player->m_flMaxspeed			= move->m_flClientMaxSpeed;
 	player->SetAbsOrigin( move->GetAbsOrigin() );
 	player->SetAbsVelocity( move->m_vecVelocity );
 	player->SetPreviouslyPredictedOrigin( move->GetAbsOrigin() );
@@ -220,7 +220,7 @@ void CPlayerMove::FinishMove( CBasePlayer *player, CUserCmd *ucmd, CMoveData *mo
 	{
 		pitch -= 360.0f;
 	}
-	pitch = clamp( pitch, -90, 90 );
+	pitch = clamp( pitch, -90.f, 90.f );
 
 	move->m_vecAngles[ PITCH ] = pitch;
 
@@ -313,11 +313,37 @@ void CommentarySystem_PePlayerRunCommand( CBasePlayer *player, CUserCmd *ucmd );
 //-----------------------------------------------------------------------------
 void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *moveHelper )
 {
+	const float playerCurTime = player->m_nTickBase * TICK_INTERVAL; 
+	const float playerFrameTime = player->m_bGamePaused ? 0 : TICK_INTERVAL;
+	const float flTimeAllowedForProcessing = player->ConsumeMovementTimeForUserCmdProcessing( playerFrameTime );
+	if ( !player->IsBot() && ( flTimeAllowedForProcessing < playerFrameTime ) )
+	{
+		// Make sure that the activity in command is erased because player cheated or dropped too many packets
+		double dblWarningFrequencyThrottle = sv_maxusrcmdprocessticks_warning.GetFloat();
+		if ( dblWarningFrequencyThrottle >= 0 )
+		{
+			static double s_dblLastWarningTime = 0;
+			double dblTimeNow = Plat_FloatTime();
+			if ( !s_dblLastWarningTime || ( dblTimeNow - s_dblLastWarningTime >= dblWarningFrequencyThrottle ) )
+			{
+				s_dblLastWarningTime = dblTimeNow;
+				Warning( "sv_maxusrcmdprocessticks_warning at server tick %u: Ignored client %s usrcmd (%.6f < %.6f)!\n", gpGlobals->tickcount, player->GetPlayerName(), flTimeAllowedForProcessing, playerFrameTime );
+			}
+		}
+		return; // Don't process this command
+	}
+
 	StartCommand( player, ucmd );
 
 	// Set globals appropriately
-	gpGlobals->curtime		=  player->m_nTickBase * TICK_INTERVAL;
-	gpGlobals->frametime	=  player->m_bGamePaused ? 0 : TICK_INTERVAL;
+	gpGlobals->curtime		=  playerCurTime;
+	gpGlobals->frametime	=  playerFrameTime;
+
+	// Prevent hacked clients from sending us invalid view angles to try to get leaf server code to crash
+	if ( !ucmd->viewangles.IsValid() || !IsEntityQAngleReasonable(ucmd->viewangles) )
+	{
+		ucmd->viewangles = vec3_angle;
+	}
 
 	// Add and subtract buttons we're forcing on the player
 	ucmd->buttons |= player->m_afButtonForced;
@@ -428,6 +454,8 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	FinishCommand( player );
 
 	// Let time pass
-	player->m_nTickBase++;
+	if ( gpGlobals->frametime > 0 )
+	{
+		player->m_nTickBase++;
+	}
 }
-

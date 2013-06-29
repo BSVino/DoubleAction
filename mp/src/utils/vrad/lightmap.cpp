@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -408,7 +408,7 @@ void ErrorLightInfo(const char *s, lightinfo_t *l)
 	//
 	else
 	{
-		Warning("%s at (degenerate face)\n\tmaterial=%s\n", TexDataStringTable_GetString( dtexdata[tex->texdata].nameStringTableID ));
+		Warning("%s at (degenerate face)\n\tmaterial=%s\n", s, TexDataStringTable_GetString( dtexdata[tex->texdata].nameStringTableID ));
 	}
 }
 

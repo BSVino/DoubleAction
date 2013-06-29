@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #include "view_shared.h"
 #include "texture_group_names.h"
 #include "tier0/icommandline.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 #include "ScreenSpaceEffects.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 

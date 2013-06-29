@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -201,9 +201,9 @@ static inline float ClampSplineRemapVal( float flValue, float flMinValue, float 
 //-----------------------------------------------------------------------------
 // The bombs the attack helicopter drops 
 //-----------------------------------------------------------------------------
-enum skins_e //Tony; gcc bitched because the enum didn't have a name. how awesome is that?
+enum
 {
-	SKIN_REGULAR = 0,
+	SKIN_REGULAR,
 	SKIN_DUD,
 };
 
@@ -381,7 +381,7 @@ public:
 	int		BloodColor( void ) { return DONT_BLEED; }
 	Class_T Classify ( void ) { return CLASS_COMBINE_GUNSHIP; }
 	virtual int	OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 
 	// Shot spread
@@ -1843,7 +1843,7 @@ void CNPC_AttackHelicopter::ShootAtPlayer( const Vector &vBasePos, const Vector 
 	for ( i = 0; i < nActualTargets; ++i )
 	{
 		int nSwap = random->RandomInt( 0, nActualTargets - 1 ); 
-		swap( ppNearbyTargets[i], ppNearbyTargets[nSwap] );
+		V_swap( ppNearbyTargets[i], ppNearbyTargets[nSwap] );
 	}
 
 	// Just shoot where we're facing
@@ -2120,7 +2120,7 @@ void CNPC_AttackHelicopter::ShootAtVehicle( const Vector &vBasePos, const Vector
 	for ( i = 0; i < nActualTargets; ++i )
 	{
 		int nSwap = random->RandomInt( 0, nActualTargets - 1 ); 
-		swap( ppNearbyTargets[i], ppNearbyTargets[nSwap] );
+		V_swap( ppNearbyTargets[i], ppNearbyTargets[nSwap] );
 	}
 
 	// Just shoot where we're facing
@@ -2196,19 +2196,19 @@ bool CNPC_AttackHelicopter::PoseGunTowardTargetDirection( const Vector &vTargetD
 
 	if (angles.x > m_angGun.x)
 	{
-		m_angGun.x = min( angles.x, m_angGun.x + 12 );
+		m_angGun.x = MIN( angles.x, m_angGun.x + 12 );
 	}
 	if (angles.x < m_angGun.x)
 	{
-		m_angGun.x = max( angles.x, m_angGun.x - 12 );
+		m_angGun.x = MAX( angles.x, m_angGun.x - 12 );
 	}
 	if (angles.y > m_angGun.y)
 	{
-		m_angGun.y = min( angles.y, m_angGun.y + 12 );
+		m_angGun.y = MIN( angles.y, m_angGun.y + 12 );
 	}
 	if (angles.y < m_angGun.y)
 	{
-		m_angGun.y = max( angles.y, m_angGun.y - 12 );
+		m_angGun.y = MAX( angles.y, m_angGun.y - 12 );
 	}
 
 	SetPoseParameter( m_poseWeapon_Pitch, -m_angGun.x );
@@ -2740,7 +2740,7 @@ bool CNPC_AttackHelicopter::IsBombDropFair( const Vector &vecBombStartPos, const
 		// dx = 0.5 * a * t^2
 		Vector vecTarget = GetEnemy()->BodyTarget( GetAbsOrigin(), false );
 		float dz = vecBombStartPos.z - vecTarget.z;
-		float dt = (dz > 0.0f) ? sqrt( 2 * dz / sv_gravity.GetFloat() ) : 0.0f;
+		float dt = (dz > 0.0f) ? sqrt( 2 * dz / GetCurrentGravity() ) : 0.0f;
 
 		// Where will the enemy be in that time?
 		Vector vecEnemyVel = GetEnemy()->GetSmoothedVelocity();
@@ -2926,7 +2926,7 @@ void CNPC_AttackHelicopter::InputDropBombAtTargetInternal( inputdata_t &inputdat
 		Warning("Bomb target %s is above the chopper!\n", STRING( strBombTarget ) );
 		return;
 	}
-	float dt = sqrt( 2 * dz / sv_gravity.GetFloat() );
+	float dt = sqrt( 2 * dz / GetCurrentGravity() );
 
 	// Compute the velocity that would make it happen
 	Vector vecVelocity;
@@ -3470,7 +3470,7 @@ void CNPC_AttackHelicopter::DropCorpse( int nDamage )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	// Take no damage from trace attacks unless it's blast damage. RadiusDamage() sometimes calls
 	// TraceAttack() as a means for delivering blast damage. Usually when the explosive penetrates
@@ -3479,7 +3479,7 @@ void CNPC_AttackHelicopter::TraceAttack( const CTakeDamageInfo &info, const Vect
 		 ( info.GetInflictor()->Classify() == CLASS_MISSILE ) || 
 		 ( info.GetAttacker()->Classify() == CLASS_MISSILE ) )
 	{
-		BaseClass::BaseClass::TraceAttack( info, vecDir, ptr );
+		BaseClass::BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 	}
 }
 
@@ -4194,7 +4194,7 @@ void CNPC_AttackHelicopter::Flight( void )
 
 	Vector vecTargetPosition;
 	float flCurrentSpeed = GetAbsVelocity().Length();
-	float flDist = min( flCurrentSpeed + accelRate, maxSpeed );
+	float flDist = MIN( flCurrentSpeed + accelRate, maxSpeed );
 	float dt = 1.0f;
 	ComputeActualTargetPosition( flDist, dt, flPerpDist, &vecTargetPosition );
 
@@ -4992,7 +4992,7 @@ void CGrenadeHelicopter::Spawn( void )
 
 	if ( HasSpawnFlags( SF_HELICOPTER_GRENADE_DUD ) )
 	{
-		m_nSkin = SKIN_DUD;
+		m_nSkin = (int)SKIN_DUD;
 	}
 
 	if ( !HasSpawnFlags( SF_GRENADE_HELICOPTER_MEGABOMB ) )
@@ -5091,7 +5091,7 @@ void CGrenadeHelicopter::InputExplodeIn( inputdata_t &inputdata )
 	{
 		// We are a dud no more!
 		RemoveSpawnFlags( SF_HELICOPTER_GRENADE_DUD );
-		m_nSkin = SKIN_REGULAR;
+		m_nSkin = (int)SKIN_REGULAR;
 	}
 
 	m_bActivated = false;
@@ -5204,13 +5204,13 @@ void CGrenadeHelicopter::WarningBlinkerThink()
 		if( m_bBlinkerAtTop )
 		{
 			//m_hWarningSprite->SetParentAttachment( "SetParentAttachment", "bottom", false );
-			m_nSkin = SKIN_REGULAR;
+			m_nSkin = (int)SKIN_REGULAR;
 			m_bBlinkerAtTop = false;
 		}
 		else
 		{
 			//m_hWarningSprite->SetParentAttachment( "SetParentAttachment", "top", false );
-			m_nSkin = SKIN_DUD;
+			m_nSkin = (int)SKIN_DUD;
 			m_bBlinkerAtTop = true;
 		}
 	}
@@ -5520,7 +5520,7 @@ void CGrenadeHelicopter::OnPhysGunPickup(CBasePlayer *pPhysGunUser, PhysGunPicku
 			SetContextThink( &CGrenadeHelicopter::WarningBlinkerThink, gpGlobals->curtime + GetBombLifetime() - 2.0f, s_pWarningBlinkerContext );
 
 #ifdef HL2_EPISODIC
-			m_nSkin = SKIN_REGULAR;
+			m_nSkin = (int)SKIN_REGULAR;
 			m_flBlinkFastTime = gpGlobals->curtime + GetBombLifetime() - 1.0f;
 #endif//HL2_EPISODIC
 			

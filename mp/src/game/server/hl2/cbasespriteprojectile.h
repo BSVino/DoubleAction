@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base class for simple projectiles
 //
@@ -31,7 +31,7 @@ public:
 	void Think();
 	virtual void HandleThink();
 
-	void CBaseSpriteProjectile::Spawn(	char *pszModel,
+	void Spawn(	char *pszModel,
 									const Vector &vecOrigin,
 									const Vector &vecVelocity,
 									edict_t *pOwner,

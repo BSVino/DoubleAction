@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Expose things from GameInterface.cpp. Mostly the engine interfaces.
 //
@@ -14,7 +14,14 @@
 
 #include "mapentities.h"
 
+class IReplayFactory;
+
 extern INetworkStringTable *g_pStringTableInfoPanel;
+extern INetworkStringTable *g_pStringTableServerMapCycle;
+
+#ifdef TF_DLL
+extern INetworkStringTable *g_pStringTableServerPopFiles;
+#endif
 
 // Player / Client related functions
 // Most of this is implemented in gameinterface.cpp, but some of it is per-mod in files like cs_gameinterface.cpp, etc.
@@ -31,7 +38,7 @@ public:
 	virtual float			ProcessUsercmds( edict_t *player, bf_read *buf, int numcmds, int totalcmds,
 								int dropped_packets, bool ignore, bool paused );
 	// Player is running a command
-	virtual void			PostClientMessagesSent( void );
+	virtual void			PostClientMessagesSent_DEPRECIATED( void );
 	virtual void			SetCommandClient( int index );
 	virtual CPlayerState	*GetPlayerState( edict_t *player );
 	virtual void			ClientEarPosition( edict_t *pEntity, Vector *pEarOrigin );
@@ -44,6 +51,12 @@ public:
 	//  can be added here
 	virtual void			GetBugReportInfo( char *buf, int buflen );
 	virtual void			NetworkIDValidated( const char *pszUserName, const char *pszNetworkID );
+
+	// The client has submitted a keyvalues command
+	virtual void			ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValues );
+
+	// Notify that the player is spawned
+	virtual void			ClientSpawned( edict_t *pPlayer );
 };
 
 
@@ -54,6 +67,7 @@ public:
 										CreateInterfaceFn fileSystemFactory, CGlobalVars *pGlobals);
 	virtual void			DLLShutdown( void );
 	// Get the simulation interval (must be compiled with identical values into both client and game .dll for MOD!!!)
+	virtual bool			ReplayInit( CreateInterfaceFn fnReplayFactory );
 	virtual float			GetTickInterval( void ) const;
 	virtual bool			GameInit( void );
 	virtual void			GameShutdown( void );
@@ -106,8 +120,23 @@ public:
 
 	virtual void			InvalidateMdlCache();
 
+	virtual void			SetServerHibernation( bool bHibernating );
+
 	float	m_fAutoSaveDangerousTime;
 	float	m_fAutoSaveDangerousMinHealthToCommit;
+	bool	m_bIsHibernating;
+
+	// Called after the steam API has been activated post-level startup
+	virtual void			GameServerSteamAPIActivated( void );
+
+	// Called after the steam API has been shutdown post-level startup
+	virtual void			GameServerSteamAPIShutdown( void );
+
+	// interface to the new GC based lobby system
+	virtual IServerGCLobby *GetServerGCLobby() OVERRIDE;
+
+	virtual const char *GetServerBrowserMapOverride() OVERRIDE;
+	virtual const char *GetServerBrowserGameData() OVERRIDE;
 
 private:
 
@@ -115,6 +144,7 @@ private:
 	// with the entity list.
 	void LevelInit_ParseAllEntities( const char *pMapEntities );
 	void LoadMessageOfTheDay();
+	void LoadSpecificMOTDMsg( const ConVar &convar, const char *pszStringName );
 };
 
 

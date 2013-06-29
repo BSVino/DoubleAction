@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -1093,7 +1093,7 @@ void CAI_PlayerAlly::OnKilledNPC( CBaseCombatCharacter *pKilled )
 }
 
 //-----------------------------------------------------------------------------
-void CAI_PlayerAlly::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CAI_PlayerAlly::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	const char *pszHitLocCriterion = NULL;
 
@@ -1115,7 +1115,7 @@ void CAI_PlayerAlly::TraceAttack( const CTakeDamageInfo &info, const Vector &vec
 
 	SpeakIfAllowed( TLK_SHOT, modifiers );
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Entity that propagates general data needed by clients for every player.
 //
@@ -15,6 +15,9 @@
 #include "const.h"
 #include "c_baseentity.h"
 #include <igameresources.h>
+
+#define PLAYER_UNCONNECTED_NAME	"unconnected"
+#define PLAYER_ERROR_NAME		"ERRORNAME"
 
 class C_PlayerResource : public C_BaseEntity, public IGameResources
 {
@@ -39,6 +42,7 @@ public : // IGameResources intreface
 	virtual bool	IsFakePlayer( int index );
 	virtual bool	IsLocalPlayer( int index  );
 	virtual bool	IsHLTV(int index);
+	virtual bool	IsReplay(int index);
 
 	virtual const char *GetPlayerName( int index );
 	virtual int		GetPing( int index );
@@ -66,6 +70,7 @@ protected:
 	bool	m_bAlive[MAX_PLAYERS+1];
 	int		m_iHealth[MAX_PLAYERS+1];
 	Color	m_Colors[MAX_TEAMS];
+	string_t m_szUnconnectedName;
 
 };
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -254,7 +254,7 @@ bool CAI_BaseActor::StartSceneEvent( CSceneEventInfo *info, CChoreoScene *scene,
 				Blink();
 				// don't blink for duration, or next random blink time
 				float flDuration = (event->GetEndTime() - scene->GetTime());
-				m_flBlinktime = gpGlobals->curtime + max( flDuration, random->RandomFloat( 1.5, 4.5 ) ); 
+				m_flBlinktime = gpGlobals->curtime + MAX( flDuration, random->RandomFloat( 1.5, 4.5 ) ); 
 			}
 			else if (stricmp( event->GetParameters(), "AI_HOLSTER") == 0)
 			{
@@ -385,7 +385,7 @@ bool CAI_BaseActor::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 			info->m_bIsMoving = IsMoving();
 
 			// Msg("%f : %f - %f\n", scene->GetTime(), event->GetStartTime(), event->GetEndTime() );
-			float flTime = clamp( scene->GetTime(), event->GetStartTime(), event->GetEndTime() - 0.1 );
+			float flTime = clamp( scene->GetTime(), event->GetStartTime(), event->GetEndTime() - 0.1f );
 			float intensity = event->GetIntensity( flTime );
 
 			// clamp in-ramp to 0.5 seconds
@@ -422,8 +422,8 @@ bool CAI_BaseActor::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 			{
 				dir = 1;
 			}
-			flSpineYaw = min( diff, 30 );
-			flBodyYaw = min( diff - flSpineYaw, 30 );
+			flSpineYaw = MIN( diff, 30 );
+			flBodyYaw = MIN( diff - flSpineYaw, 30 );
 			m_goalSpineYaw = m_goalSpineYaw * (1.0 - intensity) + intensity * flSpineYaw * dir;
 			m_goalBodyYaw = m_goalBodyYaw * (1.0 - intensity) + intensity * flBodyYaw * dir;
 
@@ -465,15 +465,15 @@ bool CAI_BaseActor::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 			}
 
 			// calc how much to use the spine for turning
-			float spineintensity = (1.0 - max( 0.0, (intensity - 0.5) / 0.5 ));
+			float spineintensity = (1.0 - MAX( 0.0, (intensity - 0.5) / 0.5 ));
 			// force spine to full if not in scene or locked
 			if (!bInScene || event->IsLockBodyFacing() )
 			{
 				spineintensity = 1.0;
 			}
 
-			flSpineYaw = min( diff * spineintensity, 30 );
-			flBodyYaw = min( diff * spineintensity - flSpineYaw, 30 );
+			flSpineYaw = MIN( diff * spineintensity, 30 );
+			flBodyYaw = MIN( diff * spineintensity - flSpineYaw, 30 );
 			info->m_flFacingYaw = info->m_flInitialYaw + (diff - flBodyYaw - flSpineYaw) * dir;
 
 			if (!event->IsLockBodyFacing())
@@ -490,7 +490,7 @@ bool CAI_BaseActor::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 					{
 						// keep eyes not blinking for duration
 						float flDuration = (event->GetEndTime() - scene->GetTime());
-						m_flBlinktime = max( m_flBlinktime, gpGlobals->curtime + flDuration );
+						m_flBlinktime = MAX( m_flBlinktime, gpGlobals->curtime + flDuration );
 					}
 					return true;
 				case SCENE_AI_HOLSTER:
@@ -522,7 +522,7 @@ bool CAI_BaseActor::ProcessSceneEvent( CSceneEventInfo *info, CChoreoScene *scen
 							{
 								float flDuration = (event->GetEndTime() - scene->GetTime());
 								int i = m_syntheticLookQueue.Count() - 1;
-								m_syntheticLookQueue[i].m_flEndTime = min( m_syntheticLookQueue[i].m_flEndTime, gpGlobals->curtime + flDuration );
+								m_syntheticLookQueue[i].m_flEndTime = MIN( m_syntheticLookQueue[i].m_flEndTime, gpGlobals->curtime + flDuration );
 								m_syntheticLookQueue[i].m_flInterest = 0.1;
 							}
 						}
@@ -804,7 +804,7 @@ float CAI_BaseActor::HeadTargetValidity(const Vector &lookTargetPos)
 	Vector vFacing = BodyDirection3D();
 
 	int iForward = LookupAttachment( "forward" );
-	if (iForward)
+	if ( iForward > 0 )
 	{
 		Vector tmp1;
 		GetAttachment( iForward, tmp1, &vFacing, NULL, NULL );
@@ -824,7 +824,7 @@ float CAI_BaseActor::HeadTargetValidity(const Vector &lookTargetPos)
 	// only look if target is within +-135 degrees
 	// scale 1..-0.707 == 1..1,  -.707..-1 == 1..0
 	// 	X * b + b = 1 == 1 / (X + 1) = b, 3.4142
-	float flInterest = clamp( 3.4142 + 3.4142 * dotPr, 0, 1 );
+	float flInterest = clamp( 3.4142f + 3.4142f * dotPr, 0.f, 1.f );
 
 	// stop looking when point too close 
 	if (flDist < MAX_FULL_LOOK_TARGET_DIST)
@@ -993,12 +993,12 @@ void CAI_BaseActor::UpdateHeadControl( const Vector &vHeadTarget, float flHeadIn
 		Vector vTargetLocal;
 		VectorNormalize( vTargetDir );
 		VectorIRotate( vTargetDir, forwardToWorld, vTargetLocal );
-		vTargetLocal.z *= clamp( vTargetLocal.x, 0.1, 1.0 );
+		vTargetLocal.z *= clamp( vTargetLocal.x, 0.1f, 1.0f );
 		VectorNormalize( vTargetLocal );
 		VectorRotate( vTargetLocal, forwardToWorld, vTargetDir );
 
 		// clamp local influence when target is behind the head
-		flHeadInfluence = flHeadInfluence * clamp( vTargetLocal.x * 2.0 + 2.0, 0.0, 1.0 );
+		flHeadInfluence = flHeadInfluence * clamp( vTargetLocal.x * 2.0f + 2.0f, 0.0f, 1.0f );
 	}
 
 	Studio_AlignIKMatrix( targetXform, vTargetDir );
@@ -1539,7 +1539,7 @@ void CAI_BaseActor::MaintainLookTargets( float flInterval )
 		if (active[i]->IsThis( this ))
 		{
 			int iForward = LookupAttachment( "forward" );
-			if (iForward)
+			if ( iForward > 0)
 			{
 				Vector tmp1;
 				GetAttachment( iForward, tmp1, &dir, NULL, NULL );
@@ -1601,7 +1601,7 @@ void CAI_BaseActor::MaintainLookTargets( float flInterval )
 		// no target, decay all head control direction
 		m_goalHeadDirection = m_goalHeadDirection * 0.8 + vHead * 0.2;
 
-		m_goalHeadInfluence = max( m_goalHeadInfluence - 0.2, 0 );
+		m_goalHeadInfluence = MAX( m_goalHeadInfluence - 0.2, 0 );
 
 		VectorNormalize( m_goalHeadDirection );
 		UpdateHeadControl( vEyePosition + m_goalHeadDirection * 100, m_goalHeadInfluence );

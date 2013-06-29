@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Places "detail" objects which are client-only renderable things
 //
@@ -8,7 +8,7 @@
 
 #include "vbsp.h"
 #include "bsplib.h"
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "bspfile.h"
 #include "gamebspfile.h"
 #include "VPhysics_Interface.h"
@@ -19,9 +19,9 @@
 #include <float.h>
 #include "CModel.h"
 #include "PhysDll.h"
-#include "UtlSymbol.h"
+#include "utlsymbol.h"
 #include "tier1/strtools.h"
-#include "keyvalues.h"
+#include "KeyValues.h"
 
 static void SetCurrentModel( studiohdr_t *pStudioHdr );
 static void FreeCurrentModelVertexes();

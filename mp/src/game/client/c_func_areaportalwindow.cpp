@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #include "cbase.h"
 #include "view.h"
 #include "model_types.h"
-#include "IVRenderView.h"
+#include "ivrenderview.h"
 #include "engine/ivmodelinfo.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -91,12 +91,19 @@ int C_FuncAreaPortalWindow::DrawModel( int flags )
 
 	// Draw the fading version.
 	render->SetBlend( GetDistanceBlend() );
-	render->DrawBrushModel( 
+
+	DrawBrushModelMode_t mode = DBM_DRAW_ALL;
+	if ( flags & STUDIO_TWOPASS )
+	{
+		mode = ( flags & STUDIO_TRANSPARENCY ) ? DBM_DRAW_TRANSLUCENT_ONLY : DBM_DRAW_OPAQUE_ONLY;
+	}
+
+	render->DrawBrushModelEx( 
 		this, 
 		(model_t *)GetModel(), 
 		GetAbsOrigin(), 
 		GetAbsAngles(), 
-		!!(flags & STUDIO_TRANSPARENCY) );
+		mode );
 
 	// Draw the optional foreground model next.
 	// Only use the alpha in the texture from the thing in the front.
@@ -106,12 +113,12 @@ int C_FuncAreaPortalWindow::DrawModel( int flags )
 		model_t *pBackground = ( model_t * )modelinfo->GetModel( m_iBackgroundModelIndex );
 		if( pBackground && modelinfo->GetModelType( pBackground ) == mod_brush )
 		{
-			render->DrawBrushModel( 
+			render->DrawBrushModelEx( 
 				this, 
 				pBackground, 
 				GetAbsOrigin(), 
 				GetAbsAngles(), 
-				!!(flags & STUDIO_TRANSPARENCY) );
+				mode );
 		}
 	}
 

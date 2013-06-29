@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -37,6 +37,7 @@ public:
 	virtual IPhysicsObject *GetElement( int elementNum ) = 0;
 	virtual void DrawWireframe( void ) = 0;
 	virtual void VPhysicsUpdate( IPhysicsObject *pObject ) = 0;
+	virtual bool TransformVectorToWorld(int boneIndex, const Vector *vTemp, Vector *vOut) = 0;
 };
 
 class CRagdoll : public IRagdoll
@@ -55,7 +56,8 @@ public:
 		const matrix3x4_t *pDeltaBones0, 
 		const matrix3x4_t *pDeltaBones1, 
 		const matrix3x4_t *pCurrentBonePosition, 
-		float boneDt );
+		float boneDt,
+		bool bFixedConstraints=false );
 
 	virtual void RagdollBone( C_BaseEntity *ent, mstudiobone_t *pbones, int boneCount, bool *boneSimulated, CBoneAccessor &pBoneToWorld );
 	virtual const Vector& GetRagdollOrigin( );
@@ -67,6 +69,16 @@ public:
 	virtual void DrawWireframe();
 	virtual void VPhysicsUpdate( IPhysicsObject *pPhysics );
 	virtual int RagdollBoneCount() const { return m_ragdoll.listCount; }
+	//=============================================================================
+	// HPE_BEGIN:
+	// [menglish] Transforms a vector from the given bone's space to world space
+	//=============================================================================
+	 
+	virtual bool TransformVectorToWorld(int iBoneIndex, const Vector *vTemp, Vector *vOut);
+	 
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
 	
 
 	void	SetInitialBonePosition( CStudioHdr *pstudiohdr, const CBoneAccessor &pDesiredBonePosition );
@@ -110,7 +122,8 @@ CRagdoll *CreateRagdoll(
 	const matrix3x4_t *pDeltaBones0, 
 	const matrix3x4_t *pDeltaBones1, 
 	const matrix3x4_t *pCurrentBonePosition, 
-	float boneDt );
+	float boneDt,
+	bool bFixedConstraints=false );
 
 
 // save this ragdoll's creation as the current tick

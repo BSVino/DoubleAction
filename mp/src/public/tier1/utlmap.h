@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,14 +24,28 @@
 
 // This is a useful macro to iterate from start to end in order in a map
 #define FOR_EACH_MAP( mapName, iteratorName ) \
-	for ( int iteratorName = mapName.FirstInorder(); iteratorName != mapName.InvalidIndex(); iteratorName = mapName.NextInorder( iteratorName ) )
+	for ( int iteratorName = (mapName).FirstInorder(); (mapName).IsUtlMap && iteratorName != (mapName).InvalidIndex(); iteratorName = (mapName).NextInorder( iteratorName ) )
 
 // faster iteration, but in an unspecified order
 #define FOR_EACH_MAP_FAST( mapName, iteratorName ) \
-	for ( int iteratorName = 0; iteratorName < mapName.MaxElement(); ++iteratorName ) if ( !mapName.IsValidIndex( iteratorName ) ) continue; else
+	for ( int iteratorName = 0; (mapName).IsUtlMap && iteratorName < (mapName).MaxElement(); ++iteratorName ) if ( !(mapName).IsValidIndex( iteratorName ) ) continue; else
+
+struct base_utlmap_t
+{
+public:
+	// This enum exists so that FOR_EACH_MAP and FOR_EACH_MAP_FAST cannot accidentally
+	// be used on a type that is not a CUtlMap. If the code compiles then all is well.
+	// The check for IsUtlMap being true should be free.
+	// Using an enum rather than a static const bool ensures that this trick works even
+	// with optimizations disabled on gcc.
+	enum CompileTimeCheck
+	{
+		IsUtlMap = 1
+	};
+};	
 
 template <typename K, typename T, typename I = unsigned short> 
-class CUtlMap
+class CUtlMap : public base_utlmap_t
 {
 public:
 	typedef K KeyType_t;
@@ -123,7 +137,10 @@ public:
 	
 	void     RemoveAll( )									{ m_Tree.RemoveAll(); }
 	void     Purge( )										{ m_Tree.Purge(); }
-			
+
+	// Purges the list and calls delete on each element in it.
+	void PurgeAndDeleteElements();
+		
 	// Iteration
 	IndexType_t  FirstInorder() const						{ return m_Tree.FirstInorder(); }
 	IndexType_t  NextInorder( IndexType_t i ) const			{ return m_Tree.NextInorder( i ); }
@@ -199,5 +216,37 @@ protected:
 };
 
 //-----------------------------------------------------------------------------
+
+// Purges the list and calls delete on each element in it.
+template< typename K, typename T, typename I >
+inline void CUtlMap<K, T, I>::PurgeAndDeleteElements()
+{
+	for ( I i = 0; i < MaxElement(); ++i ) 
+	{
+		if ( !IsValidIndex( i ) ) 
+			continue; 
+		
+		delete Element( i );
+	}
+
+	Purge();
+}
+
+//-----------------------------------------------------------------------------
+
+// This is horrible and slow and meant to be used only when you're dealing with really
+// non-time/memory-critical code and desperately want to copy a whole map element-by-element
+// for whatever reason.
+template < typename K, typename T, typename I >
+void DeepCopyMap( const CUtlMap<K,T,I>& pmapIn, CUtlMap<K,T,I> *out_pmapOut )
+{
+	Assert( out_pmapOut );
+
+	out_pmapOut->Purge();
+	FOR_EACH_MAP_FAST( pmapIn, i )
+	{
+		out_pmapOut->Insert( pmapIn.Key( i ), pmapIn.Element( i ) );
+	}
+}
 
 #endif // UTLMAP_H

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Helper classes and functions for the save/restore system.
 //
@@ -112,14 +112,15 @@ static void Matrix3x4Offset( matrix3x4_t& dest, const matrix3x4_t& matrixIn, con
 
 // This does the necessary casting / extract to grab a pointer to a member function as a void *
 // UNDONE: Cast to BASEPTR or something else here?
-#define EXTRACT_VOID_FUNCTIONPTR(x)		(*(void **)(&(x)))
+#define EXTRACT_INPUTFUNC_FUNCTIONPTR(x)		(*(inputfunc_t **)(&(x)))
+
 //-----------------------------------------------------------------------------
 // Purpose: Search this datamap for the name of this member function
 //			This is used to save/restore function pointers (convert pointer to text)
 // Input  : *function - pointer to member function
 // Output : const char * - function name
 //-----------------------------------------------------------------------------
-const char *UTIL_FunctionToName( datamap_t *pMap, void *function )
+const char *UTIL_FunctionToName( datamap_t *pMap, inputfunc_t *function )
 {
 	while ( pMap )
 	{
@@ -127,8 +128,15 @@ const char *UTIL_FunctionToName( datamap_t *pMap, void *function )
 		{
 			if ( pMap->dataDesc[i].flags & FTYPEDESC_FUNCTIONTABLE )
 			{
+#ifdef WIN32
 				Assert( sizeof(pMap->dataDesc[i].inputFunc) == sizeof(void *) );
-				void *pTest = EXTRACT_VOID_FUNCTIONPTR(pMap->dataDesc[i].inputFunc);
+#elif defined(POSIX)
+				Assert( sizeof(pMap->dataDesc[i].inputFunc) == 8 );
+#else
+#error
+#endif
+				inputfunc_t *pTest = EXTRACT_INPUTFUNC_FUNCTIONPTR(pMap->dataDesc[i].inputFunc);
+
 				if ( pTest == function )
 					return pMap->dataDesc[i].fieldName;
 			}
@@ -144,19 +152,25 @@ const char *UTIL_FunctionToName( datamap_t *pMap, void *function )
 //			This is used to save/restore function pointers (convert text back to pointer)
 // Input  : *pName - name of the member function
 //-----------------------------------------------------------------------------
-void *UTIL_FunctionFromName( datamap_t *pMap, const char *pName )
+inputfunc_t *UTIL_FunctionFromName( datamap_t *pMap, const char *pName )
 {
 	while ( pMap )
 	{
 		for ( int i = 0; i < pMap->dataNumFields; i++ )
 		{
+#ifdef WIN32
 			Assert( sizeof(pMap->dataDesc[i].inputFunc) == sizeof(void *) );
+#elif defined(POSIX)
+			Assert( sizeof(pMap->dataDesc[i].inputFunc) == 8 );
+#else
+#error
+#endif
 
 			if ( pMap->dataDesc[i].flags & FTYPEDESC_FUNCTIONTABLE )
 			{
 				if ( FStrEq( pName, pMap->dataDesc[i].fieldName ) )
 				{
-					return EXTRACT_VOID_FUNCTIONPTR(pMap->dataDesc[i].inputFunc);
+					return EXTRACT_INPUTFUNC_FUNCTIONPTR(pMap->dataDesc[i].inputFunc);
 				}
 			}
 		}
@@ -1125,10 +1139,10 @@ void CSave::WritePositionVector( const Vector *value, int count )
 
 //-------------------------------------
 
-void CSave::WriteFunction( datamap_t *pRootMap, const char *pname, const int *data, int count )
+void CSave::WriteFunction( datamap_t *pRootMap, const char *pname, inputfunc_t **data, int count )
 {
 	AssertMsg( count == 1, "Arrays of functions not presently supported" );
-	const char *functionName = UTIL_FunctionToName( pRootMap, (void *)(*data) );
+	const char *functionName = UTIL_FunctionToName( pRootMap, *data );
 	if ( !functionName )
 	{
 		Warning( "Invalid function pointer in entity!\n" );
@@ -1282,7 +1296,7 @@ bool CSave::WriteGameField( const char *pname, void *pData, datamap_t *pRootMap,
 
 		// For now, just write the address out, we're not going to change memory while doing this yet!
 		case FIELD_FUNCTION:
-			WriteFunction( pRootMap, pField->fieldName, (int *)(char *)pData, pField->fieldSize );
+			WriteFunction( pRootMap, pField->fieldName, (inputfunc_t **)(char *)pData, pField->fieldSize );
 			break;
 			
 		case FIELD_VMATRIX:
@@ -1411,7 +1425,7 @@ void CRestore::ReadBasicField( const SaveRestoreRecordHeader_t &header, void *pD
 		case FIELD_EMBEDDED:
 		{
 			AssertMsg( (( pField->flags & FTYPEDESC_PTR ) == 0) || (pField->fieldSize == 1), "Arrays of embedded pointer types presently unsupported by save/restore" );
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 			int startPos = GetReadPos();
 #endif
 			if ( !(pField->flags & FTYPEDESC_PTR) || *((void **)pDest) )
@@ -2013,7 +2027,7 @@ void CRestore::ReadGameField( const SaveRestoreRecordHeader_t &header, void *pDe
 		
 		case FIELD_FUNCTION:
 		{
-			ReadFunction( pRootMap, (void **)pDest, pField->fieldSize, header.size );
+			ReadFunction( pRootMap, (inputfunc_t **)pDest, pField->fieldSize, header.size );
 			break;
 		}
 		
@@ -2216,7 +2230,7 @@ int CRestore::ReadPositionVector( Vector *pValue, int count, int nBytesAvailable
 
 //-------------------------------------
 
-int CRestore::ReadFunction( datamap_t *pMap, void **pValue, int count, int nBytesAvailable )
+int CRestore::ReadFunction( datamap_t *pMap, inputfunc_t **pValue, int count, int nBytesAvailable )
 {
 	AssertMsg( nBytesAvailable > 0, "CRestore::ReadFunction() implementation does not currently support unspecified bytes available");
 	
@@ -2831,7 +2845,7 @@ CBaseEntity *CEntitySaveRestoreBlockHandler::FindGlobalEntity( string_t classnam
 	{
 		if ( !FClassnameIs( pReturn, STRING(classname) ) )
 		{
-			Warning( "Global entity found %s, wrong class %s [expects class %s]\n", STRING(globalname), STRING(pReturn->m_iClassname), classname );
+			Warning( "Global entity found %s, wrong class %s [expects class %s]\n", STRING(globalname), STRING(pReturn->m_iClassname), STRING(classname) );
 			pReturn = NULL;
 		}
 	}

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -38,7 +38,7 @@ public:
 // called when the server does DispatchEffect( "MyEffect", data )
 //
 #define DECLARE_CLIENT_EFFECT( effectName, callbackFunction ) \
-	static CClientEffectRegistration ClientEffectReg_##callbackFunction##( effectName, callbackFunction );
+	static CClientEffectRegistration ClientEffectReg_##callbackFunction( effectName, callbackFunction );
 
 void DispatchEffectToCallback( const char *pEffectName, const CEffectData &m_EffectData );
 void DispatchEffect( const char *pName, const CEffectData &data );

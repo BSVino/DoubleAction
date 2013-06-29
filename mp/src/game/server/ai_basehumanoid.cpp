@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -167,7 +167,7 @@ bool CAI_BaseHumanoid::OnMoveBlocked( AIMoveResult_t *pResult )
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 #define SNEAK_ATTACK_DIST	360.0f // 30 feet
-void CAI_BaseHumanoid::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CAI_BaseHumanoid::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	bool bSneakAttacked = false;
 
@@ -205,11 +205,11 @@ void CAI_BaseHumanoid::TraceAttack( const CTakeDamageInfo &info, const Vector &v
 		CTakeDamageInfo newInfo = info;
 
 		newInfo.SetDamage( GetHealth() );
-		BaseClass::TraceAttack( newInfo, vecDir, ptr );
+		BaseClass::TraceAttack( newInfo, vecDir, ptr, pAccumulator );
 		return;
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------

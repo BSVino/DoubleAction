@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: - defines SIMD "structure of arrays" classes and functions.
 //
@@ -15,7 +15,7 @@
 #include <mathlib/vector.h>
 #include <mathlib/mathlib.h>
 
-#if defined(_LINUX)
+#if defined(GNUC)
 #define USE_STDC_FOR_SIMD 0
 #else
 #define USE_STDC_FOR_SIMD 0
@@ -108,7 +108,7 @@ struct ALIGN16 intx4
 			m_i32[2] == other.m_i32[2] &&
 			m_i32[3] == other.m_i32[3] 	;
 	}
-};
+} ALIGN16_POST;
 
 
 #if defined( _DEBUG ) && defined( _X360 )
@@ -136,13 +136,13 @@ FORCEINLINE void TestVPUFlags() {}
 // miss.)
 #ifndef _X360
 extern const fltx4 Four_Zeros;									// 0 0 0 0
-extern const fltx4 Four_Ones;										// 1 1 1 1
-extern const fltx4 Four_Twos;										// 2 2 2 2
+extern const fltx4 Four_Ones;									// 1 1 1 1
+extern const fltx4 Four_Twos;									// 2 2 2 2
 extern const fltx4 Four_Threes;									// 3 3 3 3
 extern const fltx4 Four_Fours;									// guess.
 extern const fltx4 Four_Point225s;								// .225 .225 .225 .225
 extern const fltx4 Four_PointFives;								// .5 .5 .5 .5
-extern const fltx4 Four_Epsilons;									// FLT_EPSILON FLT_EPSILON FLT_EPSILON FLT_EPSILON
+extern const fltx4 Four_Epsilons;								// FLT_EPSILON FLT_EPSILON FLT_EPSILON FLT_EPSILON
 extern const fltx4 Four_2ToThe21s;								// (1<<21)..
 extern const fltx4 Four_2ToThe22s;								// (1<<22)..
 extern const fltx4 Four_2ToThe23s;								// (1<<23)..
@@ -157,7 +157,7 @@ extern const fltx4 Four_Threes;									// 3 3 3 3
 extern const fltx4 Four_Fours;									// guess.
 extern const fltx4 Four_Point225s;								// .225 .225 .225 .225
 extern const fltx4 Four_PointFives;								// .5 .5 .5 .5
-extern const fltx4 Four_Epsilons;									// FLT_EPSILON FLT_EPSILON FLT_EPSILON FLT_EPSILON
+extern const fltx4 Four_Epsilons;								// FLT_EPSILON FLT_EPSILON FLT_EPSILON FLT_EPSILON
 extern const fltx4 Four_2ToThe21s;								// (1<<21)..
 extern const fltx4 Four_2ToThe22s;								// (1<<22)..
 extern const fltx4 Four_2ToThe23s;								// (1<<23)..
@@ -167,20 +167,20 @@ extern const fltx4 Four_NegativeOnes;							// -1 -1 -1 -1
 #endif
 extern const fltx4 Four_FLT_MAX;								// FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX
 extern const fltx4 Four_Negative_FLT_MAX;						// -FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX
-extern const fltx4 g_SIMD_0123;								// 0 1 2 3 as float
+extern const fltx4 g_SIMD_0123;									// 0 1 2 3 as float
 
 // external aligned integer constants
-extern const ALIGN16 int32 g_SIMD_clear_signmask[];			// 0x7fffffff x 4
-extern const ALIGN16 int32 g_SIMD_signmask[];				// 0x80000000 x 4
-extern const ALIGN16 int32 g_SIMD_lsbmask[];				// 0xfffffffe x 4
-extern const ALIGN16 int32 g_SIMD_clear_wmask[];			// -1 -1 -1 0
-extern const ALIGN16 int32 g_SIMD_ComponentMask[4][4];		// [0xFFFFFFFF 0 0 0], [0 0xFFFFFFFF 0 0], [0 0 0xFFFFFFFF 0], [0 0 0 0xFFFFFFFF]
-extern const ALIGN16 int32 g_SIMD_AllOnesMask[];			// ~0,~0,~0,~0
-extern const ALIGN16 int32 g_SIMD_Low16BitsMask[];			// 0xffff x 4
+extern const ALIGN16 int32 g_SIMD_clear_signmask[] ALIGN16_POST;			// 0x7fffffff x 4
+extern const ALIGN16 int32 g_SIMD_signmask[] ALIGN16_POST;				// 0x80000000 x 4
+extern const ALIGN16 int32 g_SIMD_lsbmask[] ALIGN16_POST;				// 0xfffffffe x 4
+extern const ALIGN16 int32 g_SIMD_clear_wmask[] ALIGN16_POST;			// -1 -1 -1 0
+extern const ALIGN16 int32 g_SIMD_ComponentMask[4][4] ALIGN16_POST;		// [0xFFFFFFFF 0 0 0], [0 0xFFFFFFFF 0 0], [0 0 0xFFFFFFFF 0], [0 0 0 0xFFFFFFFF]
+extern const ALIGN16 int32 g_SIMD_AllOnesMask[] ALIGN16_POST;			// ~0,~0,~0,~0
+extern const ALIGN16 int32 g_SIMD_Low16BitsMask[] ALIGN16_POST;			// 0xffff x 4
 
 // this mask is used for skipping the tail of things. If you have N elements in an array, and wish
 // to mask out the tail, g_SIMD_SkipTailMask[N & 3] what you want to use for the last iteration.
-extern const int32 ALIGN16 g_SIMD_SkipTailMask[4][4];
+extern const int32 ALIGN16 g_SIMD_SkipTailMask[4][4] ALIGN16_POST;
 
 // Define prefetch macros.
 // The characteristics of cache and prefetch are completely 
@@ -1757,7 +1757,7 @@ FORCEINLINE fltx4 AndSIMD( const fltx4 & a, const fltx4 & b )				// a & b
 	return _mm_and_ps( a, b );
 }
 
-FORCEINLINE fltx4 AndNotSIMD( const fltx4 & a, const fltx4 & b )			// a & ~b
+FORCEINLINE fltx4 AndNotSIMD( const fltx4 & a, const fltx4 & b )			// ~a & b
 {
 	return _mm_andnot_ps( a, b );
 }
@@ -1813,7 +1813,7 @@ FORCEINLINE fltx4 ReplicateX4( float flValue )
 FORCEINLINE float SubFloat( const fltx4 & a, int idx )
 {
 	// NOTE: if the output goes into a register, this causes a Load-Hit-Store stall (don't mix fpu/vpu math!)
-#ifndef _LINUX
+#ifndef POSIX
 	return a.m128_f32[ idx ];
 #else
 	return (reinterpret_cast<float const *>(&a))[idx];
@@ -1822,7 +1822,7 @@ FORCEINLINE float SubFloat( const fltx4 & a, int idx )
 
 FORCEINLINE float & SubFloat( fltx4 & a, int idx )
 {
-#ifndef _LINUX
+#ifndef POSIX
 	return a.m128_f32[ idx ];
 #else
 	return (reinterpret_cast<float *>(&a))[idx];
@@ -1836,7 +1836,7 @@ FORCEINLINE uint32 SubFloatConvertToInt( const fltx4 & a, int idx )
 
 FORCEINLINE uint32 SubInt( const fltx4 & a, int idx )
 {
-#ifndef _LINUX
+#ifndef POSIX
 	return a.m128_u32[idx];
 #else
 	return (reinterpret_cast<uint32 const *>(&a))[idx];
@@ -1845,7 +1845,7 @@ FORCEINLINE uint32 SubInt( const fltx4 & a, int idx )
 
 FORCEINLINE uint32 & SubInt( fltx4 & a, int idx )
 {
-#ifndef _LINUX
+#ifndef POSIX
 	return a.m128_u32[idx];
 #else
 	return (reinterpret_cast<uint32 *>(&a))[idx];
@@ -2810,35 +2810,35 @@ void FourVectors::RotateBy(const matrix3x4_t& matrix)
 		matSplat20, matSplat21, matSplat22;
 
  {
-	 // Load the matrix into local vectors. Sadly, matrix3x4_ts are 
-	 // often unaligned. The w components will be the tranpose row of
-	 // the matrix, but we don't really care about that.
-	 fltx4 matCol0 = LoadUnalignedSIMD( matrix[0] );
-	 fltx4 matCol1 = LoadUnalignedSIMD( matrix[1] );
-	 fltx4 matCol2 = LoadUnalignedSIMD( matrix[2] );
+	// Load the matrix into local vectors. Sadly, matrix3x4_ts are 
+	// often unaligned. The w components will be the tranpose row of
+	// the matrix, but we don't really care about that.
+	fltx4 matCol0 = LoadUnalignedSIMD( matrix[0] );
+	fltx4 matCol1 = LoadUnalignedSIMD( matrix[1] );
+	fltx4 matCol2 = LoadUnalignedSIMD( matrix[2] );
+	
+	matSplat00 = SplatXSIMD( matCol0 );
+	matSplat01 = SplatYSIMD( matCol0 );
+	matSplat02 = SplatZSIMD( matCol0 );
 
-	 matSplat00 = SplatXSIMD( matCol0 );
-	 matSplat01 = SplatYSIMD( matCol0 );
-	 matSplat02 = SplatZSIMD( matCol0 );
-
-	 matSplat10 = SplatXSIMD( matCol1 );
-	 matSplat11 = SplatYSIMD( matCol1 );
-	 matSplat12 = SplatZSIMD( matCol1 );
-
-	 matSplat20 = SplatXSIMD( matCol2 );
-	 matSplat21 = SplatYSIMD( matCol2 );
-	 matSplat22 = SplatZSIMD( matCol2 );
+	matSplat10 = SplatXSIMD( matCol1 );
+	matSplat11 = SplatYSIMD( matCol1 );
+	matSplat12 = SplatZSIMD( matCol1 );
+	
+	matSplat20 = SplatXSIMD( matCol2 );
+	matSplat21 = SplatYSIMD( matCol2 );
+	matSplat22 = SplatZSIMD( matCol2 );
  }
 
- // Trust in the compiler to schedule these operations correctly:
- fltx4 outX, outY, outZ;
- outX = AddSIMD( AddSIMD( MulSIMD( x, matSplat00 ), MulSIMD( y, matSplat01 ) ), MulSIMD( z, matSplat02 ) );
- outY = AddSIMD( AddSIMD( MulSIMD( x, matSplat10 ), MulSIMD( y, matSplat11 ) ), MulSIMD( z, matSplat12 ) );
- outZ = AddSIMD( AddSIMD( MulSIMD( x, matSplat20 ), MulSIMD( y, matSplat21 ) ), MulSIMD( z, matSplat22 ) );
-
- x = outX;
- y = outY;
- z = outZ;
+	// Trust in the compiler to schedule these operations correctly:
+	fltx4 outX, outY, outZ;
+	outX = AddSIMD( AddSIMD( MulSIMD( x, matSplat00 ), MulSIMD( y, matSplat01 ) ), MulSIMD( z, matSplat02 ) );
+	outY = AddSIMD( AddSIMD( MulSIMD( x, matSplat10 ), MulSIMD( y, matSplat11 ) ), MulSIMD( z, matSplat12 ) );
+	outZ = AddSIMD( AddSIMD( MulSIMD( x, matSplat20 ), MulSIMD( y, matSplat21 ) ), MulSIMD( z, matSplat22 ) );
+	
+	x = outX;
+	y = outY;
+	z = outZ;
 }
 
 // Assume the given matrix is a rotation, and rotate these vectors by it.
@@ -2855,36 +2855,36 @@ void FourVectors::TransformBy(const matrix3x4_t& matrix)
 		matSplat20, matSplat21, matSplat22;
 
  {
-	 // Load the matrix into local vectors. Sadly, matrix3x4_ts are 
-	 // often unaligned. The w components will be the tranpose row of
-	 // the matrix, but we don't really care about that.
-	 fltx4 matCol0 = LoadUnalignedSIMD( matrix[0] );
-	 fltx4 matCol1 = LoadUnalignedSIMD( matrix[1] );
-	 fltx4 matCol2 = LoadUnalignedSIMD( matrix[2] );
-
-	 matSplat00 = SplatXSIMD( matCol0 );
-	 matSplat01 = SplatYSIMD( matCol0 );
-	 matSplat02 = SplatZSIMD( matCol0 );
-
-	 matSplat10 = SplatXSIMD( matCol1 );
-	 matSplat11 = SplatYSIMD( matCol1 );
-	 matSplat12 = SplatZSIMD( matCol1 );
-
-	 matSplat20 = SplatXSIMD( matCol2 );
-	 matSplat21 = SplatYSIMD( matCol2 );
-	 matSplat22 = SplatZSIMD( matCol2 );
+	// Load the matrix into local vectors. Sadly, matrix3x4_ts are 
+	// often unaligned. The w components will be the tranpose row of
+	// the matrix, but we don't really care about that.
+	fltx4 matCol0 = LoadUnalignedSIMD( matrix[0] );
+	fltx4 matCol1 = LoadUnalignedSIMD( matrix[1] );
+	fltx4 matCol2 = LoadUnalignedSIMD( matrix[2] );
+	
+	matSplat00 = SplatXSIMD( matCol0 );
+	matSplat01 = SplatYSIMD( matCol0 );
+	matSplat02 = SplatZSIMD( matCol0 );
+	
+	matSplat10 = SplatXSIMD( matCol1 );
+	matSplat11 = SplatYSIMD( matCol1 );
+	matSplat12 = SplatZSIMD( matCol1 );
+	
+	matSplat20 = SplatXSIMD( matCol2 );
+	matSplat21 = SplatYSIMD( matCol2 );
+	matSplat22 = SplatZSIMD( matCol2 );
  }
-
- // Trust in the compiler to schedule these operations correctly:
- fltx4 outX, outY, outZ;
-
- outX = MaddSIMD( z, matSplat02, AddSIMD( MulSIMD( x, matSplat00 ), MulSIMD( y, matSplat01 ) ) );
- outY = MaddSIMD( z, matSplat12, AddSIMD( MulSIMD( x, matSplat10 ), MulSIMD( y, matSplat11 ) ) );
- outZ = MaddSIMD( z, matSplat22, AddSIMD( MulSIMD( x, matSplat20 ), MulSIMD( y, matSplat21 ) ) );
-
- x = AddSIMD( outX, ReplicateX4( matrix[0][3] ));
- y = AddSIMD( outY, ReplicateX4( matrix[1][3] ));
- z = AddSIMD( outZ, ReplicateX4( matrix[2][3] ));
+	
+	// Trust in the compiler to schedule these operations correctly:
+	fltx4 outX, outY, outZ;
+	
+	outX = MaddSIMD( z, matSplat02, AddSIMD( MulSIMD( x, matSplat00 ), MulSIMD( y, matSplat01 ) ) );
+	outY = MaddSIMD( z, matSplat12, AddSIMD( MulSIMD( x, matSplat10 ), MulSIMD( y, matSplat11 ) ) );
+	outZ = MaddSIMD( z, matSplat22, AddSIMD( MulSIMD( x, matSplat20 ), MulSIMD( y, matSplat21 ) ) );
+	
+	x = AddSIMD( outX, ReplicateX4( matrix[0][3] ));
+	y = AddSIMD( outY, ReplicateX4( matrix[1][3] ));
+	 z = AddSIMD( outZ, ReplicateX4( matrix[2][3] ));
 }
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -31,9 +31,15 @@ struct DeathNoticeItem
 		szIcon[0]=0;
 		wzInfoText[0]=0;
 		iconDeath = NULL;
+		iconCritDeath = NULL;
 		bSelfInflicted = false;
-		flCreationTime = 0;
 		bLocalPlayerInvolved = false;
+		bCrit = false;
+		flCreationTime = 0;
+		iCount = 0;
+		iWeaponID = -1;
+		iKillerID = -1;
+		iVictimID = -1;
 	}
 
 	float GetExpiryTime();
@@ -43,9 +49,15 @@ struct DeathNoticeItem
 	char		szIcon[32];		// name of icon to display
 	wchar_t		wzInfoText[32];	// any additional text to display next to icon
 	CHudTexture *iconDeath;
+	CHudTexture *iconCritDeath;	// crit background icon
 	bool		bSelfInflicted;
-	float		flCreationTime;
 	bool		bLocalPlayerInvolved;
+	bool		bCrit;
+	float		flCreationTime;
+	int			iWeaponID;
+	int			iKillerID;
+	int			iVictimID;
+	int			iCount;
 };
 
 #define NUM_CORNER_COORD 10
@@ -68,18 +80,31 @@ public:
 
 	void RetireExpiredDeathNotices( void );
 
-	void FireGameEvent( IGameEvent *event );
+	virtual void FireGameEvent( IGameEvent *event );
+	virtual bool ShouldShowDeathNotice( IGameEvent *event ){ return true; }
 
 protected:
-	virtual Color GetTeamColor( int iTeamNumber );
-	virtual void OnGameEvent( IGameEvent *event, DeathNoticeItem &deathNoticeItem ) {};
+	virtual Color GetTeamColor( int iTeamNumber, bool bLocalPlayerInvolved = false );
+	virtual void OnGameEvent( IGameEvent *event, int iDeathNoticeMsg ) {};
 	void DrawText( int x, int y, vgui::HFont hFont, Color clr, const wchar_t *szText );
 	int AddDeathNoticeItem();
 	void GetBackgroundPolygonVerts( int x0, int y0, int x1, int y1, int iVerts, vgui::Vertex_t vert[] );
 	void CalcRoundedCorners();
-	CHudTexture *GetIcon( const char *szIcon, bool bInvert );
+
+	enum EDeathNoticeIconFormat
+	{
+		kDeathNoticeIcon_Standard,
+		kDeathNoticeIcon_Inverted,			// used for display on lighter background when kill involved the local player
+	};
+
+	CHudTexture *GetIcon( const char *szIcon, EDeathNoticeIconFormat eIconFormat );
+
+	virtual bool EventIsPlayerDeath( const char *eventName );
+
+	virtual int UseExistingNotice( IGameEvent *event ) { return -1; }
 
 	void GetLocalizedControlPointName( IGameEvent *event, char *namebuf, int namelen );
+	virtual Color GetInfoTextColor( bool bLocalPlayerInvolved ){ return Color( 255, 255, 255, 255 ); }
 
 	CPanelAnimationVarAliasType( float, m_flLineHeight, "LineHeight", "16", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flLineSpacing, "LineSpacing", "4", "proportional_float" );

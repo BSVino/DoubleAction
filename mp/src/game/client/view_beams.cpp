@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #include "beam_shared.h"
 #include "ivieweffects.h"
 #include "beamdraw.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "engine/ivmodelinfo.h"
 #include "view.h"
 #include "fx.h"
@@ -499,7 +499,7 @@ void CViewRenderBeams::InitBeams( void )
 	int p = CommandLine()->ParmValue("-particles", -1);
 	if ( p >= 0 )
 	{
-		m_nNumBeamTrails = max( p, MIN_PARTICLES );
+		m_nNumBeamTrails = MAX( p, MIN_PARTICLES );
 	}
 	else
 	{
@@ -1558,8 +1558,8 @@ void CViewRenderBeams::UpdateBeam( Beam_t *pbeam, float frametime )
 				{
 					frac = remaining / pbeam->life;
 				}
-				frac = min( 1.0f, frac );
-				frac = max( 0.0f, frac );
+				frac = MIN( 1.0f, frac );
+				frac = MAX( 0.0f, frac );
 
 				frac = 1.0f - frac;
 
@@ -1812,7 +1812,7 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 	if ( distToLine < distThreshold )
 	{
 		dotScale = RemapVal( distToLine, distThreshold, pbeam->width, 1.0f, 0.0f );
-		dotScale = clamp( dotScale, 0, 1 );
+		dotScale = clamp( dotScale, 0.f, 1.f );
 	}
 
 	scaleColor[0] = color[0] * dotScale;
@@ -1850,7 +1850,7 @@ void CViewRenderBeams::DrawBeamWithHalo(	Beam_t*			pbeam,
 		haloScale *= pbeam->haloScale;
 		
 		float colorFade = fade*fade;
-		colorFade = clamp( colorFade, 0, 1 );
+		colorFade = clamp( colorFade, 0.f, 1.f );
 
 		float haloColor[3];
 		VectorScale( srcColor, colorFade * haloFractionVisible, haloColor );
@@ -2190,8 +2190,8 @@ void CViewRenderBeams::DrawBeam( C_Beam* pbeam, ITraceFilter *pEntityBeamTraceFi
 			//float fOldWidth = pbeam->GetEndWidth();
 			C_BaseEntity *pOldStartEntity = pbeam->GetStartEntityPtr();
 			C_BaseEntity *pOldEndEntity = pbeam->GetEndEntityPtr();
-			int iOldStartAttachement = pbeam->GetStartAttachment();
-			int iOldEndAttachement = pbeam->GetEndAttachment();
+			int iOldStartAttachment = pbeam->GetStartAttachment();
+			int iOldEndAttachment = pbeam->GetEndAttachment();
 			int iOldType = pbeam->GetType();
 
 			// Get the transformed positions of the sub beam in the other portal's space
@@ -2225,8 +2225,8 @@ void CViewRenderBeams::DrawBeam( C_Beam* pbeam, ITraceFilter *pEntityBeamTraceFi
 				pbeam->SetStartEntity( pOldStartEntity );
 			if ( pOldEndEntity )
 				pbeam->SetEndEntity( pOldEndEntity );
-			pbeam->SetStartAttachment( iOldStartAttachement );
-			pbeam->SetEndAttachment( iOldEndAttachement );
+			pbeam->SetStartAttachment( iOldStartAttachment );
+			pbeam->SetEndAttachment( iOldEndAttachment );
 			pbeam->SetType( iOldType );
 
 			// Doesn't use a hallow or taper the beam because we recursed

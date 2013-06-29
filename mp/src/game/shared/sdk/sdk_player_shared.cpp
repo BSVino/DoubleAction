@@ -50,6 +50,16 @@ ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "75", FCVAR
 
 void DispatchEffect( const char *pName, const CEffectData &data );
 
+CWeaponSDKBase* CSDKPlayer::SDKAnim_GetActiveWeapon()
+{
+	return GetActiveSDKWeapon();
+}
+
+bool CSDKPlayer::SDKAnim_CanMove()
+{
+	return true;
+}
+
 void CSDKPlayer::FireBullet( 
 						   Vector vecSrc,	// shooting postion
 						   const QAngle &shootAngles,  //shooting angle

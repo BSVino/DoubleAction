@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Utility functions used by AI code.
 //
@@ -83,7 +83,7 @@ Vector VecCheckToss( CBaseEntity *pEntity, ITraceFilter *pFilter, Vector vecSpot
 	Vector			vecScale;
 	Vector			vecTossVel;
 	Vector			vecTemp;
-	float			flGravity = sv_gravity.GetFloat() * flGravityAdj;
+	float			flGravity = GetCurrentGravity() * flGravityAdj;
 
 	if (vecSpot2.z - vecSpot1.z > 500)
 	{
@@ -119,7 +119,7 @@ Vector VecCheckToss( CBaseEntity *pEntity, ITraceFilter *pFilter, Vector vecSpot
 		// But don't throw so high that it looks silly. Maximize the height of the
 		// throw above the highest of the two endpoints to a ratio of the throw length.
 		float flHeightMax = flHeightMaxRatio * (vecSpot2 - vecSpot1).Length();
-		float flHighestEndZ = max(vecSpot1.z, vecSpot2.z);
+		float flHighestEndZ = MAX(vecSpot1.z, vecSpot2.z);
 		if ((vecMidPoint.z - flHighestEndZ) > flHeightMax)
 		{
 			vecMidPoint.z = flHighestEndZ + flHeightMax;
@@ -213,7 +213,7 @@ Vector VecCheckToss( CBaseEntity *pEntity, Vector vecSpot1, Vector vecSpot2, flo
 // 
 Vector VecCheckThrow ( CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flGravityAdj, Vector *vecMins, Vector *vecMaxs )
 {
-	float			flGravity = sv_gravity.GetFloat() * flGravityAdj;
+	float			flGravity = GetCurrentGravity() * flGravityAdj;
 
 	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
 

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: An arbitrary picker
 //
@@ -74,7 +74,7 @@ public:
 	void SetStringList( const PickerList_t &list ); 
 
 	// Purpose: 
-	virtual void OnKeyCodeTyped( vgui::KeyCode code );
+	virtual void OnKeyCodePressed( vgui::KeyCode code );
 
 	// Returns the selected string
 	PickerChoiceType_t GetSelectionType() const;

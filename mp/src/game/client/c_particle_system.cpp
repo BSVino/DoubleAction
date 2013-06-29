@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,6 +23,8 @@ class C_ParticleSystem : public C_BaseEntity
 public:
 	DECLARE_CLIENTCLASS();
 
+	C_ParticleSystem();
+
 	void PreDataUpdate( DataUpdateType_t updateType );
 	void PostDataUpdate( DataUpdateType_t updateType );
 	void ClientThink( void );
@@ -39,6 +41,8 @@ protected:
 	EHANDLE		m_hControlPointEnts[kMAXCONTROLPOINTS];
 	//	SendPropArray3( SENDINFO_ARRAY3(m_iControlPointParents), SendPropInt( SENDINFO_ARRAY(m_iControlPointParents), 3, SPROP_UNSIGNED ) ),
 	unsigned char m_iControlPointParents[kMAXCONTROLPOINTS];
+
+	bool		m_bWeatherEffect;
 };
 
 IMPLEMENT_CLIENTCLASS(C_ParticleSystem, DT_ParticleSystem, CParticleSystem);
@@ -56,7 +60,16 @@ BEGIN_RECV_TABLE_NOBASE( C_ParticleSystem, DT_ParticleSystem )
 
 	RecvPropArray3( RECVINFO_ARRAY(m_hControlPointEnts), RecvPropEHandle( RECVINFO( m_hControlPointEnts[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY(m_iControlPointParents), RecvPropInt( RECVINFO(m_iControlPointParents[0]))), 
+	RecvPropBool( RECVINFO( m_bWeatherEffect ) ),
 END_RECV_TABLE();
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+C_ParticleSystem::C_ParticleSystem()
+{
+	m_bWeatherEffect = false;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -96,8 +109,8 @@ void C_ParticleSystem::PostDataUpdate( DataUpdateType_t updateType )
 			}
 			else
 			{
-				ParticleProp()->StopEmission();
-			}
+						ParticleProp()->StopEmission();
+					}
 		}
 	}
 }
@@ -112,6 +125,12 @@ void C_ParticleSystem::ClientThink( void )
 		const char *pszName = GetParticleSystemNameFromIndex( m_iEffectIndex );
 		if ( pszName && pszName[0] )
 		{
+			if ( !GameRules()->AllowMapParticleEffect( pszName ) )
+				return;
+
+			if ( m_bWeatherEffect && !GameRules()->AllowWeatherParticles() )
+				return;
+
 			CNewParticleEffect *pEffect = ParticleProp()->Create( pszName, PATTACH_ABSORIGIN_FOLLOW );
 			AssertMsg1( pEffect, "Particle system couldn't make %s", pszName );
 			if (pEffect)
@@ -166,6 +185,7 @@ void ParticleEffectCallback( const CEffectData &data )
 
 	const char *pszName = GetParticleSystemNameFromIndex( data.m_nHitBox );
 
+	CSmartPtr<CNewParticleEffect> pEffect = NULL;
 	if ( data.m_fFlags & PARTICLE_DISPATCH_FROM_ENTITY )
 	{
 		if ( data.m_hEntity.Get() )
@@ -178,7 +198,7 @@ void ParticleEffectCallback( const CEffectData &data )
 					pEnt->ParticleProp()->StopEmission();
 				}
 
-				CSmartPtr<CNewParticleEffect> pEffect = pEnt->ParticleProp()->Create( pszName, (ParticleAttachment_t)data.m_nDamageType, data.m_nAttachmentIndex );
+				pEffect = pEnt->ParticleProp()->Create( pszName, (ParticleAttachment_t)data.m_nDamageType, data.m_nAttachmentIndex );
 				AssertMsg2( pEffect.IsValid() && pEffect->IsValid(), "%s could not create particle effect %s",
 					C_BaseEntity::Instance( data.m_hEntity )->GetDebugName(), pszName );
 				if ( pEffect.IsValid() && pEffect->IsValid() )
@@ -198,7 +218,12 @@ void ParticleEffectCallback( const CEffectData &data )
 	}	
 	else
 	{
-		CSmartPtr<CNewParticleEffect> pEffect = CNewParticleEffect::Create( NULL, pszName );
+		if ( GameRules() )
+		{
+			pszName = GameRules()->TranslateEffectForVisionFilter( "particles", pszName );
+		}
+
+		pEffect = CNewParticleEffect::Create( NULL, pszName );
 		if ( pEffect->IsValid() )
 		{
 			pEffect->SetSortOrigin( data.m_vOrigin );
@@ -207,6 +232,20 @@ void ParticleEffectCallback( const CEffectData &data )
 			Vector vecForward, vecRight, vecUp;
 			AngleVectors( data.m_vAngles, &vecForward, &vecRight, &vecUp );
 			pEffect->SetControlPointOrientation( 0, vecForward, vecRight, vecUp );
+		}
+	}
+
+	if ( pEffect.IsValid() && pEffect->IsValid() )
+	{
+		if ( data.m_bCustomColors )
+		{
+			pEffect->SetControlPoint( CUSTOM_COLOR_CP1, data.m_CustomColors.m_vecColor1 );
+			pEffect->SetControlPoint( CUSTOM_COLOR_CP2, data.m_CustomColors.m_vecColor2 );
+		}
+
+		if ( data.m_bControlPoint1 )
+		{
+			pEffect->SetControlPoint( 1, data.m_ControlPoint1.m_vecOffset );
 		}
 	}
 }
@@ -227,9 +266,9 @@ void ParticleEffectStopCallback( const CEffectData &data )
 		C_BaseEntity *pEnt = C_BaseEntity::Instance( data.m_hEntity );
 		if ( pEnt )
 		{
-			pEnt->ParticleProp()->StopEmission();
+				pEnt->ParticleProp()->StopEmission();
+			}
 		}
 	}
-}
 
 DECLARE_CLIENT_EFFECT( "ParticleEffectStop", ParticleEffectStopCallback );

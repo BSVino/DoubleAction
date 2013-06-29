@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 
 
 #include "tier1/utlstring.h"
-#include "vgui_controls/treeview.h"
+#include "vgui_controls/TreeView.h"
 #include "vgui_controls/ImageList.h"
 
 

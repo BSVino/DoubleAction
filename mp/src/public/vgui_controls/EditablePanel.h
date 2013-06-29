@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,14 +27,14 @@ class EditablePanel : public Panel
 
 public:
 	EditablePanel(Panel *parent, const char *panelName);
-	EditablePanel::EditablePanel(Panel *parent, const char *panelName, HScheme hScheme);
+	EditablePanel(Panel *parent, const char *panelName, HScheme hScheme);
 
 	virtual ~EditablePanel();
 
 	// Load the control settings - should be done after all the children are added
 	// If you pass in pPreloadedKeyValues, it won't actually load the file. That way, you can cache
 	// the keyvalues outside of here if you want to prevent file accesses in the middle of the game.
-	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL);
+	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL, KeyValues *pConditions = NULL);
 	virtual void ApplySettings(KeyValues *inResourceData);
 
 	// sets the name of this dialog so it can be saved in the user config area
@@ -57,6 +57,8 @@ public:
 
 	// Shortcut function to set data in child controls
 	virtual void SetControlString(const char *controlName, const char *string);
+	// Shortcut function to set data in child controls
+	virtual void SetControlString(const char *controlName, const wchar_t *string);
 	// Shortcut function to set data in child controls
 	virtual void SetControlInt(const char *controlName, int state);
 	// Shortcut function to get data in child controls
@@ -91,7 +93,7 @@ public:
 	// Get the panel with the specified hotkey
 	virtual Panel *HasHotkey(wchar_t key);
 
-	virtual void OnKeyCodeTyped( KeyCode code );
+	virtual void OnKeyCodePressed( KeyCode code );
 
 	// Handle information requests
 	virtual bool RequestInfo(KeyValues *data);
@@ -153,6 +155,7 @@ private:
 	// the wide and tall to which all controls are locked - used for autolayout deltas
 	char *m_pszConfigName;
 	int m_iConfigID;
+	bool m_bShouldSkipAutoResize;
 };
 
 } // namespace vgui

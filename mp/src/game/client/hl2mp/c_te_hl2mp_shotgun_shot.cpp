@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -41,8 +41,8 @@ public:
 	{
 		C_BaseEntity *pEntity = EntityFromEntityHandle( pServerEntity );
 		if( pEntity &&
-			( dynamic_cast<C_BaseViewModel *>( pEntity ) != NULL ) ||
-			( dynamic_cast<C_BasePlayer *>( pEntity ) != NULL ) )
+			( ( dynamic_cast<C_BaseViewModel *>( pEntity ) != NULL ) ||
+			( dynamic_cast<C_BasePlayer *>( pEntity ) != NULL ) ) )
 		{
 			return false;
 		}

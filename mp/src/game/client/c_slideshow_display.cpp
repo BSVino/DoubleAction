@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "engine/IEngineSound.h"
 #include "dlight.h"
 #include "iefx.h"
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "filesystem.h"
 #include "KeyValues.h"
 
@@ -213,7 +213,7 @@ void C_SlideshowDisplay::BuildSlideShowImagesList( void )
 			return;
 		}
 
-		int iFileSize = min( g_pFullFileSystem->Size( fh ), SLIDESHOW_LIST_BUFFER_MAX );
+		int iFileSize = MIN( g_pFullFileSystem->Size( fh ), SLIDESHOW_LIST_BUFFER_MAX );
 
 		int iBytesRead = g_pFullFileSystem->Read( szFileBuffer, iFileSize, fh );
 		g_pFullFileSystem->Close( fh );

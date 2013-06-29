@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Father Grigori, a benevolent monk who is the last remaining human
 //			in Ravenholm. He keeps to the rooftops and uses a big ole elephant
@@ -90,10 +90,10 @@ private:
 		SCHED_MONK_NORMAL_RELOAD,
 	};
 
-	enum
+	/*enum
 	{
 		//TASK_MONK_FIRST_TASK = BaseClass::NEXT_TASK,
-	};
+	};*/
 
 	DEFINE_CUSTOM_AI;
 

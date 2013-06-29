@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,6 +17,7 @@
 #include "tier0/dbg.h"
 #include <string.h>
 #include "tier0/platform.h"
+#include "mathlib/mathlib.h"
 
 #include "tier0/memalloc.h"
 #include "tier0/memdbgon.h"
@@ -78,7 +79,10 @@ public:
 
 	// Can we use this index?
 	bool IsIdxValid( I i ) const;
-	static I InvalidIndex() { return ( I )-1; }
+
+	// Specify the invalid ('null') index that we'll only return on failure
+	static const I INVALID_INDEX = ( I )-1; // For use with COMPILE_TIME_ASSERT
+	static I InvalidIndex() { return INVALID_INDEX; }
 
 	// Gets the base address (can change when adding elements!)
 	T* Base();
@@ -87,6 +91,7 @@ public:
 	// Attaches the buffer to external memory....
 	void SetExternalBuffer( T* pMemory, int numElements );
 	void SetExternalBuffer( const T* pMemory, int numElements );
+	// Takes ownership of the passed memory, including freeing it when this buffer is destroyed.
 	void AssumeMemory( T *pMemory, int nSize );
 
 	// Fast swap
@@ -167,9 +172,9 @@ public:
 
 	void Grow( int nCount = 1 )
 	{
-		if ( IsExternallyAllocated() )
+		if ( this->IsExternallyAllocated() )
 		{
-			ConvertToGrowableMemory( m_nMallocGrowSize );
+			this->ConvertToGrowableMemory( m_nMallocGrowSize );
 		}
 		BaseClass::Grow( nCount );
 	}
@@ -179,10 +184,10 @@ public:
 		if ( CUtlMemory<T>::m_nAllocationCount >= num )
 			return;
 
-		if ( IsExternallyAllocated() )
+		if ( this->IsExternallyAllocated() )
 		{
 			// Can't grow a buffer whose memory was externally allocated 
-			ConvertToGrowableMemory( m_nMallocGrowSize );
+			this->ConvertToGrowableMemory( m_nMallocGrowSize );
 		}
 
 		BaseClass::EnsureCapacity( num );
@@ -206,18 +211,23 @@ public:
 	CUtlMemoryFixed( T* pMemory, int numElements )			{ Assert( 0 ); 										}
 
 	// Can we use this index?
-	bool IsIdxValid( int i ) const							{ return (i >= 0) && (i < SIZE); }
-	static int InvalidIndex()								{ return -1; }
+	// Use unsigned math to improve performance
+	bool IsIdxValid( int i ) const							{ return (size_t)i < SIZE; }
+
+	// Specify the invalid ('null') index that we'll only return on failure
+	static const int INVALID_INDEX = -1; // For use with COMPILE_TIME_ASSERT
+	static int InvalidIndex() { return INVALID_INDEX; }
 
 	// Gets the base address
 	T* Base()												{ if ( nAlignment == 0 ) return (T*)(&m_Memory[0]); else return (T*)AlignValue( &m_Memory[0], nAlignment ); }
 	const T* Base() const									{ if ( nAlignment == 0 ) return (T*)(&m_Memory[0]); else return (T*)AlignValue( &m_Memory[0], nAlignment ); }
 
 	// element access
-	T& operator[]( int i )									{ Assert( IsIdxValid(i) ); return Base()[i];	}
-	const T& operator[]( int i ) const						{ Assert( IsIdxValid(i) ); return Base()[i];	}
-	T& Element( int i )										{ Assert( IsIdxValid(i) ); return Base()[i];	}
-	const T& Element( int i ) const							{ Assert( IsIdxValid(i) ); return Base()[i];	}
+	// Use unsigned math and inlined checks to improve performance.
+	T& operator[]( int i )									{ Assert( (size_t)i < SIZE ); return Base()[i];	}
+	const T& operator[]( int i ) const						{ Assert( (size_t)i < SIZE ); return Base()[i];	}
+	T& Element( int i )										{ Assert( (size_t)i < SIZE ); return Base()[i];	}
+	const T& Element( int i ) const							{ Assert( (size_t)i < SIZE ); return Base()[i];	}
 
 	// Attaches the buffer to external memory....
 	void SetExternalBuffer( T* pMemory, int numElements )	{ Assert( 0 ); }
@@ -262,6 +272,139 @@ public:
 private:
 	char m_Memory[ SIZE*sizeof(T) + nAlignment ];
 };
+
+#if defined(POSIX)
+// From Chris Green: Memory is a little fuzzy but I believe this class did
+//	something fishy with respect to msize and alignment that was OK under our
+//	allocator, the glibc allocator, etc but not the valgrind one (which has no
+//	padding because it detects all forms of head/tail overwrite, including
+//	writing 1 byte past a 1 byte allocation).
+#define REMEMBER_ALLOC_SIZE_FOR_VALGRIND 1
+#endif
+
+//-----------------------------------------------------------------------------
+// The CUtlMemoryConservative class:
+// A dynamic memory class that tries to minimize overhead (itself small, no custom grow factor)
+//-----------------------------------------------------------------------------
+template< typename T >
+class CUtlMemoryConservative
+{
+
+public:
+	// constructor, destructor
+	CUtlMemoryConservative( int nGrowSize = 0, int nInitSize = 0 ) : m_pMemory( NULL )
+	{
+#ifdef REMEMBER_ALLOC_SIZE_FOR_VALGRIND
+		m_nCurAllocSize = 0;
+#endif
+
+	}
+	CUtlMemoryConservative( T* pMemory, int numElements )								{ Assert( 0 ); }
+	~CUtlMemoryConservative()								{ if ( m_pMemory ) free( m_pMemory ); }
+
+	// Can we use this index?
+	bool IsIdxValid( int i ) const							{ return ( IsDebug() ) ? ( i >= 0 && i < NumAllocated() ) : ( i >= 0 ); }
+	static int InvalidIndex()								{ return -1; }
+
+	// Gets the base address
+	T* Base()												{ return m_pMemory; }
+	const T* Base() const									{ return m_pMemory; }
+
+	// element access
+	T& operator[]( int i )									{ Assert( IsIdxValid(i) ); return Base()[i];	}
+	const T& operator[]( int i ) const						{ Assert( IsIdxValid(i) ); return Base()[i];	}
+	T& Element( int i )										{ Assert( IsIdxValid(i) ); return Base()[i];	}
+	const T& Element( int i ) const							{ Assert( IsIdxValid(i) ); return Base()[i];	}
+
+	// Attaches the buffer to external memory....
+	void SetExternalBuffer( T* pMemory, int numElements )	{ Assert( 0 ); }
+
+	// Size
+	FORCEINLINE void RememberAllocSize( size_t sz )
+	{
+#ifdef REMEMBER_ALLOC_SIZE_FOR_VALGRIND
+		m_nCurAllocSize = sz;
+#endif
+	}
+
+	size_t AllocSize( void ) const
+	{
+#ifdef REMEMBER_ALLOC_SIZE_FOR_VALGRIND
+		return m_nCurAllocSize;
+#else
+		return ( m_pMemory ) ? g_pMemAlloc->GetSize( m_pMemory ) : 0;
+#endif
+	}
+
+	int NumAllocated() const
+	{
+		return AllocSize() / sizeof( T );
+	}
+	int Count() const
+	{
+		return NumAllocated();
+	}
+
+	FORCEINLINE void ReAlloc( size_t sz )
+	{
+		m_pMemory = (T*)realloc( m_pMemory, sz );
+		RememberAllocSize( sz );
+	}
+	// Grows the memory, so that at least allocated + num elements are allocated
+	void Grow( int num = 1 )
+	{
+		int nCurN = NumAllocated();
+		ReAlloc( ( nCurN + num ) * sizeof( T ) );
+	}
+
+	// Makes sure we've got at least this much memory
+	void EnsureCapacity( int num )
+	{
+		size_t nSize = sizeof( T ) * MAX( num, Count() );
+		ReAlloc( nSize );
+	}
+
+	// Memory deallocation
+	void Purge()
+	{
+		free( m_pMemory ); 
+		RememberAllocSize( 0 );
+		m_pMemory = NULL; 
+	}
+
+	// Purge all but the given number of elements
+	void Purge( int numElements )							{ ReAlloc( numElements * sizeof(T) ); }
+
+	// is the memory externally allocated?
+	bool IsExternallyAllocated() const						{ return false; }
+
+	// Set the size by which the memory grows
+	void SetGrowSize( int size )							{}
+
+	class Iterator_t
+	{
+	public:
+		Iterator_t( int i, int _limit ) : index( i ), limit( _limit ) {}
+		int index;
+		int limit;
+		bool operator==( const Iterator_t it ) const	{ return index == it.index; }
+		bool operator!=( const Iterator_t it ) const	{ return index != it.index; }
+	};
+	Iterator_t First() const							{ int limit = NumAllocated(); return Iterator_t( limit ? 0 : InvalidIndex(), limit ); }
+	Iterator_t Next( const Iterator_t &it ) const		{ return Iterator_t( ( it.index + 1 < it.limit ) ? it.index + 1 : InvalidIndex(), it.limit ); }
+	int GetIndex( const Iterator_t &it ) const			{ return it.index; }
+	bool IsIdxAfter( int i, const Iterator_t &it ) const { return i > it.index; }
+	bool IsValidIterator( const Iterator_t &it ) const	{ return IsIdxValid( it.index ) && ( it.index < it.limit ); }
+	Iterator_t InvalidIterator() const					{ return Iterator_t( InvalidIndex(), 0 ); }
+
+private:
+	T *m_pMemory;
+#ifdef REMEMBER_ALLOC_SIZE_FOR_VALGRIND
+	size_t m_nCurAllocSize;
+#endif
+
+};
+
 
 //-----------------------------------------------------------------------------
 // constructor, destructor
@@ -326,9 +469,9 @@ void CUtlMemory<T,I>::Init( int nGrowSize /*= 0*/, int nInitSize /*= 0*/ )
 template< class T, class I >
 void CUtlMemory<T,I>::Swap( CUtlMemory<T,I> &mem )
 {
-	swap( m_nGrowSize, mem.m_nGrowSize );
-	swap( m_pMemory, mem.m_pMemory );
-	swap( m_nAllocationCount, mem.m_nAllocationCount );
+	V_swap( m_nGrowSize, mem.m_nGrowSize );
+	V_swap( m_pMemory, mem.m_pMemory );
+	V_swap( m_nAllocationCount, mem.m_nAllocationCount );
 }
 
 
@@ -349,7 +492,7 @@ void CUtlMemory<T,I>::ConvertToGrowableMemory( int nGrowSize )
 
 		int nNumBytes = m_nAllocationCount * sizeof(T);
 		T *pMemory = (T*)malloc( nNumBytes );
-		memcpy( pMemory, m_pMemory, nNumBytes ); 
+		memcpy( (void*)pMemory, (void*)m_pMemory, nNumBytes ); 
 		m_pMemory = pMemory;
 	}
 	else
@@ -406,30 +549,34 @@ void CUtlMemory<T,I>::AssumeMemory( T* pMemory, int numElements )
 template< class T, class I >
 inline T& CUtlMemory<T,I>::operator[]( I i )
 {
-	Assert( !IsReadOnly() );
-	Assert( IsIdxValid(i) );
+	// Avoid function calls in the asserts to improve debug build performance
+	Assert( m_nGrowSize != EXTERNAL_CONST_BUFFER_MARKER ); //Assert( !IsReadOnly() );
+	Assert( (uint32)i < (uint32)m_nAllocationCount );
 	return m_pMemory[i];
 }
 
 template< class T, class I >
 inline const T& CUtlMemory<T,I>::operator[]( I i ) const
 {
-	Assert( IsIdxValid(i) );
+	// Avoid function calls in the asserts to improve debug build performance
+	Assert( (uint32)i < (uint32)m_nAllocationCount );
 	return m_pMemory[i];
 }
 
 template< class T, class I >
 inline T& CUtlMemory<T,I>::Element( I i )
 {
-	Assert( !IsReadOnly() );
-	Assert( IsIdxValid(i) );
+	// Avoid function calls in the asserts to improve debug build performance
+	Assert( m_nGrowSize != EXTERNAL_CONST_BUFFER_MARKER ); //Assert( !IsReadOnly() );
+	Assert( (uint32)i < (uint32)m_nAllocationCount );
 	return m_pMemory[i];
 }
 
 template< class T, class I >
 inline const T& CUtlMemory<T,I>::Element( I i ) const
 {
-	Assert( IsIdxValid(i) );
+	// Avoid function calls in the asserts to improve debug build performance
+	Assert( (uint32)i < (uint32)m_nAllocationCount );
 	return m_pMemory[i];
 }
 
@@ -503,7 +650,10 @@ inline int CUtlMemory<T,I>::Count() const
 template< class T, class I >
 inline bool CUtlMemory<T,I>::IsIdxValid( I i ) const
 {
-	return ( ((int) i) >= 0 ) && ( ((int) i) < m_nAllocationCount );
+	// If we always cast 'i' and 'm_nAllocationCount' to unsigned then we can
+	// do our range checking with a single comparison instead of two. This gives
+	// a modest speedup in debug builds.
+	return (uint32)i < (uint32)m_nAllocationCount;
 }
 
 //-----------------------------------------------------------------------------
@@ -558,14 +708,14 @@ void CUtlMemory<T,I>::Grow( int num )
 
 	UTLMEMORY_TRACK_FREE();
 
-	m_nAllocationCount = UtlMemory_CalcNewAllocationCount( m_nAllocationCount, m_nGrowSize, nAllocationRequested, sizeof(T) );
+	int nNewAllocationCount = UtlMemory_CalcNewAllocationCount( m_nAllocationCount, m_nGrowSize, nAllocationRequested, sizeof(T) );
 
 	// if m_nAllocationRequested wraps index type I, recalculate
-	if ( ( int )( I )m_nAllocationCount < nAllocationRequested )
+	if ( ( int )( I )nNewAllocationCount < nAllocationRequested )
 	{
-		if ( ( int )( I )m_nAllocationCount == 0 && ( int )( I )( m_nAllocationCount - 1 ) >= nAllocationRequested )
+		if ( ( int )( I )nNewAllocationCount == 0 && ( int )( I )( nNewAllocationCount - 1 ) >= nAllocationRequested )
 		{
-			--m_nAllocationCount; // deal w/ the common case of m_nAllocationCount == MAX_USHORT + 1
+			--nNewAllocationCount; // deal w/ the common case of m_nAllocationCount == MAX_USHORT + 1
 		}
 		else
 		{
@@ -575,12 +725,14 @@ void CUtlMemory<T,I>::Grow( int num )
 				Assert( 0 );
 				return;
 			}
-			while ( ( int )( I )m_nAllocationCount < nAllocationRequested )
+			while ( ( int )( I )nNewAllocationCount < nAllocationRequested )
 			{
-				m_nAllocationCount = ( m_nAllocationCount + nAllocationRequested ) / 2;
+				nNewAllocationCount = ( nNewAllocationCount + nAllocationRequested ) / 2;
 			}
 		}
 	}
+
+	m_nAllocationCount = nNewAllocationCount;
 
 	UTLMEMORY_TRACK_ALLOC();
 
@@ -757,7 +909,7 @@ CUtlMemoryAligned<T, nAlignment>::CUtlMemoryAligned( int nGrowSize, int nInitAll
 	CUtlMemory<T>::m_pMemory = 0; 
 	CUtlMemory<T>::m_nAllocationCount = nInitAllocationCount;
 	CUtlMemory<T>::m_nGrowSize = nGrowSize;
-	ValidateGrowSize();
+	this->ValidateGrowSize();
 
 	// Alignment must be a power of two
 	COMPILE_TIME_ASSERT( (nAlignment & (nAlignment-1)) == 0 );
@@ -835,7 +987,7 @@ void CUtlMemoryAligned<T, nAlignment>::Grow( int num )
 {
 	Assert( num > 0 );
 
-	if ( IsExternallyAllocated() )
+	if ( this->IsExternallyAllocated() )
 	{
 		// Can't grow a buffer whose memory was externally allocated 
 		Assert(0);
@@ -855,13 +1007,13 @@ void CUtlMemoryAligned<T, nAlignment>::Grow( int num )
 	if ( CUtlMemory<T>::m_pMemory )
 	{
 		MEM_ALLOC_CREDIT_CLASS();
-		CUtlMemory<T>::m_pMemory = (T*)_aligned_realloc( CUtlMemory<T>::m_pMemory, CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
+		CUtlMemory<T>::m_pMemory = (T*)MemAlloc_ReallocAligned( CUtlMemory<T>::m_pMemory, CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
 		Assert( CUtlMemory<T>::m_pMemory );
 	}
 	else
 	{
 		MEM_ALLOC_CREDIT_CLASS();
-		CUtlMemory<T>::m_pMemory = (T*)_aligned_malloc( CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
+		CUtlMemory<T>::m_pMemory = (T*)MemAlloc_AllocAligned( CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
 		Assert( CUtlMemory<T>::m_pMemory );
 	}
 }
@@ -876,7 +1028,7 @@ inline void CUtlMemoryAligned<T, nAlignment>::EnsureCapacity( int num )
 	if ( CUtlMemory<T>::m_nAllocationCount >= num )
 		return;
 
-	if ( IsExternallyAllocated() )
+	if ( this->IsExternallyAllocated() )
 	{
 		// Can't grow a buffer whose memory was externally allocated 
 		Assert(0);
@@ -892,12 +1044,12 @@ inline void CUtlMemoryAligned<T, nAlignment>::EnsureCapacity( int num )
 	if ( CUtlMemory<T>::m_pMemory )
 	{
 		MEM_ALLOC_CREDIT_CLASS();
-		CUtlMemory<T>::m_pMemory = (T*)_aligned_realloc( CUtlMemory<T>::m_pMemory, CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
+		CUtlMemory<T>::m_pMemory = (T*)MemAlloc_ReallocAligned( CUtlMemory<T>::m_pMemory, CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
 	}
 	else
 	{
 		MEM_ALLOC_CREDIT_CLASS();
-		CUtlMemory<T>::m_pMemory = (T*)_aligned_malloc( CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
+		CUtlMemory<T>::m_pMemory = (T*)MemAlloc_AllocAligned( CUtlMemory<T>::m_nAllocationCount * sizeof(T), nAlignment );
 	}
 }
 
@@ -908,12 +1060,12 @@ inline void CUtlMemoryAligned<T, nAlignment>::EnsureCapacity( int num )
 template< class T, int nAlignment >
 void CUtlMemoryAligned<T, nAlignment>::Purge()
 {
-	if ( !IsExternallyAllocated() )
+	if ( !this->IsExternallyAllocated() )
 	{
 		if ( CUtlMemory<T>::m_pMemory )
 		{
 			UTLMEMORY_TRACK_FREE();
-			_aligned_free( CUtlMemory<T>::m_pMemory );
+			MemAlloc_FreeAligned( CUtlMemory<T>::m_pMemory );
 			CUtlMemory<T>::m_pMemory = 0;
 		}
 		CUtlMemory<T>::m_nAllocationCount = 0;

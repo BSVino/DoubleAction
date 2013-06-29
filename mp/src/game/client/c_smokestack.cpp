@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements a particle system steam jet.
 //
@@ -218,6 +218,8 @@ void C_SmokeStack::OnDataChanged(DataUpdateType_t updateType)
 }
 
 
+static ConVar mat_reduceparticles( "mat_reduceparticles", "0" );
+
 //-----------------------------------------------------------------------------
 // Purpose: Starts the effect
 // Input  : *pParticleMgr - 
@@ -260,11 +262,13 @@ void C_SmokeStack::Start(CParticleMgr *pParticleMgr, IPrototypeArgAccess *pArgs)
 		m_MaterialHandle[iCount] = m_ParticleEffect.FindOrAddMaterial( szNames );
 		iCount++;
 	}
-		
-	m_iMaxFrames = iCount-1;
-#endif
 
-	m_ParticleSpawn.Init(m_Rate);
+	m_iMaxFrames = iCount-1;
+
+	m_ParticleSpawn.Init( mat_reduceparticles.GetBool() ? m_Rate / 4 : m_Rate ); // Obey mat_reduceparticles in episodic
+#else
+	m_ParticleSpawn.Init( m_Rate );
+#endif
 
 	m_InvLifetime = m_Speed / m_JetLength;
 
@@ -362,7 +366,7 @@ void C_SmokeStack::Update(float fTimeDelta)
 
 	// Setup the twist matrix.
 	float flTwist = (m_flTwist * (M_PI_F * 2.f) / 360.0f) * Helper_GetFrameTime();
-	if( m_bTwist = !!flTwist )
+	if( ( m_bTwist = !!flTwist ) )
 	{
 		m_TwistMat[0][0] =  cos(flTwist);
 		m_TwistMat[0][1] =  sin(flTwist);

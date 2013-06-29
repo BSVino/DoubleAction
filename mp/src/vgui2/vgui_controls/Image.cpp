@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -261,5 +261,22 @@ Color Image::GetColor()
 	return _color;
 }
 
+bool Image::Evict()
+{
+	return false;
+}
 
+int Image::GetNumFrames()
+{
+	return 0;
+}
+
+void Image::SetFrame( int nFrame )
+{
+}
+
+HTexture Image::GetID()
+{
+	return 0;
+}
 

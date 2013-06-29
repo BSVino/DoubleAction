@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 #include "util_shared.h"
 #include "tier0/vprof.h"
 #include "materialsystem/imaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "materialsystem/imaterialvar.h"
 #include "view_shared.h"
 #include "viewrender.h"
 #include "tier1/KeyValues.h"
@@ -56,15 +56,13 @@ void DrawSpriteModel( IClientEntity *baseentity, CEngineSprite *psprite, const V
 		scale = 1.0f;
 	
 	if ( rendermode == kRenderNormal )
-		render->SetBlend( 1.0f );
-	
-	material = psprite->GetMaterial();
-	if ( !material )
 	{
-		return;
+		render->SetBlend( 1.0f );
 	}
-	psprite->SetRenderMode( rendermode );
-	psprite->SetFrame( frame );
+	
+	material = psprite->GetMaterial( (RenderMode_t)rendermode, frame );
+	if ( !material )
+		return;
 
 	CMatRenderContextPtr pRenderContext( materials );
 	
@@ -485,7 +483,7 @@ void CSprite::GetToolRecordingState( KeyValues *msg )
 	if ( m_bWorldSpaceScale )
 	{
 		CEngineSprite *psprite = ( CEngineSprite * )modelinfo->GetModelExtraData( GetModel() );
-		float flMinSize = min( psprite->GetWidth(), psprite->GetHeight() );
+		float flMinSize = MIN( psprite->GetWidth(), psprite->GetHeight() );
 		renderscale /= flMinSize;
 	}
 

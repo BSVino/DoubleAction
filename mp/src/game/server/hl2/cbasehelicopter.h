@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Base class for helicopters & helicopter-type vehicles
 //
@@ -116,7 +116,7 @@ public:
 	virtual void ApplySidewaysDrag( const Vector &vecRight );
 	virtual void ApplyGeneralDrag( void );
 
-	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void	TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	virtual bool FireGun( void );
 

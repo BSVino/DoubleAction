@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,6 +11,7 @@
 
 #include "convar.h"
 #include "basecombatweapon_shared.h"
+#include "iplayeranimstate.h"
 
 #if defined( CLIENT_DLL )
 class C_BasePlayer;
@@ -58,12 +59,12 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_GRENADE1_THROW,
 	PLAYERANIMEVENT_GRENADE2_THROW,
 	PLAYERANIMEVENT_VOICE_COMMAND_GESTURE,
+	PLAYERANIMEVENT_DOUBLEJUMP_CROUCH,
+	PLAYERANIMEVENT_STUN_BEGIN,
+	PLAYERANIMEVENT_STUN_MIDDLE,
+	PLAYERANIMEVENT_STUN_END,
 
-	// Tony; some SDK ones now too.
-	PLAYERANIMEVENT_STAND_TO_PRONE,
-	PLAYERANIMEVENT_CROUCH_TO_PRONE,
-	PLAYERANIMEVENT_PRONE_TO_STAND,
-	PLAYERANIMEVENT_PRONE_TO_CROUCH,
+	PLAYERANIMEVENT_ATTACK_PRIMARY_SUPER,
 
 	PLAYERANIMEVENT_DIVE,
 	PLAYERANIMEVENT_DIVE_TO_ROLL,
@@ -115,6 +116,8 @@ struct MultiPlayerPoseData_t
 	int			m_iAimYaw;
 	int			m_iAimPitch;
 	int			m_iBodyHeight;
+	int			m_iMoveYaw;
+	int			m_iMoveScale;
 
 	float		m_flEstimateYaw;
 	float		m_flLastAimTurnTime;
@@ -126,6 +129,8 @@ struct MultiPlayerPoseData_t
 		m_iAimYaw = 0;
 		m_iAimPitch = 0;
 		m_iBodyHeight = 0;
+		m_iMoveYaw = 0;
+		m_iMoveScale = 0;
 		m_flEstimateYaw = 0.0f;
 		m_flLastAimTurnTime = 0.0f;
 	}
@@ -172,7 +177,7 @@ public:
 	// Creation/Destruction
 	CMultiPlayerAnimState() {}
 	CMultiPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
-	~CMultiPlayerAnimState();
+	virtual ~CMultiPlayerAnimState();
 
 	// This is called by both the client and the server in the same way to trigger events for
 	// players firing, jumping, throwing grenades, etc.
@@ -201,7 +206,9 @@ public:
 	// Gestures.
 	void	ResetGestureSlots( void );
 	void	ResetGestureSlot( int iGestureSlot );
-	void AddVCDSequenceToGestureSlot( int iGestureSlot, int iGestureSequence, bool bAutoKill = true );
+	void AddVCDSequenceToGestureSlot( int iGestureSlot, int iGestureSequence, float flCycle = 0.0f, bool bAutoKill = true );
+	CAnimationLayer* GetGestureSlotLayer( int iGestureSlot );
+	bool	IsGestureSlotActive( int iGestureSlot );
 
 	// Feet.
 	bool	m_bForceAimYaw;
@@ -228,13 +235,13 @@ protected:
 	CUtlVector<GestureSlot_t>		m_aGestureSlots;
 	bool	InitGestureSlots( void );
 	void	ShutdownGestureSlots( void );
-	bool	IsGestureSlotActive( int iGestureSlot );
 	bool	IsGestureSlotPlaying( int iGestureSlot, Activity iGestureActivity );
 	void	AddToGestureSlot( int iGestureSlot, Activity iGestureActivity, bool bAutoKill );
-	void	RestartGesture( int iGestureSlot, Activity iGestureActivity, bool bAutoKill = true );
+	virtual void RestartGesture( int iGestureSlot, Activity iGestureActivity, bool bAutoKill = true );
 	void	ComputeGestureSequence( CStudioHdr *pStudioHdr );
 	void	UpdateGestureLayer( CStudioHdr *pStudioHdr, GestureSlot_t *pGesture );
 	void	DebugGestureInfo( void );
+	virtual float	GetGesturePlaybackRate( void ) { return 1.0f; }
 
 #ifdef CLIENT_DLL
 	void	RunGestureSlotAnimEventsToCompletion( GestureSlot_t *pGesture );
@@ -242,9 +249,14 @@ protected:
 
 	virtual void PlayFlinchGesture( Activity iActivity );
 
+	virtual float CalcMovementSpeed( bool *bIsMoving );
 	virtual float CalcMovementPlaybackRate( bool *bIsMoving );
 
-	// Pose paramters.
+	void DoMovementTest( CStudioHdr *pStudioHdr, float flX, float flY );
+	void DoMovementTest( CStudioHdr *pStudioHdr );
+	void GetMovementFlags( CStudioHdr *pStudioHdr );
+
+	// Pose parameters.
 	bool				SetupPoseParameters( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr );
@@ -263,7 +275,7 @@ protected:
 	void ComputeFireSequence();
 	void ComputeDeployedSequence();
 
-	bool ShouldUpdateAnimState();
+	virtual bool ShouldUpdateAnimState();
 
 	void				DebugShowAnimStateForPlayer( bool bIsServer );
 	void				DebugShowEyeYaw( void );
@@ -285,6 +297,7 @@ protected:
 	// Pose parameters.
 	bool						m_bPoseParameterInit;
 	MultiPlayerPoseData_t		m_PoseParameterData;
+	DebugPlayerAnimData_t		m_DebugAnimData;
 
 	bool						m_bCurrentFeetYawInitialized;
 	float						m_flLastAnimationStateClearTime;
@@ -326,13 +339,9 @@ protected:
 #endif
 	float m_flMaxGroundSpeed;
 
-	//Tony; moved debuganim data to a private block and made the 2 sdk animstates friendly. I override the base classes
-	//but want complete functionality.
-private:
-	friend class CSDKPlayerAnimState;
-	friend class CHL2MPPlayerAnimState;
-	DebugPlayerAnimData_t		m_DebugAnimData;
-
+	// movement playback options
+	int m_nMovementSequence;
+	LegAnimType_t m_LegAnimType;
 };
 
 // If this is set, then the game code needs to make sure to send player animation events

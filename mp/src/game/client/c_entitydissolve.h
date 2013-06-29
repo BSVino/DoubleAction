@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,6 +28,9 @@ public:
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	UpdateOnRemove( void );
 
+	virtual Vector	GetEffectColor( void ) { return m_vEffectColor; }
+	virtual void	SetEffectColor( Vector v ) { m_vEffectColor = v; }
+
 	// Inherited from IMotionEvent
 	virtual simresult_e	Simulate( IPhysicsMotionController *pController, IPhysicsObject *pObject, float deltaTime, Vector &linear, AngularImpulse &angular );
 	
@@ -46,6 +49,8 @@ public:
 	float	m_flFadeInLength;
 	int		m_nDissolveType;
 	float   m_flNextSparkTime;
+
+	Vector	m_vEffectColor;
 
 	Vector	m_vDissolverOrigin;
 	int		m_nMagnitude;

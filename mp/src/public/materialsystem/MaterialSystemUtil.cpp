@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -42,6 +42,14 @@ CMaterialReference::~CMaterialReference()
 void CMaterialReference::Init( char const* pMaterialName, const char *pTextureGroupName, bool bComplain )
 {
 	IMaterial *pMaterial = materials->FindMaterial( pMaterialName, pTextureGroupName, bComplain);
+	if( IsErrorMaterial( pMaterial ) )
+	{
+		if (IsOSX())
+		{
+			printf("\n ##### CMaterialReference::Init got error material for %s in tex group %s", pMaterialName, pTextureGroupName );
+		}
+	}
+
 	Assert( pMaterial );
 	Init( pMaterial );
 }

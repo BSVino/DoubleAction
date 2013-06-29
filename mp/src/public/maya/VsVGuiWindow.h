@@ -14,6 +14,9 @@
 
 #include "imayavgui.h"
 #include "vgui_controls/Frame.h"
+#include "tier1/utlmap.h"
+#include "valveMaya.h"
+
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -36,10 +39,22 @@ namespace vgui
 }
 
 
+class CVsVGuiWindowBase
+{
+public:
+	virtual void SetPeriod( float flPeriod ) = 0;
+	virtual void StartTick() = 0;
+	virtual void StartTick( float flPeriod ) = 0;
+	virtual void StopTick() = 0;
+	virtual void Tick( float flElapsedTime ) = 0;
+	virtual void NonTimerTick() = 0;
+};
+
+
 //-----------------------------------------------------------------------------
 // Creates, destroys a maya vgui window
 //-----------------------------------------------------------------------------
-void CreateMayaVGuiWindow( vgui::EditablePanel *pRootPanel, const char *pPanelName );
+CVsVGuiWindowBase *CreateMayaVGuiWindow( vgui::EditablePanel *pRootPanel, const char *pPanelName );
 void DestroyMayaVGuiWindow( const char *pPanelName );
 
 
@@ -67,36 +82,109 @@ private:
 	static CVsVguiWindowFactoryBase *s_pFirstCommandFactory;
 };
 
-
 template< class T >
 class CVsVguiWindowFactory : public CVsVguiWindowFactoryBase
 {
 	typedef CVsVguiWindowFactoryBase BaseClass;
 
+	static bool StringLessFunc( const CUtlString &a, const CUtlString &b )
+	{
+		return StringLessThan( a.Get(), b.Get() );
+	}
+
+
 public:
-	CVsVguiWindowFactory( const char *pWindowTypeName, const char *pDccCommand ) : BaseClass( pWindowTypeName, pDccCommand )
+	CVsVguiWindowFactory( const char *pWindowTypeName, const char *pDccCommand )
+	: BaseClass( pWindowTypeName, pDccCommand )
+	, m_panelMap( StringLessFunc )
 	{
 	}
 
+	struct PanelMapElem_s
+	{
+		CVsVGuiWindowBase *m_pVGuiWindow;
+		T *m_pPanel;
+	};
+
+	typedef CUtlMap< CUtlString, PanelMapElem_s > PanelMap_t;
+
 	virtual void CreateVguiWindow( const char *pPanelName )
 	{
-		T *pVguiPanel = new T( NULL, pPanelName );
-		vgui::Frame* pFrame = dynamic_cast<vgui::Frame*>( pVguiPanel );
+		T *pVGuiPanel = new T( NULL, pPanelName );
+		vgui::Frame *pFrame = dynamic_cast< vgui::Frame * >( pVGuiPanel );
+
 		if ( pFrame )
 		{
 			pFrame->SetSizeable( false );
 			pFrame->SetCloseButtonVisible( false );
 			pFrame->SetMoveable( false );
+
+			CVsVGuiWindowBase *pVGuiWindow = CreateMayaVGuiWindow( pVGuiPanel, pPanelName );
+
+			const CUtlString panelName( pPanelName );
+
+			PanelMap_t::IndexType_t nIndex = m_panelMap.Find( panelName );
+			if ( m_panelMap.IsValidIndex( nIndex ) )
+			{
+				merr << "[vsVguiWindow]: Panel \"" << pPanelName << "\" of Type: \"" << m_pWindowTypeName << "\" Already Exists!!!" << std::endl;
+			}
+			else
+			{
+				PanelMap_t::ElemType_t &element = m_panelMap.Element( m_panelMap.Insert( panelName ) );
+				element.m_pVGuiWindow = pVGuiWindow;
+				element.m_pPanel = pVGuiPanel;
+			}
 		}
-		CreateMayaVGuiWindow( pVguiPanel, pPanelName );
 	}
 
 	virtual void DestroyVguiWindow( const char *pPanelName )
 	{
+		PanelMap_t::IndexType_t nIndex = m_panelMap.Find( pPanelName );
+		if ( !m_panelMap.IsValidIndex( nIndex ) )
+			return;
+
+		PanelMap_t::ElemType_t &element = m_panelMap.Element( nIndex );
+		delete element.m_pPanel;
+
+		m_panelMap.Remove( CUtlString( pPanelName ) );
 		DestroyMayaVGuiWindow( pPanelName );
 	}
 
+	virtual vgui::Frame *GetVGuiPanel( const char *pPanelName = NULL )
+	{
+		if ( pPanelName )
+		{
+			PanelMap_t::IndexType_t nPanelIndex = m_panelMap.Find( CUtlString( pPanelName ) );
+			if ( m_panelMap.IsValidIndex( nPanelIndex ) )
+				return dynamic_cast< vgui::Frame * >( m_panelMap.Element( nPanelIndex ).m_pPanel );
+		}
+		else if ( m_panelMap.Count() > 0 )
+		{
+				return dynamic_cast< vgui::Frame * >( m_panelMap.Element( m_panelMap.FirstInorder() ).m_pPanel );
+		}
+
+		return NULL;
+	}
+
+	virtual CVsVGuiWindowBase *GetVGuiWindow( const char *pPanelName = NULL )
+	{
+		if ( pPanelName )
+		{
+			PanelMap_t::IndexType_t nPanelIndex = m_panelMap.Find( CUtlString( pPanelName ) );
+			if ( m_panelMap.IsValidIndex( nPanelIndex ) )
+				return m_panelMap.Element( nPanelIndex ).m_pVGuiWindow;
+		}
+		else if ( m_panelMap.Count() > 0 )
+		{
+				return m_panelMap.Element( m_panelMap.FirstInorder() ).m_pVGuiWindow;
+		}
+
+		return NULL;
+	}
+
 private:
+
+	PanelMap_t m_panelMap;
 };
 
 

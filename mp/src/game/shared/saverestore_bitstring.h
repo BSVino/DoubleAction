@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -45,7 +45,7 @@ public:
 			pBitString->ClearAll();
 		}
 		int numIntsInStream = CalcNumIntsForBits( numBits );
-		int readSize = min( pBitString->GetNumDWords(), numIntsInStream );
+		int readSize = MIN( pBitString->GetNumDWords(), numIntsInStream );
 		pRestore->ReadInt( pBitString->Base(), numIntsInStream );
 
 		numIntsInStream -= readSize;

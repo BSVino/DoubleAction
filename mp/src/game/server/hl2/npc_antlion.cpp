@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Antlion - nasty bug
 //
@@ -925,9 +925,9 @@ bool CNPC_Antlion::InnateWeaponLOSCondition( const Vector &ownerPos, const Vecto
 
 Vector VecCheckThrowTolerance( CBaseEntity *pEdict, const Vector &vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance )
 {
-	flSpeed = max( 1.0f, flSpeed );
+	flSpeed = MAX( 1.0f, flSpeed );
 
-	float flGravity = sv_gravity.GetFloat();
+	float flGravity = GetCurrentGravity();
 
 	Vector vecGrenadeVel = (vecSpot2 - vecSpot1);
 
@@ -1161,19 +1161,25 @@ void CNPC_Antlion::HandleAnimEvent( animevent_t *pEvent )
 
 	if ( pEvent->event == AE_ANTLION_MELEE_HIT1 )
 	{
-		MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), QAngle( 20.0f, 0.0f, -12.0f ), Vector( -250.0f, 1.0f, 1.0f ) );
+		QAngle qa( 20.0f, 0.0f, -12.0f );
+		Vector vec( -250.0f, 1.0f, 1.0f );
+		MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), qa, vec );
 		return;
 	}
 
 	if ( pEvent->event == AE_ANTLION_MELEE_HIT2 )
 	{
-		MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), QAngle( 20.0f, 0.0f, 0.0f ), Vector( -350.0f, 1.0f, 1.0f ) );
+		QAngle qa( 20.0f, 0.0f, 0.0f );
+		Vector vec( -350.0f, 1.0f, 1.0f );
+		MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), qa, vec );
 		return;
 	}
 
 	if ( pEvent->event == AE_ANTLION_MELEE_POUNCE )
 	{
-		MeleeAttack( ANTLION_MELEE2_RANGE, sk_antlion_swipe_damage.GetFloat(), QAngle( 4.0f, 0.0f, 0.0f ), Vector( -250.0f, 1.0f, 1.0f ) );
+		QAngle qa( 4.0f, 0.0f, 0.0f );
+		Vector vec( -250.0f, 1.0f, 1.0f );
+		MeleeAttack( ANTLION_MELEE2_RANGE, sk_antlion_swipe_damage.GetFloat(), qa, vec );
 		return;
 	}
 		
@@ -2650,7 +2656,7 @@ inline bool CNPC_Antlion::IsFlipped( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_Antlion::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_Antlion::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CTakeDamageInfo newInfo = info;
 
@@ -2714,7 +2720,7 @@ void CNPC_Antlion::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDi
 		}
 	}
 
-	BaseClass::TraceAttack( newInfo, vecDir, ptr );
+	BaseClass::TraceAttack( newInfo, vecDir, ptr, pAccumulator );
 }
 
 void CNPC_Antlion::StopLoopingSounds( void )
@@ -3316,7 +3322,7 @@ bool CNPC_Antlion::CheckLanding( void )
 
 	//Roughly looks one second into the future
 	testPos = GetAbsOrigin() + ( GetAbsVelocity() * timeStep );
-	testPos[2] -= ( 0.5 * sv_gravity.GetFloat() * GetGravity() * timeStep * timeStep);
+	testPos[2] -= ( 0.5 * GetCurrentGravity() * GetGravity() * timeStep * timeStep);
 
 	if ( g_debug_antlion.GetInt() == 2 )
 	{
@@ -3346,7 +3352,11 @@ bool CNPC_Antlion::CheckLanding( void )
 				CBasePlayer *pPlayer = ToBasePlayer( GetEnemy() );
 
 				if ( pPlayer && pPlayer->IsInAVehicle() == false )
-					 MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), QAngle( 4.0f, 0.0f, 0.0f ), Vector( -250.0f, 1.0f, 1.0f ) );
+				{
+					QAngle qa( 4.0f, 0.0f, 0.0f );
+					Vector vec( -250.0f, 1.0f, 1.0f );
+					MeleeAttack( ANTLION_MELEE1_RANGE, sk_antlion_swipe_damage.GetFloat(), qa, vec );
+				}
 			}
 
 			SetAbsVelocity( GetAbsVelocity() * 0.33f );
@@ -4352,7 +4362,7 @@ void CNPC_Antlion::InputJumpAtTarget( inputdata_t &inputdata )
 
 	// initial jump, sets baseline for minJumpHeight
 	Vector vecApex;
-	Vector rawJumpVel = GetMoveProbe()->CalcJumpLaunchVelocity(GetAbsOrigin(), targetPos, sv_gravity.GetFloat() * GetJumpGravity(), &minJumpHeight, maxHorzVel, &vecApex );
+	Vector rawJumpVel = GetMoveProbe()->CalcJumpLaunchVelocity(GetAbsOrigin(), targetPos, GetCurrentGravity() * GetJumpGravity(), &minJumpHeight, maxHorzVel, &vecApex );
 
 	if ( g_debug_antlion.GetInt() == 2 )
 	{

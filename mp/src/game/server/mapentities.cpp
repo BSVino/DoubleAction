@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Controls the loading, parsing and creation of the entities from the BSP.
 //
@@ -190,7 +190,7 @@ static void SortSpawnListByHierarchy( int nEntities, HierarchicalSpawn_t *pSpawn
 	// it can properly set up anything that relies on hierarchy.
 #ifdef _WIN32
 	qsort(&pSpawnList[0], nEntities, sizeof(pSpawnList[0]), (int (__cdecl *)(const void *, const void *))CompareSpawnOrder);
-#elif _LINUX
+#elif POSIX
 	qsort(&pSpawnList[0], nEntities, sizeof(pSpawnList[0]), (int (*)(const void *, const void *))CompareSpawnOrder);
 #endif
 	delete g_pClassnameSpawnPriority;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,10 +11,11 @@
 #include "hud_numericdisplay.h"
 #include "iclientmode.h"
 #include "c_basehlplayer.h"
-#include "vguimatsurface/IMatSystemSurface.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMesh.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imesh.h"
 #include "materialsystem/imaterialvar.h"
+#include "../hud_crosshair.h"
 
 #include <vgui/IScheme.h>
 #include <vgui/ISurface.h>
@@ -100,8 +101,10 @@ void CHudZoom::ApplySchemeSettings( vgui::IScheme *scheme )
 	SetPaintBorderEnabled(false);
 	SetFgColor(scheme->GetColor("ZoomReticleColor", GetFgColor()));
 
+	SetForceStereoRenderToFrameBuffer( true );
+	int x, y;
 	int screenWide, screenTall;
-	GetHudSize(screenWide, screenTall);
+	surface()->GetFullscreenViewport( x, y, screenWide, screenTall );
 	SetBounds(0, 0, screenWide, screenTall);
 }
 
@@ -181,20 +184,31 @@ void CHudZoom::Paint( void )
 	surface()->DrawSetColor( col );
 	
 	// draw zoom circles
+	float fX, fY;
+	bool bBehindCamera = false;
+	CHudCrosshair::GetDrawPosition( &fX, &fY, &bBehindCamera );
+	if( bBehindCamera )
+		return;
+	int xCrosshair = (int)fX;
+	int yCrosshair = (int)fY;
 	int wide, tall;
-	GetSize(wide, tall);
-	surface()->DrawOutlinedCircle(wide / 2, tall / 2, m_flCircle1Radius * scale, 48);
-	surface()->DrawOutlinedCircle(wide / 2, tall / 2, m_flCircle2Radius * scale, 64);
+	GetSize( wide, tall );
+
+	surface()->DrawOutlinedCircle( xCrosshair, yCrosshair, m_flCircle1Radius * scale, 48);
+	surface()->DrawOutlinedCircle( xCrosshair, yCrosshair, m_flCircle2Radius * scale, 64);
 
 	// draw dashed lines
-	int dashCount = 1;
-	int ypos = (tall - m_flDashHeight) / 2;
-	int xpos = (int)((wide / 2) + (m_flDashGap * ++dashCount * scale));
-	while (xpos < wide && xpos > 0)
+	int dashCount = 2;
+	int ypos = yCrosshair - m_flDashHeight / 2.f;
+	float fGap = m_flDashGap * MAX(scale,0.1f);
+	int dashMax = Max(fX, (float)wide - fX ) / fGap;
+	while ( dashCount < dashMax )
 	{
+		int xpos = (int)(fX - fGap * dashCount + 0.5f);
 		surface()->DrawFilledRect(xpos, ypos, xpos + 1, ypos + m_flDashHeight);
-		surface()->DrawFilledRect(wide - xpos, ypos, wide - xpos + 1, ypos + m_flDashHeight);
-		xpos = (int)((wide / 2) + (m_flDashGap * ++dashCount * max(scale,0.1f)));
+		xpos = (int)(fX + fGap * dashCount + 0.5f);
+		surface()->DrawFilledRect(xpos, ypos, xpos + 1, ypos + m_flDashHeight);
+		dashCount++;
 	}
 
 	// draw the darkened edges, with a rotated texture in the four corners
@@ -202,8 +216,8 @@ void CHudZoom::Paint( void )
 	pRenderContext->Bind( m_ZoomMaterial );
 	IMesh *pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, NULL );
 
-	float x0 = 0.0f, x1 = wide / 2.0f, x2 = wide;
-	float y0 = 0.0f, y1 = tall / 2.0f, y2 = tall;
+	float x0 = 0.0f, x1 = fX, x2 = wide;
+	float y0 = 0.0f, y1 = fY, y2 = tall;
 
 	float uv1 = 1.0f - (1.0f / 255.0f);
 	float uv2 = 0.0f + (1.0f / 255.0f);

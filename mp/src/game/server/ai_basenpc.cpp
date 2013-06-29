@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -105,10 +105,16 @@ extern ConVar sk_healthkit;
 #include "ai_waypoint.h"
 
 #include "utlbuffer.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#ifdef __clang__
+	// These clang 3.1 warnings don't seem very useful, and cannot easily be
+	// avoided in this file.
+	#pragma GCC diagnostic ignored "-Wdangling-else"	// warning: add explicit braces to avoid dangling else [-Wdangling-else]
+#endif
 
 //#define DEBUG_LOOK
 
@@ -637,17 +643,14 @@ void CAI_BaseNPC::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bo
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 #ifdef HL2_EPISODIC
-	if ( AI_IsSinglePlayer() )
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	if ( pPlayer->IRelationType( this ) != D_LI )
 	{
-		CBasePlayer *pPlayer = AI_GetSinglePlayer();
-		if ( pPlayer->IRelationType( this ) != D_LI )
-		{
-			CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx();
+		CNPC_Alyx *alyx = CNPC_Alyx::GetAlyx();
 
-			if ( alyx )
-			{
-				alyx->EnemyIgnited( this );
-			}
+		if ( alyx )
+		{
+			alyx->EnemyIgnited( this );
 		}
 	}
 #endif
@@ -992,8 +995,7 @@ void CAI_BaseNPC::NotifyFriendsOfDamage( CBaseEntity *pAttackerEntity )
 				{
 					if ( (originNpc.AsVector2D() - origin.AsVector2D()).LengthSqr() < NEAR_XY_SQ )
 					{
-						//Tony; add a check to make sure this doesn't get called if the npc isn't in a squad
-						if ( (pNpc->GetSquad() == GetSquad() && !(pNpc->GetSquad() == NULL || GetSquad() == NULL) ) || IRelationType( pNpc ) == D_LI )
+						if ( pNpc->GetSquad() == GetSquad() || IRelationType( pNpc ) == D_LI )
 							pNpc->OnFriendDamaged( this, pAttacker );
 					}
 				}
@@ -1071,7 +1073,7 @@ void CAI_BaseNPC::DecalTrace( trace_t *pTrace, char const *decalName )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CAI_BaseNPC::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
+void CAI_BaseNPC::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )
 {
 	if ( m_fNoDamageDecal )
 	{
@@ -1120,7 +1122,7 @@ float CAI_BaseNPC::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDamage
 //=========================================================
 // TraceAttack
 //=========================================================
-void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CAI_BaseNPC::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	m_fNoDamageDecal = false;
 	if ( m_takedamage == DAMAGE_NO )
@@ -1520,7 +1522,7 @@ void CBaseEntity::HandleShotImpactingGlass( const FireBulletsInfo_t &info,
 	behindGlassInfo.m_flDistance = info.m_flDistance*( 1.0f - tr.fraction );
 	behindGlassInfo.m_iAmmoType = info.m_iAmmoType;
 	behindGlassInfo.m_iTracerFreq = info.m_iTracerFreq;
-	behindGlassInfo.m_iDamage = info.m_iDamage;
+	behindGlassInfo.m_flDamage = info.m_flDamage;
 	behindGlassInfo.m_pAttacker = info.m_pAttacker ? info.m_pAttacker : this;
 	behindGlassInfo.m_nFlags = info.m_nFlags;
 
@@ -3608,7 +3610,7 @@ void CAI_BaseNPC::RebalanceThinks()
 
 			int iMaxThinkersPerTick = ceil( (float)( rebalanceCandidates.Count() + 1 ) / (float)iTicksPer10Hz ); // +1 to account for "this"
 
-			int iCurTickDistributing = min( gpGlobals->tickcount, rebalanceCandidates[0].iNextThinkTick );
+			int iCurTickDistributing = MIN( gpGlobals->tickcount, rebalanceCandidates[0].iNextThinkTick );
 			int iRemainingThinksToDistribute = iMaxThinkersPerTick - 1; // Start with one fewer first time because "this" is 
 			// always gets a slot in the current tick to avoid complications
 			// in the calculation of "last think"
@@ -4442,7 +4444,7 @@ void CAI_BaseNPC::Sleep()
 
 	if( GetState() == NPC_STATE_SCRIPT )
 	{
-		Warning( "%s put to sleep while in Scripted state!\n");
+		Warning( "%s put to sleep while in Scripted state!\n", GetClassname() );
 	}
 
 	VacateStrategySlot();
@@ -5148,7 +5150,7 @@ void CAI_BaseNPC::GiveWeapon( string_t iszWeaponName )
 	// If I have a name, make my weapon match it with "_weapon" appended
 	if ( GetEntityName() != NULL_STRING )
 	{
-		pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", GetEntityName())) );
+		pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", STRING(GetEntityName()) )) );
 	}
 
 	Weapon_Equip( pWeapon );
@@ -5273,7 +5275,7 @@ bool CAI_BaseNPC::WeaponLOSCondition(const Vector &ownerPos, const Vector &targe
 
 #endif
 
-	bool bHaveLOS;
+	bool bHaveLOS = true;
 
 	if (GetActiveWeapon())
 	{
@@ -5296,16 +5298,16 @@ bool CAI_BaseNPC::WeaponLOSCondition(const Vector &ownerPos, const Vector &targe
 	// -------------------------------------------
 	if ( CapabilitiesGet() & ( bits_CAP_NO_HIT_PLAYER | bits_CAP_NO_HIT_SQUADMATES ) )
 	{
-		float spread = 0.92;
+		float spread = 0.92f;
 		if ( GetActiveWeapon() )
 		{
 			Vector vSpread = GetAttackSpread( GetActiveWeapon() );
 			if ( vSpread.x > VECTOR_CONE_15DEGREES.x )
-				spread = TableCos(asin(vSpread.x));
+				spread = FastCos( asin(vSpread.x) );
 			else // too much error because using point not box
-				spread = 0.99145; // "15 degrees"
+				spread = 0.99145f; // "15 degrees"
 		}
-		if (CapabilitiesGet() & bits_CAP_NO_HIT_PLAYER)
+		if ( CapabilitiesGet() & bits_CAP_NO_HIT_PLAYER)
 		{
 			// Check shoot direction relative to player
 			if (PlayerInSpread( ownerPos, targetPos, spread, 8*12 ))
@@ -5327,7 +5329,7 @@ bool CAI_BaseNPC::WeaponLOSCondition(const Vector &ownerPos, const Vector &targe
 
 		if ( bHaveLOS )
 		{
-			if ( (CapabilitiesGet() & bits_CAP_NO_HIT_SQUADMATES) && m_pSquad && GetEnemy() )
+			if ( ( CapabilitiesGet() & bits_CAP_NO_HIT_SQUADMATES) && m_pSquad && GetEnemy() )
 			{
 				if ( IsSquadmateInSpread( ownerPos, targetPos, spread, 8*12 ) )
 				{
@@ -5667,7 +5669,7 @@ void CAI_BaseNPC::GatherEnemyConditions( CBaseEntity *pEnemy )
 	float tooFar = m_flDistTooFar;
 	if ( GetActiveWeapon() && HasCondition(COND_SEE_ENEMY) )
 	{
-		tooFar = max( m_flDistTooFar, GetActiveWeapon()->m_fMaxRange1 );
+		tooFar = MAX( m_flDistTooFar, GetActiveWeapon()->m_fMaxRange1 );
 	}
 
 	if ( flDistToEnemy >= tooFar )
@@ -5751,7 +5753,7 @@ float CAI_BaseNPC::GetGoalRepathTolerance( CBaseEntity *pGoalEnt, GoalType_t typ
 	{
 		float t = distToGoal / distMoved1Sec;
 
-		result = clamp( 120 * t, 0, 120 );
+		result = clamp( 120.f * t, 0.f, 120.f );
 		// Msg("t %.2f : d %.0f  (%.0f)\n", t, result, distMoved1Sec );
 	}
 		
@@ -6064,7 +6066,7 @@ void CAI_BaseNPC::ResolveActivityToSequence(Activity NewActivity, int &iSequence
 
 	translatedActivity = TranslateActivity( NewActivity, &weaponActivity );
 
-	if ( ( NewActivity == ACT_SCRIPT_CUSTOM_MOVE ) )
+	if ( NewActivity == ACT_SCRIPT_CUSTOM_MOVE )
 	{
 		iSequence = GetScriptCustomMoveSequence();
 	}
@@ -6419,7 +6421,7 @@ void CAI_BaseNPC::OnChangeActivity( Activity eNewActivity )
 //=========================================================
 // SetSequenceByName
 //=========================================================
-void CAI_BaseNPC::SetSequenceByName( char *szSequence )
+void CAI_BaseNPC::SetSequenceByName( const char *szSequence )
 {
 	int iSequence = LookupSequence( szSequence );
 
@@ -6427,7 +6429,7 @@ void CAI_BaseNPC::SetSequenceByName( char *szSequence )
 		SetSequenceById( iSequence );
 	else
 	{
-		DevWarning( 2, "%s has no sequence to match request\n", GetClassname(), szSequence );
+		DevWarning( 2, "%s has no sequence %s to match request\n", GetClassname(), szSequence );
 		SetSequence( 0 );	// Set to the reset anim (if it's there)
 	}
 }
@@ -6688,7 +6690,13 @@ void CAI_BaseNPC::SetHullSizeNormal( bool force )
 {
 	if ( m_fIsUsingSmallHull || force )
 	{
-		UTIL_SetSize(this, GetHullMins(),GetHullMaxs());
+		// Find out what the height difference will be between the versions and adjust our bbox accordingly to keep us level
+		const float flScale = GetModelScale();
+		Vector vecMins = ( GetHullMins() * flScale );
+		Vector vecMaxs = ( GetHullMaxs() * flScale );
+		
+		UTIL_SetSize( this, vecMins, vecMaxs );
+
 		m_fIsUsingSmallHull = false;
 		if ( VPhysicsGetObject() )
 		{
@@ -6857,7 +6865,7 @@ void CAI_BaseNPC::NPCInit ( void )
 				// If I have a name, make my weapon match it with "_weapon" appended
 				if ( GetEntityName() != NULL_STRING )
 				{
-					pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", GetEntityName())) );
+					pWeapon->SetName( AllocPooledString(UTIL_VarArgs("%s_weapon", STRING(GetEntityName()))) );
 				}
 
 				if ( GetEffects() & EF_NOSHADOW )
@@ -8088,7 +8096,7 @@ Vector CAI_BaseNPC::EyeOffset( Activity nActivity )
 	if ( IsCrouching() )
 		return GetCrouchEyeOffset();
 
-	return m_vDefaultEyeOffset;
+	return m_vDefaultEyeOffset * GetModelScale();
 }
 
 //-----------------------------------------------------------------------------
@@ -8232,7 +8240,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 			SetIdealActivity( ACT_IDLE );
 			Forget( bits_MEMORY_TURNING );
 			SetBoneController( 0, GetLocalAngles().y );
-			AddEffects( EF_NOINTERP );
+			IncrementInterpolationFrame();
 			break;
 		}
 
@@ -8540,7 +8548,7 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 					if (act == ACT_INVALID)
 					{
 						// Try and translate it
-						act = Weapon_TranslateActivity( (Activity)CAI_BaseNPC::GetActivityID(pEvent->options), false );
+						act = Weapon_TranslateActivity( (Activity)CAI_BaseNPC::GetActivityID(pEvent->options), NULL );
 					}
 
 					if (act != ACT_INVALID)
@@ -8919,7 +8927,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 	{
 		// Print health
 		char tempstr[512];
-		Q_snprintf(tempstr,sizeof(tempstr),"Health: %i",m_iHealth);
+		Q_snprintf(tempstr,sizeof(tempstr),"Health: %i",m_iHealth.Get());
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
@@ -8979,7 +8987,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		// --------------
 		// Print Health
 		// --------------
-		Q_snprintf(tempstr,sizeof(tempstr),"Health: %i  (DACC:%1.2f)",m_iHealth, GetDamageAccumulator() );
+		Q_snprintf(tempstr,sizeof(tempstr),"Health: %i  (DACC:%1.2f)",m_iHealth.Get(), GetDamageAccumulator() );
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
 
@@ -9009,7 +9017,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		// -----------------
 		if( GetHintGroup() != NULL_STRING )
 		{
-			Q_snprintf(tempstr,sizeof(tempstr),"Hint Group: %s", GetHintGroup() );
+			Q_snprintf(tempstr,sizeof(tempstr),"Hint Group: %s", STRING(GetHintGroup()) );
 			EntityText(text_offset,tempstr,0);
 			text_offset++;
 		}
@@ -9125,7 +9133,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 			}
 			if (!bHasConditions)
 			{
-				Q_snprintf(tempstr,sizeof(tempstr),"(no conditions)",m_iHealth);
+				Q_snprintf(tempstr,sizeof(tempstr),"(no conditions)");
 				EntityText(text_offset,tempstr,0);
 				text_offset++;
 			}
@@ -9307,7 +9315,7 @@ void CAI_BaseNPC::ReportAIState( void )
 	DevMsg( "Leader." );
 
 	DevMsg( "\n" );
-	DevMsg( "Yaw speed:%3.1f,Health: %3d\n", GetMotor()->GetYawSpeed(), m_iHealth );
+	DevMsg( "Yaw speed:%3.1f,Health: %3d\n", GetMotor()->GetYawSpeed(), m_iHealth.Get() );
 
 	if ( GetGroundEntity() )
 	{
@@ -9777,7 +9785,7 @@ Vector CAI_BaseNPC::GetActualShootTrajectory( const Vector &shootOrigin )
 
 	return shotDir;
 }
-#endif HL2_DLL
+#endif // HL2_DLL
 
 //-----------------------------------------------------------------------------
 
@@ -10340,7 +10348,7 @@ void CAI_BaseNPC::PickupWeapon( CBaseCombatWeapon *pWeapon )
 //=========================================================
 // DropItem - dead npc drops named item
 //=========================================================
-CBaseEntity *CAI_BaseNPC::DropItem ( char *pszItemName, Vector vecPos, QAngle vecAng )
+CBaseEntity *CAI_BaseNPC::DropItem ( const char *pszItemName, Vector vecPos, QAngle vecAng )
 {
 	if ( !pszItemName )
 	{
@@ -11846,7 +11854,7 @@ bool CAI_BaseNPC::CineCleanup()
 		if ( CanBecomeRagdoll() == false )
 		{
 			StopAnimation();
-  			AddEffects( EF_NOINTERP );	// Don't interpolate either, assume the corpse is positioned in its final resting place
+			IncrementInterpolationFrame(); // Don't interpolate either, assume the corpse is positioned in its final resting place
 		}
 
 		SetMoveType( MOVETYPE_NONE );
@@ -11920,7 +11928,7 @@ bool CAI_BaseNPC::CineCleanup()
 				// Call teleport to notify
 				Teleport( &origin, NULL, NULL );
 				SetLocalOrigin( origin );
-				AddEffects( EF_NOINTERP );
+				IncrementInterpolationFrame();
 			}
 
 			if ( m_iHealth <= 0 )
@@ -12475,7 +12483,13 @@ void DevMsg( CAI_BaseNPC *pAI, unsigned flags, const char *pszFormat, ... )
 {
 	if ( (flags & AIMF_IGNORE_SELECTED) || (pAI->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT) )
 	{
-		AIMsgGuts( pAI, flags, CFmtStr( &pszFormat ) );
+		va_list ap;
+		va_start(ap, pszFormat);
+		char szTempMsgBuf[512];
+		V_vsprintf_safe( szTempMsgBuf, pszFormat, ap );
+
+		AIMsgGuts( pAI, flags, szTempMsgBuf );
+		va_end(ap);
 	}
 }
 
@@ -12485,7 +12499,13 @@ void DevMsg( CAI_BaseNPC *pAI, const char *pszFormat, ... )
 {
 	if ( (pAI->m_debugOverlays & OVERLAY_NPC_SELECTED_BIT) )
 	{
-		AIMsgGuts( pAI, 0, CFmtStr( &pszFormat ) );
+		va_list ap;
+		va_start(ap, pszFormat);
+		char szTempMsgBuf[512];
+		V_vsprintf_safe( szTempMsgBuf, pszFormat, ap );
+
+		AIMsgGuts( pAI, 0, szTempMsgBuf );
+		va_end(ap);
 	}
 }
 
@@ -13928,7 +13948,7 @@ void CAI_BaseNPC::CalculateForcedInteractionPosition( void )
 //-----------------------------------------------------------------------------
 void CAI_BaseNPC::PlayerHasIlluminatedNPC( CBasePlayer *pPlayer, float flDot )
 {
-#ifdef HL2_DLL
+#ifdef HL2_EPISODIC
 	if ( IsActiveDynamicInteraction() )
 	{
 		ScriptedNPCInteraction_t *pInteraction = GetRunningDynamicInteraction();

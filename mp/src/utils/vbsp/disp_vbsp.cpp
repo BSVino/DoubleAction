@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -626,7 +626,7 @@ void DispGetFaceInfo( mapbrush_t *pBrush )
 	// we don't support displacement on entities at the moment!!
 	if( pBrush->entitynum != 0 )
 	{
-		char* pszEntityName = ValueForKey( &entities[pBrush->entitynum], "classname" );
+		char* pszEntityName = ValueForKey( &g_LoadingMap->entities[pBrush->entitynum], "classname" );
 		Error( "Error: displacement found on a(n) %s entity - not supported (entity %d, brush %d)\n", pszEntityName, pBrush->entitynum, pBrush->brushnum );
 	}
 
@@ -638,7 +638,6 @@ void DispGetFaceInfo( mapbrush_t *pBrush )
 			// error checking!!
 			if( pSide->winding->numpoints != 4 )
 				Error( "Trying to create a non-quad displacement! (entity %d, brush %d)\n", pBrush->entitynum, pBrush->brushnum );
-
 			pSide->pMapDisp->face.originalface = pSide;
 			pSide->pMapDisp->face.texinfo = pSide->texinfo;
 			pSide->pMapDisp->face.dispinfo = -1;

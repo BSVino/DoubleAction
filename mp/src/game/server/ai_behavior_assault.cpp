@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -350,7 +350,7 @@ void CAI_AssaultBehavior::ClearAssaultPoint( void )
 		}
 		else
 		{
-			DevMsg("**ERROR: Can't find next assault point: %s\n", m_hAssaultPoint->m_NextAssaultPointName );
+			DevMsg("**ERROR: Can't find next assault point: %s\n", STRING(m_hAssaultPoint->m_NextAssaultPointName) );
 
 			// Bomb out of assault behavior.
 			m_AssaultCue = CUE_NO_ASSAULT;
@@ -1043,7 +1043,7 @@ void CAI_AssaultBehavior::InitializeBehavior()
 	m_bHitRallyPoint = false;
 	m_bHitAssaultPoint = false;
 
-	m_hAssaultPoint = false;
+	m_hAssaultPoint = 0;
 
 	m_bDiverting = false;
 	m_flLastSawAnEnemyAt = 0;

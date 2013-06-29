@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Teleports a named entity to a given position and restores
 //			it's physics state
@@ -136,7 +136,7 @@ void CPointTeleport::InputTeleport( inputdata_t &inputdata )
 			pPlayer->m_Local.m_bDucked = true;
 			pPlayer->m_Local.m_bDucking = true;
 			pPlayer->m_Local.m_flDucktime = 0.0f;
-			pPlayer->SetViewOffset( VEC_DUCK_VIEW );
+			pPlayer->SetViewOffset( VEC_DUCK_VIEW_SCALED( pPlayer ) );
 			pPlayer->SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
 		}
 	}		

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements the Sticky Bolt code. This constraints ragdolls to the world
 //			after being hit by a crossbow bolt. If something here is acting funny
@@ -18,8 +18,8 @@
 #include "decals.h"
 #include "iefx.h"
 #include "engine/IEngineSound.h"
-#include "materialsystem/IMaterialVar.h"
-#include "ieffects.h"
+#include "materialsystem/imaterialvar.h"
+#include "IEffects.h"
 #include "engine/IEngineTrace.h"
 #include "vphysics/constraints.h"
 #include "engine/ivmodelinfo.h"

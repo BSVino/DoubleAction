@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -68,6 +68,7 @@ typedef int __cdecl SortFunc(
 class ListPanel : public Panel
 {
 	DECLARE_CLASS_SIMPLE( ListPanel, Panel );
+
 public:
 	ListPanel(Panel *parent, const char *panelName);
 	~ListPanel();
@@ -132,7 +133,7 @@ public:
 	virtual void RemoveAll();		// clears and deletes all the memory used by the data items
 	virtual void DeleteAllItems();	// obselete, use RemoveAll();
 
-	virtual void GetCellText(int itemID, int column, wchar_t *buffer, int bufferSize); // returns the data held by a specific cell
+	virtual void GetCellText(int itemID, int column, OUT_Z_BYTECAP(bufferSizeInBytes) wchar_t *buffer, int bufferSizeInBytes); // returns the data held by a specific cell
 	virtual IImage *GetCellImage(int itemID, int column); //, ImagePanel *&buffer); // returns the image held by a specific cell
 
 	// Use these until they return InvalidItemID to iterate all the items.
@@ -213,6 +214,14 @@ public:
 
 	MESSAGE_FUNC_INT( ResizeColumnToContents, "ResizeColumnToContents", column );
 
+#ifdef _X360
+	virtual void NavigateTo();
+#endif
+	/// Version number for file format of user config.  This defaults to 1,
+	/// and if you rearrange columns you can increment it to cause any old
+	/// user configs (which will be screwed up) to be discarded.
+	int m_nUserConfigFileVersion;
+
 protected:
 	// PAINTING
 	virtual Panel *GetCellRenderer(int row, int column);
@@ -226,7 +235,11 @@ protected:
 	virtual void ApplySchemeSettings(IScheme *pScheme);
 	virtual void OnMousePressed( MouseCode code );
 	virtual void OnMouseDoublePressed( MouseCode code );
-	virtual void OnKeyCodeTyped( KeyCode code );
+#ifdef _X360
+	virtual void OnKeyCodePressed(KeyCode code);
+#else
+	virtual void OnKeyCodePressed( KeyCode code );
+#endif
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" );
 	MESSAGE_FUNC_INT_INT( OnColumnResized, "ColumnResized", column, delta );
 	MESSAGE_FUNC_INT( OnSetSortColumn, "SetSortColumn", column );

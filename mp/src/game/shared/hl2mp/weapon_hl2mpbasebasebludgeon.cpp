@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -356,8 +356,6 @@ void CBaseHL2MPBludgeonWeapon::Swing( int bIsSecondary )
 	SendWeaponAnim( nHitActivity );
 
 	pOwner->SetAnimation( PLAYER_ATTACK1 );
-	ToHL2MPPlayer(pOwner)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-
 
 	//Setup our next attack times
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();

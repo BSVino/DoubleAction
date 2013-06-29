@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Exposes client-server neutral interfaces implemented in both places
 //
@@ -8,8 +8,13 @@
 #ifndef SHAREDINTERFACE_H
 #define SHAREDINTERFACE_H
 
+#ifdef POSIX
+#define random random_valve// stdlib.h defined random() and our class defn conflicts so under POSIX rename it using the preprocessor
+#endif
+
 class IFileSystem;
 class IUniformRandomStream;
+class CGaussianRandomStream;
 class IEngineSound;
 class IMapData;
 
@@ -22,6 +27,7 @@ extern IUniformRandomStream		*random;
 #else
 extern IUniformRandomStream		*random;
 #endif
+extern CGaussianRandomStream *randomgaussian;
 extern IEngineSound				*enginesound;
 extern IMapData					*g_pMapData;			// TODO: current implementations of the 
 														// interface are in TF2, should probably move

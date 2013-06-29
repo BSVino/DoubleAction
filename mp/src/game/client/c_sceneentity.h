@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2007, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,6 +12,7 @@
 #endif
 
 #include "ichoreoeventcallback.h"
+#include "choreoscene.h"
 
 class C_SceneEntity : public C_BaseEntity, public IChoreoEventCallback
 {
@@ -65,8 +66,10 @@ private:
 	virtual void			DispatchStartExpression( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	virtual void			DispatchEndExpression( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	virtual void			DispatchStartGesture( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
+	virtual void			DispatchProcessGesture( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	virtual void			DispatchEndGesture( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	virtual void			DispatchStartSequence( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
+	virtual void			DispatchProcessSequence( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	virtual void			DispatchEndSequence( CChoreoScene *scene, C_BaseFlex *actor, CChoreoEvent *event );
 	void					DispatchProcessLoop( CChoreoScene *scene, CChoreoEvent *event );
 
@@ -110,6 +113,22 @@ private:
 	};
 
 	CUtlVector< QueuedEvents_t > m_QueuedEvents;
+};
+
+//-----------------------------------------------------------------------------
+// Binary compiled VCDs get their strings from a pool
+//-----------------------------------------------------------------------------
+class CChoreoStringPool : public IChoreoStringPool
+{
+public:
+	short FindOrAddString( const char *pString )
+	{
+		// huh?, no compilation at run time, only fetches
+		Assert( 0 );
+		return -1;
+	}
+
+	bool GetString( short stringId, char *buff, int buffSize );
 };
 
 #endif // C_SCENEENTITY_H

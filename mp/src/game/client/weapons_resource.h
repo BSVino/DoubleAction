@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 
 #include "shareddefs.h"
 #include "weapon_parse.h"
-#include "UtlDict.h"
+#include "utldict.h"
 #include "hud.h"
 
 class C_BaseCombatWeapon;

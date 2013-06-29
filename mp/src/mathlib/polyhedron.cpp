@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -102,19 +102,19 @@ CPolyhedron_AllocByNew *CPolyhedron_AllocByNew::Allocate( unsigned short iVertic
 class CPolyhedron_TempMemory : public CPolyhedron
 {
 public:
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	int iReferenceCount;
 #endif
 
 	virtual void Release( void )
 	{
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 		--iReferenceCount;
 #endif
 	}
 
 	CPolyhedron_TempMemory( void )
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 		: iReferenceCount( 0 )
 #endif
 	{ };
@@ -127,7 +127,7 @@ static CPolyhedron_TempMemory s_TempMemoryPolyhedron;
 CPolyhedron *GetTempPolyhedron( unsigned short iVertices, unsigned short iLines, unsigned short iIndices, unsigned short iPolygons ) //grab the temporary polyhedron. Avoids new/delete for quick work. Can only be in use by one chunk of code at a time
 {
 	AssertMsg( s_TempMemoryPolyhedron.iReferenceCount == 0, "Temporary polyhedron memory being rewritten before released" );
-#ifdef _DEBUG
+#ifdef DBGFLAG_ASSERT
 	++s_TempMemoryPolyhedron.iReferenceCount;
 #endif
 	s_TempMemoryPolyhedron_Buffer.SetCount( (sizeof( Vector ) * iVertices) +

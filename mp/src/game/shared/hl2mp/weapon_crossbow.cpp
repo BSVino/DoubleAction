@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,6 @@
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
 	#include "c_te_effect_dispatch.h"
-	#include "input.h"
 #else
 	#include "hl2mp_player.h"
 	#include "te_effect_dispatch.h"
@@ -434,7 +433,9 @@ private:
 	void	SetChargerState( ChargerState_t state );
 	void	DoLoadEffect( void );
 
+#ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
+#endif
 
 private:
 	
@@ -474,24 +475,22 @@ LINK_ENTITY_TO_CLASS( weapon_crossbow, CWeaponCrossbow );
 
 PRECACHE_WEAPON_REGISTER( weapon_crossbow );
 
+#ifndef CLIENT_DLL
+
 acttable_t	CWeaponCrossbow::m_acttable[] = 
 {
-	{ ACT_MP_STAND_IDLE,				ACT_HL2MP_IDLE_CROSSBOW,					false },
-	{ ACT_MP_CROUCH_IDLE,				ACT_HL2MP_IDLE_CROUCH_CROSSBOW,				false },
-
-	{ ACT_MP_RUN,						ACT_HL2MP_RUN_CROSSBOW,						false },
-	{ ACT_MP_CROUCHWALK,				ACT_HL2MP_WALK_CROUCH_CROSSBOW,				false },
-
-	{ ACT_MP_ATTACK_STAND_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,	false },
-	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,	false },
-
-	{ ACT_MP_RELOAD_STAND,				ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,			false },
-	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,			false },
-
-	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_CROSSBOW,					false },
+	{ ACT_HL2MP_IDLE,					ACT_HL2MP_IDLE_CROSSBOW,					false },
+	{ ACT_HL2MP_RUN,					ACT_HL2MP_RUN_CROSSBOW,						false },
+	{ ACT_HL2MP_IDLE_CROUCH,			ACT_HL2MP_IDLE_CROUCH_CROSSBOW,				false },
+	{ ACT_HL2MP_WALK_CROUCH,			ACT_HL2MP_WALK_CROUCH_CROSSBOW,				false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK,	ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW,	false },
+	{ ACT_HL2MP_GESTURE_RELOAD,			ACT_HL2MP_GESTURE_RELOAD_CROSSBOW,			false },
+	{ ACT_HL2MP_JUMP,					ACT_HL2MP_JUMP_CROSSBOW,					false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponCrossbow);
+
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -793,39 +792,29 @@ void CWeaponCrossbow::DoLoadEffect( void )
 	if ( pOwner == NULL )
 		return;
 
-	//Tony; change this up a bit; on the server, dispatch an effect but don't send it to the client who fires
-	//on the client, create an effect either in the view model, or on the world model if first person.
-	CEffectData	data;
-
-	data.m_nAttachmentIndex = 1;
-
-#ifdef GAME_DLL
-	data.m_nEntIndex = entindex();
-
-	CPASFilter filter( data.m_vOrigin );
-	filter.RemoveRecipient( pOwner );
-	te->DispatchEffect( filter, 0.0, data.m_vOrigin, "CrossbowLoad", data );
-#else
 	CBaseViewModel *pViewModel = pOwner->GetViewModel();
 
-	if ( pViewModel != NULL )
-	{
+	if ( pViewModel == NULL )
+		return;
 
-		if ( ::input->CAM_IsThirdPerson() )
-			data.m_hEntity = pViewModel->GetRefEHandle();
-		else
-			data.m_hEntity = GetRefEHandle();
-		DispatchEffect( "CrossbowLoad", data );
-	}
+	CEffectData	data;
+
+#ifdef CLIENT_DLL
+	data.m_hEntity = pViewModel->GetRefEHandle();
+#else
+	data.m_nEntIndex = pViewModel->entindex();
 #endif
+	data.m_nAttachmentIndex = 1;
 
-	//Tony; switched this up, always attach it to the weapon, not the view model!!
+	DispatchEffect( "CrossbowLoad", data );
+
 #ifndef CLIENT_DLL
+
 	CSprite *pBlast = CSprite::SpriteCreate( CROSSBOW_GLOW_SPRITE2, GetAbsOrigin(), false );
 
 	if ( pBlast )
 	{
-		pBlast->SetAttachment( this, 1 );
+		pBlast->SetAttachment( pOwner->GetViewModel(), 1 );
 		pBlast->SetTransparency( kRenderTransAdd, 255, 255, 255, 255, kRenderFxNone );
 		pBlast->SetBrightness( 128 );
 		pBlast->SetScale( 0.2f );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A camera entity that's used by the -makedevshots system to take
 //			dev screenshots everytime the map is checked into source control.
@@ -146,7 +146,7 @@ void CPointDevShotCamera::DevShotThink_TakeShot( void )
 	if ( !pPlayer )
 		return;
 
-	engine->ClientCommand( pPlayer->edict(), UTIL_VarArgs( "devshots_screenshot \"%s\"", STRING(m_iszCameraName) ) );
+	engine->ClientCommand( pPlayer->edict(), "devshots_screenshot \"%s\"", STRING(m_iszCameraName) );
 
 	// Now take the shot next frame
 	SetThink( &CPointDevShotCamera::DevShotThink_PostShot );

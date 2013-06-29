@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -106,8 +106,8 @@ public:
 	bool			GetEndPointPos( int iPt, Vector &vPos );
 
 	// Get the rope material data.
-	IMaterial		*GetSolidMaterial( void )		{ return m_pMaterial; }
-	IMaterial		*GetBackMaterial( void )		{ return m_pBackMaterial; }
+	IMaterial		*GetSolidMaterial( void );
+	IMaterial		*GetBackMaterial( void );
 
 	struct BuildRopeQueuedData_t
 	{
@@ -119,7 +119,7 @@ public:
 		float	m_Slack;
 	};
 
-	void			BuildRope( RopeSegData_t *pRopeSegment, const Vector &vCurrentViewForward, const Vector &vCurrentViewOrigin, BuildRopeQueuedData_t *pQueuedData );
+	void			BuildRope( RopeSegData_t *pRopeSegment, const Vector &vCurrentViewForward, const Vector &vCurrentViewOrigin, BuildRopeQueuedData_t *pQueuedData, bool bQueued );
 
 // C_BaseEntity overrides.
 public:
@@ -251,6 +251,9 @@ public:
 	virtual void				AddToRenderCache( C_RopeKeyframe *pRope ) = 0;
 	virtual void				DrawRenderCache( bool bShadowDepth ) = 0;
 	virtual void				OnRenderStart( void ) = 0;
+	virtual void				SetHolidayLightMode( bool bHoliday ) = 0;
+	virtual bool				IsHolidayLightMode( void ) = 0;
+	virtual int					GetHolidayLightStyle( void ) = 0;
 };
 
 IRopeManager *RopeManager();

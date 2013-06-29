@@ -1,8 +1,8 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
-//=====================================================================================//
+//=============================================================================//
 
 #ifndef SDK_WEAPON_PARSE_H
 #define SDK_WEAPON_PARSE_H

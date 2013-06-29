@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -45,6 +45,7 @@ private:
 	enum
 	{
 		FILE_OPEN_ERROR = MAX_ERROR_FLAG << 1,
+		FILE_WRITE_ERROR = MAX_ERROR_FLAG << 2,
 	};
 
 	// Overflow functions

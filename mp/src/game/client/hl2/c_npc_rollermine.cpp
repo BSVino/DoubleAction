@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,9 +8,9 @@
 #include "c_ai_basenpc.h"
 #include "iviewrender_beams.h"
 #include "beam_shared.h"
-#include "materialsystem/IMaterial.h"
+#include "materialsystem/imaterial.h"
 #include "model_types.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "beamdraw.h"
 
 class C_RollerMine : public C_AI_BaseNPC

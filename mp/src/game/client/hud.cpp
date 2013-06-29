@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -35,13 +35,52 @@ static 	CClassMemoryPool< CHudTexture >	 g_HudTextureMemoryPool( 128 );
 //-----------------------------------------------------------------------------
 // Purpose: Parses the weapon txt files to get the sprites needed.
 //-----------------------------------------------------------------------------
-void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, char *szFilenameWithoutExtension, const unsigned char *pICEKey )
+struct HudTextureFileRef
+{
+	HudTextureFileRef ( const char *cszFileKey, const char *cszHudTexturePrefix )
+	{
+		Q_strncpy( m_cszFileKey, cszFileKey, kcszFileKeyLength );
+		Q_strncpy( m_cszHudTexturePrefix, cszHudTexturePrefix, kcszHudTexturePrefix );
+		m_uiPrefixLength = Q_strlen( cszHudTexturePrefix );
+		m_fileKeySymbol = KeyValuesSystem()->GetSymbolForString( m_cszFileKey );
+		Assert( m_fileKeySymbol != INVALID_KEY_SYMBOL );
+	}
+
+	enum { kcszFileKeyLength = 64, };
+	enum { kcszHudTexturePrefix = 16, };
+
+	char m_cszFileKey[kcszFileKeyLength];
+	char m_cszHudTexturePrefix[kcszHudTexturePrefix];
+	unsigned int m_uiPrefixLength;
+	HKeySymbol m_fileKeySymbol;
+};
+
+void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, const char *szFilenameWithoutExtension, const unsigned char *pICEKey )
 {
 	KeyValues *pTemp, *pTextureSection;
 
 	KeyValues *pKeyValuesData = ReadEncryptedKVFile( filesystem, szFilenameWithoutExtension, pICEKey );
 	if ( pKeyValuesData )
 	{
+		CUtlVector<HudTextureFileRef> hudTextureFileRefs;
+
+		// By default, add a default entry mapping "file" to no prefix. This will allow earlier-version files
+		// to work with no modification.
+		hudTextureFileRefs.AddToTail( HudTextureFileRef( "file", "" ) );
+
+		// Read "*file"-to-prefix mapping.
+		KeyValues *pTextureFileRefs = pKeyValuesData->FindKey( "TextureFileRefs" );
+		if ( pTextureFileRefs )
+		{
+			pTemp = pTextureFileRefs->GetFirstSubKey();
+			while ( pTemp )
+			{
+				hudTextureFileRefs.AddToTail( HudTextureFileRef( pTemp->GetName(), pTemp->GetString( "prefix", "" ) ) );
+				pTemp = pTemp->GetNextKey();
+			}
+		}
+
+		// Read our individual HUD texture data blocks.
 		pTextureSection = pKeyValuesData->FindKey( "TextureData" );
 		if ( pTextureSection  )
 		{
@@ -49,28 +88,48 @@ void LoadHudTextures( CUtlDict< CHudTexture *, int >& list, char *szFilenameWith
 			pTemp = pTextureSection->GetFirstSubKey();
 			while ( pTemp )
 			{
-				CHudTexture *tex = new CHudTexture();
-				// Key Name is the sprite name
-				Q_strncpy( tex->szShortName, pTemp->GetName(), sizeof( tex->szShortName ) );
-
 				if ( pTemp->GetString( "font", NULL ) )
 				{
+					CHudTexture *tex = new CHudTexture();
+
+					// Key Name is the sprite name
+					Q_strncpy( tex->szShortName, pTemp->GetName(), sizeof( tex->szShortName ) );
+
 					// it's a font-based icon
 					tex->bRenderUsingFont = true;
 					tex->cCharacterInFont = *(pTemp->GetString("character", ""));
 					Q_strncpy( tex->szTextureFile, pTemp->GetString( "font" ), sizeof( tex->szTextureFile ) );
+
+					list.Insert( tex->szShortName, tex );
 				}
 				else
 				{
-					tex->bRenderUsingFont = false;
-					Q_strncpy( tex->szTextureFile, pTemp->GetString( "file" ), sizeof( tex->szTextureFile ) );
-					tex->rc.left	= pTemp->GetInt( "x", 0 );
-					tex->rc.top		= pTemp->GetInt( "y", 0 );
-					tex->rc.right	= pTemp->GetInt( "width", 0 )	+ tex->rc.left;
-					tex->rc.bottom	= pTemp->GetInt( "height", 0 )	+ tex->rc.top;
-				}
+					int iTexLeft	= pTemp->GetInt( "x", 0 ),
+						iTexTop		= pTemp->GetInt( "y", 0 ),
+						iTexRight	= pTemp->GetInt( "width", 0 )	+ iTexLeft,
+						iTexBottom	= pTemp->GetInt( "height", 0 )	+ iTexTop;
 
-				list.Insert( tex->szShortName, tex );
+					for ( int i = 0; i < hudTextureFileRefs.Size(); i++ )
+					{
+						const char *cszFilename = pTemp->GetString( hudTextureFileRefs[i].m_fileKeySymbol, NULL );
+						if ( cszFilename )
+						{
+							CHudTexture *tex = new CHudTexture();
+
+							tex->bRenderUsingFont = false;
+							tex->rc.left	= iTexLeft;
+							tex->rc.top		= iTexTop;
+							tex->rc.right	= iTexRight;
+							tex->rc.bottom	= iTexBottom;
+
+							Q_strncpy( tex->szShortName, hudTextureFileRefs[i].m_cszHudTexturePrefix, sizeof( tex->szShortName ) );
+							Q_strncpy( tex->szShortName + hudTextureFileRefs[i].m_uiPrefixLength, pTemp->GetName(), sizeof( tex->szShortName ) - hudTextureFileRefs[i].m_uiPrefixLength );
+							Q_strncpy( tex->szTextureFile, cszFilename, sizeof( tex->szTextureFile ) );
+
+							list.Insert( tex->szShortName, tex );
+						}
+					}
+				}
 
 				pTemp = pTemp->GetNextKey();
 			}
@@ -111,6 +170,60 @@ typedef struct hudelement_hidden_s
 } hudelement_hidden_t;
 
 ConVar hidehud( "hidehud", "0", FCVAR_CHEAT );
+
+
+
+CHudTexture::CHudTexture()
+{
+	Q_memset( szShortName, 0, sizeof( szShortName ) );
+	Q_memset( szTextureFile, 0, sizeof( szTextureFile ) );
+	Q_memset( texCoords, 0, sizeof( texCoords ) );
+	Q_memset( &rc, 0, sizeof( rc ) );
+	textureId = -1;
+	bRenderUsingFont = false;
+	bPrecached = false;
+	cCharacterInFont = 0;
+	hFont = ( vgui::HFont )NULL;
+}
+
+CHudTexture& CHudTexture::operator =( const CHudTexture& src )
+{
+	if ( this == &src )
+		return *this;
+
+	Q_strncpy( szShortName, src.szShortName, sizeof( szShortName ) );
+	Q_strncpy( szTextureFile, src.szTextureFile, sizeof( szTextureFile ) );
+	Q_memcpy( texCoords, src.texCoords, sizeof( texCoords ) );
+
+	if ( src.textureId == -1 )
+	{
+		// Didn't have a texture ID set
+		textureId = -1;
+	}
+	else
+	{
+		// Make a new texture ID that uses the same texture
+		textureId = vgui::surface()->CreateNewTextureID();
+		vgui::surface()->DrawSetTextureFile( textureId, src.szTextureFile, false, false );
+	}
+
+	rc = src.rc;
+	bRenderUsingFont = src.bRenderUsingFont;
+	cCharacterInFont = src.cCharacterInFont;
+	hFont = src.hFont;
+
+	return *this;
+}
+
+CHudTexture::~CHudTexture()
+{
+	if ( vgui::surface() && textureId != -1 )
+	{
+		vgui::surface()->DestroyTextureID( textureId );
+		textureId = -1;
+	}
+}
+
 
 //=======================================================================================================================
 //  CHudElement
@@ -386,12 +499,13 @@ void CHud::Shutdown( void )
 {
 	gLCD.Shutdown();
 
-	// Delete all the Hud elements
-	int iMax = m_HudList.Size();
-	for ( int i = iMax-1; i >= 0; i-- )
+	// Deleting hudlist items can result in them being removed from the same hudlist (m_bNeedsRemove).
+	//	So go through and kill the last item until the array is empty.
+	while ( m_HudList.Size() > 0 )
 	{
-		delete m_HudList[i];
+		delete m_HudList.Tail();
 	}
+
 	m_HudList.Purge();
 	m_bHudTexturesLoaded = false;
 }
@@ -465,12 +579,12 @@ void CHudTexture::Precache( void )
 	}
 }
 
-void CHudTexture::DrawSelf( int x, int y, Color& clr ) const
+void CHudTexture::DrawSelf( int x, int y, const Color& clr ) const
 {
 	DrawSelf( x, y, Width(), Height(), clr );
 }
 
-void CHudTexture::DrawSelf( int x, int y, int w, int h, Color& clr ) const
+void CHudTexture::DrawSelf( int x, int y, int w, int h, const Color& clr ) const
 {
 	if ( bRenderUsingFont )
 	{
@@ -491,7 +605,7 @@ void CHudTexture::DrawSelf( int x, int y, int w, int h, Color& clr ) const
 	}
 }
 
-void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color& clr ) const
+void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, int finalWidth, int finalHeight, Color clr ) const
 {
 	if ( bRenderUsingFont )
 	{
@@ -548,7 +662,7 @@ void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw
 	}
 }
 
-void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color& clr ) const
+void CHudTexture::DrawSelfCropped( int x, int y, int cropx, int cropy, int cropw, int croph, Color clr ) const
 {
 	DrawSelfCropped( x, y, cropx, cropy, cropw, croph, cropw, croph, clr );
 }
@@ -783,7 +897,7 @@ CHudElement *CHud::FindElement( const char *pName )
 {
 	for ( int i = 0; i < m_HudList.Size(); i++ )
 	{
-		if ( stricmp( m_HudList[i]->GetName(), pName ) == 0 )
+		if ( V_stricmp( m_HudList[i]->GetName(), pName ) == 0 )
 			return m_HudList[i];
 	}
 
@@ -854,12 +968,21 @@ bool CHud::IsHidden( int iHudFlags )
 		return true;
 
 	// Local player dead?
-	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && ( pPlayer->GetHealth() <= 0 ) )
+	if ( ( iHudFlags & HIDEHUD_PLAYERDEAD ) && ( pPlayer->GetHealth() <= 0 && !pPlayer->IsAlive() ) )
 		return true;
 
 	// Need the HEV suit ( HL2 )
 	if ( ( iHudFlags & HIDEHUD_NEEDSUIT ) && ( !pPlayer->IsSuitEquipped() ) )
 		return true;
+
+	// Hide all HUD elements during screenshot if the user's set hud_freezecamhide ( TF2 )
+#if defined( TF_CLIENT_DLL )
+	extern bool IsTakingAFreezecamScreenshot();
+	extern ConVar hud_freezecamhide;
+
+	if ( IsTakingAFreezecamScreenshot() && hud_freezecamhide.GetBool() )
+		return true;
+#endif
 
 	return ( ( iHudFlags & iHideHud ) != 0);
 }
@@ -880,11 +1003,7 @@ void CHud::ProcessInput( bool bActive )
 
 int CHud::LookupRenderGroupIndexByName( const char *pszGroupName )
 {
-	int iIndex = m_RenderGroupNames.Find( pszGroupName );
-
-	Assert( m_RenderGroupNames.IsValidIndex( iIndex ) );
-
-	return iIndex;
+	return m_RenderGroupNames.Find( pszGroupName );
 }
 
 //-----------------------------------------------------------------------------

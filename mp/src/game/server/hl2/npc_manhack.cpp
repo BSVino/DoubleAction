@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -323,7 +323,7 @@ void CNPC_Manhack::PrescheduleThink( void )
 // Input  :
 // Output :
 //-----------------------------------------------------------------------------
-void CNPC_Manhack::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_Manhack::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	g_vecAttackDir = vecDir;
 
@@ -339,7 +339,7 @@ void CNPC_Manhack::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDi
 		g_pEffects->Sparks( ptr->endpos, 1, 1, &ptr->plane.normal );
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 //-----------------------------------------------------------------------------
@@ -1096,7 +1096,7 @@ void CNPC_Manhack::MaintainGroundHeight( void )
 
 	if ( tr.fraction != 1.0f )
 	{
-		float speedAdj = max( 16, (-zSpeed*0.5f) );
+		float speedAdj = MAX( 16, (-zSpeed*0.5f) );
 
 		m_vForceVelocity += Vector(0,0,1) * ( speedAdj * ( 1.0f - tr.fraction ) );
 	}
@@ -1203,7 +1203,7 @@ void CNPC_Manhack::TurnHeadRandomly(float flInterval )
 	while (timeToUse > 0)
 	{
 		m_fHeadYaw	   = (iRate * m_fHeadYaw) + (1-iRate)*desYaw;
-		timeToUse =- 0.1;
+		timeToUse = -0.1;
 	}
 }
 
@@ -1285,7 +1285,7 @@ void CNPC_Manhack::MoveToTarget(float flInterval, const Vector &vMoveTarget)
 #else
 		myAccel	 = 400;
 #endif // _XBOX
-		myZAccel = min( 500, zDist / flInterval );
+		myZAccel = MIN( 500, zDist / flInterval );
 	}
 	else
 	{
@@ -1811,11 +1811,11 @@ void CNPC_Manhack::PlayFlySound(void)
 			int iPitch1, iPitch2;
 			float flDistFactor;
 
-			flDistFactor = min( 1.0, 1 - flEnemyDist / MANHACK_PITCH_DIST1 ); 
+			flDistFactor = MIN( 1.0, 1 - flEnemyDist / MANHACK_PITCH_DIST1 ); 
 			iPitch1 = MANHACK_MIN_PITCH1 + ( ( MANHACK_MAX_PITCH1 - MANHACK_MIN_PITCH1 ) * flDistFactor); 
 
 			// NOTE: MANHACK_PITCH_DIST2 must be < MANHACK_PITCH_DIST1
-			flDistFactor = min( 1.0, 1 - flEnemyDist / MANHACK_PITCH_DIST2 ); 
+			flDistFactor = MIN( 1.0, 1 - flEnemyDist / MANHACK_PITCH_DIST2 ); 
 			iPitch2 = MANHACK_MIN_PITCH2 + ( ( MANHACK_MAX_PITCH2 - MANHACK_MIN_PITCH2 ) * flDistFactor); 
 
 			m_nEnginePitch1 = iPitch1;
@@ -1953,7 +1953,7 @@ void CNPC_Manhack::MoveExecute_Alive(float flInterval)
 	else if( GetWaterLevel() > 0 )
 	{
 		// Allow the manhack to lift off, but not to go deeper.
-		m_vCurrentVelocity.z = max( m_vCurrentVelocity.z, 0 );
+		m_vCurrentVelocity.z = MAX( m_vCurrentVelocity.z, 0 );
 	}
 
 	CheckCollisions(flInterval);
@@ -1993,7 +1993,7 @@ void CNPC_Manhack::MoveExecute_Alive(float flInterval)
 		{
 			m_vCurrentBanking.x = (iRate * m_vCurrentBanking.x) + (1 - iRate)*(m_vTargetBanking.x);
 			m_vCurrentBanking.z = (iRate * m_vCurrentBanking.z) + (1 - iRate)*(m_vTargetBanking.z);
-			timeToUse =- 0.1;
+			timeToUse = -0.1;
 		}
 		angles.x = m_vCurrentBanking.x;
 		angles.z = m_vCurrentBanking.z;
@@ -2129,7 +2129,7 @@ void CNPC_Manhack::MoveExecute_Dead(float flInterval)
 	newVelocity = newVelocity + (newVelocity * 1.5 * flInterval );
 
 	// Lose lift
-	newVelocity.z -= 0.02*flInterval*(sv_gravity.GetFloat());
+	newVelocity.z -= 0.02*flInterval*(GetCurrentGravity());
 
 	// ----------------------------------------------------------------------------------------
 	// Add in any forced velocity

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,7 +10,7 @@
 #include "lightmap.h"
 #include "radial.h"
 #include "mathlib/bumpvects.h"
-#include "UtlRBTree.h"
+#include "utlrbtree.h"
 #include "mathlib/VMatrix.h"
 #include "macro_texture.h"
 
@@ -558,9 +558,9 @@ void GetRandomColor( unsigned char *color )
 		srand( 0 );
 	}
 	
-	color[0] = ( unsigned char )( rand() * ( 255.0f / RAND_MAX ) ); 
-	color[1] = ( unsigned char )( rand() * ( 255.0f / RAND_MAX ) ); 
-	color[2] = ( unsigned char )( rand() * ( 255.0f / RAND_MAX ) ); 
+	color[0] = ( unsigned char )( rand() * ( 255.0f / VALVE_RAND_MAX ) ); 
+	color[1] = ( unsigned char )( rand() * ( 255.0f / VALVE_RAND_MAX ) ); 
+	color[2] = ( unsigned char )( rand() * ( 255.0f / VALVE_RAND_MAX ) ); 
 }
 
 

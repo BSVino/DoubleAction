@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 #include "vbsp.h"
 #include "bsplib.h"
 #include "tier1/UtlBuffer.h"
-#include "tier1/UtlVector.h"
+#include "tier1/utlvector.h"
 #include "bitmap/imageformat.h"
 #include <KeyValues.h>
 #include "tier1/strtools.h"
@@ -97,12 +97,12 @@ void Cubemap_InsertSample( const Vector& origin, int size )
 
 static const char *FindSkyboxMaterialName( void )
 {
-	for( int i = 0; i < num_entities; i++ )
+	for( int i = 0; i < g_MainMap->num_entities; i++ )
 	{
-		char* pEntity = ValueForKey(&entities[i], "classname");
+		char* pEntity = ValueForKey(&g_MainMap->entities[i], "classname");
 		if (!strcmp(pEntity, "worldspawn"))
 		{
-			return ValueForKey( &entities[i], "skyname" );
+			return ValueForKey( &g_MainMap->entities[i], "skyname" );
 		}
 	}
 	return NULL;
@@ -684,9 +684,9 @@ static int Cubemap_CreateTexInfo( int originalTexInfo, int origin[3] )
 static int SideIDToIndex( int brushSideID )
 {
 	int i;
-	for( i = 0; i < nummapbrushsides; i++ )
+	for( i = 0; i < g_MainMap->nummapbrushsides; i++ )
 	{
-		if( brushsides[i].id == brushSideID )
+		if( g_MainMap->brushsides[i].id == brushSideID )
 		{
 			return i;
 		}
@@ -721,7 +721,7 @@ void Cubemap_FixupBrushSidesMaterials( void )
 				continue;
 			}
 			
-			side_t *pSide = &brushsides[sideIndex];
+			side_t *pSide = &g_MainMap->brushsides[sideIndex];
 
 #ifdef DEBUG
 			if ( pSide->pMapDisp )
@@ -775,12 +775,12 @@ bool DoesMaterialOrDependentsUseEnvmap( const char *pPatchedMaterialName )
 void Cubemap_InitCubemapSideData( void )
 {
 	// This tree is used to prevent re-parsing material vars multiple times
-	CUtlRBTree<CubemapInfo_t> lookup( 0, nummapbrushsides, CubemapLessFunc );
+	CUtlRBTree<CubemapInfo_t> lookup( 0, g_MainMap->nummapbrushsides, CubemapLessFunc );
 
 	// Fill in specular data.
-	for ( int iSide = 0; iSide < nummapbrushsides; ++iSide )
+	for ( int iSide = 0; iSide < g_MainMap->nummapbrushsides; ++iSide )
 	{
-		side_t *pSide = &brushsides[iSide];
+		side_t *pSide = &g_MainMap->brushsides[iSide];
 		if ( !pSide )
 			continue;
 
@@ -851,7 +851,7 @@ int Cubemap_FindClosestCubemap( const Vector &entityOrigin, side_t *pSide )
 	}
 	VectorScale( vecCenter, 1.0f / pSide->winding->numpoints, vecCenter );
 	vecCenter += entityOrigin;
-	plane_t *pPlane = &mapplanes[pSide->planenum];
+	plane_t *pPlane = &g_MainMap->mapplanes[pSide->planenum];
 
 	// Find the closest cubemap.
 	int iMinCubemap = -1;
@@ -909,34 +909,34 @@ void Cubemap_AttachDefaultCubemapToSpecularSides( void )
 
 	// build a mapping from side to entity id so that we can get the entity origin
 	CUtlVector<int> sideToEntityIndex;
-	sideToEntityIndex.SetCount(nummapbrushsides);
+	sideToEntityIndex.SetCount(g_MainMap->nummapbrushsides);
 	int i;
-	for ( i = 0; i < nummapbrushsides; i++ )
+	for ( i = 0; i < g_MainMap->nummapbrushsides; i++ )
 	{
 		sideToEntityIndex[i] = -1;
 	}
 
-	for ( i = 0; i < nummapbrushes; i++ )
+	for ( i = 0; i < g_MainMap->nummapbrushes; i++ )
 	{
-		int entityIndex = mapbrushes[i].entitynum;
-		for ( int j = 0; j < mapbrushes[i].numsides; j++ )
+		int entityIndex = g_MainMap->mapbrushes[i].entitynum;
+		for ( int j = 0; j < g_MainMap->mapbrushes[i].numsides; j++ )
 		{
-			side_t *side = &mapbrushes[i].original_sides[j];
-			int sideIndex = side - brushsides;
+			side_t *side = &g_MainMap->mapbrushes[i].original_sides[j];
+			int sideIndex = side - g_MainMap->brushsides;
 			sideToEntityIndex[sideIndex] = entityIndex;
 		}
 	}
 
-	for ( int iSide = 0; iSide < nummapbrushsides; ++iSide )
+	for ( int iSide = 0; iSide < g_MainMap->nummapbrushsides; ++iSide )
 	{
-		side_t *pSide = &brushsides[iSide];
+		side_t *pSide = &g_MainMap->brushsides[iSide];
 		if ( !SideHasCubemapAndWasntManuallyReferenced( iSide ) )
 			continue;
 
 
 		int currentEntity = sideToEntityIndex[iSide];
 
-		int iCubemap = Cubemap_FindClosestCubemap( entities[currentEntity].origin, pSide );
+		int iCubemap = Cubemap_FindClosestCubemap( g_MainMap->entities[currentEntity].origin, pSide );
 		if ( iCubemap == -1 )
 			continue;
 

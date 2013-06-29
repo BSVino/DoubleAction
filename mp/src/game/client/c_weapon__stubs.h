@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,9 +22,9 @@
 
 
 #define STUB_WEAPON_CLASS( entityName, className, baseClassName )	\
-	class C_##className## : public baseClassName					\
+	class C_##className : public baseClassName					\
 	{																\
-		DECLARE_CLASS( C_##className##, baseClassName );							\
+		DECLARE_CLASS( C_##className, baseClassName );							\
 	public:															\
 		DECLARE_PREDICTABLE();										\
 		DECLARE_CLIENTCLASS();										\

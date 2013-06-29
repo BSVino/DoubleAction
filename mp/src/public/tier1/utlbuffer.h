@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -39,7 +39,7 @@ public:
 	struct ConversionArray_t
 	{
 		char m_nActualChar;
-		char *m_pReplacementString;
+		const char *m_pReplacementString;
 	};
 
 	CUtlCharConversion( char nEscapeChar, const char *pDelimiter, int nCount, ConversionArray_t *pArray );
@@ -58,7 +58,7 @@ protected:
 	struct ConversionInfo_t
 	{
 		int m_nLength;
-		char *m_pReplacementString;
+		const char *m_pReplacementString;
 	};
 
 	char m_nEscapeChar;
@@ -66,8 +66,8 @@ protected:
 	int m_nDelimiterLength;
 	int m_nCount;
 	int m_nMaxConversionLength;
-	char m_pList[255];
-	ConversionInfo_t m_pReplacements[255];
+	char m_pList[256];
+	ConversionInfo_t m_pReplacements[256];
 };
 
 #define BEGIN_CHAR_CONVERSION( _name, _delimiter, _escapeChar )	\
@@ -146,7 +146,15 @@ public:
 	// Attaches the buffer to external memory....
 	void			SetExternalBuffer( void* pMemory, int nSize, int nInitialPut, int nFlags = 0 );
 	bool			IsExternallyAllocated() const;
+	// Takes ownership of the passed memory, including freeing it when this buffer is destroyed.
 	void			AssumeMemory( void *pMemory, int nSize, int nInitialPut, int nFlags = 0 );
+
+	// copies data from another buffer
+	void			CopyBuffer( const CUtlBuffer &buffer );
+	void			CopyBuffer( const void *pubData, int cubData );
+
+	void			Swap( CUtlBuffer &buf );
+	void			Swap( CUtlMemory<uint8> &mem );
 
 	FORCEINLINE void ActivateByteSwappingIfBigEndian( void )
 	{
@@ -176,6 +184,7 @@ public:
 	short			GetShort( );
 	unsigned short	GetUnsignedShort( );
 	int				GetInt( );
+	int64			GetInt64( );
 	int				GetIntHex( );
 	unsigned int	GetUnsignedInt( );
 	float			GetFloat( );
@@ -213,7 +222,7 @@ public:
 	int				PeekDelimitedStringLength( CUtlCharConversion *pConv, bool bActualSize = true );
 
 	// Just like scanf, but doesn't work in binary mode
-	int				Scanf( const char* pFmt, ... );
+	int				Scanf( SCANF_FORMAT_STRING const char* pFmt, ... );
 	int				VaScanf( const char* pFmt, va_list list );
 
 	// Eats white space, advances Get index
@@ -246,9 +255,12 @@ public:
 	//		PutString will not write a terminating character
 	void			PutChar( char c );
 	void			PutUnsignedChar( unsigned char uc );
+	void			PutUint64( uint64 ub );
+	void			PutInt16( int16 s16 );
 	void			PutShort( short s );
 	void			PutUnsignedShort( unsigned short us );
 	void			PutInt( int i );
+	void			PutInt64( int64 i );
 	void			PutUnsignedInt( unsigned int u );
 	void			PutFloat( float f );
 	void			PutDouble( double d );
@@ -264,7 +276,7 @@ public:
 	void			PutDelimitedChar( CUtlCharConversion *pConv, char c );
 
 	// Just like printf, writes a terminating zero in binary mode
-	void			Printf( const char* pFmt, ... );
+	void			Printf( PRINTF_FORMAT_STRING const char* pFmt, ... ) FMTFUNCTION( 2, 3 );
 	void			VaPrintf( const char* pFmt, va_list list );
 
 	// What am I writing (put)/reading (get)?
@@ -290,6 +302,8 @@ public:
 	// Buffer base
 	const void* Base() const;
 	void* Base();
+	// Returns the base as a const char*, only valid in text mode.
+	const char *String() const;
 
 	// memory allocation size, does *not* reflect size written or read,
 	//	use TellPut or TellGet for that
@@ -584,7 +598,7 @@ inline void CUtlBuffer::GetObject( T *dest )
 	}
 	else
 	{
-		Q_memset( &dest, 0, sizeof(T) );
+		Q_memset( dest, 0, sizeof(T) );
 	}
 }
 
@@ -625,7 +639,7 @@ inline void CUtlBuffer::GetTypeBin< float >( float &dest )
 {
 	if ( CheckGet( sizeof( float ) ) )
 	{
-		unsigned int pData = (unsigned int)PeekGet();
+		uintptr_t pData = (uintptr_t)PeekGet();
 		if ( IsX360() && ( pData & 0x03 ) )
 		{
 			// handle unaligned read
@@ -697,6 +711,13 @@ inline int CUtlBuffer::GetInt( )
 {
 	int i;
 	GetType( i, "%d" );
+	return i;
+}
+
+inline int64 CUtlBuffer::GetInt64( )
+{
+	int64 i;
+	GetType( i, "%lld" );
 	return i;
 }
 
@@ -905,6 +926,16 @@ inline void CUtlBuffer::PutUnsignedChar( unsigned char c )
 	PutType( c, "%u" );
 }
 
+inline void CUtlBuffer::PutUint64( uint64 ub )
+{
+	PutType( ub, "%llu" );
+}
+
+inline void CUtlBuffer::PutInt16( int16 s16 )
+{
+	PutType( s16, "%d" );
+}
+
 inline void  CUtlBuffer::PutShort( short s )
 {
 	PutType( s, "%d" );
@@ -918,6 +949,11 @@ inline void CUtlBuffer::PutUnsignedShort( unsigned short s )
 inline void CUtlBuffer::PutInt( int i )
 {
 	PutType( i, "%d" );
+}
+
+inline void CUtlBuffer::PutInt64( int64 i )
+{
+	PutType( i, "%llu" );
 }
 
 inline void CUtlBuffer::PutUnsignedInt( unsigned int u )
@@ -994,6 +1030,13 @@ inline void* CUtlBuffer::Base()
 	return m_Memory.Base(); 
 }
 
+// Returns the base as a const char*, only valid in text mode.
+inline const char *CUtlBuffer::String() const
+{
+	Assert( IsText() );
+	return reinterpret_cast<const char*>( m_Memory.Base() );
+}
+
 inline int CUtlBuffer::Size() const			
 { 
 	return m_Memory.NumAllocated(); 
@@ -1023,6 +1066,19 @@ inline void CUtlBuffer::Purge()
 	m_Memory.Purge();
 }
 
+inline void CUtlBuffer::CopyBuffer( const CUtlBuffer &buffer )
+{
+	CopyBuffer( buffer.Base(), buffer.TellPut() );
+}
+
+inline void	CUtlBuffer::CopyBuffer( const void *pubData, int cubData )
+{
+	Clear();
+	if ( cubData )
+	{
+		Put( pubData, cubData );
+	}
+}
 
 #endif // UTLBUFFER_H
 

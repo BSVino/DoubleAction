@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 #include "cbase.h"
 #include "toolframework/itoolentity.h"
 #include "tier1/KeyValues.h"
-#include "sprite.h"
+#include "Sprite.h"
 #include "enginesprite.h"
 #include "toolframework_client.h"
 #include "particles/particles.h"
@@ -14,7 +14,7 @@
 #include "rendertexture.h"
 
 #ifdef PORTAL
-	#include "portalrender.h"
+	#include "PortalRender.h"
 #endif
 
 #pragma warning( disable: 4355 )  // warning C4355: 'this' : used in base member initializer list
@@ -775,7 +775,7 @@ void CClientTools::EnableParticleSystems( bool bEnable )
 //-----------------------------------------------------------------------------
 bool CClientTools::IsRenderingThirdPerson() const
 {			  
-	return C_BasePlayer::ShouldDrawLocalPlayer();
+	return !C_BasePlayer::LocalPlayerInFirstPersonView();
 }
 
 

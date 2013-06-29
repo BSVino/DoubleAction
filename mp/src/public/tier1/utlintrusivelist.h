@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2006, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Intrusive linked list templates, both for singly and doubly linked lists
 //
@@ -13,7 +13,7 @@
 #pragma once
 #endif
 
-#include "basetypes.h"
+#include "tier0/basetypes.h"
 #include "utlmemory.h"
 #include "tier0/dbg.h"
 
@@ -21,9 +21,9 @@
 // 
 // These templates are used for intrusive linked list classes. Intrusive linked list templates
 // force the structs and classes contained within them to have their own m_pNext, (optionally),
-// m_pPrev, and other fileds contained within. All memory management is up to the caller and
-// their classes. No data will ever be copied. Nodes can only exist on one list at a time, because
-// of only having on m_Next field, and manipulating the list while walking it requires that care on
+// m_pPrev, and other fields contained within. All memory management is up to the caller and their
+// classes. No data will ever be copied. Nodes can only exist on one list at a time, because of
+// only having on m_Next field, and manipulating the list while walking it requires that care on
 // the part of the caller. All accessing and searching functions work by passing and returning
 // pointers.
 //
@@ -34,7 +34,7 @@
 // m_pPrev pointer fields.
 // Functions using Priority require an m_Priority field, which must be comparable.
 //
-// Some functions are meanto for use with lists which maintain both a head and tail pointer
+// Some functions are mean for use with lists which maintain both a head and tail pointer
 // in order to support fast adding to the end.
 
 
@@ -205,6 +205,7 @@ namespace IntrusiveList
 			tailptr->m_pNext=which;
 			tailptr=which;
 		}
+		ValidateDList( head );
 	}
 	
 	// Remove a node from a dlist , maintaining the tail ptr. node is not 'delete' d
@@ -455,7 +456,8 @@ namespace IntrusiveList
 	// null, or if n is the first node. not fast.
 	template<class T> static inline T * PrevNode(T *head, T *node)
 	{
-		for(T *i=head;i;i=i->m_pNext)
+		T *i;
+		for(i=head;i;i=i->m_pNext)
 		{
 			if (i->m_pNext == node)
 				break;
@@ -511,7 +513,8 @@ namespace IntrusiveList
 		}
 		else
 		{
-			for(T *t=head;t->m_pNext;t=t->m_pNext)                        // find the node we should be before
+			T *t;
+			for(t=head;t->m_pNext;t=t->m_pNext)                        // find the node we should be before
 				if (stricmp(t->m_pNext->m_Name,node->m_Name)>=0)
 					break;
 			node->m_pNext=t->m_pNext;
@@ -677,11 +680,22 @@ template<class T> class CUtlIntrusiveList
 public:
 	T *m_pHead;
 
+	FORCEINLINE T *Head( void ) const
+	{
+		return m_pHead;
+	}
+	
 	FORCEINLINE CUtlIntrusiveList(void)
 	{
 		m_pHead = NULL;
 	}
 
+
+	FORCEINLINE void RemoveAll( void )
+	{
+		// empty list. doesn't touch nodes at all
+		m_pHead = NULL;
+	}
 	FORCEINLINE void AddToHead( T * node )
 	{
 		IntrusiveList::AddToHead( m_pHead, node );
@@ -733,11 +747,28 @@ public:
 		}
 	}
 
-	int Count( void )
+	int Count( void ) const
 	{
 		return IntrusiveList::ListLength( m_pHead );
 	}
 
+	FORCEINLINE T * FindNamedNodeCaseSensitive( char const *pName ) const
+	{
+		return IntrusiveList::FindNamedNodeCaseSensitive( m_pHead, pName );
+
+	}
+
+	T *RemoveHead( void )
+	{
+		if ( m_pHead )
+		{
+			T *pRet = m_pHead;
+			m_pHead = pRet->m_pNext;
+			return pRet;
+		}
+		else
+			return NULL;
+	}
 };
 
 // doubly linked list
@@ -759,6 +790,20 @@ public:
 		IntrusiveList::RemoveFromDList( CUtlIntrusiveList<T>::m_pHead, which );
 	}
 
+	T *RemoveHead( void )
+	{
+		if ( CUtlIntrusiveList<T>::m_pHead )
+		{
+			T *pRet = CUtlIntrusiveList<T>::m_pHead;
+			CUtlIntrusiveList<T>::m_pHead = CUtlIntrusiveList<T>::m_pHead->m_pNext;
+			if ( CUtlIntrusiveList<T>::m_pHead )
+				CUtlIntrusiveList<T>::m_pHead->m_pPrev = NULL;
+			return pRet;
+		}
+		else
+			return NULL;
+	}
+
 	T * PrevNode(T *node)
 	{
 		return ( node )?node->m_Prev:NULL;
@@ -766,7 +811,78 @@ public:
 
 };
 
+template<class T> class CUtlIntrusiveDListWithTailPtr : public CUtlIntrusiveDList<T>
+{
+public:
 
+	T *m_pTailPtr;
 
+	FORCEINLINE CUtlIntrusiveDListWithTailPtr( void ) : CUtlIntrusiveDList<T>()
+	{
+		m_pTailPtr = NULL;
+	}
+
+	FORCEINLINE void AddToHead( T * node )
+	{
+		IntrusiveList::AddToDHeadWithTailPtr( CUtlIntrusiveList<T>::m_pHead, node, m_pTailPtr );
+	}
+	FORCEINLINE void AddToTail( T * node )
+	{
+		IntrusiveList::AddToDTailWithTailPtr( CUtlIntrusiveList<T>::m_pHead, node, m_pTailPtr );
+	}
+
+	void RemoveNode( T *pWhich )
+	{
+		IntrusiveList::RemoveFromDListWithTailPtr( CUtlIntrusiveList<T>::m_pHead, pWhich, m_pTailPtr );
+	}
+
+	void Purge( void )
+	{
+		CUtlIntrusiveList<T>::Purge();
+		m_pTailPtr = NULL;
+	}
+
+	void Kill( void )
+	{
+		CUtlIntrusiveList<T>::Purge();
+		m_pTailPtr = NULL;
+	}
+
+	T *RemoveHead( void )
+	{
+		if ( CUtlIntrusiveDList<T>::m_pHead )
+		{
+			T *pRet = CUtlIntrusiveDList<T>::m_pHead;
+			CUtlIntrusiveDList<T>::m_pHead = CUtlIntrusiveDList<T>::m_pHead->m_pNext;
+			if ( CUtlIntrusiveDList<T>::m_pHead )
+				CUtlIntrusiveDList<T>::m_pHead->m_pPrev = NULL;
+			if (! CUtlIntrusiveDList<T>::m_pHead )
+				m_pTailPtr = NULL;
+			ValidateDList( CUtlIntrusiveDList<T>::m_pHead );
+			return pRet;
+		}
+		else
+			return NULL;
+	}
+
+	T * PrevNode(T *node)
+	{
+		return ( node )?node->m_Prev:NULL;
+	}
+
+};
+
+template<class T> void PrependDListWithTailToDList( CUtlIntrusiveDListWithTailPtr<T> &src, 
+												   CUtlIntrusiveDList<T> &dest )
+{
+	if ( src.m_pHead )
+	{
+		src.m_pTailPtr->m_pNext = dest.m_pHead;
+		if ( dest.m_pHead )
+			dest.m_pHead->m_pPrev = src.m_pTailPtr;
+		dest.m_pHead = src.m_pHead;
+		IntrusiveList::ValidateDList( dest.m_pHead );
+	}
+}
 
 #endif

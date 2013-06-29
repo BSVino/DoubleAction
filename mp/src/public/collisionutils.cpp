@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Common collision utility methods
 //
@@ -130,7 +130,7 @@ float IntersectRayWithTriangle( const Ray_t& ray,
 	if ((t < -boxt) || (t > 1.0f + boxt))
 		return -1.0f;
 
-	return clamp( t, 0, 1 );
+	return clamp( t, 0.f, 1.f );
 }
 
 //-----------------------------------------------------------------------------
@@ -1374,6 +1374,14 @@ bool IntersectRayWithOBB( const Vector &vecRayStart, const Vector &vecRayDelta,
 	if ( !IntersectRayWithBox( start, extent, vecOBBMins, vecOBBMaxs, flTolerance, pTrace ) )
 		return false;
 
+	// Fix up the start/end pos and fraction
+	Vector vecTemp;
+	VectorTransform( pTrace->endpos, matOBBToWorld, vecTemp );
+	pTrace->endpos = vecTemp;
+
+	pTrace->startpos = vecRayStart;
+	pTrace->fraction *= 2.0f;
+
 	// Fix up the plane information
 	float flSign = pTrace->plane.normal[ pTrace->plane.type ];
 	pTrace->plane.normal[0] = flSign * matOBBToWorld[0][pTrace->plane.type];
@@ -1381,6 +1389,7 @@ bool IntersectRayWithOBB( const Vector &vecRayStart, const Vector &vecRayDelta,
 	pTrace->plane.normal[2] = flSign * matOBBToWorld[2][pTrace->plane.type];
 	pTrace->plane.dist = DotProduct( pTrace->endpos, pTrace->plane.normal );
 	pTrace->plane.type = 3;
+
 	return true;
 }
 

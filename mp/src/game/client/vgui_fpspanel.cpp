@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #include <vgui_controls/Panel.h>
 #include "view.h"
 #include <vgui/IVGui.h>
-#include "vguimatsurface/imatsystemsurface.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 #include <vgui_controls/Controls.h>
 #include <vgui/ISurface.h>
 #include <vgui/IScheme.h>
@@ -17,12 +17,14 @@
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 #include "filesystem.h"
 #include "../common/xbox/xboxstubs.h"
+#include "steam/steam_api.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 static ConVar cl_showfps( "cl_showfps", "0", 0, "Draw fps meter at top of screen (1 = fps, 2 = smooth fps)" );
 static ConVar cl_showpos( "cl_showpos", "0", 0, "Draw current position at top of screen" );
+static ConVar cl_showbattery( "cl_showbattery", "0", 0, "Draw current battery level at top of screen when on battery power" );
 
 extern bool g_bDisplayParticlePerformance;
 int GetParticlePerformance();
@@ -64,6 +66,8 @@ private:
 	int				m_high;
 	int				m_low;
 	bool			m_bLastDraw;
+	int				m_BatteryPercent;
+	float			m_lastBatteryPercent;
 };
 
 #define FPS_PANEL_WIDTH 300
@@ -82,6 +86,8 @@ CFPSPanel::CFPSPanel( vgui::VPANEL parent ) : BaseClass( NULL, "CFPSPanel" )
 	SetPaintBackgroundEnabled( false );
 
 	m_hFont = 0;
+	m_BatteryPercent = -1;
+	m_lastBatteryPercent = -1.0f;
 
 	ComputeSize();
 
@@ -140,7 +146,11 @@ void CFPSPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CFPSPanel::OnTick( void )
 {
-	SetVisible( ShouldDraw() );
+	bool bVisible = ShouldDraw();
+	if ( IsVisible() != bVisible )
+	{
+		SetVisible( bVisible );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -305,6 +315,30 @@ void CFPSPanel::Paint()
 											  "vel:  %.2f", 
 											  vel.Length() );
 	}
+	
+	if ( cl_showbattery.GetInt() > 0 )
+	{
+		if ( steamapicontext && steamapicontext->SteamUtils() && 
+			( m_lastBatteryPercent == -1.0f || (gpGlobals->realtime - m_lastBatteryPercent) > 10.0f ) )
+		{
+			m_BatteryPercent = steamapicontext->SteamUtils()->GetCurrentBatteryPower();
+			m_lastBatteryPercent = gpGlobals->realtime;
+		}
+		
+		if ( m_BatteryPercent > 0 )
+		{
+			if ( m_BatteryPercent == 255 )
+			{
+				g_pMatSystemSurface->DrawColoredText( m_hFont, x, 2+ i * ( vgui::surface()->GetFontTall( m_hFont ) + 2 ), 
+													 255, 255, 255, 255,  "battery: On AC" );	
+			}
+			else
+			{
+				g_pMatSystemSurface->DrawColoredText( m_hFont, x, 2+ i * ( vgui::surface()->GetFontTall( m_hFont ) + 2 ), 
+											 255, 255, 255, 255,  "battery:  %d%%",m_BatteryPercent );	
+			}
+		}
+	}
 }
 
 class CFPS : public IFPSPanel
@@ -328,6 +362,7 @@ public:
 		{
 			fpsPanel->SetParent( (vgui::Panel *)NULL );
 			delete fpsPanel;
+			fpsPanel = NULL;
 		}
 	}
 };
@@ -460,7 +495,11 @@ void CBlockingFileIOPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CBlockingFileIOPanel::OnTick( void )
 {
-	SetVisible( ShouldDraw() );
+	bool bVisible = ShouldDraw();
+	if ( IsVisible() != bVisible )
+	{
+		SetVisible( bVisible );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -706,7 +745,7 @@ void  CBlockingFileIOPanel::DrawIOTime( int x, int y, int w, int h, int slot, ch
 	int historyWide = ( int ) ( w * hfrac + 0.5f );
 	int spikeWide = ( int ) ( w * spikefrac + 0.5f );
 
-	int useWide = max( barWide, historyWide );
+	int useWide = MAX( barWide, historyWide );
 
 	vgui::surface()->DrawSetColor( Color( 0, 0, 0, 31 ) );
 	vgui::surface()->DrawFilledRect( x, y, x + w, y + h );
@@ -742,6 +781,7 @@ public:
 		{
 			ioPanel->SetParent( (vgui::Panel *)NULL );
 			delete ioPanel;
+			ioPanel = NULL;
 		}
 	}
 

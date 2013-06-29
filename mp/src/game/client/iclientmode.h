@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,6 +10,7 @@
 #define ICLIENTMODE_H
 
 #include <vgui/VGUI.h>
+#include "client_virtualreality.h"
 
 class CViewSetup;
 class C_BaseEntity;
@@ -111,11 +112,41 @@ public:
 
 	virtual bool	CanRecordDemo( char *errorMsg, int length ) const = 0;
 
+	virtual void	ComputeVguiResConditions( KeyValues *pkvConditions ) = 0;
+
+	//=============================================================================
+	// HPE_BEGIN:
+	// [menglish] Save server information shown to the client in a persistent place
+	//=============================================================================
+	 
+	virtual wchar_t* GetServerName() = 0;
+	virtual void SetServerName(wchar_t* name) = 0;
+	virtual wchar_t* GetMapName() = 0;
+	virtual void SetMapName(wchar_t* name) = 0;
+	 
+	//=============================================================================
+	// HPE_END
+	//=============================================================================
+
+	virtual bool	DoPostScreenSpaceEffects( const CViewSetup *pSetup ) = 0;
+
+	virtual void	DisplayReplayMessage( const char *pLocalizeName, float flDuration, bool bUrgent,
+										  const char *pSound, bool bDlg ) = 0;
+
 // Updates.
 public:
 
 	// Called every frame.
 	virtual void	Update()=0;	
+
+	// Returns true if VR mode should black out everything around the UI
+	virtual bool	ShouldBlackoutAroundHUD() = 0;
+
+	// Returns true if VR mode should black out everything around the UI
+	virtual HeadtrackMovementMode_t ShouldOverrideHeadtrackControl() = 0;
+
+	virtual bool	IsInfoPanelAllowed() = 0;
+	virtual void	InfoPanelDisplayed() = 0;
 };	
 
 extern IClientMode *g_pClientMode;

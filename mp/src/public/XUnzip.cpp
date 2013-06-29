@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -93,26 +93,63 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined( PROTECTED_THINGS_ENABLE )
-#undef PROTECTED_THINGS_ENABLE // from protected_things.h
-#endif
-
-#include "tier0/platform.h"
-
-#ifdef IS_WINDOWS_PC
+#if defined( WIN32 ) && !defined( _X360 )
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <tchar.h>
+#elif defined(POSIX)
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tchar.h>
 #include "zip/XUnzip.h"
+
+#if defined(POSIX)
+#define _tcslen strlen
+#define _tcscpy strcpy
+#define _tcscat strcat
+#define _tcsstr strstr
+#if !defined( _T )
+#define _T( arg ) arg
+#endif
+#define INVALID_HANDLE_VALUE (void*)-1
+#define CloseHandle( arg ) close( (int) arg )
+#define ZeroMemory( ptr, size ) memset( ptr, 0, size )
+#define FILE_CURRENT SEEK_CUR
+#define FILE_BEGIN SEEK_SET
+#define FILE_END SEEK_END
+#define CreateDirectory( dir, ign ) mkdir( dir, S_IRWXU | S_IRWXG | S_IRWXO )
+#define SetFilePointer( handle, pos, ign, dir ) lseek( (int) handle, pos, dir )
+bool ReadFile( void *handle, void *outbuf, unsigned int toread, unsigned int *nread, void *ignored )
+{
+	*nread = read( (int) handle, outbuf, toread );
+	return *nread == toread;
+}
+bool WriteFile( void *handle, void *buf, unsigned int towrite, unsigned int *written, void *ignored )
+{
+	*written = write( (int) handle, buf, towrite );
+	return *written == towrite;
+}
+
+#define FILE_ATTRIBUTE_NORMAL	 S_IFREG
+#define FILE_ATTRIBUTE_DIRECTORY S_IFDIR
+#define FILE_ATTRIBUTE_ARCHIVE   0
+#define FILE_ATTRIBUTE_HIDDEN    0
+#define FILE_ATTRIBUTE_READONLY	 0
+#define FILE_ATTRIBUTE_SYSTEM    0
+typedef unsigned char BYTE;
+#endif // POSIX
+
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
 #endif
+
 
 // THIS FILE is almost entirely based upon code by Jean-loup Gailly
 // and Mark Adler. It has been modified by Lucian Wischik.
@@ -1676,7 +1713,7 @@ int inflate_blocks_free(inflate_blocks_statef *s, z_streamp z)
 
 
 
-extern const char inflate_copyright[] =
+extern const char inflate_copyright_XUnzip[] =
    " inflate 1.1.3 Copyright 1995-1998 Mark Adler ";
 // If you use the zlib library in a product, an acknowledgment is welcome
 // in the documentation of your product. If for some reason you cannot
@@ -2737,9 +2774,13 @@ LUFILE *lufopen(void *z,unsigned int len,DWORD flags,ZRESULT *err)
 		if (flags==ZIP_HANDLE)
 		{ 
 			HANDLE hf = z;
-		
-			BOOL res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&h,0,FALSE,DUPLICATE_SAME_ACCESS);
-		
+			bool res;
+#ifdef _WIN32		
+			res = DuplicateHandle(GetCurrentProcess(),hf,GetCurrentProcess(),&h,0,FALSE,DUPLICATE_SAME_ACCESS) == TRUE;
+#else
+			h = (void*) dup( (int)hf );
+			res = (int) dup >= 0;
+#endif
 			if (!res) 
 			{
 				*err=ZR_NODUPH; 
@@ -2748,17 +2789,26 @@ LUFILE *lufopen(void *z,unsigned int len,DWORD flags,ZRESULT *err)
 		}
 		else
 		{ 
+#ifdef _WIN32
 			h = CreateFile((const TCHAR *)z, GENERIC_READ, FILE_SHARE_READ, 
 					NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		
+#else
+			h = (void*) open( (const TCHAR *)z, O_RDONLY );
+#endif
 			if (h == INVALID_HANDLE_VALUE) 
 			{
 				*err = ZR_NOFILE; 
 				return NULL;
 			}
 		}
+#ifdef _WIN32
 		DWORD type = GetFileType(h);
 		canseek = (type==FILE_TYPE_DISK);
+#else
+		struct stat buf;
+		fstat( (int)h, &buf );
+		canseek = buf.st_mode & S_IFREG;
+#endif
 	}
 	LUFILE *lf = new LUFILE;
 	if (flags==ZIP_HANDLE||flags==ZIP_FILENAME)
@@ -2768,7 +2818,9 @@ LUFILE *lufopen(void *z,unsigned int len,DWORD flags,ZRESULT *err)
 		lf->h=h; lf->herr=false;
 		lf->initial_offset=0;
 		if (canseek) 
+		{
 			lf->initial_offset = SetFilePointer(h,0,NULL,FILE_CURRENT);
+		}
 	}
 	else
 	{ 
@@ -3609,7 +3661,7 @@ int unzReadCurrentFile  (unzFile file, voidp buf, unsigned len)
 
   file_in_zip_read_info_s* pfile_in_zip_read_info = s->pfile_in_zip_read;
   if (pfile_in_zip_read_info==NULL) return UNZ_PARAMERROR;
-  if ((pfile_in_zip_read_info->read_buffer == NULL)) return UNZ_END_OF_LIST_OF_FILE;
+  if (pfile_in_zip_read_info->read_buffer == NULL) return UNZ_END_OF_LIST_OF_FILE;
   if (len==0) return 0;
 
   pfile_in_zip_read_info->stream.next_out = (Byte*)buf;
@@ -3828,6 +3880,7 @@ int unzReadCurrentFile (unzFile file, void *buf, unsigned len);
 int unzCloseCurrentFile (unzFile file);
 
 
+#ifdef _WIN32
 FILETIME timet2filetime(const time_t timer)
 { struct tm *tm = gmtime(&timer);
   SYSTEMTIME st;
@@ -3842,6 +3895,7 @@ FILETIME timet2filetime(const time_t timer)
   SystemTimeToFileTime(&st,&ft);
   return ft;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -3865,6 +3919,7 @@ ZRESULT TUnzip::Open(void *z,unsigned int len,DWORD flags)
 { 
 	if (uf!=0 || currentfile!=-1) 
 		return ZR_NOTINITED;
+#ifdef _WIN32
 	GetCurrentDirectory(MAX_PATH,rootdir);
 	_tcscat(rootdir,_T("\\"));
 	if (flags==ZIP_HANDLE)
@@ -3873,12 +3928,13 @@ ZRESULT TUnzip::Open(void *z,unsigned int len,DWORD flags)
 		if (type!=FILE_TYPE_DISK) 
 			return ZR_SEEK;
 	}
+#endif
 	ZRESULT e; 
 	LUFILE *f = lufopen(z,len,flags,&e);
 	if (f==NULL) 
 		return e;
 	uf = unzOpenInternal(f);
-	return ZR_OK;
+	return uf ? ZR_OK : ZR_CORRUPT;
 }
 
 ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
@@ -3892,9 +3948,15 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
   { ze->index = uf->gi.number_entry;
     ze->name[0]=0;
     ze->attr=0;
+#ifdef _WIN32
     ze->atime.dwLowDateTime=0; ze->atime.dwHighDateTime=0;
     ze->ctime.dwLowDateTime=0; ze->ctime.dwHighDateTime=0;
     ze->mtime.dwLowDateTime=0; ze->mtime.dwHighDateTime=0;
+#else
+	ze->atime = 0;
+	ze->ctime = 0;
+	ze->mtime = 0;
+#endif
     ze->comp_size=0;
     ze->unc_size=0;
     return ZR_OK;
@@ -3938,11 +4000,15 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
   ze->comp_size = ufi.compressed_size;
   ze->unc_size = ufi.uncompressed_size;
   //
+#ifdef _WIN32
   WORD dostime = (WORD)(ufi.dosDate&0xFFFF);
   WORD dosdate = (WORD)((ufi.dosDate>>16)&0xFFFF);
   FILETIME ft;
   DosDateTimeToFileTime(dosdate,dostime,&ft);
   ze->atime=ft; ze->ctime=ft; ze->mtime=ft;
+#else
+  ze->atime=ufi.dosDate; ze->ctime=ufi.dosDate; ze->mtime=ufi.dosDate;
+#endif
   // the zip will always have at least that dostime. But if it also has
   // an extra header, then we'll instead get the info from that.
   unsigned int epos=0;
@@ -3956,19 +4022,28 @@ ZRESULT TUnzip::Get(int index,ZIPENTRY *ze)
     bool hasctime = (flags&4)!=0;
     epos+=5;
     if (hasmtime)
-    { 
-		__time32_t mtime = *(__time32_t*)(extra+epos); epos+=4;
-		ze->mtime = timet2filetime(mtime);
+    { time_t mtime = *(time_t*)(extra+epos); epos+=4;
+#ifdef _WIN32
+      ze->mtime = timet2filetime(mtime);
+#else
+	  ze->mtime = mtime;
+#endif
     }
     if (hasatime)
-    { 
-		__time32_t atime = *(__time32_t*)(extra+epos); epos+=4;
-		ze->atime = timet2filetime(atime);
+    { time_t atime = *(time_t*)(extra+epos); epos+=4;
+#ifdef _WIN32
+      ze->atime = timet2filetime(atime);
+#else
+	  ze->atime = atime;
+#endif
     }
     if (hasctime)
-    { 
-		__time32_t ctime = *(__time32_t*)(extra+epos); 
-		ze->ctime = timet2filetime(ctime);
+    { time_t ctime = *(time_t*)(extra+epos); 
+#ifdef _WIN32
+      ze->ctime = timet2filetime(ctime);
+#else
+	  ze->ctime = ctime;
+#endif
     }
     break;
   }
@@ -4009,25 +4084,19 @@ void EnsureDirectory(const TCHAR *rootdir, const TCHAR *dir)
 { 
 	if (dir==NULL || dir[0] == _T('\0')) 
 		return;
-	const TCHAR *lastslash = dir, *c = lastslash;
-	while (*c != _T('\0')) 
-	{
-		if (*c==_T('/') || *c==_T('\\')) 
-		lastslash=c; 
-		c++;
-	}
-	const TCHAR *name=lastslash;
-	if (lastslash!=dir)
-	{ 
-		TCHAR tmp[MAX_PATH]; 
-		_tcsncpy(tmp, dir, lastslash-dir);
-		tmp[lastslash-dir] = _T('\0');
-		EnsureDirectory(rootdir,tmp);
-		name++;
-	}
+	
 	TCHAR cd[MAX_PATH]; 
-	_tcscpy(cd,rootdir); 
-	_tcscat(cd,name);
+	_tcscpy(cd,rootdir);
+	_tcscat(cd,dir);
+	for ( unsigned int iCD = 0; iCD < _tcslen( cd ); iCD++ )
+	{
+		if ( cd[ iCD ] == _T( '/' ) ||  cd[ iCD ] == _T( '\\' ) )
+		{
+			cd[ iCD ] = 0;
+			CreateDirectory(cd,NULL);
+			cd[ iCD ] = _T( '\\' );
+		}
+	}
 	CreateDirectory(cd,NULL);
 }
 
@@ -4116,8 +4185,12 @@ ZRESULT TUnzip::Unzip(int index,void *dst,unsigned int len,DWORD flags)
 			if (!isabsolute) 
 				EnsureDirectory(rootdir,dir);
 		}
+#ifdef _WIN32
 		h = ::CreateFile((const TCHAR*)dst, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
 				ze.attr, NULL);
+#else
+		h = (void*) open( (const TCHAR*)dst, O_WRONLY | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO );
+#endif
 	}
 
 	if (h == INVALID_HANDLE_VALUE)  
@@ -4146,11 +4219,30 @@ ZRESULT TUnzip::Unzip(int index,void *dst,unsigned int len,DWORD flags)
 		}
 	}
 	bool settime=false;
+
+#ifdef _WIN32
 	DWORD type = GetFileType(h); 
 	if (type==FILE_TYPE_DISK && !haderr) 
 		settime=true;
+#else
+	struct stat sbuf;
+	fstat( (int)h, &sbuf );
+	settime = ( sbuf.st_mode & S_IFREG );
+#endif
+
 	if (settime) 
+	{
+#ifdef _WIN32
 		SetFileTime(h,&ze.ctime,&ze.atime,&ze.mtime);
+#else
+		struct timeval tv[2];
+		tv[0].tv_sec = ze.atime;
+		tv[0].tv_usec = 0;
+		tv[1].tv_sec = ze.mtime;
+		tv[1].tv_usec = 0;
+		futimes( (int)h, tv );
+#endif
+	}
 	if (flags!=ZIP_HANDLE) 
 		CloseHandle(h);
 	unzCloseCurrentFile(uf);
@@ -4200,7 +4292,7 @@ unsigned int FormatZipMessageU(ZRESULT code, char *buf,unsigned int len)
   unsigned int mlen=(unsigned int)strlen(msg);
   if (buf==0 || len==0) return mlen;
   unsigned int n=mlen; if (n+1>len) n=len-1;
-  strncpy(buf,msg,n); buf[n]=0;
+  memcpy(buf,msg,n); buf[n]=0;
   return mlen;
 }
 
@@ -4365,4 +4457,31 @@ bool IsZipHandleU(HZIP hz)
   return (han->flag==1);
 }
 
+bool SafeUnzipMemory( const void *pvZipped, int cubZipped, void *pvDest, int cubDest /* should be the exact expected unzipped size */ )
+{
+	// unzip
+	HZIP hZip = OpenZip( (void *)pvZipped, cubZipped, ZIP_MEMORY );
+	
+	// UnzipItem is returning ZR_MORE no matter what size buffer is passed in, we know the real size so just accept
+	int iRes = ZR_CORRUPT;
+	if ( hZip )
+	{
+		try
+		{
+			iRes = UnzipItem( hZip, 0, pvDest, cubDest, ZIP_MEMORY );
+		}
+		catch ( ... )
+		{
+			// failed to unzip, try to continue
+			iRes = ZR_CORRUPT;
+		}
+		CloseZip( hZip );
+	}
+
+	// check for failure
+	if ( ZR_OK != iRes && ZR_MORE != iRes )
+		return false;
+
+	return true;
+}
 

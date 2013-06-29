@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #include "cbase.h"
 #include <vgui_controls/Panel.h>
-#include <vgui/isurface.h>
+#include <vgui/ISurface.h>
 #include <vgui_controls/AnimationController.h>
 #include "hud_base_account.h"
 
@@ -144,7 +144,7 @@ int CHudBaseAccount::GetNumberWidth(HFont font, int number)
 
 	surface()->DrawSetTextFont(font);
 	wchar_t unicode[6];
-	swprintf(unicode, L"%d", number);
+	V_snwprintf(unicode, ARRAYSIZE(unicode), L"%d", number);
 
 	for (wchar_t *ch = unicode; *ch != 0; ch++)
 	{

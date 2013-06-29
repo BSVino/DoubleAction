@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements the zombie, a horrific once-human headcrab victim.
 //
@@ -290,7 +290,7 @@ bool CNPC_BaseZombie::FindNearestPhysicsObject( int iMaxMass )
 		return false;
 	}
 
-	float flNearestDist = min( dist, ZOMBIE_FARTHEST_PHYSICS_OBJECT * 0.5 );
+	float flNearestDist = MIN( dist, ZOMBIE_FARTHEST_PHYSICS_OBJECT * 0.5 );
 	Vector vecDelta( flNearestDist, flNearestDist, GetHullHeight() * 2.0 );
 
 	class CZombieSwatEntitiesEnum : public CFlaggedEntitiesEnum
@@ -684,7 +684,7 @@ float CNPC_BaseZombie::GetHitgroupDamageMultiplier( int iHitGroup, const CTakeDa
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	CTakeDamageInfo infoCopy = info;
 
@@ -702,7 +702,7 @@ void CNPC_BaseZombie::TraceAttack( const CTakeDamageInfo &info, const Vector &ve
 		infoCopy.ScaleDamage( 0.625 );
 	}
 
-	BaseClass::TraceAttack( infoCopy, vecDir, ptr );
+	BaseClass::TraceAttack( infoCopy, vecDir, ptr, pAccumulator );
 }
 
 
@@ -844,7 +844,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 
 	// flDamageThreshold is what percentage of the creature's max health
 	// this amount of damage represents. (clips at 1.0)
-	float flDamageThreshold = min( 1, info.GetDamage() / m_iMaxHealth );
+	float flDamageThreshold = MIN( 1, info.GetDamage() / m_iMaxHealth );
 	
 	// Being chopped up by a sharp physics object is a pretty special case
 	// so we handle it with some special code. Mainly for 
@@ -949,10 +949,12 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 //-----------------------------------------------------------------------------
 void CNPC_BaseZombie::MakeAISpookySound( float volume, float duration )
 {
+#ifdef HL2_EPISODIC
 	if ( HL2GameRules()->IsAlyxInDarknessMode() )
 	{
 		CSoundEnt::InsertSound( SOUND_COMBAT, EyePosition(), volume, duration, this, SOUNDENT_CHANNEL_SPOOKY_NOISE );
 	}
+#endif // HL2_EPISODIC
 }
 
 //-----------------------------------------------------------------------------
@@ -1027,7 +1029,7 @@ void CNPC_BaseZombie::MoanSound( envelopePoint_t *pEnvelope, int iEnvelopeSize )
 //-----------------------------------------------------------------------------
 bool CNPC_BaseZombie::IsChopped( const CTakeDamageInfo &info )
 {
-	float flDamageThreshold = min( 1, info.GetDamage() / m_iMaxHealth );
+	float flDamageThreshold = MIN( 1, info.GetDamage() / m_iMaxHealth );
 
 	if ( m_iHealth > 0 || flDamageThreshold <= 0.5 )
 		return false;
@@ -1213,7 +1215,7 @@ void CNPC_BaseZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize
 #endif // HL2_EPISODIC
 
 	// Set the zombie up to burn to death in about ten seconds.
-	SetHealth( min( m_iHealth, FLAME_DIRECT_DAMAGE_PER_SEC * (ZOMBIE_BURN_TIME + random->RandomFloat( -ZOMBIE_BURN_TIME_NOISE, ZOMBIE_BURN_TIME_NOISE)) ) );
+	SetHealth( MIN( m_iHealth, FLAME_DIRECT_DAMAGE_PER_SEC * (ZOMBIE_BURN_TIME + random->RandomFloat( -ZOMBIE_BURN_TIME_NOISE, ZOMBIE_BURN_TIME_NOISE)) ) );
 
 	// FIXME: use overlays when they come online
 	//AddOverlay( ACT_ZOM_WALK_ON_FIRE, false );
@@ -1359,20 +1361,20 @@ CBaseEntity *CNPC_BaseZombie::ClawAttack( float flDist, int iDamage, QAngle &qaV
 			{
 			case ZOMBIE_BLOOD_LEFT_HAND:
 				if( GetAttachment( "blood_left", vecBloodPos ) )
-					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), min( iDamage, 30 ) );
+					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), MIN( iDamage, 30 ) );
 				break;
 
 			case ZOMBIE_BLOOD_RIGHT_HAND:
 				if( GetAttachment( "blood_right", vecBloodPos ) )
-					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), min( iDamage, 30 ) );
+					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), MIN( iDamage, 30 ) );
 				break;
 
 			case ZOMBIE_BLOOD_BOTH_HANDS:
 				if( GetAttachment( "blood_left", vecBloodPos ) )
-					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), min( iDamage, 30 ) );
+					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), MIN( iDamage, 30 ) );
 
 				if( GetAttachment( "blood_right", vecBloodPos ) )
-					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), min( iDamage, 30 ) );
+					SpawnBlood( vecBloodPos, g_vecAttackDir, pHurt->BloodColor(), MIN( iDamage, 30 ) );
 				break;
 
 			case ZOMBIE_BLOOD_BITE:
@@ -1577,7 +1579,9 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 		right = right * 100;
 		forward = forward * 200;
 
-		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), QAngle( -15, -20, -10 ), right + forward, ZOMBIE_BLOOD_RIGHT_HAND );
+		QAngle qa( -15, -20, -10 );
+		Vector vec = right + forward;
+		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), qa, vec, ZOMBIE_BLOOD_RIGHT_HAND );
 		return;
 	}
 
@@ -1589,7 +1593,9 @@ void CNPC_BaseZombie::HandleAnimEvent( animevent_t *pEvent )
 		right = right * -100;
 		forward = forward * 200;
 
-		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), QAngle( -15, 20, -10 ), right + forward, ZOMBIE_BLOOD_LEFT_HAND );
+		QAngle qa( -15, 20, -10 );
+		Vector vec = right + forward;
+		ClawAttack( GetClawAttackRange(), sk_zombie_dmg_one_slash.GetFloat(), qa, vec, ZOMBIE_BLOOD_LEFT_HAND );
 		return;
 	}
 
@@ -1905,7 +1911,7 @@ int CNPC_BaseZombie::SelectSchedule ( void )
 
 #ifdef DEBUG_ZOMBIES
 			DevMsg("Wandering\n");
-#endif+
+#endif
 
 			// Just lost track of our enemy. 
 			// Wander around a bit so we don't look like a dingus.

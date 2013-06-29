@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -19,7 +19,7 @@ class C_Gib : public C_BaseAnimating
 	typedef C_BaseAnimating BaseClass;
 public:
 
-	C_Gib::~C_Gib( void );
+	~C_Gib( void );
 
 	static C_Gib	*CreateClientsideGib( const char *pszModelName, Vector vecOrigin, Vector vecForceDir, AngularImpulse vecAngularImp, float flLifetime = DEFAULT_GIB_LIFETIME );
 	

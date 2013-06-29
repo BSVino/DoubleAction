@@ -1,3 +1,4 @@
+//========= Copyright Valve Corporation, All rights reserved. ============//
 // QC_Eyes.cpp : Defines the class behaviors for the application.
 //
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implementation for CBaseClientRenderTargets class.
 //			Provides Init functions for common render textures used by the engine.
@@ -9,6 +9,7 @@
 #include "cbase.h"
 #include "baseclientrendertargets.h"						// header	
 #include "materialsystem/imaterialsystemhardwareconfig.h"	// Hardware config checks
+#include "tier0/icommandline.h"
 
 ITexture* CBaseClientRenderTargets::CreateWaterReflectionTexture( IMaterialSystem* pMaterialSystem, int iSize )
 {

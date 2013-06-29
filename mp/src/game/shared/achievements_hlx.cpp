@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,7 +10,7 @@
 #ifdef GAME_DLL
 
 // this gets compiled in for HL2 + Ep(X) only
-#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined ( PORTAL ) ) && ( !defined( HL2MP ) )
+#if ( defined( HL2_DLL ) || defined( HL2_EPISODIC ) ) && ( !defined ( PORTAL ) )
 
 #include "baseachievement.h"
 #include "prop_combine_ball.h"

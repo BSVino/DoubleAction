@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -3075,6 +3075,14 @@ bool CCoreDispInfo::IsTriBuildable( int iTri )
 	}
 
 	return IsTriTag( iTri, COREDISPTRI_TAG_BUILDABLE );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CCoreDispInfo::IsTriRemove( int iTri )						
+{ 
+	return IsTriTag( iTri, COREDISPTRI_TAG_FORCE_REMOVE_BIT );
 }
 
 //-----------------------------------------------------------------------------

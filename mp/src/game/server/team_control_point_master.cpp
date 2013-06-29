@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -10,6 +10,9 @@
 #include "team_control_point_master.h"
 #include "teamplayroundbased_gamerules.h"
 
+#if defined ( TF_DLL )
+#include "tf_gamerules.h"
+#endif
 
 BEGIN_DATADESC( CTeamControlPointMaster )
 	DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
@@ -82,6 +85,7 @@ void CTeamControlPointMaster::Spawn( void )
 
 	m_iCurrentRoundIndex = -1;
   	m_bFirstRoundAfterRestart = true;
+	m_flLastOwnershipChangeTime = -1;
 
 	BaseClass::Spawn();
 
@@ -184,7 +188,7 @@ bool CTeamControlPointMaster::FindControlPoints( void )
 	{
 		CTeamControlPoint *pPoint = assert_cast<CTeamControlPoint *>(pEnt);
 
-		if( pPoint->IsActive() )
+		if( pPoint->IsActive() && !pPoint->IsMarkedForDeletion() )
 		{
 			int index = pPoint->GetPointIndex();
 
@@ -264,6 +268,7 @@ bool CTeamControlPointMaster::FindControlPoints( void )
 		ObjectiveResource()->SetCPPosition( iPointIndex, pPoint->GetAbsOrigin() );
 		ObjectiveResource()->SetWarnOnCap( iPointIndex, pPoint->GetWarnOnCap() );
 		ObjectiveResource()->SetWarnSound( iPointIndex, pPoint->GetWarnSound() );
+		ObjectiveResource()->SetCPGroup( iPointIndex, pPoint->GetCPGroup() );
 		for ( int team = 0; team < GetNumberOfTeams(); team++ )
 		{
 			ObjectiveResource()->SetCPIcons( iPointIndex, team, pPoint->GetHudIconIndexForTeam(team) );
@@ -332,7 +337,7 @@ bool CTeamControlPointMaster::FindControlPointRounds( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTeamControlPointMaster::PointCanBeCapped( CTeamControlPoint *pPoint )
+bool CTeamControlPointMaster::IsInRound( CTeamControlPoint *pPoint )
 {
 	// are we playing a round and is this point in the round?
 	if ( m_ControlPointRounds.Count() > 0 && m_iCurrentRoundIndex != -1 )
@@ -346,8 +351,10 @@ bool CTeamControlPointMaster::PointCanBeCapped( CTeamControlPoint *pPoint )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTeamControlPointMaster::FindControlPointRoundToPlay( void )
+int CTeamControlPointMaster::NumPlayableControlPointRounds( void )
 {
+	int nRetVal = 0;
+
 	for ( int i = 0 ; i < m_ControlPointRounds.Count() ; ++i )
 	{
 		CTeamControlPointRound *pRound = m_ControlPointRounds[i];
@@ -357,12 +364,12 @@ bool CTeamControlPointMaster::FindControlPointRoundToPlay( void )
 			if ( pRound->IsPlayable() )
 			{
 				// we found one that's playable
-				return true;
+				nRetVal++;
 			}
 		}
 	}
 
-	return false;
+	return nRetVal;
 }
 
 //-----------------------------------------------------------------------------
@@ -436,6 +443,13 @@ void CTeamControlPointMaster::RegisterRoundBeingPlayed( void )
 			pRules->SetFirstRoundPlayed( iszEntityName );
 			m_bFirstRoundAfterRestart = false;
 		}
+	}
+
+	IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_round_selected" );	
+	if ( event )
+	{
+		event->SetString( "round", m_ControlPointRounds[m_iCurrentRoundIndex]->GetEntityName().ToCStr() );
+		gameeventmanager->FireEvent( event );
 	}
 }
 
@@ -626,7 +640,7 @@ void CTeamControlPointMaster::CheckWinConditions( void )
 			int iWinners = m_ControlPointRounds[m_iCurrentRoundIndex]->CheckWinConditions();
 			if ( iWinners != -1 && iWinners >= FIRST_GAME_TEAM )
 			{
-				bool bForceMapReset = ( FindControlPointRoundToPlay() == false ); // are there any more rounds to play?
+				bool bForceMapReset = ( NumPlayableControlPointRounds() == 0 ); // are there any more rounds to play?
 
 				if ( !bForceMapReset )
 				{
@@ -648,11 +662,39 @@ void CTeamControlPointMaster::CheckWinConditions( void )
 		// Check that the points aren't all held by one team...if they are
 		// this will reset the round and will reset all the points
 		int iWinners = TeamOwnsAllPoints();
-		if ( ( iWinners >= FIRST_GAME_TEAM ) && 
+		if ( ( m_iInvalidCapWinner != 1 ) &&
+			 ( iWinners >= FIRST_GAME_TEAM ) && 
 			 ( iWinners != m_iInvalidCapWinner ) )
 		{
-			TeamplayGameRules()->SetWinningTeam( iWinners, WINREASON_ALL_POINTS_CAPTURED, true, m_bSwitchTeamsOnWin );
-			FireTeamWinOutput( iWinners );
+			bool bWinner = true;
+
+#if defined( TF_DLL)
+			if ( TFGameRules() && TFGameRules()->IsInKothMode() )
+			{
+				CTeamRoundTimer *pTimer = NULL;
+				if ( iWinners == TF_TEAM_RED )
+				{
+					pTimer = TFGameRules()->GetRedKothRoundTimer();
+				}
+				else if ( iWinners == TF_TEAM_BLUE )
+				{
+					pTimer = TFGameRules()->GetBlueKothRoundTimer();
+				}
+
+				if ( pTimer )
+				{
+					if ( pTimer->GetTimeRemaining() > 0 || TFGameRules()->TimerMayExpire() == false )
+					{
+						bWinner = false;
+					}
+				}
+			}
+#endif
+			if ( bWinner )
+			{
+				TeamplayGameRules()->SetWinningTeam( iWinners, WINREASON_ALL_POINTS_CAPTURED, true, m_bSwitchTeamsOnWin );
+				FireTeamWinOutput( iWinners );
+			}
 		}
 	}
 }
@@ -697,7 +739,7 @@ void CTeamControlPointMaster::InternalSetWinner( int iTeam )
 	if ( m_ControlPointRounds.Count() > 0 )
 	{
 		// if we're playing rounds and there are more to play, don't do a full reset
-		bForceMapReset = ( FindControlPointRoundToPlay() == false );
+		bForceMapReset = ( NumPlayableControlPointRounds() == 0 );
 	}
 
 	if ( iTeam == TEAM_UNASSIGNED )
@@ -1013,7 +1055,7 @@ int	CTeamControlPointMaster::GetBaseControlPoint( int iTeam )
 
 		if ( PlayingMiniRounds() && iTeam > LAST_SHARED_TEAM )
 		{
-			if ( PointCanBeCapped( pPoint ) ) // is this point in the current round?
+			if ( IsInRound( pPoint ) ) // is this point in the current round?
 			{
 				if ( iPointIndex > nHighestValue )
 				{
@@ -1176,7 +1218,7 @@ int CTeamControlPointMaster::CalcNumRoundsRemaining( int iTeam )
 				}
 			}
 			// this round is playable if all control points are not owned by one team (or owned by a team that can't win by capping them)
-			bool bPlayable = ( ( iRoundOwningTeam < FIRST_GAME_TEAM ) || ( iRoundOwningTeam == pRound->GetInvalidCapWinner() ) );
+			bool bPlayable = ( ( iRoundOwningTeam < FIRST_GAME_TEAM ) || ( pRound->GetInvalidCapWinner() == 1 ) || ( iRoundOwningTeam == pRound->GetInvalidCapWinner() ) );
 			if ( !bPlayable )
 				continue;
 
@@ -1212,6 +1254,7 @@ float CTeamControlPointMaster::GetPartialCapturePointRate( void )
 {
 	return m_flPartialCapturePointsRate;
 }
+
 /*
 //-----------------------------------------------------------------------------
 // Purpose: 

@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,7 +34,7 @@ END_RECV_TABLE()
 // Globals
 //-----------------------------------------------------------------------------
 C_EntityClassList<C_FuncReflectiveGlass> g_ReflectiveGlassList;
-C_FuncReflectiveGlass *C_EntityClassList<C_FuncReflectiveGlass>::m_pClassList = NULL;
+template<> C_FuncReflectiveGlass *C_EntityClassList<C_FuncReflectiveGlass>::m_pClassList = NULL;
 
 C_FuncReflectiveGlass* GetReflectiveGlassList()
 {

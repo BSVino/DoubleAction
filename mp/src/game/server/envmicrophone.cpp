@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ====
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements an entity that measures sound volume at a point in a map.
 //
@@ -105,7 +105,7 @@ void CEnvMicrophone::Spawn(void)
 		m_flSensitivity = 10;
 	}
 
-	m_flSmoothFactor = clamp(m_flSmoothFactor, 0, 0.9);
+	m_flSmoothFactor = clamp(m_flSmoothFactor, 0.f, 0.9f);
 
 	if (!m_bDisabled)
 	{
@@ -278,7 +278,7 @@ bool CEnvMicrophone::CanHearSound(CSound *pSound, float &flVolume)
 	if (flDistance <= pSound->Volume() * m_flSensitivity)
 	{
 		flVolume = 1 - (flDistance / (pSound->Volume() * m_flSensitivity));
-		flVolume = clamp(flVolume, 0, 1);
+		flVolume = clamp(flVolume, 0.f, 1.f);
 		return true;
 	}
 

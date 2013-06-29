@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "cbase.h"
 #include "Sprite.h"
 #include "basecombatweapon.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "AI_Senses.h"
 #include "AI_Memory.h"
 #include "gamerules.h"
@@ -379,7 +379,7 @@ void CBaseTurret::EyeOff( )
 	{
 		if (m_eyeBrightness > 0)
 		{
-			m_eyeBrightness = max( 0, m_eyeBrightness - 30 );
+			m_eyeBrightness = MAX( 0, m_eyeBrightness - 30 );
 			m_pEyeGlow->SetBrightness( m_eyeBrightness );
 		}
 	}

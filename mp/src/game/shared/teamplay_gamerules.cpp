@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -289,6 +289,14 @@ void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		
 		pPlayer->SetPlayerName( pszName );
 	}
+
+	// NVNT see if this user is still or has began using a haptic device
+	const char *pszHH = engine->GetClientConVarValue( pPlayer->entindex(), "hap_HasDevice" );
+	if(pszHH)
+	{
+		int iHH = atoi(pszHH);
+		pPlayer->SetHaptics(iHH!=0);
+	}
 }
 
 //=========================================================
@@ -564,5 +572,4 @@ void CTeamplayRules::RecountTeams( void )
 		}
 	}
 }
-
 #endif // GAME_DLL

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,9 @@
 #include "iclientmode.h"
 #include "history_resource.h"
 #include "input.h"
+#include "../hud_crosshair.h"
 
+#include "VGuiMatSurface/IMatSystemSurface.h"
 #include <KeyValues.h>
 #include <vgui/IScheme.h>
 #include <vgui/ISurface.h>
@@ -575,9 +577,17 @@ void CHudWeaponSelection::Paint()
 
 	case HUDTYPE_PLUS:
 		{
+			float fCenterX, fCenterY;
+			bool bBehindCamera = false;
+			CHudCrosshair::GetDrawPosition( &fCenterX, &fCenterY, &bBehindCamera );
+
+			// if the crosshair is behind the camera, don't draw it
+			if( bBehindCamera )
+				return;
+
 			// bucket style
-			int screenCenterX = GetWide() / 2;
-			int screenCenterY = GetTall() / 2 - 15; // Height isn't quite screen height, so adjust for center alignement
+			int screenCenterX = (int) fCenterX;
+			int screenCenterY = (int) fCenterY - 15; // Height isn't quite screen height, so adjust for center alignement
 
 			// Modifiers for the four directions. Used to change the x and y offsets
 			// of each box based on which bucket we're drawing. Bucket directions are
@@ -889,7 +899,11 @@ void CHudWeaponSelection::DrawLargeWeaponBox( C_BaseCombatWeapon *pWeapon, bool 
 		// setup our localized string
 		if ( tempString )
 		{
+#ifdef WIN32
 			_snwprintf(text, sizeof(text)/sizeof(wchar_t) - 1, L"%s", tempString);
+#else
+			_snwprintf(text, sizeof(text)/sizeof(wchar_t) - 1, L"%S", tempString);
+#endif
 			text[sizeof(text)/sizeof(wchar_t) - 1] = 0;
 		}
 		else
@@ -1011,6 +1025,8 @@ void CHudWeaponSelection::ApplySchemeSettings(vgui::IScheme *pScheme)
 	{
 		SetBounds( x, y, screenWide - x, screenTall - y );
 	}
+
+	SetForceStereoRenderToFrameBuffer( true );
 }
 
 //-----------------------------------------------------------------------------

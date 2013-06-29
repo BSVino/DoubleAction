@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Bullseyes act as targets for other NPC's to attack and to trigger
 //			events 
@@ -284,7 +284,7 @@ void CNPC_Bullseye::DecalTrace( trace_t *pOldTrace, char const *decalName )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNPC_Bullseye::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
+void CNPC_Bullseye::ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName )
 {
 	// Get direction of original trace
 	Vector vTraceDir = pTrace->endpos - pTrace->startpos;
@@ -391,7 +391,7 @@ bool CNPC_Bullseye::IsLightDamage( const CTakeDamageInfo &info )
 //			*ptr - 
 //			bitsDamageType - 
 //-----------------------------------------------------------------------------
-void CNPC_Bullseye::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CNPC_Bullseye::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	//If specified, we must be the enemy of the target
 	if ( m_spawnflags & SF_BULLSEYE_ENEMYDAMAGEONLY )
@@ -411,7 +411,7 @@ void CNPC_Bullseye::TraceAttack( const CTakeDamageInfo &info, const Vector &vecD
 		TraceBleed( info.GetDamage(), vecDir, ptr, info.GetDamageType() );
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 

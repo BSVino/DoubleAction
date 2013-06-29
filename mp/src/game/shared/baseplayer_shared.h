@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,10 +32,6 @@
 
 #define DEATH_ANIMATION_TIME	3.0f
 
-// multiplayer only
-#define NOINTERP_PARITY_MAX			4
-#define NOINTERP_PARITY_MAX_BITS	2
-
 typedef struct 
 {
 	Vector		m_vecAutoAimDir;		// The direction autoaim wishes to point.
@@ -54,6 +50,8 @@ enum stepsoundtimes_t
 	STEPSOUNDTIME_WATER_KNEE,
 	STEPSOUNDTIME_WATER_FOOT,
 };
+
+void CopySoundNameWithModifierToken( char *pchDest, const char *pchSource, int nMaxLenInChars, const char *pchToken );
 
 // Shared header file for players
 #if defined( CLIENT_DLL )

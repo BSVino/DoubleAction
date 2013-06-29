@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Grenade used by the city scanner
 //
@@ -330,7 +330,7 @@ void CGrenadeHomer::Launch( CBaseEntity*		pOwner,
 	{
 		// Figure out how long it'll take for me to reach the target.
 		float flDist = ( pTarget->WorldSpaceCenter() - WorldSpaceCenter() ).Length();
-		float flTime = max( 0.5, flDist / GetAbsVelocity().Length() );
+		float flTime = MAX( 0.5, flDist / GetAbsVelocity().Length() );
 
 		CSoundEnt::InsertSound ( SOUND_DANGER, m_hTarget->GetAbsOrigin(), 300, flTime, pOwner );
 	}
@@ -600,7 +600,7 @@ void CGrenadeHomer::AimThink( void )
 			// Extract speed and direction
 			Vector	vCurDir		= GetAbsVelocity();
 			float flCurSpeed = VectorNormalize(vCurDir);
-			flTargetSpeed = max(flTargetSpeed, flCurSpeed);
+			flTargetSpeed = MAX(flTargetSpeed, flCurSpeed);
 
 			// Add in homing direction
 			Vector vecNewVelocity = GetAbsVelocity();
@@ -608,7 +608,7 @@ void CGrenadeHomer::AimThink( void )
 			while (flTimeToUse > 0)
 			{
 				vecNewVelocity = (flCurHomingStrength * vTargetDir) + ((1 - flCurHomingStrength) * vCurDir);
-				flTimeToUse =- 0.1;
+				flTimeToUse = -0.1;
 			}
 			VectorNormalize(vecNewVelocity);
 			vecNewVelocity *= flTargetSpeed;
@@ -628,7 +628,7 @@ void CGrenadeHomer::AimThink( void )
 	}
 
 	// Add in gravity
-	vecImpulse.z -= GetGravity() * sv_gravity.GetFloat() * gpGlobals->frametime;
+	vecImpulse.z -= GetGravity() * GetCurrentGravity() * gpGlobals->frametime;
 	ApplyAbsVelocityImpulse( vecImpulse );
 
 	QAngle angles;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "vrad.h"
 #include "mathlib/vector.h"
 #include "UtlBuffer.h"
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "GameBSPFile.h"
 #include "BSPTreeData.h"
 #include "VPhysics_Interface.h"

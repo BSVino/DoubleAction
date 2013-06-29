@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2004, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,14 +13,46 @@
 #include "datamodel/attributeflags.h"
 #include "datamodel/idatamodel.h"
 #include "datamodel/dmattributetypes.h"
+#include "datamodel/dmelement.h"
 #include "datamodel/dmvar.h"
 #include "tier1/utlhash.h"
 
 //-----------------------------------------------------------------------------
-// Forward declarations
+// Fast dynamic cast
 //-----------------------------------------------------------------------------
-class CDmElement;
-class CUtlBuffer;
+template< class E >
+inline E *CastElement( CDmElement *pElement )
+{
+	if ( pElement && pElement->IsA( E::GetStaticTypeSymbol() ) )
+		return static_cast< E* >( pElement );
+	return NULL;
+}
+
+
+//-----------------------------------------------------------------------------
+// type-safe element creation and accessor helpers - infers type name string from actual type
+//-----------------------------------------------------------------------------
+template< class E >
+inline E *GetElement( DmElementHandle_t hElement )
+{
+	CDmElement *pElement = g_pDataModel->GetElement( hElement );
+	return CastElement< E >( pElement );
+}
+
+//-----------------------------------------------------------------------------
+// Typesafe element creation + destruction
+//-----------------------------------------------------------------------------
+template< class E >
+inline E *CreateElement( const char *pObjectName, DmFileId_t fileid = DMFILEID_INVALID, const DmObjectId_t *pObjectID = NULL )
+{
+	return GetElement< E >( g_pDataModel->CreateElement( E::GetStaticTypeSymbol(), pObjectName, fileid, pObjectID ) );
+}
+
+template< class E >
+inline E *CreateElement( const char *pElementType, const char *pObjectName, DmFileId_t fileid = DMFILEID_INVALID, const DmObjectId_t *pObjectID = NULL )
+{
+	return GetElement< E >( g_pDataModel->CreateElement( pElementType, pObjectName, fileid, pObjectID ) );
+}
 
 
 //-----------------------------------------------------------------------------
@@ -250,7 +282,7 @@ inline CDmElement *CDmAttribute::GetOwner()
 template< class T > 
 inline const T& CDmAttribute::GetValue( const T& defaultValue ) const
 {
-	if ( GetType() == CDmAttributeInfo< T >::ATTRIBUTE_TYPE )
+	if ( GetType() == ( DmAttributeType_t )( CDmAttributeInfo< T >::ATTRIBUTE_TYPE ) )
 		return *reinterpret_cast< const T* >( m_pData );
 
 	if ( IsTypeConvertable< T >() )
@@ -286,16 +318,14 @@ inline const void* CDmAttribute::GetValueUntyped() const
 	return m_pData; 
 } 
 
-#ifndef _LINUX
 template< class E > 
 inline E* CDmAttribute::GetValueElement() const
 {
 	Assert( GetType() == AT_ELEMENT );
 	if ( GetType() == AT_ELEMENT )
-		return GetElement<E>( this->GetValue<DmElementHandle_t>( ) );
+		return GetElement<E>( this->GetValue< DmElementHandle_t >() );
 	return NULL;
 }
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -438,5 +468,301 @@ inline bool ShouldTraverse( const CDmAttribute *pAttr, TraversalDepth_t depth )
 	Assert( 0 );
 	return false;
 }
+
+
+//-----------------------------------------------------------------------------
+// Gets attributes
+//-----------------------------------------------------------------------------
+inline CDmAttribute *CDmElement::GetAttribute( const char *pAttributeName, DmAttributeType_t type )
+{
+	CDmAttribute *pAttribute = FindAttribute( pAttributeName );
+	if ( ( type != AT_UNKNOWN ) && pAttribute && ( pAttribute->GetType() != type ) )
+		return NULL;
+	return pAttribute;
+}
+
+inline const CDmAttribute *CDmElement::GetAttribute( const char *pAttributeName, DmAttributeType_t type ) const
+{
+	CDmAttribute *pAttribute = FindAttribute( pAttributeName );
+	if ( ( type != AT_UNKNOWN ) && pAttribute && ( pAttribute->GetType() != type ) )
+		return NULL;
+	return pAttribute;
+}
+
+
+//-----------------------------------------------------------------------------
+// AddAttribute calls
+//-----------------------------------------------------------------------------
+inline CDmAttribute *CDmElement::AddAttribute( const char *pAttributeName, DmAttributeType_t type )
+{
+	CDmAttribute *pAttribute = FindAttribute( pAttributeName );
+	if ( pAttribute )
+		return ( pAttribute->GetType() == type ) ? pAttribute : NULL;
+	pAttribute = CreateAttribute( pAttributeName, type );
+	return pAttribute;
+}
+
+template< class E > inline CDmAttribute *CDmElement::AddAttributeElement( const char *pAttributeName )
+{
+	CDmAttribute *pAttribute = AddAttribute( pAttributeName, AT_ELEMENT );
+	if ( !pAttribute )
+		return NULL;
+	
+	// FIXME: If the attribute exists but has a different element type symbol, should we complain?
+	pAttribute->SetElementTypeSymbol( E::GetStaticTypeSymbol() );
+	return pAttribute;
+}
+
+template< class E > inline CDmAttribute *CDmElement::AddAttributeElementArray( const char *pAttributeName )
+{
+	CDmAttribute *pAttribute = AddAttribute( pAttributeName, AT_ELEMENT_ARRAY );
+	if ( !pAttribute )
+		return NULL;
+	
+	// FIXME: If the attribute exists but has a different element type symbol, should we complain?
+	pAttribute->SetElementTypeSymbol( E::GetStaticTypeSymbol() );
+	return pAttribute;
+}
+
+//-----------------------------------------------------------------------------
+// GetValue methods
+//-----------------------------------------------------------------------------
+
+template< class T >
+inline const T& CDmElement::GetValue( const char *pAttributeName ) const
+{
+	static CDmaVar<T> defaultVal;
+	return GetValue( pAttributeName, defaultVal.Get() );
+}
+
+inline const char *CDmElement::GetValueString( const char *pAttributeName ) const
+{
+	return GetValue<CUtlString>( pAttributeName ).Get();
+}
+
+template< class E >
+inline E* CDmElement::GetValueElement( const char *pAttributeName ) const
+{
+	DmElementHandle_t h = GetValue< DmElementHandle_t >( pAttributeName );
+	return GetElement<E>( h );
+}
+
+
+template< class T >
+inline const T& CDmElement::GetValue( const char *pAttributeName, const T& defaultVal ) const
+{
+	const CDmAttribute *pAttribute = FindAttribute( pAttributeName );
+	if ( pAttribute != NULL )
+		return pAttribute->GetValue<T>();
+	return defaultVal;
+}
+
+//-----------------------------------------------------------------------------
+// SetValue methods
+//-----------------------------------------------------------------------------
+template< class T >
+inline CDmAttribute* CDmElement::SetValue( const char *pAttributeName, const T& value )
+{
+	CDmAttribute *pAttribute = FindAttribute( pAttributeName );
+	if ( !pAttribute )
+	{
+		pAttribute = CreateAttribute( pAttributeName, CDmAttributeInfo<T>::AttributeType() );
+	}
+	if ( pAttribute )
+	{
+		pAttribute->SetValue( value );
+		return pAttribute;
+	}
+	return NULL;
+}
+
+template< class E >
+inline CDmAttribute* CDmElement::SetValue( const char *pAttributeName, E* pElement )
+{
+	DmElementHandle_t hElement = pElement ? pElement->GetHandle() : DMELEMENT_HANDLE_INVALID;
+	return SetValue( pAttributeName, hElement );
+}
+
+template<>
+inline CDmAttribute* CDmElement::SetValue( const char *pAttributeName, const char *pValue )
+{
+	int nLen = pValue ? Q_strlen( pValue ) + 1 : 0;
+	CUtlString str( pValue, nLen );
+	return SetValue( pAttributeName, str );
+}
+
+template<>
+inline CDmAttribute* CDmElement::SetValue( const char *pAttributeName, char *pValue )
+{
+	return SetValue( pAttributeName, (const char *)pValue );
+}
+
+inline CDmAttribute* CDmElement::SetValue( const char *pAttributeName, const void *pValue, size_t nSize )
+{
+	CUtlBinaryBlock buf( pValue, nSize );
+	return SetValue( pAttributeName, buf );
+}
+
+
+//-----------------------------------------------------------------------------
+// AddValue methods( set value if not found )
+//-----------------------------------------------------------------------------
+template< class T >
+inline CDmAttribute* CDmElement::InitValue( const char *pAttributeName, const T& value )
+{
+	CDmAttribute *pAttribute = GetAttribute( pAttributeName );
+	if ( !pAttribute )
+		return SetValue( pAttributeName, value );
+	return pAttribute;
+}
+
+template< class E >
+inline CDmAttribute* CDmElement::InitValue( const char *pAttributeName, E* pElement )
+{
+	DmElementHandle_t hElement = pElement ? pElement->GetHandle() : DMELEMENT_HANDLE_INVALID;
+	return InitValue( pAttributeName, hElement );
+}
+
+inline  CDmAttribute* CDmElement::InitValue( const char *pAttributeName, const void *pValue, size_t size )
+{
+	CDmAttribute *pAttribute = GetAttribute( pAttributeName );
+	if ( !pAttribute )
+		return SetValue( pAttributeName, pValue, size );
+	return pAttribute;
+}
+
+template< class T >
+T *FindReferringElement( CDmElement *pElement, UtlSymId_t symAttrName, bool bMustBeInSameFile = true )
+{
+	DmAttributeReferenceIterator_t i = g_pDataModel->FirstAttributeReferencingElement( pElement->GetHandle() );
+	while ( i != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID )
+	{
+		CDmAttribute *pAttribute = g_pDataModel->GetAttribute( i );
+		CDmElement *pDmeParent = pAttribute->GetOwner();
+		if ( pDmeParent && pAttribute->GetNameSymbol() == symAttrName )
+		{
+			T *pParent = CastElement< T >( pDmeParent );
+			if ( pParent )
+			{
+				if ( !bMustBeInSameFile || ( pParent->GetFileId() == pElement->GetFileId() ) )
+					return pParent;
+			}
+		}
+		i = g_pDataModel->NextAttributeReferencingElement( i );
+	}
+	
+	return NULL;
+}
+
+template< class T >
+T *FindAncestorReferencingElement( CDmElement *target )
+{
+	if ( !target )
+		return NULL;
+	
+	for ( DmAttributeReferenceIterator_t it = g_pDataModel->FirstAttributeReferencingElement( target->GetHandle() );
+		 it != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID;
+		 it = g_pDataModel->NextAttributeReferencingElement( it ) )
+	{
+		CDmAttribute *attr = g_pDataModel->GetAttribute( it );
+		Assert( attr );
+		CDmElement *element = attr->GetOwner();
+		Assert( element );
+		if ( !element )
+			continue;
+		T *t = CastElement< T >( element );
+		if ( !t )
+			continue;
+		
+		return t;
+	}
+	return NULL;
+}
+
+template< class T >
+T *FindAncestorReferencingElement_R_Impl( CUtlRBTree< CDmElement * >& visited, CDmElement *check )
+{
+	if ( visited.Find( check ) != visited.InvalidIndex() )
+		return NULL;
+	
+	visited.Insert( check );
+	
+	// Pass one, see if it's in this ancestor list
+	DmAttributeReferenceIterator_t it;
+	for ( it = g_pDataModel->FirstAttributeReferencingElement( check->GetHandle() );
+		 it != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID;
+		 it = g_pDataModel->NextAttributeReferencingElement( it ) )
+	{
+		CDmAttribute *attr = g_pDataModel->GetAttribute( it );
+		Assert( attr );
+		CDmElement *element = attr->GetOwner();
+		Assert( element );
+		if ( !element )
+			continue;
+		T *t = CastElement< T >( element );
+		if ( !t )
+			continue;
+		
+		return t;
+	}
+	
+	for ( it = g_pDataModel->FirstAttributeReferencingElement( check->GetHandle() );
+		 it != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID;
+		 it = g_pDataModel->NextAttributeReferencingElement( it ) )
+	{
+		CDmAttribute *attr = g_pDataModel->GetAttribute( it );
+		Assert( attr );
+		CDmElement *element = attr->GetOwner();
+		Assert( element );
+		if ( !element )
+			continue;
+		
+		T *found = FindAncestorReferencingElement_R_Impl< T >( visited, element );
+		if ( found )
+			return found;
+	}
+	return NULL;
+}
+
+
+template< class T >
+void FindAncestorsReferencingElement( CDmElement *target, CUtlVector< T* >& list )
+{
+	if ( !target )
+		return;
+	
+	list.RemoveAll();
+	for ( DmAttributeReferenceIterator_t it = g_pDataModel->FirstAttributeReferencingElement( target->GetHandle() );
+		 it != DMATTRIBUTE_REFERENCE_ITERATOR_INVALID;
+		 it = g_pDataModel->NextAttributeReferencingElement( it ) )
+	{
+		CDmAttribute *attr = g_pDataModel->GetAttribute( it );
+		Assert( attr );
+		CDmElement *element = attr->GetOwner();
+		Assert( element );
+		if ( !element )
+			continue;
+		T* t = CastElement< T >( element );
+		if ( !t )
+			continue;
+		
+		if ( list.Find( t ) != list.InvalidIndex() )
+			continue;
+		
+		list.AddToTail( t );
+	}
+}
+
+
+template< class T >
+T *FindAncestorReferencingElement_R( CDmElement *target )
+{
+	if ( !target )
+		return NULL;
+	
+	CUtlRBTree< CDmElement * > visited( 0, 0, DefLessFunc( CDmElement * ) );
+	return FindAncestorReferencingElement_R_Impl< T >( visited, target );
+}
+
 
 #endif // DMATTRIBUTE_H

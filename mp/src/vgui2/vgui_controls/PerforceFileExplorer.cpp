@@ -1,17 +1,17 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Contains a list of files, determines their perforce status
 //
 // $NoKeywords: $
 //===========================================================================//
 
-#include <vgui_controls/perforcefileexplorer.h>
-#include <vgui_controls/perforcefilelist.h>
-#include <vgui_controls/combobox.h>
-#include <vgui_controls/button.h>
-#include <vgui_controls/tooltip.h>
-#include "tier1/keyvalues.h"
-#include "vgui/isystem.h"
+#include <vgui_controls/PerforceFileExplorer.h>
+#include <vgui_controls/PerforceFileList.h>
+#include <vgui_controls/ComboBox.h>
+#include <vgui_controls/Button.h>
+#include <vgui_controls/Tooltip.h>
+#include "tier1/KeyValues.h"
+#include "vgui/ISystem.h"
 #include "filesystem.h"
 #include <ctype.h>
 #include "p4lib/ip4.h"

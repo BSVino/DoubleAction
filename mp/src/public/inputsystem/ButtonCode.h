@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,6 +13,7 @@
 #endif
 
 #include "inputsystem/InputEnums.h"
+#include "mathlib/mathlib.h"
 
 //-----------------------------------------------------------------------------
 // Button enum. "Buttons" are binary-state input devices (mouse buttons, keyboard keys)
@@ -176,6 +177,21 @@ enum ButtonCode_t
 
 	JOYSTICK_LAST = JOYSTICK_LAST_AXIS_BUTTON,
 
+#if !defined ( _X360 )
+	NOVINT_FIRST = JOYSTICK_LAST + 2, // plus 1 missing key. +1 seems to cause issues on the first button.
+	
+	NOVINT_LOGO_0 = NOVINT_FIRST,
+	NOVINT_TRIANGLE_0,
+	NOVINT_BOLT_0,
+	NOVINT_PLUS_0,
+	NOVINT_LOGO_1,
+	NOVINT_TRIANGLE_1,
+	NOVINT_BOLT_1,
+	NOVINT_PLUS_1,
+	
+	NOVINT_LAST = NOVINT_PLUS_1,
+#endif
+
 	BUTTON_CODE_LAST,
 	BUTTON_CODE_COUNT = BUTTON_CODE_LAST - KEY_FIRST + 1,
 
@@ -243,14 +259,32 @@ inline bool IsMouseCode( ButtonCode_t code )
 	return ( code >= MOUSE_FIRST ) && ( code <= MOUSE_LAST );
 }
 
+inline bool IsNovintCode( ButtonCode_t code )
+{
+#if !defined ( _X360 )
+	return ( ( code >= NOVINT_FIRST ) && ( code <= NOVINT_LAST ) );
+#else
+	return false;
+#endif
+}
+
+inline bool IsNovintButtonCode( ButtonCode_t code )
+{
+#if !defined ( _X360 )
+	return IsNovintCode( code );
+#else
+	return false;
+#endif
+}
+
 inline bool IsJoystickCode( ButtonCode_t code )
 {
-	return ( code >= JOYSTICK_FIRST ) && ( code <= JOYSTICK_LAST );
+	return ( ( ( code >= JOYSTICK_FIRST ) && ( code <= JOYSTICK_LAST ) ) || IsNovintCode( code ) );
 }
 
 inline bool IsJoystickButtonCode( ButtonCode_t code )
 {
-	return ( code >= JOYSTICK_FIRST_BUTTON ) && ( code <= JOYSTICK_LAST_BUTTON );
+	return ( ( ( code >= JOYSTICK_FIRST_BUTTON ) && ( code <= JOYSTICK_LAST_BUTTON ) ) || IsNovintButtonCode( code ) );
 }
 
 inline bool IsJoystickPOVCode( ButtonCode_t code )
@@ -261,6 +295,84 @@ inline bool IsJoystickPOVCode( ButtonCode_t code )
 inline bool IsJoystickAxisCode( ButtonCode_t code )
 {
 	return ( code >= JOYSTICK_FIRST_AXIS_BUTTON ) && ( code <= JOYSTICK_LAST_AXIS_BUTTON );
+}
+
+inline ButtonCode_t GetBaseButtonCode( ButtonCode_t code )
+{
+	if ( IsJoystickButtonCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_BUTTON ) % JOYSTICK_MAX_BUTTON_COUNT;
+		return (ButtonCode_t)( JOYSTICK_FIRST_BUTTON + offset );
+	}
+
+	if ( IsJoystickPOVCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_POV_BUTTON ) % JOYSTICK_POV_BUTTON_COUNT;
+		return (ButtonCode_t)( JOYSTICK_FIRST_POV_BUTTON + offset );
+	}
+
+	if ( IsJoystickAxisCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_AXIS_BUTTON ) % JOYSTICK_AXIS_BUTTON_COUNT;
+		return (ButtonCode_t)( JOYSTICK_FIRST_AXIS_BUTTON + offset );
+	}
+
+	return code;
+}
+
+inline int GetJoystickForCode( ButtonCode_t code )
+{
+	if ( !IsJoystickCode( code ) )
+		return 0;
+
+	if ( IsJoystickButtonCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_BUTTON ) / JOYSTICK_MAX_BUTTON_COUNT;
+		return offset;
+	}
+	if ( IsJoystickPOVCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_POV_BUTTON ) / JOYSTICK_POV_BUTTON_COUNT;
+		return offset;
+	}
+	if ( IsJoystickAxisCode( code ) )
+	{
+		int offset = ( code - JOYSTICK_FIRST_AXIS_BUTTON ) / JOYSTICK_AXIS_BUTTON_COUNT;
+		return offset;
+	}
+
+	return 0;
+}
+
+inline ButtonCode_t ButtonCodeToJoystickButtonCode( ButtonCode_t code, int nDesiredJoystick )
+{
+	if ( !IsJoystickCode( code ) || nDesiredJoystick == 0 )
+		return code;
+
+	nDesiredJoystick = ::clamp<int>( nDesiredJoystick, 0, MAX_JOYSTICKS - 1 );
+
+	code = GetBaseButtonCode( code );
+
+	// Now upsample it
+	if ( IsJoystickButtonCode( code ) )
+	{
+		int nOffset = code - JOYSTICK_FIRST_BUTTON;
+		return JOYSTICK_BUTTON( nDesiredJoystick, nOffset );
+	}
+
+	if ( IsJoystickPOVCode( code ) )
+	{
+		int nOffset = code - JOYSTICK_FIRST_POV_BUTTON;
+		return JOYSTICK_POV_BUTTON( nDesiredJoystick, nOffset );
+	}
+
+	if ( IsJoystickAxisCode( code ) )
+	{
+		int nOffset = code - JOYSTICK_FIRST_AXIS_BUTTON;
+		return JOYSTICK_AXIS_BUTTON( nDesiredJoystick, nOffset );
+	}
+
+	return code;
 }
 
 #endif // BUTTONCODE_H

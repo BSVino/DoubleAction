@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -47,16 +47,14 @@ public:
 	unsigned short	GetPort() const;
 	const char*		ToString( bool onlyBase = false ) const; // returns xxx.xxx.xxx.xxx:ppppp
 	void			ToSockadr(struct sockaddr *s) const;
-	unsigned int	GetIP() const;
+	unsigned int	GetIPHostByteOrder() const;
+	unsigned int	GetIPNetworkByteOrder() const;
 
 	bool	IsLocalhost() const; // true, if this is the localhost IP 
 	bool	IsLoopback() const;	// true if engine loopback buffers are used
 	bool	IsReservedAdr() const; // true, if this is a private LAN IP
 	bool	IsValid() const;	// ip & port != 0
 	void    SetFromSocket( int hSocket );
-	// These function names are decorated because the Xbox360 defines macros for ntohl and htonl
- 	unsigned long addr_ntohl() const;
- 	unsigned long addr_htonl() const;
 	bool operator==(const netadr_s &netadr) const {return ( CompareAdr( netadr ) );}
 	bool operator<(const netadr_s &netadr) const;
 

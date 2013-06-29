@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Places "detail" objects which are client-only renderable things
 //
@@ -10,8 +10,8 @@
 #include "vbsp.h"
 #include "bsplib.h"
 #include "KeyValues.h"
-#include "UtlSymbol.h"
-#include "UtlVector.h"
+#include "utlsymbol.h"
+#include "utlvector.h"
 #include <io.h>
 #include "bspfile.h"
 #include "utilmatlib.h"
@@ -170,7 +170,7 @@ static void ParseDetailGroup( int detailId, KeyValues* pGroupKeyValues )
 					int nValid = sscanf( pSpriteData, "%f %f %f %f %f", &x, &y, &flWidth, &flHeight, &flTextureSize ); 
 					if ( (nValid != 5) || (flTextureSize == 0) )
 					{
-						Error( "Invalid arguments to \"sprite\" in detail.vbsp (model %s)!\n", model.m_ModelName );
+						Error( "Invalid arguments to \"sprite\" in detail.vbsp (model %s)!\n", model.m_ModelName.String() );
 					}
 
 					model.m_Tex[0].x = ( x + 0.5f ) / flTextureSize;
@@ -345,7 +345,7 @@ static int SelectGroup( const DetailObject_t& detail, float alpha )
 	}
 
 	// Pick a number, any number...
-	float r = rand() / (float)RAND_MAX;
+	float r = rand() / (float)VALVE_RAND_MAX;
 
 	// When dist == 0, we *always* want start.
 	// When dist == 1, we *always* want end
@@ -360,7 +360,7 @@ static int SelectGroup( const DetailObject_t& detail, float alpha )
 static int SelectDetail( DetailObjectGroup_t const& group )
 {
 	// Pick a number, any number...
-	float r = rand() / (float)RAND_MAX;
+	float r = rand() / (float)VALVE_RAND_MAX;
 
 	// Look through the list of models + pick the one associated with this number
 	for ( int i = 0; i < group.m_Models.Count(); ++i )
@@ -560,7 +560,7 @@ static void PlaceDetail( DetailModel_t const& model, const Vector& pt, const Vec
 		float probability = (cosAngle - model.m_MaxCosAngle) / 
 			(model.m_MinCosAngle - model.m_MaxCosAngle);
 
-		float t = rand() / (float)RAND_MAX;
+		float t = rand() / (float)VALVE_RAND_MAX;
 		if (t > probability)
 			return;
 	}
@@ -570,7 +570,7 @@ static void PlaceDetail( DetailModel_t const& model, const Vector& pt, const Vec
 	if (model.m_Flags & MODELFLAG_UPRIGHT)
 	{
 		// If it's upright, we just select a random yaw
-		angles.Init( 0, 360.0f * rand() / (float)RAND_MAX, 0.0f );
+		angles.Init( 0, 360.0f * rand() / (float)VALVE_RAND_MAX, 0.0f );
 	}
 	else
 	{
@@ -594,7 +594,7 @@ static void PlaceDetail( DetailModel_t const& model, const Vector& pt, const Vec
 		matrix.SetBasisVectors( xaxis, yaxis, zaxis );
 		matrix.SetTranslation( vec3_origin );
 
-		float rotAngle = 360.0f * rand() / (float)RAND_MAX;
+		float rotAngle = 360.0f * rand() / (float)VALVE_RAND_MAX;
 		VMatrix rot = SetupMatrixAxisRot( Vector( 0, 0, 1 ), rotAngle );
 		matrix = matrix * rot;
 
@@ -666,8 +666,8 @@ static void EmitDetailObjectsOnFace( dface_t* pFace, DetailObject_t& detail )
 		for (int i = 0; i < numSamples; ++i )
 		{
 			// Create a random sample...
-			float u = rand() / (float)RAND_MAX;
-			float v = rand() / (float)RAND_MAX;
+			float u = rand() / (float)VALVE_RAND_MAX;
+			float v = rand() / (float)VALVE_RAND_MAX;
 			if (v > 1.0f - u)
 			{
 				u = 1.0f - u;
@@ -752,8 +752,8 @@ static void EmitDetailObjectsOnDisplacementFace( dface_t* pFace,
 	for (int i = 0; i < numSamples; ++i )
 	{
 		// Create a random sample...
-		float u = rand() / (float)RAND_MAX;
-		float v = rand() / (float)RAND_MAX;
+		float u = rand() / (float)VALVE_RAND_MAX;
+		float v = rand() / (float)VALVE_RAND_MAX;
 
 		// Compute alpha
 		float alpha;

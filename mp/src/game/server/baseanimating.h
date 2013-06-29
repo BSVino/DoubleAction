@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,6 @@
 #include "studio.h"
 #include "datacache/idatacache.h"
 #include "tier0/threadtools.h"
-#include "datacache/imdlcache.h"
 
 
 struct animevent_t;
@@ -58,6 +57,8 @@ public:
 	CStudioHdr *GetModelPtr( void );
 	void InvalidateMdlCache();
 
+	virtual CStudioHdr *OnNewModel();
+
 	virtual CBaseAnimating*	GetBaseAnimating() { return this; }
 
 	// Cycle access
@@ -87,8 +88,7 @@ public:
 	inline void						SetPlaybackRate( float rate );
 
 	inline int GetSequence() { return m_nSequence; }
-	// inline void SetSequence(int nSequence) { Assert( GetModelPtr( ) && nSequence >= 0 && nSequence < GetModelPtr( )->GetNumSeq() );  m_nSequence = nSequence; }
-	void SetSequence(int nSequence);
+	virtual void SetSequence(int nSequence);
 	/* inline */ void ResetSequence(int nSequence);
 	// FIXME: push transitions support down into CBaseAnimating?
 	virtual bool IsActivityFinished( void ) { return m_bSequenceFinished; }
@@ -264,10 +264,11 @@ public:
 	void				DrawServerHitboxes( float duration = 0.0f, bool monocolor = false );
 	void				DrawRawSkeleton( matrix3x4_t boneToWorld[], int boneMask, bool noDepthTest = true, float duration = 0.0f, bool monocolor = false );
 
-	void				SetModelWidthScale( float scale, float change_duration = 0.0f );
-	float				GetModelWidthScale() const;
+	void				SetModelScale( float scale, float change_duration = 0.0f );
+	float				GetModelScale() const { return m_flModelScale; }
 
-	void				UpdateModelWidthScale();
+	void				UpdateModelScale();
+	virtual	void		RefreshCollisionBounds( void );
 	
 	// also calculate IK on server? (always done on client)
 	void EnableServerIK();
@@ -349,7 +350,7 @@ public:
 	CNetworkVar( int, m_nHitboxSet );
 
 	// For making things thin during barnacle swallowing, e.g.
-	CNetworkVar( float, m_flModelWidthScale );
+	CNetworkVar( float, m_flModelScale );
 
 	// was pev->framerate
 	CNetworkVar( float, m_flPlaybackRate );
@@ -377,6 +378,7 @@ public:
 private:
 	bool				m_bSequenceFinished;// flag set when StudioAdvanceFrame moves across a frame boundry
 	bool				m_bSequenceLoops;	// true if the sequence loops
+	bool				m_bResetSequenceInfoOnLoad; // true if a ResetSequenceInfo was queued up during dynamic load
 	float				m_flDissolveStartTime;
 
 	// was pev->frame
@@ -429,7 +431,9 @@ friend class CBlendingCycler;
 //-----------------------------------------------------------------------------
 inline CStudioHdr *CBaseAnimating::GetModelPtr( void ) 
 { 
-	MDLCACHE_CRITICAL_SECTION();
+	if ( IsDynamicModelLoading() )
+		return NULL;
+
 #ifdef _DEBUG
 	// GetModelPtr() is often called before OnNewModel() so go ahead and set it up first chance.
 	static IDataCacheSection *pModelCache = datacache->FindSection( "ModelData" );

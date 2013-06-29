@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2007, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // An ingenious device. We call it "The Magnusson Device". Not my chosen label,
 // you understand, but it seemed to please the personnel.
@@ -14,7 +14,7 @@
 #include "model_types.h"
 #include "ai_utils.h"
 #include "particle_system.h"
-#include "sprite.h"
+#include "Sprite.h"
 #include "citadel_effects_shared.h"
 #include "soundent.h"
 #include "SpriteTrail.h"

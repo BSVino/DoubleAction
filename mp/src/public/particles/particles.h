@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2006, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: particle system definitions
 //
@@ -23,10 +23,6 @@
 #include "materialsystem/MaterialSystemUtil.h"
 #include "trace.h"
 #include "tier1/utlsoacontainer.h"
-
-#ifndef SWDS
-#include <algorithm>
-#endif
 
 #if defined( CLIENT_DLL )
 #include "c_pixel_visibility.h"
@@ -135,7 +131,10 @@ DEFPARTICLE_ATTRIBUTE( TRACE_HIT_NORMAL, 20 );				// 0 0 0 if no hit
 #define MAX_PARTICLES_IN_A_SYSTEM 5000
 #endif
 
-#define MEASURE_PARTICLE_PERF 1
+// Set this to 1 or 0 to enable or disable particle profiling.
+// Note that this profiling is expensive on Linux, and some anti-virus
+// products can make this *extremely* expensive on Windows.
+#define MEASURE_PARTICLE_PERF 0
 
 
 //-----------------------------------------------------------------------------
@@ -395,6 +394,13 @@ public:
 	void SetLastSimulationTime( float flTime );
 	float GetLastSimulationTime() const;
 
+	int Debug_GetTotalParticleCount() const;
+	bool Debug_FrameWarningNeededTestAndReset();
+	float ParticleThrottleScaling() const;		// Returns 1.0 = not restricted, 0.0 = fully restricted (i.e. don't draw!)
+	bool ParticleThrottleRandomEnable() const;	// Retruns a randomish bool to say if you should draw this particle.
+	
+	void TallyParticlesRendered( int nVertexCount, int nIndexCount = 0 );
+
 private:
 	struct RenderCache_t
 	{
@@ -463,6 +469,13 @@ private:
 
 	int m_nNumFramesMeasured;
 
+	enum { c_nNumFramesTracked = 10 };
+	int		m_nParticleVertexCountHistory[c_nNumFramesTracked];
+	float	m_fParticleCountScaling;
+	int		m_nParticleIndexCount;
+	int		m_nParticleVertexCount;
+	bool	m_bFrameWarningNeeded;
+
 	friend class CParticleSystemDefinition;
 	friend class CParticleCollection;
 };
@@ -509,6 +522,7 @@ public:
 	virtual const DmxElementUnpackStructure_t* GetUnpackStructure() const = 0;
 	virtual ParticleOperatorId_t GetId() const = 0;
 	virtual bool IsObsolete() const = 0;
+	virtual size_t GetClassSize() const = 0;
 
 #if MEASURE_PARTICLE_PERF
 	// performance monitoring
@@ -519,7 +533,7 @@ public:
 	FORCEINLINE void RecordExecutionTime( float flETime )
 	{
 		m_flUncomittedTime += flETime;
-		m_flMaxExecutionTime = max( m_flMaxExecutionTime, flETime );
+		m_flMaxExecutionTime = MAX( m_flMaxExecutionTime, flETime );
 	}
 
 	FORCEINLINE float TotalRecordedExecutionTime( void ) const
@@ -789,9 +803,11 @@ class CParticleOperatorDefinition : public IParticleOperatorDefinition
 public:
 	CParticleOperatorDefinition( const char *pFactoryName, ParticleOperatorId_t id, bool bIsObsolete ) : m_pFactoryName( pFactoryName ), m_Id( id )
 	{
+#if MEASURE_PARTICLE_PERF
 		m_flTotalExecutionTime = 0.0f;
 		m_flMaxExecutionTime = 0.0f;
 		m_flUncomittedTime = 0.0f;
+#endif
 		m_bIsObsolete = bIsObsolete;
 	}
 
@@ -821,6 +837,11 @@ public:
 	virtual bool IsObsolete() const 
 	{ 
 		return m_bIsObsolete; 
+	}
+
+	virtual size_t GetClassSize() const
+	{
+		return sizeof( T );
 	}
 
 private:
@@ -861,8 +882,8 @@ private:
 	DMXELEMENT_UNPACK_FIELD( "Visibility Alpha Scale maximum","1", float, VisibilityInputs.m_flAlphaScaleMax )		\
 	DMXELEMENT_UNPACK_FIELD( "Visibility Radius Scale minimum","1", float, VisibilityInputs.m_flRadiusScaleMin )		\
 	DMXELEMENT_UNPACK_FIELD( "Visibility Radius Scale maximum","1", float, VisibilityInputs.m_flRadiusScaleMax )
-//	DMXELEMENT_UNPACK_FIELD( "Visibility Use Bounding Box for Proxy", "0", bool, VisibilityInputs.m_bUseBBox )		\
-//	DMXELEMENT_UNPACK_FIELD( "Visibility Bounding Box Scale", "1.0", float, VisibilityInputs.m_flBBoxScale )		\
+//	DMXELEMENT_UNPACK_FIELD( "Visibility Use Bounding Box for Proxy", "0", bool, VisibilityInputs.m_bUseBBox )		
+//	DMXELEMENT_UNPACK_FIELD( "Visibility Bounding Box Scale", "1.0", float, VisibilityInputs.m_flBBoxScale )		
 
 #define REGISTER_PARTICLE_OPERATOR( _type, _className )	\
 	g_pParticleSystemMgr->AddParticleOperator( _type, &s_##_className##Factory )
@@ -894,7 +915,7 @@ struct ParticleRenderData_t
 	float m_flSortKey;										// what we sort by
 	int   m_nIndex;									 // index or fudged index (for child particles)
 	float m_flRadius;					   // effective radius, using visibility
-#if LITTLE_ENDIAN
+#if VALVE_LITTLE_ENDIAN
 	uint8 m_nAlpha;							// effective alpha, combining alpha and alpha2 and vis. 0 - 255
 	uint8 m_nAlphaPad[3];										// this will be written to
 #else
@@ -915,7 +936,7 @@ struct ExtendedParticleRenderData_t : ParticleRenderData_t
 typedef struct ALIGN16 _FourInts
 {
 	int32 m_nValue[4];
-} FourInts;
+} ALIGN16_POST FourInts;
 
 
 
@@ -931,8 +952,8 @@ struct CPathParameters
 
 	void ClampControlPointIndices( void )
 	{
-		m_nStartControlPointNumber = max(0, min( MAX_PARTICLE_CONTROL_POINTS-1, m_nStartControlPointNumber ) );
-		m_nEndControlPointNumber = max(0, min( MAX_PARTICLE_CONTROL_POINTS-1, m_nEndControlPointNumber ) );
+		m_nStartControlPointNumber = MAX(0, MIN( MAX_PARTICLE_CONTROL_POINTS-1, m_nStartControlPointNumber ) );
+		m_nEndControlPointNumber = MAX(0, MIN( MAX_PARTICLE_CONTROL_POINTS-1, m_nEndControlPointNumber ) );
 	}
 };
 
@@ -1047,7 +1068,7 @@ public:
 	// the camera objetc may be compared for equality against control point objects
 	void Render( IMatRenderContext *pRenderContext, bool bTranslucentOnly = false, void *pCameraObject = NULL );
 
-	bool IsValid( void ) const { return m_pDef != NULL; }
+	bool IsValid( void ) const;
 	const char *GetName() const;
 
 	// IsFinished returns true when a system has no particles and won't be creating any more
@@ -1388,7 +1409,7 @@ public:
 	FORCEINLINE CM128AttributeWriteIterator( void )
 	{
 	}
-	FORCEINLINE void CM128AttributeWriteIterator::Init ( int nAttribute, CParticleCollection *pParticles )
+	FORCEINLINE void Init ( int nAttribute, CParticleCollection *pParticles )
 	{
 		m_pData = pParticles->GetM128AttributePtrForWrite( nAttribute, &m_nStride );
 	}
@@ -1451,7 +1472,7 @@ inline void CParticleCollection::SwapPosAndPrevPos( void )
 {
 	// strides better be the same!
 	Assert( m_nParticleFloatStrides[PARTICLE_ATTRIBUTE_XYZ] == m_nParticleFloatStrides[ PARTICLE_ATTRIBUTE_PREV_XYZ ] );
-	swap( m_pParticleAttributes[ PARTICLE_ATTRIBUTE_XYZ ], m_pParticleAttributes[ PARTICLE_ATTRIBUTE_PREV_XYZ ] );
+	V_swap( m_pParticleAttributes[ PARTICLE_ATTRIBUTE_XYZ ], m_pParticleAttributes[ PARTICLE_ATTRIBUTE_PREV_XYZ ] );
 }
 
 inline void CParticleCollection::LoanKillListTo( CParticleCollection *pBorrower ) const
@@ -1478,7 +1499,7 @@ inline void CParticleCollection::SetAttributeToConstant( int nAttribute, float f
 inline void CParticleCollection::SetControlPoint( int nWhichPoint, const Vector &v )
 {
 	Assert( ( nWhichPoint >= 0) && ( nWhichPoint < MAX_PARTICLE_CONTROL_POINTS ) );
-	m_nHighestCP = max( m_nHighestCP, nWhichPoint );
+	m_nHighestCP = MAX( m_nHighestCP, nWhichPoint );
 	m_ControlPoints[ nWhichPoint ].m_Position = v;
 	for( CParticleCollection *i = m_Children.m_pHead; i; i=i->m_pNext )
 	{
@@ -1502,18 +1523,23 @@ inline void CParticleCollection::SetControlPointOrientation( int nWhichPoint, co
 	Assert( ( nWhichPoint >= 0) && ( nWhichPoint < MAX_PARTICLE_CONTROL_POINTS ) );
 
 	// check perpendicular
-	Assert( fabs( DotProduct( forward, up ) ) <= 0.1f );
-	Assert( fabs( DotProduct( forward, right ) ) <= 0.1f );
-	Assert( fabs( DotProduct( right, up ) ) <= 0.1f );
-
-	m_ControlPoints[ nWhichPoint ].m_ForwardVector = forward;
-	m_ControlPoints[ nWhichPoint ].m_UpVector = up;
-	m_ControlPoints[ nWhichPoint ].m_RightVector = right;
-
-	// make sure all children are finished
-	for( CParticleCollection *i = m_Children.m_pHead; i; i=i->m_pNext )
+	if ( fabs( DotProduct( forward, up ) ) <= 0.1f
+		&& fabs( DotProduct( forward, right ) ) <= 0.1f
+		&& fabs( DotProduct( right, up ) ) <= 0.1f )
 	{
-		i->SetControlPointOrientation( nWhichPoint, forward, right, up );
+		m_ControlPoints[ nWhichPoint ].m_ForwardVector = forward;
+		m_ControlPoints[ nWhichPoint ].m_UpVector = up;
+		m_ControlPoints[ nWhichPoint ].m_RightVector = right;
+
+		// make sure all children are finished
+		for( CParticleCollection *i = m_Children.m_pHead; i; i=i->m_pNext )
+		{
+			i->SetControlPointOrientation( nWhichPoint, forward, right, up );
+		}
+	}
+	else
+	{
+		Warning( "Attempt to set particle collection %s to invalid orientation matrix\n", GetName() );
 	}
 }
 
@@ -1943,7 +1969,7 @@ public:
 	CDmxElement *Write();
 
 	const char *MaterialName() const;
-	IMaterial *GetMaterial();
+	IMaterial *GetMaterial() const;
 	const char *GetName() const;
     const DmObjectId_t& GetId() const;
 
@@ -1983,7 +2009,7 @@ public:
 private:
 	void Precache();
 	void Uncache();
-	bool IsPrecached();
+	bool IsPrecached() const;
 
 	void UnlinkAllCollections();
 
@@ -2208,6 +2234,11 @@ FORCEINLINE int CParticleCollection::GetControlPointParent( int nControlPoint ) 
 	Assert( nControlPoint <= GetHighestControlPoint() );
 	Assert( m_pDef->ReadsControlPoint( nControlPoint ) );
 	return m_ControlPoints[nControlPoint].m_nParent;
+}
+
+FORCEINLINE bool CParticleCollection::IsValid( void ) const 
+{ 
+	return ( m_pDef != NULL && m_pDef->GetMaterial() );  
 }
 
 

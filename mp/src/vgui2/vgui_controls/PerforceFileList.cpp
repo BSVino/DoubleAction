@@ -1,15 +1,15 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Contains a list of files, determines their perforce status
 //
 // $NoKeywords: $
 //===========================================================================//
 
-#include <vgui_controls/perforcefilelist.h>
+#include <vgui_controls/PerforceFileList.h>
 #include <vgui_controls/ListPanel.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/ImageList.h>
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include <vgui/ISurface.h>
 #include "filesystem.h"
 #include "p4lib/ip4.h"

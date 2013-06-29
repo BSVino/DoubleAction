@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,6 +18,7 @@
 #include "bsplib.h"
 #include "qfiles.h"
 #include "utilmatlib.h"
+#include "ChunkFile.h"
 
 #ifdef WIN32
 #pragma warning( disable: 4706 )
@@ -246,20 +247,99 @@ struct tree_t
 
 extern	int			entity_num;
 
-extern	plane_t		mapplanes[MAX_MAP_PLANES];
-extern	int			nummapplanes;
+struct LoadSide_t;
+struct LoadEntity_t;
+class CManifest;
 
-extern	int			nummapbrushes;
-extern	mapbrush_t	mapbrushes[MAX_MAP_BRUSHES];
+class CMapFile
+{
+public:
+			CMapFile( void ) { Init(); }
 
-extern	Vector		map_mins, map_maxs;
+	void	Init( void );
 
-extern	int			nummapbrushsides;
-extern	side_t		brushsides[MAX_MAP_BRUSHSIDES];
+	void				AddPlaneToHash (plane_t *p);
+	int					CreateNewFloatPlane (Vector& normal, vec_t dist);
+	int					FindFloatPlane (Vector& normal, vec_t dist);
+	int					PlaneFromPoints(const Vector &p0, const Vector &p1, const Vector &p2);
+	void				AddBrushBevels (mapbrush_t *b);
+	qboolean			MakeBrushWindings (mapbrush_t *ob);
+	void				MoveBrushesToWorld( entity_t *mapent );
+	void				MoveBrushesToWorldGeneral( entity_t *mapent );
+	void				RemoveContentsDetailFromEntity( entity_t *mapent );
+	int					SideIDToIndex( int brushSideID );
+	void				AddLadderKeys( entity_t *mapent );
+	ChunkFileResult_t	LoadEntityCallback(CChunkFile *pFile, int nParam);
+	void				ForceFuncAreaPortalWindowContents();
+	ChunkFileResult_t	LoadSideCallback(CChunkFile *pFile, LoadSide_t *pSideInfo);
+	ChunkFileResult_t	LoadConnectionsKeyCallback(const char *szKey, const char *szValue, LoadEntity_t *pLoadEntity);
+	ChunkFileResult_t	LoadSolidCallback(CChunkFile *pFile, LoadEntity_t *pLoadEntity);
+	void				TestExpandBrushes(void);
 
-#ifdef VSVMFIO
-extern	brush_texture_t side_brushtextures[MAX_MAP_BRUSHSIDES];
-#endif // VSVMFIO
+	static char			m_InstancePath[ MAX_PATH ];
+	static void			SetInstancePath( const char *pszInstancePath );
+	static const char	*GetInstancePath( void ) { return m_InstancePath; }
+	static bool			DeterminePath( const char *pszBaseFileName, const char *pszInstanceFileName, char *pszOutFileName );
+
+	void				CheckForInstances( const char *pszFileName );
+	void				MergeInstance( entity_t *pInstanceEntity, CMapFile *Instance );
+	void				MergePlanes( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix );
+	void				MergeBrushes( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix );
+	void				MergeBrushSides( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix );
+	void				ReplaceInstancePair( epair_t *pPair, entity_t *pInstanceEntity );
+	void				MergeEntities( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix );
+	void				MergeOverlays( entity_t *pInstanceEntity, CMapFile *Instance, Vector &InstanceOrigin, QAngle &InstanceAngle, matrix3x4_t &InstanceMatrix );
+
+	static int	m_InstanceCount;
+	static int	c_areaportals;
+
+	plane_t		mapplanes[MAX_MAP_PLANES];
+	int			nummapplanes;
+
+	#define	PLANE_HASHES	1024
+	plane_t		*planehash[PLANE_HASHES];
+
+	int			nummapbrushes;
+	mapbrush_t	mapbrushes[MAX_MAP_BRUSHES];
+
+	Vector		map_mins, map_maxs;
+
+	int			nummapbrushsides;
+	side_t		brushsides[MAX_MAP_BRUSHSIDES];
+
+	brush_texture_t side_brushtextures[MAX_MAP_BRUSHSIDES];
+
+	int			num_entities;
+	entity_t	entities[MAX_MAP_ENTITIES];
+
+	int			c_boxbevels;
+	int			c_edgebevels;
+	int			c_clipbrushes;
+	int			g_ClipTexinfo;
+
+	class CConnectionPairs
+	{
+		public:
+		CConnectionPairs( epair_t *pair, CConnectionPairs *next )
+		{
+			m_Pair = pair;
+			m_Next = next;
+		}
+
+		epair_t				*m_Pair;
+		CConnectionPairs	*m_Next;
+	};
+
+	CConnectionPairs	*m_ConnectionPairs;
+
+	int					m_StartMapOverlays;
+	int					m_StartMapWaterOverlays;
+};
+
+extern CMapFile	*g_MainMap;
+extern CMapFile	*g_LoadingMap;
+
+extern CUtlVector< CMapFile * > g_Maps;
 
 extern	int			g_nMapFileVersion;
 
@@ -291,8 +371,7 @@ extern	char	source[1024];
 extern char		mapbase[ 64 ];
 extern CUtlVector<int> g_SkyAreas;
 
-void 	LoadMapFile(const char *filename);
-int		FindFloatPlane (Vector& normal, vec_t dist);
+bool 	LoadMapFile( const char *pszFileName );
 int		GetVertexnum( Vector& v );
 bool Is3DSkyboxArea( int area );
 
@@ -560,12 +639,13 @@ extern CUtlVector<mapoverlay_t>	g_aMapOverlays;
 extern CUtlVector<mapoverlay_t> g_aMapWaterOverlays;
 
 int Overlay_GetFromEntity( entity_t *pMapEnt );
-void Overlay_UpdateSideLists( void );
+void Overlay_UpdateSideLists( int StartIndex );
 void Overlay_AddFaceToLists( int iFace, side_t *pSide );
 void Overlay_EmitOverlayFaces( void );
-void OverlayTransition_UpdateSideLists( void );
+void OverlayTransition_UpdateSideLists( int StartIndex );
 void OverlayTransition_AddFaceToLists( int iFace, side_t *pSide );
 void OverlayTransition_EmitOverlayFaces( void );
+void Overlay_Translate( mapoverlay_t *pOverlay, Vector &OriginOffset, QAngle &AngleOffset, matrix3x4_t &Matrix );
 
 //=============================================================================
 

@@ -10,14 +10,14 @@
 #include "clientmode_sdk.h"
 #include "cdll_client_int.h"
 #include "iinput.h"
-#include "vgui/isurface.h"
-#include "vgui/ipanel.h"
+#include "vgui/ISurface.h"
+#include "vgui/IPanel.h"
 #include <vgui_controls/AnimationController.h>
 #include "ivmodemanager.h"
-#include "BuyMenu.h"
+#include "buymenu.h"
 #include "filesystem.h"
-#include "vgui/ivgui.h"
-#include "hud_basechat.h"
+#include "vgui/IVGui.h"
+#include "hud_chat.h"
 #include "view_shared.h"
 #include "view.h"
 #include "ivrenderview.h"
@@ -26,7 +26,7 @@
 #include "dlight.h"
 #include <imapoverview.h>
 #include "c_playerresource.h"
-#include <keyvalues.h>
+#include <KeyValues.h>
 #include "text_message.h"
 #include "panelmetaclassmgr.h"
 #include "weapon_sdkbase.h"
@@ -120,10 +120,6 @@ ClientModeSDKNormal::~ClientModeSDKNormal()
 {
 }
 
-void ClientModeSDKNormal::Init()
-{
-	BaseClass::Init();
-}
 
 void ClientModeSDKNormal::InitViewport()
 {
@@ -166,22 +162,6 @@ int ClientModeSDKNormal::GetDeathMessageStartHeight( void )
 
 void ClientModeSDKNormal::PostRenderVGui()
 {
-}
-
-bool ClientModeSDKNormal::CanRecordDemo( char *errorMsg, int length ) const
-{
-	C_SDKPlayer *player = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( !player )
-	{
-		return true;
-	}
-
-	if ( !player->IsAlive() )
-	{
-		return true;
-	}
-
-	return true;
 }
 
 void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )

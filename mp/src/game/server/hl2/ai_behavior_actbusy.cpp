@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -677,7 +677,7 @@ bool CAI_ActBusyBehavior::ShouldIgnoreSound( CSound *pSound )
 			return true;
 		}
 
-		if ( pBusyAnim && ( pBusyAnim->iBusyInterruptType == BA_INT_AMBUSH ) || ( pBusyAnim->iBusyInterruptType == BA_INT_COMBAT ) )
+		if ( pBusyAnim && ( ( pBusyAnim->iBusyInterruptType == BA_INT_AMBUSH ) || ( pBusyAnim->iBusyInterruptType == BA_INT_COMBAT ) ) )
 		{
 			/*
 			// Robin: First version ignored sounds in front of the NPC.
@@ -1500,7 +1500,7 @@ bool CAI_ActBusyBehavior::ShouldPlayerAvoid( void )
 	{
 		if ( IsCurSchedule ( SCHED_ACTBUSY_START_BUSYING ) )
 		{
-			if ( GetCurTask() && GetCurTask()->iTask == TASK_WAIT_FOR_MOVEMENT || GetOuter()->GetTask()->iTask == TASK_ACTBUSY_PLAY_ENTRY )
+			if ( ( GetCurTask() && GetCurTask()->iTask == TASK_WAIT_FOR_MOVEMENT ) || GetOuter()->GetTask()->iTask == TASK_ACTBUSY_PLAY_ENTRY )
 				return true;
 		}
 		else if ( IsCurSchedule(SCHED_ACTBUSY_STOP_BUSYING) )
@@ -2493,7 +2493,7 @@ void CAI_ActBusyGoal::InputForceNPCToActBusy( inputdata_t &inputdata )
 			pHintNode = dynamic_cast<CAI_Hint*>(pEntity);
 			if ( !pHintNode )
 			{
-				Msg("ai_goal_actbusy input ForceNPCToActBusy fired targeting an entity that isn't a hintnode.\n", pszParam);
+				Msg("ai_goal_actbusy input ForceNPCToActBusy fired targeting an entity that isn't a hintnode.\n");
 				return;
 			}
 

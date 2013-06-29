@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -17,8 +17,8 @@
 #include "fx_water.h"
 #include "c_world.h"
 #include "iviewrender.h"
-#include "engine/IVDebugOverlay.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "engine/ivdebugoverlay.h"
+#include "clienteffectprecachesystem.h"
 #include "collisionutils.h"
 #include "tier0/vprof.h"
 #include "viewrender.h"
@@ -303,19 +303,19 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 	VectorMA( pParticle->m_Pos, dt, pParticle->m_Velocity, 
 				pParticle->m_Pos );
 
-	// wind blows rain around
+		// wind blows rain around
 	for ( int i = 0 ; i < 2 ; i++ )
-	{
-		if ( pParticle->m_Velocity[i] < s_WindVector[i] )
 		{
+		if ( pParticle->m_Velocity[i] < s_WindVector[i] )
+			{
 			pParticle->m_Velocity[i] += ( 5 / pParticle->m_Mass );
 
 			// clamp
 			if ( pParticle->m_Velocity[i] > s_WindVector[i] )
 				pParticle->m_Velocity[i] = s_WindVector[i];
-		}
+			}
 		else if (pParticle->m_Velocity[i] > s_WindVector[i] )
-		{
+			{
 			pParticle->m_Velocity[i] -= ( 5 / pParticle->m_Mass );
 
 			// clamp.
@@ -324,26 +324,26 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 		}
 	}
 
-	// No longer in the air? punt.
-	if ( !IsInAir( pParticle->m_Pos ) )
-	{
-		// Possibly make a splash if we hit a water surface and it's in front of the view.
-		if ( m_Splashes.Count() < 20 )
+		// No longer in the air? punt.
+		if ( !IsInAir( pParticle->m_Pos ) )
 		{
-			if ( RandomInt( 0, 100 ) < r_RainSplashPercentage.GetInt() )
+			// Possibly make a splash if we hit a water surface and it's in front of the view.
+			if ( m_Splashes.Count() < 20 )
 			{
-				trace_t trace;
-				UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_WATER, NULL, COLLISION_GROUP_NONE, &trace);
-				if( trace.fraction < 1 )
+				if ( RandomInt( 0, 100 ) < r_RainSplashPercentage.GetInt() )
 				{
-					m_Splashes.AddToTail( trace.endpos );
+					trace_t trace;
+					UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_WATER, NULL, COLLISION_GROUP_NONE, &trace);
+					if( trace.fraction < 1 )
+					{
+						m_Splashes.AddToTail( trace.endpos );
+					}
 				}
 			}
-		}
 
-		// Tell the framework it's time to remove the particle from the list
-		return false;
-	}
+			// Tell the framework it's time to remove the particle from the list
+			return false;
+		}
 
 	// We still want this particle
 	return true;
@@ -761,7 +761,7 @@ bool CClient_Precipitation::ComputeEmissionArea( Vector& origin, Vector2D& size 
 		return false;
 
 	// Determine how much time it'll take a falling particle to hit the player
-	float emissionHeight = min( vMaxs[2], pPlayer->GetAbsOrigin()[2] + 512 );
+	float emissionHeight = MIN( vMaxs[2], pPlayer->GetAbsOrigin()[2] + 512 );
 	float distToFall = emissionHeight - pPlayer->GetAbsOrigin()[2];
 	float fallTime = distToFall / GetSpeed();
 	
@@ -781,12 +781,12 @@ bool CClient_Precipitation::ComputeEmissionArea( Vector& origin, Vector2D& size 
 		 ( vMins[0] > hibound[0] ) || ( vMins[1] > hibound[1] ) )
 		return false;
 
-	origin[0] = max( vMins[0], lobound[0] );
-	origin[1] = max( vMins[1], lobound[1] );
+	origin[0] = MAX( vMins[0], lobound[0] );
+	origin[1] = MAX( vMins[1], lobound[1] );
 	origin[2] = emissionHeight;
 
-	hibound[0] = min( vMaxs[0], hibound[0] );
-	hibound[1] = min( vMaxs[1], hibound[1] );
+	hibound[0] = MIN( vMaxs[0], hibound[0] );
+	hibound[1] = MIN( vMaxs[1], hibound[1] );
 
 	size[0] = hibound[0] - origin[0];
 	size[1] = hibound[1] - origin[1];
@@ -839,9 +839,9 @@ float AshDebrisEffect::UpdateRoll( SimpleParticle *pParticle, float timeDelta )
 
 void CClient_Precipitation::CreateAshParticle( void )
 {
-	// Make sure the emitter is setup
+		// Make sure the emitter is setup
 	if ( m_pAshEmitter == NULL )
-	{
+		{
 		if ( ( m_pAshEmitter = AshDebrisEffect::Create( "ashtray" ) ) == NULL )
 			return;
 
@@ -849,167 +849,167 @@ void CClient_Precipitation::CreateAshParticle( void )
 		m_tAshParticleTraceTimer.Init( 15 );
 		m_bActiveAshEmitter = false;
 		m_iAshCount = 0;
-	}
+		}
 
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if ( pPlayer == NULL )
+		if ( pPlayer == NULL )
 		return;
 
-	Vector vForward;
-	pPlayer->GetVectors( &vForward, NULL, NULL );
-	vForward.z = 0.0f;
+		Vector vForward;
+		pPlayer->GetVectors( &vForward, NULL, NULL );
+		vForward.z = 0.0f;
 
-	float curTime = gpGlobals->frametime;
+		float curTime = gpGlobals->frametime;
 
-	Vector vPushOrigin;
+		Vector vPushOrigin;
 
-	Vector absmins = WorldAlignMins();
-	Vector absmaxs = WorldAlignMaxs();
+		Vector absmins = WorldAlignMins();
+		Vector absmaxs = WorldAlignMaxs();
 
-	//15 Traces a second.
+		//15 Traces a second.
 	while ( m_tAshParticleTraceTimer.NextEvent( curTime ) )
-	{
-		trace_t tr;
-
-		Vector vTraceStart = pPlayer->EyePosition();
-		Vector vTraceEnd = pPlayer->EyePosition() + vForward * MAX_TRACE_LENGTH;
-
-		UTIL_TraceLine( vTraceStart, vTraceEnd, MASK_SHOT_HULL & (~CONTENTS_GRATE), pPlayer, COLLISION_GROUP_NONE, &tr );
-
-		//debugoverlay->AddLineOverlay( vTraceStart, tr.endpos, 255, 0, 0, 0, 0.2 );
-
-		if ( tr.fraction != 1.0f )
 		{
-			trace_t tr2;
+			trace_t tr;
 
-			UTIL_TraceModel( vTraceStart, tr.endpos, Vector( -1, -1, -1 ), Vector( 1, 1, 1 ), this, COLLISION_GROUP_NONE, &tr2 );
+			Vector vTraceStart = pPlayer->EyePosition();
+			Vector vTraceEnd = pPlayer->EyePosition() + vForward * MAX_TRACE_LENGTH;
 
-			if ( tr2.m_pEnt == this )
+			UTIL_TraceLine( vTraceStart, vTraceEnd, MASK_SHOT_HULL & (~CONTENTS_GRATE), pPlayer, COLLISION_GROUP_NONE, &tr );
+
+			//debugoverlay->AddLineOverlay( vTraceStart, tr.endpos, 255, 0, 0, 0, 0.2 );
+
+			if ( tr.fraction != 1.0f )
 			{
+				trace_t tr2;
+
+				UTIL_TraceModel( vTraceStart, tr.endpos, Vector( -1, -1, -1 ), Vector( 1, 1, 1 ), this, COLLISION_GROUP_NONE, &tr2 );
+
+				if ( tr2.m_pEnt == this )
+				{
 				m_bActiveAshEmitter = true;
 
-				if ( tr2.startsolid == false )
-				{
+					if ( tr2.startsolid == false )
+					{
 					m_vAshSpawnOrigin = tr2.endpos + vForward * 256;
+					}
+					else
+					{
+					m_vAshSpawnOrigin = vTraceStart;
+					}
 				}
 				else
 				{
-					m_vAshSpawnOrigin = vTraceStart;
+				m_bActiveAshEmitter = false;
 				}
 			}
-			else
-			{
-				m_bActiveAshEmitter = false;
-			}
 		}
-	}
 
 	if ( m_bActiveAshEmitter == false )
 		 return;
 
-	Vector vecVelocity = pPlayer->GetAbsVelocity();
+		Vector vecVelocity = pPlayer->GetAbsVelocity();
 
 
-	float flVelocity = VectorNormalize( vecVelocity );
+		float flVelocity = VectorNormalize( vecVelocity );
 	Vector offset = m_vAshSpawnOrigin;
 
 	m_pAshEmitter->SetSortOrigin( offset );
 
-	PMaterialHandle	hMaterial[4];
-	hMaterial[0] = ParticleMgr()->GetPMaterial( "effects/fleck_ash1" );
-	hMaterial[1] = ParticleMgr()->GetPMaterial( "effects/fleck_ash2" );
-	hMaterial[2] = ParticleMgr()->GetPMaterial( "effects/fleck_ash3" );
-	hMaterial[3] = ParticleMgr()->GetPMaterial( "effects/ember_swirling001" );
+		PMaterialHandle	hMaterial[4];
+		hMaterial[0] = ParticleMgr()->GetPMaterial( "effects/fleck_ash1" );
+		hMaterial[1] = ParticleMgr()->GetPMaterial( "effects/fleck_ash2" );
+		hMaterial[2] = ParticleMgr()->GetPMaterial( "effects/fleck_ash3" );
+		hMaterial[3] = ParticleMgr()->GetPMaterial( "effects/ember_swirling001" );
 
-	SimpleParticle	*pParticle;
+		SimpleParticle	*pParticle;
 
-	Vector vSpawnOrigin = vec3_origin;
+		Vector vSpawnOrigin = vec3_origin;
 
-	if ( flVelocity > 0 )
-	{
-		vSpawnOrigin = ( vForward * 256 ) + ( vecVelocity * ( flVelocity * 2 ) );
-	}
+		if ( flVelocity > 0 )
+		{
+			vSpawnOrigin = ( vForward * 256 ) + ( vecVelocity * ( flVelocity * 2 ) );
+		}
 
-	// Add as many particles as we need
+		// Add as many particles as we need
 	while ( m_tAshParticleTimer.NextEvent( curTime ) )
-	{
-		int iRandomAltitude = RandomInt( 0, 128 );
+		{
+			int iRandomAltitude = RandomInt( 0, 128 );
 
 		offset = m_vAshSpawnOrigin + vSpawnOrigin + RandomVector( -256, 256 );
 		offset.z = m_vAshSpawnOrigin.z + iRandomAltitude;
 
-		if  (  offset[0] > absmaxs[0]
-		|| offset[1] > absmaxs[1]
-		|| offset[2] > absmaxs[2]
-		|| offset[0] < absmins[0]
-		|| offset[1] < absmins[1]
-		|| offset[2] < absmins[2] )
-			continue;
+			if  (  offset[0] > absmaxs[0]
+			|| offset[1] > absmaxs[1]
+			|| offset[2] > absmaxs[2]
+			|| offset[0] < absmins[0]
+			|| offset[1] < absmins[1]
+			|| offset[2] < absmins[2] )
+				continue;
 
 		m_iAshCount++;
 
-		bool bEmberTime = false;
-		
+			bool bEmberTime = false;
+			
 		if ( m_iAshCount >= 250 )
-		{
-			bEmberTime = true;
+			{
+				bEmberTime = true;
 			m_iAshCount = 0;
-		}
+			}
 
-		int iRandom = random->RandomInt(0,2);
+			int iRandom = random->RandomInt(0,2);
 
-		if ( bEmberTime == true )
-		{
+			if ( bEmberTime == true )
+			{
 			offset = m_vAshSpawnOrigin + (vForward * 256) + RandomVector( -128, 128 );
-			offset.z = pPlayer->EyePosition().z + RandomFloat( -16, 64 );
+				offset.z = pPlayer->EyePosition().z + RandomFloat( -16, 64 );
 
-			iRandom = 3;
-		}
+				iRandom = 3;
+			}
 
 		pParticle = (SimpleParticle *) m_pAshEmitter->AddParticle( sizeof(SimpleParticle), hMaterial[iRandom], offset );
 
-		if (pParticle == NULL)
-			continue; 
+			if (pParticle == NULL)
+				continue; 
 
-		pParticle->m_flLifetime	= 0.0f;
-		pParticle->m_flDieTime	= RemapVal( iRandomAltitude, 0, 128, 4, 8 );
+			pParticle->m_flLifetime	= 0.0f;
+			pParticle->m_flDieTime	= RemapVal( iRandomAltitude, 0, 128, 4, 8 );
 
-		if ( bEmberTime == true )
-		{
-			Vector vGoal = pPlayer->EyePosition() + RandomVector( -64, 64 );
-			Vector vDir = vGoal - offset;
-			VectorNormalize( vDir );
+			if ( bEmberTime == true )
+			{
+				Vector vGoal = pPlayer->EyePosition() + RandomVector( -64, 64 );
+				Vector vDir = vGoal - offset;
+				VectorNormalize( vDir );
 
-			pParticle->m_vecVelocity = vDir * 75;
-			pParticle->m_flDieTime = 2.5f;
-		}
-		else
-		{
-			pParticle->m_vecVelocity = Vector( RandomFloat( -20.0f, 20.0f ), RandomFloat( -20.0f, 20.0f ), RandomFloat( -10, -15 ) );
-		}
+				pParticle->m_vecVelocity = vDir * 75;
+				pParticle->m_flDieTime = 2.5f;
+			}
+			else
+			{
+				pParticle->m_vecVelocity = Vector( RandomFloat( -20.0f, 20.0f ), RandomFloat( -20.0f, 20.0f ), RandomFloat( -10, -15 ) );
+			}
 
-		float color = random->RandomInt( 125, 225 );
-		pParticle->m_uchColor[0] = color;
-		pParticle->m_uchColor[1] = color;
-		pParticle->m_uchColor[2] = color;
+			float color = random->RandomInt( 125, 225 );
+			pParticle->m_uchColor[0] = color;
+			pParticle->m_uchColor[1] = color;
+			pParticle->m_uchColor[2] = color;
 
-		pParticle->m_uchStartSize	= 1;
-		pParticle->m_uchEndSize		= 1.5;
+			pParticle->m_uchStartSize	= 1;
+			pParticle->m_uchEndSize		= 1;
 
-		pParticle->m_uchStartAlpha	= 255;
+			pParticle->m_uchStartAlpha	= 255;
 
-		pParticle->m_flRoll			= random->RandomInt( 0, 360 );
-		pParticle->m_flRollDelta	= random->RandomFloat( -0.15f, 0.15f );
+			pParticle->m_flRoll			= random->RandomInt( 0, 360 );
+			pParticle->m_flRollDelta	= random->RandomFloat( -0.15f, 0.15f );
 
-		pParticle->m_iFlags			= SIMPLE_PARTICLE_FLAG_WINDBLOWN;
+			pParticle->m_iFlags			= SIMPLE_PARTICLE_FLAG_WINDBLOWN;
 
-		if ( random->RandomInt( 0, 10 ) <= 1 )
-		{
-			pParticle->m_iFlags |= ASH_PARTICLE_NOISE;
+			if ( random->RandomInt( 0, 10 ) <= 1 )
+			{
+				pParticle->m_iFlags |= ASH_PARTICLE_NOISE;
+			}
 		}
 	}
-}
 
 void CClient_Precipitation::CreateRainOrSnowParticle( Vector vSpawnPosition, Vector vVelocity )
 {
@@ -1035,62 +1035,62 @@ void CClient_Precipitation::EmitParticles( float fTimeDelta )
 {
 	Vector2D size;
 	Vector vel, org;
-	
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
-		return;
-	Vector vPlayerCenter = pPlayer->WorldSpaceCenter();
 
-	// Compute where to emit
+		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+		if ( !pPlayer )
+		return;
+		Vector vPlayerCenter = pPlayer->WorldSpaceCenter();
+
+		// Compute where to emit
 	if (!ComputeEmissionArea( org, size ))
 		return;
 
-	// clamp this to prevent creating a bunch of rain or snow at one time.
-	if( fTimeDelta > 0.075f )
-		fTimeDelta = 0.075f;
+		// clamp this to prevent creating a bunch of rain or snow at one time.
+		if( fTimeDelta > 0.075f )
+			fTimeDelta = 0.075f;
 
-	// FIXME: Compute the precipitation density based on computational power
+		// FIXME: Compute the precipitation density based on computational power
 	float density = m_flDensity;
 
-	if (density > 0.01f) 
-		density = 0.01f;
+		if (density > 0.01f) 
+			density = 0.01f;
 
-	// Compute number of particles to emit based on precip density and emission area and dt
-	float fParticles = size[0] * size[1] * density * fTimeDelta + m_Remainder; 
-	int cParticles = (int)fParticles;
-	m_Remainder = fParticles - cParticles;
+		// Compute number of particles to emit based on precip density and emission area and dt
+		float fParticles = size[0] * size[1] * density * fTimeDelta + m_Remainder; 
+		int cParticles = (int)fParticles;
+		m_Remainder = fParticles - cParticles;
 
-	// calculate the max amount of time it will take this flake to fall.
-	// This works if we assume the wind doesn't have a z component
-	VectorCopy( s_WindVector, vel );
-	vel[2] -= GetSpeed();
+		// calculate the max amount of time it will take this flake to fall.
+		// This works if we assume the wind doesn't have a z component
+		VectorCopy( s_WindVector, vel );
+		vel[2] -= GetSpeed();
 
-	// Emit all the particles
-	for ( int i = 0 ; i < cParticles ; i++ )
-	{									 
-		Vector vParticlePos = org;
-		vParticlePos[ 0 ] += size[ 0 ] * random->RandomFloat(0, 1);
-		vParticlePos[ 1 ] += size[ 1 ] * random->RandomFloat(0, 1);
-
-		// Figure out where the particle should lie in Z by tracing a line from the player's height up to the 
-		// desired height and making sure it doesn't hit a wall.
-		Vector vPlayerHeight = vParticlePos;
-		vPlayerHeight.z = vPlayerCenter.z;
-
-		trace_t trace;
-		UTIL_TraceLine( vPlayerHeight, vParticlePos, MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &trace );
-		if ( trace.fraction < 1 )
+		// Emit all the particles
+		for ( int i = 0 ; i < cParticles ; i++ )
 		{
-			// If we hit a brush, then don't spawn the particle.
-			if ( trace.surface.flags & SURF_SKY )
+			Vector vParticlePos = org;
+			vParticlePos[ 0 ] += size[ 0 ] * random->RandomFloat(0, 1);
+			vParticlePos[ 1 ] += size[ 1 ] * random->RandomFloat(0, 1);
+
+			// Figure out where the particle should lie in Z by tracing a line from the player's height up to the 
+			// desired height and making sure it doesn't hit a wall.
+			Vector vPlayerHeight = vParticlePos;
+			vPlayerHeight.z = vPlayerCenter.z;
+
+			trace_t trace;
+			UTIL_TraceLine( vPlayerHeight, vParticlePos, MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &trace );
+			if ( trace.fraction < 1 )
 			{
-				vParticlePos = trace.endpos;
+				// If we hit a brush, then don't spawn the particle.
+				if ( trace.surface.flags & SURF_SKY )
+				{
+					vParticlePos = trace.endpos;
+				}
+				else
+				{
+					continue;
+				}
 			}
-			else
-			{
-				continue;
-			}
-		}
 
 		CreateRainOrSnowParticle( vParticlePos, vel );
 	}
@@ -1653,7 +1653,7 @@ private:
 
 	bool							m_bRayParticles;
 
-	typedef struct SnowFall_t
+	struct SnowFall_t
 	{
 		PMaterialHandle			m_hMaterial;
 		CClient_Precipitation	*m_pEntity;
@@ -1955,7 +1955,8 @@ void CSnowFallManager::CreateSnowFall( void )
 			}
 		}
 
-		FindSnowVolumes( m_vecSnowFallEmitOrigin, flRadius, pPlayer->EyePosition(), vecForward );
+		Vector vecEyePos = pPlayer->EyePosition();
+		FindSnowVolumes( m_vecSnowFallEmitOrigin, flRadius, vecEyePos, vecForward );
 		if ( m_nActiveSnowCount != 0 && m_iSnowFallArea != SNOWFALL_AROUND_PLAYER )
 		{
 			// We found an active snow emitter.
@@ -1983,7 +1984,7 @@ void CSnowFallManager::CreateSnowFall( void )
 //			flZoomScale - 
 //-----------------------------------------------------------------------------
 void CSnowFallManager::CreateSnowFallParticles( float flCurrentTime, float flRadius, const Vector &vecEyePos, const Vector &vecForward, float flZoomScale )
-{
+		{
 	// Outside of a snow volume.
 	if ( m_iSnowFallArea == SNOWFALL_IN_ENTITY )
 	{
@@ -2159,7 +2160,7 @@ void CSnowFallManager::CreateSnowParticlesRay( float flRadius, const Vector &vec
 }
 
 void CSnowFallManager::CreateSnowFallParticle( const Vector &vecParticleSpawn, int iSnow )
-{
+{	
 	SimpleParticle *pParticle = ( SimpleParticle* )m_pSnowFallEmitter->AddParticle( sizeof( SimpleParticle ), m_aSnow[iSnow].m_hMaterial, vecParticleSpawn );
 	if ( pParticle == NULL )
 		return; 
@@ -2195,13 +2196,13 @@ void CSnowFallManager::CreateSnowFallParticle( const Vector &vecParticleSpawn, i
 bool SnowFallManagerCreate( CClient_Precipitation *pSnowEntity )
 {
 	if ( !s_pSnowFallMgr )
-	{
+		{
 		s_pSnowFallMgr = new CSnowFallManager();
 		s_pSnowFallMgr->CreateEmitter();
 		s_pSnowFallMgr->InitializeAsClientEntity( NULL, RENDER_GROUP_OTHER );
 		if ( !s_pSnowFallMgr )
 			return false;
-	}
+		}
 
 	s_pSnowFallMgr->AddSnowFallEntity( pSnowEntity );
 	return true;

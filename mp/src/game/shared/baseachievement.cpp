@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,10 +9,23 @@
 #include "icommandline.h"
 #ifdef CLIENT_DLL
 #include "tier3/tier3.h"
-#include "vgui/ilocalize.h"
+#include "vgui/ILocalize.h"
 #include "achievement_notification_panel.h"
 #include "fmtstr.h"
+#include "gamestats.h"
 #endif // CLIENT_DLL
+
+//=============================================================================
+// HPE_BEGIN
+// [dwenger] Necessary for sorting achievements by award time
+//=============================================================================
+
+#include <vgui/ISystem.h>
+#include "vgui_controls/Controls.h"
+
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 CBaseAchievementHelper *CBaseAchievementHelper::s_pFirst = NULL;
 
@@ -52,7 +65,14 @@ CBaseAchievement::CBaseAchievement()
 	m_iCount = 0;
 	m_iProgressShown = 0;
 	m_bAchieved = false;
+	m_uUnlockTime = 0;
 	m_pAchievementMgr = NULL;
+	m_bShowOnHUD = false;
+	m_pszStat = NULL;
+}
+
+CBaseAchievement::~CBaseAchievement()
+{
 }
 
 //-----------------------------------------------------------------------------
@@ -168,24 +188,38 @@ void CBaseAchievement::Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pA
 		return;
 
 	// default implementation is just to increase count when filter criteria pass
+	// Msg( "Base achievement incremented on kill event.\n" );
 	IncrementCount();
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: called when an event that counts toward an achievement occurs
 //-----------------------------------------------------------------------------
-void CBaseAchievement::IncrementCount()
+void CBaseAchievement::IncrementCount( int iOptIncrement )
 {
-	if ( !IsAchieved() )
+	if ( !IsAchieved() && LocalPlayerCanEarn() )
 	{
-		if ( !m_pAchievementMgr->CheckAchievementsEnabled() )
+		if ( !AlwaysEnabled() && !m_pAchievementMgr->CheckAchievementsEnabled() )
 		{
 			Msg( "Achievements disabled, ignoring achievement progress for %s\n", GetName() );
 			return;
 		}
 
 		// on client, where the count is kept, increment count
-		m_iCount++;
+		if ( iOptIncrement > 0 )
+		{
+			// user specified that we want to increase by more than one.
+			m_iCount += iOptIncrement;
+			if ( m_iCount > m_iGoal )
+			{
+				m_iCount = m_iGoal;
+			}
+		}
+		else
+		{
+			m_iCount++;
+		}
+
 		// if this achievement gets saved w/global state, flag our global state as dirty
 		if ( GetFlags() & ACH_SAVE_GLOBAL )
 		{
@@ -197,27 +231,22 @@ void CBaseAchievement::IncrementCount()
 			Msg( "Achievement count increased for %s: %d/%d\n", GetName(), m_iCount, m_iGoal );
 		}
 
+#ifndef NO_STEAM
 		// if this achievement's progress should be stored in Steam, set the steam stat for it
 		if ( StoreProgressInSteam() && steamapicontext->SteamUserStats() )
 		{
 			// Set the Steam stat with the same name as the achievement.  Only cached locally until we upload it.
 			char pszProgressName[1024];
-			Q_snprintf( pszProgressName, 1024, "%s_STAT", GetName() );
-			bool bRet = steamapicontext->SteamUserStats()->SetStat( CGameID( engine->GetAppID() ), pszProgressName, m_iCount );
+			Q_snprintf( pszProgressName, 1024, "%s_STAT", GetStat() );
+			bool bRet = steamapicontext->SteamUserStats()->SetStat( pszProgressName, m_iCount );
 			if ( !bRet )
 			{
 				DevMsg( "ISteamUserStats::GetStat failed to set progress value in Steam for achievement %s\n", pszProgressName );
 			}
 
-			// Upload user data to commit the change to Steam so if the client crashes, progress isn't lost.
-			// Only upload if we haven't uploaded recently, to keep us from spamming Steam with uploads.  If we don't
-			// upload now, it will get uploaded no later than level shutdown.
-			if ( ( m_pAchievementMgr->GetTimeLastUpload() == 0 ) || ( Plat_FloatTime() - m_pAchievementMgr->GetTimeLastUpload() > 60 * 15 ) )
-			{
-				m_pAchievementMgr->UploadUserData();
-			}
+			m_pAchievementMgr->SetDirty( true );
 		}
-
+#endif
 		// if we've hit goal, award the achievement
 		if ( m_iGoal > 0 )
 		{
@@ -230,7 +259,18 @@ void CBaseAchievement::IncrementCount()
 				HandleProgressUpdate();
 			}
 		}
+
 	}
+}
+
+void CBaseAchievement::SetShowOnHUD( bool bShow )
+{
+ 	if ( m_bShowOnHUD != bShow )
+	{
+ 		m_pAchievementMgr->SetDirty( true );
+	}
+
+	m_bShowOnHUD = bShow;
 }
 
 void CBaseAchievement::HandleProgressUpdate()
@@ -280,6 +320,22 @@ void CBaseAchievement::CalcProgressMsgIncrement()
 	{
 		m_iProgressMsgIncrement = 0;
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAchievement::SetNextThink( float flThinkTime ) 
+{ 
+	m_pAchievementMgr->SetAchievementThink( this, flThinkTime ); 
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAchievement::ClearThink( void ) 
+{ 
+	m_pAchievementMgr->SetAchievementThink( this, THINK_CLEAR ); 
 }
 
 //-----------------------------------------------------------------------------
@@ -363,7 +419,7 @@ void CBaseAchievement::EnsureComponentBitSetAndEvaluate( int iBitNumber )
 	// see if we already have gotten this component
 	if ( 0 == ( iBitMask & m_iComponentBits ) )
 	{				
-		if ( !m_pAchievementMgr->CheckAchievementsEnabled() )
+		if ( !AlwaysEnabled() && !m_pAchievementMgr->CheckAchievementsEnabled() )
 		{
 			Msg( "Achievements disabled, ignoring achievement component for %s\n", GetName() );
 			return;
@@ -477,8 +533,8 @@ bool CBaseAchievement::ShouldSaveWithGame()
 //-----------------------------------------------------------------------------
 bool CBaseAchievement::ShouldSaveGlobal() 
 { 
-	// save if we should get saved globally and have a non-zero count, or if we have been achieved
-	return ( ( ( m_iFlags & ACH_SAVE_GLOBAL ) > 0 && ( GetCount() > 0 ) ) || IsAchieved() || ( m_iProgressShown > 0 ) );
+	// save if we should get saved globally and have a non-zero count, or if we have been achieved, or if the player has pinned this achievement to the HUD
+	return ( ( ( m_iFlags & ACH_SAVE_GLOBAL ) > 0 && ( GetCount() > 0 ) ) || IsAchieved() || ( m_iProgressShown > 0 ) || ShouldShowOnHUD() );
 }
 
 //-----------------------------------------------------------------------------
@@ -496,6 +552,64 @@ bool CBaseAchievement::IsActive()
 
 	return true;
 }
+
+//=============================================================================
+// HPE_BEGIN:
+// [pfreese] Moved serialization from AchievementMgr to here so that derived
+// classes can persist additional data
+//=============================================================================
+
+//-----------------------------------------------------------------------------
+// Purpose: Serialize our data to the KeyValues node
+//-----------------------------------------------------------------------------
+void CBaseAchievement::GetSettings( KeyValues *pNodeOut )
+{
+	pNodeOut->SetInt( "value", IsAchieved() ? 1 : 0 );
+
+	if ( HasComponents() )
+	{
+		pNodeOut->SetUint64( "data", m_iComponentBits );
+	}
+	else
+	{
+		if ( !IsAchieved() )
+		{
+			pNodeOut->SetInt( "data", m_iCount );
+		}
+	}
+	pNodeOut->SetInt( "hud", ShouldShowOnHUD() ? 1 : 0 );
+	pNodeOut->SetInt( "msg", m_iProgressShown );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Unserialize our data from the KeyValues node
+//-----------------------------------------------------------------------------
+void CBaseAchievement::ApplySettings( KeyValues *pNodeIn )
+{
+	// set the count
+	if ( pNodeIn->GetInt( "value" ) > 0 )
+	{
+		m_iCount = m_iGoal;
+		m_bAchieved = true;
+	}
+	else if ( !HasComponents() )
+	{
+		m_iCount = pNodeIn->GetInt( "data" );
+	}
+
+	// if this achievement has components, set the component bits
+	if ( HasComponents() )
+	{
+		int64 iComponentBits = pNodeIn->GetUint64( "data" );
+		SetComponentBits( iComponentBits );
+	}
+	SetShowOnHUD( !!pNodeIn->GetInt( "hud" ) );
+	m_iProgressShown = pNodeIn->GetInt( "msg" );
+}
+
+//=============================================================================
+// HPE_END
+//=============================================================================
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -622,28 +736,8 @@ void CAchievement_AchievedCount::Init()
 // Count how many achievements have been earned in our range
 void CAchievement_AchievedCount::OnSteamUserStatsStored( void )
 {
-	int iAllAchievements = m_pAchievementMgr->GetAchievementCount();
-	int iAchieved = 0;
-
-	for ( int i=0; i<iAllAchievements; ++i )
-	{		
-		IAchievement* pCurAchievement = (IAchievement*)m_pAchievementMgr->GetAchievementByIndex( i );
-		Assert ( pCurAchievement );
-
-		int iAchievementID = pCurAchievement->GetAchievementID();
-		if ( iAchievementID < m_iLowRange || iAchievementID > m_iHighRange )
-			continue;
-
-		if ( pCurAchievement->IsAchieved() )
-		{
-			iAchieved++;
-		}
-	}
-
-	if ( iAchieved >= m_iNumRequired )
-	{
-		IncrementCount();
-	}
+	// DO NO CALL. REPLACED BY CHECKMETAACHIEVEMENTS!
+	Assert( 0 );
 }
 
 void CAchievement_AchievedCount::SetAchievementsRequired( int iNumRequired, int iLowRange, int iHighRange )

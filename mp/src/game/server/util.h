@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Misc utility code.
 //
@@ -12,6 +12,7 @@
 #endif
 
 #include "ai_activity.h"
+#include "steam/steam_gameserver.h"
 #include "enginecallback.h"
 #include "basetypes.h"
 #include "tempentity.h"
@@ -42,9 +43,19 @@ class IEntityFactory;
 	#define SETUP_EXTERNC(mapClassName)
 #endif
 
+//
+// How did I ever live without ASSERT?
+//
+#ifdef	DEBUG
+void DBG_AssertFunction(bool fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage);
+#define ASSERT(f)		DBG_AssertFunction((bool)((f)!=0), #f, __FILE__, __LINE__, NULL)
+#define ASSERTSZ(f, sz)	DBG_AssertFunction((bool)((f)!=0), #f, __FILE__, __LINE__, sz)
+#else	// !DEBUG
+#define ASSERT(f)
+#define ASSERTSZ(f, sz)
+#endif	// !DEBUG
 
 #include "tier0/memdbgon.h"
-
 
 // entity creation
 // creates an entity that has not been linked to a classname
@@ -58,16 +69,18 @@ T *_CreateEntityTemplate( T *newEnt, const char *className )
 
 #include "tier0/memdbgoff.h"
 
+CBaseEntity *CreateEntityByName( const char *className, int iForceEdictIndex );
+
 // creates an entity by name, and ensure it's correctness
 // does not spawn the entity
 // use the CREATE_ENTITY() macro which wraps this, instead of using it directly
 template< class T >
 T *_CreateEntity( T *newClass, const char *className )
 {
-	T *newEnt = dynamic_cast<T*>( CreateEntityByName(className) );
+	T *newEnt = dynamic_cast<T*>( CreateEntityByName(className, -1) );
 	if ( !newEnt )
 	{
-		Warning( "classname %s used to create wrong class type\n" );
+		Warning( "classname %s used to create wrong class type\n", className );
 		Assert(0);
 	}
 
@@ -142,7 +155,9 @@ public:
 //
 inline int	  ENTINDEX( edict_t *pEdict)			
 { 
-	return engine->IndexOfEdict(pEdict); 
+	int nResult = pEdict ? pEdict->m_EdictIndex : 0;
+	Assert( nResult == engine->IndexOfEdict(pEdict) );
+	return nResult;
 }
 
 int	  ENTINDEX( CBaseEntity *pEnt );
@@ -172,7 +187,7 @@ extern CGlobalVars *gpGlobals;
 // Misc useful
 inline bool FStrEq(const char *sz1, const char *sz2)
 {
-	return ( sz1 == sz2 || stricmp(sz1, sz2) == 0 );
+	return ( sz1 == sz2 || V_stricmp(sz1, sz2) == 0 );
 }
 
 #if 0
@@ -338,7 +353,7 @@ bool		UTIL_IsMasterTriggered	(string_t sMaster, CBaseEntity *pActivator);
 void		UTIL_BloodStream( const Vector &origin, const Vector &direction, int color, int amount );
 void		UTIL_BloodSpray( const Vector &pos, const Vector &dir, int color, int amount, int flags );
 Vector		UTIL_RandomBloodVector( void );
-void		UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName = NULL );
+void		UTIL_ImpactTrace( trace_t *pTrace, int iDamageType, const char *pCustomImpactName = NULL );
 void		UTIL_PlayerDecalTrace( trace_t *pTrace, int playernum );
 void		UTIL_Smoke( const Vector &origin, const float scale, const float framerate );
 void		UTIL_AxisStringToPointDir( Vector &start, Vector &dir, const char *pString );
@@ -350,7 +365,7 @@ void		UTIL_Beam( Vector &Start, Vector &End, int nModelIndex, int nHaloIndex, un
 				float Life, unsigned char Width, unsigned char EndWidth, unsigned char FadeLength, unsigned char Noise, unsigned char Red, unsigned char Green,
 				unsigned char Blue, unsigned char Brightness, unsigned char Speed);
 
-char		*UTIL_VarArgs( char *format, ... );
+char		*UTIL_VarArgs( PRINTF_FORMAT_STRING const char *format, ... );
 bool		UTIL_IsValidEntity( CBaseEntity *pEnt );
 bool		UTIL_TeamsMatch( const char *pTeamName1, const char *pTeamName2 );
 
@@ -460,7 +475,7 @@ void			UTIL_HudMessage( CBasePlayer *pToPlayer, const hudtextparms_t &textparms,
 void			UTIL_HudHintText( CBaseEntity *pEntity, const char *pMessage );
 
 // Writes message to console with timestamp and FragLog header.
-void			UTIL_LogPrintf( char *fmt, ... );
+void			UTIL_LogPrintf( PRINTF_FORMAT_STRING const char *fmt, ... );
 
 // Sorta like FInViewCone, but for nonNPCs. 
 float UTIL_DotPoints ( const Vector &vecSrc, const Vector &vecCheck, const Vector &vecDir );
@@ -472,17 +487,7 @@ int BuildChangeList( levellist_t *pLevelList, int maxList );
 
 // computes gravity scale for an absolute gravity.  Pass the result into CBaseEntity::SetGravity()
 float UTIL_ScaleForGravity( float desiredGravity );
-//
-// How did I ever live without ASSERT?
-//
-#ifdef	DEBUG
-void DBG_AssertFunction(bool fExpr, const char* szExpr, const char* szFile, int szLine, const char* szMessage);
-#define ASSERT(f)		DBG_AssertFunction((bool)((f)!=0), #f, __FILE__, __LINE__, NULL)
-#define ASSERTSZ(f, sz)	DBG_AssertFunction((bool)((f)!=0), #f, __FILE__, __LINE__, sz)
-#else	// !DEBUG
-#define ASSERT(f)
-#define ASSERTSZ(f, sz)
-#endif	// !DEBUG
+
 
 
 //
@@ -498,22 +503,17 @@ void DBG_AssertFunction(bool fExpr, const char* szExpr, const char* szFile, int 
 #define LFO_RANDOM			3
 
 // func_rotating
-#define SF_BRUSH_ROTATE_Y_AXIS			0
-#define SF_BRUSH_ROTATE_START_ON		1
-#define SF_BRUSH_ROTATE_BACKWARDS		2
-#define SF_BRUSH_ROTATE_Z_AXIS			4
-#define SF_BRUSH_ROTATE_X_AXIS			8
+#define SF_BRUSH_ROTATE_Y_AXIS		0
+#define SF_BRUSH_ROTATE_START_ON	1
+#define SF_BRUSH_ROTATE_BACKWARDS	2
+#define SF_BRUSH_ROTATE_Z_AXIS		4
+#define SF_BRUSH_ROTATE_X_AXIS		8
+#define SF_BRUSH_ROTATE_CLIENTSIDE	16
 
-// brought over from bmodels.cpp
-#define	SF_BRUSH_ACCDCC					16	// brush should accelerate and decelerate when toggled
-#define	SF_BRUSH_HURT					32	// rotating brush that inflicts pain based on rotation speed
-#define	SF_ROTATING_NOT_SOLID			64	// some special rotating objects are not solid.
 
-#define SF_BRUSH_ROTATE_SMALLRADIUS		128
-#define SF_BRUSH_ROTATE_MEDIUMRADIUS	256
-#define SF_BRUSH_ROTATE_LARGERADIUS		512
-// changed bit to not conflict with much older flag SF_BRUSH_ACCDCC
-#define SF_BRUSH_ROTATE_CLIENTSIDE		1024
+#define SF_BRUSH_ROTATE_SMALLRADIUS	128
+#define SF_BRUSH_ROTATE_MEDIUMRADIUS 256
+#define SF_BRUSH_ROTATE_LARGERADIUS 512
 
 #define PUSH_BLOCK_ONLY_X	1
 #define PUSH_BLOCK_ONLY_Y	2
@@ -615,8 +615,7 @@ bool UTIL_IsFacingWithinTolerance( CBaseEntity *pViewer, CBaseEntity *pTarget, f
 void UTIL_GetDebugColorForRelationship( int nRelationship, int &r, int &g, int &b );
 
 struct datamap_t;
-extern const char	*UTIL_FunctionToName( datamap_t *pMap, void *function );
-extern void			*UTIL_FunctionFromName( datamap_t *pMap, const char *pName );
+extern const char	*UTIL_FunctionToName( datamap_t *pMap, inputfunc_t *function );
 
 int UTIL_GetCommandClientIndex( void );
 CBasePlayer *UTIL_GetCommandClient( void );

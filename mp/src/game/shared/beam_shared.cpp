@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements visual effects entities: sprites, beams, bubbles, etc.
 //
@@ -838,19 +838,19 @@ void CBeam::InputWidth( inputdata_t &inputdata )
 
 void CBeam::InputColorRedValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor = clamp( FastFloatToSmallInt(inputdata.value.Float()), 0, 255 );
 	SetColor( nNewColor, m_clrRender->g, m_clrRender->b );
 }
 
 void CBeam::InputColorGreenValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor =clamp( FastFloatToSmallInt(inputdata.value.Float()), 0, 255 );
 	SetColor( m_clrRender->r, nNewColor, m_clrRender->b );
 }
 
 void CBeam::InputColorBlueValue( inputdata_t &inputdata )
 {
-	int nNewColor = clamp( inputdata.value.Float(), 0, 255 );
+	int nNewColor = clamp( FastFloatToSmallInt(inputdata.value.Float()), 0, 255 );
 	SetColor( m_clrRender->r, m_clrRender->g, nNewColor );
 }
 
@@ -1015,10 +1015,11 @@ void CBeam::OnDataChanged( DataUpdateType_t updateType )
 		if ( pEnt )
 		{
 			C_BaseCombatWeapon *pWpn = dynamic_cast<C_BaseCombatWeapon *>(pEnt);
-			if ( pWpn && pWpn->IsCarriedByLocalPlayer() )
+			if ( pWpn && pWpn->ShouldDrawUsingViewModel() )
 			{
 				C_BasePlayer *player = ToBasePlayer( pWpn->GetOwner() );
 
+				// Use GetRenderedWeaponModel() instead?
 				C_BaseViewModel *pViewModel = player ? player->GetViewModel( 0 ) : NULL;
 				if ( pViewModel )
 				{
@@ -1185,6 +1186,12 @@ void CBeam::ComputeBounds( Vector& mins, Vector& maxs )
 		maxs = maxs.Max( vecAbsExtra1 );
 		maxs = maxs.Max( vecAbsExtra2 );
 	}
+
+	// bloat the bounding box by the width of the beam
+	float rad = 0.5f * MAX( m_fWidth.Get(), m_fEndWidth.Get() );
+	Vector vecRad( rad, rad, rad );
+	mins -= vecRad;
+	maxs += vecRad;
 
 	// Make sure the bounds are measured in *relative coords*
 	Vector vecAbsOrigin = GetAbsOrigin();

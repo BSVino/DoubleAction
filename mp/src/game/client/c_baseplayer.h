@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client-side CBasePlayer.
 //
@@ -14,20 +14,27 @@
 
 #include "c_playerlocaldata.h"
 #include "c_basecombatcharacter.h"
-#include "playerstate.h"
+#include "PlayerState.h"
 #include "usercmd.h"
 #include "shareddefs.h"
 #include "timedevent.h"
 #include "smartptr.h"
 #include "fx_water.h"
 #include "hintsystem.h"
-#include "soundemittersystem/isoundemittersystembase.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "c_env_fog_controller.h"
+
+#if defined USES_ECON_ITEMS
+#include "econ_item.h"
+#include "game_item_schema.h"
+#include "econ_item_view.h"
+#endif
 
 class C_BaseCombatWeapon;
 class C_BaseViewModel;
 class C_FuncLadder;
 class CFlashlightEffect;
+class C_EconWearable;
 
 extern int g_nKillCamMode;
 extern int g_nKillCamTarget1;
@@ -49,7 +56,8 @@ public:
 	Vector	error;
 };
 
-#define CHASE_CAM_DISTANCE		96.0f
+#define CHASE_CAM_DISTANCE_MIN	16.0f
+#define CHASE_CAM_DISTANCE_MAX	96.0f
 #define WALL_OFFSET				6.0f
 
 
@@ -71,6 +79,7 @@ public:
 
 	virtual void	Spawn( void );
 	virtual void	SharedSpawn(); // Shared between client and server.
+	virtual bool	GetSteamID( CSteamID *pID );
 
 	// IClientEntity overrides.
 	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
@@ -89,9 +98,11 @@ public:
 
 	virtual void	GetToolRecordingState( KeyValues *msg );
 
+	virtual float GetPlayerMaxSpeed();
+
 	void	SetAnimationExtension( const char *pExtension );
 
-	C_BaseViewModel		*GetViewModel( int viewmodelindex = 0 );
+	C_BaseViewModel		*GetViewModel( int viewmodelindex = 0, bool bObserverOK=true );
 	C_BaseCombatWeapon	*GetActiveWeapon( void ) const;
 	const char			*GetTracerType( void );
 
@@ -114,7 +125,7 @@ public:
 	virtual void			Weapon_DropPrimary( void ) {}
 
 	virtual Vector			GetAutoaimVector( float flScale );
-	void					SetSuitUpdate(char *name, int fgroup, int iNoRepeat);
+	void					SetSuitUpdate(const char *name, int fgroup, int iNoRepeat);
 
 	// Input handling
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *pCmd );
@@ -133,6 +144,7 @@ public:
 
 	// observer mode
 	virtual int			GetObserverMode() const;
+	void				SetObserverMode ( int iNewMode );
 	virtual CBaseEntity	*GetObserverTarget() const;
 	void			SetObserverTarget( EHANDLE hObserverTarget );
 
@@ -140,6 +152,7 @@ public:
 
 	bool IsObserver() const;
 	bool IsHLTV() const;
+	bool IsReplay() const;
 	void ResetObserverMode();
 	bool IsBot( void ) const { return false; }
 
@@ -168,7 +181,7 @@ public:
 
 	// Flashlight
 	void	Flashlight( void );
-	virtual void	UpdateFlashlight( void );
+	void	UpdateFlashlight( void );
 
 	// Weapon selection code
 	virtual bool				IsAllowedToSwitchWeapons( void ) { return !IsObserver(); }
@@ -200,13 +213,23 @@ public:
 
 	// Global/static methods
 	virtual void				ThirdPersonSwitch( bool bThirdperson );
+	static bool					LocalPlayerInFirstPersonView();
 	static bool					ShouldDrawLocalPlayer();
 	static C_BasePlayer			*GetLocalPlayer( void );
 	int							GetUserID( void );
 	virtual bool				CanSetSoundMixer( void );
+	virtual int					GetVisionFilterFlags( bool bWeaponsCheck = false ) { return 0x00; }
+	bool						HasVisionFilterFlags( int nFlags, bool bWeaponsCheck = false ) { return ( GetVisionFilterFlags( bWeaponsCheck ) & nFlags ) == nFlags; }
+	virtual void				CalculateVisionUsingCurrentFlags( void ) {}
+	void						BuildFirstPersonMeathookTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed, const char *pchHeadBoneName );
+
+	// Specific queries about this player.
+	bool						InFirstPersonView();
+	bool						ShouldDrawThisPlayer();
 
 	// Called by the view model if its rendering is being overridden.
-	virtual bool		ViewModel_IsTransparent( void );
+	virtual bool				ViewModel_IsTransparent( void );
+	virtual bool				ViewModel_IsUsingFBTexture( void );
 
 #if !defined( NO_ENTITY_PREDICTION )
 	void						AddToPlayerSimulationList( C_BaseEntity *other );
@@ -242,7 +265,7 @@ public:
 	virtual float				GetFOV( void );	
 	int							GetDefaultFOV( void ) const;
 	virtual bool				IsZoomed( void )	{ return false; }
-	bool						SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate, int iZoomStart = 0 );
+	bool						SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate = 0.0f, int iZoomStart = 0 );
 	void						ClearZoomOwner( void );
 
 	float						GetFOVDistanceAdjustFactor();
@@ -321,6 +344,9 @@ public:
 	virtual surfacedata_t * GetFootstepSurface( const Vector &origin, const char *surfaceName );
 	virtual void GetStepSoundVelocities( float *velwalk, float *velrun );
 	virtual void SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking );
+	virtual const char *GetOverrideStepSound( const char *pszBaseStepSoundName ) { return pszBaseStepSoundName; }
+
+	virtual void OnEmitFootstepSound( const CSoundParameters& params, const Vector& vecOrigin, float fVolume ) {}
 
 	// Called by prediction when it detects a prediction correction.
 	// vDelta is the line from where the client had predicted the player to at the usercmd in question,
@@ -351,13 +377,25 @@ public:
 	void					UpdateFogController( void );
 	void					UpdateFogBlend( void );
 
-	void					IncrementEFNoInterpParity();
-	int						GetEFNoInterpParity() const;
-
 	float					GetFOVTime( void ){ return m_flFOVTime; }
 
 	virtual void			OnAchievementAchieved( int iAchievement ) {}
+	
+	bool					ShouldAnnounceAchievement( void ){ return m_flNextAchievementAnnounceTime < gpGlobals->curtime; }
+	void					SetNextAchievementAnnounceTime( float flTime ){ m_flNextAchievementAnnounceTime = flTime; }
 
+#if defined USES_ECON_ITEMS
+	// Wearables
+	void					UpdateWearables();
+	C_EconWearable			*GetWearable( int i ) { return m_hMyWearables[i]; }
+	int						GetNumWearables( void ) { return m_hMyWearables.Count(); }
+#endif
+
+	bool					HasFiredWeapon( void ) { return m_bFiredWeapon; }
+	void					SetFiredWeapon( bool bFlag ) { m_bFiredWeapon = bFlag; }
+
+	virtual bool			CanUseFirstPersonCommand( void ){ return true; }
+	
 protected:
 	fogparams_t				m_CurrentFog;
 	EHANDLE					m_hOldFogController;
@@ -367,6 +405,10 @@ public:
 	
 	// Data for only the local player
 	CNetworkVarEmbedded( CPlayerLocalData, m_Local );
+
+#if defined USES_ECON_ITEMS
+	CNetworkVarEmbedded( CAttributeList, m_AttributeList );
+#endif
 
 	// Data common to all other players, too
 	CPlayerState			pl;
@@ -401,16 +443,18 @@ public:
 
 protected:
 
-	//Tony; made all of these virtual so mods can override.
-	virtual void		CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
+	void				CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	void				CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
 							float& zNear, float& zFar, float& fov );
 	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
-	virtual void		CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	void				CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual void		CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+
+	virtual float		GetDeathCamInterpolationTime();
+
 	virtual void		CalcDeathCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	void				CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 	virtual void		CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 
 	// Check to see if we're in vgui input mode...
@@ -438,6 +482,7 @@ protected:
 	float			m_flDeathTime;		// last time player died
 
 	float			m_flStepSoundTime;
+	bool			m_IsFootprintOnLeft;
 
 private:
 	// Make sure no one calls this...
@@ -473,6 +518,8 @@ private:
 	int				m_nFinalPredictedTick;
 
 	EHANDLE			m_pCurrentVguiScreen;
+
+	bool			m_bFiredWeapon;
 
 
 	// Player flashlight dynamic light pointers
@@ -520,10 +567,7 @@ private:
 	friend class CHL2GameMovement;
 	friend class CDODGameMovement;
 	friend class CPortalGameMovement;
-#if defined ( SDK_DLL )
-	friend class CSDKGameMovement;
-#endif
-
+	
 	// Accessors for gamemovement
 	float GetStepSize( void ) const { return m_Local.m_flStepSize; }
 
@@ -559,8 +603,15 @@ protected:
 
 	bool			m_bSentFreezeFrame;
 	float			m_flFreezeZOffset;
-	byte			m_ubEFNoInterpParity;
-	byte			m_ubOldEFNoInterpParity;
+
+	float			m_flNextAchievementAnnounceTime;
+
+	int				m_nForceVisionFilterFlags; // Force our vision filter to a specific setting
+
+#if defined USES_ECON_ITEMS
+	// Wearables
+	CUtlVector<CHandle<C_EconWearable > >	m_hMyWearables;
+#endif
 
 private:
 

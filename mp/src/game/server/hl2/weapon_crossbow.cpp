@@ -1,14 +1,14 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "basehlcombatweapon_shared.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
 #include "gamerules.h"
 #include "in_buttons.h"
@@ -18,8 +18,8 @@
 #include "engine/IEngineSound.h"
 #include "IEffects.h"
 #include "te_effect_dispatch.h"
-#include "sprite.h"
-#include "spritetrail.h"
+#include "Sprite.h"
+#include "SpriteTrail.h"
 #include "beam_shared.h"
 #include "rumble_shared.h"
 #include "gamestats.h"

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: These are a couple of base proxy classes to help us with
 // getting/setting source/result material vars
@@ -9,11 +9,10 @@
 #ifndef FUNCTIONPROXY_H
 #define FUNCTIONPROXY_H
 
-#include "materialsystem/IMaterialProxy.h"
-
+#include "materialsystem/imaterialproxy.h"
+#include "materialsystem/imaterialvar.h"
 
 class IMaterialVar;
-enum MaterialVarType_t;
 class C_BaseEntity;
 
 

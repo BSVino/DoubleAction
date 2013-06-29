@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "env_wind_shared.h"
 #include "engine/IEngineTrace.h"
 #include "tier0/vprof.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "particles_ez.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -186,7 +186,7 @@ void C_Func_Dust::ClientThink()
 	// Spawn particles?
 	if( m_DustFlags & DUSTFLAGS_ON )
 	{
-		float flDelta = min( gpGlobals->frametime, 0.1f );
+		float flDelta = MIN( gpGlobals->frametime, 0.1f );
 		while( m_Spawner.NextEvent( flDelta ) )
 		{
 			AttemptSpawnNewParticle();
@@ -228,12 +228,12 @@ void C_Func_Dust::AttemptSpawnNewParticle()
 				pParticle->m_vVelocity.z -= m_FallSpeed;
 
 				pParticle->m_flLifetime = 0;
-				pParticle->m_flDieTime = RemapVal( rand(), 0, RAND_MAX, m_LifetimeMin, m_LifetimeMax );
+				pParticle->m_flDieTime = RemapVal( rand(), 0, VALVE_RAND_MAX, m_LifetimeMin, m_LifetimeMax );
 
 				if( m_DustFlags & DUSTFLAGS_SCALEMOTES )
-					pParticle->m_flSize = RemapVal( rand(), 0, RAND_MAX, m_flSizeMin/10000.0f, m_flSizeMax/10000.0f );
+					pParticle->m_flSize = RemapVal( rand(), 0, VALVE_RAND_MAX, m_flSizeMin/10000.0f, m_flSizeMax/10000.0f );
 				else
-					pParticle->m_flSize = RemapVal( rand(), 0, RAND_MAX, m_flSizeMin, m_flSizeMax );
+					pParticle->m_flSize = RemapVal( rand(), 0, VALVE_RAND_MAX, m_flSizeMin, m_flSizeMax );
 			
 				pParticle->m_Color = m_Color;
 			}

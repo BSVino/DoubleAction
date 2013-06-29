@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #endif
 
 #include "basegrenade_shared.h"
-#include "sprite.h"
+#include "Sprite.h"
 
 extern ConVar hopwire_trap;
 

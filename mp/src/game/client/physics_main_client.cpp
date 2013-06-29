@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,9 @@
 //=============================================================================//
 #include "cbase.h"
 #include "c_baseentity.h"
-#include "typeinfo.h"
+#ifdef WIN32
+#include <typeinfo.h>
+#endif
 #include "tier0/vprof.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -331,7 +333,11 @@ void C_BaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 			else
 #endif
 			{
+#ifdef WIN32
 				Msg( "CLIENT:  %s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).raw_name(), time );
+#else
+				Msg( "CLIENT:  %s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).name(), time );				
+#endif
 			}
 		}
 	}

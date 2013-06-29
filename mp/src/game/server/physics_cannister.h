@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -92,7 +92,7 @@ public:
 	// Don't treat as a live target
 	virtual bool IsAlive( void ) { return false; }
 
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &dir, trace_t *ptr );
+	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &dir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	void	ShutdownJet( void );
 	void	BeginShutdownThink( void );

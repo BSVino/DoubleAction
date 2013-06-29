@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,8 +27,22 @@ enum
 {
 	MAX_JOYSTICKS = 1,
 	MOUSE_BUTTON_COUNT = 5,
+	MAX_NOVINT_DEVICES = 2,
 };
 
+#if defined( LINUX )
+// Linux has a slightly different mapping order on the joystick axes
+enum JoystickAxis_t
+{
+	JOY_AXIS_X = 0,
+ 	JOY_AXIS_Y,
+	JOY_AXIS_Z,
+	JOY_AXIS_U,
+	JOY_AXIS_R,
+	JOY_AXIS_V,
+	MAX_JOYSTICK_AXES,
+};
+#else
 enum JoystickAxis_t
 {
 	JOY_AXIS_X = 0,
@@ -39,6 +53,7 @@ enum JoystickAxis_t
 	JOY_AXIS_V,
 	MAX_JOYSTICK_AXES,
 };
+#endif
 
 
 

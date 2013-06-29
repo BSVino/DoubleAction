@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client DLL VGUI2 Viewport
 //
@@ -26,8 +26,8 @@
 #include <vgui/IScheme.h>
 #include <vgui/IVGui.h>
 #include <vgui/ILocalize.h>
-#include <vgui/ipanel.h>
-#include <vgui_controls/button.h>
+#include <vgui/IPanel.h>
+#include <vgui_controls/Button.h>
 
 #include <igameresources.h>
 
@@ -48,6 +48,13 @@
 #include <convar.h>
 #include "ienginevgui.h"
 #include "iclientmode.h"
+
+#include "tier0/etwprof.h"
+
+#if defined( REPLAY_ENABLED )
+#include "replay/ireplaysystem.h"
+#include "replay/ienginereplay.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -142,6 +149,7 @@ bool CBaseViewport::LoadHudAnimations( void )
 //================================================================
 CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 {
+	SetSize( 10, 10 ); // Quiet "parent not sized yet" spew
 	gViewPortInterface = this;
 	m_bInitialized = false;
 
@@ -156,6 +164,7 @@ CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 	m_bHasParent = false;
 	m_pActivePanel = NULL;
 	m_pLastActivePanel = NULL;
+	g_lastPanel = NULL;
 
 	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( enginevgui->GetPanel( PANEL_CLIENTDLL ), "resource/ClientScheme.res", "ClientScheme");
 	SetScheme(scheme);
@@ -186,6 +195,9 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 {
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
 
+	IViewPortPanel* pSpecGuiPanel = FindPanelByName(PANEL_SPECGUI);
+	bool bSpecGuiWasVisible = pSpecGuiPanel && pSpecGuiPanel->IsVisible();
+	
 	// reload the script file, so the screen positions in it are correct for the new resolution
 	ReloadScheme( NULL );
 
@@ -204,7 +216,8 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 	// hide all panels when reconnecting 
 	ShowPanel( PANEL_ALL, false );
 
-	if ( engine->IsHLTV() )
+	// re-enable the spectator gui if it was previously visible
+	if ( bSpecGuiWasVisible )
 	{
 		ShowPanel( PANEL_SPECGUI, true );
 	}
@@ -269,10 +282,12 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CSpectatorGUI( this );
 	}
+#if !defined( TF_CLIENT_DLL )
 	else if ( Q_strcmp(PANEL_NAV_PROGRESS, szPanelName) == 0 )
 	{
 		newpanel = new CNavProgress( this );
 	}
+#endif	// TF_CLIENT_DLL
 #endif
 
 	if ( Q_strcmp(PANEL_COMMENTARY_MODELVIEWER, szPanelName) == 0 )
@@ -390,9 +405,12 @@ void CBaseViewport::ShowPanel( IViewPortPanel* pPanel, bool state )
 		if ( pPanel->HasInputElements() )
 		{
 			// don't show input panels during normal demo playback
+#if defined( REPLAY_ENABLED )
+			if ( engine->IsPlayingDemo() && !engine->IsHLTV() && !g_pEngineClientReplay->IsPlayingReplayDemo() )
+#else
 			if ( engine->IsPlayingDemo() && !engine->IsHLTV() )
+#endif
 				return;
-
 			if ( (m_pActivePanel != NULL) && (m_pActivePanel != pPanel) && (m_pActivePanel->IsVisible()) )
 			{
 				// store a pointer to the currently active panel
@@ -436,6 +454,7 @@ IViewPortPanel* CBaseViewport::GetActivePanel( void )
 
 void CBaseViewport::RemoveAllPanels( void)
 {
+	g_lastPanel = NULL;
 	for ( int i=0; i < m_Panels.Count(); i++ )
 	{
 		vgui::VPANEL vPanel = m_Panels[i]->GetVPanel();
@@ -494,7 +513,7 @@ void CBaseViewport::Start( IGameUIFuncs *pGameUIFuncs, IGameEventManager2 * pGam
 
 //-----------------------------------------------------------------------------
 // Purpose: Updates the spectator panel with new player info
-/*-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void CBaseViewport::UpdateSpectatorPanel()
 {
 	char bottomText[128];
@@ -644,6 +663,8 @@ void CBaseViewport::FireGameEvent( IGameEvent * event)
 //-----------------------------------------------------------------------------
 void CBaseViewport::ReloadScheme(const char *fromFile)
 {
+	CETWScope timer( "CBaseViewport::ReloadScheme" );
+
 	// See if scheme should change
 	
 	if ( fromFile != NULL )
@@ -668,8 +689,11 @@ void CBaseViewport::ReloadScheme(const char *fromFile)
 
 	SetProportional( true );
 	
+	KeyValuesAD pConditions( "conditions" );
+	g_pClientMode->ComputeVguiResConditions( pConditions );
+
 	// reload the .res file from disk
-	LoadControlSettings( "scripts/HudLayout.res" );
+	LoadControlSettings( "scripts/HudLayout.res", NULL, NULL, pConditions );
 
 	gHUD.RefreshHudTextures();
 

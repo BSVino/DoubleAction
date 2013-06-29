@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines the player specific data that is sent only to the player
 //			to whom it belongs.
@@ -74,9 +74,6 @@ public:
 	audioparams_t			m_audio;
 
 	bool					m_bSlowMovement;
-
-	//Tony; added so tonemap controller can work in multiplayer with inputs.
-	tonemap_params_t		m_TonemapParams;
 
 };
 

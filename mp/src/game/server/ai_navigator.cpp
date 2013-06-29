@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -492,8 +492,8 @@ bool CAI_Navigator::SetGoal( const AI_NavGoal_t &goal, unsigned flags )
 		DbgNavMsg(  GetOuter(), "Failed to pathfind to nav goal:\n" );
 		DbgNavMsg1( GetOuter(), "   Type:      %s\n", AIGetGoalTypeText( goal.type) );
 		DbgNavMsg1( GetOuter(), "   Dest:      %s\n", NavVecToString( goal.dest ) );
-		DbgNavMsg1( GetOuter(), "   Dest node: %d\n", goal.destNode );
-		DbgNavMsg1( GetOuter(), "   Target:    %#x\n", goal.pTarget );
+		DbgNavMsg1( GetOuter(), "   Dest node: %p\n", goal.destNode );
+		DbgNavMsg1( GetOuter(), "   Target:    %p\n", goal.pTarget );
 
 		if ( flags & AIN_DISCARD_IF_FAIL )
 			ClearPath();
@@ -503,8 +503,8 @@ bool CAI_Navigator::SetGoal( const AI_NavGoal_t &goal, unsigned flags )
 		DbgNavMsg(  GetOuter(), "New goal set:\n" );
 		DbgNavMsg1( GetOuter(), "   Type:         %s\n", AIGetGoalTypeText( goal.type) );
 		DbgNavMsg1( GetOuter(), "   Dest:         %s\n", NavVecToString( goal.dest ) );
-		DbgNavMsg1( GetOuter(), "   Dest node:    %d\n", goal.destNode );
-		DbgNavMsg1( GetOuter(), "   Target:       %#x\n", goal.pTarget );
+		DbgNavMsg1( GetOuter(), "   Dest node:    %p\n", goal.destNode );
+		DbgNavMsg1( GetOuter(), "   Target:       %p\n", goal.pTarget );
 		DbgNavMsg1( GetOuter(), "   Tolerance:    %.1f\n", GetPath()->GetGoalTolerance() );
 		DbgNavMsg1( GetOuter(), "   Waypoint tol: %.1f\n", GetPath()->GetWaypointTolerance() );
 		DbgNavMsg1( GetOuter(), "   Activity:     %s\n", GetOuter()->GetActivityName(GetPath()->GetMovementActivity()) );
@@ -1221,7 +1221,9 @@ float CAI_Navigator::GetPathTimeToGoal()
 
 AI_PathNode_t CAI_Navigator::GetNearestNode()
 {
+#ifdef WIN32
 	COMPILE_TIME_ASSERT( (int)AIN_NO_NODE == NO_NODE );
+#endif
 	return (AI_PathNode_t)( GetPathfinder()->NearestNodeToNPC() );
 }
 
@@ -1465,7 +1467,7 @@ AIMoveResult_t CAI_Navigator::MoveClimb()
 	// Look for a block by another NPC, and attempt to recover
 	AIMoveTrace_t moveTrace;
 	if ( climbDist > 0.01 &&
-		 !GetMoveProbe()->MoveLimit( NAV_CLIMB, GetLocalOrigin(), GetLocalOrigin() + ( climbDir * min(0.1,climbDist - 0.005) ), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace ) )
+		 !GetMoveProbe()->MoveLimit( NAV_CLIMB, GetLocalOrigin(), GetLocalOrigin() + ( climbDir * MIN(0.1,climbDist - 0.005) ), MASK_NPCSOLID, GetNavTargetEntity(), &moveTrace ) )
 	{
 		CAI_BaseNPC *pOther = ( moveTrace.pObstruction ) ? moveTrace.pObstruction->MyNPCPointer() : NULL;
 		if ( pOther )
@@ -3114,7 +3116,7 @@ AI_NavPathProgress_t CAI_Navigator::ProgressFlyPath( const AI_ProgressFlyPathPar
 
 		if ( CurWaypointIsGoal() )
 		{
-			float tolerance = max( params.goalTolerance, GetPath()->GetGoalTolerance() );
+			float tolerance = MAX( params.goalTolerance, GetPath()->GetGoalTolerance() );
 			if ( waypointDist <= tolerance )
 				return AINPP_COMPLETE;
 		}

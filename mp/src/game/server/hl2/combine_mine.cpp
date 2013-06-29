@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -491,8 +491,8 @@ void CBounceBomb::BounceThink()
 				height = 0.1;
 		}
 
-		float time = sqrt( height / (0.5 * sv_gravity.GetFloat()) );
-		float velocity = sv_gravity.GetFloat() * time;
+		float time = sqrt( height / (0.5 * GetCurrentGravity()) );
+		float velocity = GetCurrentGravity() * time;
 
 		// or you can just AddVelocity to the object instead of ApplyForce
 		float force = velocity * pPhysicsObject->GetMass();
@@ -553,8 +553,8 @@ void CBounceBomb::CavernBounceThink()
 				height = 0.1;
 		}
 
-		float time = sqrt( height / (0.5 * sv_gravity.GetFloat()) );
-		float velocity = sv_gravity.GetFloat() * time;
+		float time = sqrt( height / (0.5 * GetCurrentGravity()) );
+		float velocity = GetCurrentGravity() * time;
 
 		// or you can just AddVelocity to the object instead of ApplyForce
 		float force = velocity * pPhysicsObject->GetMass();

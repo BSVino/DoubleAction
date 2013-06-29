@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -101,7 +101,7 @@ namespace physicssound
 					sound.surfacePropsHit = surfacePropsHit;
 				}
 				sound.volume += volume;
-				sound.impactSpeed = max(impactSpeed,sound.impactSpeed);
+				sound.impactSpeed = MAX(impactSpeed,sound.impactSpeed);
 				return;
 			}
 		}

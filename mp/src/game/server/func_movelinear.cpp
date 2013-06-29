@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements a brush model entity that moves along a linear path.
 //			Water whose level can be changed is implemented using the same entity.
@@ -342,7 +342,13 @@ void CFuncMoveLinear::Blocked( CBaseEntity *pOther )
 	// Hurt the blocker 
 	if ( m_flBlockDamage )
 	{
-		pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
+		if ( pOther->m_takedamage == DAMAGE_EVENTS_ONLY )
+		{
+			if ( FClassnameIs( pOther, "gib" ) )
+				UTIL_Remove( pOther );
+		}
+		else
+			pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
 	}
 }
 

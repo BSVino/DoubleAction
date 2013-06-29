@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		A schedule
 //
@@ -79,7 +79,7 @@ public:
 	bool LoadAllSchedules(void);
 
 	bool LoadSchedules( const char* prefix, CAI_ClassScheduleIdSpace *pIdSpace  );
-	bool LoadSchedulesFromBuffer( const char *prefix, char *pfile, CAI_ClassScheduleIdSpace *pIdSpace );
+	bool LoadSchedulesFromBuffer( const char *prefix, const char *pfile, CAI_ClassScheduleIdSpace *pIdSpace );
 
 private:
 	friend class CAI_SystemHook;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -55,14 +55,7 @@ bool CBaseFilter::PassesDamageFilter(const CTakeDamageInfo &info)
 
 bool CBaseFilter::PassesDamageFilterImpl( const CTakeDamageInfo &info )
 {
-	//Tony; modified so it can check the inflictor or the attacker. We'll check the attacker first; which is normal if that fails, then check the inflictor.
-	bool bResult = false;
-	bResult = PassesFilterImpl( NULL, info.GetAttacker() );
-
-	if (!bResult && info.GetInflictor() != NULL)
-		bResult = PassesFilterImpl( NULL, info.GetInflictor() );
-	
-	return bResult;//PassesFilterImpl( NULL, info.GetAttacker() );
+	return PassesFilterImpl( NULL, info.GetAttacker() );
 }
 
 //-----------------------------------------------------------------------------
@@ -379,8 +372,7 @@ protected:
 
 	bool PassesDamageFilterImpl(const CTakeDamageInfo &info)
 	{
-		//Tony; these are bits remember? this is a fix!
-		return ((info.GetDamageType() & m_iDamageType) == m_iDamageType) ? true : false;
+	 	return info.GetDamageType() == m_iDamageType;
 	}
 
 	int m_iDamageType;
@@ -544,7 +536,7 @@ bool CFilterEnemy::PassesProximityFilter( CBaseEntity *pCaller, CBaseEntity *pEn
 	float flSmallerRadius = m_flRadius;
 	if ( flSmallerRadius > flLargerRadius )
 	{
-		swap( flLargerRadius, flSmallerRadius );
+		::V_swap( flLargerRadius, flSmallerRadius );
 	}
 
 	float flDist;	

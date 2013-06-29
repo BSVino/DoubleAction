@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,9 +16,9 @@
 #include "iclientmode.h"
 #include "weapon_selection.h"
 
-#include <vgui/vgui.h>
+#include <vgui/VGUI.h>
 #include <vgui/ISurface.h>
-#include <vgui/ilocalize.h>
+#include <vgui/ILocalize.h>
 #include <KeyValues.h>
 #include <vgui_controls/AnimationController.h>
 
@@ -413,8 +413,9 @@ void CHudMenu::ShowMenu_KeyValueItems( KeyValues *pKV )
 	m_nSelectedItem = -1;
 	
 	g_szMenuString[0] = '\0';
-
-	wchar_t wItem[128];
+	wchar_t *pWritePosition = g_szMenuString;
+	int		nRemaining = sizeof( g_szMenuString ) / sizeof( wchar_t );
+	int		nCount;
 
 	int i = 0;
 	for ( KeyValues *item = pKV->GetFirstSubKey(); item != NULL; item = item->GetNextKey() )
@@ -425,9 +426,9 @@ void CHudMenu::ShowMenu_KeyValueItems( KeyValues *pKV )
 		const char *pszItem = item->GetName();
 		const wchar_t *wLocalizedItem = g_pVGuiLocalize->Find( pszItem );
 
-		_snwprintf( wItem, sizeof( wItem )/ sizeof( wchar_t ), L"%d. %s\n", i+1, wLocalizedItem );
-
-		_snwprintf( g_szMenuString, sizeof( g_szMenuString )/ sizeof( wchar_t ), L"%s%s", g_szMenuString, wItem );
+		nCount = _snwprintf( pWritePosition, nRemaining, L"%d. %ls\n", i+1, wLocalizedItem );
+		nRemaining -= nCount;
+		pWritePosition += nCount;
 
 		i++;
 	}
@@ -435,9 +436,9 @@ void CHudMenu::ShowMenu_KeyValueItems( KeyValues *pKV )
 	// put a cancel on the end
 	m_bitsValidSlots |= (1<<9);
 
-	_snwprintf( wItem, sizeof( wItem )/ sizeof( wchar_t ), L"0. %s", g_pVGuiLocalize->Find( "#Cancel" ) );
-
-	_snwprintf( g_szMenuString, sizeof( g_szMenuString )/ sizeof( wchar_t ), L"%s\n%s", g_szMenuString, wItem );
+	nCount = _snwprintf( pWritePosition, nRemaining, L"0. %ls\n", g_pVGuiLocalize->Find( "#Cancel" ) );
+	nRemaining -= nCount;
+	pWritePosition += nCount;
 
 	ProcessText();
 

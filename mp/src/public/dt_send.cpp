@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,8 +25,10 @@ static CNonModifiedPointerProxy *s_pNonModifiedPointerProxyHead = NULL;
 void SendProxy_UInt8ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 void SendProxy_UInt16ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
 void SendProxy_UInt32ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
-
-char *s_ElementNames[MAX_ARRAY_ELEMENTS] =
+#ifdef SUPPORTS_INT64
+void SendProxy_UInt64ToInt64( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID);
+#endif
+const char *s_ElementNames[MAX_ARRAY_ELEMENTS] =
 {
 	"000", "001", "002", "003", "004", "005", "006", "007", "008", "009", 
 	"010", "011", "012", "013", "014", "015", "016", "017", "018", "019",
@@ -148,10 +150,16 @@ CStandardSendProxiesV1::CStandardSendProxiesV1()
 	m_Int8ToInt32 = SendProxy_Int8ToInt32;
 	m_Int16ToInt32 = SendProxy_Int16ToInt32;
 	m_Int32ToInt32 = SendProxy_Int32ToInt32;
+#ifdef SUPPORTS_INT64
+	m_Int64ToInt64 = SendProxy_Int64ToInt64;
+#endif
 
 	m_UInt8ToInt32 = SendProxy_UInt8ToInt32;
 	m_UInt16ToInt32 = SendProxy_UInt16ToInt32;
 	m_UInt32ToInt32 = SendProxy_UInt32ToInt32;
+#ifdef SUPPORTS_INT64
+	m_UInt64ToInt64 = SendProxy_UInt64ToInt64;
+#endif
 	
 	m_FloatToFloat = SendProxy_FloatToFloat;
 	m_VectorToVector = SendProxy_VectorToVector;
@@ -203,6 +211,14 @@ void SendProxy_VectorToVector( const SendProp *pProp, const void *pStruct, const
 	pOut->m_Vector[2] = v[2];
 }
 
+void SendProxy_VectorXYToVectorXY( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
+{
+	Vector& v = *(Vector*)pData;
+	Assert( v.IsValid() );
+	pOut->m_Vector[0] = v[0];
+	pOut->m_Vector[1] = v[1];
+}
+
 #if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
 void SendProxy_QuaternionToQuaternion( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
@@ -217,7 +233,7 @@ void SendProxy_QuaternionToQuaternion( const SendProp *pProp, const void *pStruc
 
 void SendProxy_Int8ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
-	pOut->m_Int = *((char*)pData);
+	pOut->m_Int = *((const char*)pData);
 }
 
 void SendProxy_Int16ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
@@ -230,9 +246,16 @@ void SendProxy_Int32ToInt32( const SendProp *pProp, const void *pStruct, const v
 	pOut->m_Int = *((int*)pData);
 }
 
+#ifdef SUPPORTS_INT64
+void SendProxy_Int64ToInt64( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
+{
+	pOut->m_Int64 = *((int64*)pData);
+}
+#endif
+
 void SendProxy_UInt8ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
-	pOut->m_Int = *((unsigned char*)pData);
+	pOut->m_Int = *((const unsigned char*)pData);
 }
 
 void SendProxy_UInt16ToInt32( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
@@ -244,10 +267,16 @@ void SendProxy_UInt32ToInt32( const SendProp *pProp, const void *pStruct, const 
 {
 	*((unsigned long*)&pOut->m_Int) = *((unsigned long*)pData);
 }
+#ifdef SUPPORTS_INT64
+void SendProxy_UInt64ToInt64( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
+{
+	*((int64*)&pOut->m_Int64) = *((uint64*)pData);
+}
+#endif
 
 void SendProxy_StringToString( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID)
 {
-	pOut->m_pString = (char*)pData;
+	pOut->m_pString = (const char*)pData;
 }
 
 void* SendProxy_DataTableToDataTable( const SendProp *pProp, const void *pStructBase, const void *pData, CSendProxyRecipients *pRecipients, int objectID )
@@ -279,22 +308,7 @@ void* SendProxy_SendLocalDataTable( const SendProp *pProp, const void *pStruct, 
 	return ( void * )pVarData;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Filters updates to a variable so that only non-local players see
-// the changes.  This is so we can send a low-res origin to non-local players
-// while sending a hi-res one to the local player.
-// Input  : *pVarData - 
-//			*pOut - 
-//			objectID - 
-//-----------------------------------------------------------------------------
 
-void* SendProxy_SendNonLocalDataTable( const SendProp *pProp, const void *pStruct, const void *pVarData, CSendProxyRecipients *pRecipients, int objectID )
-{
-	pRecipients->SetAllRecipients();
-	pRecipients->ClearRecipient( objectID - 1 );
-	return ( void * )pVarData;
-}
-REGISTER_SEND_PROXY_NON_MODIFIED_POINTER( SendProxy_SendNonLocalDataTable );
 
 
 
@@ -310,6 +324,8 @@ float AssignRangeMultiplier( int nBits, double range )
 		iHighValue = ((1 << (unsigned long)nBits) - 1);
 
 	float fHighLowMul = iHighValue / range;
+	if ( CloseEnough( range, 0 ) )
+		fHighLowMul = iHighValue;
 	
 	// If the precision is messing us up, then adjust it so it won't.
 	if ( (unsigned long)(fHighLowMul * range) > iHighValue ||
@@ -321,7 +337,7 @@ float AssignRangeMultiplier( int nBits, double range )
 		int i;
 		for ( i=0; i < ARRAYSIZE( multipliers ); i++ )
 		{
-			float fHighLowMul = (float)( iHighValue / range ) * multipliers[i];
+			fHighLowMul = (float)( iHighValue / range ) * multipliers[i];
 			if ( (unsigned long)(fHighLowMul * range) > iHighValue ||
 				(fHighLowMul * range) > (double)iHighValue )
 			{
@@ -346,7 +362,7 @@ float AssignRangeMultiplier( int nBits, double range )
 
 
 SendProp SendPropFloat(
-	char *pVarName,		
+	const char *pVarName,		
 	// Variable name.
 	int offset,			// Offset into container structure.
 	int sizeofVar,
@@ -397,7 +413,7 @@ SendProp SendPropFloat(
 }
 
 SendProp SendPropVector(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int nBits,					// Number of bits to use when encoding.
@@ -432,9 +448,45 @@ SendProp SendPropVector(
 	return ret;
 }
 
+SendProp SendPropVectorXY(
+	const char *pVarName,
+	int offset,
+	int sizeofVar,
+	int nBits,					// Number of bits to use when encoding.
+	int flags,
+	float fLowValue,			// For floating point, low and high values.
+	float fHighValue,			// High value. If HIGH_DEFAULT, it's (1<<nBits).
+	SendVarProxyFn varProxy
+	)
+{
+	SendProp ret;
+
+	if(varProxy == SendProxy_VectorXYToVectorXY)
+	{
+		Assert(sizeofVar == sizeof(Vector));
+	}
+
+	if ( nBits == 32 )
+		flags |= SPROP_NOSCALE;
+
+	ret.m_Type = DPT_VectorXY;
+	ret.m_pVarName = pVarName;
+	ret.SetOffset( offset );
+	ret.m_nBits = nBits;
+	ret.SetFlags( flags );
+	ret.m_fLowValue = fLowValue;
+	ret.m_fHighValue = fHighValue;
+	ret.m_fHighLowMul = AssignRangeMultiplier( ret.m_nBits, ret.m_fHighValue - ret.m_fLowValue );
+	ret.SetProxyFn( varProxy );
+	if( ret.GetFlags() & (SPROP_COORD | SPROP_NOSCALE | SPROP_NORMAL | SPROP_COORD_MP | SPROP_COORD_MP_LOWPRECISION | SPROP_COORD_MP_INTEGRAL) )
+		ret.m_nBits = 0;
+
+	return ret;
+}
+
 #if 0 // We can't ship this since it changes the size of DTVariant to be 20 bytes instead of 16 and that breaks MODs!!!
 SendProp SendPropQuaternion(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int nBits,					// Number of bits to use when encoding.
@@ -471,7 +523,7 @@ SendProp SendPropQuaternion(
 #endif
 
 SendProp SendPropAngle(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int nBits,
@@ -504,7 +556,7 @@ SendProp SendPropAngle(
 
 
 SendProp SendPropQAngles(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int nBits,
@@ -537,7 +589,7 @@ SendProp SendPropQAngles(
 }
   
 SendProp SendPropInt(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int nBits,
@@ -561,6 +613,12 @@ SendProp SendPropInt(
 		{
 			varProxy = SendProxy_Int32ToInt32;
 		}
+#ifdef SUPPORTS_INT64
+		else if ( sizeofVar == 8 )
+		{
+			varProxy = SendProxy_Int64ToInt64;
+		}
+#endif
 		else
 		{
 			Assert(!"SendPropInt var has invalid size");
@@ -575,7 +633,12 @@ SendProp SendPropInt(
 		nBits = sizeofVar * 8;
 	}
 
+#ifdef SUPPORTS_INT64
+	ret.m_Type = (sizeofVar == 8) ? DPT_Int64 : DPT_Int;
+#else
 	ret.m_Type = DPT_Int;
+#endif
+	
 	ret.m_pVarName = pVarName;
 	ret.SetOffset( offset );
 	ret.m_nBits = nBits;
@@ -595,13 +658,18 @@ SendProp SendPropInt(
 
 		else if( varProxy == SendProxy_Int32ToInt32 )
 			ret.SetProxyFn( SendProxy_UInt32ToInt32 );
+			
+#ifdef SUPPORTS_INT64
+		else if( varProxy == SendProxy_Int64ToInt64 )
+			ret.SetProxyFn( SendProxy_UInt64ToInt64 );
+#endif
 	}
 
 	return ret;
 }
 
 SendProp SendPropString(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int bufferLen,
 	int flags,
@@ -621,7 +689,7 @@ SendProp SendPropString(
 }
 
 SendProp SendPropArray3(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	int sizeofVar,
 	int elements,
@@ -650,14 +718,12 @@ SendProp SendPropArray3(
 
 	SendProp *pProps = new SendProp[elements]; // TODO free that again
 	
-	char *pParentArrayPropName = AllocateStringHelper( "%s", pVarName );
-
 	for ( int i = 0; i < elements; i++ )
 	{
 		pProps[i] = pArrayProp;	// copy array element property setting
 		pProps[i].SetOffset( i*sizeofVar ); // adjust offset
 		pProps[i].m_pVarName = s_ElementNames[i];	// give unique name
-		pProps[i].SetParentArrayPropName( pParentArrayPropName ); // For debugging...
+		pProps[i].m_pParentArrayPropName = pVarName; // For debugging...
 	}
 
 	SendTable *pTable = new SendTable( pProps, elements, pVarName ); // TODO free that again
@@ -668,7 +734,7 @@ SendProp SendPropArray3(
 }
 
 SendProp SendPropDataTable(
-	char *pVarName,
+	const char *pVarName,
 	int offset,
 	SendTable *pTable,
 	SendTableProxyFn varProxy
@@ -700,7 +766,7 @@ SendProp SendPropDataTable(
 SendProp InternalSendPropArray(
 	const int elementCount,
 	const int elementStride,
-	char *pName,
+	const char *pName,
 	ArrayLengthSendProxyFn arrayLengthFn
 	)
 {
@@ -720,8 +786,8 @@ SendProp InternalSendPropArray(
 
 
 SendProp SendPropExclude(
-	char *pDataTableName,	// Data table name (given to BEGIN_SEND_TABLE and BEGIN_RECV_TABLE).
-	char *pPropName		// Name of the property to exclude.
+	const char *pDataTableName,	// Data table name (given to BEGIN_SEND_TABLE and BEGIN_RECV_TABLE).
+	const char *pPropName		// Name of the property to exclude.
 	)
 {
 	SendProp ret;
@@ -745,6 +811,8 @@ SendProp::SendProp()
 	m_pDataTable = NULL;
 	m_ProxyFn = NULL;
 	m_pExcludeDTName = NULL;
+	m_pParentArrayPropName = NULL;
+
 	
 	m_Type = DPT_Int;
 	m_Flags = 0;
@@ -787,7 +855,7 @@ SendTable::SendTable()
 }
 
 
-SendTable::SendTable(SendProp *pProps, int nProps, char *pNetTableName)
+SendTable::SendTable(SendProp *pProps, int nProps, const char *pNetTableName)
 {
 	Construct( pProps, nProps, pNetTableName );
 }
@@ -799,7 +867,7 @@ SendTable::~SendTable()
 }
 
 
-void SendTable::Construct( SendProp *pProps, int nProps, char *pNetTableName )
+void SendTable::Construct( SendProp *pProps, int nProps, const char *pNetTableName )
 {
 	m_pProps = pProps;
 	m_nProps = nProps;

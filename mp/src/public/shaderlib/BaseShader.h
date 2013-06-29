@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,6 +18,7 @@
 #include "materialsystem/ishaderapi.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
 #include "shaderlib/BaseShader.h"
+#include "convar.h"
 
 //-----------------------------------------------------------------------------
 // Forward declarations
@@ -149,13 +150,13 @@ public:
 	CMeshBuilder* MeshBuilder();
 
 	// Loads a texture
-	void LoadTexture( int nTextureVar );
+	void LoadTexture( int nTextureVar, int nAdditionalCreationFlags = 0 );
 
 	// Loads a bumpmap
 	void LoadBumpMap( int nTextureVar );
 
 	// Loads a cubemap
-	void LoadCubeMap( int nTextureVar );
+	void LoadCubeMap( int nTextureVar, int nAdditionalCreationFlags = 0  );
 
 	// get the shaderapi handle for a texture. BE CAREFUL WITH THIS. 
 	ShaderAPITextureHandle_t GetShaderAPITextureBindHandle( int nTextureVar, int nFrameVar, int nTextureChannel = 0 );
@@ -334,6 +335,5 @@ class CBasePerMaterialContextData								// shaders can keep per material data i
 	{
 	}
 };
-
 
 #endif // BASESHADER_H

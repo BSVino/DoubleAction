@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #if defined(_WIN32) && !defined(_X360)
 #include <winsock.h>
-#elif _LINUX
+#elif POSIX
 #define INVALID_SOCKET -1
 #define SOCKET_ERROR -1
 #include <sys/types.h>
@@ -62,7 +62,7 @@ bool CBlockingUDPSocket::CreateSocket (void)
 	{
 		m_pImpl->m_SocketIP.sin_addr.S_un.S_addr = 0L;
 	}		
-#elif _LINUX
+#elif POSIX
 	if ( m_pImpl->m_SocketIP.sin_addr.s_addr == INADDR_ANY )
 	{
 		m_pImpl->m_SocketIP.sin_addr.s_addr = 0L;

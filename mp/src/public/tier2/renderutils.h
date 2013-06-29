@@ -1,4 +1,4 @@
-//===== Copyright © 2005-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A set of utilities to render standard shapes
 //
@@ -62,7 +62,8 @@ void DrawScreenSpaceRectangle( IMaterial *pMaterial,
 	int nSrcTextureWidth, int nSrcTextureHeight,		// needed for fixup
 	void *pClientRenderable = NULL,						// Used to pass to the bind proxies
 	int nXDice = 1,
-	int nYDice = 1 );
+	int nYDice = 1,
+	float fDepth = 0.0 );								// what Z value to put in the verts
 
 #endif // RENDERUTILS_H
 

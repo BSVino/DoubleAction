@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -78,7 +78,7 @@ public:
 
 	// If rect is not specified, reconstruct all bits, otherwise just
 	// reconstruct a subrect.
-	virtual void Download( Rect_t *pRect = 0 ) = 0;
+	virtual void Download( Rect_t *pRect = 0, int nAdditionalCreationFlags = 0 ) = 0;
 
 	// Uses for stats. . .get the approximate size of the texture in it's current format.
 	virtual int GetApproximateVidMemBytes( void ) const = 0;
@@ -117,6 +117,9 @@ public:
 
 	// Force LOD override (automatically downloads the texture)
 	virtual void ForceLODOverride( int iNumLodsOverrideUpOrDown ) = 0;
+
+	// Save texture to a file.
+	virtual bool SaveToFile( const char *fileName ) = 0;
 };
 
 

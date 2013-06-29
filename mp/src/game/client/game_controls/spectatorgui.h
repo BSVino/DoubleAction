@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #endif
 
 #include <vgui/IScheme.h>
-#include <vgui/keycode.h>
+#include <vgui/KeyCode.h>
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Button.h>
@@ -68,6 +68,8 @@ public:
 	virtual bool ShouldShowPlayerLabel( int specmode );
 
 	virtual Color GetBlackBarColor( void ) { return BLACK_BAR_COLOR; }
+
+	virtual const char *GetResFile( void ) { return "Resource/UI/Spectator.res"; }
 	
 protected:
 

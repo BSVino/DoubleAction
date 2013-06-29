@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,8 +16,8 @@
 
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "tier0/vprof.h"
-#include "CollisionUtils.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "collisionutils.h"
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -231,7 +231,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 
 			float s, t;
 			IntersectRayWithRay( bullet, listener, s, t );
-			t = clamp( t, 0, 1 );
+			t = clamp( t, 0.f, 1.f );
 			vecListenOrigin.z -= t * LISTENER_HEIGHT;
 		}
 		break;
@@ -278,7 +278,7 @@ void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType )
 
 		CLocalPlayerFilter filter;
 		enginesound->EmitSound(	filter, SOUND_FROM_WORLD, CHAN_STATIC, params.soundname, 
-			params.volume, SNDLVL_TO_ATTN(params.soundlevel), 0, params.pitch, &start, &shotDir, false);
+			params.volume, SNDLVL_TO_ATTN(params.soundlevel), 0, params.pitch, 0, &start, &shotDir, NULL);
 	}
 
 	// FIXME: This has a bad behavior when both bullet + strider shots are whizzing by at the same time

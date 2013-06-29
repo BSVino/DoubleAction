@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -76,6 +76,7 @@ struct ragdollparams_t
 	const matrix3x4_t *pCurrentBones;
 	float		jointFrictionScale;
 	bool		allowStretch;
+	bool		fixedConstraints;
 };
 
 //-----------------------------------------------------------------------------

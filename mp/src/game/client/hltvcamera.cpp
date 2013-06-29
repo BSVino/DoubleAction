@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "movevars_shared.h"
 #include "in_buttons.h"
 #include "text_message.h"
-#include "vgui_controls/controls.h"
+#include "vgui_controls/Controls.h"
 #include "vgui/ILocalize.h"
 #include "vguicenterprint.h"
 #include "game/client/iviewport.h"
@@ -245,7 +245,7 @@ void C_HLTVCamera::CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 		cameraAngles.y = angle.y;
 		
 		NormalizeAngles( cameraAngles );
-		cameraAngles.x = clamp( cameraAngles.x, -60, 60 );
+		cameraAngles.x = clamp( cameraAngles.x, -60.f, 60.f );
 
 		SmoothCameraAngle( cameraAngles );
 	}
@@ -551,7 +551,17 @@ void C_HLTVCamera::SetMode(int iMode)
 
     Assert( iMode > OBS_MODE_NONE && iMode <= LAST_PLAYER_OBSERVERMODE );
 
+	int iOldMode = m_nCameraMode;
 	m_nCameraMode = iMode;
+
+	IGameEvent *event = gameeventmanager->CreateEvent( "hltv_changed_mode" );
+	if ( event )
+	{
+		event->SetInt( "oldmode", iOldMode );
+		event->SetInt( "newmode", m_nCameraMode );
+		event->SetInt( "obs_target", m_iTraget1 );
+		gameeventmanager->FireEventClientSide( event );
+	}
 }
 
 void C_HLTVCamera::SetPrimaryTarget( int nEntity ) 
@@ -559,6 +569,7 @@ void C_HLTVCamera::SetPrimaryTarget( int nEntity )
  	if ( m_iTraget1 == nEntity )
 		return;
 
+	int iOldTarget = m_iTraget1;
 	m_iTraget1 = nEntity;
 
 	if ( GetMode() == OBS_MODE_ROAMING )
@@ -581,6 +592,15 @@ void C_HLTVCamera::SetPrimaryTarget( int nEntity )
 
 	m_flLastDistance = m_flDistance;
 	m_flLastAngleUpdateTime = -1;
+
+	IGameEvent *event = gameeventmanager->CreateEvent( "hltv_changed_target" );
+	if ( event )
+	{
+		event->SetInt( "mode", m_nCameraMode );
+		event->SetInt( "old_target", iOldTarget );
+		event->SetInt( "obs_target", m_iTraget1 );
+		gameeventmanager->FireEventClientSide( event );
+	}
 }
 
 void C_HLTVCamera::SpecNextPlayer( bool bInverse )
@@ -815,7 +835,7 @@ void C_HLTVCamera::SmoothCameraAngle( QAngle& targetAngle )
 	{
 		float deltaTime = gpGlobals->realtime - m_flLastAngleUpdateTime;
 
-		deltaTime = clamp( deltaTime*m_flInertia, 0.01, 1);
+		deltaTime = clamp( deltaTime*m_flInertia, 0.01f, 1.f);
 
 		InterpolateAngles( m_aCamAngle, targetAngle, m_aCamAngle, deltaTime );
 	}

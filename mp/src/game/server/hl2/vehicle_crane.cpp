@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -253,7 +253,7 @@ void CPropCrane::InitCraneSpeeds( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CPropCrane::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CPropCrane::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	if ( ptr->hitbox == VEHICLE_HITBOX_DRIVER )
 	{
@@ -526,7 +526,7 @@ void CPropCrane::DriveCrane( int iDriverButtons, int iButtonsPressed, float flNP
 			// If we're turning back on ourselves, use decel speed
 			if ( m_flTurn < 0 )
 			{
-				flTurnAdd = max( flTurnAdd, m_flTurnDecel );
+				flTurnAdd = MAX( flTurnAdd, m_flTurnDecel );
 			}
 
 			m_flTurn = UTIL_Approach( m_flMaxTurnSpeed, m_flTurn, flTurnAdd * gpGlobals->frametime );
@@ -547,7 +547,7 @@ void CPropCrane::DriveCrane( int iDriverButtons, int iButtonsPressed, float flNP
 			// If we're turning back on ourselves, increase the rate
 			if ( m_flTurn > 0 )
 			{
-				flTurnAdd = max( flTurnAdd, m_flTurnDecel );
+				flTurnAdd = MAX( flTurnAdd, m_flTurnDecel );
 			}
 			m_flTurn = UTIL_Approach( -m_flMaxTurnSpeed, m_flTurn, flTurnAdd * gpGlobals->frametime );
 		}
@@ -568,7 +568,7 @@ void CPropCrane::DriveCrane( int iDriverButtons, int iButtonsPressed, float flNP
 		float rumble;
 
 		float factor = fabs(m_flTurn) / maxTurn;
-		factor = min( factor, 1.0f );
+		factor = MIN( factor, 1.0f );
 		rumble = minRumble + (rumbleRange * factor);
 
 		m_hPlayer->RumbleEffect( RUMBLE_FLAT_BOTH, (int)(rumble * 100), RUMBLE_FLAG_UPDATE_SCALE );

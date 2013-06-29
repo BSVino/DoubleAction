@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Holds the enumerated list of default cursors
 //
@@ -36,6 +36,8 @@ enum CursorCode
 	dc_hand,
 	dc_blank, // don't show any custom vgui cursor, just let windows do it stuff (for HTML widget)
 	dc_last,
+	dc_alwaysvisible_push,
+	dc_alwaysvisible_pop,
 };
 
 typedef unsigned long HCursor;

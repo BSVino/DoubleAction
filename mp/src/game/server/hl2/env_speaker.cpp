@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -91,7 +91,7 @@ void CSpeaker::Precache( void )
 		SetNextThink( gpGlobals->curtime + random->RandomFloat(5.0, 15.0) );
 	}
 
-	if ( !m_pInstancedResponseSystem )
+	if ( !m_pInstancedResponseSystem && Q_strlen( STRING(m_iszRuleScriptFile) ) > 0 )
 	{
 		m_pInstancedResponseSystem = PrecacheCustomResponseSystem( STRING( m_iszRuleScriptFile ) );
 	}
@@ -139,7 +139,7 @@ int	CSpeaker::Restore( IRestore &restore )
 			restore.StartBlock( szResponseSystemBlockName );
 			if ( !Q_stricmp( szResponseSystemBlockName, "InstancedResponseSystem" ) )
 			{
-				if ( !m_pInstancedResponseSystem )
+				if ( !m_pInstancedResponseSystem && Q_strlen( STRING(m_iszRuleScriptFile) ) > 0 )
 				{
 					m_pInstancedResponseSystem = PrecacheCustomResponseSystem( STRING( m_iszRuleScriptFile ) );
 					if ( m_pInstancedResponseSystem )
@@ -165,7 +165,7 @@ void CSpeaker::SpeakerThink( void )
 	// Wait for the talking characters to finish first.
 	if ( !g_AIFriendliesTalkSemaphore.IsAvailable( this ) || !g_AIFoesTalkSemaphore.IsAvailable( this ) )
 	{
-		float releaseTime = max( g_AIFriendliesTalkSemaphore.GetReleaseTime(), g_AIFoesTalkSemaphore.GetReleaseTime() );
+		float releaseTime = MAX( g_AIFriendliesTalkSemaphore.GetReleaseTime(), g_AIFoesTalkSemaphore.GetReleaseTime() );
 		// Add some slop (only up to one second)
 		releaseTime += random->RandomFloat( 0, 1 );
 		SetNextThink( releaseTime );

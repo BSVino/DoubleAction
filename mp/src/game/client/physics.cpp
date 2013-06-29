@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -174,7 +174,7 @@ void PhysicsLevelInit( void )
 
 	// TODO: need to get the right factory function here
 	//physenv->SetDebugOverlay( appSystemFactory );
-	physenv->SetGravity( Vector(0, 0, -sv_gravity.GetFloat() ) );
+	physenv->SetGravity( Vector(0, 0, -GetCurrentGravity() ) );
 	// 15 ms per tick
 	// NOTE: Always run client physics at this rate - helps keep ragdolls stable
 	physenv->SetSimulationTimestep( IsXbox() ? DEFAULT_XBOX_CLIENT_VPHYSICS_TICK : DEFAULT_TICK_INTERVAL );
@@ -438,6 +438,8 @@ void CPhysicsSystem::PhysicsSimulate()
 
 	if ( physenv )
 	{
+		tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s %d", __FUNCTION__, physenv->GetActiveObjectCount() );
+
 		g_Collisions.BufferTouchEvents( true );
 #ifdef _DEBUG
 		physenv->DebugCheckContacts();

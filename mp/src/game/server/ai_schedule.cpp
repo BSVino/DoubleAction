@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Base combat character with no AI
 //
@@ -190,7 +190,7 @@ int CAI_SchedulesManager::GetGoalID( const char *token )
 //			false - if data load fails
 //-----------------------------------------------------------------------------
 
-bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, char *pStartFile, CAI_ClassScheduleIdSpace *pIdSpace )
+bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, const char *pStartFile, CAI_ClassScheduleIdSpace *pIdSpace )
 {
 	char token[1024];
 	char save_token[1024];
@@ -239,7 +239,7 @@ bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, char *pS
 		int	   taskNum = 0;
 
 		pfile = engine->ParseFile(pfile, token, sizeof( token ) );
-		while ((token[0]!=NULL) && (stricmp("Interrupts",token)))
+		while ((token[0]!='\0') && (stricmp("Interrupts",token)))
 		{
 			// Convert generic ID to sub-class specific enum
 			int taskID = CAI_BaseNPC::GetTaskID(token);
@@ -455,7 +455,7 @@ bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, char *pS
 			// Check for malformed task argument type
 			if (!stricmp(token,":"))
 			{
-				DevMsg( "ERROR: LoadSchd (%s): Schedule (%s),\n        Task (%s), has a malformed AI Task Argument = (%s)\n",
+				DevMsg( "ERROR: LoadSchd (%s): Schedule (%s),\n        Task (%d), has a malformed AI Task Argument = (%s)\n",
 						prefix,new_schedule->GetName(),taskID,save_token);
 				Assert(0);
 				return false;
@@ -477,7 +477,7 @@ bool CAI_SchedulesManager::LoadSchedulesFromBuffer( const char *prefix, char *pS
 		// Now read in the interrupts
 		// ==========================
 		pfile = engine->ParseFile(pfile, token, sizeof( token ) );
-		while ((token[0]!=NULL) && (stricmp("Schedule",token)))
+		while ((token[0]!='\0') && (stricmp("Schedule",token)))
 		{
 			// Convert generic ID to sub-class specific enum
 			int condID = CAI_BaseNPC::GetConditionID(token);

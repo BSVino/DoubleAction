@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -181,7 +181,7 @@ void ReceiveBasePortalVis( uint64 iWorkUnit, MessageBuffer *pBuf, int iWorker )
 	portal_t * p = &portals[iWorkUnit];
 	if ( p->portalflood != 0 || p->portalfront != 0 || p->portalvis != 0) 
 	{
-		Msg("Duplicate portal %d\n", iWorkUnit);
+		Msg("Duplicate portal %llu\n", iWorkUnit);
 	}
 	
 	if ( pBuf->getLen() - pBuf->getOffset() != portalbytes*2 )

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -121,7 +121,7 @@ public:
 
 	bool ReadStringTable( int numStrings, CUtlBuffer& buf );
 	
-	inline int CRunTimeKeyValuesStringTable::Count() const
+	inline int Count() const
 	{
 		return m_Strings.Count();
 	}

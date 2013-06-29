@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements an interface for reading and writing heirarchical
 //			text files of key value pairs. The format of the file is as follows:
@@ -688,9 +688,9 @@ bool CChunkFile::ReadKeyValueColor(const char *pszValue, unsigned char &chRed, u
 {
 	if (pszValue != NULL)
 	{
-		int r;
-		int g;
-		int b;
+		int r = 0;
+		int g = 0;
+		int b = 0;
 		
 		if (sscanf(pszValue, "%d %d %d", &r, &g, &b) == 3)
 		{

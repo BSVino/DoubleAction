@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2006, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,11 +7,11 @@
 #include "cbase.h"
 #endif
 #include "ep2_gamestats.h"
-#include "tier1/UtlBuffer.h"
+#include "tier1/utlbuffer.h"
 #include "vehicle_base.h"
-#include "tier1/UtlString.h"
+#include "tier1/utlstring.h"
 #include "filesystem.h"
-#include "ICommandLine.h"
+#include "icommandline.h"
 
 static CEP2GameStats s_CEP2GameStats_Singleton;
 CBaseGameStats *g_pEP2GameStats = &s_CEP2GameStats_Singleton;
@@ -461,7 +461,7 @@ void CEP2GameStats::Event_LoadGame( void )
 		return;
 
 	char name[ 512 ];
-	Q_snprintf( name, sizeof( name ), "SAVE/%s", pchSaveFile );
+	Q_snprintf( name, sizeof( name ), "save/%s", pchSaveFile );
 	Q_DefaultExtension( name, IsX360() ? ".360.sav" : ".sav", sizeof( name ) );
 	Q_FixSlashes( name );
 	Q_strlower( name );

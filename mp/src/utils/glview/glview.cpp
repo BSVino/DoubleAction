@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,7 +7,9 @@
 //=============================================================================//
 #include "glos.h"
 #include <gl/gl.h>
+#if _MSC_VER < 1600
 #include <gl/glaux.h>
+#endif
 #include <gl/glu.h>
 #include <stdarg.h>
 #include <string.h>

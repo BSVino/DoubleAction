@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #include "cbase.h"
 #include "beamdraw.h"
 #include "enginesprite.h"
-#include "IViewRender_Beams.h"
+#include "iviewrender_beams.h"
 #include "view.h"
 #include "iviewrender.h"
 #include "engine/ivmodelinfo.h"
@@ -39,7 +39,7 @@ CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, in
 	psprite = ( CEngineSprite * )modelinfo->GetModelExtraData( pSpriteModel );
 	Assert( psprite );
 
-	material = psprite->GetMaterial();
+	material = psprite->GetMaterial( (RenderMode_t)rendermode, frame );
 	if( !material )
 		return NULL;
 	
@@ -52,9 +52,6 @@ CEngineSprite *Draw_SetSpriteTexture( const model_t *pSpriteModel, int frame, in
 		return psprite;
 	}
 	
-	psprite->SetFrame( frame );
-	psprite->SetRenderMode( rendermode );
-
 	pRenderContext->Bind( material );
 	return psprite;
 }
@@ -239,7 +236,7 @@ void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 	if ( segments < 2 )
 		return;
 
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int nHDRColorScaleCache = 0;
@@ -251,7 +248,7 @@ void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 	}
 	
 	length = VectorLength( delta );
-	float flMaxWidth = max(startWidth, endWidth) * 0.5f;
+	float flMaxWidth = MAX(startWidth, endWidth) * 0.5f;
 	div = 1.0 / (segments-1);
 
 	if ( length*div < flMaxWidth * 1.414 )
@@ -323,7 +320,7 @@ void DrawSegs( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 	float fadeFraction = fadeLength/ delta.Length();
 	
 	// BUGBUG: This code generates NANs when fadeFraction is zero! REVIST!
-	fadeFraction = clamp(fadeFraction,1e-6,1);
+	fadeFraction = clamp(fadeFraction,1.e-6f,1.f);
 
 	// Choose two vectors that are perpendicular to the beam
 	Vector perp1;
@@ -493,7 +490,7 @@ void DrawTeslaSegs( int noise_divisions, float *prgNoise, const model_t* spritem
 	if ( segments < 2 )
 		return;
 	
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int nHDRColorScaleCache = 0;
@@ -525,7 +522,7 @@ void DrawTeslaSegs( int noise_divisions, float *prgNoise, const model_t* spritem
 	float fadeFraction = fadeLength/ delta.Length();
 	
 	// BUGBUG: This code generates NANs when fadeFraction is zero! REVIST!
-	fadeFraction = clamp(fadeFraction,1e-6,1);
+	fadeFraction = clamp(fadeFraction,1.e-6f,1.f);
 
 	Vector perp;
 	ComputeBeamPerpendicular( delta, &perp );
@@ -678,7 +675,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 	if ( segments < 2 )
 		return;
 	
-	IMaterial *pMaterial = pBeamSprite->GetMaterial();
+	IMaterial *pMaterial = pBeamSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int		nHDRColorScaleCache = 0;
@@ -699,7 +696,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 	}
 	
 
-	IMaterial *pBeamMaterial = pBeamSprite->GetMaterial();
+	IMaterial *pBeamMaterial = pBeamSprite->GetMaterial( (RenderMode_t)rendermode );
 	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
 	CBeamSegDraw segDraw;
 	segDraw.Start( pRenderContext, (segments-1)*(numAttachments-1), pBeamMaterial );
@@ -708,8 +705,7 @@ void DrawSplineSegs( int noise_divisions, float *prgNoise,
 	IMaterial *pHaloMaterial = NULL;
 	if ( pHaloSprite )
 	{
-		pHaloSprite->SetRenderMode( kRenderGlow );
-		pHaloMaterial = pHaloSprite->GetMaterial();
+		pHaloMaterial = pHaloSprite->GetMaterial( kRenderGlow );
 	}
 	
 	//-----------------------------------------------------------
@@ -987,7 +983,7 @@ void BeamDrawHalo( const model_t* spritemodel, float frame, int rendermode,
 	if ( !pSprite )
 		return;
 
-	DrawHalo( pSprite->GetMaterial(), source, scale, color, flHDRColorScale );
+	DrawHalo( pSprite->GetMaterial( (RenderMode_t)rendermode ), source, scale, color, flHDRColorScale );
 }
 
 //-----------------------------------------------------------------------------
@@ -1023,7 +1019,7 @@ void DrawDisk( int noise_divisions, float *prgNoise, const model_t* spritemodel,
 	if ( segments < 2 )
 		return;
 	
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		IMaterialVar *pHDRColorScaleVar = pMaterial->FindVarFast( "$hdrcolorscale", &nHDRColorScaleCache );
@@ -1120,7 +1116,7 @@ void DrawCylinder( int noise_divisions, float *prgNoise, const model_t* spritemo
 	if ( segments < 2 )
 		return;
 	
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int		nHDRColorScaleCache = 0;
@@ -1206,7 +1202,7 @@ void DrawRing( int noise_divisions, float *prgNoise, void (*pfnNoise)( float *no
 	if ( !pSprite )
 		return;
 
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int		nHDRColorScaleCache = 0;
@@ -1371,7 +1367,7 @@ void DrawBeamFollow( const model_t* spritemodel, BeamTrail_t* pHead, int frame, 
 	if ( !pSprite )
 		return;
 
-	IMaterial *pMaterial = pSprite->GetMaterial();
+	IMaterial *pMaterial = pSprite->GetMaterial( (RenderMode_t)rendermode );
 	if( pMaterial )
 	{
 		static unsigned int		nHDRColorScaleCache = 0;

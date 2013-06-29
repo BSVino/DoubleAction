@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Builds/merges the BSP tree of detail brushes
 //
@@ -103,7 +103,7 @@ bool MergeFace_r( node_t *node, face_t *face, face_t *original )
 	else
 	{
 		// UNDONE: Don't copy the faces each time unless it's necessary!?!?!
-		plane_t *plane = &mapplanes[node->planenum];
+		plane_t *plane = &g_MainMap->mapplanes[node->planenum];
 		winding_t *frontwinding, *backwinding, *onwinding;
 
 		Vector offset;
@@ -118,7 +118,7 @@ bool MergeFace_r( node_t *node, face_t *face, face_t *original )
 			assert( frontwinding == NULL );
 			assert( backwinding == NULL );
 
-			if ( DotProduct( mapplanes[face->planenum].normal, mapplanes[node->planenum].normal ) > 0 )
+			if ( DotProduct( g_MainMap->mapplanes[face->planenum].normal, g_MainMap->mapplanes[node->planenum].normal ) > 0 )
 			{
 				frontwinding = onwinding;
 			}
@@ -190,8 +190,8 @@ void TryMergeFaceList( face_t **pFaceList )
 	face_t **pPlaneList = NULL;
 
 	// divide the list into buckets by plane number
-	pPlaneList = new face_t *[nummapplanes];
-	memset( pPlaneList, 0, sizeof(face_t *) * nummapplanes );
+	pPlaneList = new face_t *[g_MainMap->nummapplanes];
+	memset( pPlaneList, 0, sizeof(face_t *) * g_MainMap->nummapplanes );
 
 	face_t *pFaces = *pFaceList;
 	face_t *pOutput = NULL;
@@ -217,7 +217,7 @@ void TryMergeFaceList( face_t **pFaceList )
 
 	// now merge each plane's list of faces
 	int merged = 0;
-	for ( int i = 0; i < nummapplanes; i++ )
+	for ( int i = 0; i < g_MainMap->nummapplanes; i++ )
 	{
 		if ( pPlaneList[i] )
 		{
@@ -278,7 +278,7 @@ face_t *MergeDetailTree( tree_t *worldtree, int brush_start, int brush_end )
 	face_t		*pLeafFaceList = NULL;
 
 	// Grab the list of detail brushes
-	detailbrushes = MakeBspBrushList (brush_start, brush_end, map_mins, map_maxs, ONLY_DETAIL );
+	detailbrushes = MakeBspBrushList (brush_start, brush_end, g_MainMap->map_mins, g_MainMap->map_maxs, ONLY_DETAIL );
 	if (detailbrushes)
 	{
 		start = Plat_FloatTime();
@@ -370,7 +370,7 @@ bool ClipFaceToBrush( face_t *pFace, bspbrush_t *pbrush, face_t **pOutputList )
 			if ( pbrush->sides[i].bevel )
 				continue;
 
-			if ( mapplanes[pbrush->sides[i].planenum].type <= PLANE_Z )
+			if ( g_MainMap->mapplanes[pbrush->sides[i].planenum].type <= PLANE_Z )
 			{
 				sortedSides.AddToHead( i );
 			}
@@ -386,7 +386,7 @@ bool ClipFaceToBrush( face_t *pFace, bspbrush_t *pbrush, face_t **pOutputList )
 			if ( index == foundSide )
 				continue;
 			
-			plane_t *plane = &mapplanes[pbrush->sides[index].planenum];
+			plane_t *plane = &g_MainMap->mapplanes[pbrush->sides[index].planenum];
 			winding_t *frontwinding, *backwinding;
 			ClipWindingEpsilon_Offset(currentface->w, plane->normal, plane->dist, 0.001, &frontwinding, &backwinding, offset);
 			
@@ -469,7 +469,7 @@ side_t *FindOriginalSide( mapbrush_t *mb, side_t *pBspSide )
 	side_t *bestside = NULL;
 	float bestdot = 0;
 
-	plane_t *p1 = mapplanes + pBspSide->planenum;
+	plane_t *p1 = g_MainMap->mapplanes + pBspSide->planenum;
 
 	for (int i=0 ; i<mb->numsides ; i++)
 	{
@@ -483,7 +483,7 @@ side_t *FindOriginalSide( mapbrush_t *mb, side_t *pBspSide )
 			return mb->original_sides + i;
 		}
 		// see how close the match is
-		plane_t *p2 = &mapplanes[side->planenum&~1];
+		plane_t *p2 = &g_MainMap->mapplanes[side->planenum&~1];
 		float dot = DotProduct (p1->normal, p2->normal);
 		if (dot > bestdot)
 		{

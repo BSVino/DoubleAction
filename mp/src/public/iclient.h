@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,7 +23,7 @@ public:
 	virtual	~IClient() {}
 
 	// connect client
-	virtual void	Connect(const char * szName, int nUserID, INetChannel *pNetChannel, bool bFakePlayer) = 0;
+	virtual void	Connect(const char * szName, int nUserID, INetChannel *pNetChannel, bool bFakePlayer, int clientChallenge ) = 0;
 
 	// set the client in a pending state waiting for a new game
 	virtual void	Inactivate( void ) = 0;
@@ -32,7 +32,7 @@ public:
 	virtual	void	Reconnect( void ) = 0;				// froce reconnect
 
 	// disconnects a client with a given reason
-	virtual void	Disconnect( const char *reason, ... ) = 0;
+	virtual void	Disconnect( PRINTF_FORMAT_STRING const char *reason, ... ) = 0;
 
 	virtual int				GetPlayerSlot() const = 0; // returns client slot (usually entity number-1)
 	virtual int				GetUserID() const = 0; // unique ID on this server 
@@ -62,7 +62,7 @@ public:
 	// send client a network message
 	virtual bool	SendNetMsg(INetMessage &msg, bool bForceReliable = false) = 0;
 	// send client a text message
-	virtual void	ClientPrintf (const char *fmt, ...) = 0;
+	virtual void	ClientPrintf (PRINTF_FORMAT_STRING const char *fmt, ...) = 0;
 
 		// client has established network channels, nothing else
 	virtual bool	IsConnected( void ) const = 0;
@@ -74,6 +74,13 @@ public:
 	virtual bool	IsFakeClient( void ) const = 0;
 	// returns true, if client is a HLTV proxy
 	virtual bool	IsHLTV( void ) const = 0;
+#if defined( REPLAY_ENABLED )
+	// returns true, if client is a Replay proxy
+	virtual bool	IsReplay( void ) const = 0;
+#else
+	// !KLUDGE! Reduce number of #ifdefs required
+	inline bool		IsReplay( void ) const { return false; }
+#endif
 	// returns true, if client hears this player
 	virtual bool	IsHearingClient(int index) const = 0;
 	// returns true, if client hears this player by proximity

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 
 #include "vgui_controls/Panel.h"
 #include "datacache/imdlcache.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 #include "matsys_controls/potterywheelpanel.h"
 #include "tier3/mdlutils.h"
 
@@ -27,6 +27,12 @@ namespace vgui
 	class IScheme;
 }
 
+// 
+struct MDLAnimEventState_t
+{
+	int		m_nEventSequence;
+	float	m_flPrevEventCycle;
+};
 
 //-----------------------------------------------------------------------------
 // MDL Viewer Panel
@@ -46,14 +52,24 @@ public:
 	virtual void OnTick();
 
 	// Sets the current mdl
-	virtual void SetMDL( MDLHandle_t handle );
-	virtual void SetMDL( const char *pMDLName );
+	virtual void SetMDL( MDLHandle_t handle, void *pProxyData = NULL );
+	virtual void SetMDL( const char *pMDLName, void *pProxyData = NULL );
 
 	// Sets the camera to look at the model
 	void LookAtMDL( );
 
+	// Sets the current LOD
+	void SetLOD( int nLOD );
+
 	// Sets the current sequence
 	void SetSequence( int nSequence );
+
+	// Set the pose parameters
+	void SetPoseParameters( const float *pPoseParameters, int nCount );
+	bool SetPoseParameterByName( const char *pszName, float fValue );
+
+	// Set the overlay sequence layers
+	void SetSequenceLayers( const MDLSquenceLayer_t *pSequenceLayers, int nCount );
 
 	void SetCollsionModel( bool bVisible );
 	void SetGroundGrid( bool bVisible );
@@ -61,18 +77,29 @@ public:
 	void SetLockView( bool bLocked );
 	void SetSkin( int nSkin );
 	void SetLookAtCamera( bool bLookAtCamera );
+	void SetIgnoreDoubleClick( bool bState );
 
 	// Bounds.
 	bool GetBoundingBox( Vector &vecBoundsMin, Vector &vecBoundsMax );
 	bool GetBoundingSphere( Vector &vecCenter, float &flRadius );
 
-	void SetModelAnglesAndPosition( const QAngle &angRot, const Vector &vecPos );
+	virtual void SetModelAnglesAndPosition( const QAngle &angRot, const Vector &vecPos );
 
 	// Attached models.
-	void	SetMergeMDL( MDLHandle_t handle );
-	void	SetMergeMDL( const char *pMDLName );
+	void	SetMergeMDL( MDLHandle_t handle, void *pProxyData = NULL, int nSkin = -1 );
+	MDLHandle_t SetMergeMDL( const char *pMDLName, void *pProxyData = NULL, int nSkin = -1 );
+	int		GetMergeMDLIndex( void *pProxyData );
 	int		GetMergeMDLIndex( MDLHandle_t handle );
+	CMDL	*GetMergeMDL(MDLHandle_t handle );
 	void	ClearMergeMDLs( void );
+
+	virtual void	SetupFlexWeights( void ) { return; }
+
+	// Events
+	void DoAnimationEvents();
+	void DoAnimationEvents( CStudioHdr *pStudioHdr, int nSeqNum, float flTime, bool bNoLoop, MDLAnimEventState_t *pEventState );
+	virtual void FireEvent( const char *pszEventName, const char *pszEventOptions ) { }
+	void ResetAnimationEventState( MDLAnimEventState_t *pEventState );
 
 protected:
 
@@ -80,14 +107,26 @@ protected:
 	{
 		CMDL		m_MDL;
 		matrix3x4_t	m_MDLToWorld;
+		bool		m_bDisabled;
 	};
 
 	MDLData_t				m_RootMDL;
 	CUtlVector<MDLData_t>	m_aMergeMDLs;
 
+	static const int MAX_SEQUENCE_LAYERS = 8;
+	int					m_nNumSequenceLayers;
+	MDLSquenceLayer_t	m_SequenceLayers[ MAX_SEQUENCE_LAYERS ];
+
+	MDLAnimEventState_t	m_EventState;
+	MDLAnimEventState_t	m_SequenceLayerEventState[ MAX_SEQUENCE_LAYERS ];
+
 private:
 	// paint it!
 	void OnPaint3D();
+	virtual void PrePaint3D( IMatRenderContext *pRenderContext ) { };
+	virtual void PostPaint3D( IMatRenderContext *pRenderContext ) { };
+	virtual void RenderingMergedModel( IMatRenderContext *pRenderContext, CStudioHdr *pStudioHdr, MDLHandle_t mdlHandle, matrix3x4_t *pWorldMatrix ) { };
+
 	void OnMouseDoublePressed( vgui::MouseCode code );
 
 	void DrawCollisionModel();
@@ -101,6 +140,9 @@ private:
 	bool	m_bLockView : 1;
 	bool	m_bWireFrame : 1;
 	bool	m_bLookAtCamera : 1;
+	bool	m_bIgnoreDoubleClick : 1;
+
+	float	m_PoseParameters[ MAXSTUDIOPOSEPARAM ];
 };
 
 

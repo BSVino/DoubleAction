@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,14 @@
 #include "vgui_controls/Controls.h"
 #include "vgui_controls/Panel.h"
 #include "vgui/ISurface.h"
+#include "../hud_crosshair.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
+
+#ifdef SIXENSE
+#include "sixense/in_sixense.h"
+#include "view.h"
+int ScreenTransform( const Vector& point, Vector& screen );
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -97,6 +105,7 @@ void CHUDQuickInfo::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings( scheme );
 
 	SetPaintBackgroundEnabled( false );
+	SetForceStereoRenderToFrameBuffer( true );
 }
 
 
@@ -238,8 +247,17 @@ void CHUDQuickInfo::Paint()
 	if ( pWeapon == NULL )
 		return;
 
-	int		xCenter	= ( ScreenWidth() - m_icon_c->Width() ) / 2;
-	int		yCenter = ( ScreenHeight() - m_icon_c->Height() ) / 2;
+	float fX, fY;
+	bool bBehindCamera = false;
+	CHudCrosshair::GetDrawPosition( &fX, &fY, &bBehindCamera );
+
+	// if the crosshair is behind the camera, don't draw it
+	if( bBehindCamera )
+		return;
+
+	int		xCenter	= (int)fX;
+	int		yCenter = (int)fY - m_icon_lb->Height() / 2;
+
 	float	scalar  = 138.0f/255.0f;
 	
 	// Check our health for a warning
@@ -297,10 +315,6 @@ void CHUDQuickInfo::Paint()
 	Color clrNormal = gHUD.m_clrNormal;
 	clrNormal[3] = 255 * scalar;
 	m_icon_c->DrawSelf( xCenter, yCenter, clrNormal );
-
-	// adjust center for the bigger crosshairs
-	xCenter	= ScreenWidth() / 2;
-	yCenter = ( ScreenHeight() - m_icon_lb->Height() ) / 2;
 
 	if( IsX360() )
 	{

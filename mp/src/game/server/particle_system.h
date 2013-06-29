@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -21,6 +21,8 @@ class CParticleSystem : public CBaseEntity
 public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
+
+	CParticleSystem();
 
 	virtual void Precache( void );
 	virtual void Spawn( void );
@@ -51,6 +53,7 @@ protected:
 	string_t			m_iszControlPointNames[kMAXCONTROLPOINTS];
 	CNetworkArray( EHANDLE, m_hControlPointEnts, kMAXCONTROLPOINTS );
 	CNetworkArray( unsigned char, m_iControlPointParents, kMAXCONTROLPOINTS );
+	CNetworkVar( bool,	m_bWeatherEffect );
 };
 
 #endif // PARTICLE_SYSTEM_H

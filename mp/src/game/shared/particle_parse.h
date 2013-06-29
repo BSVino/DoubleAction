@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,6 +12,7 @@
 
 #include "utlvector.h"
 #include "utlstring.h"
+#include "ifilelist.h"
 
 //-----------------------------------------------------------------------------
 // Particle attachment methods
@@ -26,6 +27,8 @@ enum ParticleAttachment_t
 
 	PATTACH_WORLDORIGIN,			// Used for control points that don't attach to an entity
 
+	PATTACH_ROOTBONE_FOLLOW,		// Create at the root bone of the entity, and update to follow
+
 	MAX_PATTACH_TYPES,
 };
 
@@ -34,13 +37,25 @@ extern int GetAttachTypeFromString( const char *pszString );
 #define PARTICLE_DISPATCH_FROM_ENTITY		(1<<0)
 #define PARTICLE_DISPATCH_RESET_PARTICLES	(1<<1)
 
+struct te_tf_particle_effects_colors_t
+{
+	Vector m_vecColor1;
+	Vector m_vecColor2;
+};
+
+struct te_tf_particle_effects_control_point_t
+{
+	ParticleAttachment_t m_eParticleAttachment;
+	Vector m_vecOffset;
+};
+
 //-----------------------------------------------------------------------------
 // Particle parsing methods
 //-----------------------------------------------------------------------------
 // Parse the particle manifest file & register the effects within it
 // Only needs to be called once per game, unless tools change particle definitions
-void ParseParticleEffects( bool bLoadSheets );
-void ParseParticleEffectsMap( const char *pMapName, bool bLoadSheets ); //Tony; added for parsing map specific manifests.
+void ParseParticleEffects( bool bLoadSheets, bool bPrecache );
+void ParseParticleEffectsMap( const char *pMapName, bool bLoadSheets, IFileList *pFilesToReload = NULL ); 
 
 // Get a list of the files inside the particle manifest file
 void GetParticleManifest( CUtlVector<CUtlString>& list );
@@ -48,6 +63,9 @@ void GetParticleManifest( CUtlVector<CUtlString>& list );
 // Precaches standard particle systems (only necessary on server)
 // Should be called once per level
 void PrecacheStandardParticleSystems( );
+
+class IFileList;
+void ReloadParticleEffectsInList( IFileList *pFilesToReload );
 
 //-----------------------------------------------------------------------------
 // Particle spawning methods
@@ -57,6 +75,11 @@ void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t i
 void DispatchParticleEffect( const char *pszParticleName, Vector vecOrigin, QAngle vecAngles, CBaseEntity *pEntity = NULL );
 void DispatchParticleEffect( const char *pszParticleName, Vector vecOrigin, Vector vecStart, QAngle vecAngles, CBaseEntity *pEntity = NULL );
 void DispatchParticleEffect( int iEffectIndex, Vector vecOrigin, Vector vecStart, QAngle vecAngles, CBaseEntity *pEntity = NULL );
+
+void DispatchParticleEffect( const char *pszParticleName, ParticleAttachment_t iAttachType, CBaseEntity *pEntity, const char *pszAttachmentName, Vector vecColor1, Vector vecColor2, bool bUseColors=true, bool bResetAllParticlesOnEntity = false );
+void DispatchParticleEffect( const char *pszParticleName, Vector vecOrigin, QAngle vecAngles, Vector vecColor1, Vector vecColor2, bool bUseColors=true, CBaseEntity *pEntity = NULL, int iAttachType = PATTACH_CUSTOMORIGIN );
+
+
 void StopParticleEffects( CBaseEntity *pEntity );
 
 

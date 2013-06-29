@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 #include <utlqueue.h> // a vector based queue template to manage our VGUI menu queue
 #include <vgui_controls/Frame.h>
 #include "vguitextwindow.h"
-#include "vgui/isurface.h"
+#include "vgui/ISurface.h"
 #include "commandmenu.h"
 #include <igameevents.h>
 
@@ -115,7 +115,7 @@ protected:
 		virtual void OnMousePressed(MouseCode code) { }// don't respond to mouse clicks
 		virtual vgui::VPANEL IsWithinTraverse( int x, int y, bool traversePopups )
 		{
-			return NULL;
+			return ( vgui::VPANEL )0;
 		}
 
 	};

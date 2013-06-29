@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics simulation for non-havok/ipion objects
 //
@@ -11,7 +11,7 @@
 #include "typeinfo.h"
 // BUGBUG: typeinfo stomps some of the warning settings (in yvals.h)
 #pragma warning(disable:4244)
-#elif _LINUX
+#elif POSIX
 #include <typeinfo>
 #else
 #error "need typeinfo defined"
@@ -294,7 +294,10 @@ bool CPhysicsPushedEntities::SpeculativelyCheckPush( PhysicsPushedInfo_t &info, 
 				return true;
 		}
 		pBlocker->SetAbsOrigin( pushDestPosition );
+
+#ifndef TF_DLL
 		DevMsg(1, "Ignoring player blocking train!\n");
+#endif
 		return true;
 	}
 	return false;
@@ -783,6 +786,7 @@ void CPhysicsPushedEntities::RotateRootEntity( CBaseEntity *pRoot, float movetim
 	// rotate the pusher to it's final position
 	QAngle angles = pRoot->GetLocalAngles();
 	angles += pRoot->GetLocalAngularVelocity() * movetime;
+
 	pRoot->SetLocalAngles( angles );
 	
 	// Compute the change in absangles
@@ -958,7 +962,7 @@ void CBaseEntity::PhysicsDispatchThink( BASEPTR thinkFunc )
 			{
 #ifdef _WIN32
 				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).raw_name(), time );
-#elif _LINUX
+#elif POSIX
 				Msg( "%s(%s) thinking for %.02f ms!!!\n", GetClassname(), typeid(this).name(), time );
 #else
 #error "typeinfo"
@@ -1189,7 +1193,7 @@ void CBaseEntity::PhysicsAddHalfGravity( float timestep )
 
 	// Add 1/2 of the total gravitational effects over this timestep
 	Vector vecAbsVelocity = GetAbsVelocity();
-	vecAbsVelocity[2] -= ( 0.5 * ent_gravity * sv_gravity.GetFloat() * timestep );
+	vecAbsVelocity[2] -= ( 0.5 * ent_gravity * GetCurrentGravity() * timestep );
 	vecAbsVelocity[2] += GetBaseVelocity()[2] * gpGlobals->frametime;
 	SetAbsVelocity( vecAbsVelocity );
 
@@ -1858,7 +1862,7 @@ void CBaseEntity::PhysicsStepRunTimestep( float timestep )
 		{
 			if ( !( ( GetFlags() & FL_SWIM ) && ( GetWaterLevel() > 0 ) ) )
 			{
-				if ( GetAbsVelocity()[2] < ( sv_gravity.GetFloat() * -0.1 ) )
+				if ( GetAbsVelocity()[2] < ( GetCurrentGravity() * -0.1 ) )
 				{
 					hitsound = true;
 				}
@@ -2042,7 +2046,7 @@ void Physics_RunThinkFunctions( bool simulating )
 	{
 		UTIL_DisableRemoveImmediate();
 		int listMax = SimThink_ListCount();
-		listMax = max(listMax,1);
+		listMax = MAX(listMax,1);
 		CBaseEntity **list = (CBaseEntity **)stackalloc( sizeof(CBaseEntity *) * listMax );
 		// iterate through all entities and have them think or simulate
 		

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Has init functions for all the standard render targets used by most games.
 //			Mods who wish to make their own render targets can inherit from this class
@@ -22,7 +22,7 @@
 #endif
 
 #include "game/client/iclientrendertargets.h"		// base class with interfaces called by the engine
-#include "materialsystem\imaterialsystem.h"		// for material system classes and interfaces
+#include "materialsystem/imaterialsystem.h"		// for material system classes and interfaces
 
 
 // Externs
@@ -50,6 +50,9 @@ protected:
 
 	// Used for monitors
 	CTextureReference		m_CameraTexture;
+
+	// Used for the HUD in stereo and head tracking mode
+	CTextureReference		m_UITexture;
 
 	// Init functions for the common render targets
 	ITexture* CreateWaterReflectionTexture( IMaterialSystem* pMaterialSystem, int iSize = 1024 );

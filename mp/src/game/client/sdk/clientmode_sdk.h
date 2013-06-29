@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,7 +25,6 @@ public:
 					ClientModeSDKNormal();
 	virtual			~ClientModeSDKNormal();
 
-	virtual void	Init();
 	virtual void	InitViewport();
 
 	virtual float	GetViewModelFOV( void );
@@ -33,8 +32,6 @@ public:
 	int				GetDeathMessageStartHeight( void );
 
 	virtual void	PostRenderVGui();
-
-	virtual bool	CanRecordDemo( char *errorMsg, int length ) const;
 
 	virtual void	OverrideView( CViewSetup *pSetup );
 	virtual void	OverrideMouseInput( float *x, float *y );

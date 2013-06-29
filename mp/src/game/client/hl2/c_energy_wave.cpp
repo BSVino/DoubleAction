@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client's energy wave
 //
@@ -11,11 +11,11 @@
 // $NoKeywords: $
 //=============================================================================//
 #include "cbase.h"
-#include "materialsystem/IMaterialSystem.h"
-#include "materialsystem/IMesh.h"
+#include "materialsystem/imaterialsystem.h"
+#include "materialsystem/imesh.h"
 #include "energy_wave_effect.h"
-#include "mathlib/VMatrix.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "mathlib/vmatrix.h"
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

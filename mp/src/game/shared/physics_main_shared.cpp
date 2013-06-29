@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,8 +27,8 @@
 #include "tier0/memdbgon.h"
 
 // memory pool for storing links between entities
-static CMemoryPool g_EdictTouchLinks( sizeof(touchlink_t), MAX_EDICTS, CMemoryPool::GROW_NONE, "g_EdictTouchLinks");
-static CMemoryPool g_EntityGroundLinks( sizeof( groundlink_t ), MAX_EDICTS, CMemoryPool::GROW_NONE, "g_EntityGroundLinks");
+static CUtlMemoryPool g_EdictTouchLinks( sizeof(touchlink_t), MAX_EDICTS, CUtlMemoryPool::GROW_NONE, "g_EdictTouchLinks");
+static CUtlMemoryPool g_EntityGroundLinks( sizeof( groundlink_t ), MAX_EDICTS, CUtlMemoryPool::GROW_NONE, "g_EntityGroundLinks");
 
 struct watcher_t
 {
@@ -129,7 +129,8 @@ public:
 
 	CDataObjectAccessSystem()
 	{
-		COMPILE_TIME_ASSERT( NUM_DATAOBJECT_TYPES <= MAX_ACCESSORS );
+		// Cast to int to make it clear that we know we are comparing different enum types.
+		COMPILE_TIME_ASSERT( (int)NUM_DATAOBJECT_TYPES <= (int)MAX_ACCESSORS );
 
 		Q_memset( m_Accessors, 0, sizeof( m_Accessors ) );
 	}
@@ -139,7 +140,7 @@ public:
 		AddDataAccessor( TOUCHLINK, new CEntityDataInstantiator< touchlink_t > );
 		AddDataAccessor( GROUNDLINK, new CEntityDataInstantiator< groundlink_t > );
 		AddDataAccessor( STEPSIMULATION, new CEntityDataInstantiator< StepSimulationData > );
-		AddDataAccessor( MODELWIDTHSCALE, new CEntityDataInstantiator< ModelWidthScale > );
+		AddDataAccessor( MODELSCALE, new CEntityDataInstantiator< ModelScale > );
 		AddDataAccessor( POSITIONWATCHER, new CEntityDataInstantiator< CWatcherList > );
 		AddDataAccessor( PHYSICSPUSHLIST, new CEntityDataInstantiator< physicspushlist_t > );
 		AddDataAccessor( VPHYSICSUPDATEAI, new CEntityDataInstantiator< vphysicsupdateai_t > );
@@ -490,7 +491,7 @@ static inline float GetActualGravity( CBaseEntity *pEnt )
 		ent_gravity = 1.0f;
 	}
 
-	return ent_gravity * sv_gravity.GetFloat();
+	return ent_gravity * GetCurrentGravity();
 }
 
 
@@ -536,6 +537,12 @@ inline void FreeTouchLink( touchlink_t *link )
 	g_EdictTouchLinks.Free( link );
 }
 
+#ifdef STAGING_ONLY
+#ifndef CLIENT_DLL
+ConVar sv_groundlink_debug( "sv_groundlink_debug", "0", FCVAR_NONE, "Enable logging of alloc/free operations for debugging." );
+#endif
+#endif // STAGING_ONLY
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Output : inline groundlink_t
@@ -549,8 +556,17 @@ inline groundlink_t *AllocGroundLink( void )
 	}
 	else
 	{
-		DevMsg( "AllocGroundLink: failed to allocate groundlink_t.!!!\n" );
+		DevMsg( "AllocGroundLink: failed to allocate groundlink_t.!!!  groundlinksallocated=%d g_EntityGroundLinks.Count()=%d\n", groundlinksallocated, g_EntityGroundLinks.Count() );
 	}
+
+#ifdef STAGING_ONLY
+#ifndef CLIENT_DLL
+	if ( sv_groundlink_debug.GetBool() )
+	{
+		UTIL_LogPrintf( "Groundlink Alloc: %p at %d\n", link, groundlinksallocated );
+	}
+#endif
+#endif // STAGING_ONLY
 
 	return link;
 }
@@ -562,6 +578,15 @@ inline groundlink_t *AllocGroundLink( void )
 //-----------------------------------------------------------------------------
 inline void FreeGroundLink( groundlink_t *link )
 {
+#ifdef STAGING_ONLY
+#ifndef CLIENT_DLL
+	if ( sv_groundlink_debug.GetBool() )
+	{
+		UTIL_LogPrintf( "Groundlink Free: %p at %d\n", link, groundlinksallocated );
+	}
+#endif
+#endif // STAGING_ONLY
+
 	if ( link )
 	{
 		--groundlinksallocated;
@@ -704,7 +729,7 @@ void CBaseEntity::PhysicsRemoveToucher( CBaseEntity *otherEntity, touchlink_t *l
 	link->prevLink->nextLink = link->nextLink;
 
 	if ( DebugTouchlinks() )
-		Msg( "remove 0x%x: %s-%s (%d-%d) [%d in play, %d max]\n", link, link->entityTouched->GetDebugName(), otherEntity->GetDebugName(), link->entityTouched->entindex(), otherEntity->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
+		Msg( "remove 0x%p: %s-%s (%d-%d) [%d in play, %d max]\n", link, link->entityTouched->GetDebugName(), otherEntity->GetDebugName(), link->entityTouched->entindex(), otherEntity->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
 	FreeTouchLink( link );
 }
 
@@ -734,7 +759,7 @@ void CBaseEntity::PhysicsRemoveTouchedList( CBaseEntity *ent )
 
 			// kill it
 			if ( DebugTouchlinks() )
-				Msg( "remove 0x%x: %s-%s (%d-%d) [%d in play, %d max]\n", link, ent->GetDebugName(), link->entityTouched->GetDebugName(), ent->entindex(), link->entityTouched->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
+				Msg( "remove 0x%p: %s-%s (%d-%d) [%d in play, %d max]\n", link, ent->GetDebugName(), link->entityTouched->GetDebugName(), ent->entindex(), link->entityTouched->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
 			FreeTouchLink( link );
 			link = nextLink;
 		}
@@ -1008,7 +1033,7 @@ touchlink_t *CBaseEntity::PhysicsMarkEntityAsTouched( CBaseEntity *other )
 	// build new link
 	link = AllocTouchLink();
 	if ( DebugTouchlinks() )
-		Msg( "add 0x%x: %s-%s (%d-%d) [%d in play, %d max]\n", link, GetDebugName(), other->GetDebugName(), entindex(), other->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
+		Msg( "add 0x%p: %s-%s (%d-%d) [%d in play, %d max]\n", link, GetDebugName(), other->GetDebugName(), entindex(), other->entindex(), linksallocated, g_EdictTouchLinks.PeakCount() );
 	if ( !link )
 		return NULL;
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 
 #include "vbsp.h"
 #include "disp_vbsp.h"
-#include "UtlVector.h"
+#include "utlvector.h"
 #include "faces.h"
 #include "builddisp.h"
 #include "tier1/strtools.h"
@@ -50,8 +50,8 @@ void EmitPlanes (void)
 	plane_t		*mp;
 	int		planetranslate[MAX_MAP_PLANES];
 
-	mp = mapplanes;
-	for (i=0 ; i<nummapplanes ; i++, mp++)
+	mp = g_MainMap->mapplanes;
+	for (i=0 ; i<g_MainMap->nummapplanes ; i++, mp++)
 	{
 		dp = &dplanes[numplanes];
 		planetranslate[i] = numplanes;
@@ -160,7 +160,7 @@ void EmitLeaf (node_t *node)
 		if (numleafbrushes >= MAX_MAP_LEAFBRUSHES)
 			Error ("Too many brushes in one leaf, max = %d", MAX_MAP_LEAFBRUSHES);
 
-		brushnum = b->original - mapbrushes;
+		brushnum = b->original - g_MainMap->mapbrushes;
 		for (i=leaf_p->firstleafbrush ; i<numleafbrushes ; i++)
 		{
 			if (dleafbrushes[i] == brushnum)
@@ -1053,11 +1053,11 @@ void EmitBrushes (void)
 	int			    planenum;
 
 	numbrushsides = 0;
-	numbrushes = nummapbrushes;
+	numbrushes = g_MainMap->nummapbrushes;
 
-	for (bnum=0 ; bnum<nummapbrushes ; bnum++)
+	for (bnum=0 ; bnum<g_MainMap->nummapbrushes ; bnum++)
 	{
-		b = &mapbrushes[bnum];
+		b = &g_MainMap->mapbrushes[bnum];
 		db = &dbrushes[bnum];
 
 		db->contents = b->contents;
@@ -1073,7 +1073,7 @@ void EmitBrushes (void)
 			cp->texinfo = b->original_sides[j].texinfo;
 			if ( cp->texinfo == -1 )
 			{
-				cp->texinfo = g_ClipTexinfo;
+				cp->texinfo = g_MainMap->g_ClipTexinfo;
 			}
 			cp->bevel = b->original_sides[j].bevel;
 		}
@@ -1089,7 +1089,7 @@ void EmitBrushes (void)
 					dist = -b->mins[x];
 				else
 					dist = b->maxs[x];
-				planenum = FindFloatPlane (normal, dist);
+				planenum = g_MainMap->FindFloatPlane (normal, dist);
 				for (i=0 ; i<b->numsides ; i++)
 					if (b->original_sides[i].planenum == planenum)
 						break;
@@ -1221,7 +1221,7 @@ void EnsurePresenceOfWaterLODControlEntity( void )
 	entity_t *mapent = &entities[num_entities];
 	num_entities++;
 	memset(mapent, 0, sizeof(*mapent));
-	mapent->firstbrush = nummapbrushes;
+	mapent->firstbrush = g_MainMap->nummapbrushes;
 	mapent->numbrushes = 0;
 
 	SetKeyValue( mapent, "classname", "water_lod_control" );
@@ -1327,7 +1327,7 @@ void BeginModel (void)
 
 	for (j=start ; j<end ; j++)
 	{
-		b = &mapbrushes[j];
+		b = &g_MainMap->mapbrushes[j];
 		if (!b->numsides)
 			continue;	// not a real brush (origin brush)
 		AddPointToBounds (b->mins, mins, maxs);

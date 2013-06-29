@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -148,8 +148,8 @@ public:
 	// This specifies the directory where gameinfo.txt is. This must be set.
 	const char		*m_pDirectoryName;
 
-	// If this is set, then it will add a search path with _<language> appended to the pathname
-	// for each search path with a path ID of "game".
+	// If this is set, then any search paths with a _english will be replaced with _m_pLanguage and added before the
+	// _english path
 	// (default: null)
 	const char		*m_pLanguage;
 

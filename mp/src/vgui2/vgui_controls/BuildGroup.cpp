@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -79,9 +79,6 @@ BuildGroup::BuildGroup(Panel *parentPanel, Panel *contextPanel)
 	for (int i=0; i<4; ++i)
 		_rulerNumber[i] = NULL;
 	SetContextPanel(contextPanel);
-	_controlGroup = NULL;
-	_groupDeltaX = 0;
-	_groupDeltaX = 0;
 	_showRulers = false;
 
 }
@@ -677,7 +674,7 @@ bool BuildGroup::KeyCodeTyped(KeyCode code, Panel *panel)
 		ApplySnap(panel);
 
 		panel->Repaint();
-		if (panel->GetVParent() != NULL)
+		if (panel->GetVParent() != 0)
 		{
 			panel->PostMessage(panel->GetVParent(), new KeyValues("Repaint"));
 		}
@@ -870,7 +867,7 @@ void BuildGroup::PanelAdded(Panel *panel)
 //-----------------------------------------------------------------------------
 // Purpose: loads the control settings from file
 //-----------------------------------------------------------------------------
-void BuildGroup::LoadControlSettings(const char *controlResourceName, const char *pathID, KeyValues *pPreloadedKeyValues)
+void BuildGroup::LoadControlSettings(const char *controlResourceName, const char *pathID, KeyValues *pPreloadedKeyValues, KeyValues *pConditions)
 {
 	// make sure the file is registered
 	RegisterControlSettingsFile(controlResourceName, pathID);
@@ -907,6 +904,11 @@ void BuildGroup::LoadControlSettings(const char *controlResourceName, const char
 					rDat->ProcessResolutionKeys( "_minmode" );
 				}
 			}
+
+			if ( pConditions && pConditions->GetFirstSubKey() )
+			{
+				ProcessConditionalKeys( rDat, pConditions );			
+			}
 		}
 	}
 
@@ -937,6 +939,52 @@ void BuildGroup::LoadControlSettings(const char *controlResourceName, const char
 	if ( rDat != pPreloadedKeyValues )
 	{
 		rDat->deleteThis();
+	}
+}
+
+void BuildGroup::ProcessConditionalKeys( KeyValues *pData, KeyValues *pConditions )
+{
+	// for each condition, look for it in keys
+	// if its a positive condition, promote all of its children, replacing values
+
+	if ( pData )
+	{
+		KeyValues *pSubKey = pData->GetFirstSubKey();
+		if ( !pSubKey )
+		{
+			// not a block
+			return;
+		}
+
+		for ( ; pSubKey != NULL; pSubKey = pSubKey->GetNextKey() )
+		{
+			// recursively descend each sub block
+			ProcessConditionalKeys( pSubKey, pConditions );
+
+			KeyValues *pCondition = pConditions->GetFirstSubKey();
+			for ( ; pCondition != NULL; pCondition = pCondition->GetNextKey() )
+			{
+				// if we match any conditions in this sub block, copy up
+				KeyValues *pConditionBlock = pSubKey->FindKey( pCondition->GetName() );
+				if ( pConditionBlock )
+				{
+					KeyValues *pOverridingKey;
+					for ( pOverridingKey = pConditionBlock->GetFirstSubKey(); pOverridingKey != NULL; pOverridingKey = pOverridingKey->GetNextKey() )
+					{
+						KeyValues *pExistingKey = pSubKey->FindKey( pOverridingKey->GetName() );
+						if ( pExistingKey )
+						{
+							pExistingKey->SetStringValue( pOverridingKey->GetString() );
+						}
+						else
+						{
+							KeyValues *copy = pOverridingKey->MakeCopy();
+							pSubKey->AddSubKey( copy );
+						}
+					}				
+				}
+			}			
+		}		
 	}
 }
 
@@ -1209,6 +1257,7 @@ Panel *BuildGroup::NewControl( KeyValues *controlKeys, int x, int y)
 	Panel *newPanel = NULL;
 	if (controlKeys)
 	{
+//		Warning( "Creating new control \"%s\" of type \"%s\"\n", controlKeys->GetString( "fieldName" ), controlKeys->GetString( "ControlName" ) );
 		KeyValues *keyVal = new KeyValues("ControlFactory", "ControlName", controlKeys->GetString("ControlName"));
 		m_pBuildContext->RequestInfo(keyVal);
 		// returns NULL on failure

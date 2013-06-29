@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // This is a helper class designed to help with the chains of modal dialogs
 // encountered when trying to open or save a particular file
@@ -12,7 +12,7 @@
 #pragma once
 #endif
 
-#include "vgui_controls/panel.h"
+#include "vgui_controls/Panel.h"
 #include "tier1/utlstring.h"
 
 //-----------------------------------------------------------------------------

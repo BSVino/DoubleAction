@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Team management class. Contains all the details for a specific team
 //
@@ -326,4 +326,21 @@ void CTeam::AwardAchievement( int iAchievement )
 	UserMessageBegin( filter, "AchievementEvent" );
 		WRITE_SHORT( iAchievement );
 	MessageEnd();
+}
+
+int CTeam::GetAliveMembers( void )
+{
+	int iAlive = 0;
+
+	int iNumPlayers = GetNumPlayers();
+
+	for ( int i=0;i<iNumPlayers;i++ )
+	{
+		if ( GetPlayer(i) && GetPlayer(i)->IsAlive() )
+		{
+			iAlive++;
+		}
+	}
+
+	return iAlive;
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -337,7 +337,7 @@ IMotionEvent::simresult_e CPhysicsNPCSolver::Simulate( IPhysicsMotionController 
 			linear = pushImpulse;
 			if ( pObject->GetContactPoint(NULL,NULL) )
 			{
-				linear.z += sv_gravity.GetFloat();
+				linear.z += GetCurrentGravity();
 			}
 		}
 		return SIM_GLOBAL_ACCELERATION;

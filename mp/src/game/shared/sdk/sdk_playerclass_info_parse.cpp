@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,19 +27,19 @@ FilePlayerClassInfo_t* CreatePlayerClassInfo()
 
 CSDKPlayerClassInfo::CSDKPlayerClassInfo()
 {
-	m_iTeam				= TEAM_UNASSIGNED;
+	m_iTeam= TEAM_UNASSIGNED;
 	
-	m_iPrimaryWeapon	= WEAPON_NONE;
-	m_iSecondaryWeapon	= WEAPON_NONE;
-	m_iMeleeWeapon		= WEAPON_NONE;
+	m_iPrimaryWeapon= WEAPON_NONE;
+	m_iSecondaryWeapon= WEAPON_NONE;
+	m_iMeleeWeapon= WEAPON_NONE;
 	
-	m_iNumGrensType1	= 0;
-	m_iGrenType1		= WEAPON_NONE;
+	m_iNumGrensType1 = 0;
+	m_iGrenType1 = WEAPON_NONE;
 
-	m_iNumGrensType2	= 0;
-	m_iGrenType2		= WEAPON_NONE;
+	m_iNumGrensType2 = 0;
+	m_iGrenType2 = WEAPON_NONE;
 
-	m_szLimitCvar[0]	= '\0';
+	m_szLimitCvar[0] = '\0';
 	m_flRunSpeed		= SDK_DEFAULT_PLAYER_RUNSPEED;
 	m_flSprintSpeed		= SDK_DEFAULT_PLAYER_SPRINTSPEED;
 	m_flProneSpeed		= SDK_DEFAULT_PLAYER_PRONESPEED;

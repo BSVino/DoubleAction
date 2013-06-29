@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -212,7 +212,7 @@ void ClusterMerge (int clusternum)
 	{
 		p = leaf->portals[i];
 		if (p->status != stat_done)
-			Error ("portal not done %d %d %d\n", i, p, portals);
+			Error ("portal not done %d %p %p\n", i, p, portals);
 		for (j=0 ; j<portallongs ; j++)
 			((long *)portalvector)[j] |= ((long *)p->portalvis)[j];
 		pnum = p - portals;
@@ -360,7 +360,7 @@ void CalcVis (void)
 	}
 
 		
-	Msg ("Optimized: %d visible clusters (%.2f%%)\n", count, totalvis, count*100/totalvis);
+	Msg ("Optimized: %d visible clusters (%.2f%%)\n", count, count*100.0/totalvis);
 	Msg ("Total clusters visible: %i\n", totalvis);
 	Msg ("Average clusters visible: %i\n", totalvis / portalclusters);
 }

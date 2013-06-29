@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Deals with precaching requests from client effects
 //
@@ -7,7 +7,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "fx.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "particles/particles.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

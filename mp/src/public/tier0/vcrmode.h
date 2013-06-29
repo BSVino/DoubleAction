@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: VCR mode records a client's game and allows you to 
 //			play it back and reproduce it exactly. When playing it back, nothing
@@ -24,8 +24,8 @@
 #include "tier0/vcr_shared.h"
 #include "tier0/dbg.h"
 
-#ifdef _LINUX
-DBG_INTERFACE void BuildCmdLine( int argc, tchar **argv );
+#ifdef POSIX
+DBG_INTERFACE const char *BuildCmdLine( int argc, char **argv, bool fAddSteam = true );
 tchar *GetCommandLine();
 #endif
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,6 +16,7 @@
 #include "tier1/interface.h"
 
 class Color;
+class KeyValues;
 
 namespace vgui
 {
@@ -47,6 +48,21 @@ public:
 
 	// colors
 	virtual Color GetColor(const char *colorName, Color defaultColor) = 0;
+	
+	// Get the number of borders
+	virtual int GetBorderCount() const = 0;
+
+	// Get the border at the given index
+	virtual IBorder *GetBorderAtIndex( int iIndex ) = 0;
+
+	// Get the number of fonts
+	virtual int GetFontCount() const = 0;
+
+	// Get the font at the given index
+	virtual HFont GetFontAtIndex( int iIndex ) = 0;	
+
+	// Get color data
+	virtual const KeyValues *GetColorData() const = 0;
 };
 
 
@@ -98,9 +114,8 @@ public:
 	virtual int GetProportionalScaledValueEx( HScheme scheme, int normalizedValue ) = 0;
 	virtual int GetProportionalNormalizedValueEx( HScheme scheme, int scaledValue ) = 0;
 
-#ifdef _XBOX
-	virtual void DeleteImage( const char *pImageName ) = 0;
-#endif
+	// Returns true if image evicted, false otherwise
+	virtual bool DeleteImage( const char *pImageName ) = 0;
 };
 
 #define VGUI_SCHEME_INTERFACE_VERSION "VGUI_Scheme010"

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A point entity that periodically emits sparks and "bzzt" sounds.
 //
@@ -8,6 +8,7 @@
 #include "cbase.h"
 #include "IEffects.h"
 #include "engine/IEngineSound.h"
+#include "envspark.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,40 +28,10 @@ void DoSpark( CBaseEntity *ent, const Vector &location, int nMagnitude, int nTra
 	}
 }
 
-
 const int SF_SPARK_START_ON			= 64;
 const int SF_SPARK_GLOW				= 128;
 const int SF_SPARK_SILENT			= 256;
 const int SF_SPARK_DIRECTIONAL		= 512;
-
-
-class CEnvSpark : public CPointEntity
-{
-	DECLARE_CLASS( CEnvSpark, CPointEntity );
-
-public:
-	CEnvSpark( void );
-
-	void	Spawn(void);
-	void	Precache(void);
-	void	SparkThink(void);
-
-	// Input handlers
-	void InputStartSpark( inputdata_t &inputdata );
-	void InputStopSpark( inputdata_t &inputdata );
-	void InputToggleSpark( inputdata_t &inputdata );
-	void InputSparkOnce( inputdata_t &inputdata );
-	
-	DECLARE_DATADESC();
-
-	float			m_flDelay;
-	int				m_nGlowSpriteIndex;
-	int				m_nMagnitude;
-	int				m_nTrailLength;
-
-	COutputEvent	m_OnSpark;
-};
-
 
 BEGIN_DATADESC( CEnvSpark )
 
@@ -82,7 +53,7 @@ BEGIN_DATADESC( CEnvSpark )
 END_DATADESC()
 
 
-LINK_ENTITY_TO_CLASS(env_spark, CEnvSpark);
+LINK_ENTITY_TO_CLASS( env_spark, CEnvSpark );
 
 
 //-----------------------------------------------------------------------------
@@ -103,15 +74,15 @@ void CEnvSpark::Spawn(void)
 	SetThink( NULL );
 	SetUse( NULL );
 
-	if (FBitSet(m_spawnflags, SF_SPARK_START_ON))
+	if ( FBitSet(m_spawnflags, SF_SPARK_START_ON ) )
 	{
-		SetThink(&CEnvSpark::SparkThink);	// start sparking
+		SetThink( &CEnvSpark::SparkThink );	// start sparking
 	}
 
 	SetNextThink( gpGlobals->curtime + 0.1 + random->RandomFloat( 0, 1.5 ) );
 
 	// Negative delays are not allowed
-	if (m_flDelay < 0)
+	if ( m_flDelay < 0 )
 	{
 		m_flDelay = 0;
 	}
@@ -133,7 +104,7 @@ void CEnvSpark::Spawn(void)
 //-----------------------------------------------------------------------------
 void CEnvSpark::Precache(void)
 {
-	m_nGlowSpriteIndex = PrecacheModel("sprites/glow01.vmt");
+	m_nGlowSpriteIndex = PrecacheModel( "sprites/glow01.vmt" );
 
 	PrecacheScriptSound( "DoSpark" );
 }
@@ -164,13 +135,20 @@ void CEnvSpark::SparkThink(void)
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for starting the sparks.
 //-----------------------------------------------------------------------------
 void CEnvSpark::InputStartSpark( inputdata_t &inputdata )
 {
-	SetThink(&CEnvSpark::SparkThink);
+	StartSpark();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CEnvSpark::StartSpark( void )
+{
+	SetThink( &CEnvSpark::SparkThink );
 	SetNextThink( gpGlobals->curtime );
 }
 
@@ -188,16 +166,23 @@ void CEnvSpark::InputSparkOnce( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CEnvSpark::InputStopSpark( inputdata_t &inputdata )
 {
-	SetThink(NULL);
+	StopSpark();
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CEnvSpark::StopSpark( void )
+{
+	SetThink( NULL );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Input handler for toggling the on/off state of the sparks.
 //-----------------------------------------------------------------------------
 void CEnvSpark::InputToggleSpark( inputdata_t &inputdata )
 {
-	if (GetNextThink() == TICK_NEVER_THINK)
+	if ( GetNextThink() == TICK_NEVER_THINK )
 	{
 		InputStartSpark( inputdata );
 	}

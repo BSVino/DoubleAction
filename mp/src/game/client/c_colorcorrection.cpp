@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Color correction entity with simple radial falloff
 //
@@ -9,7 +9,7 @@
 #include "filesystem.h"
 #include "cdll_client_int.h"
 #include "colorcorrectionmgr.h"
-#include "materialsystem/materialsystemutil.h"
+#include "materialsystem/MaterialSystemUtil.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

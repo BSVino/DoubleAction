@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client explosions
 //
@@ -7,12 +7,12 @@
 #include "cbase.h"
 #include "tempentity.h"  // FLAGS
 #include "c_te_particlesystem.h"
-#include "RagdollExplosionEnumerator.h"
+#include "ragdollexplosionenumerator.h"
 #include "glow_overlay.h"
 #include "fx_explosion.h"
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "engine/ivdebugoverlay.h"
-#include "tier1/keyvalues.h"
+#include "tier1/KeyValues.h"
 #include "toolframework_client.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

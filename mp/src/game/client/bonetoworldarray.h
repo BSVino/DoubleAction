@@ -1,4 +1,4 @@
-//========== Copyright © 2006, Valve Corporation, All rights reserved. ========
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -13,6 +13,7 @@
 #pragma once
 #endif
 
+#include "tier0/memdbgon.h" // for _aligned_malloc usage below
 //-----------------------------------------------------------------------------
 // 
 //-----------------------------------------------------------------------------

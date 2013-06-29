@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2007, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,10 +15,10 @@
 #pragma once
 #endif
 
-#include "IGameSystem.h"
+#include "igamesystem.h"
 #include "engine/IClientLeafSystem.h"
 #include "cdll_int.h"
-#include "IVRenderView.h"
+#include "ivrenderview.h"
 #include "tier1/mempool.h"
 #include "tier1/refcount.h"
 
@@ -84,7 +84,7 @@ struct SetupRenderInfo_t
 	bool m_bDrawDetailObjects : 1;
 	bool m_bDrawTranslucentObjects : 1;
 
-	SetupRenderInfo_t::SetupRenderInfo_t()
+	SetupRenderInfo_t()
 	{
 		m_bDrawDetailObjects = true;
 		m_bDrawTranslucentObjects = true;

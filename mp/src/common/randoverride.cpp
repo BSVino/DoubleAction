@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -11,7 +11,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#ifdef _LINUX
+#ifdef GNUC
 #define __cdecl 
 #endif
 
@@ -21,7 +21,7 @@ void __cdecl srand(unsigned int)
 
 int __cdecl rand()
 {
-	return RandomInt( 0, 0x7fff );
+	return RandomInt( 0, VALVE_RAND_MAX );
 }
 
 #endif // !_STATIC_LINKED || _SHARED_LIB

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A shotgun.
 //
@@ -8,10 +8,10 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "NPCEvent.h"
+#include "npcevent.h"
 #include "basehlcombatweapon_shared.h"
 #include "basecombatcharacter.h"
-#include "AI_BaseNPC.h"
+#include "ai_basenpc.h"
 #include "player.h"
 #include "gamerules.h"		// For g_pGameRules
 #include "in_buttons.h"
@@ -295,7 +295,7 @@ bool CWeaponShotgun::StartReload( void )
 		m_bNeedPump = true;
 	}
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
@@ -336,7 +336,7 @@ bool CWeaponShotgun::Reload( void )
 	if (m_iClip1 >= GetMaxClip1())
 		return false;
 
-	int j = min(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+	int j = MIN(1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
 
 	if (j <= 0)
 		return false;
@@ -765,7 +765,7 @@ void CWeaponShotgun::ItemHolsterFrame( void )
 			return;
 
 		// Just load the clip with no animations
-		int ammoFill = min( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
+		int ammoFill = MIN( (GetMaxClip1() - m_iClip1), GetOwner()->GetAmmoCount( GetPrimaryAmmoType() ) );
 		
 		GetOwner()->RemoveAmmo( ammoFill, GetPrimaryAmmoType() );
 		m_iClip1 += ammoFill;

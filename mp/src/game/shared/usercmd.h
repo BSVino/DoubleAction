@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -114,6 +114,17 @@ public:
 		CRC32_Final( &crc );
 
 		return crc;
+	}
+
+	// Allow command, but negate gameplay-affecting values
+	void MakeInert( void )
+	{
+		viewangles = vec3_angle;
+		forwardmove = 0.f;
+		sidemove = 0.f;
+		upmove = 0.f;
+		buttons = 0;
+		impulse = 0;
 	}
 
 	// For matching server and client commands for debugging

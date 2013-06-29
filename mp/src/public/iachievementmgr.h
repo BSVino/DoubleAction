@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,6 +11,7 @@
 #endif
 
 #include "utlmap.h"
+#include "vgui_controls/Panel.h"
 
 class CBaseAchievement;
 
@@ -26,6 +27,8 @@ public:
 	virtual int GetPointValue() = 0;
 	virtual bool ShouldSaveWithGame() = 0;
 	virtual bool ShouldHideUntilAchieved() = 0;
+	virtual bool ShouldShowOnHUD() = 0;
+	virtual void SetShowOnHUD( bool bShow ) = 0;
 };
 
 
@@ -41,6 +44,8 @@ public:
 	virtual void DownloadUserData() = 0;
 	virtual void EnsureGlobalStateLoaded() = 0;
 	virtual void SaveGlobalStateIfDirty( bool bAsync ) = 0;
+	virtual bool HasAchieved( const char *pchName ) = 0;
+	virtual bool WereCheatsEverOn() = 0;
 };
 
 // flags for IAchievement::GetFlags

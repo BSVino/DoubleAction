@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,12 +12,7 @@
 #include "eiface.h"
 #endif
 
-#ifdef _LINUX
-#define random random_valve// stdlib.h defined random()..., and so does vstdlib/random.h
-#endif
-
-class IFileSystem;				// include FileSystem.h
-class IUniformRandomStream;		// include vstdlib/random.h
+class IFileSystem;				// include filesystem.h
 class IEngineSound;				// include engine/IEngineSound.h
 class IVEngineServer;			
 class IVoiceServer;
@@ -32,6 +27,7 @@ class IMDLCache;
 class IServerEngineTools;
 class IXboxSystem;
 class CSteamAPIContext;
+class CSteamGameServerAPIContext;
 
 extern IVEngineServer			*engine;
 extern IVoiceServer				*g_pVoiceServer;
@@ -39,7 +35,6 @@ extern IFileSystem				*filesystem;
 extern IStaticPropMgrServer		*staticpropmgr;
 extern ISpatialPartition		*partition;
 extern IEngineSound				*enginesound;
-extern IUniformRandomStream		*random;
 extern IVModelInfo				*modelinfo;
 extern IEngineTrace				*enginetrace;
 extern IGameEventManager2		*gameeventmanager;
@@ -48,7 +43,9 @@ extern IDataCache				*datacache;
 extern IMDLCache				*mdlcache;
 extern IServerEngineTools		*serverenginetools;
 extern IXboxSystem				*xboxsystem; // 360 only
-extern CSteamAPIContext			*steamapicontext;
+extern CSteamAPIContext			*steamapicontext; // available on game clients
+extern CSteamGameServerAPIContext *steamgameserverapicontext; //available on game servers
+
 
 
 //-----------------------------------------------------------------------------
@@ -102,6 +99,14 @@ void MessageWriteBool( bool bValue );
 void MessageWriteUBitLong( unsigned int data, int numbits );
 void MessageWriteSBitLong( int data, int numbits );
 void MessageWriteBits( const void *pIn, int nBits );
+
+#ifndef NO_STEAM
+
+/// Returns Steam ID, given player index.   Returns an invalid SteamID upon
+/// failure
+extern CSteamID GetSteamIDForPlayerIndex( int iPlayerIndex );
+
+#endif
 
 
 // Bytewise

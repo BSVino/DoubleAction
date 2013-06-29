@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Weapon data file parsing, shared by game & client dlls.
 //
@@ -33,7 +33,8 @@ const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ] =
 	"special1",
 	"special2",
 	"special3",
-	"taunt"
+	"taunt",
+	"deploy"
 };
 #else
 extern const char *pWeaponSoundCategories[ NUM_SHOOT_SOUND_TYPES ];
@@ -192,7 +193,7 @@ void PrecacheFileWeaponInfoDatabase( IFileSystem *filesystem, const unsigned cha
 	manifest->deleteThis();
 }
 
-KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameWithoutExtension, const unsigned char *pICEKey )
+KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameWithoutExtension, const unsigned char *pICEKey, bool bForceReadEncryptedFile /*= false*/ )
 {
 	Assert( strchr( szFilenameWithoutExtension, '.' ) == NULL );
 	char szFullName[512];
@@ -209,7 +210,7 @@ KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameW
 
 	Q_snprintf(szFullName,sizeof(szFullName), "%s.txt", szFilenameWithoutExtension);
 
-	if ( !pKV->LoadFromFile( filesystem, szFullName, pSearchPath ) ) // try to load the normal .txt file first
+	if ( bForceReadEncryptedFile || !pKV->LoadFromFile( filesystem, szFullName, pSearchPath ) ) // try to load the normal .txt file first
 	{
 #ifndef _XBOX
 		if ( pICEKey )
@@ -283,7 +284,15 @@ bool ReadWeaponDataFromFileForSlot( IFileSystem* filesystem, const char *szWeapo
 
 	char sz[128];
 	Q_snprintf( sz, sizeof( sz ), "scripts/%s", szWeaponName );
-	KeyValues *pKV = ReadEncryptedKVFile( filesystem, sz, pICEKey );
+
+	KeyValues *pKV = ReadEncryptedKVFile( filesystem, sz, pICEKey,
+#if defined( DOD_DLL )
+		true			// Only read .ctx files!
+#else
+		false
+#endif
+		);
+
 	if ( !pKV )
 		return false;
 

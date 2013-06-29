@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Entity that propagates general data needed by clients for every player.
 //
@@ -17,7 +17,6 @@
 #include "tier0/memdbgon.h"
 
 const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
-#define PLAYER_UNCONNECTED_NAME	"unconnected"
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
@@ -59,7 +58,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
 	memset( m_bAlive, 0, sizeof( m_bAlive ) );
 	memset( m_iHealth, 0, sizeof( m_iHealth ) );
-
+	m_szUnconnectedName = 0;
+	
 	for ( int i=0; i<MAX_TEAMS; i++ )
 	{
 		m_Colors[i] = COLOR_GREY;
@@ -98,14 +98,17 @@ void C_PlayerResource::UpdatePlayerName( int slot )
 		Error( "UpdatePlayerName with bogus slot %d\n", slot );
 		return;
 	}
+	if (!m_szUnconnectedName )
+		m_szUnconnectedName = AllocPooledString( PLAYER_UNCONNECTED_NAME );
+	
 	player_info_t sPlayerInfo;
 	if ( IsConnected( slot ) && engine->GetPlayerInfo( slot, &sPlayerInfo ) )
 	{
 		m_szName[slot] = AllocPooledString( sPlayerInfo.name );
 	}
-	else
+	else 
 	{
-		m_szName[slot] = AllocPooledString( PLAYER_UNCONNECTED_NAME );
+		m_szName[slot] = m_szUnconnectedName;
 	}
 }
 
@@ -129,7 +132,7 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
 	{
 		Assert( false );
-		return "ERRORNAME";
+		return PLAYER_ERROR_NAME;
 	}
 	
 	if ( !IsConnected( iIndex ) )
@@ -212,6 +215,23 @@ bool C_PlayerResource::IsHLTV(int index)
 		return sPlayerInfo.ishltv;
 	}
 	
+	return false;
+}
+
+bool C_PlayerResource::IsReplay(int index)
+{
+#if defined( REPLAY_ENABLED )
+	if ( !IsConnected( index ) )
+		return false;
+
+	player_info_t sPlayerInfo;
+
+	if ( engine->GetPlayerInfo( index, &sPlayerInfo ) )
+	{
+		return sPlayerInfo.isreplay;
+	}
+#endif
+
 	return false;
 }
 
