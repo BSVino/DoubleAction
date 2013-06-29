@@ -37,6 +37,18 @@
     <Filter Include="Tools Framework">
       <UniqueIdentifier>{7B72D9D0-E55D-2A74-4A7B-5D5B7AFE85C6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\DA">
+      <UniqueIdentifier>{e67d3cd9-7229-4f05-a176-d320cd235289}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\Weapons">
+      <UniqueIdentifier>{1f667b53-1fca-49b6-a7a2-c4379fa894db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\Player">
+      <UniqueIdentifier>{9757454c-5714-4f48-ad60-33b98449fbab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\Bots">
+      <UniqueIdentifier>{3de8646a-7bcf-4b59-a73b-140411aa4101}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\win32\release\VS2010\libprotobuf.lib">
@@ -3486,6 +3498,216 @@
     </ClCompile>
     <ClCompile Include="toolframework_server.cpp">
       <Filter>Tools Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_shareddefs.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_weapon_melee.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_crowbar.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_grenade.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_m1911.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_ammo_pickup.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_powerup.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_spawngenerator.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_brushentity.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_client.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_env_message.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_env_sparkler.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_eventlog.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_gameinterface.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_logicalentity.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_modelentity.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_team.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_vehicle_jeep.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\te_firebullets.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_playermove.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_player_resource.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_player.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_chatter.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event_player.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_event_weapon.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_init.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_listen.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_manager.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_nav.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_pathfind.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_radio.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_statemachine.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_update.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_vision.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_bot_weapon.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\da_gamestate.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_attack.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_buy.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_follow.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_hide.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_hunt.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_idle.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_investigate_noise.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_move_to.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_open_door.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bot\states\da_bot_use_entity.cpp">
+      <Filter>Source Files\DA\Bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

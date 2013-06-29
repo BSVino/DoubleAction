@@ -31,18 +31,6 @@
     <Filter Include="Source Files\game_controls">
       <UniqueIdentifier>{1E7DB91A-DC0A-B17F-617D-4C4FB3FA7A3E}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\HL2 DLL">
-      <UniqueIdentifier>{3C43D38A-46AF-2183-A5E5-44383B1D2652}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HL2MP">
-      <UniqueIdentifier>{2BA678C8-595F-A004-FD96-60E33CA8DE83}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HL2MP\UI">
-      <UniqueIdentifier>{0B2F6887-5DFD-E914-A406-9470E425C8E9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\HL2MP\Weapons">
-      <UniqueIdentifier>{382A0C79-1859-D554-1EB7-DCBE8F115956}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Precompiled Header">
       <UniqueIdentifier>{A7D26A13-21F4-C6B5-5922-8A4FB05AF07D}</UniqueIdentifier>
     </Filter>
@@ -54,6 +42,18 @@
     </Filter>
     <Filter Include="Tool Framework">
       <UniqueIdentifier>{C8FC1989-2499-2137-2EEA-17663813D98F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA">
+      <UniqueIdentifier>{36a12d82-b983-4a9c-8fdf-6c46d2e5db09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\Weapons">
+      <UniqueIdentifier>{1065ac30-8e01-4b7c-96ac-3a8ceb2188b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\UI">
+      <UniqueIdentifier>{1eb435a4-ef6f-4c8d-a3c1-d2f8232f0e03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\DA\Player">
+      <UniqueIdentifier>{8860a5bf-7ec9-4ada-81ea-38da70feabf3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1859,93 +1859,6 @@
     <ClInclude Include="game_controls\basemodelpanel.h">
       <Filter>Source Files\game_controls</Filter>
     </ClInclude>
-    <ClInclude Include="hl2\c_basehelicopter.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_basehlcombatweapon.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_basehlplayer.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_corpse.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_hl2_playerlocaldata.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_prop_combine_ball.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\c_vehicle_crane.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2\citadel_effects_shared.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2\env_headcrabcanister_shared.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2\hl2_gamerules.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2\hl2_shareddefs.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2\hl_gamemovement.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2\hud_suitpower.h">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\c_hl2mp_player.h">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\clientmode_hl2mpnormal.h">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_gamerules.h">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_player_shared.h">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.h">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\ui\backgroundpanel.h">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\hl2mp_hud_chat.h">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\ui\hl2mpclientscoreboard.h">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="hl2mp\ui\hl2mptextwindow.h">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_ar2.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbase.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbase_machinegun.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_physcannon.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_rpg.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\game\shared\hl2mp\weapon_slam.h">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClInclude>
     <ClInclude Include="sixense\in_sixense.h">
       <Filter>Source Files\Sixense</Filter>
     </ClInclude>
@@ -3037,279 +2950,6 @@
     <ClCompile Include="game_controls\vguitextwindow.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2\basehlcombatweapon_shared.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_antlion_dust.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_ar2_explosion.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_barnacle.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_barney.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_basehelicopter.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_basehlcombatweapon.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_basehlplayer.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_citadel_effects.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_corpse.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_env_alyxtemp.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_env_headcrabcanister.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_env_starfield.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_func_tankmortar.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_hl2_playerlocaldata.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_info_teleporter_countdown.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_npc_antlionguard.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_npc_combinegunship.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_npc_manhack.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_npc_rollermine.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_plasma_beam_node.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_prop_combine_ball.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_rotorwash.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_script_intro.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_strider.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_te_concussiveexplosion.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_te_flare.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_thumper_dust.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_vehicle_airboat.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_vehicle_cannon.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_vehicle_crane.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_vehicle_prisoner_pod.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="episodic\c_vort_charge_token.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_weapon__stubs_hl2.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\c_weapon_crossbow.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2\env_headcrabcanister_shared.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\fx_antlion.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\fx_bugbait.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\fx_hl2_impacts.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\fx_hl2_tracers.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hl2_clientmode.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2\hl2_gamerules.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2\hl2_usermessages.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2\hl_gamemovement.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hl_in_main.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hl_prediction.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_ammo.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_battery.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_blood.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_credits.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_damageindicator.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_flashlight.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_health.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_poisondamageindicator.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_quickinfo.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_squadstatus.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_suitpower.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_weaponselection.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\hud_zoom.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\script_intro_shared.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\shieldproxy.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2\vgui_rootpanel_hl2.cpp">
-      <Filter>Source Files\HL2 DLL</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\c_hl2mp_player.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\c_te_hl2mp_shotgun_shot.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\clientmode_hl2mpnormal.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_gamerules.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_player_shared.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\hl2mp_weapon_parse.cpp">
-      <Filter>Source Files\HL2MP</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\ui\backgroundpanel.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\hl2mp_hud_chat.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\hl2mp_hud_target_id.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\hl2mp_hud_team.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\ui\hl2mpclientscoreboard.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\ui\hl2mptextwindow.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="hl2mp\hud_deathnotice.cpp">
-      <Filter>Source Files\HL2MP\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_357.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_ar2.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crossbow.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_crowbar.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_frag.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbase.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbase_machinegun.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbasebasebludgeon.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_physcannon.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_pistol.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_rpg.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_shotgun.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_slam.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_smg1.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\game\shared\hl2mp\weapon_stunstick.cpp">
-      <Filter>Source Files\HL2MP\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files\Precompiled Header</Filter>
     </ClCompile>
@@ -3519,6 +3159,159 @@
     </ClCompile>
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_in_main.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_prediction.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\c_sdk_env_sparkler.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\c_sdk_team.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\c_te_firebullets.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\clientmode_sdk.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\projectedlighteffect.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_fx_impacts.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_fx_weaponfx.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_shareddefs.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp">
+      <Filter>Source Files\DA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_weapon_melee.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_weapon_parse.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_beretta.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbo_m1911.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_akimbobase.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_basesdkgrenade.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_beretta.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_brawl.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_crowbar.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_fal.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_grenade.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_m1911.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_ammo.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_weaponselection.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_chat.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_damage.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_health.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_message.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_notices.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_slowmo.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_stylebar.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_targetid.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud_sdkdeathnotice.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\c_sdk_player_resource.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\c_sdk_player.cpp">
+      <Filter>Source Files\DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
+      <Filter>Source Files\DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\da_hud_crosshair.cpp">
+      <Filter>Source Files\DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_scoreboard.cpp">
+      <Filter>Source Files\DA\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
