@@ -5,6 +5,9 @@
 //=============================================================================//
 
 #include "cbase.h"
+
+#include "sdk_hud_ammo.h"
+
 #include "hud.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -16,64 +19,12 @@
 #include "ihudlcd.h"
 #include "c_sdk_player.h"
 #include "sdkviewport.h"
+#include "weapon_sdkbase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
-
-//-----------------------------------------------------------------------------
-// Purpose: Displays current ammunition level
-//-----------------------------------------------------------------------------
-class CHudAmmo : public CHudNumericDisplay, public CHudElement
-{
-	DECLARE_CLASS_SIMPLE( CHudAmmo, CHudNumericDisplay );
-
-public:
-	CHudAmmo( const char *pElementName );
-	virtual void ApplySchemeSettings( IScheme *scheme );
-	void Init( void );
-	void VidInit( void );
-	void Reset();
-
-	void SetAmmo(int ammo, bool playAnimation);
-	void SetAmmo2(int ammo2, bool playAnimation);
-
-	virtual void Paint();
-	virtual void PaintBackground() {};
-
-protected:
-	virtual void OnThink();
-
-	void UpdateAmmoDisplays();
-	void UpdatePlayerAmmo( C_BasePlayer *player );
-
-	CHudTexture* GetTexture();
-	Vector2D GetRoundPosition(int i);
-
-private:
-	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
-	CHandle< C_BaseEntity > m_hCurrentVehicle;
-	int		m_iAmmo;
-	int		m_iAmmo2;
-
-	CHudTexture* m_p762Round;
-	CHudTexture* m_p9mmRound;
-	CHudTexture* m_p45acpRound;
-	CHudTexture* m_pBuckshotRound;
-
-	class CFlyingRound
-	{
-	public:
-		bool bActive;
-		Vector2D vecPosition;
-		Vector2D vecVelocity;
-		float flAngle;
-		float flAngularVelocity;
-	};
-
-	CUtlVector<CFlyingRound> m_aRounds;
-};
 
 DECLARE_HUDELEMENT( CHudAmmo );
 
@@ -236,37 +187,9 @@ void CHudAmmo::UpdateAmmoDisplays()
 //-----------------------------------------------------------------------------
 void CHudAmmo::SetAmmo(int ammo, bool playAnimation)
 {
+	// Only update if we've lost ammo somehow.
 	if (ammo != m_iAmmo)
 	{
-		CHudTexture* pTexture = GetTexture();
-		if (playAnimation && pTexture)
-		{
-			for (int i = ammo; i < m_iAmmo; i++)
-			{
-				int iSpot = -1;
-
-				// Find a spot to put it.
-				for (int j = 0; j < m_aRounds.Count(); j++)
-				{
-					if (!m_aRounds[j].bActive)
-					{
-						iSpot = j;
-						break;
-					}
-				}
-
-				if (iSpot == -1)
-					iSpot = m_aRounds.AddToTail();
-
-				m_aRounds[iSpot].bActive = true;
-				m_aRounds[iSpot].flAngle = 0;
-				m_aRounds[iSpot].flAngularVelocity = RandomFloat(10, 1000);
-				m_aRounds[iSpot].vecVelocity.x = RandomFloat(-100, -300);
-				m_aRounds[iSpot].vecVelocity.y = RandomFloat(-300, -500);
-				m_aRounds[iSpot].vecPosition = GetRoundPosition(ammo);
-			}
-		}
-
 		m_iAmmo = ammo;
 	}
 
@@ -284,6 +207,42 @@ void CHudAmmo::SetAmmo2(int ammo2, bool playAnimation)
 	}
 
 	SetSecondaryValue(ammo2);
+}
+
+void CHudAmmo::ShotFired(C_WeaponSDKBase* pWeapon)
+{
+	UpdateAmmoDisplays();
+
+	m_iAmmo = pWeapon->Clip1();
+
+	int iSpot = -1;
+
+	// Find a spot to put it.
+	for (int j = 0; j < m_aRounds.Count(); j++)
+	{
+		if (!m_aRounds[j].bActive)
+		{
+			iSpot = j;
+			break;
+		}
+	}
+
+	if (iSpot == -1)
+		iSpot = m_aRounds.AddToTail();
+
+	m_aRounds[iSpot].bActive = true;
+	m_aRounds[iSpot].flAngle = 0;
+	m_aRounds[iSpot].flAngularVelocity = RandomFloat(10, 1000);
+	m_aRounds[iSpot].vecVelocity.x = RandomFloat(-100, -300);
+	m_aRounds[iSpot].vecVelocity.y = RandomFloat(-300, -500);
+	m_aRounds[iSpot].vecPosition = GetRoundPosition(m_iAmmo);
+}
+
+void CHudAmmo::Reload(C_WeaponSDKBase* pWeapon)
+{
+	UpdateAmmoDisplays();
+
+	m_iAmmo = pWeapon->Clip1();
 }
 
 CHudTexture* CHudAmmo::GetTexture()

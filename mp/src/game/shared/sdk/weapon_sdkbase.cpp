@@ -20,6 +20,7 @@
 
 	#include "c_sdk_player.h"
 	#include "prediction.h"
+	#include "sdk_hud_ammo.h"
 
 #else
 
@@ -277,6 +278,19 @@ void CWeaponSDKBase::finishattack (CSDKPlayer *pPlayer)
 
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
 	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
+
+#ifdef CLIENT_DLL
+	if (!prediction->InPrediction() || prediction->IsFirstTimePredicted())
+	{
+		CHudElement* pElement = gHUD.FindElement("CHudAmmo");
+		if (pElement)
+		{
+			CHudAmmo* pHudAmmo = dynamic_cast<CHudAmmo*>(pElement);
+			if (pHudAmmo)
+				pHudAmmo->ShotFired(this);
+		}
+	}
+#endif
 }
 
 void CWeaponSDKBase::PrimaryAttack( void )
@@ -1241,6 +1255,19 @@ void CWeaponSDKBase::FinishReload()
 
 		pOwner->ReadyWeapon();
 	}
+
+#ifdef CLIENT_DLL
+	if (!prediction->InPrediction() || prediction->IsFirstTimePredicted())
+	{
+		CHudElement* pElement = gHUD.FindElement("CHudAmmo");
+		if (pElement)
+		{
+			CHudAmmo* pHudAmmo = dynamic_cast<CHudAmmo*>(pElement);
+			if (pHudAmmo)
+				pHudAmmo->Reload(this);
+		}
+	}
+#endif
 }
 
 void CWeaponSDKBase::SendReloadEvents()
