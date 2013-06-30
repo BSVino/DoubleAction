@@ -37,8 +37,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug_mod_hl2mp\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug_mod_hl2mp\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug_DoubleAction\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\Debug_DoubleAction\</IntDir>
     <ExecutablePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\devtools\vstools;$(ExecutablePath);$(Path)</ExecutablePath>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreLinkEventUseInBuild>
@@ -61,7 +61,7 @@
       <AdditionalOptions> /MP</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;.\sdk;..\..\game\shared\sdk;.\sdk\bot;..\shared\sdk\bot</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp;ALLOW_DEVELOPMENT_CVARS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -149,8 +149,8 @@ exit 1
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;..\..\game\shared\sdk;.\sdk;.\sdk\bot</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;.\;..\..\game\shared;..\..\utils\common;..\..\game\shared\econ;..\..\game\server\NextBot;..\..\game\shared\sdk;.\sdk;.\sdk\bot;..\..\game\shared\sdk\bot</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=server;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;GAME_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;fopen=dont_use_fopen;SDK_DLL;VPCGAMECAPS=HL2MP;PROJECTDIR=D:\dev\games\rel\hl2\src\game\server;_DLL_EXT=.dll;VPCGAME=hl2mp;ALLOW_DEVELOPMENT_CVARS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -212,12 +212,12 @@ exit 1
       <OutputFile>$(OutDir)/server.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Message>Publishing to ..\..\..\game\mod_hl2mp\bin</Message>
-      <Command>if not exist "..\..\..\game\mod_hl2mp\bin" mkdir "..\..\..\game\mod_hl2mp\bin"
-copy "$(TargetDir)"$(TargetFileName) "..\..\..\game\mod_hl2mp\bin\$(TargetFileName)"
+      <Message>Publishing to \Dropbox\ActionBoogaloo\dab\bin</Message>
+      <Command>if not exist "\Dropbox\ActionBoogaloo\dab\bin" mkdir "\Dropbox\ActionBoogaloo\dab\bin"
+copy "$(TargetDir)"$(TargetFileName) "\Dropbox\ActionBoogaloo\dab\bin\$(TargetFileName)"
 if ERRORLEVEL 1 goto BuildEventFailed
-if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map ..\..\..\game\mod_hl2mp\bin\$(TargetName).map
-copy "$(TargetDir)"$(TargetName).pdb ..\..\..\game\mod_hl2mp\bin\$(TargetName).pdb
+if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map \Dropbox\ActionBoogaloo\dab\bin\$(TargetName).map
+copy "$(TargetDir)"$(TargetName).pdb \Dropbox\ActionBoogaloo\dab\bin\$(TargetName).pdb
 if ERRORLEVEL 1 goto BuildEventFailed
 goto BuildEventOK
 :BuildEventFailed

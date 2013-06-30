@@ -63,7 +63,7 @@
       <AdditionalOptions> /MP</AdditionalOptions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;..\..\game\shared\sdk;.\sdk;.\sdk\vgui</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_HAS_ITERATOR_DEBUGGING=0;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk;ALLOW_DEVELOPMENT_CVARS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -153,7 +153,7 @@ exit 1
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>.\;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\client\generated_proto_mod_hl2mp;..\..\thirdparty\protobuf-2.3.0\src;..\..\vgui2\include;..\..\vgui2\controls;..\..\game\shared;.\game_controls;..\..\thirdparty\sixensesdk\include;..\..\game\shared\sdk;.\sdk;.\sdk\vgui</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;DLLNAME=client;RAD_TELEMETRY_DISABLED;COMPILER_MSVC32;BINK_VIDEO;AVI_VIDEO;WMV_VIDEO;NO_STRING_T;CLIENT_DLL;VECTOR;VERSION_SAFE_STEAM_API_INTERFACES;PROTECTED_THINGS_ENABLE;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;ENABLE_CHROMEHTMLWINDOW;fopen=dont_use_fopen;SDK_DLL;USE_MONITORS;VPCGAMECAPS=SDK;PROJECTDIR=D:\dev\games\rel\hl2\src\game\client;_DLL_EXT=.dll;VPCGAME=sdk;ALLOW_DEVELOPMENT_CVARS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -216,12 +216,12 @@ exit 1
       <OutputFile>$(OutDir)/client.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Message>Publishing to ..\..\..\game\mod_hl2mp\bin</Message>
-      <Command>if not exist "..\..\..\game\mod_hl2mp\bin" mkdir "..\..\..\game\mod_hl2mp\bin"
-copy "$(TargetDir)"$(TargetFileName) "..\..\..\game\mod_hl2mp\bin\$(TargetFileName)"
+      <Message>Publishing to \Dropbox\ActionBoogaloo\dab\bin</Message>
+      <Command>if not exist "\Dropbox\ActionBoogaloo\dab\bin" mkdir "\Dropbox\ActionBoogaloo\dab\bin"
+copy "$(TargetDir)"$(TargetFileName) "\Dropbox\ActionBoogaloo\dab\bin\$(TargetFileName)"
 if ERRORLEVEL 1 goto BuildEventFailed
-if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map ..\..\..\game\mod_hl2mp\bin\$(TargetName).map
-copy "$(TargetDir)"$(TargetName).pdb ..\..\..\game\mod_hl2mp\bin\$(TargetName).pdb
+if exist "$(TargetDir)"$(TargetName).map copy "$(TargetDir)"$(TargetName).map \Dropbox\ActionBoogaloo\dab\bin\$(TargetName).map
+copy "$(TargetDir)"$(TargetName).pdb \Dropbox\ActionBoogaloo\dab\bin\$(TargetName).pdb
 if ERRORLEVEL 1 goto BuildEventFailed
 goto BuildEventOK
 :BuildEventFailed
