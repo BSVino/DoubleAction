@@ -180,6 +180,7 @@ public:
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
+	float GetSlowMoTime() const { return m_flSlowMoTime; }
 	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
 
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
