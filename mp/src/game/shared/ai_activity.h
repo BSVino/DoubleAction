@@ -2581,6 +2581,8 @@ typedef enum
 	ACT_DAB_WALLRUN,
 
 	ACT_DA_VM_FIRELAST,
+	ACT_DA_VM_BRAWL,
+	ACT_DA_VM_BRAWL_EMPTY,
 
 	// this is the end of the global activities, private per-monster activities start here.
 	LAST_SHARED_ACTIVITY,

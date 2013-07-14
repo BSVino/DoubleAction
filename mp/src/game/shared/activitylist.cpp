@@ -2749,6 +2749,8 @@ void ActivityList_RegisterSharedActivities( void )
 	REGISTER_SHARED_ACTIVITY(ACT_DAB_WALLRUN);
 
 	REGISTER_SHARED_ACTIVITY(ACT_DA_VM_FIRELAST);
+	REGISTER_SHARED_ACTIVITY(ACT_DA_VM_BRAWL);
+	REGISTER_SHARED_ACTIVITY(ACT_DA_VM_BRAWL_EMPTY);
 
 	AssertMsg( g_HighestActivity == LAST_SHARED_ACTIVITY - 1, "Not all activities from ai_activity.h registered in activitylist.cpp" ); 
 } 
