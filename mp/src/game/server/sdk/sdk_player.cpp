@@ -4048,6 +4048,18 @@ void CC_GiveSlowMo(const CCommand& args)
 
 static ConCommand give_slowmo("give_slowmo", CC_GiveSlowMo, "Give the player one second of slow motion.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
+void CC_GiveStyle(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	pPlayer->AddStylePoints(10, STYLE_POINT_SMALL);
+}
+
+static ConCommand give_style("give_style", CC_GiveStyle, "Give the player some style to his bar.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CC_DisarmMe(const CCommand& args)
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
