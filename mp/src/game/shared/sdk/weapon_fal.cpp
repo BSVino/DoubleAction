@@ -78,6 +78,7 @@ acttable_t CWeaponFAL::m_acttable[] =
 	{ ACT_DAB_CROUCHWALK_AIM,           ACT_DAB_CROUCHWALK_AIM_FAL,             false },
 	{ ACT_DAB_PRONECHEST_AIM,           ACT_DAB_PRONECHEST_AIM_FAL,             false },
 	{ ACT_DAB_PRONEBACK_AIM,            ACT_DAB_PRONEBACK_AIM_FAL,              false },
+	{ ACT_DAB_DRAW,                     ACT_DAB_DRAW_FAL,                       false },
 	{ ACT_DAB_PRIMARYATTACK,			ACT_DAB_PRIMARYATTACK_FAL,				false },
 	{ ACT_DAB_PRIMARYATTACK_CROUCH,		ACT_DAB_PRIMARYATTACK_CROUCH_FAL,		false },
 	{ ACT_DAB_PRIMARYATTACK_PRONE,		ACT_DAB_PRIMARYATTACK_PRONE_FAL,		false },

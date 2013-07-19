@@ -1406,6 +1406,8 @@ bool CWeaponSDKBase::Deploy( )
 		if (vm)
 			vm->SetPlaybackRate( 1/flSpeedMultiplier );
 
+		pOwner->DoAnimationEvent( PLAYERANIMEVENT_DRAW );
+
 		pOwner->SetNextAttack( GetCurrentTime() + SequenceDuration() * flSpeedMultiplier );
 
 		pOwner->m_Shared.SetAimIn(0.0f);

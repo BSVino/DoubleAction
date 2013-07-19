@@ -769,6 +769,13 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		break;
 #endif
 
+	case PLAYERANIMEVENT_DRAW:
+		{
+			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DAB_DRAW );
+			iGestureActivity = ACT_VM_DRAW;
+			break;
+		}
+
 	case PLAYERANIMEVENT_DIVE:
 		{
 			m_bDiveStart = true;
