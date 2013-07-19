@@ -1006,7 +1006,7 @@ void CSDKPlayer::Spawn()
 		switch(GetTeamNumber())
 		{
 		case SDK_TEAM_BLUE:
-			SetCharacter("playermale");
+			SetCharacter("frank");
 			break;
 		case SDK_TEAM_RED:
 			SetCharacter("wish");

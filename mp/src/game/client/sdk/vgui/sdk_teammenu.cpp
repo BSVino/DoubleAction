@@ -245,7 +245,7 @@ void CSDKTeamMenu::Update( void )
 		"	\"model\"\n"
 		"	{\n"
 		"		\"spotlight\"	\"1\"\n"
-		"		\"modelname\"	\"models/player/playermale.mdl\"\n"
+		"		\"modelname\"	\"models/player/frank.mdl\"\n"
 		"		\"origin_z\"	\"-35\"\n"
 		"		\"origin_y\"	\"0\"\n"
 		"		\"origin_x\"	\"130\"\n"

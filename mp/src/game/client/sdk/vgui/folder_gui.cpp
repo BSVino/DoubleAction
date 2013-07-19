@@ -190,7 +190,7 @@ void CFolderMenu::Update()
 		"	\"model\"\n"
 		"	{\n"
 		"		\"spotlight\"	\"1\"\n"
-		"		\"modelname\"	\"models/player/playermale.mdl\"\n"
+		"		\"modelname\"	\"models/player/frank.mdl\"\n"
 		"		\"origin_z\"	\"-57\"\n"
 		"		\"origin_y\"	\"10\"\n"
 		"		\"origin_x\"	\"110\"\n"
