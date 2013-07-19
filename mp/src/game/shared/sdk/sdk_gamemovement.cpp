@@ -2656,6 +2656,8 @@ void CSDKGameMovement::FullWalkMove ()
 				}
 #endif
 				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.StartDiving();
+
+				FinishGravity();
 			}
 		}
 	}
