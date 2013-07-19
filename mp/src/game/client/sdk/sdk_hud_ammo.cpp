@@ -236,6 +236,7 @@ void CHudAmmo::ShotFired(C_WeaponSDKBase* pWeapon)
 	m_aRounds[iSpot].vecVelocity.x = RandomFloat(-100, -300);
 	m_aRounds[iSpot].vecVelocity.y = RandomFloat(-300, -500);
 	m_aRounds[iSpot].vecPosition = GetRoundPosition(m_iAmmo);
+	m_aRounds[iSpot].pTexture = GetTexture();
 }
 
 void CHudAmmo::Reload(C_WeaponSDKBase* pWeapon)
@@ -347,12 +348,18 @@ void CHudAmmo::Paint()
 			continue;
 		}
 
+		if (!oRound.pTexture)
+		{
+			oRound.bActive = false;
+			continue;
+		}
+
 		oRound.vecPosition += flFrameTime * oRound.vecVelocity;
 		oRound.vecVelocity.y += flFrameTime * 2000;
 		oRound.flAngle += flFrameTime * oRound.flAngularVelocity;
 
-		SDKViewport::DrawPolygon(pTexture,
+		SDKViewport::DrawPolygon(oRound.pTexture,
 			oRound.vecPosition.x, oRound.vecPosition.y,
-			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale), oRound.flAngle);
+			oRound.pTexture->EffectiveWidth(flScale), oRound.pTexture->EffectiveHeight(flScale), oRound.flAngle);
 	}
 }

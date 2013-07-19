@@ -56,11 +56,12 @@ private:
 	class CFlyingRound
 	{
 	public:
-		bool bActive;
-		Vector2D vecPosition;
-		Vector2D vecVelocity;
-		float flAngle;
-		float flAngularVelocity;
+		bool         bActive;
+		Vector2D     vecPosition;
+		Vector2D     vecVelocity;
+		float        flAngle;
+		float        flAngularVelocity;
+		CHudTexture* pTexture;
 	};
 
 	CUtlVector<CFlyingRound> m_aRounds;
