@@ -33,7 +33,7 @@ float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence
 	if (pOwner)
 		flSlow *= pOwner->GetSlowMoMultiplier();
 
-	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * m_flPlaybackRate * flSlow;
+	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * flSlow;
 }
 
 void CDABViewModel::DoMuzzleFlash()
