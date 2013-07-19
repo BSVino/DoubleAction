@@ -154,10 +154,6 @@ void CSDKTeamMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-static ConVar hud_characterpreview_x("hud_characterpreview_x", "130", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar hud_characterpreview_z("hud_characterpreview_z", "-35", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-
 //-----------------------------------------------------------------------------
 // Purpose: called to update the menu with new information
 //-----------------------------------------------------------------------------
@@ -276,6 +272,10 @@ void CSDKTeamMenu::Update( void )
 
 		std::string sCharacter = std::string("models/player/") + m_pszCharacterModel + ".mdl";
 		pValues->SetString("modelname", sCharacter.c_str());
+
+		ConVarRef hud_characterpreview_x( "hud_characterpreview_x" );
+		ConVarRef hud_characterpreview_y( "hud_characterpreview_y" );
+		ConVarRef hud_characterpreview_z( "hud_characterpreview_z" );
 
 		pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
 		pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());

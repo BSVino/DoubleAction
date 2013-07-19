@@ -152,9 +152,9 @@ void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-static ConVar hud_characterpreview_x("hud_characterpreview_x", "130", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_x("hud_characterpreview_x", "220", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar hud_characterpreview_z("hud_characterpreview_z", "-35", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_z("hud_characterpreview_z", "-40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CDABCharacterMenu::Update()
 {
