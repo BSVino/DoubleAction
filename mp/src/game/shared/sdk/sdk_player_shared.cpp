@@ -593,6 +593,9 @@ void CSDKPlayer::ReadyWeapon()
 
 bool CSDKPlayer::IsWeaponReady()
 {
+	if (m_Shared.IsAimedIn())
+		return true;
+
 	return GetCurrentTime() < m_flReadyWeaponUntil;
 }
 
