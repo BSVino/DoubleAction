@@ -188,8 +188,25 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacte
 	m_flEyeYaw = AngleNormalize( eyeYaw );
 	m_flEyePitch = AngleNormalize( eyePitch );
 
-	m_flCharacterEyeYaw += AngleNormalize( flCharacterYaw - m_flCharacterEyeYaw ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
-	m_flCharacterEyePitch += AngleNormalize( flCharacterPitch - m_flCharacterEyePitch ) * gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * 10;
+	float flRampSpeed = 20;
+	if (pSDKPlayer->GetActiveSDKWeapon() && pSDKPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
+		flRampSpeed = 50;
+
+	float flApproachSpeed = gpGlobals->frametime * pSDKPlayer->GetSlowMoMultiplier() * RemapVal(m_pSDKPlayer->m_Shared.GetAimIn(), 0, 1, 10, flRampSpeed);
+
+	float flYawDifference = AngleNormalize( flCharacterYaw - m_flCharacterEyeYaw );
+	float flYawApproachSpeed = flYawDifference * flApproachSpeed;
+	if (fabs(flYawApproachSpeed) < fabs(flYawDifference))
+		m_flCharacterEyeYaw += flYawApproachSpeed;
+	else
+		m_flCharacterEyeYaw = flCharacterYaw;
+
+	float flPitchDifference = AngleNormalize( flCharacterPitch - m_flCharacterEyePitch );
+	float flPitchApproachSpeed = flPitchDifference * flApproachSpeed;
+	if (fabs(flPitchApproachSpeed) < fabs(flPitchDifference))
+		m_flCharacterEyePitch += flPitchApproachSpeed;
+	else
+		m_flCharacterEyePitch = flCharacterPitch;
 
 	// Compute the player sequences.
 	ComputeSequences( pStudioHdr );
