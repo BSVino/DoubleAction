@@ -41,7 +41,7 @@ ConVar	da_d2p_stunt_forgiveness( "da_d2p_stunt_forgiveness", "0.4", FCVAR_REPLIC
 
 
 ConVar  da_acro_wallflip_dist ("da_acro_wallflip_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-ConVar  da_acro_wallflip_limit ("da_acro_wallflip_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_wallflip_limit ("da_acro_wallflip_limit", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_wallflip_speed ("da_acro_wallflip_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_wallflip_gain ("da_acro_wallflip_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
