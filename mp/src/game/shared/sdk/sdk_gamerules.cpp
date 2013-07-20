@@ -849,6 +849,9 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 	// in teamplay only use deathmatch spawns that are near team mates
 	bool bNeedTeamMate = (IsTeamplay() && !stricmp(pSpot->GetClassname(),"info_player_deathmatch"));
 
+	bool bTeammatesAlive = !!(pPlayer->GetTeam()->GetAliveMembers()-1); // Subtract 1 because the spawning player is considered alive by this point.
+	bNeedTeamMate &= bTeammatesAlive;
+
 	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
@@ -857,8 +860,22 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 
 		CSDKPlayer* pOtherSDKPlayer = ToSDKPlayer(pOtherPlayer);
 
+		if (pOtherPlayer == pPlayer)
+			continue;
+
 		if (!pOtherSDKPlayer->IsAlive())
 			continue;
+
+		if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
+			continue;
+
+		trace_t tr;
+		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
+		if (tr.m_pEnt == pOtherPlayer)
+		{
+			if (PlayerRelationship(pPlayer, pOtherPlayer) != GR_TEAMMATE)
+				return false;
+		}
 
 		if (PlayerRelationship(pPlayer, pOtherPlayer) == GR_TEAMMATE)
 		{
@@ -869,14 +886,6 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 			}
 			continue;
 		}
-
-		if ((pSpot->GetAbsOrigin() - pOtherPlayer->GetAbsOrigin()).LengthSqr() > 512*512)
-			continue;
-
-		trace_t tr;
-		UTIL_TraceLine( pSpot->WorldSpaceCenter(), pOtherSDKPlayer->WorldSpaceCenter(), MASK_VISIBLE_AND_NPCS, pPlayer, COLLISION_GROUP_NONE, &tr );
-		if (tr.m_pEnt == pOtherPlayer)
-			return false;
 	}
 
 	// if we need a team mate and didn't find one don't use this point

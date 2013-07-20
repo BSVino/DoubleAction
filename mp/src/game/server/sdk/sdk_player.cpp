@@ -1161,35 +1161,8 @@ CBaseEntity* CSDKPlayer::EntSelectSpawnPoint()
 
 	switch( GetTeamNumber() )
 	{
-#if defined ( SDK_USE_TEAMS )
 	case SDK_TEAM_BLUE:
-		{
-			// if we found a suitable spawn point in the field don't use a team spawn
-			if (pSpot)
-				break;
-
-			pSpawnPointName = "info_player_blue";
-			pSpot = g_pLastBlueSpawn;
-			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
-			{
-				g_pLastBlueSpawn = pSpot;
-			}
-		}
-		break;
 	case SDK_TEAM_RED:
-		{
-			if (pSpot)
-				break;
-
-			pSpawnPointName = "info_player_red";
-			pSpot = g_pLastRedSpawn;
-			if ( SelectSpawnSpot( pSpawnPointName, pSpot ) )
-			{
-				g_pLastRedSpawn = pSpot;
-			}
-		}		
-		break;
-#endif // SDK_USE_TEAMS
 	case TEAM_UNASSIGNED:
 		{
 			pSpawnPointName = "info_player_deathmatch";
