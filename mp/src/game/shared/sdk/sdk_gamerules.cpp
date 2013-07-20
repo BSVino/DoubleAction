@@ -589,6 +589,8 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 #define ROBUST_RADIUS_PROBE_DIST 32.0f // If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
 
+ConVar da_grenade_wall_protection("da_grenade_wall_protection", "3", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Scale wall thickness by this before subtracting it from the amount of damage.");
+
 void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore )
 {
 	const int MASK_RADIUS_DAMAGE = MASK_SHOT&(~CONTENTS_HITBOX);
@@ -664,7 +666,7 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 			if (tr2.startsolid)
 			{
 				float flSolidArea = ((tr2.startpos - vecSpot) * tr2.fractionleftsolid).Length();
-				flBlockedDamage = info.GetDamage()/2 + flSolidArea;
+				flBlockedDamage = info.GetDamage()/2 + flSolidArea*da_grenade_wall_protection.GetFloat();
 			}
 		}
 
