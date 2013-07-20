@@ -124,7 +124,6 @@ extern ConVar tf_mm_servermode;
 
 #if defined ( SDK_DLL )
 #include "sdk_gamerules.h"
-#include "bot/bot.h"
 #endif
 
 #if defined( REPLAY_ENABLED )

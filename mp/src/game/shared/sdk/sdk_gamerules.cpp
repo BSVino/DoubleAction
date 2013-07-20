@@ -28,7 +28,6 @@
 	#include "player_resource.h"
 	#include "mapentities.h"
 	#include "sdk_basegrenade_projectile.h"
-	#include "bot.h"
 	#include "da_spawngenerator.h"
 
 #endif
