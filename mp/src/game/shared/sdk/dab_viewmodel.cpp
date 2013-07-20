@@ -47,7 +47,7 @@ void CDABViewModel::DoMuzzleFlash()
 		id = GetDAWeapon ()->GetWeaponID ();
 		if (SDK_WEAPON_AKIMBO_BERETTA == id || SDK_WEAPON_AKIMBO_M1911 == id)
 		{/*HACK: Alternate attachment for akimbos, where else to put this?*/
-			if (((CAkimbobase *)GetDAWeapon ())->shootright)
+			if (((CAkimboBase *)GetDAWeapon ())->shootright)
 				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "2");
 			else
 				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1");

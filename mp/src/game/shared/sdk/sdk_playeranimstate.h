@@ -51,10 +51,8 @@ public:
 	bool	HandleDucking( Activity &idealActivity );
 	bool	HandleSwimming( Activity &idealActivity );
 
-	bool	handlevault (Activity &idealActivity);
-	bool	handlewallrun (Activity &idealActivity);
-	bool	handlewallflip (Activity &idealActivity);
-	bool	handlewallclimb (Activity &idealActivity);
+	bool	HandleWallFlip (Activity &idealActivity);
+	bool	HandleWallClimb (Activity &idealActivity);
 #if defined ( SDK_USE_PRONE )
 	bool	HandleProne( Activity &idealActivity );
 	bool	HandleProneTransition( Activity &idealActivity );
@@ -110,7 +108,7 @@ private:
 	bool		m_bRollTransition;
 	bool		m_bRollTransitionFirstFrame;
 
-	bool		flipping;
+	bool		m_bFlipping;
 
 	float		m_flHoldDeployedPoseUntilTime;
 

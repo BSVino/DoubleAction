@@ -8,23 +8,23 @@
 	#include "sdk_player.h"
 #endif
 
-IMPLEMENT_NETWORKCLASS_ALIASED(Akimbobase, DT_Akimbobase)
-BEGIN_NETWORK_TABLE(CAkimbobase, DT_Akimbobase)
+IMPLEMENT_NETWORKCLASS_ALIASED(AkimboBase, DT_AkimboBase)
+BEGIN_NETWORK_TABLE(CAkimboBase, DT_AkimboBase)
 #ifdef CLIENT_DLL
 #else
 #endif
 END_NETWORK_TABLE()
 #ifndef CLIENT_DLL
-	BEGIN_DATADESC(CAkimbobase)
+	BEGIN_DATADESC(CAkimboBase)
 	END_DATADESC()
 #else
-	BEGIN_PREDICTION_DATA(CAkimbobase)
+	BEGIN_PREDICTION_DATA(CAkimboBase)
 	END_PREDICTION_DATA()
 #endif
-LINK_ENTITY_TO_CLASS(weapon_akimbobase, CAkimbobase);
+LINK_ENTITY_TO_CLASS(weapon_akimbobase, CAkimboBase);
 
 static bool 
-akimbo_reload (CAkimbobase *self)
+akimbo_reload (CAkimboBase *self)
 {
 	CBaseCombatCharacter *owner = self->GetOwner ();
 	if (!owner)
@@ -40,14 +40,13 @@ akimbo_reload (CAkimbobase *self)
 	}
 	return false;
 }
-CAkimbobase::CAkimbobase ()
+CAkimboBase::CAkimboBase ()
 {
 	reload_delegate = (delegate_t)akimbo_reload;
 	shootright = false;
 }
 
-Activity 
-CAkimbobase::ActivityOverride (Activity baseAct, bool *pRequired)
+Activity CAkimboBase::ActivityOverride (Activity baseAct, bool *pRequired)
 {/*Remap baseAct to the approrpiate left/right akimbo firing animation.*/
 	Activity act = baseAct;
 	if (ACT_DAB_PRIMARYATTACK <= act && act <= ACT_DAB_PRIMARYATTACK_ROLL)
@@ -58,21 +57,21 @@ CAkimbobase::ActivityOverride (Activity baseAct, bool *pRequired)
 	}
 	return BaseClass::ActivityOverride (act, pRequired);
 }
-int
-CAkimbobase::GetTracerAttachment (void)
+
+int CAkimboBase::GetTracerAttachment (void)
 {
 	if (shootright) return 2;
 	return 1;
 }
-Activity 
-CAkimbobase::GetIdleActivity (void)
+
+Activity CAkimboBase::GetIdleActivity (void)
 {
 	//if (rightclip > 0 && leftclip > 0) return ACT_VM_IDLE;
 	//if (rightclip > 0 && leftclip == 0) return ACT_VM_IDLE_EMPTY_LEFT;
 	return ACT_VM_IDLE_EMPTY;
 }
-bool 
-CAkimbobase::Deploy ()
+
+bool CAkimboBase::Deploy ()
 {/*Transfer iClip1 of single pistol to rightclip*/
 	CWeaponSDKBase *from = GetPlayerOwner ()->switchfrom;
 	SDKWeaponID id1 = SDK_WEAPON_NONE;
@@ -85,8 +84,8 @@ CAkimbobase::Deploy ()
 	}
 	return BaseClass::Deploy ();
 }
-bool 
-CAkimbobase::Holster (CBaseCombatWeapon *pSwitchingTo)
+
+bool CAkimboBase::Holster (CBaseCombatWeapon *pSwitchingTo)
 {/*Transfer rightclip into iClip1 of single pistol*/
 	CWeaponSDKBase *to = (CWeaponSDKBase *)pSwitchingTo;
 	SDKWeaponID id1 = SDK_WEAPON_NONE;
@@ -98,8 +97,8 @@ CAkimbobase::Holster (CBaseCombatWeapon *pSwitchingTo)
 	}
 	return BaseClass::Holster (pSwitchingTo);
 }
-void 
-CAkimbobase::PrimaryAttack (void)
+
+void CAkimboBase::PrimaryAttack (void)
 {
 	Activity act;
 	if (rightclip <= 0 && leftclip <= 0) 
@@ -135,10 +134,10 @@ CAkimbobase::PrimaryAttack (void)
 	}
 	SendWeaponAnim (act);
 	m_iClip1 = leftclip + rightclip;
-	finishattack (pPlayer);
+	FinishAttack (pPlayer);
 }
-void
-CAkimbobase::FinishReload (void)
+
+void CAkimboBase::FinishReload (void)
 {
 	CSDKPlayer *owner = GetPlayerOwner();
 	int clipsize = GetMaxClip1()/2;
@@ -166,15 +165,15 @@ CAkimbobase::FinishReload (void)
 	}
 	m_iClip1 = rightclip + leftclip;
 }
-void 
-CAkimbobase::GiveDefaultAmmo (void)
+
+void CAkimboBase::GiveDefaultAmmo (void)
 {
 	rightclip = GetMaxClip1 ()/2;
 	leftclip = GetMaxClip1 ()/2;
 	m_iClip1 = rightclip + leftclip;
 }
-void
-CAkimbobase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
+
+void CAkimboBase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
 {
 #ifdef GAME_DLL
 	CSDKPlayer *pl;
@@ -189,7 +188,7 @@ CAkimbobase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
 	}
 	/*Ensure player has a single with their akimbos*/
 	Q_snprintf (name, sizeof (name), "weapon_%s", GetSDKWpnData ().m_szSingle);
-	single = pl->findweapon (AliasToWeaponID (name));
+	single = pl->FindWeapon (AliasToWeaponID (name));
 	if (!single)
 	{/*Give them a single too*/
 		pl->GiveNamedItem (name);
@@ -198,13 +197,13 @@ CAkimbobase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
 	BaseClass::OnPickedUp (pNewOwner);
 #endif
 }
-void 
-CAkimbobase::CheckReload (void)
+
+void CAkimboBase::CheckReload (void)
 {
 	BaseClass::CheckReload ();
 }
 
-int CAkimbobase::GetMaxClip1() const
+int CAkimboBase::GetMaxClip1() const
 {
 	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 
@@ -219,7 +218,7 @@ int CAkimbobase::GetMaxClip1() const
 
 // For weight purposes an akimbo weighs the same as a single.
 // This is so that the second entity in the player's inventory just adds another single's worth of weight.
-int CAkimbobase::GetWeight() const
+int CAkimboBase::GetWeight() const
 {
 	SDKWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 

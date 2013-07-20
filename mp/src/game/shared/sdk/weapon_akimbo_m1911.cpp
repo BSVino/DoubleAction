@@ -3,15 +3,16 @@
 #include "weapon_akimbobase.h"
 
 #if defined( CLIENT_DLL )
-	#define CAkimbo_m1911 C_Akimbo_m1911
+	#define CAkimboM1911 C_AkimboM1911
 	#include "c_sdk_player.h"
 #else
 	#include "sdk_player.h"
 #endif
-class CAkimbo_m1911 : public CAkimbobase
+
+class CAkimboM1911 : public CAkimboBase
 {
 public:
-	DECLARE_CLASS(CAkimbo_m1911, CWeaponSDKBase);
+	DECLARE_CLASS(CAkimboM1911, CAkimboBase);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
@@ -25,18 +26,18 @@ public:
 	}
 };
 
-IMPLEMENT_NETWORKCLASS_ALIASED(Akimbo_m1911, DT_Akimbo_m1911)
+IMPLEMENT_NETWORKCLASS_ALIASED(AkimboM1911, DT_AkimboM1911)
 
-BEGIN_NETWORK_TABLE(CAkimbo_m1911, DT_Akimbo_m1911)
+BEGIN_NETWORK_TABLE(CAkimboM1911, DT_AkimboM1911)
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA(CAkimbo_m1911)
+BEGIN_PREDICTION_DATA(CAkimboM1911)
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS(weapon_akimbo_m1911, CAkimbo_m1911);
+LINK_ENTITY_TO_CLASS(weapon_akimbo_m1911, CAkimboM1911);
 PRECACHE_WEAPON_REGISTER(weapon_akimbo_m1911);
 
-acttable_t CAkimbo_m1911::m_acttable[] = 
+acttable_t CAkimboM1911::m_acttable[] = 
 {
 	{ ACT_DAB_STAND_IDLE,				ACT_DAB_STAND_IDLE_AKIMBO_M1911,				false },
 	{ ACT_DAB_WALK_IDLE,				ACT_DAB_WALK_IDLE_AKIMBO_M1911,					false },
@@ -90,4 +91,4 @@ acttable_t CAkimbo_m1911::m_acttable[] =
 	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_AKIMBO_M1911,                false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_AKIMBO_M1911,           false },
 };
-IMPLEMENT_ACTTABLE(CAkimbo_m1911);
+IMPLEMENT_ACTTABLE(CAkimboM1911);

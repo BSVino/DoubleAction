@@ -80,6 +80,7 @@ public:
 	virtual void ItemPostFrame();
 	virtual void PrimaryAttack();
 	virtual void SecondaryAttack();
+	void FinishAttack (CSDKPlayer *pPlayer);
 
 	virtual void      StartSwing(bool bIsSecondary, bool bIsStockAttack = false);
 	virtual void      Swing();
@@ -180,8 +181,6 @@ private:
 #endif
 
 public:
-	/*New bits to make Akimbos work in a sane manner*/
-	void finishattack (CSDKPlayer *pPlayer);
 	/*TODO: These should be moved into the akimbo class, but for some reason
 	I can't get them to synch properly there.*/
 	CNetworkVar (int, leftclip);

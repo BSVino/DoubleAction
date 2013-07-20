@@ -148,14 +148,10 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	
-	SendPropInt (SENDINFO (tapkey)),
-	SendPropFloat (SENDINFO (taptime)),
-	SendPropInt (SENDINFO (kongcnt)),
-	SendPropFloat (SENDINFO (kongtime)),
-	SendPropFloat (SENDINFO (runtime)),
-	SendPropVector (SENDINFO (rundir)),
-	SendPropFloat (SENDINFO (manteltime)),
-	SendPropVector (SENDINFO (wallnormal)),
+	SendPropInt (SENDINFO (m_iWallFlipCount)),
+	SendPropFloat (SENDINFO (m_flWallFlipTime)),
+	SendPropFloat (SENDINFO (m_flMantelTime)),
+	SendPropVector (SENDINFO (m_vecMantelWallNormal)),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -2032,7 +2028,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 			{
 				char name[32];
 				Q_snprintf (name, sizeof (name), "akimbo_%s", WeaponIDToAlias (id));
-				CAkimbobase *akb = (CAkimbobase *)findweapon (AliasToWeaponID (name));
+				CAkimboBase *akb = (CAkimboBase *)FindWeapon (AliasToWeaponID (name));
 				if (akb)
 				{/*Keep left pistol if we have akimbos*/
 					CWeaponSDKBase *left = (CWeaponSDKBase *)GiveNamedItem (cls);
@@ -2044,7 +2040,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		}
 		else
 		{/*Akimbo toss*/
-			CAkimbobase *akb = (CAkimbobase *)pWeapon;
+			CAkimboBase *akb = (CAkimboBase *)pWeapon;
 			const char *alias = pWeapon->GetSDKWpnData ().m_szSingle;
 			char name[32];
 			int i;
@@ -2062,7 +2058,7 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 			}
 			RemovePlayerItem (akb);
 			/*Ensure 2.*/
-			CWeaponSDKBase *wpn = findweapon (AliasToWeaponID (alias));
+			CWeaponSDKBase *wpn = FindWeapon (AliasToWeaponID (alias));
 			AssertMsg (wpn != NULL, "How do you have akimbos without a single?");
 			if (wpn) 
 			{

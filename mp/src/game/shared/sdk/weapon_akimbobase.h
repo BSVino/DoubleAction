@@ -26,8 +26,10 @@ weapon_sdkbase.cpp for pick up behaviour
 
 It would be wise to work toward a more unified approach, and one that
 supplants this baseclass entirely.*/
+
 #include "weapon_sdkbase.h"
 #include "ai_activity.h"
+
 enum
 {/*ActivityOverride expects these in this order*/
 	ACT_DAB_AKIMBO_RIGHT = LAST_SHARED_ACTIVITY,
@@ -45,20 +47,22 @@ enum
 	/*Anything after this is private*/
 	LAST_SHARED_AKIMBO_ACTIVITY
 };
+
 #ifdef CLIENT_DLL
-	#define CAkimbobase C_Akimbobase
+	#define CAkimboBase C_AkimboBase
 #endif
+
 class CSDKPlayer;
-class CAkimbobase : public CWeaponSDKBase
+class CAkimboBase : public CWeaponSDKBase
 {
 public:
-	DECLARE_CLASS(CAkimbobase, CWeaponSDKBase);
+	DECLARE_CLASS(CAkimboBase, CWeaponSDKBase);
 	DECLARE_NETWORKCLASS();
 	DECLARE_PREDICTABLE();
 #ifdef GAME_DLL
 	DECLARE_DATADESC();
 #endif
-	CAkimbobase ();
+	CAkimboBase ();
 	virtual bool IsPredicted() const { return true; }
 	virtual Activity ActivityOverride (Activity baseAct, bool *pRequired);
 	virtual int GetTracerAttachment (void);

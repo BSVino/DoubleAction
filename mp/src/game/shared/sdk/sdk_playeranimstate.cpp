@@ -115,7 +115,7 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bRollTransition = false;
 	m_bRollTransitionFirstFrame = false;
 
-	flipping = false;
+	m_bFlipping = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -364,7 +364,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 		return;
 	}
-	if (flipping)
+	if (m_bFlipping)
 	{
 		m_angRender[YAW] = m_flEyeYaw;
 #ifndef CLIENT_DLL
@@ -1214,50 +1214,39 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 	return false;
 }
 
-bool 
-CSDKPlayerAnimState::handlevault (Activity &idealActivity)
-{/*TODO: implement*/
-	return false;
-}
-bool 
-CSDKPlayerAnimState::handlewallrun (Activity &idealActivity)
-{/*TODO: implement*/
-	return false;
-}
-bool 
-CSDKPlayerAnimState::handlewallflip (Activity &idealActivity)
+bool CSDKPlayerAnimState::HandleWallFlip (Activity &idealActivity)
 {
-	if (!flipping)
-	{/*Flip only on activation*/
-		if (m_pSDKPlayer->m_Shared.kongtime <= 0)
-		{
+	if (!m_bFlipping)
+	{
+		/*Flip only on activation*/
+		if (!m_pSDKPlayer->m_Shared.IsWallFlipping())
 			return false;
-		}
 	}
+
 	if (m_pSDKPlayer->GetCurrentTime () - 
 		m_pSDKPlayer->m_Shared.GetDiveTime () < 1e-1) 
 	{/*Not in a dive (exception: we want to dive out of a flip)*/
-		flipping = false;
+		m_bFlipping = false;
 		return false;
 	}
 	if (m_pSDKPlayer->GetFlags()&FL_ONGROUND)
 	{/*Exit if we land on something*/
-		flipping = false;
+		m_bFlipping = false;
 		return false;
 	}
 	if (GetBasePlayer()->GetCycle () >= 0.99) 
 	{/*Exit once the flip animation finished once*/
-		flipping = false;
+		m_bFlipping = false;
 		return false;
 	}
 	idealActivity = ACT_DAB_WALLFLIP;
-	flipping = true;
+	m_bFlipping = true;
 	return true;
 }
-bool 
-CSDKPlayerAnimState::handlewallclimb (Activity &idealActivity)
+
+bool CSDKPlayerAnimState::HandleWallClimb (Activity &idealActivity)
 {
-	if (m_pSDKPlayer->m_Shared.manteltime > 0)
+	if (m_pSDKPlayer->m_Shared.IsManteling())
 	{
 		idealActivity = ACT_DAB_WALLCLIMB;
 		return true;
@@ -1283,12 +1272,9 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	else if (m_pSDKPlayer->IsWeaponReady())
 		idealActivity = ACT_DAB_STAND_READY;
 
-	if (handlewallclimb (idealActivity) ||
-		handlewallflip (idealActivity) ||
+	if (HandleWallClimb (idealActivity) ||
+		HandleWallFlip (idealActivity) ||
 		HandleDiving( idealActivity ) ||
-
-		handlevault (idealActivity) ||
-		handlewallrun (idealActivity)||
 
 		HandleJumping( idealActivity ) || 
 #if defined ( SDK_USE_PRONE )

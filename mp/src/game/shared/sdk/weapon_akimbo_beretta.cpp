@@ -3,15 +3,16 @@
 #include "weapon_akimbobase.h"
 
 #if defined( CLIENT_DLL )
-	#define CAkimbo_beretta C_Akimbo_beretta
+	#define CAkimboBeretta C_AkimboBeretta
 	#include "c_sdk_player.h"
 #else
 	#include "sdk_player.h"
 #endif
-class CAkimbo_beretta : public CAkimbobase
+
+class CAkimboBeretta : public CAkimboBase
 {
 public:
-	DECLARE_CLASS(CAkimbo_beretta, CWeaponSDKBase);
+	DECLARE_CLASS(CAkimboBeretta, CAkimboBase);
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 	DECLARE_ACTTABLE();
@@ -25,18 +26,18 @@ public:
 	}
 };
 
-IMPLEMENT_NETWORKCLASS_ALIASED(Akimbo_beretta, DT_Akimbo_beretta)
+IMPLEMENT_NETWORKCLASS_ALIASED(AkimboBeretta, DT_AkimboBeretta)
 
-BEGIN_NETWORK_TABLE(CAkimbo_beretta, DT_Akimbo_beretta)
+BEGIN_NETWORK_TABLE(CAkimboBeretta, DT_AkimboBeretta)
 END_NETWORK_TABLE()
 
-BEGIN_PREDICTION_DATA(CAkimbo_beretta)
+BEGIN_PREDICTION_DATA(CAkimboBeretta)
 END_PREDICTION_DATA()
 
-LINK_ENTITY_TO_CLASS(weapon_akimbo_beretta, CAkimbo_beretta);
+LINK_ENTITY_TO_CLASS(weapon_akimbo_beretta, CAkimboBeretta);
 PRECACHE_WEAPON_REGISTER(weapon_akimbo_beretta);
 
-acttable_t CAkimbo_beretta::m_acttable[] = 
+acttable_t CAkimboBeretta::m_acttable[] = 
 {
 	{ ACT_DAB_STAND_IDLE,				ACT_DAB_STAND_IDLE_AKIMBO_BERETTA,				false },
 	{ ACT_DAB_WALK_IDLE,				ACT_DAB_WALK_IDLE_AKIMBO_BERETTA,					false },
@@ -90,4 +91,4 @@ acttable_t CAkimbo_beretta::m_acttable[] =
 	{ ACT_DAB_DIVESLIDE,                ACT_DAB_DIVESLIDE_AKIMBO_BERETTA,                false },
 	{ ACT_DAB_PRONE_TO_STAND,           ACT_DAB_PRONE_TO_STAND_AKIMBO_BERETTA,           false },
 };
-IMPLEMENT_ACTTABLE(CAkimbo_beretta);
+IMPLEMENT_ACTTABLE(CAkimboBeretta);

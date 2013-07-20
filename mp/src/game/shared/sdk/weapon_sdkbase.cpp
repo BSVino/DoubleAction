@@ -196,7 +196,7 @@ ConVar dab_coldaccuracymultiplier( "dab_coldaccuracymultiplier", "0.25", FCVAR_C
 ConVar dab_decayrate( "dab_decayrate", "2", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "A multiplier for the accuracy decay rate of weapons as they fire." );
 
 //Tony; added as a default primary attack if it doesn't get overridden, ie: by CSDKWeaponMelee
-void CWeaponSDKBase::finishattack (CSDKPlayer *pPlayer)
+void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 {
 #ifdef GAME_DLL
 	pPlayer->NoteWeaponFired();
@@ -340,8 +340,9 @@ void CWeaponSDKBase::PrimaryAttack( void )
 		else
 			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
 	}
+
 	/*Chopped this in half here for akimbos*/
-	finishattack (pPlayer);
+	FinishAttack (pPlayer);
 }
 
 void CWeaponSDKBase::SecondaryAttack()
@@ -1057,10 +1058,10 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		if (GetSDKWpnData ().m_eWeaponType == WT_PISTOL)
 		{/*This is the only place I could think to put this, unfortunately.*/
 			const char *alias = WeaponIDToAlias (GetWeaponID ());
-			CAkimbobase *akb;
+			CAkimboBase *akb;
 			char name[32];
 			Q_snprintf (name, sizeof (name), "weapon_akimbo_%s", alias);
-			akb = (CAkimbobase *)pPlayer->GiveNamedItem (name);
+			akb = (CAkimboBase *)pPlayer->GiveNamedItem (name);
 			if (akb) 
 			{/*Second pistol is always the left one*/
 				akb->leftclip = m_iClip1;

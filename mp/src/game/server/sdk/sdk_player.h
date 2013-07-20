@@ -149,7 +149,7 @@ public:
 
 	int             GetTotalStyle() { return m_flTotalStyle; }
 
-	CWeaponSDKBase *findweapon (SDKWeaponID id);
+	CWeaponSDKBase *FindWeapon (SDKWeaponID id);
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently

@@ -107,6 +107,19 @@ public:
 	float   GetDiveLerped() const { return m_flDiveLerped; };
 	void    IncreaseDiveLerped(float flLerped) { m_flDiveLerped += flLerped; };
 	float   GetTimeLeftGround() const { return m_flTimeLeftGround; };
+	float   GetDiveToProneLandTime() const { return m_flDiveToProneLandTime; }
+	void    DiveLandedProne();
+
+	bool    IsManteling() const { return m_flMantelTime > 0; }
+	void    StartManteling(const Vector& vecWallNormal);
+	void    AccumulateMantelTime();
+	void    ResetManteling();
+
+	bool    IsWallFlipping() const { return m_flWallFlipTime > 0; }
+	void    StartWallFlip();
+	void    AccumulateWallFlipTime();
+	void    ResetWallFlipCount() { m_iWallFlipCount = 0; }
+	int     GetWallFlipCount() const { return m_iWallFlipCount; }
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -125,6 +138,8 @@ public:
 
 	float   GetRunSpeed() const { return m_flRunSpeed; }
 	float   GetAimInSpeed() const { return m_flAimInSpeed; }
+
+	void    PlayerOnGround();
 
 	void	ForceUnzoom( void );
 
@@ -157,7 +172,7 @@ private:
 	CNetworkVar( bool, m_bIsSprinting );
 	bool m_bGaveSprintPenalty;
 #endif
-public: /*Slopes need to slide longer, let there be light here!*/
+
 	CNetworkVar( bool, m_bSliding );
 	CNetworkVar( bool, m_bInAirSlide );
 	CNetworkVar( Vector, m_vecSlideDirection );
@@ -167,10 +182,10 @@ public: /*Slopes need to slide longer, let there be light here!*/
 	CNetworkVar( float, m_flLastDuckPress );
 	CNetworkVar( bool, m_bRolling );
 	CNetworkVar( bool, m_bRollingFromDive );
-public: /*For double tapping.*/
+
 	CNetworkVar( Vector, m_vecRollDirection );
 	CNetworkVar( float, m_flRollTime );
-public:
+
 	CNetworkVar( bool, m_bDiving );
 	CNetworkVar( Vector, m_vecDiveDirection );
 	CNetworkVar( bool, m_bRollAfterDive );
@@ -193,16 +208,11 @@ public:
 	CNetworkVar( float, m_flStamina );
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
-public:
-	/*Stuff for new controls*/
-	CNetworkVar (int,		tapkey);
-	CNetworkVar (float,		taptime);
-	CNetworkVar (int,		kongcnt);
-	CNetworkVar (float,		kongtime);
-	CNetworkVar (float,		runtime);
-	CNetworkVar (Vector,	rundir);
-	CNetworkVar (float,		manteltime);
-	CNetworkVar (Vector,	wallnormal);
+	CNetworkVar(int,    m_iWallFlipCount);
+	CNetworkVar(float,  m_flWallFlipTime);
+	CNetworkVar(float,  m_flMantelTime);
+	CNetworkVar(Vector, m_vecMantelWallNormal);
+
 public:
 
 #ifdef SDK_USE_PRONE

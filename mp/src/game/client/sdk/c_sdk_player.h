@@ -151,7 +151,7 @@ public:
 	virtual void    ReadyWeapon();
 	virtual bool    IsWeaponReady();
 
-	CWeaponSDKBase *findweapon (SDKWeaponID id);
+	CWeaponSDKBase *FindWeapon (SDKWeaponID id);
 
 	float GetStylePoints() { return m_flStylePoints; }
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }

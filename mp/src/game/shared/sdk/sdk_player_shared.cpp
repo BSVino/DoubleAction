@@ -405,14 +405,9 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bAimedIn = false;
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
-
-
-	m_Shared.tapkey = 0;
-	m_Shared.taptime = -1;
-	m_Shared.kongcnt = 0;
-	m_Shared.kongtime = 0;
-	m_Shared.runtime = 0;
-	m_Shared.manteltime = 0;
+	m_Shared.m_iWallFlipCount = 0;
+	m_Shared.m_flWallFlipTime = 0;
+	m_Shared.m_flMantelTime = 0;
 
 
 	//Tony; todo; fix
@@ -1063,6 +1058,33 @@ void CSDKPlayerShared::EndDive()
 	m_pOuter->ReadyWeapon();
 }
 
+void CSDKPlayerShared::DiveLandedProne()
+{
+	SetProne(true, true);
+	m_bProneSliding = true;
+	m_flDisallowUnProneTime = m_pOuter->GetCurrentTime() + 0.4f;
+	m_flDiveToProneLandTime = m_pOuter->GetCurrentTime();
+}
+
+void CSDKPlayerShared::StartManteling(const Vector& vecWallNormal)
+{
+	m_vecMantelWallNormal = vecWallNormal;
+
+	m_pOuter->DoAnimationEvent (PLAYERANIMEVENT_WALLCLIMB);
+
+	m_flMantelTime = 0.5f;
+}
+
+void CSDKPlayerShared::AccumulateMantelTime()
+{
+	m_flMantelTime -= gpGlobals->frametime;
+}
+
+void CSDKPlayerShared::ResetManteling()
+{
+	m_flMantelTime = 0;
+}
+
 #if defined ( SDK_USE_SPRINTING )
 void CSDKPlayerShared::SetSprinting( bool bSprinting )
 {
@@ -1108,6 +1130,22 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 	{
 		ForceUnzoom();
 	}
+}
+
+ConVar da_acro_wallflip_delay ("da_acro_wallflip_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayerShared::StartWallFlip()
+{
+	m_flWallFlipTime = da_acro_wallflip_delay.GetFloat();
+	m_iWallFlipCount++;
+}
+
+void CSDKPlayerShared::AccumulateWallFlipTime()
+{
+	m_flWallFlipTime -= 1000 * gpGlobals->frametime * m_pOuter->GetSlowMoMultiplier();
+
+	if (m_flWallFlipTime < 0)
+		m_flWallFlipTime = 0;
 }
 
 bool CSDKPlayerShared::IsAimedIn() const
@@ -1163,6 +1201,12 @@ void CSDKPlayerShared::SetRecoil(float flRecoil)
 	m_flRecoilAccumulator = flRecoil * dab_recoilmultiplier.GetFloat();
 	m_vecRecoilDirection.y = 1;
 	m_vecRecoilDirection.x = SharedRandomFloat( "Recoil", -0.5f, 0.5f );
+}
+
+void CSDKPlayerShared::PlayerOnGround( void )
+{
+	m_flTimeLeftGround = m_pOuter->GetCurrentTime();
+	m_iWallFlipCount = 0;
 }
 
 void CSDKPlayerShared::ForceUnzoom( void )
@@ -1691,11 +1735,11 @@ float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID 
 
 	return flValue * (flModify+1);
 }
-CWeaponSDKBase *
-CSDKPlayer::findweapon (SDKWeaponID id)
+
+CWeaponSDKBase* CSDKPlayer::FindWeapon (SDKWeaponID id)
 {
 	int i;
-	for (i = 0; i < WeaponCount (); i++)
+	for (i = 0; i < WeaponCount(); i++)
 	{
 		CWeaponSDKBase *wpn = (CWeaponSDKBase *)GetWeapon (i);
 		if (wpn)
