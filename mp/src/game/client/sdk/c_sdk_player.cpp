@@ -740,7 +740,7 @@ void C_SDKPlayer::UpdateClientSideAnimation()
 	QAngle angEyeAngles = EyeAngles();
 	QAngle angCharacterEyeAngles = angEyeAngles;
 
-	if (IsInThirdPerson())
+	if (IsInThirdPerson() && this == GetLocalSDKPlayer())
 		VectorAngles(m_vecThirdTarget - EyePosition(), Vector(0, 0, 1), angCharacterEyeAngles);
 
 	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
