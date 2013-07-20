@@ -58,6 +58,8 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 		m_eWeaponType = WT_PISTOL;
 	else if (FStrEq(pszWeaponType, "melee"))
 		m_eWeaponType = WT_MELEE;
+	else if (FStrEq(pszWeaponType, "grenade"))
+		m_eWeaponType = WT_GRENADE;
 	else
 		m_eWeaponType = WT_NONE;
 

@@ -323,7 +323,11 @@ void CDABBuyMenu::Update()
 
 		m_apTypes.AddToTail(new CFolderLabel(this, nullptr));
 
-		m_apTypes.Tail()->SetText((std::string("#DA_WeaponType_") + WeaponTypeToAlias(pInfo->m_eWeaponType)).c_str());
+		const char* pWeaponType = WeaponTypeToAlias(pInfo->m_eWeaponType);
+		if (pWeaponType)
+			m_apTypes.Tail()->SetText((std::string("#DA_WeaponType_") + pWeaponType).c_str());
+		else
+			m_apTypes.Tail()->SetText("#DA_WeaponType_None");
 		m_apTypes.Tail()->SetPos(iWeaponTypeX, iWeaponY);
 		m_apTypes.Tail()->SetZPos(-5);
 		m_apTypes.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));

@@ -1383,6 +1383,9 @@ bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 			return false;
 	}
 
+	if (pWeaponInfo->m_eWeaponType == WT_GRENADE && m_aLoadout[eWeapon].m_iCount)
+		return false;
+
 	return true;
 }
 

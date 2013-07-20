@@ -22,6 +22,7 @@ typedef enum {
 	WT_SHOTGUN,
 	WT_SMG,
 	WT_PISTOL,
+	WT_GRENADE,
 
 	WT_MAX
 } weapontype_t;

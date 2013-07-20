@@ -64,6 +64,7 @@ inline const char* WeaponTypeToAlias( weapontype_t id )
 		"shotgun",
 		"smg",
 		"pistol",
+		"grenade",
 	};
 
 	return aszWeaponTypes[id];
