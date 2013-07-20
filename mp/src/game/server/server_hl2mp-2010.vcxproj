@@ -1149,6 +1149,7 @@ exit 1
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
     <ClCompile Include="sdk\bots\bot_main.cpp" />
+    <ClCompile Include="sdk\bots\sdk_bot.cpp" />
     <ClCompile Include="sdk\da_ammo_pickup.cpp" />
     <ClCompile Include="sdk\da_powerup.cpp" />
     <ClCompile Include="sdk\da_spawngenerator.cpp" />

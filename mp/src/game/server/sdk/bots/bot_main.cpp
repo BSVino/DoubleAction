@@ -19,13 +19,19 @@
 #include "nav_pathfind.h"
 #include "nav_area.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 class CSDKBot;
 void Bot_Think( CSDKBot *pBot );
 
 
 // Handler for the "bot" command.
-CON_COMMAND_F( bot_add, "Add a bot.", 0 /*FCVAR_CHEAT*/ )
+CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
 	if( !TheNavMesh->IsLoaded() )
 		Warning( "No navigation mesh loaded! Can't create bot" );
 
@@ -100,12 +106,7 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 	pPlayer->ChangeTeam( 0 );
 	pPlayer->RemoveAllItems( true );
 
-	// Spawn() doesn't work with MP template codebase, even if this line is part of default bot template...
-	//pPlayer->Spawn();
-
-	CCommand args;
-	args.Tokenize( "joingame" );
-	pPlayer->ClientCommand( args );
+	pPlayer->Initialize();
 
 	// set bot skills
 	pPlayer->m_flSkill[BOT_SKILL_YAW_RATE] = random->RandomFloat(SKILL_MIN_YAW_RATE, SKILL_MAX_YAW_RATE);

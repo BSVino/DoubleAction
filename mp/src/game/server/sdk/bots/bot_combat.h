@@ -9,6 +9,7 @@
 #include "movehelper_server.h"
 #include "gameinterface.h"
 #include "bot_main.h"
+#include "sdk_bot.h"
 
 
 bool AcquireEnemy( CSDKBot *pBot )

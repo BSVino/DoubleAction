@@ -10,7 +10,6 @@
 
 #include "cbase.h"
 #include "player.h"
-#include "sdk_player.h"
 
 #include "nav_mesh.h"
 #include "nav_pathfind.h"
@@ -77,102 +76,9 @@ struct NavAreaData_t
 // intermediate sized hull used when we want to test something smaller than the full bot hull, and bigger than a simple trace line
 static Vector BotTestHull = Vector(5,5,5);
 
-// This is our bot class.
-class CSDKBot : public CSDKPlayer
-{
-public:
-	DECLARE_CLASS( CSDKBot, CSDKPlayer );
-
-	float			m_flNextStrafeTime;
-	float			m_flStrafeSkillRelatedTimer;
-	float			m_flSideMove;
-
-	QAngle			m_ForwardAngle;
-	QAngle			m_LastAngles;
-
-	// behaviour - capabilities
-	int m_nBotState;
-	int m_nBotSchedule;
-	float m_flSkill[BOT_SKILL_MAX_TOKENS];
-
-	// navigation
-	float m_flNextJump;
-	bool m_bIsOnLadder;
-	CUtlVector <NavAreaData_t> m_Waypoints;
-	float m_flNextPathCheck;
-	float m_flDontUseDirectNav;
-	float m_flTimeToRecheckStuck;
-	float m_flDesiredYaw;
-	float m_flNextDealObstacles;
-	int m_nIsHiding;
-	CUtlVector<int> m_AlreadyCheckedHideSpots;
-	float m_flCreateRandomPathCoolDown;
-	float m_flNextProximityCheck;
-	float m_flBotToEnemyDist;
-	float m_flDistTraveled;
-	float m_flHeightDifToEnemy;
-
-	// combat
-	EHANDLE hEnemy;
-	float m_flTimeToRecheckEnemy;
-	bool m_bEnemyOnSights;	
-	bool m_bInRangeToAttack;
-	float m_flNextBotAttack;
-	float m_flMinRangeAttack;
-
-	bool HasEnemy() { return (hEnemy.Get() != NULL && hEnemy.Get()->IsAlive()); }
-	bool RecheckEnemy() { return m_flTimeToRecheckEnemy < gpGlobals->curtime; }
-
-	CBasePlayer *GetEnemy() { return dynamic_cast<CBasePlayer *>(hEnemy.Get()); }
-		
-	void Spawn()
-	{
-		BaseClass::Spawn();
-
-		hEnemy.Set(NULL);
-		ResetNavigationParams();	
-		m_AlreadyCheckedHideSpots.RemoveAll();
-		m_flNextDealObstacles = 0;
-		m_flCreateRandomPathCoolDown = 0;
-		m_flNextProximityCheck = 0;		
-		m_flDistTraveled = 0; // distance this bot has traveled recently, since last stuck check
-		m_flMinRangeAttack = 60.0f;
-		m_bInRangeToAttack = false;
-		m_flNextAttack = gpGlobals->curtime;
-		m_flNextStrafeTime = 0;
-		m_flStrafeSkillRelatedTimer = 0;
-	}
-
-	void ResetNavigationParams()
-	{
-		m_Waypoints.RemoveAll();
-		m_flNextJump = 0;
-		m_bIsOnLadder = false;
-		m_flNextPathCheck = 0;
-		m_flDontUseDirectNav = 0;
-	}
-
-	void AddWaypoint( Vector center, NavTraverseType transient, int attribute, int id, bool AddToTail = false )
-	{  
-		NavAreaData_t data;
-		VectorCopy( center, data.Center );
-		data.TransientType = transient;
-		data.AttributeType = attribute;
-		data.Id = id;		
-
-		if( AddToTail )
-			m_Waypoints.AddToTail(data); 
-		else
-			m_Waypoints.AddToHead(data); 	
-	}
-
-	void ResetWaypoints( void ) { m_Waypoints.RemoveAll(); }
-};
-
-
 CBasePlayer *BotPutInServer( bool bFrozen );
 
-bool CreatePath( CSDKBot *pBot, CBasePlayer *pPlayer, Vector OptionalOrg = vec3_origin );
+bool CreatePath( class CSDKBot *pBot, CBasePlayer *pPlayer, Vector OptionalOrg = vec3_origin );
 
 void Bot_RunAll();
 
