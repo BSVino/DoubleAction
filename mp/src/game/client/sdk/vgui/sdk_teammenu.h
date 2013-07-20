@@ -9,6 +9,8 @@
 #ifndef SDK_TEAMMENU_H
 #define SDK_TEAMMENU_H
 
+#include <string>
+
 #include "teammenu.h"
 #include <classmenu.h>
 #include <vgui_controls/EditablePanel.h>
@@ -31,12 +33,7 @@ public:
 	virtual void OnCursorEntered();
 
 private:
-	char m_szCharacter[100];
-	char m_szSequence[100];
-	char m_szWeaponModel[100];
-
-	float m_flBodyPitch;
-	float m_flBodyYaw;
+	int m_iSkin;
 };
 
 class CSDKTeamMenu : public CFolderMenu, public IViewPortPanel
@@ -50,10 +47,13 @@ public:
 	CSDKTeamMenu(IViewPort *pViewPort);
 	virtual ~CSDKTeamMenu();
 
+	virtual void ApplySettings( KeyValues *resourceData );
+
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	
 	virtual void Reset();
 	virtual void Update();
+	virtual void UpdateCharacter();
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void SetVisible(bool state);
@@ -68,6 +68,7 @@ public:
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
 	void SetCharacterPreview( const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch );
+	void SetCharacterSkin( int iSkin );
 
 	vgui::Label*       GetCharacterInfo();
 	class CModelPanel* GetCharacterImage();
@@ -80,11 +81,12 @@ private:
 
 	ButtonCode_t m_iCharacterMenuKey;
 
-	const char*	m_pszCharacterModel;
-	const char*	m_pszCharacterSequence;
-	const char*	m_pszCharacterWeaponModel;
-	float		m_flBodyYaw;
-	float		m_flBodyPitch;
+	std::string m_sCharacterModel;
+	std::string m_sCharacterSequence;
+	std::string m_sCharacterWeaponModel;
+	float       m_flBodyYaw;
+	float       m_flBodyPitch;
+	int         m_iCharacterSkin;
 
 	// rounded corners
 	//Color					 m_bgColor;

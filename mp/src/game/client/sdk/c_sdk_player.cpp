@@ -473,8 +473,12 @@ void C_SDKRagdoll::CreateRagdoll()
 
 	}
 
-	SetModelIndex( m_nModelIndex );
-	
+	if (pPlayer)
+	{
+		SetModelIndex( m_nModelIndex );
+		m_nSkin = pPlayer->m_nSkin;
+	}
+
 	// Turn it into a ragdoll.
 	if ( cl_ragdoll_physics_enable.GetInt() )
 	{

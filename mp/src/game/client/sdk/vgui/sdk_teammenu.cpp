@@ -61,16 +61,7 @@ void CTeamButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
-	strcpy(m_szCharacter, resourceData->GetString("character"));
-
-	const char* pszSequence = resourceData->GetString("sequence", "");
-	strcpy(m_szSequence, pszSequence);
-
-	const char* pszWeaponModel = resourceData->GetString("weaponmodel", "");
-	strcpy(m_szWeaponModel, pszWeaponModel);
-
-	m_flBodyYaw = resourceData->GetFloat("body_yaw");
-	m_flBodyPitch = resourceData->GetFloat("body_pitch");
+	m_iSkin = resourceData->GetFloat("skin");
 }
 
 void CTeamButton::OnCursorEntered()
@@ -81,23 +72,15 @@ void CTeamButton::OnCursorEntered()
 	if (!pParent)
 		return;
 
-	pParent->SetCharacterPreview(m_szCharacter, m_szSequence, m_szWeaponModel, m_flBodyYaw, m_flBodyPitch);
-
-	vgui::Label* pInfoLabel = pParent->GetCharacterInfo();
-	if (pInfoLabel)
-	{
-		if (m_szCharacter[0])
-			pInfoLabel->SetText((std::string("#characterinfo_") + m_szCharacter).c_str());
-		else
-			pInfoLabel->SetText(m_szCharacter);
-	}
+	pParent->SetCharacterSkin(m_iSkin);
 }
 
 CSDKTeamMenu::CSDKTeamMenu(IViewPort *pViewPort) : CFolderMenu( PANEL_TEAM )
 {
 	m_pViewPort = pViewPort;
 
-	m_pszCharacterModel = "";
+	m_sCharacterModel = "";
+	m_iCharacterSkin = 0;
 
 	m_pCharacterInfo = new CFolderLabel(this, "CharacterInfo");
 	m_pCharacterImage = new CModelPanel(this, "CharacterImage");
@@ -111,6 +94,26 @@ CSDKTeamMenu::CSDKTeamMenu(IViewPort *pViewPort) : CFolderMenu( PANEL_TEAM )
 //Destructor
 CSDKTeamMenu::~CSDKTeamMenu()
 {
+}
+
+void CSDKTeamMenu::ApplySettings( KeyValues *resourceData )
+{
+	BaseClass::ApplySettings( resourceData );
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
+	const char* pszCharacter = pPlayer->GetCharacter();
+	if (!pszCharacter[0])
+		return;
+
+	KeyValues* pPose = resourceData->FindKey(VarArgs("%s_pose", pszCharacter));
+	Assert(pPose);
+	if (!pPose)
+		return;
+
+	SetCharacterPreview(pszCharacter, pPose->GetString("sequence"), pPose->GetString("weaponmodel"), pPose->GetFloat("body_yaw"), pPose->GetFloat("body_pitch"));
 }
 
 void CSDKTeamMenu::Reset()
@@ -127,6 +130,7 @@ void CSDKTeamMenu::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
+		LoadControlSettings( "Resource/UI/TeamMenu.res" );
 		Activate();
 		SetMouseInputEnabled( true );
 	}
@@ -159,43 +163,17 @@ void CSDKTeamMenu::OnKeyCodePressed( KeyCode code )
 //-----------------------------------------------------------------------------
 void CSDKTeamMenu::Update( void )
 {
-	//BaseClass::Update();
+	BaseClass::Update();
 
-	//const ConVar *allowspecs =  cvar->FindVar( "mp_allowspectators" );
+	// The character was changed. Reload control settings so that animation is updated.
+	LoadControlSettings( "Resource/UI/TeamMenu.res" );
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	
-	if ( !pPlayer )//|| !SDKGameRules() )
+	if ( !pPlayer )
 		return;
 
-	/*if ( allowspecs && allowspecs->GetBool() )
-	{
-		if ( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED || ( pPlayer && pPlayer->IsPlayerDead() ) )
-		{
-			SetVisibleButton("specbutton", true);
-		}
-		else
-		{
-			SetVisibleButton("specbutton", false);
-		}
-	}
-	else
-	{
-		SetVisibleButton("specbutton", false );
-	}
-
-	if( pPlayer->GetTeamNumber() == TEAM_UNASSIGNED ) // we aren't on a team yet
-	{
-		SetVisibleButton("CancelButton", false); 
-	}
-	else
-	{
-		SetVisibleButton("CancelButton", true); 
-	}
-
-	MoveToCenterOfScreen();*/
-
-	Label *pStatusLabel = dynamic_cast<Label *>(FindChildByName("frankteaminfo"));
+	Label *pStatusLabel = dynamic_cast<Label *>(FindChildByName("blueteaminfo"));
 	C_Team *team = GetGlobalTeam(SDK_TEAM_BLUE);
 	if (pStatusLabel && team)
 	{
@@ -216,7 +194,7 @@ void CSDKTeamMenu::Update( void )
 		}
 	}
 
-	pStatusLabel = dynamic_cast<Label *>(FindChildByName("wishteaminfo"));
+	pStatusLabel = dynamic_cast<Label *>(FindChildByName("redteaminfo"));
 	team = GetGlobalTeam(SDK_TEAM_RED);
 	if (pStatusLabel && team)
 	{
@@ -236,6 +214,16 @@ void CSDKTeamMenu::Update( void )
 			pStatusLabel->SetText(szText);
 		}
 	}
+
+	UpdateCharacter();
+}
+
+void CSDKTeamMenu::UpdateCharacter()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	
+	if ( !pPlayer )
+		return;
 
 	const char szPlayerPreviewTemplate[] =
 		"	\"model\"\n"
@@ -263,14 +251,14 @@ void CSDKTeamMenu::Update( void )
 		"		}\n"
 		"	}";
 
-	if (strcmp(m_pszCharacterModel, "random") == 0)
+	if (m_sCharacterModel == "random")
 		m_pCharacterImage->SwapModel("");
-	else if (m_pszCharacterModel[0])
+	else if (m_sCharacterModel.length())
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
 
-		std::string sCharacter = std::string("models/player/") + m_pszCharacterModel + ".mdl";
+		std::string sCharacter = std::string("models/player/") + m_sCharacterModel + ".mdl";
 		pValues->SetString("modelname", sCharacter.c_str());
 
 		ConVarRef hud_characterpreview_x( "hud_characterpreview_x" );
@@ -284,7 +272,7 @@ void CSDKTeamMenu::Update( void )
 		KeyValues* pAnimation = pValues->FindKey("animation");
 		if (pAnimation)
 		{
-			pAnimation->SetString("sequence", m_pszCharacterSequence);
+			pAnimation->SetString("sequence", m_sCharacterSequence.c_str());
 
 			KeyValues* pPoseParameters = pAnimation->FindKey("pose_parameters");
 			if (pPoseParameters)
@@ -296,14 +284,14 @@ void CSDKTeamMenu::Update( void )
 
 		KeyValues* pWeapon = pValues->FindKey("attached_model");
 		if (pWeapon)
-			pWeapon->SetString("modelname", m_pszCharacterWeaponModel);
+			pWeapon->SetString("modelname", m_sCharacterWeaponModel.c_str());
+
+		pValues->SetInt("skin", m_iCharacterSkin);
 
 		m_pCharacterImage->ParseModelInfo(pValues);
 
 		pValues->deleteThis();
 	}
-
-	BaseClass::Update();
 }
 
 Panel *CSDKTeamMenu::CreateControlByName( const char *controlName )
@@ -389,13 +377,20 @@ void CSDKTeamMenu::OnCommand( const char *command )
 
 void CSDKTeamMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
-	m_pszCharacterModel = pszPreview;
-	m_pszCharacterSequence = pszSequence;
-	m_pszCharacterWeaponModel = pszWeaponModel;
+	m_sCharacterModel = pszPreview;
+	m_sCharacterSequence = pszSequence;
+	m_sCharacterWeaponModel = pszWeaponModel;
 	m_flBodyPitch = flPitch;
 	m_flBodyYaw = flYaw;
 
-	Update();
+	UpdateCharacter();
+}
+
+void CSDKTeamMenu::SetCharacterSkin(int iSkin)
+{
+	m_iCharacterSkin = iSkin;
+
+	UpdateCharacter();
 }
 
 //-----------------------------------------------------------------------------

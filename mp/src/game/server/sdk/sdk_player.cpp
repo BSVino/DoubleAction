@@ -1006,13 +1006,15 @@ void CSDKPlayer::Spawn()
 		switch(GetTeamNumber())
 		{
 		case SDK_TEAM_BLUE:
-			SetCharacter("frank");
+			m_nSkin = 1;
 			break;
 		case SDK_TEAM_RED:
-			SetCharacter("wish");
+			m_nSkin = 2;
 			break;
 		}
 	}
+	else
+		m_nSkin = 0;
 
 	MDLCACHE_CRITICAL_SECTION();
 
@@ -2198,6 +2200,7 @@ void CSDKPlayer::CreateRagdollEntity()
 		pRagdoll->m_vecRagdollOrigin = GetAbsOrigin();
 		pRagdoll->m_vecRagdollVelocity = GetAbsVelocity();
 		pRagdoll->m_nModelIndex = m_nModelIndex;
+		pRagdoll->m_nSkin = m_nSkin;
 		pRagdoll->m_nForceBone = m_nForceBone;
 		pRagdoll->m_vecForce = m_vecTotalBulletForce;
 		pRagdoll->Spawn();
@@ -2367,19 +2370,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_MAPINFO )
 		{
-//Tony; using teams, go to picking team.
-#if defined( SDK_USE_TEAMS )
-			if (gpGlobals->teamplay)
-				State_Transition( STATE_PICKINGTEAM );
-			else
-//Tony; not using teams, but we are using classes, so go straight to class picking.
-#elif !defined ( SDK_USE_TEAMS ) && defined ( SDK_USE_PLAYERCLASSES )
-			State_Transition( STATE_PICKINGCLASS );
-//Tony; not using teams or classes, go straight to active.
-#endif
 			State_Transition( STATE_PICKINGCHARACTER );
 		}
-		
+
 		return true;
 	}
 	else if ( FStrEq( pcmd, "joinclass" ) ) 
@@ -3893,27 +3886,26 @@ void CC_Character(const CCommand& args)
 	if (args.ArgC() == 1)
 	{
 		if (pPlayer->IsAlive())
-			gpGlobals->teamplay ? pPlayer->ShowTeamMenu() : pPlayer->ShowCharacterMenu();
+			pPlayer->ShowCharacterMenu();
 		else
-			gpGlobals->teamplay ? pPlayer->State_Transition(STATE_PICKINGTEAM) : pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
 
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
-		if (gpGlobals->teamplay)
-		{
-			Msg("Can't set character in teamplay");
-			return;
-		}
-
 		pPlayer->StopObserverMode();
 
 		if (pPlayer->SetCharacter(args[1]))
 		{
 			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+			{
+				if (gpGlobals->teamplay)
+					pPlayer->State_Transition( STATE_PICKINGTEAM );
+				else
+					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+			}
 
 			return;
 		}
@@ -3923,7 +3915,12 @@ void CC_Character(const CCommand& args)
 			if (pPlayer->PickRandomCharacter())
 			{
 				if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+				{
+					if (gpGlobals->teamplay)
+						pPlayer->State_Transition( STATE_PICKINGTEAM );
+					else
+						pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+				}
 
 				return;
 			}

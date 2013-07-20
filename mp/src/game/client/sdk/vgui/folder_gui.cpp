@@ -16,6 +16,7 @@
 
 #include "ammodef.h"
 #include "c_sdk_player.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -248,6 +249,18 @@ void CFolderMenu::Update()
 			if (pWeapon)
 				pWeapon->SetString("modelname", "");
 		}
+
+		if (SDKGameRules()->IsTeamplay())
+		{
+			if (pPlayer->GetTeamNumber() == SDK_TEAM_BLUE)
+				pValues->SetInt("skin", 1);
+			else if (pPlayer->GetTeamNumber() == SDK_TEAM_RED)
+				pValues->SetInt("skin", 2);
+			else
+				pValues->SetInt("skin", 0);
+		}
+		else
+			pValues->SetInt("skin", 0);
 
 		pPlayerPreview->ParseModelInfo(pValues);
 
