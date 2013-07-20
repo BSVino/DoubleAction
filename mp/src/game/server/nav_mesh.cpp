@@ -21,8 +21,6 @@
 #endif
 #include "functorutils.h"
 
-#include "NextBot/NavMeshEntities/func_nav_prerequisite.h"
-
 // NOTE: This has to be the last file included!
 #include "tier0/memdbgon.h"
 
@@ -615,6 +613,7 @@ void CNavMesh::OnRoundRestart( void )
 		area->RemoveAllPrerequisites();
 	}
 
+#ifdef NEXT_BOT
 	// attach prerequisites
 	CFuncNavPrerequisite *prereq = NULL;
 	while( ( prereq = (CFuncNavPrerequisite *)gEntList.FindEntityByClassname( prereq, "func_nav_prerequisite" ) ) != NULL )
@@ -626,6 +625,7 @@ void CNavMesh::OnRoundRestart( void )
 
 		ForAllAreasOverlappingExtent( apply, prereqExtent );
 	}
+#endif
 }
 
 

@@ -393,10 +393,10 @@ private:
 
 	virtual void	SharedSpawn();
 
+public:
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
-public:
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 	virtual bool		SuicideAllowed( void ) { return GetCurrentTime() > m_flNextSuicideTime; }
 

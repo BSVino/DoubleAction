@@ -28,7 +28,7 @@
 #include "sdk_player.h"
 #include "sdk_gamerules.h"
 #include "tier0/vprof.h"
-#include "sdk_bot_temp.h"
+#include "bots/bot_main.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

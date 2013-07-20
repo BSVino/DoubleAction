@@ -28,6 +28,7 @@
 #include "vphysics/player_controller.h"
 #include "igamemovement.h"
 #include "da_ammo_pickup.h"
+#include "bots/bot_main.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1014,6 +1015,9 @@ void CSDKPlayer::Spawn()
 
 	MDLCACHE_CRITICAL_SECTION();
 
+	if (!STRING(m_iszCharacter.Get())[0])
+		PickRandomCharacter();
+
 	if (STRING(m_iszCharacter.Get())[0])
 		SetModel( UTIL_VarArgs("models/player/%s.mdl", STRING(m_iszCharacter.Get())) );
 	else
@@ -1340,6 +1344,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	//Tony; only check teams in teamplay
 	if ( gpGlobals->teamplay )
 		bCheckFriendlyFire = true;
+
+	//R_Yell - mp_friendlyfire by default doesn't let us damage bots. This check turns FF off in bot vs human situations, you still can use mp_friendlyfire to disallow FF among humans
+	CBasePlayer *pPlayer = ToBasePlayer(pInflictor);
+	if( pPlayer && (pPlayer->IsBot() && !IsBot()) || (!pPlayer->IsBot() && IsBot()) )
+		bFriendlyFire = true;
+	//
 
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
@@ -3000,7 +3010,7 @@ void CSDKPlayer::MoveToNextIntroCamera()
 
 	// if we still couldn't find a camera, goto T spawn
 	if(!m_pIntroCamera)
-		m_pIntroCamera = gEntList.FindEntityByClassname(m_pIntroCamera, "info_player_terrorist");
+		m_pIntroCamera = gEntList.FindEntityByClassname(m_pIntroCamera, "info_player_deathmatch");
 
 	SetViewOffset( vec3_origin );	// no view offset
 	UTIL_SetSize( this, vec3_origin, vec3_origin ); // no bbox

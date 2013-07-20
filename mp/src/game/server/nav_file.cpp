@@ -1317,6 +1317,7 @@ const CUtlVector< Place > *CNavMesh::GetPlacesFromNavFile( bool *hasUnnamedPlace
 	
 	if ( IsX360() )
 	{
+#ifdef _XBOX
 		// 360 has compressed NAVs
 		CLZMA lzma;
 		if ( lzma.IsCompressed( (unsigned char *)fileBuffer.Base() ) )
@@ -1326,6 +1327,9 @@ const CUtlVector< Place > *CNavMesh::GetPlacesFromNavFile( bool *hasUnnamedPlace
 			lzma.Uncompress( (unsigned char *)fileBuffer.Base(), pOriginalData );
 			fileBuffer.AssumeMemory( pOriginalData, originalSize, originalSize, CUtlBuffer::READ_ONLY );
 		}
+#else
+		AssertMsg(false, "No LZMA");
+#endif
 	}
 
 	// check magic number
@@ -1410,6 +1414,7 @@ NavErrorType CNavMesh::Load( void )
 
 	if ( IsX360() )
 	{
+#ifdef _XBOX
 		// 360 has compressed NAVs
 		CLZMA lzma;
 		if ( lzma.IsCompressed( (unsigned char *)fileBuffer.Base() ) )
@@ -1419,6 +1424,9 @@ NavErrorType CNavMesh::Load( void )
 			lzma.Uncompress( (unsigned char *)fileBuffer.Base(), pOriginalData );
 			fileBuffer.AssumeMemory( pOriginalData, originalSize, originalSize, CUtlBuffer::READ_ONLY );
 		}
+#else
+		AssertMsg(false, "No LZMA");
+#endif
 	}
 
 	// check magic number

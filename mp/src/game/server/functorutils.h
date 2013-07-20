@@ -5,9 +5,6 @@
 #ifndef _FUNCTOR_UTILS_H_
 #define _FUNCTOR_UTILS_H_
 
-#include "NextBotInterface.h"
-#include "NextBotManager.h"
-
 //--------------------------------------------------------------------------------------------------------
 /**
  * NOTE: The functors in this file should ideally be game-independent, 
@@ -321,21 +318,13 @@ inline bool ForEachActor( Functor &func )
 		if ( !player->IsConnected() )
 			continue;
 
-		// skip bots - ForEachCombatCharacter will catch them
-		INextBot *bot = player->MyNextBotPointer();
-		if ( bot )
-		{
-			continue;
-		}
-
 		if ( func( player ) == false )
 		{
 			return false;
 		}
 	}
 
-	// iterate all NextBots
-	return TheNextBots().ForEachCombatCharacter( func );
+	return true;
 }
 
 
@@ -385,24 +374,11 @@ inline bool ForEachActor( IActorFunctor &func )
 		if ( !player->IsConnected() )
 			continue;
 
-		// skip bots - ForEachCombatCharacter will catch them
-		INextBot *bot = dynamic_cast< INextBot * >( player );
-		if ( bot )
-		{
-			continue;
-		}
-
 		if ( func( player ) == false )
 		{
 			isComplete = false;
 			break;
 		}
-	}
-
-	if ( !isComplete )
-	{
-		// iterate all NextBots
-		isComplete = TheNextBots().ForEachCombatCharacter( func );
 	}
 
 	func.OnEndIteration( isComplete );

@@ -1050,6 +1050,18 @@ exit 1
     <ClCompile Include="..\..\game\shared\movevars_shared.cpp" />
     <ClCompile Include="..\..\game\shared\mp_shareddefs.cpp" />
     <ClCompile Include="..\..\game\shared\multiplay_gamerules.cpp" />
+    <ClCompile Include="nav_area.cpp" />
+    <ClCompile Include="nav_colors.cpp" />
+    <ClCompile Include="nav_edit.cpp" />
+    <ClCompile Include="nav_entities.cpp" />
+    <ClCompile Include="nav_file.cpp" />
+    <ClCompile Include="nav_generate.cpp" />
+    <ClCompile Include="nav_ladder.cpp" />
+    <ClCompile Include="nav_merge.cpp" />
+    <ClCompile Include="nav_mesh.cpp" />
+    <ClCompile Include="nav_mesh_factory.cpp" />
+    <ClCompile Include="nav_node.cpp" />
+    <ClCompile Include="nav_simplify.cpp" />
     <ClCompile Include="ndebugoverlay.cpp" />
     <ClCompile Include="..\..\public\networkvar.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -1136,6 +1148,7 @@ exit 1
     </ClCompile>
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
+    <ClCompile Include="sdk\bots\bot_main.cpp" />
     <ClCompile Include="sdk\da_ammo_pickup.cpp" />
     <ClCompile Include="sdk\da_powerup.cpp" />
     <ClCompile Include="sdk\da_spawngenerator.cpp" />

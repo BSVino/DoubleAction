@@ -34,6 +34,9 @@
     <Filter Include="DA\Player">
       <UniqueIdentifier>{9757454c-5714-4f48-ad60-33b98449fbab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DA\Player\bots">
+      <UniqueIdentifier>{eca4ad9f-dbf8-4f4e-8483-a9d151f49b31}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\win32\release\VS2010\libprotobuf.lib">
@@ -2967,6 +2970,45 @@
     </ClCompile>
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp">
       <Filter>DA\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bots\bot_main.cpp">
+      <Filter>DA\Player\bots</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_area.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_colors.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_entities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_file.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_generate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_ladder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_merge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_mesh_factory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_simplify.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nav_edit.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

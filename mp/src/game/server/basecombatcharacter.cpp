@@ -3427,7 +3427,7 @@ float CBaseCombatCharacter::GetFogObscuredRatio( float range ) const
 //-----------------------------------------------------------------------------
 void CBaseCombatCharacter::UpdateLastKnownArea( void )
 {
-#ifdef NEXT_BOT
+//#ifdef NEXT_BOT
 	if ( TheNavMesh->IsGenerating() )
 	{
 		ClearLastKnownArea();
@@ -3472,7 +3472,7 @@ void CBaseCombatCharacter::UpdateLastKnownArea( void )
 
 		m_lastNavArea = area;
 	}
-#endif
+//#endif
 }
 
 
