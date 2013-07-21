@@ -139,11 +139,28 @@ void CSDKBot::BotThink()
 	CUserCmd cmd;
 	Q_memset( &cmd, 0, sizeof( cmd ) );
 
+	ConVarRef bot_freeze("bot_freeze");
+
 	if ( !IsAlive() )
 	{
 		HandleRespawn(cmd);
 	}
-	else
+	else if (bot_mimic.GetBool())
+	{
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex( bot_mimic.GetInt()  );
+		if ( pPlayer && pPlayer->GetLastUserCommand() )
+		{
+			cmd = *pPlayer->GetLastUserCommand();
+
+			ConVarRef bot_mimic_yaw_offset("bot_mimic_yaw_offset");
+			cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+			ConVarRef bot_crouch("bot_crouch");
+			if( bot_crouch.GetInt() )
+				cmd.buttons |= IN_DUCK;
+		}
+	}
+	else if (!bot_freeze.GetBool())
 	{
 		trace_t tr_front;
 		Vector Forward;
