@@ -79,6 +79,7 @@ protected:
 	float m_flBotToEnemyDist;
 	float m_flDistTraveled;
 	float m_flHeightDifToEnemy;
+	float m_flLastStuntTime;
 
 	// combat
 	EHANDLE hEnemy;

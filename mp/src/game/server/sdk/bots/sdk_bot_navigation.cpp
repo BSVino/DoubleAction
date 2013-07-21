@@ -475,6 +475,28 @@ bool CSDKBot::SafePathAhead( Vector origin )
 
 void CSDKBot::Navigation( CUserCmd &cmd )
 {
+	int iLikelihood = 3;
+	if (m_bEnemyOnSights)
+		iLikelihood = 1;
+	if (gpGlobals->curtime > m_flLastStuntTime + 4 && random->RandomInt(0, iLikelihood) == 0)
+	{
+		switch (random->RandomInt(0, 1))
+		{
+		default:
+		case 0:
+			// Dive
+			cmd.buttons |= IN_ALT1;
+			break;
+
+		case 1:
+			// Slide
+			cmd.buttons |= IN_DUCK|IN_ALT1;
+			break;
+		}
+
+		m_flLastStuntTime = gpGlobals->curtime;
+	}
+
 	// teammate proximity check - this prevents two bots share same space, in case collisions among bots are disabled
 	if( m_flNextProximityCheck < gpGlobals->curtime )
 	{
