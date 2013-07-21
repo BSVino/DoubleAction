@@ -1324,6 +1324,8 @@ void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &ve
 	BaseClass::TraceAttack( inputInfo, vecDir, ptr, pAccumulator );
 }
 
+ConVar bot_easy( "bot_easy", "1", 0, "Make bots easier" );
+
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
@@ -1352,13 +1354,16 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bCheckFriendlyFire = true;
 
 	//R_Yell - mp_friendlyfire by default doesn't let us damage bots. This check turns FF off in bot vs human situations, you still can use mp_friendlyfire to disallow FF among humans
-	CBasePlayer *pPlayer = ToBasePlayer(info.GetAttacker());
-	if (pPlayer)
+	CBasePlayer *pAttacker = ToBasePlayer(info.GetAttacker());
+	if (pAttacker)
 	{
-		if (pPlayer->IsBot() != IsBot())
+		if (pAttacker->IsBot() != IsBot())
 			bFriendlyFire = true;
 	}
 	//
+
+	if (bot_easy.GetBool() && !IsBot() && pAttacker->IsBot())
+		flDamage *= 0.3f;
 
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
