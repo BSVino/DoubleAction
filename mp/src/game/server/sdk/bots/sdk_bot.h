@@ -9,6 +9,44 @@ class CSDKBot : public CSDKPlayer
 public:
 	DECLARE_CLASS( CSDKBot, CSDKPlayer );
 
+public:
+	void Initialize();
+
+	void BotThink();
+
+protected:
+	bool HasEnemy() { return (hEnemy.Get() != NULL && hEnemy.Get()->IsAlive()); }
+	bool RecheckEnemy() { return m_flTimeToRecheckEnemy < gpGlobals->curtime; }
+
+	CBasePlayer *GetEnemy() { return dynamic_cast<CBasePlayer *>(hEnemy.Get()); }
+
+	void Spawn();
+
+	void RunPlayerMove( CUserCmd &cmd, float frametime );
+
+	void HandleRespawn( CUserCmd &cmd );
+	void InfoGathering();
+
+	void ResetNavigationParams();
+	void AddWaypoint( Vector center, NavTraverseType transient, int attribute, int id, bool AddToTail = false );
+	void ResetWaypoints( void ) { m_Waypoints.RemoveAll(); }
+
+	void DealWithObstacles( CBaseEntity *pTouchEnt, CUserCmd &cmd );
+	void AddRandomPath( float randomStartAngle = 0 );
+	bool BotOnLadder();
+	bool ArrivedToWaypoint();
+	void CheckStuck( CUserCmd &cmd );
+	void CheckNavMeshAttrib( trace_t *ptr, CUserCmd &cmd );
+	bool CreatePath( CBasePlayer *pPlayer, Vector OptionalOrg = vec3_origin );
+	bool CreateHidePath( Vector &HiDeSpot );
+	void SelectSchedule( bool forcePath = false );
+	bool SafePathAhead( Vector origin );
+	void Navigation( CUserCmd &cmd  );
+
+	bool AcquireEnemy();
+	void Attack( CUserCmd &cmd );
+
+protected:
 	float			m_flNextStrafeTime;
 	float			m_flStrafeSkillRelatedTimer;
 	float			m_flSideMove;
@@ -45,16 +83,4 @@ public:
 	bool m_bInRangeToAttack;
 	float m_flNextBotAttack;
 	float m_flMinRangeAttack;
-
-	bool HasEnemy() { return (hEnemy.Get() != NULL && hEnemy.Get()->IsAlive()); }
-	bool RecheckEnemy() { return m_flTimeToRecheckEnemy < gpGlobals->curtime; }
-
-	CBasePlayer *GetEnemy() { return dynamic_cast<CBasePlayer *>(hEnemy.Get()); }
-
-	void Initialize();
-	void Spawn();
-
-	void ResetNavigationParams();
-	void AddWaypoint( Vector center, NavTraverseType transient, int attribute, int id, bool AddToTail = false );
-	void ResetWaypoints( void ) { m_Waypoints.RemoveAll(); }
 };

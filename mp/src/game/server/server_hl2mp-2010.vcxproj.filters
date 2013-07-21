@@ -3013,6 +3013,12 @@
     <ClCompile Include="sdk\bots\sdk_bot.cpp">
       <Filter>DA\Player\bots</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\bots\sdk_bot_combat.cpp">
+      <Filter>DA\Player\bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\bots\sdk_bot_navigation.cpp">
+      <Filter>DA\Player\bots</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

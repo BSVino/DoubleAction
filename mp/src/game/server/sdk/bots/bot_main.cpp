@@ -7,13 +7,10 @@
 #include "sdk_player.h"
 
 #include "in_buttons.h"
-#include "movehelper_server.h"
 #include "gameinterface.h"
-#include "datacache/imdlcache.h"
 
 #include "bot_main.h"
-#include "bot_combat.h"
-#include "bot_navigation.h"
+#include "sdk_bot.h"
 
 // support for nav mesh
 #include "nav_mesh.h"
@@ -106,11 +103,6 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 
 	pPlayer->Initialize();
 
-	// set bot skills
-	pPlayer->m_flSkill[BOT_SKILL_YAW_RATE] = random->RandomFloat(SKILL_MIN_YAW_RATE, SKILL_MAX_YAW_RATE);
-	pPlayer->m_flSkill[BOT_SKILL_SPEED] = random->RandomFloat(SKILL_MIN_SPEED, SKILL_MAX_SPEED);
-	pPlayer->m_flSkill[BOT_SKILL_STRAFE] = random->RandomFloat( SKILL_MIN_STRAFE, SKILL_MAX_STRAFE);
-
 	g_CurBotNumber++;
 
 	return pPlayer;
@@ -134,157 +126,7 @@ void Bot_RunAll( void )
 		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) )
 		{
 			CSDKBot *pBot = static_cast< CSDKBot* >( pPlayer );
-			Bot_Think( pBot );
+			pBot->BotThink();
 		}
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Simulates a single frame of movement for a player
-// Input  : *fakeclient - 
-//			*viewangles - 
-//			forwardmove - 
-//			m_flSideMove - 
-//			upmove - 
-//			buttons - 
-//			impulse - 
-//			msec - 
-// Output : 	virtual void
-//-----------------------------------------------------------------------------
-static void RunPlayerMove( CSDKPlayer *fakeclient, CUserCmd &cmd, float frametime )
-{
-	if ( !fakeclient )
-		return;
-
-	// Store off the globals.. they're gonna get whacked
-	float flOldFrametime = gpGlobals->frametime;
-	float flOldCurtime = gpGlobals->curtime;
-
-	float flTimeBase = gpGlobals->curtime + gpGlobals->frametime - frametime;
-	fakeclient->SetTimeBase( flTimeBase );
-
-	MoveHelperServer()->SetHost( fakeclient );
-
-	MDLCACHE_CRITICAL_SECTION();
-
-	fakeclient->PlayerRunCommand( &cmd, MoveHelperServer() );
-
-	// save off the last good usercmd
-	fakeclient->SetLastUserCommand( cmd );
-
-	// Clear out any fixangle that has been set
-	fakeclient->pl.fixangle = FIXANGLE_NONE;
-
-	// Restore the globals..
-	gpGlobals->frametime = flOldFrametime;
-	gpGlobals->curtime = flOldCurtime;
-}
-
-void Bot_HandleRespawn( CSDKBot *pBot, CUserCmd &cmd )
-{		
-	// Try hitting my buttons occasionally
-	if ( random->RandomInt( 0, 100 ) > 80 )
-	{
-		// Respawn the bot
-		if ( random->RandomInt( 0, 1 ) == 0 )
-		{
-			pBot->ClearLoadout();
-			pBot->BuyRandom();
-
-			pBot->PickRandomCharacter();
-			pBot->PickRandomSkill();
-
-			pBot->State_Transition( STATE_ACTIVE );
-		}
-		else
-		{
-			cmd.buttons = 0;
-		}
-	}	
-}
-
-// here bot updates important info that is used multiple times along the thinking process
-void BotInfoGathering( CSDKBot *pBot )
-{	
-	pBot->m_flBotToEnemyDist = (pBot->GetLocalOrigin() - pBot->GetEnemy()->GetLocalOrigin()).Length();
-
-	trace_t tr;
-	UTIL_TraceHull(  pBot->EyePosition(), pBot->GetEnemy()->EyePosition() - Vector(0,0,20), -BotTestHull, BotTestHull, MASK_SHOT, pBot, COLLISION_GROUP_NONE, &tr );
-	
-	if( tr.m_pEnt == pBot->GetEnemy() ) // vision line between both
-		pBot->m_bEnemyOnSights = true;
-	else
-		pBot->m_bEnemyOnSights = false;
-
-	pBot->m_bInRangeToAttack = (pBot->m_flBotToEnemyDist < pBot->m_flMinRangeAttack) && pBot->FInViewCone( pBot->GetEnemy() ); 
-
-	pBot->m_flDistTraveled += fabs(pBot->GetLocalVelocity().Length()); // this is used for stuck checking, 
-
-	pBot->m_flHeightDifToEnemy = pBot->GetLocalOrigin().z - pBot->GetEnemy()->GetLocalOrigin().z;
-}
-	
-
-//-----------------------------------------------------------------------------
-// Run this Bot's AI for one tick.
-//-----------------------------------------------------------------------------
-void Bot_Think( CSDKBot *pBot )
-{
-	// Make sure we stay being a bot
-	pBot->AddFlag( FL_FAKECLIENT );
-
-	if ( pBot->IsEFlagSet(EFL_BOT_FROZEN) )
-		return;
-
-	CUserCmd cmd;
-	Q_memset( &cmd, 0, sizeof( cmd ) );	
-
-	if ( !pBot->IsAlive() )
-	{
-		Bot_HandleRespawn( pBot, cmd );
-	}
-	else
-	{
-		trace_t tr_front;
-		Vector Forward;
-		AngleVectors(pBot->GetLocalAngles(), &Forward);
-		UTIL_TraceHull( pBot->GetLocalOrigin()+Vector(0,0,5), pBot->GetLocalOrigin() + Vector(0,0,5) + (Forward * 50), pBot->GetPlayerMins(), pBot->GetPlayerMaxs(), MASK_PLAYERSOLID, pBot, COLLISION_GROUP_NONE, &tr_front );
-
-		// enemy acquisition
-		if( !pBot->GetEnemy() || pBot->RecheckEnemy() || !pBot->GetEnemy()->IsAlive() )
-		{
-			if( pBot->GetEnemy() && !pBot->GetEnemy()->IsAlive() )
-				pBot->ResetNavigationParams();
-
-			if( !AcquireEnemy( pBot ) )
-				return;
-	
-			pBot->m_flTimeToRecheckEnemy = gpGlobals->curtime + 1.0f;
-		}
-
-		// assume we have an enemy from now on
-
-		BotInfoGathering( pBot );
-
-		BotAttack( pBot, cmd );
-
-		if( pBot->m_flTimeToRecheckStuck < gpGlobals->curtime )
-			CheckStuck( pBot, cmd );
-		
-		if( pBot->m_flNextDealObstacles < gpGlobals->curtime )
-			DealWithObstacles( pBot, tr_front.m_pEnt, cmd );	
-
-		BotNavigation( pBot, cmd );
-
-		CheckNavMeshAttrib(pBot, &tr_front, cmd);		
-	}
-
-	// debug waypoint related position
-	/*for( int i=0; i<pBot->m_Waypoints.Count(); i++ )
-	{
-		NDebugOverlay::Cross3DOriented( pBot->m_Waypoints[i].Center, QAngle(0,0,0), 5*i+1, 200, 0, 0, false, -1 );
-	}*/
-
-	RunPlayerMove( pBot, cmd, gpGlobals->frametime );		
-}
-
-

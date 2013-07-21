@@ -78,8 +78,6 @@ static Vector BotTestHull = Vector(5,5,5);
 
 CBasePlayer *BotPutInServer( bool bFrozen );
 
-bool CreatePath( class CSDKBot *pBot, CBasePlayer *pPlayer, Vector OptionalOrg = vec3_origin );
-
 void Bot_RunAll();
 
 #endif // BOT_MAIN_H
