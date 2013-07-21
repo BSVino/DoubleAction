@@ -1346,9 +1346,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		bCheckFriendlyFire = true;
 
 	//R_Yell - mp_friendlyfire by default doesn't let us damage bots. This check turns FF off in bot vs human situations, you still can use mp_friendlyfire to disallow FF among humans
-	CBasePlayer *pPlayer = ToBasePlayer(pInflictor);
-	if( pPlayer && (pPlayer->IsBot() && !IsBot()) || (!pPlayer->IsBot() && IsBot()) )
-		bFriendlyFire = true;
+	CBasePlayer *pPlayer = ToBasePlayer(info.GetAttacker());
+	if (pPlayer)
+	{
+		if (pPlayer->IsBot() != IsBot())
+			bFriendlyFire = true;
+	}
 	//
 
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))

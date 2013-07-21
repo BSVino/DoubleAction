@@ -29,6 +29,7 @@
 	#include "mapentities.h"
 	#include "sdk_basegrenade_projectile.h"
 	#include "da_spawngenerator.h"
+	#include "bots/bot_main.h"
 
 #endif
 
@@ -747,7 +748,7 @@ void CSDKGameRules::Think()
 // bone positions multiple times a frame.
 void CSDKGameRules::EndGameFrame( void )
 {
-	//TheBots->StartFrame();
+	Bot_RunAll();
 
 	BaseClass::EndGameFrame();
 }

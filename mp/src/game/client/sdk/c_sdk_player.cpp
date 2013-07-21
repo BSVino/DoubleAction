@@ -309,6 +309,7 @@ public:
 	int GetPlayerEntIndex() const;
 	IRagdoll* GetIRagdoll() const;
 
+	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 	virtual void ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName );
 
 	void ClientThink( void );
@@ -383,6 +384,16 @@ void C_SDKRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
 		}
 	}
 }
+
+bool C_SDKRagdoll::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr )
+{
+	// This somehow avoids a stack overflow in the engine, but I don't have symbols so I can't figure out the real cause.
+	if (m_hPlayer.Get() && m_hPlayer->IsPlayer() && ToBasePlayer(m_hPlayer)->IsBot())
+		return false;
+
+	return BaseClass::TestHitboxes(ray, fContentsMask, tr);
+}
+
 void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, unsigned char r, unsigned char g, unsigned char b, int flags );
 void C_SDKRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
 {

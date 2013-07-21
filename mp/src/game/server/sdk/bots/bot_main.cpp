@@ -9,6 +9,7 @@
 #include "in_buttons.h"
 #include "movehelper_server.h"
 #include "gameinterface.h"
+#include "datacache/imdlcache.h"
 
 #include "bot_main.h"
 #include "bot_combat.h"
@@ -50,9 +51,6 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 }
 
 static int g_CurBotNumber = 1;
-
-
-LINK_ENTITY_TO_CLASS( bot, CSDKBot );
 
 
 class CBotManager
@@ -127,14 +125,16 @@ void Bot_RunAll( void )
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
 
-		// Ignore plugin bots
+		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsBot())
+			continue;
+
 		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) )
 		{
-			CSDKBot *pBot = dynamic_cast< CSDKBot* >( pPlayer );
-			if ( pBot )
-			{
-				Bot_Think( (CSDKBot *)pPlayer );
-			}
+			CSDKBot *pBot = static_cast< CSDKBot* >( pPlayer );
+			Bot_Think( pBot );
 		}
 	}
 }
@@ -164,6 +164,9 @@ static void RunPlayerMove( CSDKPlayer *fakeclient, CUserCmd &cmd, float frametim
 	fakeclient->SetTimeBase( flTimeBase );
 
 	MoveHelperServer()->SetHost( fakeclient );
+
+	MDLCACHE_CRITICAL_SECTION();
+
 	fakeclient->PlayerRunCommand( &cmd, MoveHelperServer() );
 
 	// save off the last good usercmd
@@ -185,7 +188,13 @@ void Bot_HandleRespawn( CSDKBot *pBot, CUserCmd &cmd )
 		// Respawn the bot
 		if ( random->RandomInt( 0, 1 ) == 0 )
 		{
-			cmd.buttons |= IN_JUMP;
+			pBot->ClearLoadout();
+			pBot->BuyRandom();
+
+			pBot->PickRandomCharacter();
+			pBot->PickRandomSkill();
+
+			pBot->State_Transition( STATE_ACTIVE );
 		}
 		else
 		{
