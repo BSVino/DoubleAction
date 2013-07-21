@@ -157,7 +157,7 @@ void CSDKBot::AddRandomPath( float randomStartAngle )
 			{
 				AddWaypoint( tr2.endpos , GO_NORTH, 0, 0 ); // we actually use the near to ground position to avoid useless mid-air random waypoints
 				m_nBotState = BOT_NAVIG_UNSTUCK;
-				DevMsg("Random path created\n");
+				//DevMsg("Random path created\n");
 				return;
 			}
 		}
@@ -165,7 +165,7 @@ void CSDKBot::AddRandomPath( float randomStartAngle )
 
 	m_flCreateRandomPathCoolDown = gpGlobals->curtime+0.75f;
 
-	DevMsg("Random path FAILED\n");
+	//DevMsg("Random path FAILED\n");
 }
 
 bool CSDKBot::BotOnLadder()
@@ -227,7 +227,7 @@ void CSDKBot::CheckStuck( CUserCmd &cmd )
 		{
 			area->IncreaseDanger(0, 1.0f); // let bots know this area is tricky to navigate so they avoid it eventually
 		}
-		DevMsg("!STUCK, can't move at all\n");
+		//DevMsg("!STUCK, can't move at all\n");
 		AddRandomPath();
 		cmd.buttons |= IN_JUMP;
 	}
@@ -239,7 +239,7 @@ void CSDKBot::CheckStuck( CUserCmd &cmd )
 		if( tr.fraction != 1.0 )
 		{
 			NDebugOverlay::Line( GetLocalOrigin()+Vector(0,0,15), m_Waypoints[0].Center+Vector(0,0,15), 200, 0, 0, false, 5 );
-			DevMsg("!STUCK can't see next waypoint\n");
+			//DevMsg("!STUCK can't see next waypoint\n");
 			AddRandomPath();
 		}
 	}
@@ -344,13 +344,13 @@ bool CSDKBot::CreatePath( CBasePlayer *pPlayer, Vector OptionalOrg )
 		return true;
 	}
 
-	DevMsg("!Can't create path from given start to goal areas\n");
+	//DevMsg("!Can't create path from given start to goal areas\n");
 	return false;
 }
 
 bool CSDKBot::CreateHidePath( Vector &HiDeSpot )
 {
-	DevMsg("Let's hide\n");
+	//DevMsg("Let's hide\n");
 	m_flNextPathCheck = gpGlobals->curtime + 0.15f;
 
 	CBaseEntity *pSpot = NULL;
@@ -362,10 +362,10 @@ bool CSDKBot::CreateHidePath( Vector &HiDeSpot )
 
 			if( BotToHideSpotDist > 100 && BotToHideSpotDist < 1500 )
 			{
-				DevMsg("Found suitable spawn point\n");
+				//DevMsg("Found suitable spawn point\n");
 				if( CreatePath( NULL, pSpot->GetLocalOrigin() ) ) // got a route to hide spot, now chech it for possible enemies near
 				{
-					DevMsg("Found hide spot\n");
+					//DevMsg("Found hide spot\n");
 					Vector prevWaypoint = vec3_origin;
 					m_AlreadyCheckedHideSpots.AddToTail( pSpot->entindex() );
 
@@ -537,7 +537,7 @@ void CSDKBot::Navigation( CUserCmd &cmd )
 			if( BotToEnemyDist2d < 16 ) // we are on top of enemy, forget about combat and get down there
 			{
 				m_flDontUseDirectNav = gpGlobals->curtime + 2.5f;
-				DevMsg("!I'm on top of enemy, literally\n");
+				//DevMsg("!I'm on top of enemy, literally\n");
 				if( GetLocalOrigin().z > GetEnemy()->GetLocalOrigin().z ) // let's only move if we are on top
 					AddRandomPath();
 				else
