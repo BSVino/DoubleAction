@@ -85,6 +85,6 @@ protected:
 	float m_flTimeToRecheckEnemy;
 	bool m_bEnemyOnSights;	
 	bool m_bInRangeToAttack;
-	float m_flNextBotAttack;
+	float m_flNextBotMeleeAttack;
 	float m_flMinRangeAttack;
 };

@@ -33,10 +33,33 @@ bool CSDKBot::AcquireEnemy()
 
 void CSDKBot::Attack( CUserCmd &cmd )
 {
-	// EXCEPTIONS
-	if( !m_bEnemyOnSights || !m_bInRangeToAttack || m_flNextBotAttack > gpGlobals->curtime )
+	if (!m_bEnemyOnSights)
 		return;
 
-	cmd.buttons |= IN_ATTACK;
-	m_flNextBotAttack = gpGlobals->curtime + 0.75f;
+	if (!GetActiveSDKWeapon())
+		return;
+
+	if (m_bInRangeToAttack && gpGlobals->curtime > m_flNextBotMeleeAttack )
+	{
+		if (GetActiveSDKWeapon()->IsMeleeWeapon())
+		{
+			cmd.buttons |= (random->RandomInt(0, 1) == 0)?IN_ATTACK:IN_ATTACK2;
+			m_flNextBotMeleeAttack = gpGlobals->curtime + 0.75f;
+		}
+		else
+		{
+			cmd.buttons |= IN_ATTACK2;
+			m_flNextBotMeleeAttack = gpGlobals->curtime + 0.75f;
+		}
+	}
+	else
+	{
+		if (GetActiveSDKWeapon()->IsFullAuto())
+			cmd.buttons |= IN_ATTACK;
+		else
+		{
+			if (random->RandomInt(0, 1))
+				cmd.buttons |= IN_ATTACK;
+		}
+	}
 }

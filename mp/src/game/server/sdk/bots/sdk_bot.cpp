@@ -41,9 +41,9 @@ void CSDKBot::Spawn()
 	m_flDistTraveled = 0; // distance this bot has traveled recently, since last stuck check
 	m_flMinRangeAttack = 60.0f;
 	m_bInRangeToAttack = false;
-	m_flNextAttack = gpGlobals->curtime;
 	m_flNextStrafeTime = 0;
 	m_flStrafeSkillRelatedTimer = 0;
+	m_flNextBotMeleeAttack = 0;
 }
 
 void CSDKBot::Event_Killed( const CTakeDamageInfo &info )
