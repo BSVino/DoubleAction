@@ -240,6 +240,9 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
 	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
+
+	SendPropBool( SENDINFO( m_bCoderHacks ) ),
+	SendPropInt( SENDINFO( m_nCoderHacksButtons ), 32, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -847,6 +850,9 @@ void CSDKPlayer::PostThink()
 
 	if ( sv_drawserverhitbox.GetBool() )
 		DrawServerHitboxes( 2*gpGlobals->frametime, true );
+
+	if (SDKGameRules()->CoderHacks())
+		m_nCoderHacksButtons = m_nButtons;
 }
 
 bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
@@ -3561,6 +3567,49 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, flMaxSlow);
 }
 
+void CSDKPlayer::CoderHacks(bool bOn)
+{
+	// Steam ID to account ID conversion:
+	// STEAM_X:Y:Z -> 2Z+Y
+	static AccountID_t aiCoders[] = {
+		8238,     // STEAM_0:0:4119, Vino
+		29302461, // STEAM_0:1:14651230 TRP
+	};
+
+	int iSize = sizeof(aiCoders)/sizeof(int);
+
+	CSteamID ID;
+	GetSteamID(&ID);
+
+	if (!ID.IsValid())
+		return;
+
+	bool bFound = false;
+	for (int i = 0; i < iSize; i++)
+	{
+		if (aiCoders[0] == ID.GetAccountID())
+		{
+			bFound = true;
+			break;
+		}
+	}
+
+	if (!bFound)
+		return;
+
+	if (m_bCoderHacks == bOn)
+		return;
+
+	m_bCoderHacks = bOn;
+
+	if (bOn)
+		UTIL_SayText( "Coder hacks ON.\n", this );
+	else
+		UTIL_SayText( "Coder hacks OFF.\n", this );
+
+	SDKGameRules()->CoderHacksUpdate();
+}
+
 void CSDKPlayer::ThirdPersonToggle()
 {
 	m_bThirdPerson = !m_bThirdPerson;
@@ -4093,3 +4142,20 @@ void CC_HealMe_f(const CCommand &args)
 	pPlayer->TakeHealth( iDamage, DMG_GENERIC );
 }
 static ConCommand healme("healme", CC_HealMe_f, "heals the player.\n\tArguments: <health to heal>", FCVAR_CHEAT);
+
+void CC_CoderHacks_f(const CCommand &args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+	if ( !pPlayer )
+		return;
+
+	if (!FStrEq(args[0], "coder") || !FStrEq(args[1], "hacks"))
+		return;
+
+	if (FStrEq(args[2], "on"))
+		pPlayer->CoderHacks(true);
+	else if (FStrEq(args[2], "off"))
+		pPlayer->CoderHacks(false);
+}
+
+static ConCommand coder("coder", CC_CoderHacks_f, "C0d3r h4c|<s", FCVAR_HIDDEN);

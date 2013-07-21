@@ -304,6 +304,8 @@ public:
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
+	void CoderHacks(bool bOn);
+
 private:
 	bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
 
@@ -481,6 +483,9 @@ public:
 	int    m_iBrawlKills;
 	int    m_iStreakKills; // Kills in a row.
 	int    m_iCurrentStreak;
+
+	CNetworkVar( bool, m_bCoderHacks );
+	CNetworkVar( int, m_nCoderHacksButtons );
 
 protected:
 	static PartInfo m_partInfo[ MAX_PLAYERS ];						///< part positions for each player

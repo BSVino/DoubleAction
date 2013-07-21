@@ -249,6 +249,8 @@ public:
 
 	float           GetLastSpawnTime() const { return m_flLastSpawnTime; }
 
+	int             GetCoderHacksButtons() const { return m_nCoderHacksButtons; }
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )
@@ -348,6 +350,10 @@ private:
 	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
 	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
 	float                                  m_flLastLesson;
+
+	bool    m_bCoderHacks;
+	int     m_nCoderHacksButtons;
+
 public:
 	CWeaponSDKBase *switchfrom;
 };

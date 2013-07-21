@@ -180,6 +180,8 @@ public:
 
 	virtual void ServerActivate();
 
+	void    CoderHacksUpdate();
+
 	void	ReCalculateSlowMo();
 	void	CalculateSlowMoForPlayer(CSDKPlayer* pPlayer);	// Is this player being slowed by those around?
 	void	PlayerSlowMoUpdate(CSDKPlayer* pPlayer);		// This player activated or deactivated slowmo, update surrounding players.
@@ -213,9 +215,12 @@ public:
 	float GetMapRemainingTime();	// time till end of map, -1 if timelimit is disabled
 	float GetMapElapsedTime();		// How much time has elapsed since the map started.
 
+	bool    CoderHacks() { return m_bCoderHacks; }
+
 private:
 	CNetworkVar( float, m_flGameStartTime );
 	CNetworkVar( bool, m_bIsTeamplay );
+	CNetworkVar( bool, m_bCoderHacks );
 
 	float	m_flNextSlowMoUpdate;
 };

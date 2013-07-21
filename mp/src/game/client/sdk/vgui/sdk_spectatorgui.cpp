@@ -8,6 +8,8 @@
 #include "cbase.h"
 #include "hud.h"
 
+#include <string>
+
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
 #include <filesystem.h>
@@ -20,6 +22,7 @@
 #include <vgui_controls/AnimationController.h>
 #include "voice_status.h"
 #include "c_sdk_player.h"
+#include "in_buttons.h"
 
 using namespace vgui;
 DECLARE_HUDELEMENT( CSDKMapOverview )
@@ -188,6 +191,67 @@ void CSDKSpectatorGUI::Update()
 
 }
 
+static const wchar_t* s_apszButtons[] =
+{
+	L"IN_ATTACK",
+	L"IN_JUMP",
+	L"IN_DUCK",
+	L"IN_FORWARD",
+	L"IN_BACK",
+	L"IN_USE",
+	L"IN_CANCEL",
+	L"IN_LEFT",
+	L"IN_RIGHT",
+	L"IN_MOVELEFT",
+	L"IN_MOVERIGHT",
+	L"IN_ATTACK2",
+	L"IN_RUN",
+	L"IN_RELOAD",
+	L"IN_ALT1",
+	L"IN_ALT2",
+	L"IN_SCORE",
+	L"IN_SPEED",
+	L"IN_WALK",
+	L"IN_ZOOM",
+	L"IN_WEAPON1",
+	L"IN_WEAPON2",
+	L"IN_BULLRUSH",
+	L"IN_GRENADE1",
+	L"IN_GRENADE2",
+	L"IN_ATTACK3",
+};
+
+void CSDKSpectatorGUI::Paint()
+{
+	BaseClass::Paint();
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer* pObserved = pLocalPlayer?ToSDKPlayer(pLocalPlayer->GetObserverTarget()):nullptr;
+
+	if (pObserved && SDKGameRules()->CoderHacks())
+	{
+		std::wstring sButtons = L"Buttons:";
+
+		// If either of these guy trip up it means the button list has been changed and s_apszButtons needs to be updated.
+		Assert(IN_ATTACK3 == (1<<25));
+		Assert(std::wstring(s_apszButtons[25]) == std::wstring(L"IN_ATTACK3"));
+
+		int iCount = sizeof(s_apszButtons)/sizeof(wchar_t*);
+		for (int i = 0; i < iCount; i++)
+		{
+			if (pObserved->GetCoderHacksButtons() & (1<<i))
+			{
+				sButtons += L" ";
+				sButtons += s_apszButtons[i];
+			}
+		}
+
+		surface()->DrawSetTextPos( GetWide()/4, GetTall()/2 );
+		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+		surface()->DrawSetTextFont( vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme( "ClientScheme" ))->GetFont( "Default" ) );	//reset the font, draw icon can change it
+		surface()->DrawUnicodeString( sButtons.c_str(), vgui::FONT_DRAW_NONADDITIVE );
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Save off widths for sizing calculations

@@ -79,9 +79,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
+		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 #else
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
 		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
+		SendPropBool( SENDINFO( m_bCoderHacks ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -300,6 +302,34 @@ void CSDKGameRules::ServerActivate()
 	}
 
 	//TheBots->ServerActivate();
+}
+
+void CSDKGameRules::CoderHacksUpdate()
+{
+	bool bCoderHacks = false;
+
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer->m_bCoderHacks)
+		{
+			bCoderHacks = true;
+			break;
+		}
+	}
+
+	if (bCoderHacks == m_bCoderHacks)
+		return;
+
+	m_bCoderHacks = bCoderHacks;
+
+	if (m_bCoderHacks)
+		UTIL_SayTextAll("Dev mode on.\n");
+	else
+		UTIL_SayTextAll("Dev mode off.\n");
 }
 
 ConVar da_slow_force_distance("da_slow_force_distance", "300", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");

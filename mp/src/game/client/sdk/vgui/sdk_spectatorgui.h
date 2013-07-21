@@ -34,6 +34,8 @@ public:
 	virtual void Update( void );
 	virtual bool NeedsUpdate( void );
 
+	virtual void Paint( void );
+
 protected:
 
 	void UpdateTimer();
