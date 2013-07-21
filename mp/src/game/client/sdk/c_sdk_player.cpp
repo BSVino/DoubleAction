@@ -394,10 +394,7 @@ void C_SDKRagdoll::Interp_Copy( C_BaseAnimatingOverlay *pSourceEntity )
 bool C_SDKRagdoll::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr )
 {
 	// This somehow avoids a stack overflow in the engine, but I don't have symbols so I can't figure out the real cause.
-	if (m_hPlayer.Get() && m_hPlayer->IsPlayer() && ToBasePlayer(m_hPlayer)->IsBot())
-		return false;
-
-	return BaseClass::TestHitboxes(ray, fContentsMask, tr);
+	return false;
 }
 
 void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, unsigned char r, unsigned char g, unsigned char b, int flags );
