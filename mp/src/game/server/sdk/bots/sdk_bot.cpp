@@ -46,6 +46,13 @@ void CSDKBot::Spawn()
 	m_flStrafeSkillRelatedTimer = 0;
 }
 
+void CSDKBot::Event_Killed( const CTakeDamageInfo &info )
+{
+	BaseClass::Event_Killed(info);
+
+	m_flLastDeathTime = gpGlobals->curtime;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Simulates a single frame of movement for a player
 // Input : *fakeclient -
@@ -86,25 +93,16 @@ void CSDKBot::RunPlayerMove( CUserCmd &cmd, float frametime )
 
 void CSDKBot::HandleRespawn( CUserCmd &cmd )
 {
-	// Try hitting my buttons occasionally
-	if ( random->RandomInt( 0, 100 ) > 80 )
-	{
-		// Respawn the bot
-		if ( random->RandomInt( 0, 1 ) == 0 )
-		{
-			ClearLoadout();
-			BuyRandom();
+	if (gpGlobals->curtime < m_flLastDeathTime + 5)
+		return;
 
-			PickRandomCharacter();
-			PickRandomSkill();
+	ClearLoadout();
+	BuyRandom();
 
-			State_Transition( STATE_ACTIVE );
-		}
-		else
-		{
-			cmd.buttons = 0;
-		}
-	}
+	PickRandomCharacter();
+	PickRandomSkill();
+
+	State_Transition( STATE_ACTIVE );
 }
 
 // here bot updates important info that is used multiple times along the thinking process

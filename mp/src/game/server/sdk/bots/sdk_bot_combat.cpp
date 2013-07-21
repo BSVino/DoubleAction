@@ -15,7 +15,7 @@ bool CSDKBot::AcquireEnemy()
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
 
-		if ( pPlayer && pPlayer != NULL && pPlayer->IsAlive() && pPlayer != this ) // acquiring only human players
+		if ( pPlayer && pPlayer != NULL && pPlayer->IsAlive() && pPlayer != this )
 		{
 			float dist = (GetLocalOrigin() - pPlayer->GetLocalOrigin()).Length();
 

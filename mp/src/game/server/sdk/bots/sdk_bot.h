@@ -22,6 +22,8 @@ protected:
 
 	void Spawn();
 
+	void Event_Killed( const CTakeDamageInfo &info );
+
 	void RunPlayerMove( CUserCmd &cmd, float frametime );
 
 	void HandleRespawn( CUserCmd &cmd );
@@ -58,6 +60,8 @@ protected:
 	int m_nBotState;
 	int m_nBotSchedule;
 	float m_flSkill[BOT_SKILL_MAX_TOKENS];
+
+	float m_flLastDeathTime;
 
 	// navigation
 	float m_flNextJump;
