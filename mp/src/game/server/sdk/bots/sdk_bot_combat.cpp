@@ -55,7 +55,10 @@ void CSDKBot::Attack( CUserCmd &cmd )
 	else
 	{
 		if (GetActiveSDKWeapon()->IsFullAuto())
-			cmd.buttons |= IN_ATTACK;
+		{
+			if (GetActiveSDKWeapon()->Clip1())
+				cmd.buttons |= IN_ATTACK;
+		}
 		else
 		{
 			if (random->RandomInt(0, 1))
