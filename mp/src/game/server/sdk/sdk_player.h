@@ -285,7 +285,7 @@ public:
 
 	// Universal Meter
 	float GetStylePoints() { return m_flStylePoints; }
-	void AddStylePoints(float points, style_point_t eStyle);
+	void AddStylePoints(float points, style_sound_t eSound);
 	void SetStylePoints(float points);
 	bool UseStylePoints();
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;

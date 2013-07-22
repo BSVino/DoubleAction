@@ -8,10 +8,17 @@
 
 typedef enum
 {
+	STYLE_SOUND_NONE,
+	STYLE_SOUND_SMALL,
+	STYLE_SOUND_LARGE,
+	STYLE_SOUND_KNOCKOUT,
+} style_sound_t;
+
+typedef enum
+{
 	STYLE_POINT_SMALL,
 	STYLE_POINT_LARGE,
 	STYLE_POINT_STYLISH,
-	STYLE_POINT_KNOCKOUT,
 } style_point_t;
 
 typedef enum {
