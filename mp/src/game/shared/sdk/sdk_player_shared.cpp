@@ -1728,8 +1728,13 @@ float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID 
 	if (m_iStyleSkill != eSkill)
 		return flValue;
 
+	ConVarRef dab_stylemeteractivationcost("dab_stylemeteractivationcost");
+	float flMultiplier = RemapValClamped(m_pOuter->GetStylePoints(), 0, dab_stylemeteractivationcost.GetFloat(), 1, 2);
+
 	if (m_pOuter->IsStyleSkillActive())
-		flModify *= 2;
+		flMultiplier = 2;
+
+	flModify *= flMultiplier;
 
 	return flValue * (flModify+1);
 }
