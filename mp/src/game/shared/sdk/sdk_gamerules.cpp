@@ -332,6 +332,9 @@ void CSDKGameRules::CoderHacksUpdate()
 		UTIL_SayTextAll("Dev mode off.\n");
 }
 
+// Enabling this causes bots to always give slowmo to other players, for debugging purposes.
+//#define SLOWMO_DEBUG
+
 ConVar da_slow_force_distance("da_slow_force_distance", "300", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");
 
 void CSDKGameRules::ReCalculateSlowMo()
@@ -356,6 +359,12 @@ void CSDKGameRules::ReCalculateSlowMo()
 			continue;
 
 		CSDKPlayer* pSDKPlayer = static_cast<CSDKPlayer*>(pPlayer);
+
+#ifdef SLOWMO_DEBUG
+		if (pSDKPlayer->IsBot())
+			GiveSlowMoToNearbyPlayers(pSDKPlayer);
+		else
+#endif
 
 		// If the player is passive it means they've already been reached recursively.
 		// If the player activated their own slowmo then they don't need to be calculated.
@@ -427,6 +436,17 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 				break;
 			}
 		}
+
+#ifdef SLOWMO_DEBUG
+		if (pOtherPlayer->IsBot())
+		{
+			if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() < da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() || pOtherPlayer->IsVisible(pPlayer))
+			{
+				bOtherInSlow = true;
+				break;
+			}
+		}
+#endif
 	}
 
 	// If any of these players are in slow then I'm in slow too.
