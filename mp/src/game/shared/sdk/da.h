@@ -11,6 +11,7 @@ typedef enum
 	STYLE_POINT_SMALL,
 	STYLE_POINT_LARGE,
 	STYLE_POINT_STYLISH,
+	STYLE_POINT_KNOCKOUT,
 } style_point_t;
 
 typedef enum {

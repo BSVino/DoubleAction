@@ -891,6 +891,7 @@ void CSDKPlayer::Precache()
 	PrecacheScriptSound( "HudMeter.FillLarge" );
 	PrecacheScriptSound( "HudMeter.FillSmall" );
 	PrecacheScriptSound( "HudMeter.FillStylish" );
+	PrecacheScriptSound( "HudMeter.Knockout" );
 
 	PrecacheScriptSound( "Weapon_Brawl.PunchHit" );
 
@@ -1916,7 +1917,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		if (bExecution)
 			flBrawlPoints *= 2;
 
-		AddStylePoints(flBrawlPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+		AddStylePoints(flBrawlPoints, bKilledVictim?STYLE_POINT_KNOCKOUT:STYLE_POINT_LARGE);
 
 		if (bKilledVictim)
 		{
@@ -3474,7 +3475,9 @@ void CSDKPlayer::AddStylePoints(float points, style_point_t eStyle)
 	}
 
 	CSingleUserRecipientFilter filter( this );
-	if (eStyle == STYLE_POINT_SMALL)
+	if (eStyle == STYLE_POINT_KNOCKOUT)
+		EmitSound(filter, entindex(), "HudMeter.Knockout");
+	else if (eStyle == STYLE_POINT_SMALL)
 		EmitSound(filter, entindex(), "HudMeter.FillSmall");
 	else if (eStyle == STYLE_POINT_LARGE)
 		EmitSound(filter, entindex(), "HudMeter.FillLarge");
