@@ -1897,10 +1897,30 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (info.GetDamageType() == DMG_CLUB)
 	{
 		// Brawl
-		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
+
+		bool bExecution = false;
+		if (bKilledVictim)
+		{
+			Vector vecForward;
+			AngleVectors(pVictim->EyeAngles(), &vecForward, nullptr, nullptr);
+
+			if (vecKillerToVictim.Dot(vecForward) < -0.7f)
+				bExecution = true;
+		}
+
+		float flBrawlPoints = flPoints*0.5f;
+		if (bExecution)
+			flBrawlPoints *= 2;
+
+		AddStylePoints(flBrawlPoints, bKilledVictim?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
 
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
+		{
+			if (bExecution)
+				SendAnnouncement(ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
+			else
+				SendAnnouncement(ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
+		}
 		else
 			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
