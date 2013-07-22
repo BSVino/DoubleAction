@@ -183,6 +183,10 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+
+	RecvPropFloat( RECVINFO(m_vecViewOffset[0]) ),
+	RecvPropFloat( RECVINFO(m_vecViewOffset[1]) ),
+	RecvPropFloat( RECVINFO(m_vecViewOffset[2]) ),
 END_RECV_TABLE()
 
 // main table
