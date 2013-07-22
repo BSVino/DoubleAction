@@ -738,8 +738,8 @@ void CSDKPlayer::PreThink(void)
 				// If Resilient is active, heal up to 100%, which is actually 200 health
 				iMaxHealth = GetMaxHealth();
 			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
-				// If it's passive heal higher than 100%
-				iMaxHealth = GetMaxHealth() * 1.25f;
+				// If it's passive heal to 100%
+				iMaxHealth = GetMaxHealth();
 
 			int iHealthTaken = 0;
 			if (GetHealth() < iMaxHealth)
@@ -2007,15 +2007,16 @@ int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 	// Don't call parent class, we override with special behavior
 }
 
-ConVar dab_resilient_health_bonus( "dab_resilient_health_bonus", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar da_resilient_health_bonus( "da_resilient_health_bonus", "50", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 
 int CSDKPlayer::GetMaxHealth() const
 {
 	if (IsStyleSkillActive(SKILL_RESILIENT))
-		return BaseClass::GetMaxHealth() + dab_resilient_health_bonus.GetInt();
+		return BaseClass::GetMaxHealth() + da_resilient_health_bonus.GetInt();
 
 	return BaseClass::GetMaxHealth();
 }
+
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
