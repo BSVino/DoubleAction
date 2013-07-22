@@ -90,7 +90,7 @@ public:
 	virtual bool      ImpactWater( const Vector &start, const Vector &end );
 
 	virtual float	GetMeleeRange( void )								{	return	80.0f;	}
-	virtual float	GetMeleeDamage( bool bSecondary ) const;
+	virtual float	GetMeleeDamage( bool bSecondary, CSDKPlayer* pVictim ) const;
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
 	virtual void			AddMeleeViewKick();

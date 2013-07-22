@@ -432,7 +432,7 @@ void CWeaponSDKBase::Swing()
 
 #ifndef CLIENT_DLL
 	// Like bullets, melee traces have to trace against triggers.
-	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetMeleeDamage( m_bSwingSecondary ), DMG_CLUB );
+	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetMeleeDamage( m_bSwingSecondary, ToSDKPlayer(traceHit.m_pEnt) ), DMG_CLUB );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );
 #endif
 
@@ -554,7 +554,7 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		VectorNormalize( hitDirection );
 
 #ifndef CLIENT_DLL
-		float flDamage = GetMeleeDamage( bIsSecondary );
+		float flDamage = GetMeleeDamage( bIsSecondary, ToSDKPlayer(pHitEntity) );
 
 		CTakeDamageInfo info( GetOwner(), GetOwner(), flDamage, DMG_CLUB );
 
@@ -660,14 +660,31 @@ bool CWeaponSDKBase::ImpactWater( const Vector &start, const Vector &end )
 	return true;
 }
 
-float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary ) const
+float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) const
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
 	// The heavier the damage the more it hurts.
-	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 35, 60);
+	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
 
-	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.2f, SKILL_BOUNCER);
+	if (pVictim)
+	{
+		// If the victim is low on health then finish them off.
+		if (pVictim->GetHealth() <= 55)
+			return pVictim->GetHealth() * 1.2f;
+
+		if (pPlayer->IsStyleSkillActive(SKILL_BOUNCER))
+			return pVictim->GetHealth() * 1.5f;
+
+		Vector vecForward;
+		AngleVectors(pVictim->EyeAngles(), &vecForward, nullptr, nullptr);
+
+		// Attacks to the rear do double damage.
+		if ((pPlayer->GetAbsOrigin() - pVictim->GetAbsOrigin()).Normalized().Dot(vecForward) < -0.7f)
+			flDamage *= 2;
+	}
+
+	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.5f, SKILL_BOUNCER);
 
 	if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
