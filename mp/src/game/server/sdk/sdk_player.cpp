@@ -1368,7 +1368,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 	//
 
-	if (bot_easy.GetBool() && !IsBot() && pAttacker->IsBot())
+	if (bot_easy.GetBool() && !IsBot() && pAttacker && pAttacker->IsBot())
 		flDamage *= 0.3f;
 
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
