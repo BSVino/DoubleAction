@@ -953,9 +953,13 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		// Clip empty? Or out of ammo on a no-clip weapon?
 		if ( !IsMeleeWeapon() && (( UsesClipsForAmmo1() && m_iClip1 <= 0) || ( !UsesClipsForAmmo1() && pPlayer->GetAmmoCount(m_iPrimaryAmmoType)<=0 )) )
 		{
-			HandleFireOnEmpty();
-			pPlayer->ReadyWeapon();
-			SendWeaponAnim( ACT_VM_DRYFIRE );
+			if (m_flNextEmptySoundTime < gpGlobals->curtime)
+			{
+				WeaponSound(EMPTY);
+				pPlayer->ReadyWeapon();
+				SendWeaponAnim( ACT_VM_DRYFIRE );
+				m_flNextEmptySoundTime = gpGlobals->curtime + 0.5;
+			}
 		}
 		else if (pPlayer->GetWaterLevel() == 3 && m_bFiresUnderwater == false)
 		{
