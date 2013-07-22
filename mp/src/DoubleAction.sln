@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (HL2MP)", "game\client\client_hl2mp-2010.vcxproj", "{17BCE59A-9037-EC8D-433E-F81339E2F1BA}"
+# Visual C++ Express 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client (DA)", "game\client\client_hl2mp-2010.vcxproj", "{17BCE59A-9037-EC8D-433E-F81339E2F1BA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{33B7DFDC-BECB-3678-1190-6C951E393EB3} = {33B7DFDC-BECB-3678-1190-6C951E393EB3}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server (HL2MP)", "game\server\server_hl2mp-2010.vcxproj", "{33B7DFDC-BECB-3678-1190-6C951E393EB3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server (DA)", "game\server\server_hl2mp-2010.vcxproj", "{33B7DFDC-BECB-3678-1190-6C951E393EB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
