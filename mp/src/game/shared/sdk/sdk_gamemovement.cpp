@@ -30,6 +30,7 @@
 ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar sdk_slidetime("sdk_slidetime", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 #ifdef CLIENT_DLL
 ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVAR_USERINFO );
@@ -1726,7 +1727,7 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->m_Shared.SetAirSliding( true );
 			}
 		}
-		else */if (m_pSDKPlayer->GetLocalVelocity().Length2D() < 50 && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
+		else */if (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime() > sdk_slidetime.GetFloat() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
 			if(!CanUnduck())
 				m_pSDKPlayer->m_Shared.m_bMustDuckFromSlide = true;

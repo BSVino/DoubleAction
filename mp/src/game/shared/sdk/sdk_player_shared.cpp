@@ -854,22 +854,17 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
 
-ConVar sdk_slidetime("sdk_slidetime", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
-
 float CSDKPlayerShared::GetSlideFriction() const
 {
 	if (!m_bSliding)
 		return 1;
 
-	float flMultiplier = 1;
+	ConVarRef sdk_slidetime("sdk_slidetime");
 
-	if (m_iStyleSkill == SKILL_ATHLETIC)
-		flMultiplier = ModifySkillValue(2.5, 0.5f, SKILL_ATHLETIC);
+	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat() - 0.2f)
+		return 0.05f;
 
-	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat())
-		return 0.1f/flMultiplier;
-
-	return RemapValClamped(m_pOuter->GetCurrentTime(), m_flSlideTime + sdk_slidetime.GetFloat(), m_flSlideTime + sdk_slidetime.GetFloat()+1, 0.1f, 1.0f)/flMultiplier;
+	return 1;
 }
 
 void CSDKPlayerShared::SetDuckPress(bool bReset)
