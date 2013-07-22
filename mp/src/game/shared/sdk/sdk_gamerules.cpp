@@ -304,6 +304,13 @@ void CSDKGameRules::ServerActivate()
 	//TheBots->ServerActivate();
 }
 
+void CSDKGameRules::ClientDisconnected( edict_t *pClient )
+{
+	BaseClass::ClientDisconnected(pClient);
+
+	CoderHacksUpdate();
+}
+
 void CSDKGameRules::CoderHacksUpdate()
 {
 	bool bCoderHacks = false;

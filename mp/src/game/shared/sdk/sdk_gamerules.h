@@ -179,6 +179,7 @@ public:
 	int SelectDefaultTeam( void );
 
 	virtual void ServerActivate();
+	virtual void ClientDisconnected( edict_t *pClient );
 
 	void    CoderHacksUpdate();
 
