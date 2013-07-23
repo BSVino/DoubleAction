@@ -1823,7 +1823,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
-		AddStylePoints(flPoints, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
+		AddStylePoints(flPoints, (bKilledVictim||info.GetDamageType() == DMG_CLUB)?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
 
 		if (m_Shared.IsDiving())
 		{
@@ -3455,6 +3455,8 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 	return pEnt;
 }
 
+ConVar da_style_sound_delay("da_style_sound_delay", "0.1", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
+
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 {
 	m_flTotalStyle += points;
@@ -3469,18 +3471,40 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 		m_flStylePoints += points;
 
 	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
-	{
 		ActivateMeter();
-		return;
-	}
 
 	CSingleUserRecipientFilter filter( this );
+
+	EmitSound_t params;
+	params.m_flSoundTime = gpGlobals->curtime + da_style_sound_delay.GetFloat();
+	params.m_pOrigin = nullptr;
+	params.m_pflSoundDuration = nullptr;
+	params.m_bWarnOnDirectWaveReference = true;
+
+	params.m_nFlags |= SND_CHANGE_PITCH|SND_DELAY;
+	if (IsStyleSkillActive())
+		params.m_nPitch = RemapValClamped(m_flStyleSkillCharge, 0, dab_stylemetertotalcharge.GetFloat(), 80, 120);
+	else
+		params.m_nPitch = RemapValClamped(m_flStylePoints, 0, dab_stylemeteractivationcost.GetFloat(), 80, 120);
+
+	params.m_nPitch += random->RandomInt(-5, 5);
+
 	if (eStyle == STYLE_SOUND_KNOCKOUT)
-		EmitSound(filter, entindex(), "HudMeter.Knockout");
+	{
+		params.m_nFlags = 0;
+		params.m_pSoundName = "HudMeter.Knockout";
+		EmitSound(filter, entindex(), params);
+	}
 	else if (eStyle == STYLE_SOUND_SMALL)
-		EmitSound(filter, entindex(), "HudMeter.FillSmall");
+	{
+		params.m_pSoundName = "HudMeter.FillSmall";
+		EmitSound(filter, entindex(), params);
+	}
 	else if (eStyle == STYLE_SOUND_LARGE)
-		EmitSound(filter, entindex(), "HudMeter.FillLarge");
+	{
+		params.m_pSoundName = "HudMeter.FillLarge";
+		EmitSound(filter, entindex(), params);
+	}
 }
 
 void CSDKPlayer::SetStylePoints(float flPoints)
