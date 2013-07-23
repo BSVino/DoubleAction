@@ -46,6 +46,8 @@ public:
 	// Get SDK weapon specific weapon data.
 	CSDKWeaponInfo const	&GetSDKWpnData() const;
 
+	virtual const char* GetViewModel( int viewmodelindex = 0 ) const;
+
 	// Get a pointer to the player that owns this weapon
 	CSDKPlayer* GetPlayerOwner() const;
 	CSDKPlayer*	GetPrevOwner( void ) const { return m_pPrevOwner; }
@@ -91,6 +93,14 @@ public:
 
 	virtual float	GetMeleeRange( void )								{	return	80.0f;	}
 	virtual float	GetMeleeDamage( bool bSecondary, CSDKPlayer* pVictim ) const;
+
+	virtual void      StartGrenadeToss();
+	virtual bool      MaintainGrenadeToss();
+	virtual float     GetGrenadeThrowStart() const { return m_flGrenadeThrowStart; }
+	virtual float     GetGrenadeThrowWeaponHolsterTime() const; // What time does the weapon finish holstering
+	virtual float     GetGrenadeThrowWeaponDeployTime() const;  // What time does the weapon start re-deploying
+	virtual float     GetGrenadeThrowEnd() const;               // What time does the weapon finish re-deploying
+	virtual void      GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QAngle& angThrow);
 
 	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
 	virtual void			AddMeleeViewKick();
@@ -171,6 +181,9 @@ private:
 
 	CNetworkVar(float, m_flSwingTime);
 	CNetworkVar(bool, m_bSwingSecondary);
+
+	CNetworkVar(float, m_flGrenadeThrowStart);
+	bool m_bGrenadeThrown;
 
 	CSDKPlayer *m_pPrevOwner;
 

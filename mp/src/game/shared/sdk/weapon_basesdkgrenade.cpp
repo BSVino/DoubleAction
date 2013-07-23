@@ -327,30 +327,9 @@ void CBaseSDKGrenade::ItemPostFrame()
 			return;
 		}
 
-		QAngle angThrow = pPlayer->LocalEyeAngles();
-
-		Vector vForward, vRight, vUp;
-
-		if (angThrow.x < 90 )
-			angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
-		else
-		{
-			angThrow.x = 360.0f - angThrow.x;
-			angThrow.x = -10 + angThrow.x * -((90 - 10) / 90.0);
-		}
-
-		float flVel = (90 - angThrow.x) * 8;
-
-		if (flVel > 850)
-			flVel = 850;
-
-		AngleVectors( angThrow, &vForward, &vRight, &vUp );
-
-		Vector vecSrc = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset();
-
-		vecSrc += vForward * 16;
-	
-		Vector vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
+		Vector vecSrc, vecThrow;
+		QAngle angThrow;
+		GetGrenadeThrowVectors(vecSrc, vecThrow, angThrow);
 
 		EmitGrenade( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this );
 

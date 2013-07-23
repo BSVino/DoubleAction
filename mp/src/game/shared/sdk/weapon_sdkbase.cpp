@@ -26,6 +26,7 @@
 
 	#include "sdk_player.h"
 	#include "te_effect_dispatch.h"
+	#include "weapon_grenade.h"
 
 #endif
 
@@ -49,6 +50,8 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	RecvPropInt(RECVINFO(leftclip)),
 	RecvPropInt(RECVINFO(rightclip)),
 	RecvPropBool(RECVINFO(shootright)),
+
+	RecvPropFloat( RECVINFO( m_flGrenadeThrowStart ) ),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
@@ -64,6 +67,8 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	SendPropInt(SENDINFO(leftclip)),
 	SendPropInt(SENDINFO(rightclip)),
 	SendPropBool(SENDINFO(shootright)),
+
+	SendPropFloat( SENDINFO( m_flGrenadeThrowStart ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -121,6 +126,8 @@ CWeaponSDKBase::CWeaponSDKBase()
 	m_flArrowCurSize = 0;
 	m_flArrowSpinOffset = RandomFloat(0, 10);
 #endif
+
+	m_flGrenadeThrowStart = -1;
 }
 
 void CWeaponSDKBase::Precache()
@@ -151,6 +158,14 @@ const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
 	#endif
 
 	return *pSDKInfo;
+}
+
+const char* CWeaponSDKBase::GetViewModel( int viewmodelindex ) const
+{
+	if (m_flGrenadeThrowStart > 0 && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime())
+		return CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->szViewModel;
+
+	return BaseClass::GetViewModel(viewmodelindex);
 }
 
 bool CWeaponSDKBase::PlayEmptySound()
@@ -710,6 +725,115 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 	return flTime;
 }
 
+ConVar da_grenade_throw_time( "da_grenade_throw_time", "1.0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take to throw a grenade?" );
+
+void CWeaponSDKBase::StartGrenadeToss()
+{
+	// Don't let weapon idle interfere in the middle of a throw!
+	SetWeaponIdleTime( GetCurrentTime() + da_grenade_throw_time.GetFloat() );
+
+	m_flNextPrimaryAttack	= GetCurrentTime() + da_grenade_throw_time.GetFloat();
+	m_flNextSecondaryAttack	= GetCurrentTime() + da_grenade_throw_time.GetFloat();
+
+	m_bGrenadeThrown = false;
+}
+
+ConVar da_grenade_weaponlerp_time( "da_grenade_weaponlerp_time", "0.25", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?" );
+
+bool CWeaponSDKBase::MaintainGrenadeToss()
+{
+	if (GetCurrentTime() >= GetGrenadeThrowEnd())
+	{
+		m_flGrenadeThrowStart = -1;
+		return false;
+	}
+
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+	if (!pPlayer)
+		return false;
+
+	SetViewModel();
+	SetModel(GetViewModel());
+
+	if (!m_bGrenadeThrown && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime())
+	{
+		m_bGrenadeThrown = true;
+
+		pPlayer->Instructor_LessonLearned("grenade");
+
+		pPlayer->UseStyleCharge(SKILL_TROLL, 60);
+
+		SendWeaponAnim( ACT_VM_THROW );
+
+#ifdef GAME_DLL
+		Vector vecSrc, vecThrow;
+		QAngle angThrow;
+		GetGrenadeThrowVectors(vecSrc, vecThrow, angThrow);
+
+		CGrenadeProjectile::Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this, GRENADE_TIMER );
+
+		if (!pPlayer->IsStyleSkillActive(SKILL_TROLL))
+		{
+			if( pPlayer )
+				pPlayer->RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+		}
+#endif
+	}
+
+	return true;
+}
+
+float CWeaponSDKBase::GetGrenadeThrowWeaponHolsterTime() const
+{
+	Assert(m_flGrenadeThrowStart > 0);
+	return m_flGrenadeThrowStart + da_grenade_weaponlerp_time.GetFloat();
+}
+
+float CWeaponSDKBase::GetGrenadeThrowWeaponDeployTime() const
+{
+	Assert(m_flGrenadeThrowStart > 0);
+	return m_flGrenadeThrowStart + da_grenade_throw_time.GetFloat() - da_grenade_weaponlerp_time.GetFloat();
+}
+
+float CWeaponSDKBase::GetGrenadeThrowEnd() const
+{
+	Assert(m_flGrenadeThrowStart > 0);
+	return m_flGrenadeThrowStart + da_grenade_throw_time.GetFloat();
+}
+
+void CWeaponSDKBase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QAngle& angThrow)
+{
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+	Assert(pPlayer);
+	if (!pPlayer)
+		return;
+
+	angThrow = pPlayer->LocalEyeAngles();
+
+	Vector vForward, vRight, vUp;
+
+	if (angThrow.x < 90 )
+		angThrow.x = -10 + angThrow.x * ((90 + 10) / 90.0);
+	else
+	{
+		angThrow.x = 360.0f - angThrow.x;
+		angThrow.x = -10 + angThrow.x * -((90 - 10) / 90.0);
+	}
+
+	float flVel = (90 - angThrow.x) * 8;
+
+	if (flVel > 850)
+		flVel = 850;
+
+	AngleVectors( angThrow, &vForward, &vRight, &vUp );
+
+	vecSrc = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset();
+
+	vecSrc += vForward * 16;
+
+	vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
+}
+
 void CWeaponSDKBase::AddViewKick()
 {
 #ifdef CLIENT_DLL
@@ -924,6 +1048,19 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		m_flAccuracyDecay = 0;
 
 	bool bFired = false;
+
+	if (m_flGrenadeThrowStart > 0)
+	{
+		if (MaintainGrenadeToss())
+			return;
+	}
+	else if ((pPlayer->m_nButtons & IN_ALT2) && (m_flGrenadeThrowStart <= 0) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	{
+		m_flGrenadeThrowStart = GetCurrentTime();
+
+		StartGrenadeToss();
+		return;
+	}
 
 	// Secondary attack has priority
 	if (m_flSwingTime > 0 && m_flSwingTime <= GetCurrentTime())

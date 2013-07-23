@@ -76,11 +76,42 @@ ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_D
 ConVar da_weaponoffset( "da_weaponoffset", "0.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon offset, creates movement while looking around." );
 ConVar da_weapontilt( "da_weapontilt", "16", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the weapon tilt when diving laterally?" );
 
+ConVar da_weapon_grenadethrow_drop( "da_weapon_grenadethrow_drop", "-5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the weapon drop when throwing a grenade?" );
+ConVar da_weapon_grenadethrow_tilt( "da_weapon_grenadethrow_tilt", "90", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the weapon drop when throwing a grenade?" );
+
+float RemapGainedValClamped( float flInput, float flGain, float flInLo, float flInHi, float flOutLo, float flOutHi)
+{
+	float flNormalized = RemapValClamped(flInput, flInLo, flInHi, 0, 1);
+	float flLerped = Gain(flNormalized, flGain);
+	return RemapVal(flLerped, 0, 1, flOutLo, flOutHi);
+}
+
 void CDAViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
 {
 	CSDKPlayer* pOwner = ToSDKPlayer(owner);
 	if (!pOwner)
 		return;
+
+	CWeaponSDKBase* pWeapon = GetDAWeapon();
+	if (pWeapon && pWeapon->GetGrenadeThrowStart() > 0)
+	{
+		float flThrowStart = GetDAWeapon()->GetGrenadeThrowStart();
+		float flHolsterTime = GetDAWeapon()->GetGrenadeThrowWeaponHolsterTime();
+		float flDeployTime = GetDAWeapon()->GetGrenadeThrowWeaponDeployTime();
+		float flThrowEnd = GetDAWeapon()->GetGrenadeThrowEnd();
+
+		float flGain = 0.7f;
+		if (pOwner->GetCurrentTime() < flHolsterTime)
+		{
+			eyePosition -= Vector(0, 0, 1) * RemapGainedValClamped( pOwner->GetCurrentTime(), flGain, flThrowStart, flHolsterTime, 0, da_weapon_grenadethrow_drop.GetFloat());
+			eyeAngles.x += RemapGainedValClamped( pOwner->GetCurrentTime(), flGain, flThrowStart, flHolsterTime, 0, da_weapon_grenadethrow_tilt.GetFloat());
+		}
+		else if (pOwner->GetCurrentTime() > flDeployTime)
+		{
+			eyePosition -= Vector(0, 0, 1) * RemapGainedValClamped( pOwner->GetCurrentTime(), flGain, flDeployTime, flThrowEnd, da_weapon_grenadethrow_drop.GetFloat(), 0);
+			eyeAngles.x += RemapGainedValClamped( pOwner->GetCurrentTime(), flGain, flDeployTime, flThrowEnd, da_weapon_grenadethrow_tilt.GetFloat(), 0);
+		}
+	}
 
 	// Offset it a tad so that it moves while looking around.
 	eyePosition.x += da_weaponoffset.GetFloat();

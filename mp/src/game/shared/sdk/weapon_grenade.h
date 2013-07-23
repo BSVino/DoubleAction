@@ -12,12 +12,17 @@
 
 #include "weapon_basesdkgrenade.h"
 
+#ifdef GAME_DLL
+#include "sdk_basegrenade_projectile.h"
+#endif
 
 #ifdef CLIENT_DLL
 	
 	#define CWeaponGrenade C_WeaponGrenade
 
 #endif
+
+#define GRENADE_TIMER 1.5f //Seconds
 
 //-----------------------------------------------------------------------------
 // Fragmentation grenades
@@ -46,5 +51,35 @@ public:
 	CWeaponGrenade( const CWeaponGrenade & ) {}
 };
 
+#ifdef GAME_DLL
+
+class CGrenadeProjectile : public CBaseGrenadeProjectile
+{
+public:
+	DECLARE_CLASS( CGrenadeProjectile, CBaseGrenadeProjectile );
+
+	//Tony; by default projectiles don't have one, so make sure derived weapons do!!
+	virtual SDKWeaponID GetWeaponID( void ) const		{	return SDK_WEAPON_GRENADE; }
+
+	// Overrides.
+public:
+	virtual void Spawn();
+
+	virtual void Precache();
+
+	// Grenade stuff.
+public:
+
+	static CGrenadeProjectile* Create( 
+		const Vector &position, 
+		const QAngle &angles, 
+		const Vector &velocity, 
+		const AngularImpulse &angVelocity, 
+		CBaseCombatCharacter *pOwner,
+		CWeaponSDKBase *pWeapon,
+		float timer );
+};
+
+#endif
 
 #endif // WEAPON_GRENADE_H

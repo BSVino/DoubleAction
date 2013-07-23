@@ -15,6 +15,7 @@
 #include "da_instructor.h"
 #include "c_sdk_player.h"
 #include "da_buymenu.h"
+#include "ammodef.h"
 
 CInstructor::CInstructor()
 {
@@ -258,6 +259,14 @@ bool PlayerActiveWeaponHasAimInConditions( C_SDKPlayer *pPlayer, class CLesson *
 	return false;
 }
 
+bool PlayerHasGrenadesConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
+{
+	if (!PlayerAliveConditions(pPlayer, pLesson))
+		return false;
+
+	return pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades"));
+}
+
 bool PlayerHasSlowMoConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 {
 	if (!PlayerAliveConditions(pPlayer, pLesson))
@@ -295,6 +304,8 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 		return PlayerHasMultipleWeaponsConditions;
 	else if (sConditions == "PlayerActiveWeaponHasAimIn")
 		return PlayerActiveWeaponHasAimInConditions;
+	else if (sConditions == "PlayerHasGrenades")
+		return PlayerHasGrenadesConditions;
 	else if (sConditions == "PlayerHasSlowMo")
 		return PlayerHasSlowMoConditions;
 	else if (sConditions == "PlayerInThirdPerson")
