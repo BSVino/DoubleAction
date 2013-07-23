@@ -52,6 +52,7 @@ private:
 	CHudTexture* m_p9mmRound;
 	CHudTexture* m_p45acpRound;
 	CHudTexture* m_pBuckshotRound;
+	CHudTexture* m_pGrenadeIcon;
 
 	class CFlyingRound
 	{

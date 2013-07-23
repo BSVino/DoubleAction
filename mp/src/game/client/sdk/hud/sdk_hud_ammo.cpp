@@ -51,6 +51,7 @@ void CHudAmmo::ApplySchemeSettings( IScheme *scheme )
 	m_p9mmRound = gHUD.GetIcon("round_9mm");
 	m_p45acpRound = gHUD.GetIcon("round_45acp");
 	m_pBuckshotRound = gHUD.GetIcon("round_buckshot");
+	m_pGrenadeIcon = gHUD.GetIcon("grenade_icon");
 }
 
 //-----------------------------------------------------------------------------
@@ -107,7 +108,7 @@ void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 	hudlcd->SetGlobalStat( "(weapon_print_name)", wpn ? wpn->GetPrintName() : " " );
 	hudlcd->SetGlobalStat( "(weapon_name)", wpn ? wpn->GetName() : " " );
 
-	if ( !wpn || !player || !wpn->UsesPrimaryAmmo() )
+	if ( !wpn || !player )
 	{
 		hudlcd->SetGlobalStat( "(ammo_primary)", "n/a" );
 		hudlcd->SetGlobalStat( "(ammo_secondary)", "n/a" );
@@ -274,12 +275,6 @@ ConVar hud_ammoscale("hud_ammoscale", "1.4", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, 
 
 Vector2D CHudAmmo::GetRoundPosition(int i)
 {
-	CHudTexture* pTexture = GetTexture();
-	if ( !pTexture )
-		return Vector2D(0, 0);
-
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
@@ -287,6 +282,12 @@ Vector2D CHudAmmo::GetRoundPosition(int i)
 
 	float flRightPadding = 40;
 	float flBottomPadding = 40;
+
+	CHudTexture* pTexture = GetTexture();
+	if ( !pTexture )
+		return Vector2D(iWidth - flRightPadding*flScale, iHeight - flBottomPadding*flScale);
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	int iSpacing = 10*flScale;
 
@@ -317,15 +318,23 @@ void CHudAmmo::Paint()
 	if (!pPlayer->GetActiveSDKWeapon())
 		return;
 
-	CHudTexture* pTexture = GetTexture();
-
-	if (!pTexture)
-		return;
-
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
 	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
+
+	CWeaponSDKBase* pGrenade = pPlayer->FindWeapon(SDK_WEAPON_GRENADE);
+	if (pGrenade)
+	{
+		Vector2D vecFirstRound = GetRoundPosition(0);
+		for (int i = 0; i < pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i++)
+			m_pGrenadeIcon->DrawSelf(iWidth - 40 - 32 - i*35, vecFirstRound.y - 40, 32, 32, Color(255, 255, 255, 255));
+	}
+
+	CHudTexture* pTexture = GetTexture();
+
+	if (!pTexture)
+		return;
 
 	for (int i = 0; i < m_iAmmo; i++)
 	{
