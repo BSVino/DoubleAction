@@ -911,11 +911,46 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 	pCmd->viewangles[YAW] += vecRecoil.x;
 }
 
+void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize)
+{
+	CMeshBuilder meshBuilder;
+	CMatRenderContextPtr pRenderContext( materials );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+	pRenderContext->Bind( m );
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,1, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.TexCoord2f( 0,0, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.End(false, true);
+}
+
 CMaterialReference g_hWeaponArrow;
+CMaterialReference g_hGrenadeIcon;
 int CWeaponSDKBase::DrawModel(int flags)
 {
 	if (!g_hWeaponArrow.IsValid())
 		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
+	if (!g_hGrenadeIcon.IsValid())
+		g_hGrenadeIcon.Init( "particle/grenadeicon.vmt", TEXTURE_GROUP_OTHER );
 
 	int iReturn = BaseClass::DrawModel(flags);
 
@@ -952,34 +987,10 @@ int CWeaponSDKBase::DrawModel(int flags)
 
 	float flSize = m_flArrowCurSize;
 
-	CMeshBuilder meshBuilder;
-	CMatRenderContextPtr pRenderContext( materials );
-	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+	DrawIconQuad(g_hWeaponArrow, vecOrigin, vecRight, vecUp, flSize);
 
-	pRenderContext->Bind( g_hWeaponArrow );
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
-
-	meshBuilder.Color4f( 1, 1, 1, 1 );
-	meshBuilder.TexCoord2f( 0,0, 0 );
-	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4f( 1, 1, 1, 1 );
-	meshBuilder.TexCoord2f( 0,1, 0 );
-	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4f( 1, 1, 1, 1 );
-	meshBuilder.TexCoord2f( 0,1, 1 );
-	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.Color4f( 1, 1, 1, 1 );
-	meshBuilder.TexCoord2f( 0,0, 1 );
-	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
-	meshBuilder.AdvanceVertex();
-
-	meshBuilder.End(false, true);
+	if (GetWeaponID() == SDK_WEAPON_GRENADE)
+		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize);
 
 	return iReturn;
 }
