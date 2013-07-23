@@ -1202,7 +1202,21 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		if (!pPlayer->GetWeapon(i))
 			continue;
 
-		iWeaponsWeight += static_cast<CWeaponSDKBase*>(pPlayer->GetWeapon(i))->GetWeight();
+		CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(pPlayer->GetWeapon(i));
+
+		if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
+		{
+			int iGrenades = pPlayer->GetAmmoCount("grenades");
+
+			// If I'm a nitrophiliac, forgive one grenade's worth of weight.
+			// This way I can carry the extra grenade without a penalty to picking stuff up.
+			if (pPlayer->m_Shared.m_iStyleSkill == SKILL_TROLL)
+				iGrenades -= 1;
+
+			iWeaponsWeight += iGrenades * CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->iWeight;
+		}
+		else
+			iWeaponsWeight += pWeapon->GetWeight();
 	}
 
 	if (GetWeight() + iWeaponsWeight > MAX_LOADOUT_WEIGHT)
