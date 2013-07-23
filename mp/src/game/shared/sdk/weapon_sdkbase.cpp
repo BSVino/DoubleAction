@@ -162,7 +162,7 @@ const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
 
 const char* CWeaponSDKBase::GetViewModel( int viewmodelindex ) const
 {
-	if (m_flGrenadeThrowStart > 0 && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime())
+	if (IsThrowingGrenade() && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime())
 		return CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->szViewModel;
 
 	return BaseClass::GetViewModel(viewmodelindex);
@@ -785,19 +785,19 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 
 float CWeaponSDKBase::GetGrenadeThrowWeaponHolsterTime() const
 {
-	Assert(m_flGrenadeThrowStart > 0);
+	Assert(IsThrowingGrenade());
 	return m_flGrenadeThrowStart + da_grenade_weaponlerp_time.GetFloat();
 }
 
 float CWeaponSDKBase::GetGrenadeThrowWeaponDeployTime() const
 {
-	Assert(m_flGrenadeThrowStart > 0);
+	Assert(IsThrowingGrenade());
 	return m_flGrenadeThrowStart + da_grenade_throw_time.GetFloat() - da_grenade_weaponlerp_time.GetFloat();
 }
 
 float CWeaponSDKBase::GetGrenadeThrowEnd() const
 {
-	Assert(m_flGrenadeThrowStart > 0);
+	Assert(IsThrowingGrenade());
 	return m_flGrenadeThrowStart + da_grenade_throw_time.GetFloat();
 }
 
@@ -1049,12 +1049,12 @@ void CWeaponSDKBase::ItemPostFrame( void )
 
 	bool bFired = false;
 
-	if (m_flGrenadeThrowStart > 0)
+	if (IsThrowingGrenade())
 	{
 		if (MaintainGrenadeToss())
 			return;
 	}
-	else if ((pPlayer->m_nButtons & IN_ALT2) && (m_flGrenadeThrowStart <= 0) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
 	{
 		m_flGrenadeThrowStart = GetCurrentTime();
 

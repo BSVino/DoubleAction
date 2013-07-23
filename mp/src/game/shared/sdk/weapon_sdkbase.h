@@ -94,6 +94,7 @@ public:
 	virtual float	GetMeleeRange( void )								{	return	80.0f;	}
 	virtual float	GetMeleeDamage( bool bSecondary, CSDKPlayer* pVictim ) const;
 
+	virtual bool      IsThrowingGrenade() const { return m_flGrenadeThrowStart > 0; }
 	virtual void      StartGrenadeToss();
 	virtual bool      MaintainGrenadeToss();
 	virtual float     GetGrenadeThrowStart() const { return m_flGrenadeThrowStart; }

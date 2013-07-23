@@ -93,7 +93,7 @@ void CDAViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAn
 		return;
 
 	CWeaponSDKBase* pWeapon = GetDAWeapon();
-	if (pWeapon && pWeapon->GetGrenadeThrowStart() > 0)
+	if (pWeapon && pWeapon->IsThrowingGrenade())
 	{
 		float flThrowStart = GetDAWeapon()->GetGrenadeThrowStart();
 		float flHolsterTime = GetDAWeapon()->GetGrenadeThrowWeaponHolsterTime();

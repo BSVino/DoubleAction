@@ -1148,6 +1148,9 @@ bool CSDKPlayerShared::IsAimedIn() const
 	if (IsDiving() || IsRolling())
 		return false;
 
+	if (GetActiveSDKWeapon() && GetActiveSDKWeapon()->IsThrowingGrenade())
+		return false;
+
 	return m_bAimedIn;
 }
 
