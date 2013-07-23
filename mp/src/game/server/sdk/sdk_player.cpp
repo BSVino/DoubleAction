@@ -1823,7 +1823,10 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
-		AddStylePoints(flPoints, (bKilledVictim||info.GetDamageType() == DMG_CLUB)?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
+		if (info.GetDamageType() == DMG_CLUB)
+			AddStylePoints(flPoints, bKilledVictim?STYLE_SOUND_KNOCKOUT:STYLE_SOUND_LARGE);
+		else
+			AddStylePoints(flPoints, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
 
 		if (m_Shared.IsDiving())
 		{
