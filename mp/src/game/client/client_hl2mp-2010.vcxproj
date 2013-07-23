@@ -849,7 +849,7 @@ exit 1
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
-    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
+    <ClCompile Include="..\shared\sdk\da_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp" />
@@ -1261,9 +1261,9 @@ exit 1
     <ClCompile Include="sdk\sdk_fx_weaponfx.cpp" />
     <ClCompile Include="sdk\sdk_in_main.cpp" />
     <ClCompile Include="sdk\sdk_prediction.cpp" />
-    <ClCompile Include="sdk\vgui\dab_buymenu.cpp" />
-    <ClCompile Include="sdk\vgui\dab_charactermenu.cpp" />
-    <ClCompile Include="sdk\vgui\dab_skillmenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_buymenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_charactermenu.cpp" />
+    <ClCompile Include="sdk\vgui\da_skillmenu.cpp" />
     <ClCompile Include="sdk\vgui\folder_gui.cpp" />
     <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
     <ClCompile Include="sdk\vgui\sdk_mapinfo.cpp" />

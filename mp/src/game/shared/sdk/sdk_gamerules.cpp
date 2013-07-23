@@ -160,7 +160,7 @@ static CSDKViewVectors g_SDKViewVectors(
 #endif
 );
 
-ConVar dab_globalslow("dab_globalslow", "1", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");
+ConVar da_globalslow("da_globalslow", "1", FCVAR_DEVELOPMENTONLY|FCVAR_REPLICATED, "Global slow motion");
 
 const CViewVectors* CSDKGameRules::GetViewVectors() const
 {
@@ -1758,29 +1758,29 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	if ( bTeamOnly )
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
-			pszFormat = "DAB_Chat_Spec";
+			pszFormat = "DA_Chat_Spec";
 		else
 		{
 			/* only needed in round based play
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "DAB_Chat_Team_Dead";
+				pszFormat = "DA_Chat_Team_Dead";
 			else
 			*/
-				pszFormat = "DAB_Chat_Team";
+				pszFormat = "DA_Chat_Team";
 		}
 	}
 	else
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
-			pszFormat = "DAB_Chat_All_Spec";
+			pszFormat = "DA_Chat_All_Spec";
 		else
 		{
 			/* only needed in round based play
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "DAB_Chat_All_Dead";
+				pszFormat = "DA_Chat_All_Dead";
 			else
 			*/
-				pszFormat = "DAB_Chat_All";
+				pszFormat = "DA_Chat_All";
 		}
 	}
 

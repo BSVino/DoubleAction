@@ -35,8 +35,8 @@
 #include "c_sdk_player.h"
 #include "c_sdk_team.h"
 
-#include "dab_charactermenu.h"
-#include "dab_buymenu.h"
+#include "da_charactermenu.h"
+#include "da_buymenu.h"
 
 
 #include "IGameUIFuncs.h" // for key bindings
@@ -75,7 +75,7 @@ void CCharacterButton::OnCursorEntered()
 {
 	BaseClass::OnCursorEntered();
 
-	CDABCharacterMenu* pParent = dynamic_cast<CDABCharacterMenu*>(GetParent());
+	CDACharacterMenu* pParent = dynamic_cast<CDACharacterMenu*>(GetParent());
 	if (!pParent)
 		return;
 
@@ -91,7 +91,7 @@ void CCharacterButton::OnCursorEntered()
 	}
 }
 
-CDABCharacterMenu::CDABCharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_CLASS )
+CDACharacterMenu::CDACharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_CLASS )
 {
 	m_pViewPort = pViewPort;
 
@@ -107,15 +107,15 @@ CDABCharacterMenu::CDABCharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_
 }
 
 //Destructor
-CDABCharacterMenu::~CDABCharacterMenu()
+CDACharacterMenu::~CDACharacterMenu()
 {
 }
 
-void CDABCharacterMenu::Reset()
+void CDACharacterMenu::Reset()
 {
 }
 
-void CDABCharacterMenu::ShowPanel( bool bShow )
+void CDACharacterMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
 		m_iCharacterMenuKey = gameuifuncs->GetButtonCodeForBind( "character" );
@@ -135,7 +135,7 @@ void CDABCharacterMenu::ShowPanel( bool bShow )
 	}
 }
 
-void CDABCharacterMenu::OnKeyCodePressed( KeyCode code )
+void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
@@ -156,7 +156,7 @@ static ConVar hud_characterpreview_x("hud_characterpreview_x", "220", FCVAR_CHEA
 static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_characterpreview_z("hud_characterpreview_z", "-40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-void CDABCharacterMenu::Update()
+void CDACharacterMenu::Update()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -231,7 +231,7 @@ void CDABCharacterMenu::Update()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-Panel *CDABCharacterMenu::CreateControlByName( const char *controlName )
+Panel *CDACharacterMenu::CreateControlByName( const char *controlName )
 {
 	if ( !Q_stricmp( "CharacterButton", controlName ) )
 		return new CCharacterButton( this, NULL );
@@ -241,7 +241,7 @@ Panel *CDABCharacterMenu::CreateControlByName( const char *controlName )
 		return BaseClass::CreateControlByName( controlName );
 }
 
-void CDABCharacterMenu::SetVisible( bool state )
+void CDACharacterMenu::SetVisible( bool state )
 {
 	BaseClass::SetVisible( state );
 
@@ -257,7 +257,7 @@ void CDABCharacterMenu::SetVisible( bool state )
 	}
 }
 
-void CDABCharacterMenu::OnCommand( const char *command )
+void CDACharacterMenu::OnCommand( const char *command )
 {
 	if ( Q_strncmp( command, "character ", 10 ) == 0 )
 	{
@@ -273,7 +273,7 @@ void CDABCharacterMenu::OnCommand( const char *command )
 		BaseClass::OnCommand(command);
 }
 
-void CDABCharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
+void CDACharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
 	m_pszCharacterModel = pszPreview;
 	m_pszCharacterSequence = pszSequence;
@@ -284,12 +284,12 @@ void CDABCharacterMenu::SetCharacterPreview(const char* pszPreview, const char* 
 	Update();
 }
 
-void CDABCharacterMenu::PaintBackground()
+void CDACharacterMenu::PaintBackground()
 {
 	// Don't
 }
 
-void CDABCharacterMenu::PaintBorder()
+void CDACharacterMenu::PaintBorder()
 {
 	// Don't
 }
@@ -297,14 +297,14 @@ void CDABCharacterMenu::PaintBorder()
 //-----------------------------------------------------------------------------
 // Purpose: Apply scheme settings
 //-----------------------------------------------------------------------------
-void CDABCharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
+void CDACharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
-Label* CDABCharacterMenu::GetCharacterInfo()
+Label* CDACharacterMenu::GetCharacterInfo()
 {
 	return m_pCharacterInfo;
 }
@@ -312,7 +312,7 @@ Label* CDABCharacterMenu::GetCharacterInfo()
 CON_COMMAND(hud_reload_character, "Reload resource for character menu.")
 {
 	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_CLASS );
-	CDABCharacterMenu *pCharacter = dynamic_cast<CDABCharacterMenu*>(pPanel);
+	CDACharacterMenu *pCharacter = dynamic_cast<CDACharacterMenu*>(pPanel);
 	if (!pCharacter)
 		return;
 	

@@ -188,7 +188,7 @@ inline float Oscillate(float flTime, float flLength)
 	return fabs(RemapVal(fmod(flTime, flLength), 0, flLength, -1, 1));
 }
 
-extern ConVar dab_stylemeteractivationcost;
+extern ConVar da_stylemeteractivationcost;
 
 void CHudStyleBar::Paint()
 {
@@ -247,7 +247,7 @@ void CHudStyleBar::Paint()
 	if (pPlayer->IsStyleSkillActive())
 		flPercent = min(pPlayer->GetStyleSkillCharge() / 100, 1);
 	else
-		flPercent = m_flStyle / dab_stylemeteractivationcost.GetFloat();
+		flPercent = m_flStyle / da_stylemeteractivationcost.GetFloat();
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap, flBarHeight );

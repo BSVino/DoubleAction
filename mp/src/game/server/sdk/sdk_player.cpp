@@ -700,9 +700,9 @@ inline bool CSDKPlayer::IsReloading( void ) const
 	return false;
 }
 
-ConVar dab_regenamount( "dab_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
-ConVar dab_decayamount( "dab_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
-ConVar dab_regenamount_secondwind( "dab_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
+ConVar da_regenamount( "da_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar da_decayamount( "da_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
+ConVar da_regenamount_secondwind( "da_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
 void CSDKPlayer::PreThink(void)
 {
@@ -722,16 +722,16 @@ void CSDKPlayer::PreThink(void)
 	{
 		if (!IsStyleSkillActive() && m_flCurrentTime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
 		{
-			m_iHealth -= dab_decayamount.GetFloat();
+			m_iHealth -= da_decayamount.GetFloat();
 
 			m_flNextHealthDecay = m_flCurrentTime + 1;
 		}
 
 		if (m_flCurrentTime > m_flNextRegen)
 		{
-			float flRatio = dab_regenamount_secondwind.GetFloat()/dab_regenamount.GetFloat();
+			float flRatio = da_regenamount_secondwind.GetFloat()/da_regenamount.GetFloat();
 			float flModifier = (flRatio - 1)/2;
-			float flHealth = m_Shared.ModifySkillValue(dab_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
+			float flHealth = m_Shared.ModifySkillValue(da_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
 
 			m_flNextRegen = m_flCurrentTime + 1;
 
@@ -1280,7 +1280,7 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 
 	if (!SuicideAllowed())
 	{		
-		ClientPrint( this, HUD_PRINTCENTER, "DAB_No_Suicide" );
+		ClientPrint( this, HUD_PRINTCENTER, "DA_No_Suicide" );
 		return;
 	}
 	
@@ -1603,8 +1603,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return 1;
 }
 
-ConVar dab_stylemetertotalcharge( "dab_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
-extern ConVar dab_stylemeteractivationcost;
+ConVar da_stylemetertotalcharge( "da_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
+extern ConVar da_stylemeteractivationcost;
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
@@ -1702,15 +1702,15 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (IsStyleSkillActive())
 	{
 		// If the player died while the style meter was active, refund the unused portion.
-		float flUnused = m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat();
-		float flRefund = flUnused*dab_stylemeteractivationcost.GetFloat();
+		float flUnused = m_flStyleSkillCharge/da_stylemetertotalcharge.GetFloat();
+		float flRefund = flUnused*da_stylemeteractivationcost.GetFloat();
 		SetStylePoints(m_flStylePoints + flRefund);
 	}
 
 	// Losing a whole activation can be rough, let's be a bit more forgiving.
 	// Going down with lots of bar drops you more than going down with just a little bar.
 	// This way, running around with your bar full you run a high risk.
-	float flActivationCost = dab_stylemeteractivationcost.GetFloat();
+	float flActivationCost = da_stylemeteractivationcost.GetFloat();
 
 	float flLostPoints = RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/4);
 
@@ -1757,13 +1757,13 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	if (bKilledVictim)
 	{
 		// Give me a quarter of the activation cost. I'll get another quarter from damaging.
-		flPoints = dab_stylemeteractivationcost.GetFloat()/4;
+		flPoints = da_stylemeteractivationcost.GetFloat()/4;
 	}
 	else
 	{
 		// Damaging someone stylishly for 100% of their health is enough to get one quarter bar.
 		// The player will double their points from from killing. Need to kill two enemies to fill the bar.
-		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, dab_stylemeteractivationcost.GetFloat()/4);
+		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, da_stylemeteractivationcost.GetFloat()/4);
 	}
 
 	if (m_Shared.IsAimedIn())
@@ -1986,9 +1986,9 @@ void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t eP
 		WRITE_BYTE( ePointStyle );
 
 		if (IsStyleSkillActive())
-			WRITE_FLOAT( m_flStyleSkillCharge/dab_stylemetertotalcharge.GetFloat() );
+			WRITE_FLOAT( m_flStyleSkillCharge/da_stylemetertotalcharge.GetFloat() );
 		else
-			WRITE_FLOAT( GetStylePoints()/dab_stylemeteractivationcost.GetFloat() );
+			WRITE_FLOAT( GetStylePoints()/da_stylemeteractivationcost.GetFloat() );
 
 	// End the message block
 	MessageEnd();
@@ -2260,7 +2260,7 @@ void CSDKPlayer::CreateViewModel( int index /*=0*/ )
 	if ( GetViewModel( index ) )
 		return;
 
-	CPredictedViewModel *vm = ( CPredictedViewModel * )CreateEntityByName( "dab_viewmodel" );
+	CPredictedViewModel *vm = ( CPredictedViewModel * )CreateEntityByName( "da_viewmodel" );
 	if ( vm )
 	{
 		vm->SetAbsOrigin( GetAbsOrigin() );
@@ -3382,7 +3382,7 @@ bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	return false;
 }
 
-ConVar dab_disarmredraw("dab_disarmredraw", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "After how long does the player draw his next weapon after he's been disarmed?");
+ConVar da_disarmredraw("da_disarmredraw", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "After how long does the player draw his next weapon after he's been disarmed?");
 
 void CSDKPlayer::Disarm()
 {
@@ -3403,7 +3403,7 @@ void CSDKPlayer::Disarm()
 
 	ThrowActiveWeapon(false);
 
-	m_flDisarmRedraw = GetCurrentTime() + dab_disarmredraw.GetFloat();
+	m_flDisarmRedraw = GetCurrentTime() + da_disarmredraw.GetFloat();
 }
 
 CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
@@ -3463,14 +3463,14 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 
 	if (IsStyleSkillActive())
 	{
-		points = RemapValClamped(points, 0, dab_stylemeteractivationcost.GetFloat(), 0, dab_stylemetertotalcharge.GetFloat());
+		points = RemapValClamped(points, 0, da_stylemeteractivationcost.GetFloat(), 0, da_stylemetertotalcharge.GetFloat());
 		points /= 2;
-		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > dab_stylemetertotalcharge.GetFloat()) ? dab_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
+		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > da_stylemetertotalcharge.GetFloat()) ? da_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
 	}
 	else
 		m_flStylePoints += points;
 
-	if (m_flStylePoints > dab_stylemeteractivationcost.GetFloat())
+	if (m_flStylePoints > da_stylemeteractivationcost.GetFloat())
 		ActivateMeter();
 
 	CSingleUserRecipientFilter filter( this );
@@ -3483,9 +3483,9 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 
 	params.m_nFlags |= SND_CHANGE_PITCH|SND_DELAY;
 	if (IsStyleSkillActive())
-		params.m_nPitch = RemapValClamped(m_flStyleSkillCharge, 0, dab_stylemetertotalcharge.GetFloat(), 80, 120);
+		params.m_nPitch = RemapValClamped(m_flStyleSkillCharge, 0, da_stylemetertotalcharge.GetFloat(), 80, 120);
 	else
-		params.m_nPitch = RemapValClamped(m_flStylePoints, 0, dab_stylemeteractivationcost.GetFloat(), 80, 120);
+		params.m_nPitch = RemapValClamped(m_flStylePoints, 0, da_stylemeteractivationcost.GetFloat(), 80, 120);
 
 	params.m_nPitch += random->RandomInt(-5, 5);
 
@@ -3526,9 +3526,9 @@ void CSDKPlayer::SetStylePoints(float flPoints)
 
 bool CSDKPlayer::UseStylePoints (void)
 {
-	if (m_flStylePoints >= dab_stylemeteractivationcost.GetFloat())
+	if (m_flStylePoints >= da_stylemeteractivationcost.GetFloat())
 	{
-		m_flStylePoints -= dab_stylemeteractivationcost.GetFloat();
+		m_flStylePoints -= da_stylemeteractivationcost.GetFloat();
 
 		return true;
 	}
@@ -3546,7 +3546,7 @@ void CSDKPlayer::ActivateMeter()
 
 	m_flStylePoints = 0;
 
-	m_flStyleSkillCharge = dab_stylemetertotalcharge.GetFloat();
+	m_flStyleSkillCharge = da_stylemetertotalcharge.GetFloat();
 
 	m_iStyleKillStreak = 0;
 

@@ -1,6 +1,6 @@
 #include "cbase.h"
 
-#include "dab_viewmodel.h"
+#include "da_viewmodel.h"
 #include "sdk_gamerules.h"
 #include "weapon_akimbobase.h"
 
@@ -13,19 +13,19 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-LINK_ENTITY_TO_CLASS( dab_viewmodel, CDABViewModel );
+LINK_ENTITY_TO_CLASS( da_viewmodel, CDAViewModel );
 
-IMPLEMENT_NETWORKCLASS_ALIASED( DABViewModel, DT_DABViewModel )
+IMPLEMENT_NETWORKCLASS_ALIASED( DAViewModel, DT_DAViewModel )
 
-BEGIN_NETWORK_TABLE( CDABViewModel, DT_DABViewModel )
+BEGIN_NETWORK_TABLE( CDAViewModel, DT_DAViewModel )
 END_NETWORK_TABLE()
 
-CDABViewModel::CDABViewModel()
+CDAViewModel::CDAViewModel()
 {
 	m_vecPlayerVelocityLerp = Vector(0, 0, 0);
 }
 
-float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
+float CDAViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
 {
 	float flSlow = 1;
 
@@ -36,7 +36,7 @@ float CDABViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence
 	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * flSlow;
 }
 
-void CDABViewModel::DoMuzzleFlash()
+void CDAViewModel::DoMuzzleFlash()
 {
 #ifdef CLIENT_DLL
 	int id;
@@ -76,7 +76,7 @@ ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_D
 ConVar da_weaponoffset( "da_weaponoffset", "0.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon offset, creates movement while looking around." );
 ConVar da_weapontilt( "da_weapontilt", "16", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the weapon tilt when diving laterally?" );
 
-void CDABViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
+void CDAViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles )
 {
 	CSDKPlayer* pOwner = ToSDKPlayer(owner);
 	if (!pOwner)

@@ -46,7 +46,7 @@
 #include "da.h"
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet impact point" );
-ConVar dab_stylemeteractivationcost( "dab_stylemeteractivationcost", "75", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
+ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "75", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 
 void DispatchEffect( const char *pName, const CEffectData &data );
 
@@ -538,10 +538,10 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 	}
 }
 
-ConVar dab_styletime( "dab_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
+ConVar da_styletime( "da_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
 bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 {
-	if (dab_styletime.GetBool())
+	if (da_styletime.GetBool())
 	{
 		if (eSkill == SKILL_NONE)
 			return true;
@@ -1177,7 +1177,7 @@ void CSDKPlayerShared::RampSlowAimIn(float flGoal)
 		m_flSlowAimIn = Approach(flGoal, m_flSlowAimIn, da_slowaimin_speedout.GetFloat()*gpGlobals->frametime);
 }
 
-ConVar dab_recoildecay("dab_recoildecay", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_recoildecay("da_recoildecay", "250", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
 {
@@ -1185,15 +1185,15 @@ Vector CSDKPlayerShared::GetRecoil(float flFrameTime)
 		return Vector(0, 0, 0);
 
 	float flRecoil = m_flRecoilAccumulator*flFrameTime;
-	m_flRecoilAccumulator = Approach(0, m_flRecoilAccumulator, flFrameTime * dab_recoildecay.GetFloat());
+	m_flRecoilAccumulator = Approach(0, m_flRecoilAccumulator, flFrameTime * da_recoildecay.GetFloat());
 	return m_vecRecoilDirection * flRecoil;
 }
 
-ConVar dab_recoilmultiplier("dab_recoilmultiplier", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_recoilmultiplier("da_recoilmultiplier", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayerShared::SetRecoil(float flRecoil)
 {
-	m_flRecoilAccumulator = flRecoil * dab_recoilmultiplier.GetFloat();
+	m_flRecoilAccumulator = flRecoil * da_recoilmultiplier.GetFloat();
 	m_vecRecoilDirection.y = 1;
 	m_vecRecoilDirection.x = SharedRandomFloat( "Recoil", -0.5f, 0.5f );
 }
@@ -1420,7 +1420,7 @@ void CSDKPlayer::ActivateSlowMo()
 
 float CSDKPlayer::GetSlowMoMultiplier() const
 {
-	return m_flSlowMoMultiplier * dab_globalslow.GetFloat();
+	return m_flSlowMoMultiplier * da_globalslow.GetFloat();
 }
 
 float CSDKPlayer::GetSlowMoGoal() const
@@ -1728,8 +1728,8 @@ float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID 
 	if (m_iStyleSkill != eSkill)
 		return flValue;
 
-	ConVarRef dab_stylemeteractivationcost("dab_stylemeteractivationcost");
-	float flMultiplier = RemapValClamped(m_pOuter->GetStylePoints(), 0, dab_stylemeteractivationcost.GetFloat(), 1, 2);
+	ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
+	float flMultiplier = RemapValClamped(m_pOuter->GetStylePoints(), 0, da_stylemeteractivationcost.GetFloat(), 1, 2);
 
 	if (m_pOuter->IsStyleSkillActive())
 		flMultiplier = 2;

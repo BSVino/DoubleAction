@@ -40,14 +40,14 @@ private:
 	IBorder* m_pArmedBorder;
 };
 
-class CDABBuyMenu : public CFolderMenu, public IViewPortPanel
+class CDABuyMenu : public CFolderMenu, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CDABBuyMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CDABuyMenu, CFolderMenu );
 
 public:
-	CDABBuyMenu(IViewPort *pViewPort);
-	virtual ~CDABBuyMenu();
+	CDABuyMenu(IViewPort *pViewPort);
+	virtual ~CDABuyMenu();
 
 	virtual const char *GetName( void ) { return PANEL_BUY; }
 

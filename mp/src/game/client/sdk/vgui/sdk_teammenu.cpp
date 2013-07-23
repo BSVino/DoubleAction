@@ -36,7 +36,7 @@
 #include "c_sdk_team.h"
 
 #include "sdk_teammenu.h"
-#include "dab_buymenu.h"
+#include "da_buymenu.h"
 
 
 #include "IGameUIFuncs.h" // for key bindings
@@ -178,7 +178,7 @@ void CSDKTeamMenu::Update( void )
 	if (pStatusLabel && team)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_TeamMenu_Info" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_TeamMenu_Info" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";
@@ -199,7 +199,7 @@ void CSDKTeamMenu::Update( void )
 	if (pStatusLabel && team)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_TeamMenu_Info" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_TeamMenu_Info" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";

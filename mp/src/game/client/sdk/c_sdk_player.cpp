@@ -34,10 +34,10 @@
 #include "cam_thirdperson.h"
 #include "headtrack/isourcevirtualreality.h"
 
-#include "dab_buymenu.h"
+#include "da_buymenu.h"
 #include "sdk_teammenu.h"
-#include "dab_charactermenu.h"
-#include "dab_skillmenu.h"
+#include "da_charactermenu.h"
+#include "da_skillmenu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -1511,8 +1511,8 @@ static ConVar da_cam_back_aim("da_cam_back_aim", "25", FCVAR_USERINFO|FCVAR_ARCH
 static ConVar da_cam_right_aim("da_cam_right_aim", "20", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in", true, -30, true, 30);
 static ConVar da_cam_up_aim("da_cam_up_aim", "5", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits while aiming in", true, -20, true, 30);
 
-static ConVar dab_aimin_fov_delta_high("dab_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar dab_aimin_fov_delta_low("dab_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_aimin_fov_delta_high("da_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_aimin_fov_delta_low("da_aimin_fov_delta_low", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar da_aimin_slow_fov_delta("da_aimin_slow_fov_delta", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
@@ -1569,9 +1569,9 @@ void C_SDKPlayer::OverrideView( CViewSetup *pSetup )
 	if (m_Shared.GetAimIn() > 0 && pWeapon && (pWeapon->FullAimIn() || pWeapon->HasAimInFireRateBonus() || pWeapon->HasAimInRecoilBonus() || IsStyleSkillActive(SKILL_MARKSMAN)))
 	{
 		if (pWeapon->HasAimInFireRateBonus())
-			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_low.GetFloat();
+			pSetup->fov -= m_Shared.m_flAimIn*da_aimin_fov_delta_low.GetFloat();
 		else
-			pSetup->fov -= m_Shared.m_flAimIn*dab_aimin_fov_delta_high.GetFloat();
+			pSetup->fov -= m_Shared.m_flAimIn*da_aimin_fov_delta_high.GetFloat();
 	}
 
 	pSetup->fov -= Bias(m_Shared.m_flSlowAimIn, 0.65f)*da_aimin_slow_fov_delta.GetFloat();
@@ -1594,9 +1594,9 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
 	}
 }
 
@@ -1607,9 +1607,9 @@ void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
 	}
 }
 
@@ -1620,9 +1620,9 @@ void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDABCharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABBuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDABSkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
+		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
+		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
 	}
 }
 

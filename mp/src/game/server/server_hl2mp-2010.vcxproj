@@ -742,7 +742,7 @@ exit 1
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
-    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp" />
+    <ClCompile Include="..\shared\sdk\da_viewmodel.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp" />

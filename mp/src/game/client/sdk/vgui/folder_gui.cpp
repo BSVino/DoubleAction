@@ -106,15 +106,15 @@ void CFolderMenu::Update()
 	Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
 
 	if (m_szCharacter[0])
-		m_pProfileInfo->SetText((std::string("#DAB_CharacterInfo_") + m_szCharacter).c_str());
+		m_pProfileInfo->SetText((std::string("#DA_CharacterInfo_") + m_szCharacter).c_str());
 	else
-		m_pProfileInfo->SetText("#DAB_CharacterInfo_None");
+		m_pProfileInfo->SetText("#DA_CharacterInfo_None");
 
 	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
 	if (pSlotsLabel)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_BuyMenu_SlotsRemaining" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_BuyMenu_SlotsRemaining" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";
@@ -270,7 +270,7 @@ void CFolderMenu::Update()
 		pPlayerPreview->SwapModel("");
 
 	if (pPlayer->m_Shared.m_iStyleSkill)
-		m_pCharacteristicsInfo->SetText((std::string("#DAB_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
+		m_pCharacteristicsInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
 	else
 		m_pCharacteristicsInfo->SetText("");
 }

@@ -191,9 +191,9 @@ void UTIL_ClipPunchAngleOffset( QAngle &in, const QAngle &punch, const QAngle &c
 }
 #endif
 
-ConVar dab_fulldecay( "dab_fulldecay", "0.5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The maximum accuracy decay." );
-ConVar dab_coldaccuracymultiplier( "dab_coldaccuracymultiplier", "0.25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The accuracy of a cold barrel as a multiplier of the original accuracy." );
-ConVar dab_decayrate( "dab_decayrate", "2", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "A multiplier for the accuracy decay rate of weapons as they fire." );
+ConVar da_fulldecay( "da_fulldecay", "0.5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The maximum accuracy decay." );
+ConVar da_coldaccuracymultiplier( "da_coldaccuracymultiplier", "0.25", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The accuracy of a cold barrel as a multiplier of the original accuracy." );
+ConVar da_decayrate( "da_decayrate", "2", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "A multiplier for the accuracy decay rate of weapons as they fire." );
 
 //Tony; added as a default primary attack if it doesn't get overridden, ie: by CSDKWeaponMelee
 void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
@@ -216,7 +216,7 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 	flSpread = pPlayer->m_Shared.ModifySkillValue(flSpread, -0.25f, SKILL_MARKSMAN);
 
 	if (!WeaponSpreadFixed())
-		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, dab_fulldecay.GetFloat(), dab_coldaccuracymultiplier.GetFloat(), 1);
+		flSpread *= RemapValClamped(m_flAccuracyDecay, 0, da_fulldecay.GetFloat(), da_coldaccuracymultiplier.GetFloat(), 1);
 
 	QAngle angShoot = pPlayer->EyeAngles() + pPlayer->GetPunchAngle();
 
@@ -271,10 +271,10 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		m_flAccuracyDecay = 0;
 
 	// Weapons that fire quickly should decay slower.
-	m_flAccuracyDecay += (flFireRate * dab_decayrate.GetFloat());
+	m_flAccuracyDecay += (flFireRate * da_decayrate.GetFloat());
 
-	if (m_flAccuracyDecay > dab_fulldecay.GetFloat())
-		m_flAccuracyDecay = dab_fulldecay.GetFloat();
+	if (m_flAccuracyDecay > da_fulldecay.GetFloat())
+		m_flAccuracyDecay = da_fulldecay.GetFloat();
 
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
 	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
@@ -901,7 +901,7 @@ weapontype_t CWeaponSDKBase::GetWeaponType(SDKWeaponID eWeapon)
 	return pFileInfo->m_eWeaponType;
 }
 
-ConVar dab_decaymultiplier( "dab_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
+ConVar da_decaymultiplier( "da_decaymultiplier", "0.7", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "The multiplier for the recoil decay rate." );
 
 //Tony; added so we can have base functionality without implementing it into every weapon.
 void CWeaponSDKBase::ItemPostFrame( void )
@@ -918,7 +918,7 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		CheckReload();
 
 	// A multiplier of 1 means that for every second of firing the player needs to wait one second to get back to full accuracy.
-	m_flAccuracyDecay -= (gpGlobals->frametime * dab_decaymultiplier.GetFloat() * pPlayer->GetSlowMoMultiplier());
+	m_flAccuracyDecay -= (gpGlobals->frametime * da_decaymultiplier.GetFloat() * pPlayer->GetSlowMoMultiplier());
 
 	if (m_flAccuracyDecay < 0)
 		m_flAccuracyDecay = 0;

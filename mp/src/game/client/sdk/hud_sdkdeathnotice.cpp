@@ -106,7 +106,7 @@ void SDKHudDeathNotice::Paint()
 		wchar_t* pwszWeapon = nullptr;
 
 		if (msg.szIcon[0])
-			pwszWeapon = g_pVGuiLocalize->Find( VarArgs("#DAB_Weapon_Obituary_%s", msg.szIcon+2) );
+			pwszWeapon = g_pVGuiLocalize->Find( VarArgs("#DA_Weapon_Obituary_%s", msg.szIcon+2) );
 
 		if (!pwszWeapon)
 			pwszWeapon = L"x.x";

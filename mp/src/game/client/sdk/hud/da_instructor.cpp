@@ -14,7 +14,7 @@
 
 #include "da_instructor.h"
 #include "c_sdk_player.h"
-#include "dab_buymenu.h"
+#include "da_buymenu.h"
 
 CInstructor::CInstructor()
 {

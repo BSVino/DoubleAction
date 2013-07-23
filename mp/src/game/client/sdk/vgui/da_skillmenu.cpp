@@ -35,7 +35,7 @@
 #include "c_sdk_player.h"
 #include "c_sdk_team.h"
 
-#include "dab_skillmenu.h"
+#include "da_skillmenu.h"
 
 
 #include "IGameUIFuncs.h" // for key bindings
@@ -69,7 +69,7 @@ void CSkillButton::OnCursorEntered()
 
 	InvalidateLayout();
 
-	CDABSkillMenu* pParent = dynamic_cast<CDABSkillMenu*>(GetParent());
+	CDASkillMenu* pParent = dynamic_cast<CDASkillMenu*>(GetParent());
 	if (!pParent)
 		return;
 
@@ -96,7 +96,7 @@ SkillID CSkillButton::GetSkill()
 	return AliasToSkillID(m_szSkillName);
 }
 
-CDABSkillMenu::CDABSkillMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY_EQUIP_CT )
+CDASkillMenu::CDASkillMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY_EQUIP_CT )
 {
 	m_pViewPort = pViewPort;
 
@@ -110,11 +110,11 @@ CDABSkillMenu::CDABSkillMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY_EQUI
 }
 
 //Destructor
-CDABSkillMenu::~CDABSkillMenu()
+CDASkillMenu::~CDASkillMenu()
 {
 }
 
-void CDABSkillMenu::Update()
+void CDASkillMenu::Update()
 {
 	BaseClass::Update();
 
@@ -128,7 +128,7 @@ void CDABSkillMenu::Update()
 	}
 }
 
-void CDABSkillMenu::ShowPanel( bool bShow )
+void CDASkillMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
 		m_iSkillMenuKey = gameuifuncs->GetButtonCodeForBind( "skill" );
@@ -145,7 +145,7 @@ void CDABSkillMenu::ShowPanel( bool bShow )
 	}
 }
 
-void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
+void CDASkillMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
@@ -162,7 +162,7 @@ void CDABSkillMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-Panel *CDABSkillMenu::CreateControlByName( const char *controlName )
+Panel *CDASkillMenu::CreateControlByName( const char *controlName )
 {
 	if ( !Q_stricmp( "SkillButton", controlName ) )
 		return new CSkillButton( this, NULL );
@@ -170,7 +170,7 @@ Panel *CDABSkillMenu::CreateControlByName( const char *controlName )
 		return BaseClass::CreateControlByName( controlName );
 }
 
-void CDABSkillMenu::SetVisible( bool state )
+void CDASkillMenu::SetVisible( bool state )
 {
 	BaseClass::SetVisible( state );
 
@@ -186,7 +186,7 @@ void CDABSkillMenu::SetVisible( bool state )
 	}
 }
 
-void CDABSkillMenu::OnCommand( const char *command )
+void CDASkillMenu::OnCommand( const char *command )
 {
 	if (Q_strncasecmp(command, "setskill ", 9) == 0)
 	{
@@ -200,12 +200,12 @@ void CDABSkillMenu::OnCommand( const char *command )
 		BaseClass::OnCommand(command);
 }
 
-void CDABSkillMenu::PaintBackground()
+void CDASkillMenu::PaintBackground()
 {
 	// Don't
 }
 
-void CDABSkillMenu::PaintBorder()
+void CDASkillMenu::PaintBorder()
 {
 	// Don't
 }
@@ -213,19 +213,19 @@ void CDABSkillMenu::PaintBorder()
 //-----------------------------------------------------------------------------
 // Purpose: Apply scheme settings
 //-----------------------------------------------------------------------------
-void CDABSkillMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
+void CDASkillMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
-CFolderLabel* CDABSkillMenu::GetSkillInfo()
+CFolderLabel* CDASkillMenu::GetSkillInfo()
 {
 	return m_pSkillInfo;
 }
 
-CPanelTexture* CDABSkillMenu::GetSkillIcon()
+CPanelTexture* CDASkillMenu::GetSkillIcon()
 {
 	return m_pSkillIcon;
 }
@@ -233,7 +233,7 @@ CPanelTexture* CDABSkillMenu::GetSkillIcon()
 CON_COMMAND(hud_reload_skill, "Reload resource for skill menu.")
 {
 	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_BUY_EQUIP_CT );
-	CDABSkillMenu *pSkill = dynamic_cast<CDABSkillMenu*>(pPanel);
+	CDASkillMenu *pSkill = dynamic_cast<CDASkillMenu*>(pPanel);
 	if (!pSkill)
 		return;
 	

@@ -49,11 +49,11 @@ CAkimboBase::CAkimboBase ()
 Activity CAkimboBase::ActivityOverride (Activity baseAct, bool *pRequired)
 {/*Remap baseAct to the approrpiate left/right akimbo firing animation.*/
 	Activity act = baseAct;
-	if (ACT_DAB_PRIMARYATTACK <= act && act <= ACT_DAB_PRIMARYATTACK_ROLL)
+	if (ACT_DA_PRIMARYATTACK <= act && act <= ACT_DA_PRIMARYATTACK_ROLL)
 	{
-		unsigned ndx = act - ACT_DAB_PRIMARYATTACK;
-		if (!shootright) act = (Activity)(ACT_DAB_AKIMBO_LEFT + ndx);
-		else act = (Activity)(ACT_DAB_AKIMBO_RIGHT + ndx);
+		unsigned ndx = act - ACT_DA_PRIMARYATTACK;
+		if (!shootright) act = (Activity)(ACT_DA_AKIMBO_LEFT + ndx);
+		else act = (Activity)(ACT_DA_AKIMBO_RIGHT + ndx);
 	}
 	return BaseClass::ActivityOverride (act, pRequired);
 }

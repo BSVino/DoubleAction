@@ -39,7 +39,7 @@
 #include "c_sdk_player.h"
 #include "c_sdk_team.h"
 
-#include "dab_buymenu.h"
+#include "da_buymenu.h"
 #include "folder_gui.h"
 #include "da.h"
 
@@ -82,7 +82,7 @@ void CWeaponButton::OnCursorEntered()
 	InvalidateLayout();
 	SetBorder(m_pArmedBorder);
 
-	CDABBuyMenu* pParent = dynamic_cast<CDABBuyMenu*>(GetParent());
+	CDABuyMenu* pParent = dynamic_cast<CDABuyMenu*>(GetParent());
 	if (!pParent)
 		return;
 
@@ -117,7 +117,7 @@ SDKWeaponID CWeaponButton::GetWeaponID()
 	return AliasToWeaponID(m_szWeaponID);
 }
 
-CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY )
+CDABuyMenu::CDABuyMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY )
 {
 	m_pViewPort = pViewPort;
 
@@ -131,17 +131,17 @@ CDABBuyMenu::CDABBuyMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY )
 }
 
 //Destructor
-CDABBuyMenu::~CDABBuyMenu()
+CDABuyMenu::~CDABuyMenu()
 {
 }
 
-void CDABBuyMenu::Reset()
+void CDABuyMenu::Reset()
 {
 	m_pWeaponInfo->SetText("");
 	m_pWeaponImage->SwapModel("");
 }
 
-void CDABBuyMenu::ShowPanel( bool bShow )
+void CDABuyMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
 		m_iBuyMenuKey = gameuifuncs->GetButtonCodeForBind( "buy" );
@@ -161,7 +161,7 @@ void CDABBuyMenu::ShowPanel( bool bShow )
 	}
 }
 
-void CDABBuyMenu::OnCommand( const char *command )
+void CDABuyMenu::OnCommand( const char *command )
 {
 	BaseClass::OnCommand(command);
 
@@ -173,7 +173,7 @@ void CDABBuyMenu::OnCommand( const char *command )
 	}
 }
 
-void CDABBuyMenu::OnKeyCodePressed( KeyCode code )
+void CDABuyMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
@@ -194,7 +194,7 @@ static ConVar hud_playerpreview_x("hud_playerpreview_x", "120", FCVAR_CHEAT|FCVA
 static ConVar hud_playerpreview_y("hud_playerpreview_y", "-5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-void CDABBuyMenu::Update()
+void CDABuyMenu::Update()
 {
 	m_pWeaponInfo = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponInfo"));
 	m_pWeaponInfo->SetText("");
@@ -231,7 +231,7 @@ void CDABBuyMenu::Update()
 	if (pSlotsLabel)
 	{
 		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DAB_BuyMenu_SlotsRemaining" );
+		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_BuyMenu_SlotsRemaining" );
 		if ( pchFmt && pchFmt[0] )
 		{
 			wchar_t szText[512]=L"";
@@ -368,7 +368,7 @@ void CDABBuyMenu::Update()
 	BaseClass::Update();
 }
 
-Panel *CDABBuyMenu::CreateControlByName( const char *controlName )
+Panel *CDABuyMenu::CreateControlByName( const char *controlName )
 {
 	if (FStrEq(controlName, "WeaponButton"))
 		return new CWeaponButton(this, nullptr);
@@ -376,7 +376,7 @@ Panel *CDABBuyMenu::CreateControlByName( const char *controlName )
 	return BaseClass::CreateControlByName(controlName);
 }
 
-void CDABBuyMenu::SetVisible( bool state )
+void CDABuyMenu::SetVisible( bool state )
 {
 	BaseClass::SetVisible( state );
 
@@ -392,12 +392,12 @@ void CDABBuyMenu::SetVisible( bool state )
 	}
 }
 
-void CDABBuyMenu::PaintBackground()
+void CDABuyMenu::PaintBackground()
 {
 	// Don't
 }
 
-void CDABBuyMenu::PaintBorder()
+void CDABuyMenu::PaintBorder()
 {
 	// Don't
 }
@@ -405,19 +405,19 @@ void CDABBuyMenu::PaintBorder()
 //-----------------------------------------------------------------------------
 // Purpose: Apply scheme settings
 //-----------------------------------------------------------------------------
-void CDABBuyMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
+void CDABuyMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
-vgui::Label* CDABBuyMenu::GetWeaponInfo()
+vgui::Label* CDABuyMenu::GetWeaponInfo()
 {
 	return m_pWeaponInfo;
 }
 
-CModelPanel* CDABBuyMenu::GetWeaponImage()
+CModelPanel* CDABuyMenu::GetWeaponImage()
 {
 	return m_pWeaponImage;
 }
@@ -425,7 +425,7 @@ CModelPanel* CDABBuyMenu::GetWeaponImage()
 CON_COMMAND(hud_reload_buy, "Reload resource for buy menu.")
 {
 	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_BUY );
-	CDABBuyMenu *pBuy = dynamic_cast<CDABBuyMenu*>(pPanel);
+	CDABuyMenu *pBuy = dynamic_cast<CDABuyMenu*>(pPanel);
 	if (!pBuy)
 		return;
 

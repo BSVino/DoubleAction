@@ -20,7 +20,7 @@ logically as both single and akimbo and have all the code implemented on it,
 but this would require a deal of extra work from what I know.
 
 sdk_player.cpp for drop functional
-dab_viewmodel.cpp for muzzle flashes
+da_viewmodel.cpp for muzzle flashes
 weapon_sdkbase.cpp for pick up behaviour
 (probably another one or two as well)
 
@@ -32,18 +32,18 @@ supplants this baseclass entirely.*/
 
 enum
 {/*ActivityOverride expects these in this order*/
-	ACT_DAB_AKIMBO_RIGHT = LAST_SHARED_ACTIVITY,
-	ACT_DAB_AKIMBO_CROUCH_RIGHT,
-	ACT_DAB_AKIMBO_PRONE_RIGHT,
-	ACT_DAB_AKIMBO_SLIDE_RIGHT,
-	ACT_DAB_AKIMBO_DIVE_RIGHT,
-	ACT_DAB_AKIMBO_ROLL_RIGHT,
-	ACT_DAB_AKIMBO_LEFT,
-	ACT_DAB_AKIMBO_CROUCH_LEFT,
-	ACT_DAB_AKIMBO_PRONE_LEFT,
-	ACT_DAB_AKIMBO_SLIDE_LEFT,
-	ACT_DAB_AKIMBO_DIVE_LEFT,
-	ACT_DAB_AKIMBO_ROLL_LEFT,
+	ACT_DA_AKIMBO_RIGHT = LAST_SHARED_ACTIVITY,
+	ACT_DA_AKIMBO_CROUCH_RIGHT,
+	ACT_DA_AKIMBO_PRONE_RIGHT,
+	ACT_DA_AKIMBO_SLIDE_RIGHT,
+	ACT_DA_AKIMBO_DIVE_RIGHT,
+	ACT_DA_AKIMBO_ROLL_RIGHT,
+	ACT_DA_AKIMBO_LEFT,
+	ACT_DA_AKIMBO_CROUCH_LEFT,
+	ACT_DA_AKIMBO_PRONE_LEFT,
+	ACT_DA_AKIMBO_SLIDE_LEFT,
+	ACT_DA_AKIMBO_DIVE_LEFT,
+	ACT_DA_AKIMBO_ROLL_LEFT,
 	/*Anything after this is private*/
 	LAST_SHARED_AKIMBO_ACTIVITY
 };

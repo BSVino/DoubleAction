@@ -3250,9 +3250,6 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
-      <Filter>DA\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\hud_sdkdeathnotice.cpp">
       <Filter>DA\UI</Filter>
     </ClCompile>
@@ -3276,15 +3273,6 @@
     </ClCompile>
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp">
       <Filter>DA\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\dab_buymenu.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\dab_charactermenu.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\dab_skillmenu.cpp">
-      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\vgui\folder_gui.cpp">
       <Filter>DA\UI</Filter>
@@ -3348,6 +3336,18 @@
     </ClCompile>
     <ClCompile Include="sdk\hud\da_instructor.cpp">
       <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\da_buymenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\da_charactermenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\vgui\da_skillmenu.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\da_viewmodel.cpp">
+      <Filter>DA\Weapons</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

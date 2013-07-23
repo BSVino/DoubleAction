@@ -5,15 +5,15 @@
 #include "weapon_sdkbase.h"
 
 #if defined( CLIENT_DLL )
-#define CDABViewModel C_DABViewModel
+#define CDAViewModel C_DAViewModel
 #endif
 
-class CDABViewModel : public CPredictedViewModel
+class CDAViewModel : public CPredictedViewModel
 {
-	DECLARE_CLASS( CDABViewModel, CPredictedViewModel );
+	DECLARE_CLASS( CDAViewModel, CPredictedViewModel );
 
 public:
-	CDABViewModel();
+	CDAViewModel();
 
 public:
 	DECLARE_NETWORKCLASS();

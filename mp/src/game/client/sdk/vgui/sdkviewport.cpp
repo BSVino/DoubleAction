@@ -45,9 +45,9 @@
 #if defined ( SDK_USE_TEAMS )
 #include "sdk_teammenu.h"
 #endif
-#include "dab_buymenu.h"
-#include "dab_skillmenu.h"
-#include "dab_charactermenu.h"
+#include "da_buymenu.h"
+#include "da_skillmenu.h"
+#include "da_charactermenu.h"
 #include "sdk_mapinfo.h"
 
 #if defined ( SDK_USE_TEAMS )
@@ -191,15 +191,15 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 #endif
 	else if ( Q_strcmp( PANEL_BUY, szPanelName) == 0 )
 	{
-		newpanel = new CDABBuyMenu( this );
+		newpanel = new CDABuyMenu( this );
 	}
 	else if ( Q_strcmp( PANEL_BUY_EQUIP_CT, szPanelName) == 0 )
 	{
-		newpanel = new CDABSkillMenu( this );
+		newpanel = new CDASkillMenu( this );
 	}
 	else if ( Q_strcmp( PANEL_CLASS, szPanelName) == 0 )
 	{
-		newpanel = new CDABCharacterMenu( this );
+		newpanel = new CDACharacterMenu( this );
 	}
 	else
 	{

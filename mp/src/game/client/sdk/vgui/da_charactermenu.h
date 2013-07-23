@@ -5,48 +5,51 @@
 // $NoKeywords: $
 //=================================================================================//
 
-#ifndef SDK_SKILLMENU_H
-#define SDK_SKILLMENU_H
+#pragma once
 
 #include <classmenu.h>
+#include <vgui_controls/EditablePanel.h>
 #include <FileSystem.h>
-#include <vgui/KeyCode.h>
+#include "iconpanel.h"
+#include <vgui_controls/CheckButton.h>
 #include "folder_gui.h"
 
-class CSkillButton : public vgui::Button
+class CCharacterButton : public vgui::Button
 {
 private:
-	DECLARE_CLASS_SIMPLE( CSkillButton, vgui::Button );
+	DECLARE_CLASS_SIMPLE( CCharacterButton, vgui::Button );
 	
 public:
-	CSkillButton(vgui::Panel *parent, const char *panelName);
+	CCharacterButton(vgui::Panel *parent, const char *panelName);
 
 	virtual void ApplySettings( KeyValues *resourceData );
 
 	virtual void OnCursorEntered();
-	virtual void OnCursorExited();
-
-	SkillID GetSkill();
 
 private:
-	char m_szSkillName[100];
+	char m_szCharacter[100];
+	char m_szSequence[100];
+	char m_szWeaponModel[100];
+
+	float m_flBodyPitch;
+	float m_flBodyYaw;
 };
 
-class CDABSkillMenu : public CFolderMenu, public IViewPortPanel
+class CDACharacterMenu : public CFolderMenu, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CDABSkillMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CDACharacterMenu, CFolderMenu );
 
 public:
-	CDABSkillMenu(IViewPort *pViewPort);
-	virtual ~CDABSkillMenu();
+	CDACharacterMenu(IViewPort *pViewPort);
+	virtual ~CDACharacterMenu();
 
-	virtual const char *GetName( void ) { return PANEL_BUY_EQUIP_CT; }
+	virtual const char *GetName( void ) { return PANEL_CLASS; }
 
-	virtual void Reset() {};
+	virtual void Reset();
 	virtual void Update( void );
 	virtual Panel *CreateControlByName( const char *controlName );
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
+	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void SetVisible( bool state );
 	virtual void ShowPanel(bool bShow);
 	void OnCommand( const char *command );
@@ -58,16 +61,24 @@ public:
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
-	CFolderLabel*      GetSkillInfo();
-	CPanelTexture*     GetSkillIcon();
+	void SetCharacterPreview( const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch );
+
+	vgui::Label*       GetCharacterInfo();
+	class CModelPanel* GetCharacterImage();
 
 private:
 	IViewPort	*m_pViewPort;
 
-	ButtonCode_t m_iSkillMenuKey;
+	class CFolderLabel* m_pCharacterInfo;
+	class CModelPanel*  m_pCharacterImage;
 
-	CFolderLabel*      m_pSkillInfo;
-	CPanelTexture*     m_pSkillIcon;
+	ButtonCode_t m_iCharacterMenuKey;
+
+	const char*	m_pszCharacterModel;
+	const char*	m_pszCharacterSequence;
+	const char*	m_pszCharacterWeaponModel;
+	float		m_flBodyYaw;
+	float		m_flBodyPitch;
 
 protected:
 	// vgui overrides for rounded corner background
@@ -75,5 +86,3 @@ protected:
 	virtual void PaintBorder();
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 };
-
-#endif //SDK_SKILLMENU_H
