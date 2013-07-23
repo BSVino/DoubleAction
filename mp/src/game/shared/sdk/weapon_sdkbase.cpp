@@ -20,7 +20,7 @@
 
 	#include "c_sdk_player.h"
 	#include "prediction.h"
-	#include "sdk_hud_ammo.h"
+	#include "hud/sdk_hud_ammo.h"
 
 #else
 

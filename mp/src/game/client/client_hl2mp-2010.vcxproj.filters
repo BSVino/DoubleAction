@@ -3250,36 +3250,6 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_ammo.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_weaponselection.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_chat.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_damage.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_health.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_message.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_notices.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_slowmo.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_stylebar.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_targetid.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\dab_viewmodel.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
@@ -3304,17 +3274,8 @@
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\da_hud_crosshair.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_scoreboard.cpp">
-      <Filter>DA\UI</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp">
       <Filter>DA\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\da_instructor.cpp">
-      <Filter>DA\UI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\vgui\dab_buymenu.cpp">
       <Filter>DA\UI</Filter>
@@ -3348,6 +3309,45 @@
     </ClCompile>
     <ClCompile Include="hud_basedeathnotice.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\da_hud_crosshair.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_ammo.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_chat.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_damage.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_health.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_message.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_notices.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_slowmo.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_stylebar.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_targetid.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_hud_weaponselection.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\sdk_scoreboard.cpp">
+      <Filter>DA\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\hud\da_instructor.cpp">
+      <Filter>DA\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

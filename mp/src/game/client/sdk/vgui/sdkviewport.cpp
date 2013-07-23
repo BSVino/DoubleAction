@@ -36,7 +36,7 @@
 #include "vguicenterprint.h"
 #include "text_message.h"
 #include "c_sdk_player.h"
-#include "sdk_scoreboard.h"
+#include "hud/sdk_scoreboard.h"
 #include "sdk_textwindow.h"
 #include "sdk_spectatorgui.h"
 #if defined ( SDK_USE_PLAYERCLASSES )

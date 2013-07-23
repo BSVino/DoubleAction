@@ -17,7 +17,7 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 
-#include "da_instructor.h"
+#include "hud/da_instructor.h"
 
 class CProjectedLightEffect;
 
