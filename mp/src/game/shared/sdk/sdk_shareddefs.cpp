@@ -78,10 +78,10 @@ static const char * s_WeaponAliasInfo[] =
 	"none",		// WEAPON_NONE
 	"fal",		// SDK_WEAPON_FAL
 	"mossberg", // SDK_WEAPON_MOSSBERG
-	"vector",	// SDK_WEAPON_VECTOR
+	"mac10",    // SDK_WEAPON_MAC10
 	"mp5k",		// SDK_WEAPON_MP5
 	"m1911",	// SDK_WEAPON_M1911
-	"beretta",		// SDK_WEAPON_P99
+	"beretta",  // SDK_WEAPON_BERETTA
 	"crowbar",	// SDK_WEAPON_CROWBAR
 	"grenade",	// SDK_WEAPON_GRENADE
 	"brawl",	// SDK_WEAPON_BRAWL

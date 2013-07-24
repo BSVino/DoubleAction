@@ -2851,9 +2851,6 @@
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp">
       <Filter>DA</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\sdk\weapon_vector.cpp">
-      <Filter>DA\Weapons</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_weapon_melee.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
@@ -3017,6 +3014,9 @@
       <Filter>DA\Player\bots</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\da_viewmodel.cpp">
+      <Filter>DA\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\sdk\weapon_mac10.cpp">
       <Filter>DA\Weapons</Filter>
     </ClCompile>
   </ItemGroup>

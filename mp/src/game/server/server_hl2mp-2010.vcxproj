@@ -763,11 +763,11 @@ exit 1
     <ClCompile Include="..\shared\sdk\weapon_fal.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_grenade.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_m1911.cpp" />
+    <ClCompile Include="..\shared\sdk\weapon_mac10.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mossberg.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_mp5k.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
-    <ClCompile Include="..\shared\sdk\weapon_vector.cpp" />
     <ClCompile Include="gamedll_replay.cpp" />
     <ClCompile Include="..\..\game\shared\achievement_saverestore.cpp" />
     <ClCompile Include="..\..\game\shared\achievementmgr.cpp" />
