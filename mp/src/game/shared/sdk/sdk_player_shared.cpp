@@ -1749,9 +1749,9 @@ CWeaponSDKBase* CSDKPlayer::FindWeapon (SDKWeaponID id)
 	{
 		CWeaponSDKBase *wpn = (CWeaponSDKBase *)GetWeapon (i);
 		if (wpn)
-		{/*Do nulls terminal the list?*/
-			if (wpn->GetWeaponID () != id) continue; 
-			else return wpn;
+		{
+			if (wpn->GetWeaponID () == id)
+				return wpn;
 		}
 	}
 	return NULL;

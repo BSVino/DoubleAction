@@ -1078,7 +1078,7 @@ CBaseEntity *CBasePlayer::FindUseEntity()
 	// A button, etc. can be made out of clip brushes, make sure it's +useable via a traceline, too.
 	int useableContents = MASK_SOLID | CONTENTS_DEBRIS | CONTENTS_PLAYERCLIP;
 
-#ifdef CSTRIKE_DLL
+#if defined(CSTRIKE_DLL) || defined(SDK_DLL)
 	useableContents = MASK_NPCSOLID_BRUSHONLY | MASK_OPAQUE_AND_NPCS;
 #endif
 

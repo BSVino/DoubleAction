@@ -160,6 +160,21 @@ const CSDKWeaponInfo &CWeaponSDKBase::GetSDKWpnData() const
 	return *pSDKInfo;
 }
 
+bool CWeaponSDKBase::IsAkimbo() const
+{
+	return !FStrEq(GetSDKWpnData().m_szSingle, "");
+}
+
+bool CWeaponSDKBase::HasAkimbo() const
+{
+	return !FStrEq(GetSDKWpnData().m_szAkimbo, "");
+}
+
+bool CWeaponSDKBase::IsGrenade() const
+{
+	return GetSDKWpnData().m_eWeaponType == WT_GRENADE;
+}
+
 const char* CWeaponSDKBase::GetViewModel( int viewmodelindex ) const
 {
 	if (IsThrowingGrenade() && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime())
@@ -1207,30 +1222,16 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	if ( !UTIL_ItemCanBeTouchedByPlayer( this, pPlayer ) )
 		return;
 
-	int iWeaponsWeight = 0;
-	for (int i = 0; i < pPlayer->WeaponCount(); i++)
-	{
-		if (!pPlayer->GetWeapon(i))
-			continue;
+	int iWeight = GetWeight();
 
-		CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(pPlayer->GetWeapon(i));
+	// If the player has nitrophiliac and doesn't have any other grenades, this one's free.
+	if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) == 0 && pPlayer->m_Shared.m_iStyleSkill == SKILL_TROLL)
+		iWeight = 0;
 
-		if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
-		{
-			int iGrenades = pPlayer->GetAmmoCount("grenades");
+	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
+		pPlayer->DropWeaponsToPickUp(this);
 
-			// If I'm a nitrophiliac, forgive one grenade's worth of weight.
-			// This way I can carry the extra grenade without a penalty to picking stuff up.
-			if (pPlayer->m_Shared.m_iStyleSkill == SKILL_TROLL)
-				iGrenades -= 1;
-
-			iWeaponsWeight += iGrenades * CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->iWeight;
-		}
-		else
-			iWeaponsWeight += pWeapon->GetWeight();
-	}
-
-	if (GetWeight() + iWeaponsWeight > MAX_LOADOUT_WEIGHT)
+	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
 		return;
 
 	// ----------------------------------------
@@ -1238,30 +1239,47 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	// ----------------------------------------
 	if (pPlayer->Weapon_OwnsThisType( GetClassname(), GetSubType())) 
 	{
-		if (GetSDKWpnData ().m_eWeaponType == WT_PISTOL)
-		{/*This is the only place I could think to put this, unfortunately.*/
-			const char *alias = WeaponIDToAlias (GetWeaponID ());
-			CAkimboBase *akb;
-			char name[32];
-			Q_snprintf (name, sizeof (name), "weapon_akimbo_%s", alias);
-			akb = (CAkimboBase *)pPlayer->GiveNamedItem (name);
-			if (akb) 
-			{/*Second pistol is always the left one*/
-				akb->leftclip = m_iClip1;
-				UTIL_Remove (this);
-				akb->SetOwner (pPlayer);
-				pPlayer->Weapon_Switch (akb);
-				return;
+		if (HasAkimbo())
+		{
+			// I already have one of these, and there's an akimbo version. Do we have it?
+			if (!pPlayer->FindWeapon(AliasToWeaponID(GetSDKWpnData().m_szAkimbo)))
+			{
+				// We don't have the akimbo version. Give it.
+				CAkimboBase* pAkimbo = (CAkimboBase*)pPlayer->GiveNamedItem(UTIL_VarArgs("weapon_%s", GetSDKWpnData().m_szAkimbo));
+				if (pAkimbo)
+				{
+					// Second pistol is always the left one
+					pAkimbo->leftclip = m_iClip1;
+					pAkimbo->SetOwner(pPlayer);
+
+					// Player already has a weapon like this one, so just remove this one.
+					UTIL_Remove(this);
+
+					pPlayer->Weapon_Switch(pAkimbo);
+					return;
+				}
 			}
+
+			// We already have the akimbo version. Don't pick it up.
+			return;
 		}
+
 		if ( pPlayer->Weapon_EquipAmmoOnly( this ) )
 		{
 			// Only remove me if I have no ammo left
 			if ( HasPrimaryAmmo() )
 				return;
 
+			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon() && pPlayer->GetActiveSDKWeapon()->GetWeaponID() != SDK_WEAPON_BRAWL)
+			{
+				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
+			}
+			else
+				pPlayer->Weapon_Switch(pPlayer->FindWeapon(GetWeaponID()));
+
 			UTIL_Remove( this );
 			OnPickedUp( pPlayer );
+
 			return;
 		}
 		else
@@ -1279,20 +1297,15 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 		pPlayer->Weapon_Equip( this );
 		if ( pPlayer->IsInAVehicle() )
-		{
 			Holster(NULL);
-		}
 		else
 		{
-			bool bFirstPickup = !(pPlayer == GetPrevOwner());
-
-			// If it uses clips, load it full. (if this is the first time you've picked up this weapon)
-			if ( UsesClipsForAmmo1() && bFirstPickup )
+			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon() && pPlayer->GetActiveSDKWeapon()->GetWeaponID() != SDK_WEAPON_BRAWL)
 			{
-				m_iClip1 = GetMaxClip1();
+				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 			}
-
-			pPlayer->Weapon_Switch( this );
+			else
+				pPlayer->Weapon_Switch( this );
 		}
 
 		OnPickedUp( pPlayer );

@@ -124,7 +124,8 @@ public:
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;
 	
-	CWeaponSDKBase* GetActiveSDKWeapon() const;
+	CWeaponSDKBase*    GetActiveSDKWeapon() const;
+	CWeaponSDKBase*    GetSDKWeapon( int i ) const;
 	virtual void	CreateViewModel( int viewmodelindex = 0 );
 
 	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
@@ -132,6 +133,9 @@ public:
 	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 	virtual CBaseCombatWeapon* GetLastWeapon( void );
+
+	int  FindCurrentWeaponsWeight();
+	void DropWeaponsToPickUp(CWeaponSDKBase* pWeapon);
 
 	virtual Vector  EyePosition();
 
@@ -406,8 +410,10 @@ private:
 	// Last usercmd we shot a bullet on.
 	int m_iLastWeaponFireUsercmd;
 
-	virtual void SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  );
-	virtual void SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
+	void SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  );
+	void SDKThrowWeaponInternal( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  );
+	void SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
+
 	// When the player joins, it cycles their view between trigger_camera entities.
 	// This is the current camera, and the time that we'll switch to the next one.
 	EHANDLE m_pIntroCamera;

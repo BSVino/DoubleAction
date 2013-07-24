@@ -29,6 +29,7 @@
 #include "igamemovement.h"
 #include "da_ammo_pickup.h"
 #include "bots/bot_main.h"
+#include "ammodef.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -2064,62 +2065,9 @@ bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 		AngleVectors( gunAngles, &vecForward, NULL, NULL );
 
 		float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
-		pWeapon->SetWeaponVisible( false );
-		pWeapon->Holster(NULL);
-		pWeapon->SetPrevOwner(this);
-		/*HACK: Pay attention now, this is where it gets tricky.
-		We want to ensure:
-			1. Akimbos are moved if a single is tossed
-			2. Single is removed if akimbos are tossed
-		It's either this or a rewrite of the weapon code*/
-		if (pWeapon->GetSDKWpnData ().m_szSingle[0] == '\0')
-		{/*Single toss*/
-			const char *cls = pWeapon->GetClassname ();
-			weapontype_t type = pWeapon->GetWeaponType ();
-			SDKWeaponID id = pWeapon->GetWeaponID ();
 
-			SDKThrowWeapon (pWeapon, vecForward, gunAngles, flDiameter);
-			if (WT_PISTOL == type)
-			{
-				char name[32];
-				Q_snprintf (name, sizeof (name), "akimbo_%s", WeaponIDToAlias (id));
-				CAkimboBase *akb = (CAkimboBase *)FindWeapon (AliasToWeaponID (name));
-				if (akb)
-				{/*Keep left pistol if we have akimbos*/
-					CWeaponSDKBase *left = (CWeaponSDKBase *)GiveNamedItem (cls);
-					left->m_iClip1 = akb->leftclip;
-					SetActiveWeapon (left);
-					RemovePlayerItem (akb); /*Ensure 1.*/
-				}
-			}
-		}
-		else
-		{/*Akimbo toss*/
-			CAkimboBase *akb = (CAkimboBase *)pWeapon;
-			const char *alias = pWeapon->GetSDKWpnData ().m_szSingle;
-			char name[32];
-			int i;
-			/*Throw two singles instead of pmodel (rule of style)*/
-			Q_snprintf (name, sizeof (name), "weapon_%s", alias);
-			for (i = 0; i < 2; i++)
-			{/*I have to redo vphysics here else source cries.
-			 This doesn't really make sense, but it seems to work.*/
-				CWeaponSDKBase *wpn = (CWeaponSDKBase *)Weapon_Create (name);
-				wpn->VPhysicsDestroyObject (); 
-				wpn->VPhysicsInitShadow (true, true);
-				if (i == 0) wpn->m_iClip1 = akb->rightclip;
-				else wpn->m_iClip1 = akb->leftclip;
-				SDKThrowWeapon (wpn, vecForward, gunAngles, flDiameter);
-			}
-			RemovePlayerItem (akb);
-			/*Ensure 2.*/
-			CWeaponSDKBase *wpn = FindWeapon (AliasToWeaponID (alias));
-			AssertMsg (wpn != NULL, "How do you have akimbos without a single?");
-			if (wpn) 
-			{
-				RemovePlayerItem (wpn);
-			}
-		}
+		SDKThrowWeapon(pWeapon, vecForward, gunAngles, flDiameter);
+
 		if (bAutoSwitch) SwitchToNextBestWeapon( NULL );
 		return true;
 	}
@@ -2149,12 +2097,308 @@ void CSDKPlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
 	dynamic_cast<CWeaponSDKBase*>(pWeapon)->SetDieThink( false );	//Make sure the context think for removing is gone!!
 }
 
+int CSDKPlayer::FindCurrentWeaponsWeight()
+{
+	int iWeaponsWeight = 0;
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		if (!GetWeapon(i))
+			continue;
+
+		CWeaponSDKBase* pWeapon = GetSDKWeapon(i);
+
+		if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
+		{
+			int iGrenades = GetAmmoCount("grenades");
+
+			// If I'm a nitrophiliac, forgive one grenade's worth of weight.
+			// This way I can carry the extra grenade without a penalty to picking stuff up.
+			if (m_Shared.m_iStyleSkill == SKILL_TROLL)
+				iGrenades -= 1;
+
+			iWeaponsWeight += iGrenades * CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->iWeight;
+		}
+		else
+			iWeaponsWeight += pWeapon->GetWeight();
+	}
+
+	return iWeaponsWeight;
+}
+
+ConVar da_debug_weaponpickup("da_debug_weaponpickup", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayer::DropWeaponsToPickUp(CWeaponSDKBase* pWeapon)
+{
+	bool bDebug = da_debug_weaponpickup.GetBool();
+
+	// Throw away weapons, lightest first, until we have room for this weapon.
+	int iNewWeaponsWeight = FindCurrentWeaponsWeight();
+
+	// This vector is a list the quantity of our current weapons.
+	CUtlVector<int> aiWeapons;
+	aiWeapons.AddMultipleToTail(WEAPON_MAX);
+	memset(aiWeapons.Base(), 0, aiWeapons.Count()*sizeof(int));
+
+	// Count up how many weapons we have currently.
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		if (!GetSDKWeapon(i))
+			continue;
+
+		CWeaponSDKBase* pThisWeapon = GetSDKWeapon(i);
+
+		if (pThisWeapon->IsGrenade())
+			aiWeapons[pThisWeapon->GetWeaponID()] += GetAmmoCount(GetAmmoDef()->Index("grenades"));
+		else if (pThisWeapon->IsAkimbo())
+			aiWeapons[AliasToWeaponID(pThisWeapon->GetSDKWpnData().m_szSingle)] = 2;
+		else if (aiWeapons[pThisWeapon->GetWeaponID()] == 0) // Don't overwrite if the akimbo already stored a 2
+			aiWeapons[pThisWeapon->GetWeaponID()] = 1;
+	}
+
+	// Nitrophiliac forgives one grenade's weight.
+	if (m_Shared.m_iStyleSkill == SKILL_TROLL && aiWeapons[SDK_WEAPON_GRENADE])
+		aiWeapons[SDK_WEAPON_GRENADE] -= 1;
+
+	if (bDebug)
+	{
+		DevMsg("Weapon count:\n");
+		for (int i = 0; i < aiWeapons.Count(); i++)
+			DevMsg(" %s: %d\n", WeaponIDToAlias((SDKWeaponID)i), aiWeapons[i]);
+		DevMsg("Total weight: %d\n", iNewWeaponsWeight);
+	}
+
+	// Test for an early out. If this weapon has no akimbo version, and we already have one,
+	// then just toss the one we have to make room for the new one.
+	if (!pWeapon->IsGrenade() && !pWeapon->HasAkimbo())
+	{
+		if (aiWeapons[pWeapon->GetWeaponID()])
+		{
+			if (bDebug)
+				DevMsg("Early out: throwing duplicate %s\n", WeaponIDToAlias(pWeapon->GetWeaponID()));
+
+			QAngle gunAngles;
+			VectorAngles( BodyDirection2D(), gunAngles );
+
+			Vector vecForward;
+			AngleVectors( gunAngles, &vecForward, NULL, NULL );
+
+			float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
+
+			SDKThrowWeapon(FindWeapon(pWeapon->GetWeaponID()), vecForward, gunAngles, flDiameter);
+
+			return;
+		}
+	}
+
+	// Never remove brawl.
+	aiWeapons[SDK_WEAPON_BRAWL] = 0;
+
+	// This vector is a list of how many of each weapon we're going to toss.
+	CUtlVector<int> aiTossWeapons;
+	aiTossWeapons.AddMultipleToTail(WEAPON_MAX);
+	memset(aiTossWeapons.Base(), 0, aiTossWeapons.Count()*sizeof(int));
+
+	// This O(n^2) algorithm could be O(nlogn) with a bit more work,
+	// but it's only rarely run, and only on small data sets (n == WEAPON_MAX) so I'm not going to bother.
+	while (pWeapon->GetWeight() + iNewWeaponsWeight > MAX_LOADOUT_WEIGHT)
+	{
+		int iLightestWeapon = -1;
+
+		// Find the lightest weapon.
+		for (int i = 0; i < aiWeapons.Count(); i++)
+		{
+			if (!aiWeapons[i])
+				continue;
+
+			if (aiTossWeapons[i] >= aiWeapons[i])
+				continue;
+
+			if (iLightestWeapon == -1)
+			{
+				iLightestWeapon = i;
+				continue;
+			}
+
+			CSDKWeaponInfo* pLightestWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)iLightestWeapon);
+			CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+
+			if (pWeaponInfo->iWeight < pLightestWeaponInfo->iWeight)
+			{
+				iLightestWeapon = i;
+				continue;
+			}
+
+			if (pWeaponInfo->iWeight == pLightestWeaponInfo->iWeight)
+			{
+				// If we're picking up a gun, prefer to toss grenades.
+				if (pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE && i == SDK_WEAPON_GRENADE)
+				{
+					iLightestWeapon = i;
+					continue;
+				}
+
+				// If we're picking up a grenade, prefer to toss weapons.
+				if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE && i != SDK_WEAPON_GRENADE)
+				{
+					iLightestWeapon = i;
+					continue;
+				}
+			}
+		}
+
+		if (iLightestWeapon == -1)
+		{
+			AssertMsg(false, UTIL_VarArgs("Can't throw away enough weapons to make room for %s!\n", pWeapon->GetClassname()));
+			return;
+		}
+
+		aiTossWeapons[iLightestWeapon]++;
+		iNewWeaponsWeight -= CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)iLightestWeapon)->iWeight;
+
+		if (bDebug)
+			DevMsg("Tossing %s, new weight %d\n", WeaponIDToAlias((SDKWeaponID)iLightestWeapon), iNewWeaponsWeight);
+	}
+
+	// Now add back any weapons that could have been retained.
+	// This may help if the player has a heavy gun and a small gun and picks up a heavy gun.
+	for (int i = 0; i < aiWeapons.Count(); i++)
+	{
+		if (!aiWeapons[i])
+			continue;
+
+		if (!aiTossWeapons[i])
+			continue;
+
+		CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+
+		if (pWeapon->GetWeight() + iNewWeaponsWeight + pWeaponInfo->iWeight <= MAX_LOADOUT_WEIGHT)
+		{
+			aiTossWeapons[i] = false;
+			iNewWeaponsWeight += pWeaponInfo->iWeight;
+
+			if (bDebug)
+				DevMsg("Restoring %s, new weight %d\n", WeaponIDToAlias((SDKWeaponID)i), iNewWeaponsWeight);
+		}
+	}
+
+	for (int i = 0; i < aiTossWeapons.Count(); i++)
+	{
+		for (int j = 0; j < aiTossWeapons[i]; j++)
+		{
+			if (bDebug)
+				DevMsg("Throwing %s\n", WeaponIDToAlias((SDKWeaponID)i));
+
+			QAngle gunAngles;
+			VectorAngles( BodyDirection2D(), gunAngles );
+
+			Vector vecForward;
+			AngleVectors( gunAngles, &vecForward, NULL, NULL );
+
+			float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
+
+			SDKThrowWeapon(FindWeapon((SDKWeaponID)i), vecForward, gunAngles, flDiameter);
+		}
+	}
+
+	Assert(FindCurrentWeaponsWeight() + pWeapon->GetWeight() <= MAX_LOADOUT_WEIGHT);
+}
+
 void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  )
+{
+	Assert(pWeapon);
+	if (!pWeapon)
+		return;
+
+	if (!FStrEq(pWeapon->GetSDKWpnData().m_szSingle, ""))
+	{
+		// This is an akimbo weapon. Toss two singles instead.
+
+		CAkimboBase *pAkimbos = (CAkimboBase*)pWeapon;
+		const char *pszSingle = pWeapon->GetSDKWpnData().m_szSingle;
+		char name[32];
+		int i;
+
+		Q_snprintf (name, sizeof (name), "weapon_%s", pszSingle);
+		for (i = 0; i < 2; i++)
+		{
+			CWeaponSDKBase *pThrow = (CWeaponSDKBase*)Weapon_Create(name);
+			pThrow->VPhysicsDestroyObject(); 
+			pThrow->VPhysicsInitShadow(true, true);
+			if (i == 0)
+				pThrow->m_iClip1 = pAkimbos->rightclip;
+			else
+				pThrow->m_iClip1 = pAkimbos->leftclip;
+
+			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
+		}
+		RemovePlayerItem (pAkimbos);
+
+		// Remove the single version also.
+		CWeaponSDKBase *pSingle = FindWeapon(AliasToWeaponID(pszSingle));
+		AssertMsg (pSingle, "How do you have akimbos without a single?");
+		if (pSingle) 
+			RemovePlayerItem (pSingle);
+
+		return;
+	}
+
+	if (!FStrEq(pWeapon->GetSDKWpnData().m_szAkimbo, ""))
+	{
+		// This is a single weapon that has an akimbo counterpart.
+		// Check to see if we have the akimbo, and if we do, remove it before tossing.
+		CAkimboBase *pAkimbo = (CAkimboBase*)FindWeapon(AliasToWeaponID(pWeapon->GetSDKWpnData().m_szAkimbo));
+		if (pAkimbo)
+		{
+			// Toss out a single.
+			CWeaponSDKBase *pThrow = (CWeaponSDKBase*)Weapon_Create(pWeapon->GetName());
+			pThrow->VPhysicsDestroyObject(); 
+			pThrow->VPhysicsInitShadow(true, true);
+
+			// Throw the left one.
+			pThrow->m_iClip1 = pAkimbo->leftclip;
+
+			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
+
+			// Remove the akimbo weapon.
+			RemovePlayerItem(pAkimbo);
+
+			// Pretend that this wasn't the weapon we threw out, re-draw it.
+			pWeapon->Holster(nullptr);
+			SetActiveWeapon(pWeapon);
+
+			return;
+		}
+	}
+
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE && GetAmmoCount(GetAmmoDef()->Index("grenades")) > 1)
+	{
+		CWeaponSDKBase *pGrenade = (CWeaponSDKBase*)Weapon_Create(pWeapon->GetName());
+		pGrenade->VPhysicsDestroyObject();
+		pGrenade->VPhysicsInitShadow(true, true);
+
+		SDKThrowWeaponInternal(pGrenade, vecForward, vecAngles, flDiameter);
+
+		RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+		return;
+	}
+
+	pWeapon->SetWeaponVisible( false );
+	pWeapon->Holster(NULL);
+	pWeapon->SetPrevOwner(this);
+	Weapon_Detach( pWeapon );
+
+	SDKThrowWeaponInternal(pWeapon, vecForward, vecAngles, flDiameter);
+
+	// Throwing the last grenade doesn't remove the ammo. Must remove it manually.
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
+		RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+}
+
+void CSDKPlayer::SDKThrowWeaponInternal( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  )
 {
 	Vector vecOrigin;
 	CollisionProp()->RandomPointInBounds( Vector( 0.5f, 0.5f, 0.5f ), Vector( 0.5f, 0.5f, 1.0f ), &vecOrigin );
 
-	// Nowhere in particular; just drop it.
 	Vector vecThrow;
 	SDKThrowWeaponDir( pWeapon, vecForward, &vecThrow );
 
@@ -2179,7 +2423,6 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	pWeapon->SetAbsAngles( vecAngles );
 	pWeapon->Drop( vecThrow );
 	pWeapon->SetRemoveable( false );
-	Weapon_Detach( pWeapon );
 
 	pWeapon->SetDieThink( true );
 }
@@ -2253,7 +2496,14 @@ void CSDKPlayer::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 
 CWeaponSDKBase* CSDKPlayer::GetActiveSDKWeapon() const
 {
-	return dynamic_cast< CWeaponSDKBase* >( GetActiveWeapon() );
+	Assert(!GetActiveWeapon() || dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon()));
+	return static_cast< CWeaponSDKBase* >( GetActiveWeapon() );
+}
+
+CWeaponSDKBase* CSDKPlayer::GetSDKWeapon(int i) const
+{
+	Assert(!GetWeapon(i) || dynamic_cast<CWeaponSDKBase*>(GetWeapon(i)));
+	return static_cast< CWeaponSDKBase* >( GetWeapon(i) );
 }
 
 void CSDKPlayer::CreateViewModel( int index /*=0*/ )

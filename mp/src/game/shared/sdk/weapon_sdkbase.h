@@ -46,6 +46,10 @@ public:
 	// Get SDK weapon specific weapon data.
 	CSDKWeaponInfo const	&GetSDKWpnData() const;
 
+	bool IsAkimbo() const;
+	bool HasAkimbo() const;
+	bool IsGrenade() const;
+
 	virtual const char* GetViewModel( int viewmodelindex = 0 ) const;
 
 	// Get a pointer to the player that owns this weapon
