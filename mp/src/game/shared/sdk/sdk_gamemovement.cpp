@@ -1829,7 +1829,7 @@ void CSDKGameMovement::Duck( void )
 			// If holding the stunt button, slide
 			bWantsSlide = !!(mv->m_nButtons & IN_ALT1);
 			// If holding the movement key forward, roll
-			bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f);
+			bWantsRoll = (bPlayerHoldingMoveKeys && flWishDotLocal > 0.5f) || (mv->m_nButtons & IN_DUCK);
 			// Otherwise, prone
 			bWantsProne = !bWantsRoll && !bWantsSlide;
 

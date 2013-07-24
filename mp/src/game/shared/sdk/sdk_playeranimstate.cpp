@@ -1005,15 +1005,10 @@ bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
 	}
 	else if ( m_pSDKPlayer->m_Shared.IsProne() )
 	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-		{
-			if (ShouldUseAimInAnims())
-				idealActivity = ACT_DA_PRONECHEST_AIM;
-			else
-				idealActivity = ACT_DA_PRONECHEST_IDLE;		
-		}
+		if (ShouldUseAimInAnims())
+			idealActivity = ACT_DA_PRONECHEST_AIM;
 		else
-			idealActivity = ACT_DA_CRAWL_IDLE;		
+			idealActivity = ACT_DA_PRONECHEST_IDLE;
 
 		return true;
 	}

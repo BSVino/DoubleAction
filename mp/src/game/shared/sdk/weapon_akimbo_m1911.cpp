@@ -51,7 +51,6 @@ acttable_t CAkimboM1911::m_acttable[] =
 	{ ACT_DA_CROUCHWALK_READY,         ACT_DA_CROUCHWALK_READY_AKIMBO_M1911,         false },
 	{ ACT_DA_PRONECHEST_IDLE,			ACT_DA_PRONECHEST_IDLE_AKIMBO_M1911,			false },
 	{ ACT_DA_PRONEBACK_IDLE,			ACT_DA_PRONEBACK_IDLE_AKIMBO_M1911,			false },
-	{ ACT_DA_CRAWL_IDLE,				ACT_DA_CRAWL_IDLE_AKIMBO_M1911,				false },
 
 	{ ACT_DA_DRAW,                     ACT_DA_DRAW_AKIMBO_M1911,                    false },
 

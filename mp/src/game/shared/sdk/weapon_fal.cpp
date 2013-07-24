@@ -70,7 +70,6 @@ acttable_t CWeaponFAL::m_acttable[] =
 	{ ACT_DA_CROUCHWALK_READY,         ACT_DA_CROUCHWALK_READY_FAL,           false },
 	{ ACT_DA_PRONECHEST_IDLE,			ACT_DA_PRONECHEST_IDLE_FAL,			false },
 	{ ACT_DA_PRONEBACK_IDLE,			ACT_DA_PRONEBACK_IDLE_FAL,				false },
-	{ ACT_DA_CRAWL_IDLE,				ACT_DA_CRAWL_IDLE_FAL,					false },
 	{ ACT_DA_STAND_AIM,                ACT_DA_STAND_AIM_FAL,                  false },
 	{ ACT_DA_WALK_AIM,                 ACT_DA_WALK_AIM_FAL,                   false },
 	{ ACT_DA_RUN_AIM,                  ACT_DA_RUN_AIM_FAL,                    false },
