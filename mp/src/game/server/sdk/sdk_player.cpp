@@ -3708,8 +3708,6 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 	return pEnt;
 }
 
-ConVar da_style_sound_delay("da_style_sound_delay", "0.1", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
-
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 {
 	m_flTotalStyle += points;
@@ -3729,7 +3727,6 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 	CSingleUserRecipientFilter filter( this );
 
 	EmitSound_t params;
-	params.m_flSoundTime = gpGlobals->curtime + da_style_sound_delay.GetFloat();
 	params.m_pOrigin = nullptr;
 	params.m_pflSoundDuration = nullptr;
 	params.m_bWarnOnDirectWaveReference = true;
