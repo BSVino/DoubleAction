@@ -65,4 +65,8 @@ void CSDKBot::Attack( CUserCmd &cmd )
 				cmd.buttons |= IN_ATTACK;
 		}
 	}
+
+	// Try to throw a grenade.
+	if (random->RandomInt(0, 1))
+		cmd.buttons |= IN_ALT2;
 }
