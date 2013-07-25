@@ -46,9 +46,15 @@ private:
 
 	// Render all panel effects
 	void		RenderLetterboxing( void );
+	void		RenderDeathFrame( void );
 
 	// List of current panel effects
 	CUtlVector< CPanelEffect *> m_Effects;
+
+	float       m_flKilledByStartTime;
+	vgui::HFont m_hDeathFrameLarge;
+	vgui::HFont m_hDeathFrameMedium;
+	vgui::HFont m_hDeathFrameSmall;
 };
 
 

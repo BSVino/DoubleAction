@@ -248,6 +248,11 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bCoderHacks ) ),
 	SendPropInt( SENDINFO( m_nCoderHacksButtons ), 32, SPROP_UNSIGNED ),
+
+	SendPropEHandle( SENDINFO( m_hKiller ) ),
+	SendPropEHandle( SENDINFO( m_hInflictor ) ),
+	SendPropBool( SENDINFO( m_bWasKilledByExplosion ) ),
+	SendPropVector (SENDINFO (m_vecKillingExplosionPosition)),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -1113,6 +1118,10 @@ void CSDKPlayer::Spawn()
 		m_arrIgnoreNadesByIndex.AddToHead(pGrenade->entindex());
 		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile");
 	}
+
+	m_hKiller = nullptr;
+	m_hInflictor = nullptr;
+	m_bWasKilledByExplosion = false;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1611,6 +1620,16 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
+
+	m_hKiller = ToSDKPlayer(info.GetAttacker());
+	m_hInflictor = info.GetInflictor();
+	if (m_hInflictor.Get() != m_hKiller && info.GetDamageType() == DMG_BLAST)
+	{
+		// The object that's exploding will no longer exist by the time it gets to the client,
+		// so we snack away its location now so that data will be still available later.
+		m_bWasKilledByExplosion = true;
+		m_vecKillingExplosionPosition = m_hInflictor->GetAbsOrigin();
+	}
 
 	StopSound( "Player.GoSlide" );
 
@@ -3376,7 +3395,7 @@ void CSDKPlayer::State_Enter_DEATH_ANIM()
 extern ConVar spec_freeze_time;
 extern ConVar spec_freeze_traveltime;
 
-#define SDK_DEATH_ANIMATION_TIME 0.5f
+#define SDK_DEATH_ANIMATION_TIME 0.0f
 
 void CSDKPlayer::State_PreThink_DEATH_ANIM()
 {
@@ -3401,20 +3420,27 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 	if (gpGlobals->curtime < m_flDeathTime + SDK_DEATH_ANIMATION_TIME)
 		return;
 
-	float flTimeInFreeze = spec_freeze_traveltime.GetFloat() + spec_freeze_time.GetFloat();
+	float flTimeInFreeze = spec_freeze_time.GetFloat();
 	float flFreezeEnd = (m_flDeathTime + SDK_DEATH_ANIMATION_TIME + flTimeInFreeze );
 
-	if ( GetObserverTarget() && GetObserverTarget() != this )
+	// Allow the player to spawn early if he wants.
+	if (gpGlobals->curtime > m_flDeathTime + SDK_PLAYER_DEATH_TIME)
 	{
-		if ( gpGlobals->curtime < flFreezeEnd )
+		if ((m_nButtons & IN_ATTACK) && !(m_afButtonLast & IN_ATTACK))
 		{
-			if ( GetObserverMode() != OBS_MODE_FREEZECAM )
-			{
-				StartObserverMode( OBS_MODE_FREEZECAM );
-				PhysObjectSleep();
-			}
+			State_Transition( STATE_ACTIVE );
 			return;
 		}
+	}
+
+	if ( gpGlobals->curtime < flFreezeEnd )
+	{
+		if ( GetObserverMode() != OBS_MODE_FREEZECAM )
+		{
+			StartObserverMode( OBS_MODE_FREEZECAM );
+			PhysObjectSleep();
+		}
+		return;
 	}
 
 	if ( gpGlobals->curtime < flFreezeEnd )

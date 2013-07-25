@@ -174,7 +174,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 
 	pPlayer->OverrideView( pSetup );
 
-	if( ::input->CAM_IsThirdPerson() )
+	if( ::input->CAM_IsThirdPerson() && pPlayer->IsAlive() )
 	{
 		Vector cam_ofs = g_ThirdPersonManager.GetCameraOffsetAngles();
 

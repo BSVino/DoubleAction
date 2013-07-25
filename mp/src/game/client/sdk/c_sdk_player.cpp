@@ -33,6 +33,7 @@
 #include "in_buttons.h"
 #include "cam_thirdperson.h"
 #include "headtrack/isourcevirtualreality.h"
+#include "engine/ivdebugoverlay.h"
 
 #include "da_buymenu.h"
 #include "sdk_teammenu.h"
@@ -222,6 +223,11 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 	RecvPropInt( RECVINFO( m_nCoderHacksButtons ) ),
+
+	RecvPropEHandle( RECVINFO( m_hKiller ) ),
+	RecvPropEHandle( RECVINFO( m_hInflictor ) ),
+	RecvPropBool( RECVINFO( m_bWasKilledByExplosion ) ),
+	RecvPropVector( RECVINFO( m_vecKillingExplosionPosition ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -1029,6 +1035,320 @@ void C_SDKPlayer::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 	eyeOrigin = target->EyePosition();
 
 	engine->SetViewAngles( eyeAngles );
+}
+
+ConVar da_deathframe_back( "da_deathframe_back", "40.0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY );
+ConVar da_deathframe_side( "da_deathframe_side", "60.0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY );
+ConVar da_deathframe_showvectors("da_deathframe_showvectors", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_deathframe_debug("da_deathframe_debug", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void C_SDKPlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	int iTotal = 6;
+
+	int iStart = random->RandomInt(0, iTotal-1);
+	int iCurrent = (iStart+1)%iTotal;
+
+	Vector vecCamTarget, vecCamPlayer, vecCamLookAt;
+
+	bool bOK = false;
+	bool bDebugTargets = false;
+	bool bDebugViews = da_deathframe_debug.GetBool() && !m_bSentFreezeFrame;
+
+	while (iCurrent != iStart)
+	{
+		switch (iCurrent)
+		{
+		default:
+		case 0:
+			bOK = CalcFreezeCamThreeQuartersView(eyeOrigin, eyeAngles, fov, 1, vecCamTarget, vecCamPlayer, vecCamLookAt);
+			if (bDebugViews)
+				DevMsg("Three quarters view 1 %s\n", bOK?"OK":"not OK");
+			bDebugTargets = true;
+			break;
+
+		case 1:
+			bOK = CalcFreezeCamThreeQuartersView(eyeOrigin, eyeAngles, fov, -1, vecCamTarget, vecCamPlayer, vecCamLookAt);
+			if (bDebugViews)
+				DevMsg("Three quarters view -1 %s\n", bOK?"OK":"not OK");
+			bDebugTargets = true;
+			break;
+
+		case 2:
+			bOK = CalcFreezeCamHalfHalfView(eyeOrigin, eyeAngles, fov, 1, vecCamTarget, vecCamPlayer, vecCamLookAt);
+			if (bDebugViews)
+				DevMsg("Half half view 1 %s\n", bOK?"OK":"not OK");
+			bDebugTargets = true;
+			break;
+
+		case 3:
+			bOK = CalcFreezeCamHalfHalfView(eyeOrigin, eyeAngles, fov, -1, vecCamTarget, vecCamPlayer, vecCamLookAt);
+			if (bDebugViews)
+				DevMsg("Half half view -1 %s\n", bOK?"OK":"not OK");
+			bDebugTargets = true;
+			break;
+
+		case 4:
+			bOK = CalcFreezeCamPortraitView(eyeOrigin, eyeAngles, fov);
+			if (bDebugViews)
+				DevMsg("Portrait view %s\n", bOK?"OK":"not OK");
+			bDebugTargets = false;
+			break;
+
+		case 5:
+			bOK = CalcFreezeCamKillerAimInView(eyeOrigin, eyeAngles, fov);
+			if (bDebugViews)
+				DevMsg("Killer aim-in view %s\n", bOK?"OK":"not OK");
+			bDebugTargets = false;
+			break;
+		}
+
+		if (bOK)
+			break;
+
+		iCurrent = (iCurrent+1)%iTotal;
+	}
+
+	if (!bOK)
+	{
+		if (bDebugViews)
+			DevMsg("All failed. Trying portrait view 3 more times.\n");
+
+		// CalcFreezeCamPortraitView() tries from different angles at random
+		// so if another angle can't be found, try this one a few times.
+		for (int i = 0; i < 3; i++)
+		{
+			if (CalcFreezeCamPortraitView(eyeOrigin, eyeAngles, fov))
+			{
+				if (bDebugViews)
+					DevMsg("Portrait view OK.\n");
+	
+				break;
+			}
+
+			if (bDebugViews)
+				DevMsg("Portrait view failed.\n");
+		}
+
+		bDebugTargets = false;
+	}
+
+	if (m_bWasKilledByExplosion)
+	{
+		// Delay a tad if we were killed by an explosion, to allow the explosion particles to go.
+		if (gpGlobals->curtime < m_flDeathTime + 0.2f)
+			return;
+	}
+
+	if ( !m_bSentFreezeFrame )
+	{
+		if (da_deathframe_showvectors.GetBool())
+		{
+			float flTime = 60;
+
+			if (bDebugTargets)
+			{
+				debugoverlay->AddBoxOverlay( vecCamPlayer, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 0,0,255,127, flTime );
+				DrawClientHitboxes( flTime, true );
+				debugoverlay->AddBoxOverlay( vecCamTarget, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, flTime );
+				if (ToSDKPlayer(GetObserverTarget()))
+					ToSDKPlayer(GetObserverTarget())->DrawClientHitboxes( flTime, true );
+				debugoverlay->AddBoxOverlay( vecCamLookAt, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,255,127, flTime );
+				debugoverlay->AddLineOverlayAlpha( vecCamPlayer, vecCamTarget, 255, 255, 255, 127, false, flTime );
+				debugoverlay->AddBoxOverlay( eyeOrigin, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 0,255,0,127, flTime );
+				debugoverlay->AddLineOverlayAlpha( eyeOrigin, vecCamLookAt, 255, 255, 255, 127, false, flTime );
+			}
+			else
+			{
+				DrawClientHitboxes( flTime, true );
+				debugoverlay->AddBoxOverlay( eyeOrigin, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 0,255,0,127, flTime );
+
+				Vector vecForward;
+				AngleVectors(eyeAngles, &vecForward);
+				debugoverlay->AddLineOverlayAlpha( eyeOrigin, eyeOrigin+vecForward*100, 255, 255, 255, 127, false, flTime );
+			}
+		}
+
+		m_bSentFreezeFrame = true;
+
+		ConVarRef spec_freeze_time("spec_freeze_time");
+		view->FreezeFrame( spec_freeze_time.GetFloat() );
+	}
+}
+
+bool C_SDKPlayer::CalcFreezeCamThreeQuartersView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov, float flSide, Vector& vecCamTarget, Vector& vecCamPlayer, Vector& vecCamLookAt )
+{
+	C_BaseEntity* pTarget = GetObserverTarget();
+
+	if (pTarget == this)
+		pTarget = nullptr;
+
+	if (!pTarget)
+		pTarget = GetInflictor();
+
+	if (pTarget == this)
+		pTarget = nullptr;
+
+	if (!pTarget && !m_bWasKilledByExplosion)
+		return false;
+
+	if (m_bWasKilledByExplosion)
+		vecCamTarget = m_vecKillingExplosionPosition + Vector(0, 0, 35);
+	else
+		vecCamTarget = GetFreezeCamOrigin(pTarget);
+
+	vecCamPlayer = GetFreezeCamOrigin(this);
+
+	vecCamLookAt = Lerp(0.3f, vecCamPlayer, vecCamTarget);
+
+	Vector vecForward = (vecCamTarget-vecCamPlayer).Normalized();
+	Vector vecSide = vecForward.Cross(Vector(0, 0, 1)).Normalized();
+
+	Vector vecCamPosition = vecCamPlayer - vecForward * da_deathframe_back.GetFloat() + vecSide * da_deathframe_side.GetFloat() * flSide;
+
+	Vector vecCamSize(6, 6, 6);
+
+	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( vecCamPlayer, vecCamPosition, -vecCamSize, vecCamSize, MASK_OPAQUE, pTarget, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+
+	if (trace.fraction < 1.0)
+		return false;
+
+	eyeOrigin = vecCamPosition;
+
+	VectorAngles((vecCamLookAt - vecCamPosition).Normalized(), eyeAngles);
+
+	return true;
+}
+
+bool C_SDKPlayer::CalcFreezeCamHalfHalfView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov, float flSide, Vector& vecCamTarget, Vector& vecCamPlayer, Vector& vecCamLookAt )
+{
+	C_SDKPlayer* pTarget = ToSDKPlayer(GetObserverTarget());
+
+	if (pTarget == this)
+		pTarget = nullptr;
+
+	if (!pTarget)
+		return false;
+
+	vecCamTarget = GetFreezeCamOrigin(pTarget);
+
+	vecCamPlayer = GetFreezeCamOrigin(this);
+
+	if ((vecCamTarget-vecCamPlayer).Length() > 200)
+		return false;
+
+	vecCamLookAt = Lerp(0.5f, vecCamPlayer, vecCamTarget);
+
+	Vector vecForward = (vecCamTarget-vecCamPlayer).Normalized();
+	Vector vecSide = vecForward.Cross(Vector(0, 0, 1)).Normalized();
+
+	Vector vecCamPosition = vecCamLookAt + vecSide * da_deathframe_side.GetFloat() * flSide;
+
+	Vector vecCamSize(6, 6, 6);
+
+	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( vecCamPlayer, vecCamPosition, -vecCamSize, vecCamSize, MASK_OPAQUE, pTarget, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+
+	if (trace.fraction < 1.0)
+		return false;
+
+	eyeOrigin = vecCamPosition;
+
+	VectorAngles((vecCamLookAt - vecCamPosition).Normalized(), eyeAngles);
+
+	return true;
+}
+
+bool C_SDKPlayer::CalcFreezeCamPortraitView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	Vector vecCamPlayer = GetFreezeCamOrigin(this);
+
+	Vector vecForward, vecSide, vecUp;
+	GetVectors(&vecForward, &vecSide, nullptr);
+
+	float flRandomYaw = random->RandomFloat(-100, 100);
+	float flForward = cos(flRandomYaw) * da_deathframe_side.GetFloat();
+	float flSide = sin(flRandomYaw) * da_deathframe_side.GetFloat();
+
+	Vector vecCamPosition = vecCamPlayer + vecForward * flForward + vecSide * flSide;
+
+	Vector vecCamSize(6, 6, 6);
+
+	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( vecCamPlayer, vecCamPosition, -vecCamSize, vecCamSize, MASK_OPAQUE, this, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+
+	if (trace.fraction < 1.0)
+		return false;
+
+	eyeOrigin = vecCamPosition;
+
+	VectorAngles((vecCamPlayer - vecCamPosition).Normalized(), eyeAngles);
+
+	return true;
+}
+
+bool C_SDKPlayer::CalcFreezeCamKillerAimInView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
+{
+	C_SDKPlayer* pTarget = ToSDKPlayer(GetObserverTarget());
+
+	if (pTarget == this)
+		pTarget = nullptr;
+
+	if (!pTarget)
+		return false;
+
+	if (!pTarget->GetActiveSDKWeapon())
+		return false;
+
+	if (pTarget->GetActiveSDKWeapon()->IsGrenade())
+		return false;
+
+	if (pTarget->GetActiveSDKWeapon()->IsMeleeWeapon())
+		return false;
+
+	if (GetInflictor() != pTarget)
+		return false;
+
+	// Set up some values since the target is remote and we might not have them proper.
+	pTarget->m_flSideLerp = pTarget->m_bThirdPersonCamSide?1:-1;
+	pTarget->m_flStuntLerp = (pTarget->m_Shared.IsDiving()||pTarget->m_Shared.IsRolling())?1:0;
+	pTarget->m_flCameraLerp = 1;
+
+	// Easy!
+	eyeOrigin = pTarget->CalculateThirdPersonCameraPosition(pTarget->EyePosition(), pTarget->EyeAngles());
+	eyeAngles = pTarget->EyeAngles();
+
+	return true;
+}
+
+Vector C_SDKPlayer::GetFreezeCamOrigin(C_BaseEntity* pTarget)
+{
+	C_SDKPlayer* pSDKTarget = ToSDKPlayer(pTarget);
+	if (!pSDKTarget)
+		return pTarget->GetObserverCamOrigin();
+
+	Vector vecOrigin;
+
+	if (pSDKTarget->m_hRagdoll != nullptr && static_cast<C_BaseAnimating*>(pSDKTarget->m_hRagdoll.Get())->IsRagdoll())
+		vecOrigin = pSDKTarget->m_hRagdoll->GetRenderOrigin();
+	else
+	{
+		vecOrigin = pSDKTarget->GetObserverCamOrigin() + pSDKTarget->GetChaseCamViewOffset( pSDKTarget );
+
+		if ( pSDKTarget->m_Shared.IsSliding() )
+			vecOrigin.z -= 20;
+		else if ( !pSDKTarget->IsAlive() )
+			vecOrigin.z += 35;
+	}
+
+	return vecOrigin;
 }
 
 #if defined ( SDK_USE_PLAYERCLASSES )

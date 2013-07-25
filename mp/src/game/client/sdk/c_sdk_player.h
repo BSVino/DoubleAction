@@ -81,6 +81,12 @@ public:
 
 	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
 	virtual void CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	virtual void CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	virtual bool CalcFreezeCamThreeQuartersView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov, float flSide, Vector& vecCamTarget, Vector& vecCamPlayer, Vector& vecCamLookAt );
+	virtual bool CalcFreezeCamHalfHalfView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov, float flSide, Vector& vecCamTarget, Vector& vecCamPlayer, Vector& vecCamLookAt );
+	virtual bool CalcFreezeCamPortraitView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	virtual bool CalcFreezeCamKillerAimInView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	virtual Vector GetFreezeCamOrigin(C_BaseEntity* pTarget);
 
 	virtual Vector  EyePosition();
 
@@ -249,6 +255,11 @@ public:
 
 	float           GetLastSpawnTime() const { return m_flLastSpawnTime; }
 
+	CSDKPlayer*     GetKiller() const { return m_hKiller; }
+	CBaseEntity*    GetInflictor() const { return m_hInflictor; }
+	bool            WasKilledByGrenade() const { return m_bWasKilledByExplosion; }
+	Vector          GetKillingGrenadePosition() const { return m_vecKillingExplosionPosition; }
+
 	int             GetCoderHacksButtons() const { return m_nCoderHacksButtons; }
 
 public: // Public Variables
@@ -338,6 +349,11 @@ private:
 	float  m_flSideLerp;
 
 	char m_iszCharacter[256];
+
+	CNetworkHandle(CSDKPlayer, m_hKiller);
+	CNetworkHandle(CBaseEntity, m_hInflictor);
+	bool m_bWasKilledByExplosion;
+	Vector m_vecKillingExplosionPosition;
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;

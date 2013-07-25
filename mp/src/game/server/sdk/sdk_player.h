@@ -490,6 +490,11 @@ public:
 	int    m_iStreakKills; // Kills in a row.
 	int    m_iCurrentStreak;
 
+	CNetworkHandle(CSDKPlayer, m_hKiller);
+	CNetworkHandle(CBaseEntity, m_hInflictor);
+	CNetworkVar(bool, m_bWasKilledByExplosion);
+	CNetworkVar(Vector, m_vecKillingExplosionPosition);
+
 	CNetworkVar( bool, m_bCoderHacks );
 	CNetworkVar( int, m_nCoderHacksButtons );
 
