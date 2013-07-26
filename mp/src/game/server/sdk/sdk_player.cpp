@@ -3393,7 +3393,6 @@ void CSDKPlayer::State_Enter_DEATH_ANIM()
 }
 
 extern ConVar spec_freeze_time;
-extern ConVar spec_freeze_traveltime;
 
 #define SDK_DEATH_ANIMATION_TIME 0.0f
 
