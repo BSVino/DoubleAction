@@ -10,7 +10,7 @@
 
 $Games
 {
-	"HL2MP"
+	"DA"
 }
 
 // Makes the VPC scripts work in the SDK's context

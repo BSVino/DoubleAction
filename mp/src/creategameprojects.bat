@@ -1,1 +1,3 @@
-devtools\bin\vpc.exe /hl2mp +game /mksln games.sln
+@echo off
+devtools\bin\vpc.exe /da +game /mksln DoubleAction.sln
+pause
