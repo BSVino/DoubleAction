@@ -558,6 +558,19 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 		return m_Shared.m_iStyleSkill == eSkill;
 }
 
+static ConVar da_style_decay_max("da_style_decay_max", "5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_style_decay_min("da_style_decay_min", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CSDKPlayer::DecayStyle()
+{
+	if (IsStyleSkillActive())
+		return;
+
+	float flDecayPerSecond = RemapValClamped(m_flStylePoints, 0, da_stylemeteractivationcost.GetFloat(), da_style_decay_min.GetFloat(), da_style_decay_max.GetFloat());
+	float flDecayThisFrame = flDecayPerSecond * gpGlobals->frametime * GetSlowMoMultiplier();
+	m_flStylePoints = Approach(0, m_flStylePoints, flDecayThisFrame);
+}
+
 void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 {
 	if (!IsStyleSkillActive(eSkill))

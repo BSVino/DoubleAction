@@ -163,6 +163,7 @@ public:
 	float GetStyleSkillCharge() { return m_flStyleSkillCharge; }
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
 	void UseStyleCharge(SkillID eSkill, float flCharge);
+	void DecayStyle();
 
 	virtual void SharedSpawn();
 	

@@ -894,6 +894,8 @@ void CSDKGameMovement::ReduceTimers( void )
 
 	m_pSDKPlayer->m_Shared.RampSlowAimIn(flAimGoal);
 
+	m_pSDKPlayer->DecayStyle();
+
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	float flStamina = m_pSDKPlayer->m_Shared.GetStamina();
 #endif

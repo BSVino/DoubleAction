@@ -294,6 +294,7 @@ public:
 	bool UseStylePoints();
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
 	void UseStyleCharge(SkillID eSkill, float flCharge);
+	void DecayStyle();
 
 	void ActivateMeter();
 
