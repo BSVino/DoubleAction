@@ -183,7 +183,7 @@ void CHudStyleBar::OnThink()
 	}
 }
 
-inline float Oscillate(float flTime, float flLength)
+float Oscillate(float flTime, float flLength)
 {
 	return fabs(RemapVal(fmod(flTime, flLength), 0, flLength, -1, 1));
 }

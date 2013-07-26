@@ -166,8 +166,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 
-	RecvPropFloat( RECVINFO( m_angEyeAngles.x ) ),
-//	RecvPropFloat( RECVINFO( m_angEyeAngles.y ) ),
+	RecvPropFloat( RECVINFO_NAME( m_angEyeAngles.x, m_angEyeAngles[0] ) ),
+//	RecvPropFloat( RECVINFO_NAME( m_angEyeAngles.y, m_angEyeAngles[1] ) ),
 	RecvPropInt( RECVINFO( m_ArmorValue ) ),
 
 	RecvPropTime		( RECVINFO( m_flFreezeUntil ) ),
@@ -182,12 +182,12 @@ END_RECV_TABLE()
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 
-	RecvPropFloat( RECVINFO( m_angEyeAngles.x ) ),
-	RecvPropFloat( RECVINFO( m_angEyeAngles.y ) ),
+	RecvPropFloat( RECVINFO_NAME( m_angEyeAngles.x, m_angEyeAngles[0] ) ),
+	RecvPropFloat( RECVINFO_NAME( m_angEyeAngles.y, m_angEyeAngles[1] ) ),
 
-	RecvPropFloat( RECVINFO(m_vecViewOffset.x) ),
-	RecvPropFloat( RECVINFO(m_vecViewOffset.y) ),
-	RecvPropFloat( RECVINFO(m_vecViewOffset.z) ),
+	RecvPropFloat( RECVINFO_NAME(m_vecViewOffset.x, m_vecViewOffset[0]) ),
+	RecvPropFloat( RECVINFO_NAME(m_vecViewOffset.y, m_vecViewOffset[1]) ),
+	RecvPropFloat( RECVINFO_NAME(m_vecViewOffset.z, m_vecViewOffset[2]) ),
 END_RECV_TABLE()
 
 // main table
