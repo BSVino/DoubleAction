@@ -311,6 +311,11 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	CoderHacksUpdate();
 }
 
+bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
+{
+	return true;
+}
+
 void CSDKGameRules::CoderHacksUpdate()
 {
 	bool bCoderHacks = false;
