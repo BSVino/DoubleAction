@@ -6,21 +6,70 @@ Follow development of this project here: http://forums.doubleactiongame.com/view
 
 How to build it:
 
-1. You need Visual Studio 2010 Express. You also need Git. TortoiseGit will do. You then need to download the Source SDK Base 2007 from Steam.
+1. You need Visual Studio 2010 Express. You also need Git. TortoiseGit will do. You then need to download the Source SDK Base 2013 from Steam.
 2. Use TortoiseGit to download the source to your hard drive.
-3. Make sure that you have the latest testing build installed in \source\steamapps\sourcemods\actionboogaloo
+3. Make sure that you have the latest testing build installed in \Dropbox\ActionBoogaloo\dab
 4. Open the project file.
 5. Right click on "Client SDK" and tell it "Set startup project". This specifies which project in your solution that Visual Studio will try to run when you hit F5. 
 6. Right click "Client SDK" and go to properties. Then go to "Debugging" Set "Configuration" (at the top) to "Debug" Set the following variables:
 
-Command: C:\Steam\steamapps\yourusername\source sdk base 2007\hl2.exe
-Command arguments: -allowdebug -dev -sw -game "C:\Steam\SteamApps\SourceMods\actionboogaloo"
-Working directory: C:\Steam\steamapps\yourusername\source sdk base 2007
+Command: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer\hl2.exe
+Command arguments: -allowdebug -dev -sw -game "D:\Dropbox\ActionBoogaloo\dab"
+Working directory: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer
 
-You may need to modify these to point to your Steam directory.
-7. Verify that the "Custom build step" also points to your correct Steam directory.
-8. Right click on "Solution" in the Solution explorer and choose "Configuration Manager" and set that to "Debug"
+You may need to modify these to point to the proper directories.
+
+7. Verify that the "Build Events" > "Post-Build Event" also points to your correct Steam directory.
+8. In the top of the screen there's a dropdown next to the green "run" arrow that lets you choose the build configuration. Make sure it's set to "Debug"
 9. Press F7 to build it. This takes a while.
 10. Press F5 to run it.
 
 Hopefully everything will work and you will be in the debugger running the game. Load up a map and have at it.
+
+
+
+
+
+SOURCE 1 SDK LICENSE
+
+Source SDK Copyright(c) Valve Corp.  
+
+THIS DOCUMENT DESCRIBES A CONTRACT BETWEEN YOU AND VALVE 
+CORPORATION ("Valve").  PLEASE READ IT BEFORE DOWNLOADING OR USING 
+THE SOURCE ENGINE SDK ("SDK"). BY DOWNLOADING AND/OR USING THE 
+SOURCE ENGINE SDK YOU ACCEPT THIS LICENSE. IF YOU DO NOT AGREE TO 
+THE TERMS OF THIS LICENSE PLEASE DON’T DOWNLOAD OR USE THE SDK.  
+
+  You may, free of charge, download and use the SDK to develop a modified Valve game 
+running on the Source engine.  You may distribute your modified Valve game in source and 
+object code form, but only for free. Terms of use for Valve games are found in the Steam 
+Subscriber Agreement located here: http://store.steampowered.com/subscriber_agreement/ 
+
+  You may copy, modify, and distribute the SDK and any modifications you make to the 
+SDK in source and object code form, but only for free.  Any distribution of this SDK must 
+include this LICENSE file and thirdpartylegalnotices.txt.  
+ 
+  Any distribution of the SDK or a substantial portion of the SDK must include the above 
+copyright notice and the following: 
+
+    DISCLAIMER OF WARRANTIES.  THE SOURCE SDK AND ANY 
+    OTHER MATERIAL DOWNLOADED BY LICENSEE IS PROVIDED 
+    "AS IS".  VALVE AND ITS SUPPLIERS DISCLAIM ALL 
+    WARRANTIES WITH RESPECT TO THE SDK, EITHER EXPRESS 
+    OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED 
+    WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, 
+    TITLE AND FITNESS FOR A PARTICULAR PURPOSE.  
+
+    LIMITATION OF LIABILITY.  IN NO EVENT SHALL VALVE OR 
+    ITS SUPPLIERS BE LIABLE FOR ANY SPECIAL, INCIDENTAL, 
+    INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER 
+    (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF 
+    BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF 
+    BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) 
+    ARISING OUT OF THE USE OF OR INABILITY TO USE THE 
+    ENGINE AND/OR THE SDK, EVEN IF VALVE HAS BEEN 
+    ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  
+ 
+       
+If you would like to use the SDK for a commercial purpose, please contact Valve at 
+sourceengine@valvesoftware.com.
