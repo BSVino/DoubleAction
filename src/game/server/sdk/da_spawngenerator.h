@@ -35,6 +35,10 @@ public:
 	};
 
 	CSpawnPointGenerator( CBaseEntity *pRefSpot, int team, int numSpawns);
+    CSpawnPointGenerator( const CSpawnPointGenerator& o )
+    {
+        *this = o;
+    }
 	~CSpawnPointGenerator(){};
 
 	int SpawnsCreated() { return m_iSpawnsCreated; }
