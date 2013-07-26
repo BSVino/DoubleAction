@@ -576,8 +576,7 @@ void CAI_NetworkManager::LoadNetworkGraph( void )
 		// older node graphs to load for these maps
 		if ( !V_stricmp( szLoweredGameDir, "hl2" ) || !V_stricmp( szLoweredGameDir, "episodic" ) )
 		{
-			if ( filesystem->IsSteam() )
-				bOK = true;
+			bOK = true;
 		}
 		
 		if ( !bOK )
@@ -978,7 +977,6 @@ bool CAI_NetworkManager::IsAIFileCurrent ( const char *szMapName )
 		return true;
 	}
 	
-	//if ( filesystem && filesystem->IsSteam() )
 	{
 		const char *pGameDir = CommandLine()->ParmValue( "-game", "hl2" );		
 		char szLoweredGameDir[256];
@@ -2635,7 +2633,7 @@ void CAI_NetworkBuilder::InitVisibility(CAI_Network *pNetwork, CAI_Node *pNode)
 
 		if ( DebuggingConnect( pNode->m_iID, testnode ) )
 		{
-			DevMsg( "" ); // break here..
+			DevMsg( " " ); // break here..
 		}
 
 		// We know we can view ourself
@@ -2816,7 +2814,7 @@ void CAI_NetworkBuilder::InitNeighbors(CAI_Network *pNetwork, CAI_Node *pNode)
 	{
 		if ( DebuggingConnect( pNode->m_iID, checknode ) )
 		{
-			DevMsg( "" ); // break here..
+			DevMsg( " " ); // break here..
 		}
 
 		// I'm not a neighbor of myself
@@ -3206,7 +3204,7 @@ void CAI_NetworkBuilder::InitLinks(CAI_Network *pNetwork, CAI_Node *pNode)
 
 			if ( DebuggingConnect( pNode->m_iID, i ) )
 			{
-				DevMsg( "" ); // break here..
+				DevMsg( " " ); // break here..
 			}
 
 			if ( !(pNode->m_eNodeInfo & bits_NODE_FALLEN) && !(pDestNode->m_eNodeInfo & bits_NODE_FALLEN) )

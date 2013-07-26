@@ -1,0 +1,128 @@
+//-----------------------------------------------------------------------------
+//	CLIENT_DA.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$Macro SRCDIR		"..\.."
+$Macro GAMENAME 	"dab" [$SOURCESDK]
+
+$Macro OUTBINDIR	"\Dropbox\ActionBoogaloo\dab\debug_bin"
+
+$Include "$SRCDIR\game\client\client_base.vpc"
+
+$macro VSLIBDIR  "." [!$VS2010]
+$macro VSLIBDIR  "VS2010" [$VS2010]
+
+$Configuration
+{
+	$Compiler
+	{
+		$AdditionalIncludeDirectories		"$BASE;sdk\vgui,.\sdk,$SRCDIR\game\shared\sdk,.\hl2,.\hl2\elements,$SRCDIR\game\shared\hl2"
+		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS"
+	}
+}
+
+$Project "Client (DA)"
+{
+	$Folder "DA"
+	{
+		$Folder "Player"
+		{
+			$File "sdk/c_sdk_player.cpp"
+			$File "sdk/c_sdk_player_resource.cpp"
+			$File "$SRCDIR/game/shared/Multiplayer/multiplayer_animstate.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_gamemovement.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_player_shared.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_playeranimstate.cpp"
+		}
+
+		$Folder "UI"
+		{
+			$File "sdk/vgui/da_buymenu.cpp"
+			$File "sdk/vgui/da_charactermenu.cpp"
+			$File "sdk/hud/da_hud_crosshair.cpp"
+			$File "sdk/hud/da_instructor.cpp"
+			$File "sdk/vgui/da_skillmenu.cpp"
+			$File "sdk/vgui/folder_gui.cpp"
+			$File "sdk/hud_sdkdeathnotice.cpp"
+			$File "sdk/hud/sdk_hud_ammo.cpp"
+			$File "sdk/hud/sdk_hud_chat.cpp"
+			$File "sdk/hud/sdk_hud_damage.cpp"
+			$File "sdk/hud/sdk_hud_health.cpp"
+			$File "sdk/hud/sdk_hud_message.cpp"
+			$File "sdk/hud/sdk_hud_notices.cpp"
+			$File "sdk/hud/sdk_hud_slowmo.cpp"
+			$File "sdk/hud/sdk_hud_stylebar.cpp"
+			$File "sdk/hud/sdk_hud_targetid.cpp"
+			$File "sdk/hud/sdk_hud_weaponselection.cpp"
+			$File "sdk/vgui/sdk_mapinfo.cpp"
+			$File "sdk/hud/sdk_scoreboard.cpp"
+			$File "sdk/vgui/sdk_spectatorgui.cpp"
+			$File "sdk/vgui/sdk_teammenu.cpp"
+			$File "sdk/vgui/sdk_textwindow.cpp"
+			$File "sdk/vgui/sdkviewport.cpp"
+			$File "sdk/vgui/vgui_rootpanel_sdk.cpp"
+		}
+
+		$Folder "Weapons"
+		{
+			$File "$SRCDIR/game/shared/sdk/da_viewmodel.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_basegrenade_projectile.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_weapon_melee.cpp"
+			$File "$SRCDIR/game/shared/sdk/sdk_weapon_parse.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_akimbo_beretta.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_akimbo_m1911.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_akimbobase.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_basesdkgrenade.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_beretta.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_brawl.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_crowbar.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_fal.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_grenade.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_m1911.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_mac10.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_mossberg.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_mp5k.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_sdkbase.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
+		}
+
+		$File "sdk/c_sdk_env_sparkler.cpp"
+		$File "sdk/c_sdk_team.cpp"
+		$File "sdk/c_te_firebullets.cpp"
+		$File "sdk/clientmode_sdk.cpp"
+		$File "sdk/projectedlighteffect.cpp"
+		$File "sdk/sdk_fx_impacts.cpp"
+		$File "$SRCDIR/game/shared/sdk/sdk_fx_shared.cpp"
+		$File "sdk/sdk_fx_weaponfx.cpp"
+		$File "$SRCDIR/game/shared/sdk/sdk_gamerules.cpp"
+		$File "sdk/sdk_in_main.cpp"
+		$File "sdk/sdk_prediction.cpp"
+		$File "$SRCDIR/game/shared/sdk/sdk_shareddefs.cpp"
+		$File "$SRCDIR/game/shared/sdk/sdk_usermessages.cpp"
+	}
+
+	$Folder	"Source Files"
+	{
+		-$File	"$SRCDIR\game\shared\weapon_parse_default.cpp"
+
+		$File	"hud_voicestatus.cpp"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
+		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
+		$File	"hud_basedeathnotice.cpp"
+	}
+
+	$Folder "Libraries"
+	{
+		$File "$SRCDIR\lib\$PLATFORM\release\$VSLIBDIR\libprotobuf.lib" [$WINDOWS]
+		{
+			$Configuration "Debug" { $ExcludedFromBuild	"Yes" }
+		}
+		$File "$SRCDIR\lib\$PLATFORM\debug\$VSLIBDIR\libprotobuf.lib" [$WINDOWS]
+		{
+			$Configuration "Release" { $ExcludedFromBuild "Yes" }
+		}
+		$File "$SRCDIR\lib\$PLATFORM\release\libprotobuf.a"         [$POSIX]
+	}
+}

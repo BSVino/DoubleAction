@@ -1,0 +1,4 @@
+#!/bin/bash
+
+devtools/bin/vpc /da +game /mksln DoubleAction
+

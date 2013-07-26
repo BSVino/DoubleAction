@@ -181,6 +181,8 @@ public:
 	virtual void ServerActivate();
 	virtual void ClientDisconnected( edict_t *pClient );
 
+	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
+
 	void    CoderHacksUpdate();
 
 	void	ReCalculateSlowMo();

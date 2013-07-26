@@ -98,13 +98,16 @@
 #include "tf/tf_gc_server.h"
 #include "tf_gamerules.h"
 #include "tf_lobby.h"
-#include "player_vs_environment/tf_populator.h"
+#include "player_vs_environment/tf_population_manager.h"
 
 extern ConVar tf_mm_trusted;
 extern ConVar tf_mm_servermode;
 #endif
 
+#ifdef USE_NAV_MESH
 #include "nav_mesh.h"
+#endif
+
 #ifdef NEXT_BOT
 #include "NextBotManager.h"
 #endif
@@ -120,10 +123,6 @@ extern ConVar tf_mm_servermode;
 #ifdef PORTAL
 #include "prop_portal_shared.h"
 #include "portal_player.h"
-#endif
-
-#if defined ( SDK_DLL )
-#include "sdk_gamerules.h"
 #endif
 
 #if defined( REPLAY_ENABLED )
@@ -704,7 +703,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	// load Mod specific game events ( MUST be before InitAllSystems() so it can pickup the mod specific events)
 	gameeventmanager->LoadEventsFromFile("resource/ModEvents.res");
 
-#if defined(CSTRIKE_DLL) // BOTPORT: TODO: move these ifdefs out
+#ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 	InstallBotControl();
 #endif
 
@@ -734,10 +733,10 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	debugoverlay = (IVDebugOverlay *)appSystemFactory( VDEBUG_OVERLAY_INTERFACE_VERSION, NULL );
 
 #ifndef _XBOX
-//#ifdef NEXT_BOT
+#ifdef USE_NAV_MESH
 	// create the Navigation Mesh interface
 	TheNavMesh = NavMeshFactory();
-//#endif
+#endif
 
 	// init the gamestatsupload connection
 	gamestatsuploader->InitConnection();
@@ -780,14 +779,14 @@ void CServerGameDLL::DLLShutdown( void )
 #endif
 
 #ifndef _XBOX
-//#ifdef NEXT_BOT
+#ifdef USE_NAV_MESH
 	// destroy the Navigation Mesh interface
 	if ( TheNavMesh )
 	{
 		delete TheNavMesh;
 		TheNavMesh = NULL;
 	}
-//#endif
+#endif
 	// reset (shutdown) the gamestatsupload connection
 	gamestatsuploader->InitConnection();
 #endif
@@ -1129,11 +1128,11 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 	}
 
 #ifndef _XBOX
-//#ifdef NEXT_BOT
+#ifdef USE_NAV_MESH
 	// load the Navigation Mesh for this map
 	TheNavMesh->Load();
 	TheNavMesh->OnServerActivate();
-//#endif
+#endif
 #endif
 
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
@@ -1224,7 +1223,9 @@ void CServerGameDLL::GameFrame( bool simulating )
 	GameStartFrame();
 
 #ifndef _XBOX
+#ifdef USE_NAV_MESH
 	TheNavMesh->Update();
+#endif
 
 #ifdef NEXT_BOT
 	TheNextBots().Update();
@@ -1392,13 +1393,13 @@ void CServerGameDLL::LevelShutdown( void )
 	g_nCurrentChapterIndex = -1;
 
 #ifndef _XBOX
-//#ifdef NEXT_BOT
+#ifdef USE_NAV_MESH
 	// reset the Navigation Mesh
 	if ( TheNavMesh )
 	{
 		TheNavMesh->Reset();
 	}
-//#endif
+#endif
 #endif
 }
 

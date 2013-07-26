@@ -1,0 +1,4 @@
+#!/bin/bash
+
+devtools/bin/vpc /hl2mp +everything /mksln everything
+
