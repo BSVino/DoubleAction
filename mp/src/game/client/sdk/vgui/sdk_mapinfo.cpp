@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2008, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,9 +13,9 @@
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
-#include <vgui/IVgui.h>
+#include <vgui/IVGui.h>
 
-#include <FileSystem.h>
+#include <filesystem.h>
 #include <convar.h>
 
 #include "folder_gui.h"
@@ -96,7 +96,7 @@ void CSDKMapInfo::Update( void )
 			Q_strncat( szLocalURL, szPathData, sizeof( szLocalURL ), COPY_ALL_CHARACTERS );
 
 			m_pMapMessage->SetVisible( true );
-			m_pMapMessage->OpenURL( szLocalURL, nullptr );
+			m_pMapMessage->OpenURL( szLocalURL, NULL );
 
 			CFolderLabel* pMapName = dynamic_cast<CFolderLabel *>(FindChildByName("MapName"));
 			pMapName->SetText(szMapName);

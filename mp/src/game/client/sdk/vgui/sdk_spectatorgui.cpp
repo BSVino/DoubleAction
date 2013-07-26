@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,8 +7,6 @@
 
 #include "cbase.h"
 #include "hud.h"
-
-#include <string>
 
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
@@ -23,6 +21,11 @@
 #include "voice_status.h"
 #include "c_sdk_player.h"
 #include "in_buttons.h"
+
+#undef min
+#undef max
+
+#include <string>
 
 using namespace vgui;
 DECLARE_HUDELEMENT( CSDKMapOverview )
@@ -226,7 +229,7 @@ void CSDKSpectatorGUI::Paint()
 	BaseClass::Paint();
 
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	C_SDKPlayer* pObserved = pLocalPlayer?ToSDKPlayer(pLocalPlayer->GetObserverTarget()):nullptr;
+	C_SDKPlayer* pObserved = pLocalPlayer?ToSDKPlayer(pLocalPlayer->GetObserverTarget()):NULL;
 
 	if (pObserved && SDKGameRules()->CoderHacks())
 	{
@@ -299,8 +302,8 @@ void CSDKSpectatorGUI::ResizeControls( void )
 	m_pRedScore->GetContentSize( wTer, hTer );
 	
 	int desiredScoreWidth = m_scoreWidth;
-	desiredScoreWidth = max( desiredScoreWidth, wCT );
-	desiredScoreWidth = max( desiredScoreWidth, wTer );
+	desiredScoreWidth = std::max( desiredScoreWidth, wCT );
+	desiredScoreWidth = std::max( desiredScoreWidth, wTer );
 
 	int diff = desiredScoreWidth - w1;
 	if ( diff != 0 )
@@ -326,7 +329,7 @@ void CSDKSpectatorGUI::ResizeControls( void )
 	m_pExtraInfo->GetContentSize( wExtra, hExtra );
 
 	int desiredExtraWidth = m_extraInfoWidth;
-	desiredExtraWidth = max( desiredExtraWidth, wExtra );
+	desiredExtraWidth = std::max( desiredExtraWidth, wExtra );
 
 	diff = desiredExtraWidth - w1;
 	if ( diff != 0 )

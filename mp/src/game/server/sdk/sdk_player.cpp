@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL1.
 //
@@ -1119,8 +1119,8 @@ void CSDKPlayer::Spawn()
 		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile");
 	}
 
-	m_hKiller = nullptr;
-	m_hInflictor = nullptr;
+	m_hKiller = NULL;
+	m_hInflictor = NULL;
 	m_bWasKilledByExplosion = false;
 }
 
@@ -1930,7 +1930,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		if (bKilledVictim)
 		{
 			Vector vecForward;
-			AngleVectors(pVictim->EyeAngles(), &vecForward, nullptr, nullptr);
+			AngleVectors(pVictim->EyeAngles(), &vecForward, NULL, NULL);
 
 			if (vecKillerToVictim.Dot(vecForward) < -0.7f)
 				bExecution = true;
@@ -2382,7 +2382,7 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 			RemovePlayerItem(pAkimbo);
 
 			// Pretend that this wasn't the weapon we threw out, re-draw it.
-			pWeapon->Holster(nullptr);
+			pWeapon->Holster(NULL);
 			SetActiveWeapon(pWeapon);
 
 			return;
@@ -3752,8 +3752,8 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 	CSingleUserRecipientFilter filter( this );
 
 	EmitSound_t params;
-	params.m_pOrigin = nullptr;
-	params.m_pflSoundDuration = nullptr;
+	params.m_pOrigin = NULL;
+	params.m_pflSoundDuration = NULL;
 	params.m_bWarnOnDirectWaveReference = true;
 
 	params.m_nFlags |= SND_CHANGE_PITCH|SND_DELAY;

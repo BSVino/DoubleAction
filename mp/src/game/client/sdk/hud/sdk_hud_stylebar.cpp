@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,7 +30,7 @@ using namespace vgui;
 #include "hud_numericdisplay.h"
 #include "c_sdk_player.h"
 
-#include "ConVar.h"
+#include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -296,7 +296,7 @@ void CHudStyleBar::Paint()
 		if (gpGlobals->curtime < pAnnouncement->m_flStartTime)
 			continue;
 
-		auto* pTexture = m_apAnnouncements[pAnnouncement->m_eAnnouncement];
+		CHudTexture* pTexture = m_apAnnouncements[pAnnouncement->m_eAnnouncement];
 
 		float flScale = 1.2;
 		if (pAnnouncement->m_ePointStyle == STYLE_POINT_LARGE)

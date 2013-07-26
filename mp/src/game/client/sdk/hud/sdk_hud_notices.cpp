@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,7 +30,7 @@ using namespace vgui;
 #include "hud_numericdisplay.h"
 #include "c_sdk_player.h"
 
-#include "ConVar.h"
+#include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -172,7 +172,7 @@ void CHudNotices::Paint()
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
-	auto* pTexture = m_apNotices[m_eNotice];
+	CHudTexture* pTexture = m_apNotices[m_eNotice];
 
 	Assert(pTexture);
 	if (!pTexture)

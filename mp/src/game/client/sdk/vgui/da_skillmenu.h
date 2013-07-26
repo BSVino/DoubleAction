@@ -1,4 +1,4 @@
-//======== Copyright © 1996-2008, Valve Corporation, All rights reserved. =========//
+//======== Copyright Â© 1996-2008, Valve Corporation, All rights reserved. =========//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #define SDK_SKILLMENU_H
 
 #include <classmenu.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 #include <vgui/KeyCode.h>
 #include "folder_gui.h"
 

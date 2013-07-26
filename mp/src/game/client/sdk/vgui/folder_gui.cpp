@@ -1,12 +1,10 @@
 #include "cbase.h"
 
-#include <sstream>
-
 #include "folder_gui.h"
 
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
-#include <vgui/IVGUI.h>
+#include <vgui/IVGui.h>
 
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/CheckButton.h>
@@ -18,11 +16,14 @@
 #include "c_sdk_player.h"
 #include "sdk_gamerules.h"
 
-// memdbgon must be the last include file in a .cpp file!!!
-#include "tier0/memdbgon.h"
-
 // Using std version
 #undef min
+#undef max
+
+#include <sstream>
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 using namespace vgui;
 
@@ -214,7 +215,7 @@ void CFolderMenu::Update()
 		"	}";
 
 	CModelPanel *pPlayerPreview = dynamic_cast<CModelPanel *>(FindChildByName("player_preview"));
-	CSDKWeaponInfo* pWeaponInfo = nullptr;
+	CSDKWeaponInfo* pWeaponInfo = NULL;
 	if (eFirst)
 		pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
 
@@ -365,7 +366,7 @@ void CFolderLabel::ApplySchemeSettings( IScheme *pScheme )
 CPanelTexture::CPanelTexture(Panel *parent, const char *panelName)
 	: Panel(parent, panelName)
 {
-	m_pImage = nullptr;
+	m_pImage = NULL;
 
 	m_iX = m_iY = 0;
 	m_iWidth = m_iHeight = 100;
@@ -506,7 +507,7 @@ void CPanelTexture::ApplySchemeSettings(IScheme *pScheme)
 CImageButton::CImageButton(Panel *parent, const char *panelName)
 	: Button(parent, panelName, "")
 {
-	m_pImage = nullptr;
+	m_pImage = NULL;
 
 	m_iX = m_iY = 0;
 	m_iWidth = m_iHeight = 100;

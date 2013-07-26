@@ -251,13 +251,13 @@ CHudTexture* CHudAmmo::GetTexture()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if ( !pPlayer )
-		return nullptr;
+		return NULL;
 
 	if (!pPlayer->IsAlive())
-		return nullptr;
+		return NULL;
 
 	if (!pPlayer->GetActiveSDKWeapon())
-		return nullptr;
+		return NULL;
 
 	if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "9x19mm"))
 		return m_p9mmRound;
@@ -268,7 +268,7 @@ CHudTexture* CHudAmmo::GetTexture()
 	else if (FStrEq(pPlayer->GetActiveSDKWeapon()->GetSDKWpnData().szAmmo1, "buckshot"))
 		return m_pBuckshotRound;
 
-	return nullptr;
+	return NULL;
 }
 
 ConVar hud_ammoscale("hud_ammoscale", "1.4", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the ammo display.");
@@ -346,7 +346,7 @@ void CHudAmmo::Paint()
 
 	for (int i = 0; i < m_aRounds.Count(); i++)
 	{
-		auto& oRound = m_aRounds[i];
+		CFlyingRound& oRound = m_aRounds[i];
 
 		if (!oRound.bActive)
 			continue;

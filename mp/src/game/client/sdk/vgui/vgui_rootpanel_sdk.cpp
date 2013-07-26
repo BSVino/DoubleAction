@@ -8,10 +8,13 @@
 #include "vgui_int.h"
 #include "ienginevgui.h"
 #include "vgui_rootpanel_sdk.h"
-#include "vgui/ivgui.h"
+#include "vgui/IVGui.h"
 #include <vgui/ISurface.h>
 #include "c_sdk_player.h"
 #include <vgui/ILocalize.h>
+
+#undef min
+#undef max
 
 #include <string>
 
@@ -107,7 +110,7 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 		}
 
 		if (pPlayer->GetSlowMoMultiplier() < 1)
-			flLetterbox = max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
+			flLetterbox = std::max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
 	}
 
 	if (flLetterbox > 0)

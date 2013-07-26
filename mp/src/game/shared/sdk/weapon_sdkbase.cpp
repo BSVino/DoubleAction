@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -707,7 +707,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 			return pVictim->GetHealth() * 1.5f;
 
 		Vector vecForward;
-		AngleVectors(pVictim->EyeAngles(), &vecForward, nullptr, nullptr);
+		AngleVectors(pVictim->EyeAngles(), &vecForward, NULL, NULL);
 
 		// Attacks to the rear do double damage.
 		if ((pPlayer->GetAbsOrigin() - pVictim->GetAbsOrigin()).Normalized().Dot(vecForward) < -0.7f)

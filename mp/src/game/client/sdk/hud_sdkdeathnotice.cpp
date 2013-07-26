@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2008, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Draws CSPort's death notices
 //
@@ -9,8 +9,8 @@
 #include "hud_macros.h"
 #include "c_sdk_player_resource.h"
 #include "iclientmode.h"
-#include <vgui_controls/controls.h>
-#include <vgui_controls/panel.h>
+#include <vgui_controls/Controls.h>
+#include <vgui_controls/Panel.h>
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <KeyValues.h>
@@ -22,7 +22,7 @@
 
 #include "hud_basedeathnotice.h"
 
-#include "engine/ienginesound.h"
+#include "engine/IEngineSound.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -103,7 +103,7 @@ void SDKHudDeathNotice::Paint()
 		int iTextTall = surface()->GetFontTall( m_hTextFont );
 		int iconWide = 0, iconTall = 0, iVictimTextOffset = 0, iconActualWide = 0;
 
-		wchar_t* pwszWeapon = nullptr;
+		wchar_t* pwszWeapon = NULL;
 
 		if (msg.szIcon[0])
 			pwszWeapon = g_pVGuiLocalize->Find( VarArgs("#DA_Weapon_Obituary_%s", msg.szIcon+2) );

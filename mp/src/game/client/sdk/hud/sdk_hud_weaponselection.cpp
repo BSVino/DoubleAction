@@ -207,7 +207,7 @@ void CHudWeaponSelection::OnThink( void )
 				{
 					// I don't have this weapon anymore. Clear it out.
 					delete m_apModel[i][slotpos];
-					m_apModel[i][slotpos] = nullptr;
+					m_apModel[i][slotpos] = NULL;
 				}
 
 				continue;
@@ -222,7 +222,7 @@ void CHudWeaponSelection::OnThink( void )
 				{
 					// The weapon is different somehow. Clear it out.
 					delete m_apModel[i][slotpos];
-					m_apModel[i][slotpos] = nullptr;
+					m_apModel[i][slotpos] = NULL;
 				}
 				else
 					continue;
@@ -245,10 +245,10 @@ void CHudWeaponSelection::OnThink( void )
 
 			MDLCACHE_CRITICAL_SECTION();
 
-			auto pModel = pWeaponModel->m_hModel;
+			CHandle<CModelPanelModel> pModel = pWeaponModel->m_hModel;
 			if (pModel)
 			{
-				auto pModelPointer = pModel->GetModelPtr();
+				CStudioHdr* pModelPointer = pModel->GetModelPtr();
 
 				pModel->SetAbsAngles(QAngle(0, 0, 0));
 				pModel->SetAbsOrigin(Vector(0, 0, 0));
@@ -261,7 +261,7 @@ void CHudWeaponSelection::OnThink( void )
 				Assert(pModel->GetHitboxSet() >= 0);
 				if (pModel->GetHitboxSet() >= 0)
 				{
-					auto pHitbox = pModelPointer?pModelPointer->pHitbox(0, pModel->GetHitboxSet()):nullptr;
+					mstudiobbox_t* pHitbox = pModelPointer?pModelPointer->pHitbox(0, pModel->GetHitboxSet()):NULL;
 					if (pHitbox)
 					{
 						Vector vecCenter = (pHitbox->bbmax + pHitbox->bbmin)/2;
@@ -356,7 +356,7 @@ void CHudWeaponSelection::ClearModels()
 
 			delete m_apModel[i][slotpos];
 
-			m_apModel[i][slotpos] = nullptr;
+			m_apModel[i][slotpos] = NULL;
 		}
 	}
 }

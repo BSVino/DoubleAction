@@ -1,4 +1,4 @@
-//======== Copyright © 1996-2008, Valve Corporation, All rights reserved. =========//
+//======== Copyright Â© 1996-2008, Valve Corporation, All rights reserved. =========//
 //
 // Purpose: 
 //
@@ -7,8 +7,6 @@
 
 #include "cbase.h"
 #include <stdio.h>
-#include <string>
-#include <sstream>
 
 #include <cdll_client_int.h>
 
@@ -17,12 +15,12 @@
 #include <vgui/ISurface.h>
 #include <KeyValues.h>
 #include <vgui_controls/ImageList.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RichText.h>
-#include <vgui/IVGUI.h>
+#include <vgui/IVGui.h>
 
 #include <vgui_controls/Panel.h>
 
@@ -43,6 +41,12 @@
 #include "folder_gui.h"
 #include "da.h"
 
+#undef min
+#undef max
+
+#include <string>
+#include <sstream>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -53,7 +57,7 @@ ConVar _cl_buymenuopen( "_cl_buymenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "in
 CWeaponButton::CWeaponButton(vgui::Panel *parent, const char *panelName )
 	: Button( parent, panelName, "WeaponButton")
 {
-	m_pArmedBorder = nullptr;
+	m_pArmedBorder = NULL;
 
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
 	InvalidateLayout(true, true);
@@ -256,25 +260,25 @@ void CDABuyMenu::Update()
 	for ( int i = 0; i < m_apTypes.Count(); i++)
 	{
 		m_apTypes[i]->DeletePanel();
-		m_apTypes[i] = nullptr;
+		m_apTypes[i] = NULL;
 	}
 
 	for ( int i = 0; i < m_apAmmos.Count(); i++)
 	{
 		m_apAmmos[i]->DeletePanel();
-		m_apAmmos[i] = nullptr;
+		m_apAmmos[i] = NULL;
 	}
 
 	for ( int i = 0; i < m_apWeights.Count(); i++)
 	{
 		m_apWeights[i]->DeletePanel();
-		m_apWeights[i] = nullptr;
+		m_apWeights[i] = NULL;
 	}
 
 	for ( int i = 0; i < m_apQuantities.Count(); i++)
 	{
 		m_apQuantities[i]->DeletePanel();
-		m_apQuantities[i] = nullptr;
+		m_apQuantities[i] = NULL;
 	}
 
 	m_apTypes.RemoveAll();
@@ -321,7 +325,7 @@ void CDABuyMenu::Update()
 
 		CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(pPanel->GetWeaponID());
 
-		m_apTypes.AddToTail(new CFolderLabel(this, nullptr));
+		m_apTypes.AddToTail(new CFolderLabel(this, NULL));
 
 		const char* pWeaponType = WeaponTypeToAlias(pInfo->m_eWeaponType);
 		if (pWeaponType)
@@ -333,7 +337,7 @@ void CDABuyMenu::Update()
 		m_apTypes.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));
 		m_apTypes.Tail()->SetScheme("FolderScheme");
 
-		m_apAmmos.AddToTail(new CFolderLabel(this, nullptr));
+		m_apAmmos.AddToTail(new CFolderLabel(this, NULL));
 
 		m_apAmmos.Tail()->SetText((std::string("#DA_Ammo_") + pInfo->szAmmo1).c_str());
 		m_apAmmos.Tail()->SetPos(iWeaponAmmoX, iWeaponY);
@@ -341,7 +345,7 @@ void CDABuyMenu::Update()
 		m_apAmmos.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));
 		m_apAmmos.Tail()->SetScheme("FolderScheme");
 
-		m_apWeights.AddToTail(new CFolderLabel(this, nullptr));
+		m_apWeights.AddToTail(new CFolderLabel(this, NULL));
 
 		std::ostringstream sWeight;
 		sWeight << pInfo->iWeight;
@@ -353,7 +357,7 @@ void CDABuyMenu::Update()
 
 		if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()))
 		{
-			m_apQuantities.AddToTail(new CFolderLabel(this, nullptr));
+			m_apQuantities.AddToTail(new CFolderLabel(this, NULL));
 
 			std::ostringstream sCount;
 			sCount << pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID());
@@ -371,7 +375,7 @@ void CDABuyMenu::Update()
 Panel *CDABuyMenu::CreateControlByName( const char *controlName )
 {
 	if (FStrEq(controlName, "WeaponButton"))
-		return new CWeaponButton(this, nullptr);
+		return new CWeaponButton(this, NULL);
 
 	return BaseClass::CreateControlByName(controlName);
 }

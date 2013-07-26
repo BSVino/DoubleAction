@@ -1,7 +1,5 @@
 #include "cbase.h"
 
-#include <string>
-
 #include "filesystem.h"
 #include <vgui/ILocalize.h>
 #include "iclientmode.h"
@@ -16,6 +14,14 @@
 #include "c_sdk_player.h"
 #include "da_buymenu.h"
 #include "ammodef.h"
+
+#undef min
+#undef max
+
+#include <string>
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 CInstructor::CInstructor()
 {
@@ -116,7 +122,7 @@ CLesson* CInstructor::GetLesson(const CUtlString& sLesson)
 {
 	unsigned short iLesson = m_apLessons.Find(sLesson);
 	if (iLesson == m_apLessons.InvalidIndex())
-		return nullptr;
+		return NULL;
 
 	return m_apLessons[iLesson];
 }
@@ -314,7 +320,7 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 	Assert(false);
 	Error(std::string("Couldn't find lesson condition '").append(sConditions.Get()).append("'\n").c_str());
 
-	return nullptr;
+	return NULL;
 }
 
 pfnConditionsMet Game_GetInstructorConditions(const CUtlString& sCondition)
@@ -620,7 +626,7 @@ bool C_SDKPlayer::Instructor_IsLessonValid(const CLessonProgress* pLessonProgres
 C_SDKPlayer::CLessonProgress* C_SDKPlayer::Instructor_GetBestLesson()
 {
 	if (!m_apLessonPriorities.Count())
-		return nullptr;
+		return NULL;
 
 	return m_apLessonPriorities[0];
 }
@@ -660,7 +666,7 @@ CHudLessonPanel::CHudLessonPanel( const char *pElementName ) : BaseClass(NULL, "
 	SetParent( pParent );
 	SetVisible( false );
 	m_pLabel = new vgui::Label( this, "HudLessonPanelLabel", "" );
-	m_pLesson = nullptr;
+	m_pLesson = NULL;
 }
 
 void CHudLessonPanel::Init()
@@ -758,7 +764,7 @@ void CHudLessonPanel::PerformLayout()
 	int iDesiredLabelWide = 0;
 	for ( i=0; i < m_Labels.Count(); ++i )
 	{
-		iDesiredLabelWide = max( iDesiredLabelWide, m_Labels[i]->GetWide() );
+		iDesiredLabelWide = std::max( iDesiredLabelWide, m_Labels[i]->GetWide() );
 	}
 
 	// find the total height
@@ -798,10 +804,10 @@ void CHudLessonPanel::PerformLayout()
 		y = (tall - labelTall) / 2;
 	}
 
-	x = max(x,0);
-	y = max(y,0);
+	x = std::max(x,0);
+	y = std::max(y,0);
 
-	iDesiredLabelWide = min(iDesiredLabelWide,wide);
+	iDesiredLabelWide = std::min(iDesiredLabelWide,wide);
 	m_pLabel->SetBounds( x, y, iDesiredLabelWide, labelTall );
 
 	// now lay out the sub-labels

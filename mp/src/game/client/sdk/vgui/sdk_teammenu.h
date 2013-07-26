@@ -1,4 +1,4 @@
-//======== Copyright © 1996-2008, Valve Corporation, All rights reserved. =========//
+//======== Copyright Â© 1996-2008, Valve Corporation, All rights reserved. =========//
 //
 // Purpose: 
 //
@@ -9,15 +9,18 @@
 #ifndef SDK_TEAMMENU_H
 #define SDK_TEAMMENU_H
 
-#include <string>
-
 #include "teammenu.h"
 #include <classmenu.h>
 #include <vgui_controls/EditablePanel.h>
-#include <FileSystem.h>
-#include "iconpanel.h"
+#include <filesystem.h>
+#include "IconPanel.h"
 #include <vgui_controls/CheckButton.h>
 #include "folder_gui.h"
+
+#undef min
+#undef max
+
+#include <string>
 
 #if defined ( SDK_USE_TEAMS )
 class CTeamButton : public vgui::Button

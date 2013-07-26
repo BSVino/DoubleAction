@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,7 +23,7 @@
 #include "cl_animevent.h"
 #include "input.h"
 #include <baseviewport.h>
-#include "ClientEffectPrecacheSystem.h"
+#include "clienteffectprecachesystem.h"
 #include "model_types.h"
 #include "sdk_gamerules.h"
 #include "projectedlighteffect.h"
@@ -166,8 +166,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 
-	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
-//	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropFloat( RECVINFO( m_angEyeAngles.x ) ),
+//	RecvPropFloat( RECVINFO( m_angEyeAngles.y ) ),
 	RecvPropInt( RECVINFO( m_ArmorValue ) ),
 
 	RecvPropTime		( RECVINFO( m_flFreezeUntil ) ),
@@ -182,12 +182,12 @@ END_RECV_TABLE()
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
 
-	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
-	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropFloat( RECVINFO( m_angEyeAngles.x ) ),
+	RecvPropFloat( RECVINFO( m_angEyeAngles.y ) ),
 
-	RecvPropFloat( RECVINFO(m_vecViewOffset[0]) ),
-	RecvPropFloat( RECVINFO(m_vecViewOffset[1]) ),
-	RecvPropFloat( RECVINFO(m_vecViewOffset[2]) ),
+	RecvPropFloat( RECVINFO(m_vecViewOffset.x) ),
+	RecvPropFloat( RECVINFO(m_vecViewOffset.y) ),
+	RecvPropFloat( RECVINFO(m_vecViewOffset.z) ),
 END_RECV_TABLE()
 
 // main table
@@ -572,7 +572,7 @@ void C_SDKRagdoll::ClientThink( void )
 		int iAlpha = GetRenderColor().a;
 		int iFadeSpeed = 600.0f;
 
-		iAlpha = max( iAlpha - ( iFadeSpeed * gpGlobals->frametime ), 0 );
+		iAlpha = std::max( iAlpha - ( iFadeSpeed * gpGlobals->frametime ), 0.0f );
 
 		SetRenderMode( kRenderTransAlpha );
 		SetRenderColorA( iAlpha );
@@ -1181,13 +1181,13 @@ bool C_SDKPlayer::CalcFreezeCamThreeQuartersView( Vector& eyeOrigin, QAngle& eye
 	C_BaseEntity* pTarget = GetObserverTarget();
 
 	if (pTarget == this)
-		pTarget = nullptr;
+		pTarget = NULL;
 
 	if (!pTarget)
 		pTarget = GetInflictor();
 
 	if (pTarget == this)
-		pTarget = nullptr;
+		pTarget = NULL;
 
 	if (!pTarget && !m_bWasKilledByExplosion)
 		return false;
@@ -1228,7 +1228,7 @@ bool C_SDKPlayer::CalcFreezeCamHalfHalfView( Vector& eyeOrigin, QAngle& eyeAngle
 	C_SDKPlayer* pTarget = ToSDKPlayer(GetObserverTarget());
 
 	if (pTarget == this)
-		pTarget = nullptr;
+		pTarget = NULL;
 
 	if (!pTarget)
 		return false;
@@ -1269,7 +1269,7 @@ bool C_SDKPlayer::CalcFreezeCamPortraitView( Vector& eyeOrigin, QAngle& eyeAngle
 	Vector vecCamPlayer = GetFreezeCamOrigin(this);
 
 	Vector vecForward, vecSide, vecUp;
-	GetVectors(&vecForward, &vecSide, nullptr);
+	GetVectors(&vecForward, &vecSide, NULL);
 
 	float flRandomYaw = random->RandomFloat(-100, 100);
 	float flForward = cos(flRandomYaw) * da_deathframe_side.GetFloat();
@@ -1299,7 +1299,7 @@ bool C_SDKPlayer::CalcFreezeCamKillerAimInView( Vector& eyeOrigin, QAngle& eyeAn
 	C_SDKPlayer* pTarget = ToSDKPlayer(GetObserverTarget());
 
 	if (pTarget == this)
-		pTarget = nullptr;
+		pTarget = NULL;
 
 	if (!pTarget)
 		return false;
@@ -1336,7 +1336,7 @@ Vector C_SDKPlayer::GetFreezeCamOrigin(C_BaseEntity* pTarget)
 
 	Vector vecOrigin;
 
-	if (pSDKTarget->m_hRagdoll != nullptr && static_cast<C_BaseAnimating*>(pSDKTarget->m_hRagdoll.Get())->IsRagdoll())
+	if (pSDKTarget->m_hRagdoll != NULL && static_cast<C_BaseAnimating*>(pSDKTarget->m_hRagdoll.Get())->IsRagdoll())
 		vecOrigin = pSDKTarget->m_hRagdoll->GetRenderOrigin();
 	else
 	{
@@ -1784,7 +1784,7 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 		flSideScale = fabs( cl_sidespeed.GetFloat() ) / fabs( pCmd->sidemove );
 	}
 
-	float flScale = min( flForwardScale, flSideScale );
+	float flScale = std::min( flForwardScale, flSideScale );
 	pCmd->forwardmove *= flScale;
 	pCmd->sidemove *= flScale;
 

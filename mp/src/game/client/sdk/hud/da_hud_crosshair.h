@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -25,7 +25,7 @@ public:
 	CDAHudCrosshair( const char *pElementName );
 
 	void			SetCrosshairAngle( const QAngle& angle );
-	void			SetCrosshair( CHudTexture *texture, Color& clr );
+	void			SetCrosshair( CHudTexture *texture, const Color& clr );
 	void			ResetCrosshair();
 	void			DrawCrosshair( void );
   	bool			HasCrosshair( void ) { return ( m_pCrosshair != NULL ); }

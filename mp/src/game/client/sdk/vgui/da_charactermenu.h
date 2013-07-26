@@ -1,4 +1,4 @@
-//======== Copyright © 1996-2008, Valve Corporation, All rights reserved. =========//
+//======== Copyright Â© 1996-2008, Valve Corporation, All rights reserved. =========//
 //
 // Purpose: 
 //
@@ -9,8 +9,8 @@
 
 #include <classmenu.h>
 #include <vgui_controls/EditablePanel.h>
-#include <FileSystem.h>
-#include "iconpanel.h"
+#include <filesystem.h>
+#include "IconPanel.h"
 #include <vgui_controls/CheckButton.h>
 #include "folder_gui.h"
 

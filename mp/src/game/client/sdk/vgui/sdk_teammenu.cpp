@@ -1,4 +1,4 @@
-//======== Copyright © 1996-2008, Valve Corporation, All rights reserved. =========//
+//======== Copyright Â© 1996-2008, Valve Corporation, All rights reserved. =========//
 //
 // Purpose: 
 //
@@ -7,7 +7,6 @@
 
 #include "cbase.h"
 #include <stdio.h>
-#include <string>
 
 #include <cdll_client_int.h>
 
@@ -16,12 +15,12 @@
 #include <vgui/ISurface.h>
 #include <KeyValues.h>
 #include <vgui_controls/ImageList.h>
-#include <FileSystem.h>
+#include <filesystem.h>
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RichText.h>
-#include <vgui/IVGUI.h>
+#include <vgui/IVGui.h>
 
 #include <vgui_controls/Panel.h>
 
@@ -40,6 +39,11 @@
 
 
 #include "IGameUIFuncs.h" // for key bindings
+
+#undef min
+#undef max
+
+#include <string>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

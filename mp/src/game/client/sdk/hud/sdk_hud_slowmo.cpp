@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -64,7 +64,7 @@ CHudSlowMo::CHudSlowMo( const char *pElementName ) : BaseClass(NULL, "HudSlowMo"
 {
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
 
-	m_pBackground = m_pRed = m_pNeedle = nullptr;
+	m_pBackground = m_pRed = m_pNeedle = NULL;
 }
 
 void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
