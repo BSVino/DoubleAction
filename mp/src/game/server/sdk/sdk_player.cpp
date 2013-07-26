@@ -3859,7 +3859,10 @@ void CSDKPlayer::ActivateMeter()
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_TROLL)
 	{
-		GiveNamedItem( "weapon_grenade" );
+		if ( Weapon_OwnsThisType("weapon_grenade") )
+			CBasePlayer::GiveAmmo(1, "grenades");
+		else
+			GiveNamedItem( "weapon_grenade" );
 
 		SendNotice(NOTICE_TROLL);
 	}
