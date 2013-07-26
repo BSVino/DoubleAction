@@ -735,7 +735,7 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 	// The heavier it is the longer it takes to swing.
 	float flWeight = GetSDKWpnData().iWeight;
 
-	float flTime = RemapVal(flWeight, 5, 20, 0.15f, 0.6f);
+	float flTime = RemapVal(flWeight, 5, 20, 0.25f, 0.6f);
 
 	return flTime;
 }
