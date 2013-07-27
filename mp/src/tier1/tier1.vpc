@@ -24,14 +24,6 @@ $Configuration
 	}
 }
 
-$Configuration	"Release"
-{
-	$Compiler
-	{
-		$PreprocessorDefinitions		"ALLOW_DEVELOPMENT_CVARS"
-	}
-}
-
 $Project "tier1"
 {
 	$Folder	"Source Files"
