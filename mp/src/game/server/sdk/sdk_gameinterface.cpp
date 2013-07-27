@@ -17,7 +17,7 @@ void CServerGameClients::GetPlayerLimits( int& minplayers, int& maxplayers, int 
 {
 	minplayers = 2;  // Force multiplayer.
 	maxplayers = MAX_PLAYERS;
-	defaultMaxPlayers = 32;
+	defaultMaxPlayers = 16;
 }
 
 // -------------------------------------------------------------------------------------------- //
