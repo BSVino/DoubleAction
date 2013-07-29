@@ -36,6 +36,14 @@ $Configuration "Release"
 	}
 }
 
+$Configuration
+{
+    $Linker
+    {
+        $AdditionalDependencies "$BASE $SRCDIR/asdthirdparty/curl-7.31.0/lib/libcurl.a"
+    }
+}
+
 $Project "Server (DA)"
 {
 	$Folder "DA"
@@ -137,5 +145,6 @@ $Project "Server (DA)"
 	$Folder "Link Libraries" [$LINUX]
 	{
 		$Lib datanetworking
+        $DynamicFile "$SRCDIR/thirdparty/curl-7.31.0/lib/libcurl.a"
 	}
 }

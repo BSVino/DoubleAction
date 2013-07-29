@@ -31,20 +31,29 @@ size_t CurlReadFunction(void *ptr, size_t size, size_t nmemb, void *userdata)
 	return iBytesToRead;
 }
 
+void DebugString(const char* pszString)
+{
+#ifdef __linux__
+    printf("%s", pszString);
+#else
+    OutputDebugString(pszString); // Sends it to the VS debug window
+#endif
+}
+
 int CurlDebugCallback(CURL *pCurl, curl_infotype eInfo, char* psz, size_t i, void* pData)
 {
 	if (eInfo == CURLINFO_TEXT)
-		OutputDebugString("Info: ");
+		DebugString("Info: ");
 	else if (eInfo == CURLINFO_HEADER_IN)
-		OutputDebugString("Header in: ");
+		DebugString("Header in: ");
 	else if (eInfo == CURLINFO_HEADER_OUT)
-		OutputDebugString("Header out: ");
+		DebugString("Header out: ");
 	else if (eInfo == CURLINFO_DATA_IN)
-		OutputDebugString("Data in: ");
+		DebugString("Data in: ");
 	else if (eInfo == CURLINFO_DATA_OUT)
-		OutputDebugString("Data out: ");
+		DebugString("Data out: ");
 
-	OutputDebugString(psz);
+	DebugString(psz);
 
 	return 0;
 }

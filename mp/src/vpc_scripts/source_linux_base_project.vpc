@@ -39,7 +39,7 @@ $Configuration
 		$PreprocessorDefinitions		"$BASE;_OSX;OSX;_DARWIN_UNLIMITED_SELECT;FD_SETSIZE=10240;" [$OSX32 || $OSX64]
 		$PreprocessorDefinitions		"$BASE;_DEMO"			[$DEMO]
 		$SymbolVisibility				"hidden" 		[$POSIX]
-		$GCC_ExtraCompilerFlags			"$BASE -U_FORTIFY_SOURCE" [$LINUXALL]
+		$GCC_ExtraCompilerFlags			"$BASE -U_FORTIFY_SOURCE -std=c++0x" [$LINUXALL]
 		$GCC_ExtraCompilerFlags			"$BASE -faddress-sanitizer" [$ADDRESSSANITIZER && $LINUXALL]
 
 		// Pass on appropriate branch define to preprocessor
