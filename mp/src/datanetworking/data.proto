@@ -1,0 +1,17 @@
+package da.protobuf;
+
+import "math.proto";
+
+message GameData
+{
+	optional bool debug = 1;
+	optional string map_name = 2;
+	optional string server_name = 3;
+	optional int32 timestamp = 4;
+	optional PlayerPositions positions = 5;
+}
+
+message PlayerPositions
+{
+	repeated Vector position = 1;
+}

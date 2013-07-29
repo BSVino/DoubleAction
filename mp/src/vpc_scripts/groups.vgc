@@ -11,12 +11,14 @@
 $Group "gamedlls"
 {
 	"client"
+	"datanetworking"
 	"server"
 }
 
 $Group "game"
 {
 	"client"
+	"datanetworking"
 	"mathlib"
 	"server"
 	"tier1"
@@ -32,6 +34,7 @@ $Group "everything"
 {
 	"captioncompiler"
 	"client"
+	"datanetworking"
 	"game_shader_dx9"
 	"glview"
 	"height2normal"
@@ -56,6 +59,7 @@ $Group "everything"
 
 $Group "dedicated"
 {
+	"datanetworking"
 	"mathlib"
 	"server"
 	"tier1"

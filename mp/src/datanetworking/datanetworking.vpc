@@ -1,0 +1,55 @@
+//-----------------------------------------------------------------------------
+//	DATANETWORKING.VPC
+//
+//	Project Script
+//-----------------------------------------------------------------------------
+
+$macro SRCDIR		".."
+$Macro OUTLIBDIR	"$SRCDIR\lib\public" [!$LINUX]
+$Macro GENERATED_PROTO_DIR	"."
+$macro PROTOBUF_LITE 0
+
+$include "$SRCDIR\vpc_scripts\source_lib_base.vpc"
+$include "$SRCDIR\vpc_scripts\protobuf_builder.vpc"
+$Include "$SRCDIR\game\protobuf_include.vpc"
+
+$Configuration
+{
+	$Compiler
+	{
+		$PreprocessorDefinitions "$BASE;_HAS_EXCEPTIONS=0;CURL_STATICLIB"
+		$AdditionalIncludeDirectories "$BASE;$SRCDIR\thirdparty\curl-7.31.0\include"
+	}
+}
+
+$Configuration "Debug"
+{
+	$Librarian
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\Debug\libcurl.lib ws2_32.lib" [$WIN32]
+	}
+}
+
+$Configuration "Release"
+{
+	$Librarian
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\RelWithDebInfo\libcurl.lib ws2_32.lib" [$WIN32]
+	}
+}
+
+$Project "Data Networking"
+{
+	$Folder	"Source Files"
+	{
+		$File "datanetworking.cpp"
+	}
+
+	$Folder "Protobuf Files"
+	{
+		$File "$SRCDIR\datanetworking\data.proto"
+		$DynamicFile "$GENERATED_PROTO_DIR\data.pb.cc"
+		$File "$SRCDIR\datanetworking\math.proto"
+		$DynamicFile "$GENERATED_PROTO_DIR\math.pb.cc"
+	}
+}

@@ -1,0 +1,29 @@
+package da.protobuf;
+
+message Vector {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+}
+
+message Vector2D {
+	required float x = 1;
+	required float y = 2;
+}
+
+message EAngle {
+	required float p = 1;
+	required float y = 2;
+	required float r = 3;
+}
+
+message AABB {
+	required Vector min = 1;
+	required Vector max = 2;
+}
+
+message TRS {
+	required Vector translation = 1;
+	required EAngle rotation = 2;
+	required Vector scaling = 3;
+}

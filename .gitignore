@@ -1,5 +1,9 @@
 # Files to ignore when considering what GIT should commit.
 
+*.pb.cc
+*.pb.h
+/mp/src/lib/public/*.lib
+
 # Visual Studio 
 *.suo
 *.user
@@ -23,6 +27,7 @@ ipch
 *.vcxproj.filters
 *.vpc.sentinel
 *.unsuccessfulbuild
+*.cache
 
 # OSX/Linux build products
 *.mak
@@ -64,3 +69,5 @@ config.cfg
 
 /mp/src/enc_temp_folder
 /mp/src/mathlib/Debug
+
+mp/src/thirdparty/curl-7.31.0/*

@@ -8,11 +8,15 @@
 // Project definitions //
 /////////////////////////
 
+$Project "datanetworking"
+{
+	"datanetworking\datanetworking.vpc" [$DA]
+}
+
 $Project "captioncompiler"
 {
 	"utils\captioncompiler\captioncompiler.vpc" [$WIN32]
 }
-
 
 $Project "client"
 {

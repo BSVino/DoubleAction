@@ -16,6 +16,23 @@ $Configuration
 	{
 		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\sdk,.\sdk,$SRCDIR\game\shared\sdk;.\sdk\bot"
 		$PreprocessorDefinitions		"$BASE;SDK_DLL;USE_MONITORS"
+		$PreprocessorDefinitions		"$BASE;WITH_DATA_COLLECTION"
+	}
+}
+
+$Configuration "Debug"
+{
+	$Linker
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\Debug\libcurl.lib ws2_32.lib" [$WIN32]
+	}
+}
+
+$Configuration "Release"
+{
+	$Linker
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\RelWithDebInfo\libcurl.lib ws2_32.lib" [$WIN32]
 	}
 }
 
@@ -64,6 +81,7 @@ $Project "Server (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
 		}
 
+		$File "sdk/da_datamanager.cpp"
 		$File "sdk/da_ammo_pickup.cpp"
 		$File "sdk/da_powerup.cpp"
 		$File "sdk/da_spawngenerator.cpp"
@@ -104,5 +122,20 @@ $Project "Server (DA)"
 		$File	"$SRCDIR\game\shared\ragdoll_shared.h"
 		$File	"$SRCDIR\game\shared\solidsetdefaults.h"
 		$File	"$SRCDIR\game\shared\touchlink.h"
+	}
+
+	$Folder "Link Libraries" [$WIN32]
+	{
+		$DynamicFile "$SRCDIR\lib\public\datanetworking.lib"
+	}
+
+	$Folder "Link Libraries" [$POSIX && !$LINUX]
+	{
+		$DynamicFile "$SRCDIR\lib\$PLATFORM\datanetworking$_STATICLIB_EXT"
+	}
+
+	$Folder "Link Libraries" [$LINUX]
+	{
+		$Lib datanetworking
 	}
 }
