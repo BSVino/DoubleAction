@@ -28,6 +28,6 @@ public:
 	CWeaponSDKBase* GetDAWeapon() { return static_cast<CWeaponSDKBase*>(GetOwningWeapon()); }
 
 private:
-
 	Vector m_vecPlayerVelocityLerp;
+	QAngle m_angLastPlayerEyeAngles;
 };

@@ -23,6 +23,7 @@ END_NETWORK_TABLE()
 CDAViewModel::CDAViewModel()
 {
 	m_vecPlayerVelocityLerp = Vector(0, 0, 0);
+	m_angLastPlayerEyeAngles = QAngle(0, 0, 0);
 }
 
 float CDAViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
@@ -116,8 +117,18 @@ void CDAViewModel::AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAn
 	// Offset it a tad so that it moves while looking around.
 	eyePosition.x += da_weaponoffset.GetFloat();
 
+	// For mysterious reasons that I don't care to investigate, the eye angles
+	// are sometimes slammed to (0, 0, 0) for a frame or two. If this should
+	// happen, use the previous eye angles instead.
+	QAngle angEye = EyeAngles();
+
+	if (angEye.x == 0 && angEye.y == 0 && angEye.z == 0)
+		angEye = m_angLastPlayerEyeAngles;
+	else
+		m_angLastPlayerEyeAngles = angEye;
+
 	Vector vecViewForward, vecViewRight, vecViewUp;
-	AngleVectors(EyeAngles(), &vecViewForward, &vecViewRight, &vecViewUp);
+	AngleVectors(angEye, &vecViewForward, &vecViewRight, &vecViewUp);
 
 	Vector vecViewDirection(vecViewForward.x, vecViewForward.y, 0);
 	vecViewDirection.NormalizeInPlace();
