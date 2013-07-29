@@ -70,7 +70,7 @@
 
 
 
-#define SDK_GAME_DESCRIPTION	"Action Boogaloo"
+#define SDK_GAME_DESCRIPTION	"Double Action: Boogaloo"
 
 //================================================================================
 // Most elements below here are specific to the options above.
