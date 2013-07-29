@@ -320,7 +320,7 @@ void CSDKGameRules::CoderHacksUpdate()
 {
 	bool bCoderHacks = false;
 
-	for (int i = 1; i < gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 		if (!pPlayer)
@@ -352,7 +352,7 @@ ConVar da_slow_force_distance("da_slow_force_distance", "300", FCVAR_DEVELOPMENT
 void CSDKGameRules::ReCalculateSlowMo()
 {
 	// Reset all passive players to none, to prevent circular activations
-	for (int i = 1; i < gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
 		if (!pPlayer)
@@ -364,7 +364,7 @@ void CSDKGameRules::ReCalculateSlowMo()
 			pSDKPlayer->SetSlowMoType(SLOWMO_NONE);
 	}
 
-	for (int i = 1; i < gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer* pPlayer = UTIL_PlayerByIndex(i);
 		if (!pPlayer)
@@ -916,7 +916,7 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 	bool bTeammatesAlive = !!(pPlayer->GetTeam()->GetAliveMembers()-1); // Subtract 1 because the spawning player is considered alive by this point.
 	bNeedTeamMate &= bTeammatesAlive;
 
-	for (int i = 0; i < gpGlobals->maxClients; i++)
+	for (int i = 0; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pOtherPlayer = UTIL_PlayerByIndex( i );
 		if (!pOtherPlayer)
