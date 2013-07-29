@@ -1,32 +1,64 @@
-Thanks for your interest in the Source SDK 2013 project.  When you make a
-contribution to the project (e.g. create an Issue or submit a Pull Request)
-(a "Contribution"), Valve wants to be able to use your Contribution to improve
-the SDK and other Valve products. 
+DOUBLE ACTION CONTRIBUTION GUIDELINES:
 
-As a condition of providing a Contribution, you agree that: 
-- You grant Valve a non-exclusive, irrevocable, royalty-free, worldwide license
-to make, use, sell, reproduce, modify, distribute (directly and indirectly),
-and publicly display and perform the Contribution, and any derivative works
-that Valve may make from the Contribution, under any intellectual property you
-own or have the right to license. 
-- You warrant and represent that the Contribution is your original creation,
-that you have the authority to grant this license to Valve, and that this
-license does not require the permission of any third party.  Otherwise, you
-provide your Contribution "as is" without warranties.  
+Legal Mumbo Jumbo. If you're contributing to Double Action, you agree that:
 
-Should you wish to submit a suggestion or work that is not your original
-creation, you may submit it to Valve separate from any Contribution,
-explicitly identifying it as sourced from a third party, stating the details
-of its origin, and informing Valve of any license or other restriction of
-which you are personally aware. 
-
+* You are permitting your work to be used in Double Action. You can't change
+your mind about this -- once your work in merged into Double Action, it's
+part of the game forevermore. (It's part of the project history also, so it
+can't be undone.) You won't try to charge us royalties or fees for your work
+either. You also will receive credit for all of your work.
+* You did the work you submit yourself, or you responsibly source where your
+work came from. You won't try to pass off other people's work as your own.
+You provide your work without warranties or guarantees that it will work,
+although if it doesn't we certainly won't use it. You're under no legal
+obligation to do any work for Double Action.
 
 Technical Guidelines for Contributions:
 
-* Please keep your pull requests as granular as possible. Including two or three unrelated things in a single pull request just makes it less likely that the uber-request will be accepted. Two small pull requests are usually bettern than one large pull request.
-* If you are including a pull request with warning fixes, please include the following information about the warning:
+* Please keep your pull requests as granular as possible. Including two or
+three unrelated things in a single pull request just makes it less likely
+that the uber-request will be accepted. Two small pull requests are usually
+betten than one large pull request.
+* You must follow the existing code conventions. This means using 
+m_flHungarianNotation and CamelCaseFunctionNames(), just like Valve does. If
+even one person doesn't adhere to these then the code base starts to fall
+apart. (Minor diversions from the conventions are okay, Valve is hardly perfect
+about it themselves.)
+* If you are including a pull request with warning fixes, please include the
+following information about the warning:
   . The OS and version you are building on
   . The Compiler and version you are using
   . The text of the warning (or group of warnings) itself
 
+Other Considerations:
 
+* Everything on this page applies: http://forums.doubleactiongame.com/viewtopic.php?p=28234
+* Before you do a lot of work, talk to the design team. You may be implementing
+a feature that has already been tried and hasn't worked. Or, you may be trying
+to implement something that's outside the scope or design of Double Action.
+Ideas are great and we love to try out new things, but it's best if you talk
+with the rest of the team before putting a lot of work into something that's
+been done before. The best best is to do a little bit of work at a time,
+and then submit it for review by the team to get feedback and encouragement.
+* If you contribute a new feature, you must be willing to support that feature.
+That means:
+  . Creating the feature
+  . Fixing bugs and exploits related to the feature
+  . Playtesting the feature
+  . Improving the design of the feature based on playtesting
+  . Creating user interface mechanisms to support the feature
+  . Creating usability mechanics to teach the player that the feature exists
+... and so on. If you don't finish your feature, then most likely we'll remove
+it from the game instead of finishing it for you. For example if you create a
+new stunt, you need to fix its bugs and exploits, spend time working on its
+controls and handling (it took me months to get the first few stunts right) and
+hook into the existing hints interface so that the player is told about the
+new stunt. If you create a new gun you need to add it to the menu, hook up the
+art and animations, hook up the text for it, and so on.
+* You don't have to get the code perfect before you submit it to us. We
+understand that everything is a work-in-progress and if you're like us then
+you're likely never satisfied with your own work. That said, don't send us
+work that's too unpolished. It's better to focus on a single feature and build
+on it later than to send a ton of unpolished features.
+* Don't forget to have fun. If you're not having fun, you're doing it for the
+wrong reasons.
