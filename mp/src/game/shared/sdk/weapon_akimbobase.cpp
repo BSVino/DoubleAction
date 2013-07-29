@@ -8,6 +8,9 @@
 	#include "sdk_player.h"
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 IMPLEMENT_NETWORKCLASS_ALIASED(AkimboBase, DT_AkimboBase)
 BEGIN_NETWORK_TABLE(CAkimboBase, DT_AkimboBase)
 #ifdef CLIENT_DLL

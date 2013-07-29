@@ -8,6 +8,9 @@
 #include "weapon_shotgun.h"
 #include "sdk_fx_shared.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 IMPLEMENT_NETWORKCLASS_ALIASED( WeaponShotgun, DT_WeaponShotgun )
 
 BEGIN_NETWORK_TABLE( CWeaponShotgun, DT_WeaponShotgun )

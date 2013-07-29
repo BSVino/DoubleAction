@@ -20,6 +20,8 @@
 	#include "items.h"
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 #define GRENADE_RADIUS	2.0f // inches
 

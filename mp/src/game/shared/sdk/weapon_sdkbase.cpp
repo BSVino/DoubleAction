@@ -30,6 +30,9 @@
 
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 // ----------------------------------------------------------------------------- //
 // CWeaponSDKBase tables.
 // ----------------------------------------------------------------------------- //
@@ -307,7 +310,7 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		m_flAccuracyDecay = da_fulldecay.GetFloat();
 
 	m_flNextPrimaryAttack = GetCurrentTime() + flFireRate;
-	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
+	m_flNextSecondaryAttack = GetCurrentTime() + min(flFireRate, 0.2f);
 
 #ifdef CLIENT_DLL
 	if (!prediction->InPrediction() || prediction->IsFirstTimePredicted())

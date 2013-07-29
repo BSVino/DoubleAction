@@ -25,6 +25,9 @@ extern ConVar sv_gravity;
 
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 const float GRENADE_COEFFICIENT_OF_RESTITUTION = 0.2f;
 
 
