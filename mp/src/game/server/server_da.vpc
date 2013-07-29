@@ -38,10 +38,10 @@ $Configuration "Release"
 
 $Configuration
 {
-    $Linker
-    {
-        $AdditionalDependencies "$BASE $SRCDIR/asdthirdparty/curl-7.31.0/lib/libcurl.a"
-    }
+	$Linker
+	{
+		$AdditionalDependencies "$BASE $SRCDIR/thirdparty/curl-7.31.0/lib/libcurl.a" [$LINUX]
+	}
 }
 
 $Project "Server (DA)"
