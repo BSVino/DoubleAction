@@ -13,7 +13,13 @@ You provide your work without warranties or guarantees that it will work,
 although if it doesn't we certainly won't use it. You're under no legal
 obligation to do any work for Double Action.
 
-Technical Guidelines for Contributions:
+Valve is happy to accept pull requests and issues in the source-sdk-2013
+repository in these cases:
+ * Changes that fix bugs in the SDK deployment process itself. The repository
+   should build out of the box, and anything that prevents that is a pull
+   request we want.
+ * High priority bugs in HL2, the Episodes, or HL2MP that can be fixed in
+   client.dll or server.dll.
 
 * Please keep your pull requests as granular as possible. Including two or
 three unrelated things in a single pull request just makes it less likely
