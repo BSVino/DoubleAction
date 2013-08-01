@@ -13,6 +13,11 @@ $Project "datanetworking"
 	"datanetworking\datanetworking.vpc" [$DA]
 }
 
+$Project "datatool"
+{
+	"datatool\datatool.vpc" [$DA]
+}
+
 $Project "captioncompiler"
 {
 	"utils\captioncompiler\captioncompiler.vpc" [$WIN32]

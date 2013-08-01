@@ -19,6 +19,7 @@ $Group "game"
 {
 	"client"
 	"datanetworking"
+	"datatool"
 	"mathlib"
 	"server"
 	"tier1"
