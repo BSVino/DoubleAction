@@ -1,1 +1,3 @@
-devtools\bin\vpc.exe /hl2mp +everything /mksln everything.sln
+@echo off
+devtools\bin\vpc.exe /da +everything /mksln Everything.sln
+pause

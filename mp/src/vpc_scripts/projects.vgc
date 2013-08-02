@@ -30,7 +30,7 @@ $Project "client"
 
 $Project "game_shader_dx9"
 {
-	"materialsystem\stdshaders\game_shader_dx9_da.vpc" [$DA]
+	"materialsystem\stdshaders\game_shader_dx9_hl2mp.vpc" [$DA]
 }
 
 $Project "glview"
