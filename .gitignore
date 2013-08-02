@@ -71,3 +71,5 @@ config.cfg
 /mp/src/mathlib/Debug
 
 mp/src/thirdparty/curl-7.31.0/*
+/mp/src/datatool/Debug
+/mp/src/bin

@@ -85,7 +85,7 @@ int main(int argc, const char** args)
 
 	g_pFullFileSystem->FindClose( ffh );
 
-	if (sCommand == "listmaps")
+	if (sCommand == "list_maps")
 	{
 		map<string, int> aMaps;
 		for (size_t i = 0; i < apbDatas.size(); i++)
@@ -93,6 +93,32 @@ int main(int argc, const char** args)
 
 		for (auto it = aMaps.begin(); it != aMaps.end(); it++)
 			Msg("%s: %d\n", it->first.c_str(), it->second);
+	}
+	else if (sCommand == "map_positions")
+	{
+		if (argc < 4)
+		{
+			Msg("Usage: %s [directory] map_positions [mapname]\n", args[0]);
+			return 1;
+		}
+
+		string sMap = args[3];
+		vector<Vector> avecPositions;
+		for (size_t i = 0; i < apbDatas.size(); i++)
+		{
+			if (apbDatas[i].map_name() != sMap)
+				continue;
+
+			for (size_t j = 0; j < apbDatas[i].positions().position_size(); j++)
+			{
+				auto& pbPosition = apbDatas[i].positions().position(j);
+				avecPositions.push_back(Vector(pbPosition.x(), pbPosition.y(), pbPosition.z()));
+			}
+		}
+
+		Msg("Positions for %s\n", sMap.c_str());
+		for (size_t i = 0; i < avecPositions.size(); i++)
+			Msg("%f %f %f\n", avecPositions[i].x, avecPositions[i].y, avecPositions[i].z);
 	}
 
 	return 0;
