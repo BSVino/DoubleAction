@@ -34,6 +34,10 @@
 #include "cam_thirdperson.h"
 #include "headtrack/isourcevirtualreality.h"
 #include "engine/ivdebugoverlay.h"
+#include "ProxyEntity.h"
+#include "materialsystem/IMaterial.h"
+#include "materialsystem/IMaterialVar.h"
+#include "functionproxy.h"
 
 #include "da_buymenu.h"
 #include "sdk_teammenu.h"
@@ -2090,3 +2094,52 @@ int C_SDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
 
 	return UserInfoVar.GetInt();
 }
+
+class CSlowIntensityProxy : public CResultProxy
+{
+public:
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+};
+
+
+bool CSlowIntensityProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if (!CResultProxy::Init( pMaterial, pKeyValues ))
+		return false;
+	return true;
+}
+
+ConVar da_postprocess_slowmo("da_postprocess_slowmo", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CSlowIntensityProxy::OnBind( void *pC_BaseEntity )
+{
+	Assert( m_pResult );
+
+	float flValue = 0;
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+	{
+		CBaseEntity *target = pPlayer->GetObserverTarget();
+		if (target && target->IsPlayer())
+		{
+			pPlayer = (C_SDKPlayer *)target;
+		}
+	}
+
+	if ( pPlayer )
+	{
+		if (da_postprocess_slowmo.GetBool())
+			flValue = 1;
+		else
+			flValue = RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, pPlayer->GetSlowMoGoal()-0.01f, 0, 1);
+	}
+
+	SetFloatResult( flValue );
+
+	if ( ToolsEnabled() )
+		ToolFramework_RecordMaterialParams( GetMaterial() );
+}
+
+EXPOSE_INTERFACE( CSlowIntensityProxy, IMaterialProxy, "SlowIntensity" IMATERIAL_PROXY_INTERFACE_VERSION );

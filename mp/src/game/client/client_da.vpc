@@ -88,6 +88,7 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
 		}
 
+		$File "sdk/da_view_scene.cpp"
 		$File "sdk/c_sdk_env_sparkler.cpp"
 		$File "sdk/c_sdk_team.cpp"
 		$File "sdk/c_te_firebullets.cpp"
