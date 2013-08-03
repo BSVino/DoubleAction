@@ -64,7 +64,9 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 			pPlayer = (C_SDKPlayer *)target;
 	}
 
-	if ( pPlayer->GetSlowMoMultiplier() < 1 || !pPlayer->IsAlive() )
+	ConVarRef da_postprocess_slowmo("da_postprocess_slowmo");
+
+	if ( pPlayer->GetSlowMoMultiplier() < 1 || !pPlayer->IsAlive() || da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt() )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
