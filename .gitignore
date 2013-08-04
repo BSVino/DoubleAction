@@ -83,3 +83,5 @@ mp/src/thirdparty/curl-7.31.0/*
 /mp/src/materialsystem/stdshaders/makefile.stdshader_dx9_20b
 /mp/src/materialsystem/stdshaders/makefile.stdshader_dx9_20b.copy
 /mp/src/materialsystem/stdshaders/shaders
+/mp/src/datatool/Release
+/mp/src/materialsystem/stdshaders/Release_dx9_dab
