@@ -22,10 +22,9 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( BASETEXTURE,      SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "Framebuffer" )
 		SHADER_PARAM( SLOWMOAMOUNT,     SHADER_PARAM_TYPE_FLOAT, "", "Strength of slow motion effect" )
-		SHADER_PARAM( VIGNETTE,         SHADER_PARAM_TYPE_TEXTURE, "0", "Vignette texture" )
-		SHADER_PARAM( GRAIN,            SHADER_PARAM_TYPE_TEXTURE, "0", "Film grain texture" )
+		SHADER_PARAM( COMBINED,         SHADER_PARAM_TYPE_TEXTURE, "0", "Combined texture input. Red: overlay. Green: grain. Blue: Vignette alpha. Alpha: blur alpha." )
 		SHADER_PARAM( GRAINOFFSET,      SHADER_PARAM_TYPE_FLOAT, "0", "Film grain texture offset" )
-		SHADER_PARAM( OVERLAY,          SHADER_PARAM_TYPE_TEXTURE, "0", "Overlay texture" )
+		SHADER_PARAM( BLUR,             SHADER_PARAM_TYPE_TEXTURE, "_rt_SmallFB1", "Blur texture" )
 	END_SHADER_PARAMS
 
 	SHADER_INIT_PARAMS()
@@ -41,9 +40,8 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	SHADER_INIT
 	{
 		LoadTexture( BASETEXTURE );
-		LoadTexture( VIGNETTE );
-		LoadTexture( GRAIN );
-		LoadTexture( OVERLAY );
+		LoadTexture( COMBINED );
+		LoadTexture( BLUR );
 	}
 
 	SHADER_DRAW
@@ -53,7 +51,6 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			pShaderShadow->EnableTexture( SHADER_SAMPLER0, true );
 			pShaderShadow->EnableTexture( SHADER_SAMPLER1, true );
 			pShaderShadow->EnableTexture( SHADER_SAMPLER2, true );
-			pShaderShadow->EnableTexture( SHADER_SAMPLER3, true );
 
 			int fmt = VERTEX_POSITION;
 			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0 );
@@ -62,6 +59,9 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			SET_STATIC_VERTEX_SHADER( slowmo_vs20 );
 
 			DECLARE_STATIC_PIXEL_SHADER( slowmo_ps20b );
+			//SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, g_pHardwareConfig->GetDXSupportLevel() >= 90 );
+			SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, 0 ); // Blur's not working right now for lack of a blurred buffer to render from.
+			psh_forgot_to_set_static_WITH_BLUR = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
 			SET_STATIC_PIXEL_SHADER( slowmo_ps20b );
 		}
 
@@ -93,9 +93,8 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			aflOffset[0] = params[GRAINOFFSET]->GetFloatValue();
 			pShaderAPI->SetPixelShaderConstant( 5, aflOffset );
 
-			BindTexture( SHADER_SAMPLER1, VIGNETTE, -1 );
-			BindTexture( SHADER_SAMPLER2, GRAIN, -1 );
-			BindTexture( SHADER_SAMPLER3, OVERLAY, -1 );
+			BindTexture( SHADER_SAMPLER1, COMBINED, -1 );
+			BindTexture( SHADER_SAMPLER2, BLUR, -1 );
 
 			DECLARE_DYNAMIC_VERTEX_SHADER( slowmo_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER( slowmo_vs20 );

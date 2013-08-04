@@ -1,10 +1,12 @@
 #define HDRTYPE HDR_TYPE_NONE
+
+// STATIC: "WITH_BLUR" "0..1" [= 0]
+
 #include "common_ps_fxc.h"
 
 sampler FBSampler        : register( s0 );
-sampler VignetteSampler  : register( s1 );
-sampler FilmGrainSampler : register( s2 );
-sampler OverlaySampler   : register( s3 );
+sampler CombinedSampler  : register( s1 );
+sampler BlurSampler      : register( s2 );
 
 const float flSlowMoScale   : register( c0 );
 const float flSlowMoFilter  : register( c1 );
@@ -21,6 +23,12 @@ struct PS_INPUT
 HALF4 main( PS_INPUT i ) : COLOR
 {
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
+	float4 aflCombined = tex2D( CombinedSampler, i.texCoord );
+
+	float flGrain = tex2D( CombinedSampler, i.texCoord + float2(flGrainOffset, flGrainOffset) ).g;
+	float flVignetteAlpha = aflCombined.b;
+	float flOverlay = aflCombined.r;
+	float flBlurAlpha = aflCombined.a;
 
 	float flFBMax = max( aflFB.r, max( aflFB.g, aflFB.b ) );
 	float flFBMin = min( aflFB.r, min( aflFB.g, aflFB.b ) );
@@ -43,10 +51,15 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	float4 aflOutput = aflFB;
 
+#if WITH_BLUR
+	float4 aflBlur = tex2D( BlurSampler, i.texCoord );
+
+	aflOutput.rgb = lerp(aflOutput.rgb, aflBlur.rgb, flBlurAlpha);
+#endif
+
 	aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp;
 
-	float4 aflVignette = tex2D( VignetteSampler, i.texCoord );
-	aflOutput.rgb = lerp(aflOutput.rgb, aflVignette.rgb, aflVignette.a * flVignetteScale);
+	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 
 	// Adjust levels. Crush the blacks and blow out the whites.
 	float flExponent = log( flBias ) * -1.4427f;
@@ -58,17 +71,15 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(flFBGrey, flFBGrey, flFBGrey), .36);
 
-	float4 aflGrain = tex2D( FilmGrainSampler, i.texCoord + float2(flGrainOffset, flGrainOffset) );
-
 	// Use a "screen" filter to apply grain to output. This helps bring the general light levels up a bit.
-	aflGrain.rgb = 1 - (1 - aflOutput.rgb)*(1 - aflGrain.rgb);
+	float3 aflGrain = 1 - (1 - aflOutput.rgb)*(1 - float3(flGrain, flGrain, flGrain));
 
 	// Scale it by the noise scale.
 	aflOutput.rgb = lerp(aflOutput.rgb, aflGrain, flNoiseScale);
 
-	float4 aflOverlay = tex2D( OverlaySampler, i.texCoord );
-	float4 aflConditional = step(0.5, aflOutput);
-	float4 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
+	float3 aflOverlay = float3(flOverlay, flOverlay, flOverlay);
+	float3 aflConditional = step(0.5, aflOutput.rgb);
+	float3 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
 
 	// Scale it by the overlay scale.
 	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15);
