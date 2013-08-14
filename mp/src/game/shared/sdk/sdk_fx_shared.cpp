@@ -164,7 +164,8 @@ void FX_FireBullets(
 	if ( bDoEffects)
 	{
 #ifdef CLIENT_DLL
-		pPlayer->m_flMuzzleFlashYaw = random->RandomFloat(0, 360);
+		if (pPlayer)
+			pPlayer->m_flMuzzleFlashYaw = random->RandomFloat(0, 360);
 		ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
 #endif
 
