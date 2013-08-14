@@ -298,6 +298,9 @@ public: // Public Variables
 
 	int	  m_iIDEntIndex;
 	int GetArmorValue() { return m_ArmorValue; }
+
+	float m_flMuzzleFlashYaw;
+
 private:
 	void UpdateSoundEvents();
 

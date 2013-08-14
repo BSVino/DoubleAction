@@ -305,6 +305,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_bThirdPersonCamSide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_flMuzzleFlashYaw, FIELD_FLOAT, FTYPEDESC_PRIVATE ),   
 
 	DEFINE_PRED_FIELD( m_bCoderHacks, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nCoderHacksButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -2058,6 +2059,18 @@ void C_SDKPlayer::UpdateFlashlight()
 			EyeVectors( &vecForward, &vecRight, &vecUp );
 			vecPos = GetRenderOrigin() + m_vecViewOffset;
 		}
+
+		// Give the muzzle flash a random rotation so that the texture looks more varied.
+		VMatrix mMuzzleFlash(vecForward, -vecRight, vecUp, vecPos);
+
+		VMatrix mRotate = SetupMatrixAxisRot(Vector(1, 0, 0), m_flMuzzleFlashYaw);
+
+		VMatrix mNew = mMuzzleFlash * mRotate;
+
+		mNew.GetBasisVectors(vecForward, vecRight, vecUp);
+		vecRight = -vecRight;
+
+		Assert((mMuzzleFlash.GetForward() - vecForward).LengthSqr() < 0.001f);
 
 		// Update the light with the new position and direction.		
 		ProjectedLightEffectManager(projManagerIdx).UpdateFlashlight( vecPos, vecForward, vecRight, vecUp, pFlashlightPlayer->GetFlashlightFOV(), 
