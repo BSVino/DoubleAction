@@ -1405,7 +1405,7 @@ bool C_SDKPlayer::CanShowSkillMenu( void )
 	}
 }
 
-ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "15.0" );
+ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "7.0" );
 
 void C_SDKPlayer::ClientThink()
 {
