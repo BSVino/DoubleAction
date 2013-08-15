@@ -491,6 +491,9 @@ public:
 	int    m_iStreakKills; // Kills in a row.
 	int    m_iCurrentStreak;
 
+	int    m_iKills;
+	int    m_iDeaths;
+
 	CNetworkHandle(CSDKPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	CNetworkVar(bool, m_bWasKilledByExplosion);

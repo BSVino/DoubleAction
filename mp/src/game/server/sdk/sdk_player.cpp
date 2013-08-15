@@ -381,6 +381,8 @@ CSDKPlayer::CSDKPlayer()
 	m_bHasPlayerDied = false;
 	m_bThirdPerson = false;
 
+	m_iKills = m_iDeaths = 0;
+
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iszCharacter = NULL_STRING;
@@ -1678,6 +1680,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 			else if (info.GetDamageType() == DMG_CLUB)
 				pSDKAttacker->m_iBrawlKills++;
 		}
+
+		// These are used to see how well the player is doing for the purposes
+		// of adjusting style accretion. So, only count it if it's a "skill-based"
+		// kill, ie one player shooting another, and not eg a suicide.
+		m_iDeaths += 1;
+		pSDKAttacker->m_iKills += 1;
 	}
 
 	// show killer in death cam mode
@@ -3735,6 +3743,21 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 {
+	float flDeathRatio = m_iDeaths;
+
+	// D/K means that a player with a lot of deaths will get a higher ratio.
+	if (m_iKills > 0)
+		flDeathRatio = (float)m_iDeaths/(float)m_iKills;
+
+	flDeathRatio = clamp(flDeathRatio, 0.7f, 2);
+
+	// Dampen the ratio if there's not enough data.
+	float flRatioWeight = RemapValClamped(m_iKills + m_iDeaths, 0, 10, 0, 1);
+
+	// Weight the amount of style given by how well a player is doing.
+	float flFinalWeight = (flDeathRatio - 1) * flRatioWeight + 1;
+	points *= flFinalWeight;
+
 	m_flTotalStyle += points;
 
 	if (IsStyleSkillActive())
