@@ -932,10 +932,11 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize)
 {
 	CMeshBuilder meshBuilder;
+
 	CMatRenderContextPtr pRenderContext( materials );
+	pRenderContext->Bind( m );
 	IMesh* pMesh = pRenderContext->GetDynamicMesh();
 
-	pRenderContext->Bind( m );
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
 	meshBuilder.Color4f( 1, 1, 1, 1 );

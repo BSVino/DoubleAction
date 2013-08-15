@@ -80,6 +80,8 @@ void CBaseGrenadeProjectile::Precache()
 
 	CMaterialReference g_hGrenadeArrow;
 
+	void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize);
+
 	int CBaseGrenadeProjectile::DrawModel( int flags )
 	{
 		// During the first half-second of our life, don't draw ourselves if he's
@@ -138,34 +140,7 @@ void CBaseGrenadeProjectile::Precache()
 
 		float flSize = m_flArrowCurSize;
 
-		CMeshBuilder meshBuilder;
-		CMatRenderContextPtr pRenderContext( materials );
-		IMesh* pMesh = pRenderContext->GetDynamicMesh();
-
-		pRenderContext->Bind( g_hGrenadeArrow );
-		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
-
-		meshBuilder.Color4f( 1, 1, 1, 1 );
-		meshBuilder.TexCoord2f( 0,0, 0 );
-		meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4f( 1, 1, 1, 1 );
-		meshBuilder.TexCoord2f( 0,1, 0 );
-		meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4f( 1, 1, 1, 1 );
-		meshBuilder.TexCoord2f( 0,1, 1 );
-		meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color4f( 1, 1, 1, 1 );
-		meshBuilder.TexCoord2f( 0,0, 1 );
-		meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.End(false, true);
+		DrawIconQuad(g_hGrenadeArrow, vecOrigin, vecRight, vecUp, flSize);
 
 		return iReturn;
 	}
