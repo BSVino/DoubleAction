@@ -14,6 +14,7 @@ const float flVignetteScale : register( c2 );
 const float flNoiseScale    : register( c3 );
 const float flBias          : register( c4 );
 const float flGrainOffset   : register( c5 );
+const float flDeathCam      : register( c6 );
 
 struct PS_INPUT
 {
@@ -25,7 +26,13 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
 	float4 aflCombined = tex2D( CombinedSampler, i.texCoord );
 
-	float flGrain = tex2D( CombinedSampler, i.texCoord + float2(flGrainOffset, flGrainOffset) ).g;
+	float flGrain;
+
+	if (flDeathCam > 0)
+		flGrain = aflCombined.g; // Death cam should be like a photo, so the grain should be static. (As in, not moving.)
+	else
+		flGrain = tex2D( CombinedSampler, i.texCoord + float2(flGrainOffset, flGrainOffset) ).g;
+
 	float flVignetteAlpha = aflCombined.b;
 	float flOverlay = aflCombined.r;
 	float flBlurAlpha = aflCombined.a;
@@ -57,7 +64,11 @@ HALF4 main( PS_INPUT i ) : COLOR
 	aflOutput.rgb = lerp(aflOutput.rgb, aflBlur.rgb, flBlurAlpha);
 #endif
 
-	aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp;
+	// Only do the blue tint if we're not in the death cam.
+	if (flDeathCam > 0)
+		aflOutput.gb = aflOutput.gb - 0.02 * flTotalRamp;
+	else
+		aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp;
 
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 

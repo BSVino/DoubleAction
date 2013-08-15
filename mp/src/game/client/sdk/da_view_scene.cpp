@@ -49,6 +49,7 @@ CDAViewRender::CDAViewRender()
 }
 
 ConVar da_postprocess_compare( "da_postprocess_compare", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Only render to half of the screen for debug purposes" );
+ConVar da_postprocess_deathcam_override( "da_postprocess_deathcam_override", "-1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Override the control for death came mode" );
 
 void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 {
@@ -65,13 +66,19 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	}
 
 	ConVarRef da_postprocess_slowmo("da_postprocess_slowmo");
+	ConVarRef da_postprocess_deathcam("da_postprocess_deathcam");
 
-	if ( pPlayer->GetSlowMoMultiplier() < 1 || !pPlayer->IsAlive() || da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt() )
+	if ( pPlayer->GetSlowMoMultiplier() < 1 || (!pPlayer->IsAlive() && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM) || da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt() )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
 		if ( !IsErrorMaterial(pMaterial) )
 		{
+			if (pPlayer->IsAlive())
+				da_postprocess_deathcam.SetValue(false);
+			else
+				da_postprocess_deathcam.SetValue(true);
+
 			if (da_postprocess_compare.GetInt() == 1)
 				DrawScreenEffectMaterial( pMaterial, 0, 0, XRES(320), ScreenHeight() );
 			else

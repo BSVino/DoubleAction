@@ -18,6 +18,8 @@ ConVar da_postprocess_vignette( "da_postprocess_vignette", "1", FCVAR_CHEAT|FCVA
 ConVar da_postprocess_grain( "da_postprocess_grain", "0.05", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the grain by?" );
 ConVar da_postprocess_bias( "da_postprocess_bias", "0.65", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to bias the colors by?" );
 
+ConVar da_postprocess_deathcam( "da_postprocess_deathcam", "0", FCVAR_CHEAT, "Control for death came mode. Set by code." );
+
 BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( BASETEXTURE,      SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "Framebuffer" )
@@ -92,6 +94,10 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			float aflOffset[1] = { 0.0f };
 			aflOffset[0] = params[GRAINOFFSET]->GetFloatValue();
 			pShaderAPI->SetPixelShaderConstant( 5, aflOffset );
+
+			float aflDeathCam[1] = { 0.0f };
+			aflDeathCam[0] = da_postprocess_deathcam.GetBool()?1:0;
+			pShaderAPI->SetPixelShaderConstant( 6, aflDeathCam );
 
 			BindTexture( SHADER_SAMPLER1, COMBINED, -1 );
 			BindTexture( SHADER_SAMPLER2, BLUR, -1 );
