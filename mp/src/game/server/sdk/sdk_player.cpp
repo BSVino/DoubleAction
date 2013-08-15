@@ -983,19 +983,45 @@ void CSDKPlayer::GiveDefaultItems()
 
 		for (int i = 0; i < WeaponCount(); i++)
 		{
-			if (!GetWeapon(i))
+			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
+			CWeaponSDKBase* pLastWeapon = dynamic_cast<CWeaponSDKBase*>(Weapon_GetLast());
+
+			if (!pWeapon)
 				continue;
 
-			if (GetWeapon(i) == GetActiveWeapon())
+			if (pWeapon == GetActiveWeapon())
 				continue;
 
-			if (!dynamic_cast<CWeaponSDKBase*>(GetWeapon(i)))
+			if (!pWeapon)
 				continue;
 
-			if (static_cast<CWeaponSDKBase*>(GetWeapon(i))->GetWeaponID() == SDK_WEAPON_BRAWL)
+			if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
 				continue;
 
-			Weapon_SetLast(GetWeapon(i));
+			if (!pLastWeapon || pLastWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+			{
+				Weapon_SetLast(pWeapon);
+				continue;
+			}
+
+			// Only use a grenade as the lastweapon if there are no other weapons.
+			if (pWeapon->IsGrenade())
+				continue;
+
+			// Always go to a higher weight weapon.
+			if (pWeapon->GetWeight() > pLastWeapon->GetWeight())
+			{
+				Weapon_SetLast(pWeapon);
+				continue;
+			}
+
+			// Always use the akimbo version instead of single.
+			if (FStrEq(UTIL_VarArgs("weapon_%s", pWeapon->GetSDKWpnData().m_szSingle), pLastWeapon->GetSDKWpnData().szClassName))
+			{
+				Weapon_SetLast(pWeapon);
+				continue;
+			}
+
 			break;
 		}
 
