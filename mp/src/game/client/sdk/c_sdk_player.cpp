@@ -1149,11 +1149,6 @@ void C_SDKPlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 		if (gpGlobals->curtime < m_flDeathTime + 0.2f)
 			return;
 	}
-	else
-	{
-		if (gpGlobals->curtime < m_flDeathTime + 0.05f)
-			return;
-	}
 
 	if ( !m_bSentFreezeFrame )
 	{
@@ -1260,7 +1255,7 @@ bool C_SDKPlayer::CalcFreezeCamHalfHalfView( Vector& eyeOrigin, QAngle& eyeAngle
 	Vector vecForward = (vecCamTarget-vecCamPlayer).Normalized();
 	Vector vecSide = vecForward.Cross(Vector(0, 0, 1)).Normalized();
 
-	Vector vecCamPosition = vecCamLookAt + vecSide * da_deathframe_side.GetFloat() * flSide;
+	Vector vecCamPosition = vecCamLookAt + vecSide * da_deathframe_side.GetFloat() * 2 * flSide;
 
 	Vector vecCamSize(6, 6, 6);
 
@@ -1339,6 +1334,16 @@ bool C_SDKPlayer::CalcFreezeCamKillerAimInView( Vector& eyeOrigin, QAngle& eyeAn
 	// Easy!
 	eyeOrigin = pTarget->CalculateThirdPersonCameraPosition(pTarget->EyePosition(), pTarget->EyeAngles());
 	eyeAngles = pTarget->EyeAngles();
+
+	Vector vecCamSize(6, 6, 6);
+
+	trace_t trace;
+	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
+	UTIL_TraceHull( pTarget->EyePosition(), eyeOrigin, -vecCamSize, vecCamSize, MASK_OPAQUE, this, COLLISION_GROUP_NONE, &trace );
+	C_BaseEntity::PopEnableAbsRecomputations();
+
+	if (trace.fraction < 1.0)
+		return false;
 
 	return true;
 }
