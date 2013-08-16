@@ -41,6 +41,7 @@
 #else
 	#include "sdk_player.h"
 	#include "sdk_team.h"
+	#include "dove.h"
 #endif
 
 #include "da.h"
@@ -1429,6 +1430,9 @@ void CSDKPlayer::ActivateSlowMo()
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
+
+	if (m_bHasSuperSlowMo || m_flSlowMoTime > 3)
+		CDove::SpawnDoves(this);
 #endif
 
 	ReadyWeapon();

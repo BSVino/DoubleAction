@@ -30,6 +30,7 @@
 #include "da_ammo_pickup.h"
 #include "bots/bot_main.h"
 #include "ammodef.h"
+#include "dove.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -3883,6 +3884,9 @@ void CSDKPlayer::ActivateMeter()
 	// If we're still less than max health, take up to make health.
 	if (GetHealth() < GetMaxHealth())
 		TakeHealth(GetMaxHealth() - GetHealth(), 0);
+
+	if (m_Shared.m_iStyleSkill != SKILL_TROLL && m_Shared.m_iStyleSkill != SKILL_REFLEXES)
+		CDove::SpawnDoves(this);
 
 	// Refill ammo
 	if (m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
