@@ -238,7 +238,7 @@ void CSDKBot::CheckStuck( CUserCmd &cmd )
 
 		if( tr.fraction != 1.0 )
 		{
-			NDebugOverlay::Line( GetLocalOrigin()+Vector(0,0,15), m_Waypoints[0].Center+Vector(0,0,15), 200, 0, 0, false, 5 );
+			//NDebugOverlay::Line( GetLocalOrigin()+Vector(0,0,15), m_Waypoints[0].Center+Vector(0,0,15), 200, 0, 0, false, 5 );
 			//DevMsg("!STUCK can't see next waypoint\n");
 			AddRandomPath();
 		}
