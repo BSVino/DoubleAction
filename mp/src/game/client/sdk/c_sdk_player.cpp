@@ -767,7 +767,12 @@ void C_SDKPlayer::UpdateClientSideAnimation()
 	m_PlayerAnimState->Update( angEyeAngles[YAW], angEyeAngles[PITCH], angCharacterEyeAngles[YAW], angCharacterEyeAngles[PITCH] );
 
 	BaseClass::UpdateClientSideAnimation();
+
+	// If in first person, still setup bones so that they're available for the ragdoll when the player dies.
+	if (!IsInThirdPerson())
+		SetupBones(nullptr, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime);
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1142,6 +1147,11 @@ void C_SDKPlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 	{
 		// Delay a tad if we were killed by an explosion, to allow the explosion particles to go.
 		if (gpGlobals->curtime < m_flDeathTime + 0.2f)
+			return;
+	}
+	else
+	{
+		if (gpGlobals->curtime < m_flDeathTime + 0.05f)
 			return;
 	}
 
