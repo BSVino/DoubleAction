@@ -233,3 +233,15 @@ int CAkimboBase::GetWeight() const
 
 	return pSingleInfo->iWeight;
 }
+
+const Vector CAkimboBase::GetShootPosition(CSDKPlayer* pShooter)
+{
+	Assert(pShooter);
+	if (!pShooter)
+		return Vector(0, 0, 0);
+
+	Vector vecPosition, vecRight;
+	pShooter->EyePositionAndVectors(&vecPosition, nullptr, &vecRight, nullptr);
+
+	return vecPosition + vecRight * (shootright?4:-4);
+}

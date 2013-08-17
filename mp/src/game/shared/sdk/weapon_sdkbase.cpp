@@ -272,7 +272,7 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 
 	FX_FireBullets(
 		pPlayer->entindex(),
-		pPlayer->Weapon_ShootPosition(),
+		GetShootPosition(pPlayer),
 		angShoot,
 		GetWeaponID(),
 		0, //Tony; fire mode - this is unused at the moment, left over from CSS when SDK* was created in the first place.
@@ -1709,4 +1709,13 @@ bool CWeaponSDKBase::CanBeSelected()
 		return false;
 
 	return true;
+}
+
+const Vector CWeaponSDKBase::GetShootPosition(CSDKPlayer* pShooter)
+{
+	Assert(pShooter);
+	if (!pShooter)
+		return Vector(0, 0, 0);
+
+	return pShooter->EyePosition();
 }

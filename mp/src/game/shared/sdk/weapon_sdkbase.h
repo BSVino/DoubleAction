@@ -161,6 +161,8 @@ public:
 	virtual bool HasAimInFireRateBonus();
 	virtual bool HasAimInRecoilBonus();
 
+	virtual const Vector GetShootPosition(CSDKPlayer* pShooter);
+
 	virtual weapontype_t GetWeaponType() const;
 	static weapontype_t  GetWeaponType( SDKWeaponID eWeapon );
 

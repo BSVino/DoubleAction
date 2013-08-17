@@ -77,6 +77,8 @@ public:
 
 	virtual int GetMaxClip1( void ) const;
 	virtual int GetWeight( void ) const;
+
+	const Vector GetShootPosition(CSDKPlayer* pShooter);
 public:
 };
 #endif

@@ -2009,8 +2009,11 @@ void C_SDKPlayer::UpdateFlashlight()
 				AngleVectors( gunAttachmentAngles, &vecForward, &vecRight, &vecUp );
 		}
 
-		//Tony; just set this shit for now, directly.
-		pFlashlightPlayer->m_vecFlashlightOrigin = EyePosition();//vecPos;
+		if (GetActiveSDKWeapon())
+			pFlashlightPlayer->m_vecFlashlightOrigin = GetActiveSDKWeapon()->GetShootPosition(this);
+		else
+			pFlashlightPlayer->m_vecFlashlightOrigin = EyePosition();
+
 		pFlashlightPlayer->m_vecFlashlightForward = vecForward;
 		pFlashlightPlayer->m_vecFlashlightRight = vecRight;
 		pFlashlightPlayer->m_vecFlashlightUp = vecUp;
