@@ -1954,36 +1954,28 @@ void CSDKGameMovement::Duck( void )
 				if (m_pSDKPlayer->m_Shared.GetDiveToProneLandTime() > 0 && m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetDiveToProneLandTime() < da_d2p_stunt_forgiveness.GetFloat())
 				{
 					// If the player presses a stunt button just after she lands from a dive,
-					// give her the benefit of the doubt and transition to a dive as if the
+					// give her the benefit of the doubt and transition to a roll as if the
 					// button was down the whole time.
-					if (buttonsPressed&IN_ALT1)
+					Vector vecForward, vecRight, vecUp;
+					AngleVectors( mv->m_vecViewAngles, &vecForward, &vecRight, &vecUp );
+					vecForward.z = 0.0f;
+					vecRight.z = 0.0f;		
+					VectorNormalize( vecForward );
+					VectorNormalize( vecRight );
+
+					Vector vecWishDirection( vecForward.x*mv->m_flForwardMove + vecRight.x*mv->m_flSideMove, vecForward.y*mv->m_flForwardMove + vecRight.y*mv->m_flSideMove, 0.0f );
+					vecWishDirection.NormalizeInPlace();
+
+					Vector vecLocalVelocity = m_pSDKPlayer->GetLocalVelocity();
+					vecLocalVelocity.NormalizeInPlace();
+
+					float flWishDotLocal = vecWishDirection.Dot(vecLocalVelocity);
+
+					// Only if the direction of the movement keys is the same as the velocity.
+					if (flWishDotLocal > 0.5f)
 					{
-						bSlide = true;
+						bRoll = true;
 						bFromDive = true;
-					}
-					else
-					{
-						Vector vecForward, vecRight, vecUp;
-						AngleVectors( mv->m_vecViewAngles, &vecForward, &vecRight, &vecUp );
-						vecForward.z = 0.0f;
-						vecRight.z = 0.0f;		
-						VectorNormalize( vecForward );
-						VectorNormalize( vecRight );
-
-						Vector vecWishDirection( vecForward.x*mv->m_flForwardMove + vecRight.x*mv->m_flSideMove, vecForward.y*mv->m_flForwardMove + vecRight.y*mv->m_flSideMove, 0.0f );
-						vecWishDirection.NormalizeInPlace();
-
-						Vector vecLocalVelocity = m_pSDKPlayer->GetLocalVelocity();
-						vecLocalVelocity.NormalizeInPlace();
-
-						float flWishDotLocal = vecWishDirection.Dot(vecLocalVelocity);
-
-						// Only if the direction of the movement keys is the same as the velocity.
-						if (flWishDotLocal > 0.5f)
-						{
-							bRoll = true;
-							bFromDive = true;
-						}
 					}
 				}
 			}
