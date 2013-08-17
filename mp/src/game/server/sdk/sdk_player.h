@@ -401,6 +401,10 @@ private:
 	virtual void	SharedSpawn();
 
 public:
+	virtual float GetPlayerMaxSpeed(bool bDucking);
+	virtual float GetPlayerMaxSpeed() { return GetPlayerMaxSpeed(false); }
+	float GetMaxSlideSpeed();
+
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 

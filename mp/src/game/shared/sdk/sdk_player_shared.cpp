@@ -986,9 +986,9 @@ ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.6", FCVAR_REPLICATED | FCVAR_CH
 
 ConVar  sdk_dive_height_high( "sdk_dive_height_high", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "380", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "220", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "500", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
 ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
@@ -1324,7 +1324,60 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flAimInSpeed = 100;
 
 	// Set the absolute max to sprint speed (but we don't use sprint so now it's runspeed)
-	SetMaxSpeed( m_Shared.ModifySkillValue(m_Shared.m_flRunSpeed, 0.25f, SKILL_ATHLETIC) );
+	SetMaxSpeed( GetPlayerMaxSpeed(false) );
+}
+
+float CSDKPlayer::GetPlayerMaxSpeed(bool bDucking)
+{
+	float flMaxSpeed;
+
+	// This check is now simplified, just use CanChangePosition because it checks the two things we need to check anyway.
+	if ( m_Shared.IsProne() && m_Shared.CanChangePosition() && GetGroundEntity() != NULL )
+	{
+		if (m_Shared.m_bProneSliding)
+			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flSlideSpeed, 0.5f, SKILL_ATHLETIC);
+		else
+			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flProneSpeed, 0.5f, SKILL_ATHLETIC);
+	}
+	//not prone - standing or crouching and possibly moving
+	else if ( (m_Shared.IsSliding() && !m_Shared.IsGettingUpFromSlide()) && GetGroundEntity() )
+		flMaxSpeed = GetMaxSlideSpeed();
+	else if ( m_Shared.IsRolling() && GetGroundEntity() )
+		flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flRollSpeed, 0.25f, SKILL_ATHLETIC);
+	else if ( m_Shared.IsDiving() && !GetGroundEntity() )
+	{
+		ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
+		ConVarRef sdk_dive_speed("sdk_dive_speed");
+
+		float flSpeedRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+		flSpeedRatio -= 1; // 0 means unchanged.
+		flSpeedRatio /= 2; // It gets doubled when the skill is on.
+
+		flMaxSpeed = m_Shared.ModifySkillValue(sdk_dive_speed.GetFloat(), flSpeedRatio, SKILL_ATHLETIC);
+	}
+	else
+	{
+		if ( bDucking )
+			flMaxSpeed = m_Shared.m_flRunSpeed;	//gets cut in fraction later
+		else
+		{
+			if ( m_Shared.IsAimedIn() )
+				flMaxSpeed = RemapValClamped(m_Shared.GetAimIn(), 0, 1, m_Shared.m_flRunSpeed, m_Shared.m_flAimInSpeed);
+			else
+				flMaxSpeed = m_Shared.m_flRunSpeed;
+		}
+
+		flMaxSpeed = m_Shared.ModifySkillValue(flMaxSpeed, 0.25f, SKILL_ATHLETIC);
+	}
+
+	return flMaxSpeed;
+}
+
+ConVar da_athletic_slide_boost("da_athletic_slide_boost", ".25", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+float CSDKPlayer::GetMaxSlideSpeed()
+{
+	return m_Shared.ModifySkillValue(m_Shared.m_flSlideSpeed, da_athletic_slide_boost.GetFloat(), SKILL_ATHLETIC);
 }
 
 //-----------------------------------------------------------------------------

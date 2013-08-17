@@ -168,6 +168,9 @@ public:
 	virtual void SharedSpawn();
 	
 	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
+	virtual float GetPlayerMaxSpeed(bool bDucking);
+	virtual float GetPlayerMaxSpeed() { return GetPlayerMaxSpeed(false); }
+	float GetMaxSlideSpeed();
 
 //Tony; pronetodo!
 //	void CheckProneMoveSound( int groundspeed, bool onground );

@@ -147,52 +147,7 @@ CSDKGameMovement::~CSDKGameMovement()
 
 void CSDKGameMovement::SetPlayerSpeed( void )
 {
-#if defined ( SDK_USE_PRONE )
-	// This check is now simplified, just use CanChangePosition because it checks the two things we need to check anyway.
-	if ( m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.CanChangePosition() && m_pSDKPlayer->GetGroundEntity() != NULL )
-	{
-		if (m_pSDKPlayer->m_Shared.m_bProneSliding)
-			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-		else
-			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flProneSpeed;
-	}
-	else	//not prone - standing or crouching and possibly moving
-#endif // SDK_USE_PRONE
-	if ( (m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide()) && m_pSDKPlayer->GetGroundEntity() )
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-	else if ( m_pSDKPlayer->m_Shared.IsRolling() && m_pSDKPlayer->GetGroundEntity() )
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRollSpeed;
-	else if ( m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity() )
-	{
-		ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
-
-		float flSpeedRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
-		flSpeedRatio -= 1; // 0 means unchanged.
-		flSpeedRatio /= 2; // It gets doubled when the skill is on.
-
-		mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(sdk_dive_speed.GetFloat(), flSpeedRatio, SKILL_ATHLETIC);
-	}
-	else
-	{
-		float stamina = 100.0f;
-#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
-		stamina = m_pSDKPlayer->m_Shared.GetStamina();
-#endif
-		if ( mv->m_nButtons & IN_DUCK )
-		{
-			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;	//gets cut in fraction later
-		}
-		else
-		{
-			float flMaxSpeed;	
-			if ( m_pSDKPlayer->m_Shared.IsAimedIn() )
-				flMaxSpeed = RemapValClamped(m_pSDKPlayer->m_Shared.GetAimIn(), 0, 1, m_pSDKPlayer->m_Shared.m_flRunSpeed, m_pSDKPlayer->m_Shared.m_flAimInSpeed);
-			else
-				flMaxSpeed = m_pSDKPlayer->m_Shared.m_flRunSpeed;
-
-			mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
-		}
-	}
+	mv->m_flClientMaxSpeed = m_pSDKPlayer->GetPlayerMaxSpeed(!!(mv->m_nButtons & IN_DUCK));
 
 	if (m_pSDKPlayer->PlayerFrozen())
 		mv->m_flClientMaxSpeed *= m_pSDKPlayer->m_flFreezeAmount;
@@ -1861,9 +1816,9 @@ void CSDKGameMovement::Duck( void )
 
 					float flSpeedFraction = RemapValClamped(flVelocity/sdk_dive_speed.GetFloat(), 0, 1, 0.2f, 1);
 
-					mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
-					mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-					mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+					mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->GetMaxSlideSpeed() * flSpeedFraction);
+					mv->m_flClientMaxSpeed = m_pSDKPlayer->GetMaxSlideSpeed();
+					mv->m_flMaxSpeed = m_pSDKPlayer->GetMaxSlideSpeed();
 					player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
 					SetSlideEyeOffset( 1.0 );
@@ -2081,9 +2036,9 @@ void CSDKGameMovement::Duck( void )
 
 				m_pSDKPlayer->m_Shared.StartSliding(bFromDive);
 
-				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->m_Shared.m_flSlideSpeed * flSpeedFraction);
-				mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
-				mv->m_flMaxSpeed = m_pSDKPlayer->m_Shared.m_flSlideSpeed;
+				mv->m_vecVelocity = m_pSDKPlayer->m_Shared.GetSlideDirection() * (m_pSDKPlayer->GetMaxSlideSpeed() * flSpeedFraction);
+				mv->m_flClientMaxSpeed = m_pSDKPlayer->GetMaxSlideSpeed();
+				mv->m_flMaxSpeed = m_pSDKPlayer->GetMaxSlideSpeed();
 				player->m_surfaceFriction = m_pSDKPlayer->m_Shared.GetSlideFriction();
 
 				SetSlideEyeOffset( bFromDive?1.0:0.0 );
