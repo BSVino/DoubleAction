@@ -2381,6 +2381,7 @@ bool CSDKGameMovement::CheckMantel()
 }
 
 static ConVar da_terminal_velocity("da_terminal_velocity", "1600", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_terminal_velocity_delta("da_terminal_velocity_delta", "400", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CSDKGameMovement::FullWalkMove ()
 {
@@ -2670,8 +2671,18 @@ void CSDKGameMovement::FullWalkMove ()
 		Friction();
 	}
 
-	if (mv->m_vecVelocity.z < -da_terminal_velocity.GetFloat())
-		mv->m_vecVelocity.z = -da_terminal_velocity.GetFloat();
+	Vector vecForward;
+	AngleVectors(mv->m_vecAngles, &vecForward);
+
+	float flLookingUp = vecForward.Dot(Vector(0, 0, 1));
+
+	float flTerminalVelocityLookingDown = da_terminal_velocity.GetFloat() + da_terminal_velocity_delta.GetFloat();
+	float flTerminalVelocityLookingUp = da_terminal_velocity.GetFloat() - da_terminal_velocity_delta.GetFloat();
+	float flTerminalVelocity = RemapValClamped(flLookingUp, -1, 1, flTerminalVelocityLookingDown, flTerminalVelocityLookingUp);
+
+	if (mv->m_vecVelocity.z < -flTerminalVelocity)
+		mv->m_vecVelocity.z = -flTerminalVelocity;
+
 	CheckVelocity();
 	if (player->GetGroundEntity() != NULL)
 	{
