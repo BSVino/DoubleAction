@@ -2439,13 +2439,16 @@ void CSDKGameMovement::FullWalkMove ()
 				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) &&
 					fabs (tr.plane.normal[2]) < 0.7)
 				{
+					m_pSDKPlayer->m_Shared.EndDive();
+					m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
+
 					float speed = da_acro_wallflip_speed.GetFloat ();
 					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
 					mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
 					mv->m_vecVelocity[2] = da_acro_wallflip_gain.GetFloat ();
 					SetGroundEntity (NULL);
 					FinishGravity ();
-					
+
 					CPASFilter filter (org);
 					filter.UsePredictionRules ();
 					m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");

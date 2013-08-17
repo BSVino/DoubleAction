@@ -1147,6 +1147,8 @@ void CSDKPlayerShared::StartWallFlip()
 {
 	m_flWallFlipTime = da_acro_wallflip_delay.GetFloat();
 	m_iWallFlipCount++;
+
+	m_pOuter->SetGravity(0.8f);
 }
 
 void CSDKPlayerShared::AccumulateWallFlipTime()
