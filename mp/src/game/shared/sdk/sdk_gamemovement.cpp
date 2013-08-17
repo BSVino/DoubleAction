@@ -43,6 +43,7 @@ ConVar	da_d2p_stunt_forgiveness( "da_d2p_stunt_forgiveness", "0.4", FCVAR_REPLIC
 
 ConVar  da_acro_wallflip_dist ("da_acro_wallflip_dist", "8", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_wallflip_limit ("da_acro_wallflip_limit", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_athletic_wallflip_limit ("da_athletic_wallflip_limit", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_wallflip_speed ("da_acro_wallflip_speed", "180", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_wallflip_gain ("da_acro_wallflip_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
@@ -2410,8 +2411,14 @@ void CSDKGameMovement::FullWalkMove ()
 	{
 		int pressed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
 		if (pressed&IN_ALT1)
-		{/*Stunt button behaviour*/
-			if (m_pSDKPlayer->m_Shared.GetWallFlipCount() < da_acro_wallflip_limit.GetInt ())
+		{
+			int iWallflips = da_acro_wallflip_limit.GetInt();
+			if (m_pSDKPlayer->m_Shared.m_iStyleSkill == SKILL_ATHLETIC)
+				iWallflips = da_athletic_wallflip_limit.GetInt();
+			if (m_pSDKPlayer->IsStyleSkillActive(SKILL_ATHLETIC))
+				iWallflips = 9999;
+
+			if (m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips)
 			{
 				trace_t tr;
 				Vector org, mins, maxs;
