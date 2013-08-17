@@ -262,7 +262,7 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		AngleVectors(angShoot, &vecShoot);
 
 		trace_t tr;
-		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
 
 		Vector vecBulletDirection = tr.endpos - pPlayer->Weapon_ShootPosition();
 		vecBulletDirection.NormalizeInPlace();

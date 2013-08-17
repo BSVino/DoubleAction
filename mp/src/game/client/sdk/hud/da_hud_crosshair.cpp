@@ -174,14 +174,18 @@ void CDAHudCrosshair::Paint( void )
 	{
 		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
 
-		Vector vecForward = pPlayer->GetThirdPersonCameraTarget() - pPlayer->Weapon_ShootPosition();
+		Vector vecShootPosition = pPlayer->Weapon_ShootPosition();
+		if (pPlayer->GetActiveSDKWeapon())
+			vecShootPosition = pPlayer->GetActiveSDKWeapon()->GetShootPosition(pPlayer);
+
+		Vector vecForward = pPlayer->GetThirdPersonCameraTarget() - vecShootPosition;
 
 		// Now trace to see where the player will hit
 		trace_t tr2;
-		UTIL_TraceLine( pPlayer->Weapon_ShootPosition(), pPlayer->Weapon_ShootPosition() + vecForward * 1000, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr2 );
+		UTIL_TraceLine( vecShootPosition, vecShootPosition + vecForward * 1000, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr2 );
 
 		//DebugDrawLine(vecCamera, tr.endpos, 255, 0, 0, true, 0.1f);
-		//DebugDrawLine(pPlayer->Weapon_ShootPosition(), tr2.endpos, 0, 0, 255, true, 0.1f);
+		//DebugDrawLine(vecShootPosition, tr2.endpos, 0, 0, 255, true, 0.1f);
 
 		if ((tr2.endpos - pPlayer->GetThirdPersonCameraTarget()).LengthSqr() > 1)
 		{

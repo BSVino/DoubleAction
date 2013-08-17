@@ -63,7 +63,9 @@ Activity CAkimboBase::ActivityOverride (Activity baseAct, bool *pRequired)
 
 int CAkimboBase::GetTracerAttachment (void)
 {
-	if (shootright) return 2;
+	if (shootright)
+		return 2;
+
 	return 1;
 }
 
@@ -118,9 +120,7 @@ void CAkimboBase::PrimaryAttack (void)
 	{
 		return;
 	}
-	if (rightclip > 0 && leftclip > 0) shootright = (bool)(shootright^1);
-	else if (rightclip > 0) shootright = true;
-	else shootright = false;
+
 	if (shootright)
 	{
 		//if (rightclip != 1) act = ACT_VM_PRIMARYATTACK;
@@ -135,9 +135,14 @@ void CAkimboBase::PrimaryAttack (void)
 		act = ACT_VM_SECONDARYATTACK;
 		leftclip--;
 	}
+
 	SendWeaponAnim (act);
 	m_iClip1 = leftclip + rightclip;
 	FinishAttack (pPlayer);
+
+	if (rightclip > 0 && leftclip > 0) shootright = (bool)(shootright^1);
+	else if (rightclip > 0) shootright = true;
+	else shootright = false;
 }
 
 void CAkimboBase::FinishReload (void)
