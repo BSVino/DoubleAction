@@ -19,9 +19,13 @@
 #undef max
 
 #include <string>
+#include <vector>
+#include <sstream>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+ConVar da_instructor_lessons_learned("da_instructor_lessons_learned", "", FCVAR_ARCHIVE);
 
 CInstructor::CInstructor()
 {
@@ -532,6 +536,19 @@ void C_SDKPlayer::Instructor_Think()
 	}
 }
 
+// http://stackoverflow.com/questions/236129/splitting-a-string-in-c
+// Why doesn't the C++ STL have this sort of stuff? For that matter, why doesn't Valve?
+std::vector<std::string>& split_string(const std::string &s, char delim, std::vector<std::string> &elems)
+{
+	std::stringstream ss(s);
+	std::string item;
+	while (std::getline(ss, item, delim))
+	{
+		elems.push_back(item);
+	}
+	return elems;
+}
+
 void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 {
 	if (!m_pInstructor)
@@ -560,14 +577,36 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 	pLessonProgress->m_flLastTimeLearned = gpGlobals->curtime;
 	pLessonProgress->m_iTimesLearned++;
 
+	CLesson* pLesson = m_pInstructor->GetLesson(sLesson);
+
 	if (lesson_debug.GetBool())
 	{
-		CLesson* pLesson = m_pInstructor->GetLesson(sLesson);
-
 		if (pLessonProgress->m_iTimesLearned < pLesson->m_iTimesToLearn)
 			Msg(VarArgs(const_cast<char*>(std::string("Instructor: Trained lesson ").append(sLesson).append(" - %d/%d\n").c_str()), pLessonProgress->m_iTimesLearned, pLesson->m_iTimesToLearn));
 		else if (pLessonProgress->m_iTimesLearned == pLesson->m_iTimesToLearn)
 			Msg(std::string("Instructor: Learned lesson ").append(sLesson).append("\n").c_str());
+	}
+
+	if (pLessonProgress->m_iTimesLearned == pLesson->m_iTimesToLearn)
+	{
+		// Lesson has been learned. Save it to the config so that we don't show this
+		// hint on consecutive boots of the game.
+		std::string sLessonsLearned = da_instructor_lessons_learned.GetString();
+		std::vector<std::string> asTokens;
+		split_string(sLessonsLearned, ';', asTokens);
+
+		bool bFound = false;
+		for (size_t i = 0; i < asTokens.size(); i++)
+		{
+			if (asTokens[i] == pLesson->m_sLessonName.String())
+			{
+				bFound = true;
+				break;
+			}
+		}
+
+		if (!bFound)
+			da_instructor_lessons_learned.SetValue(VarArgs("%s;%s", da_instructor_lessons_learned.GetString(), pLesson->m_sLessonName.String()));
 	}
 }
 
@@ -579,6 +618,18 @@ bool C_SDKPlayer::Instructor_IsLessonLearned(const CLessonProgress* pLessonProgr
 	Assert(pLessonProgress);
 	if (!pLessonProgress)
 		return true;
+
+	// Check the config for whether the lesson was learned in previous
+	// runs of the game.
+	std::string sLessonsLearned = da_instructor_lessons_learned.GetString();
+	std::vector<std::string> asTokens;
+	split_string(sLessonsLearned, ';', asTokens);
+
+	for (size_t i = 0; i < asTokens.size(); i++)
+	{
+		if (asTokens[i] == pLessonProgress->m_sLessonName.String())
+			return true;
+	}
 
 	CLesson* pLesson = m_pInstructor->GetLesson(pLessonProgress->m_sLessonName);
 
