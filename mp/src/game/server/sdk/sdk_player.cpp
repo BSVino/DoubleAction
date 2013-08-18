@@ -3174,6 +3174,23 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 		GiveSlowMo(1);
+
+	if (m_Shared.m_iStyleSkill != SKILL_TROLL)
+	{
+		ConVarRef da_max_grenades("da_max_grenades");
+		while (GetAmmoCount("grenades") > da_max_grenades.GetInt())
+		{
+			QAngle gunAngles;
+			VectorAngles( BodyDirection2D(), gunAngles );
+
+			Vector vecForward;
+			AngleVectors( gunAngles, &vecForward, NULL, NULL );
+
+			float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
+
+			SDKThrowWeapon(FindWeapon(SDK_WEAPON_GRENADE), vecForward, gunAngles, flDiameter);
+		}
+	}
 }
 
 #if defined ( SDK_USE_PRONE )
@@ -4548,3 +4565,35 @@ void CC_CoderHacks_f(const CCommand &args)
 }
 
 static ConCommand coder("coder", CC_CoderHacks_f, "C0d3r h4c|<s", FCVAR_HIDDEN);
+
+CON_COMMAND( give_weapon, "Give weapon to player.\n\tArguments: <weapon_name>" )
+{
+	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+	if ( pPlayer 
+		&& (gpGlobals->maxClients == 1 || sv_cheats->GetBool()) 
+		&& args.ArgC() >= 2 )
+	{
+		char item_to_give[ 256 ];
+		Q_strncpy( item_to_give, args[1], sizeof( item_to_give ) );
+		Q_strlower( item_to_give );
+
+		string_t iszItem = AllocPooledString( item_to_give );	// Make a copy of the classname
+
+		if (strncmp(item_to_give, "weapon_", 7) == 0)
+		{
+			CWeaponSDKBase* pDrop = (CWeaponSDKBase*)pPlayer->Weapon_Create(item_to_give);
+			pDrop->VPhysicsDestroyObject(); 
+			pDrop->VPhysicsInitShadow(true, true);
+
+			Vector vecForward;
+			pPlayer->GetVectors(&vecForward, nullptr, nullptr);
+
+			pDrop->SetAbsOrigin(pPlayer->EyePosition() + vecForward * 40);
+
+			pDrop->Drop( vecForward * 40 );
+			pDrop->SetRemoveable( false );
+
+			pDrop->SetDieThink( true );
+		}
+	}
+}

@@ -1182,6 +1182,24 @@ void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
 		pPlayer->SetMaxSpeed( 600 );
 	}
 }
+
+ConVar da_max_grenades("da_max_grenades", "2", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Max grenades without Nitrophiliac");
+
+bool CSDKGameRules::CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pItem )
+{
+	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(pItem);
+	CSDKPlayer* pSDKPlayer = ToSDKPlayer(pPlayer);
+
+	if (pWeapon && pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE && pSDKPlayer->m_Shared.m_iStyleSkill != SKILL_TROLL)
+	{
+		// If the player doesn't have Nitrophiliac, max 2 grenades.
+		if (pSDKPlayer->GetAmmoCount("grenades") >= da_max_grenades.GetInt())
+			return false;
+	}
+
+	return BaseClass::CanHavePlayerItem(pPlayer, pItem);
+}
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 void CSDKGameRules::ChooseRandomClass( CSDKPlayer *pPlayer )
 {
@@ -1737,8 +1755,8 @@ CAmmoDef* GetAmmoDef()
 		def.AddAmmoType( "762x51mm", DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, INFINITE_AMMO, BULLET_IMPULSE(140, 800),    0 );
 		def.AddAmmoType( "45acp",    DMG_BULLET,   TRACER_LINE_AND_WHIZ, 0, 0, INFINITE_AMMO, BULLET_IMPULSE(200, 1225),   0 );
 
-		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE,          0, 0, INFINITE_AMMO,  BULLET_IMPULSE(526/9, 1300), 0 );
-		def.AddAmmoType( "grenades", DMG_BLAST,    TRACER_NONE,          0, 0, 5/*max carry*/,   1,                           0 );
+		def.AddAmmoType( "buckshot", DMG_BUCKSHOT, TRACER_NONE,          0, 0, INFINITE_AMMO, BULLET_IMPULSE(526/9, 1300), 0 );
+		def.AddAmmoType( "grenades", DMG_BLAST,    TRACER_NONE,          0, 0, 4,             1,                           0 );
 	}
 
 	return &def;

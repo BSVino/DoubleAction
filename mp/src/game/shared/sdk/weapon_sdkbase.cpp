@@ -1228,10 +1228,6 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 	int iWeight = GetWeight();
 
-	// If the player has nitrophiliac and doesn't have any other grenades, this one's free.
-	if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) == 0 && pPlayer->m_Shared.m_iStyleSkill == SKILL_TROLL)
-		iWeight = 0;
-
 	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
 		pPlayer->DropWeaponsToPickUp(this);
 

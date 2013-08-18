@@ -166,6 +166,8 @@ public:
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
 	virtual bool InitTeamSpawns( void );
 
+	virtual bool CanHavePlayerItem( CBasePlayer *pPlayer, CBaseCombatWeapon *pWeapon );
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 	bool IsPlayerClassOnTeam( int cls, int team );
 	bool CanPlayerJoinClass( CSDKPlayer *pPlayer, int cls );

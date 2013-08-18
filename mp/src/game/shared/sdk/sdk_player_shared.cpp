@@ -39,6 +39,8 @@
 
 	#define CRecipientFilter C_RecipientFilter
 #else
+	#include "variant_t.h"
+
 	#include "sdk_player.h"
 	#include "sdk_team.h"
 	#include "dove.h"
@@ -433,6 +435,79 @@ void CSDKPlayer::StartTouch(CBaseEntity *pOther)
 
 bool CSDKPlayer::PlayerUse()
 {
+#ifdef GAME_DLL
+	// Was use pressed or released?
+	if ( ((m_nButtons | m_afButtonPressed | m_afButtonReleased) & IN_USE) && !IsObserver() )
+	{
+		Vector forward, up;
+		EyeVectors( &forward, NULL, &up );
+
+		Vector vecSearchCenter = EyePosition();
+		CBaseEntity *pObject = nullptr;
+		CBaseEntity *pNearest = nullptr;
+		float flNearest = FLT_MAX;
+
+		// Look for grenades so we can prioritize picking them up first.
+		for ( CEntitySphereQuery sphere( vecSearchCenter, PLAYER_USE_RADIUS ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		{
+			if ( !pObject )
+				continue;
+
+			if ( !IsUseableEntity( pObject, FCAP_USE_IN_RADIUS ) )
+				continue;
+
+			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(pObject);
+			if (!pWeapon)
+				continue;
+
+			if (pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE)
+				continue;
+
+			// If we're full up on grenades, pass over to whatever other weapons are lying around.
+			if (!g_pGameRules->CanHavePlayerItem(this, pWeapon))
+				continue;
+
+			// see if it's more roughly in front of the player than previous guess
+			Vector point;
+			pObject->CollisionProp()->CalcNearestPoint( vecSearchCenter, &point );
+
+			Vector dir = point - vecSearchCenter;
+			VectorNormalize(dir);
+			float dot = DotProduct( dir, forward );
+
+			// Need to be looking at the object more or less
+			if ( dot < 0.8 )
+				continue;
+
+			float dist = CalcDistanceToLine( point, vecSearchCenter, forward );
+
+			ConVarRef sv_debug_player_use("sv_debug_player_use");
+			if ( sv_debug_player_use.GetBool() )
+			{
+				Msg("Radius found %s, dist %.2f\n", pObject->GetClassname(), dist );
+			}
+
+			// Not worried about shit being behind a wall at this point.
+			// Just greedily gobble up all nearby grenades since there's
+			// no penalty to the player for doing so.
+
+			if ( dist < flNearest )
+			{
+				pNearest = pObject;
+				flNearest = dist;
+			}
+		}
+
+		if (pNearest)
+		{
+			// This is a grenade. Use it to pick it up.
+			variant_t emptyVariant;
+			pNearest->AcceptInput( "Use", this, this, emptyVariant, USE_TOGGLE );
+			return true;
+		}
+	}
+#endif
+
 	bool bUsed = BaseClass::PlayerUse();
 
 	if (bUsed)
