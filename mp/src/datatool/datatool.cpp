@@ -77,8 +77,16 @@ int main(int argc, const char** args)
 		sBuffer.resize(iFileSize);
 		g_pFullFileSystem->Read( (void*)sBuffer.data(), iFileSize, fh );
 
-		apbDatas.push_back(da::protobuf::GameData());
-		apbDatas.back().ParseFromString(sBuffer);
+		da::protobuf::GameData pbGameData;
+		pbGameData.ParseFromString(sBuffer);
+
+		if (pbGameData.debug() || pbGameData.cheats())
+		{
+			pszFileName = g_pFullFileSystem->FindNext( ffh );
+			continue;
+		}
+
+		apbDatas.push_back(pbGameData);
 
 		pszFileName = g_pFullFileSystem->FindNext( ffh );
 	}

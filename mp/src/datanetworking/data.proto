@@ -9,6 +9,11 @@ message GameData
 	optional string server_name = 3;
 	optional int32 timestamp = 4;
 	optional PlayerPositions positions = 5;
+	optional bool cheats = 6;
+
+	repeated string characters_chosen = 16;
+	repeated int32 weapons_chosen = 17;
+	repeated int32 skills_chosen = 18;
 }
 
 message PlayerPositions

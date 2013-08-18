@@ -30,36 +30,17 @@ void FillProtoBufVector(da::protobuf::Vector* pVector, const Vector& vecFill)
 
 CDataManager g_DataManager( "CDataManager" );
 
+CDataManager& DataManager()
+{
+	return g_DataManager;
+}
+
 extern bool DASendData(const da::protobuf::GameData& pbGameData, std::string& sError);
 static void SendData( CFunctor **pData, unsigned int nCount )
 {
 	da::protobuf::GameData pbGameData;
-	pbGameData.set_map_name(STRING(gpGlobals->mapname));
 
-#ifdef _DEBUG
-	pbGameData.set_debug(true);
-#else
-	pbGameData.set_debug(false);
-#endif
-
-	const ConVar* pHostname = cvar->FindVar( "hostname" );
-	pbGameData.set_server_name(pHostname->GetString());
-
-	pbGameData.set_timestamp((unsigned)time(NULL));
-
-	da::protobuf::PlayerPositions* pPlayerPositions = pbGameData.mutable_positions();
-
-	const CUtlVector<Vector>& avecPlayerPositions = g_DataManager.GetPlayerPositions();
-
-	auto pPositions = pPlayerPositions->mutable_position();
-	pPositions->Reserve(avecPlayerPositions.Count());
-
-	size_t iDataSize = avecPlayerPositions.Count();
-
-	for (size_t i = 0; i < iDataSize; i++)
-		FillProtoBufVector(pPositions->Add(), avecPlayerPositions[i]);
-
-	g_DataManager.ClearData();
+	g_DataManager.FillProtoBuffer(&pbGameData);
 
 	std::string sError;
 	if (!DASendData(pbGameData, sError))
@@ -113,6 +94,24 @@ void CDataManager::SavePositions()
 
 		m_avecPlayerPositions.AddToTail(pPlayer->GetAbsOrigin());
 	}
+
+	ConVarRef sv_cheats("sv_cheats");
+	m_bCheated |= sv_cheats.GetBool();
+}
+
+void CDataManager::AddCharacterChosen(const char* pszCharacter)
+{
+	m_apszCharactersChosen.AddToTail(pszCharacter);
+}
+
+void CDataManager::AddWeaponChosen(SDKWeaponID eWeapon)
+{
+	m_aeWeaponsChosen.AddToTail(eWeapon);
+}
+
+void CDataManager::AddSkillChosen(SkillID eSkill)
+{
+	m_aeSkillsChosen.AddToTail(eSkill);
 }
 
 void CDataManager::LevelShutdownPostEntity()
@@ -130,6 +129,54 @@ void CDataManager::LevelShutdownPostEntity()
 bool CDataManager::IsSendingData()
 {
 	return !!m_pSendData;
+}
+
+void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
+{
+	pbGameData->set_map_name(STRING(gpGlobals->mapname));
+
+#ifdef _DEBUG
+	pbGameData->set_debug(true);
+#else
+	pbGameData->set_debug(false);
+#endif
+
+	pbGameData->set_cheats(m_bCheated);
+
+	const ConVar* pHostname = cvar->FindVar( "hostname" );
+	pbGameData->set_server_name(pHostname->GetString());
+
+	pbGameData->set_timestamp((unsigned)time(NULL));
+
+	auto pPositions = pbGameData->mutable_positions()->mutable_position();
+	size_t iDataSize = m_avecPlayerPositions.Count();
+	pPositions->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		FillProtoBufVector(pPositions->Add(), m_avecPlayerPositions[i]);
+
+	auto pCharacters = pbGameData->mutable_characters_chosen();
+	iDataSize = m_apszCharactersChosen.Count();
+	pCharacters->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		pCharacters->Add()->assign(m_apszCharactersChosen[i]);
+
+	auto pWeapons = pbGameData->mutable_weapons_chosen();
+	iDataSize = m_aeWeaponsChosen.Count();
+	pWeapons->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		pWeapons->Add(m_aeWeaponsChosen[i]);
+
+	auto pSkills = pbGameData->mutable_skills_chosen();
+	iDataSize = m_aeSkillsChosen.Count();
+	pSkills->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		pSkills->Add(m_aeSkillsChosen[i]);
+
+	ClearData();
 }
 
 void CDataManager::ClearData()
