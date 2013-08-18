@@ -1292,8 +1292,12 @@ bool CClientShadowMgr::Init()
 
 	SetShadowBlobbyCutoffArea( 0.005 );
 
+#ifdef SDK_DLL
+	m_nMaxDepthTextureShadows = 4;
+#else
 	bool bTools = CommandLine()->CheckParm( "-tools" ) != NULL;
 	m_nMaxDepthTextureShadows = bTools ? 4 : 1;	// Just one shadow depth texture in games, more in tools
+#endif
 
 	bool bLowEnd = ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80 );
 
