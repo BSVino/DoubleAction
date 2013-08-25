@@ -1332,7 +1332,7 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 void CSDKPlayer::InitialSpawn( void )
 {
 	m_flTotalStyle = 0;
-	m_bThirdPerson = !!GetUserInfoInt("cl_thirdperson", 0);
+	m_bThirdPerson = !!GetUserInfoInt("da_thirdperson", 0);
 
 	m_iStuntKills = 0;
 	m_iGrenadeKills = 0;

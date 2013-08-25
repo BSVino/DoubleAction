@@ -35,7 +35,7 @@ CSDKInput* SDKInput()
 	return &g_Input;
 }
 
-static ConVar cl_thirdperson( "cl_thirdperson", "0", FCVAR_USERINFO|FCVAR_ARCHIVE, "Choose third person mode." );
+static ConVar da_thirdperson( "da_thirdperson", "1", FCVAR_USERINFO|FCVAR_ARCHIVE, "Choose third person mode." );
 
 void AB_Input_LevelInit()
 {
