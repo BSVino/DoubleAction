@@ -2593,6 +2593,7 @@ void CSDKGameMovement::FullWalkMove ()
 				if (!tr.DidHit ())
 				{
 					mv->SetAbsOrigin (tr.endpos);
+					m_pSDKPlayer->Instructor_LessonLearned("mantel");
 				}
 			}
 		}
