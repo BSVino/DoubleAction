@@ -30,6 +30,7 @@ ConVar da_instructor_lessons_learned("da_instructor_lessons_learned", "", FCVAR_
 CInstructor::CInstructor()
 {
 	m_bActive = true;
+	m_bSideHintShowing = false;
 	m_sLastLesson = "";
 	Initialize();
 }
@@ -94,6 +95,7 @@ void CInstructor::ReadLesson(KeyValues* pData)
 	pLesson->m_iWidth = pData->GetInt("Width", 100);
 	pLesson->m_sNextLesson = pData->GetString("Next", "");
 	pLesson->m_sText = pData->GetString("Text", "");
+	pLesson->m_sSideHintText = pData->GetString("SideHint", "");
 	pLesson->m_flSlideAmount = pData->GetFloat("SlideAmount", 0);
 	pLesson->m_bSlideX = pData->GetInt("SlideX", 0);
 	pLesson->m_iPriority = pData->GetInt("Priority", 0);
@@ -389,8 +391,19 @@ void CInstructor::DisplayLesson(const CUtlString& sLesson)
 	if (pLesson->m_iLearningMethod == CLesson::LEARN_DISPLAYING)
 		pLocalPlayer->Instructor_LessonLearned(sLesson);
 
-	CHudElement* pLessonPanel = gHUD.FindElement("CHudLessonPanel");
-	static_cast<CHudLessonPanel*>(pLessonPanel)->SetLesson(pLesson);
+	int iLessonTrainings = pLocalPlayer->Instructor_GetLessonTrainings(sLesson);
+
+	if (pLesson->m_sSideHintText.Length() && iLessonTrainings == 0)
+	{
+		CHudElement* pLessonPanel = gHUD.FindElement("CHudSideHintPanel");
+		static_cast<CHudSideHintPanel*>(pLessonPanel)->SetLesson(pLesson);
+		m_bSideHintShowing = true;
+	}
+	else
+	{
+		CHudElement* pLessonPanel = gHUD.FindElement("CHudLessonPanel");
+		static_cast<CHudLessonPanel*>(pLessonPanel)->SetLesson(pLesson);
+	}
 }
 
 void CInstructor::ShowLesson()
@@ -403,6 +416,13 @@ void CInstructor::HideLesson()
 	CHudElement* pLessonPanel = gHUD.FindElement("CHudLessonPanel");
 	if (pLessonPanel)
 		static_cast<CHudLessonPanel*>(pLessonPanel)->Reset();
+
+	pLessonPanel = gHUD.FindElement("CHudSideHintPanel");
+	if (pLessonPanel)
+	{
+		m_bSideHintShowing = false;
+		static_cast<CHudSideHintPanel*>(pLessonPanel)->Reset();
+	}
 }
 
 void CInstructor::FinishedLesson(const CUtlString& sLesson, bool bForceNext)
@@ -452,8 +472,10 @@ void C_SDKPlayer::Instructor_Respawn()
 
 void C_SDKPlayer::Instructor_Reset()
 {
-	m_apLessonPriorities.RemoveAll();
-	da_instructor_lessons_learned.SetValue("");
+	m_apLessonProgress.RemoveAll();
+
+	if (m_pInstructor)
+		m_pInstructor->HideLesson();
 }
 
 typedef C_SDKPlayer::CLessonProgress* LessonProgressPointer;
@@ -492,6 +514,9 @@ void C_SDKPlayer::Instructor_Think()
 			oProgress.m_sLessonName = m_pInstructor->GetLessons().Key(i);
 		}
 	}
+
+	if (m_pInstructor->IsSideHintShowing())
+		m_flLastLesson = gpGlobals->curtime;
 
 	if (m_flLastLesson < 0 || gpGlobals->curtime > m_flLastLesson + lesson_nexttime.GetFloat())
 	{
@@ -583,6 +608,21 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 	pLessonProgress->m_flLastTimeLearned = gpGlobals->curtime;
 	pLessonProgress->m_iTimesLearned++;
 
+	CHudElement* pLessonPanel = gHUD.FindElement("CHudSideHintPanel");
+	if (pLessonPanel)
+	{
+		CHudSideHintPanel* pSideHint = static_cast<CHudSideHintPanel*>(pLessonPanel);
+
+		if (pSideHint->IsVisible() && pSideHint->GetLesson() && pSideHint->GetLesson()->m_sLessonName == sLesson)
+		{
+			m_pInstructor->HideLesson();
+
+			// Play a sound?
+
+			pSideHint->Reset();
+		}
+	}
+
 	CLesson* pLesson = m_pInstructor->GetLesson(sLesson);
 
 	if (lesson_debug.GetBool())
@@ -644,6 +684,28 @@ bool C_SDKPlayer::Instructor_IsLessonLearned(const CLessonProgress* pLessonProgr
 		return true;
 
 	return pLessonProgress->m_iTimesLearned >= pLesson->m_iTimesToLearn;
+}
+
+int C_SDKPlayer::Instructor_GetLessonTrainings(const CUtlString& sLesson)
+{
+	if (!m_pInstructor)
+		return -1;
+
+	if (!m_pInstructor->IsInitialized())
+		m_pInstructor->Initialize();
+
+	int iLesson = m_apLessonProgress.Find(sLesson);
+	Assert(iLesson != -1);
+	if (iLesson == -1)
+		return 0;
+
+	CLessonProgress* pLessonProgress = &m_apLessonProgress[iLesson];
+
+	Assert(pLessonProgress);
+	if (!pLessonProgress)
+		return 0;
+
+	return pLessonProgress->m_iTimesLearned;
 }
 
 // Can this lesson be displayed right now?
@@ -972,6 +1034,240 @@ void CHudLessonPanel::SetLesson(CLesson* pLesson)
 	LocalizeAndDisplay(pLesson->m_sText.Get(), pLesson->m_sText.Get());
 }
 
+DECLARE_HUDELEMENT( CHudSideHintPanel );
+
+CHudSideHintPanel::CHudSideHintPanel( const char *pElementName ) : BaseClass(NULL, "HudSideHintPanel"), CHudElement( pElementName )
+{
+	vgui::Panel *pParent = g_pClientMode->GetViewport();
+	SetParent( pParent );
+	SetVisible( false );
+	m_pLabel = new vgui::Label( this, "HudSideHintPanelLabel", "" );
+	m_pLesson = NULL;
+}
+
+void CHudSideHintPanel::Init()
+{
+	HOOK_MESSAGE( LessonLearned );
+}
+
+void CHudSideHintPanel::Reset()
+{
+	SetHintText( NULL );
+	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "SideHintHide" ); 
+	m_bLastLabelUpdateHack = true;
+}
+
+void CHudSideHintPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	SetFgColor( GetFgColor() );
+	m_hFont = pScheme->GetFont( "HudHintTextLarge", true );
+	m_pLabel->SetBgColor( Color( 0, 0, 0, 150 ) );
+	m_pLabel->SetPaintBackgroundType( 2 );
+	m_pLabel->SetSize( 0, GetTall() );		// Start tiny, it'll grow.
+}
+
+bool CHudSideHintPanel::SetHintText( wchar_t *text )
+{
+	// clear the existing text
+	for (int i = 0; i < m_Labels.Count(); i++)
+	{
+		m_Labels[i]->MarkForDeletion();
+	}
+	m_Labels.RemoveAll();
+
+	wchar_t *p = text;
+
+	while ( p )
+	{
+		wchar_t *line = p;
+		wchar_t *end = wcschr( p, L'\n' );
+		int linelengthbytes = 0;
+		if ( end )
+		{
+			//*end = 0;	//eek
+			p = end+1;
+			linelengthbytes = ( end - line ) * 2;
+		}
+		else
+		{
+			p = NULL;
+		}
+
+		// replace any key references with bound keys
+		wchar_t buf[512];
+		if (linelengthbytes)
+			UTIL_ReplaceKeyBindings( line, linelengthbytes, buf, sizeof( buf ) );
+		else
+		{
+			if (!p)
+				UTIL_ReplaceKeyBindings( line, linelengthbytes, buf, sizeof( buf ) );
+			else
+				buf[0] = '\0';
+		}
+
+		// put it in a label
+		vgui::Label *label = vgui::SETUP_PANEL(new vgui::Label(this, NULL, buf));
+		label->SetFont( m_hFont );
+		label->SetPaintBackgroundEnabled( false );
+		label->SetPaintBorderEnabled( false );
+		label->SizeToContents();
+		label->SetContentAlignment( vgui::Label::a_west );
+		label->SetFgColor( GetFgColor() );
+		m_Labels.AddToTail( vgui::SETUP_PANEL(label) );
+	}
+
+	InvalidateLayout( true );
+
+	return true;
+}
+
+void CHudSideHintPanel::PerformLayout()
+{
+	BaseClass::PerformLayout();
+	int i;
+
+	int wide, tall;
+	GetSize( wide, tall );
+
+	// find the widest line
+	int iDesiredLabelWide = 0;
+	for ( i=0; i < m_Labels.Count(); ++i )
+	{
+		iDesiredLabelWide = std::max( iDesiredLabelWide, m_Labels[i]->GetWide() );
+	}
+
+	// find the total height
+	int fontTall = vgui::surface()->GetFontTall( m_hFont );
+	int labelTall = fontTall * m_Labels.Count();
+
+	iDesiredLabelWide += m_iTextX*2;
+	labelTall += m_iTextY*2;
+
+	// Now clamp it to our animation size
+	iDesiredLabelWide = (iDesiredLabelWide * m_flLabelSizePercentage);
+
+	int x, y;
+	if ( m_iCenterX < 0 )
+	{
+		x = 0;
+	}
+	else if ( m_iCenterX > 0 )
+	{
+		x = wide - iDesiredLabelWide;
+	}
+	else
+	{
+		x = (wide - iDesiredLabelWide) / 2;
+	}
+
+	if ( m_iCenterY > 0 )
+	{
+		y = 0;
+	}
+	else if ( m_iCenterY < 0 )
+	{
+		y = tall - labelTall;
+	}
+	else
+	{
+		y = (tall - labelTall) / 2;
+	}
+
+	x = std::max(x,0);
+	y = std::max(y,0);
+
+	iDesiredLabelWide = std::min(iDesiredLabelWide,wide);
+	m_pLabel->SetBounds( x, y, iDesiredLabelWide, labelTall );
+
+	// now lay out the sub-labels
+	for ( i=0; i<m_Labels.Count(); ++i )
+	{
+		m_Labels[i]->SetPos( 10, y + m_iTextY + i*fontTall );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Updates the label color each frame
+//-----------------------------------------------------------------------------
+void CHudSideHintPanel::OnThink()
+{
+	m_pLabel->SetFgColor(GetFgColor());
+	for (int i = 0; i < m_Labels.Count(); i++)
+	{
+		m_Labels[i]->SetFgColor(GetFgColor());
+	}
+
+	// If our label size isn't at the extreme's, we're sliding open / closed
+	// This is a hack to get around InvalideLayout() not getting called when
+	// m_flLabelSizePercentage is changed via a HudAnimation.
+	if ( m_flLabelSizePercentage != 0.0 && m_flLabelSizePercentage != 1.0 || m_bLastLabelUpdateHack )
+	{
+		m_bLastLabelUpdateHack = (m_flLabelSizePercentage != 0.0 && m_flLabelSizePercentage != 1.0);
+		InvalidateLayout();
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Localize, display, and animate the hud element
+//-----------------------------------------------------------------------------
+void CHudSideHintPanel::LocalizeAndDisplay( const char *pszHudTxtMsg, const char *szRawString )
+{
+	static wchar_t szBuf[128];
+	static wchar_t *pszBuf;
+
+	// init buffers & pointers
+	szBuf[0] = 0;
+	pszBuf = szBuf;
+
+	// try to localize
+	if ( pszHudTxtMsg )
+	{
+		pszBuf = g_pVGuiLocalize->Find( pszHudTxtMsg );
+	}
+	else
+	{
+		pszBuf = g_pVGuiLocalize->Find( szRawString );
+	}
+
+	if ( !pszBuf )
+	{
+		// use plain ASCII string 
+		g_pVGuiLocalize->ConvertANSIToUnicode( szRawString, szBuf, sizeof(szBuf) );
+		pszBuf = szBuf;
+	}
+
+	// make it visible
+	if ( SetHintText( pszBuf ) )
+	{
+		SetVisible( true );
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "SideHintShow" ); 
+
+		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+		if ( pLocalPlayer )
+		{
+			pLocalPlayer->EmitSound( "Hud.Hint" );
+
+			if ( pLocalPlayer->Hints() )
+			{
+				pLocalPlayer->Hints()->PlayedAHint();
+			}
+		}
+	}
+	else
+	{
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "SideHintHide" ); 
+	}
+}
+
+void CHudSideHintPanel::SetLesson(CLesson* pLesson)
+{
+	m_pLesson = pLesson;
+
+	LocalizeAndDisplay(pLesson->m_sSideHintText.Get(), pLesson->m_sSideHintText.Get());
+}
+
 bool CSDKPlayer::LessonPriorityLess::Less( const LessonPointer& lhs, const LessonPointer& rhs, void *pCtx )
 {
 	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -985,7 +1281,12 @@ bool CSDKPlayer::LessonPriorityLess::Less( const LessonPointer& lhs, const Lesso
 
 void CC_ResetLessons()
 {
+	da_instructor_lessons_learned.SetValue("");
+
 	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
 	pPlayer->Instructor_Initialize();
 	pPlayer->Instructor_Reset();
 }

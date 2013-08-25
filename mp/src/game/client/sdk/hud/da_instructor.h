@@ -44,6 +44,7 @@ public:
 	CUtlString                      m_sLessonName;
 	CUtlString                      m_sNextLesson;
 	CUtlString                      m_sText;
+	CUtlString                      m_sSideHintText;
 	int                             m_iWidth;
 	bool                            m_bAutoNext;
 	bool                            m_bKillOnFinish;
@@ -100,6 +101,45 @@ protected:
 	CLesson*    m_pLesson;
 };
 
+class CHudSideHintPanel : public vgui::Panel, public CHudElement
+{
+	DECLARE_CLASS_SIMPLE( CHudSideHintPanel, vgui::Panel );
+
+public:
+	CHudSideHintPanel( const char *pElementName );
+
+	void Init();
+	void Reset();
+
+	bool SetHintText( wchar_t *text );
+	void LocalizeAndDisplay( const char *pszHudTxtMsg, const char *szRawString );
+
+	virtual void PerformLayout();
+
+	void SetLesson( CLesson* pLesson );
+	CLesson* GetLesson() { return m_pLesson; }
+
+protected:
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void OnThink();
+
+protected:
+	vgui::HFont  m_hFont;
+	Color        m_bgColor;
+	vgui::Label* m_pLabel;
+	CUtlVector<vgui::Label *> m_Labels;
+
+	CPanelAnimationVarAliasType( int, m_iTextX, "text_xpos", "8", "proportional_int" );
+	CPanelAnimationVarAliasType( int, m_iTextY, "text_ypos", "8", "proportional_int" );
+	CPanelAnimationVarAliasType( int, m_iCenterX, "center_x", "0", "proportional_int" );
+	CPanelAnimationVarAliasType( int, m_iCenterY, "center_y", "0", "proportional_int" );
+
+	bool        m_bLastLabelUpdateHack;
+	CPanelAnimationVar( float, m_flLabelSizePercentage, "HintSize", "0" );
+
+	CLesson*    m_pLesson;
+};
+
 class CInstructor
 {
 	friend class CLessonPanel;
@@ -131,10 +171,13 @@ public:
 
 	CLesson*        GetCurrentLesson() { return m_apLessons[m_apLessons.Find(m_sCurrentLesson.Get())]; };
 
+	bool            IsSideHintShowing() { return m_bSideHintShowing; }
+
 	static pfnConditionsMet GetBaseConditions(const CUtlString& sCondition);
 
 protected:
 	bool                        m_bActive;
+	bool                        m_bSideHintShowing;
 	CUtlMap<CUtlString, CLesson*> m_apLessons;
 	CUtlString                  m_sLastLesson;
 	CUtlString                  m_sCurrentLesson;
