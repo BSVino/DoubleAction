@@ -1224,6 +1224,8 @@ void CSDKPlayerShared::StartWallFlip()
 	m_iWallFlipCount++;
 
 	m_pOuter->SetGravity(0.8f);
+
+	m_pOuter->Instructor_LessonLearned("wallflip");
 }
 
 void CSDKPlayerShared::AccumulateWallFlipTime()
