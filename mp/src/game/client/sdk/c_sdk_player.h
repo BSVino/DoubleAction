@@ -233,6 +233,7 @@ public:
 	virtual void	Instructor_Initialize();
 	virtual void	Instructor_Think();
 	virtual void	Instructor_Respawn();
+	virtual void	Instructor_Reset();
 
 	virtual void	Instructor_LessonLearned(const CUtlString& sLesson);
 	virtual bool	Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress);

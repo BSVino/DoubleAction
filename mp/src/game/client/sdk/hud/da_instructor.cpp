@@ -450,6 +450,12 @@ void C_SDKPlayer::Instructor_Respawn()
 	m_flLastLesson = -1;
 }
 
+void C_SDKPlayer::Instructor_Reset()
+{
+	m_apLessonPriorities.RemoveAll();
+	da_instructor_lessons_learned.SetValue("");
+}
+
 typedef C_SDKPlayer::CLessonProgress* LessonProgressPointer;
 bool LessonPriorityCompare( const LessonProgressPointer& l, const LessonProgressPointer& r )
 {
@@ -981,6 +987,7 @@ void CC_ResetLessons()
 {
 	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	pPlayer->Instructor_Initialize();
+	pPlayer->Instructor_Reset();
 }
 
 static ConCommand lesson_reset("lesson_reset", CC_ResetLessons, "Reset the game instructor lessons.");
