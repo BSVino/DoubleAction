@@ -239,7 +239,12 @@ void CHudStyleBar::Paint()
 		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.1f, 1)*255);
 	}
 	else
-		clrBar = gHUD.m_clrNormal;
+	{
+		int r = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.r()/2, gHUD.m_clrNormal.r());
+		int g = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.g()/2, gHUD.m_clrNormal.g());
+		int b = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.b()/2, gHUD.m_clrNormal.b());
+		clrBar.SetColor(r, g, b, gHUD.m_clrNormal.a());
+	}
 
 	surface()->DrawSetColor( clrBar );
 
@@ -250,7 +255,24 @@ void CHudStyleBar::Paint()
 		flPercent = m_flStyle / da_stylemeteractivationcost.GetFloat();
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
-	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap, m_flGap + flBarHeight*(1-flPercent), iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap, flBarHeight );
+
+	int iBarLeft = iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
+	int iBarRight = iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap;
+	surface()->DrawFilledRect( iBarLeft, m_flGap + flBarHeight*(1-flPercent), iBarRight, flBarHeight );
+
+	float flPulseTime = 0.6f;
+	float flAlphaRamp = RemapValClamped(fmod(gpGlobals->curtime, flPulseTime), 0, flPulseTime, 0, 1);
+	int iPulseAlpha = RemapValClamped(Bias(flAlphaRamp, 0.1f), 0, flPulseTime, 50, 10);
+	surface()->DrawSetColor( Color(255, 255, 255, iPulseAlpha) );
+
+	float flWidth = 0.1f;
+	float flBottom = RemapValClamped(fmod(gpGlobals->curtime, flPulseTime), 0, flPulseTime, -flWidth, 1);
+	float flTop = flBottom + flWidth;
+
+	flBottom = clamp(flBottom, 0, flPercent);
+	flTop = clamp(flTop, 0, flPercent);
+
+	surface()->DrawFilledRect( iBarLeft + 2, m_flGap + flBarHeight*(1-flTop), iBarRight - 2, flBarHeight*(1-flBottom) );
 
 	if (pStyleTexture)
 	{
