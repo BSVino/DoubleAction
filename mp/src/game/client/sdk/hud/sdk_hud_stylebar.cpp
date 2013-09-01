@@ -81,7 +81,8 @@ public:
 	void	MsgFunc_StyleAnnouncement( bf_read &msg );
 
 private:
-	int		m_flStyle;
+	float   m_flCurrentStyle;
+	int		m_flGoalStyle;
 
 	CPanelAnimationVarAliasType( float, m_flGap, "Gap", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
@@ -150,7 +151,7 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 
 void CHudStyleBar::Reset()
 {
-	m_flStyle = 0;
+	m_flCurrentStyle = m_flGoalStyle = 0;
 	m_aAnnouncements.RemoveAll();
 }
 
@@ -169,10 +170,8 @@ void CHudStyleBar::OnThink()
 
 	float flStyle = pPlayer->GetStylePoints();
 
-	if ( flStyle == m_flStyle )
-		return;
-
-	m_flStyle = flStyle;
+	m_flGoalStyle = flStyle;
+	m_flCurrentStyle = Approach(m_flGoalStyle, m_flCurrentStyle, RemapValClamped(fabs((float)m_flGoalStyle-m_flCurrentStyle), 0, 10, gpGlobals->frametime*10, gpGlobals->frametime*100));
 
 	int iNext;
 	for (int i = m_aAnnouncements.Head(); i != m_aAnnouncements.InvalidIndex(); i = iNext)
@@ -240,9 +239,9 @@ void CHudStyleBar::Paint()
 	}
 	else
 	{
-		int r = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.r()/2, gHUD.m_clrNormal.r());
-		int g = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.g()/2, gHUD.m_clrNormal.g());
-		int b = Lerp(m_flStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.b()/2, gHUD.m_clrNormal.b());
+		int r = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.r()/2, gHUD.m_clrNormal.r());
+		int g = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.g()/2, gHUD.m_clrNormal.g());
+		int b = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.b()/2, gHUD.m_clrNormal.b());
 		clrBar.SetColor(r, g, b, gHUD.m_clrNormal.a());
 	}
 
@@ -252,7 +251,7 @@ void CHudStyleBar::Paint()
 	if (pPlayer->IsStyleSkillActive())
 		flPercent = min(pPlayer->GetStyleSkillCharge() / 100, 1);
 	else
-		flPercent = m_flStyle / da_stylemeteractivationcost.GetFloat();
+		flPercent = m_flCurrentStyle / da_stylemeteractivationcost.GetFloat();
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 
