@@ -1442,7 +1442,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				}
 			}
 
-			if ( m_Shared.IsDiving() || m_Shared.IsSliding() )
+			if ( m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling() )
 			{
 				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
 				VectorNormalize( vecToPlayer );
