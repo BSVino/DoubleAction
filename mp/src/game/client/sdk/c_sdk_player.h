@@ -31,6 +31,7 @@ public:
 		{
 			m_flLastTimeShowed = 0;
 			m_iTimesLearned = 0;
+			m_iTimesShown = 0;
 			m_flLastTimeLearned = 0;
 		}
 
@@ -38,6 +39,7 @@ public:
 		CUtlString     m_sLessonName;
 		double         m_flLastTimeShowed;
 		int            m_iTimesLearned;
+		int            m_iTimesShown;
 		double         m_flLastTimeLearned;
 	};
 
@@ -236,6 +238,7 @@ public:
 	virtual void	Instructor_Reset();
 
 	virtual void	Instructor_LessonLearned(const CUtlString& sLesson);
+	virtual void	Instructor_LessonShowed(const CUtlString& sLesson);
 	virtual bool	Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress);
 	virtual int     Instructor_GetLessonTrainings(const CUtlString& sLesson);
 	virtual bool	Instructor_IsLessonValid(const CLessonProgress* pLessonProgress);

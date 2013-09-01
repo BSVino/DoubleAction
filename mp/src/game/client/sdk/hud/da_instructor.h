@@ -57,6 +57,7 @@ public:
 	lesson_t                        m_iLessonType;
 	learn_t                         m_iLearningMethod;
 	int                             m_iTimesToLearn;
+	int                             m_iMaxShows;
 
 	pfnConditionsMet                m_pfnConditions;
 };

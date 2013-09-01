@@ -121,6 +121,7 @@ void CInstructor::ReadLesson(KeyValues* pData)
 		pLesson->m_iLearningMethod = CLesson::LEARN_PERFORMING;
 
 	pLesson->m_iTimesToLearn = pData->GetInt("TimesToLearn", 1);
+	pLesson->m_iMaxShows = pData->GetInt("MaxShows", -1);
 	pLesson->m_pfnConditions = Game_GetInstructorConditions(pData->GetString("Conditions")); // A dirty hack, but not a scary one.
 }
 
@@ -391,6 +392,8 @@ void CInstructor::DisplayLesson(const CUtlString& sLesson)
 	if (pLesson->m_iLearningMethod == CLesson::LEARN_DISPLAYING)
 		pLocalPlayer->Instructor_LessonLearned(sLesson);
 
+	pLocalPlayer->Instructor_LessonShowed(sLesson);
+
 	int iLessonTrainings = pLocalPlayer->Instructor_GetLessonTrainings(sLesson);
 
 	if (pLesson->m_sSideHintText.Length() && iLessonTrainings == 0)
@@ -656,6 +659,28 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 	}
 }
 
+void C_SDKPlayer::Instructor_LessonShowed(const CUtlString& sLesson)
+{
+	if (!m_pInstructor)
+		return;
+
+	if (!m_pInstructor->IsInitialized())
+		m_pInstructor->Initialize();
+
+	int iLesson = m_apLessonProgress.Find(sLesson);
+	Assert(iLesson != -1);
+	if (iLesson == -1)
+		return;
+
+	CLessonProgress* pLessonProgress = &m_apLessonProgress[iLesson];
+
+	Assert(pLessonProgress);
+	if (!pLessonProgress)
+		return;
+
+	pLessonProgress->m_iTimesShown++;
+}
+
 bool C_SDKPlayer::Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress)
 {
 	if (!m_pInstructor)
@@ -728,6 +753,9 @@ bool C_SDKPlayer::Instructor_IsLessonValid(const CLessonProgress* pLessonProgres
 		return false;
 
 	if (pLessonProgress->m_flLastTimeShowed != 0 && gpGlobals->curtime < pLessonProgress->m_flLastTimeShowed + lesson_downtime.GetFloat())
+		return false;
+
+	if (pLesson->m_iMaxShows > 0 && pLessonProgress->m_iTimesShown > pLesson->m_iMaxShows)
 		return false;
 
 	for (int i = 0; i < pLesson->m_asPrerequisites.Count(); i++)
