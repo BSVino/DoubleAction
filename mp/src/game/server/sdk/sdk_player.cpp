@@ -3935,6 +3935,10 @@ void CSDKPlayer::ActivateMeter()
 			GiveNamedItem( "weapon_grenade" );
 
 		SendNotice(NOTICE_TROLL);
+
+		// They used the superslow, empty the style meter.
+		m_flStyleSkillCharge = 0;
+		SetStylePoints(0);
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 	{
