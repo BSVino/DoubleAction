@@ -360,7 +360,7 @@ void CSDKGameRules::ReCalculateSlowMo()
 
 		CSDKPlayer* pSDKPlayer = static_cast<CSDKPlayer*>(pPlayer);
 
-		if (pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE)
+		if (pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE || pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
 			pSDKPlayer->SetSlowMoType(SLOWMO_NONE);
 	}
 
@@ -378,12 +378,10 @@ void CSDKGameRules::ReCalculateSlowMo()
 		else
 #endif
 
-		// If the player is passive it means they've already been reached recursively.
-		// If the player activated their own slowmo then they don't need to be calculated.
-		if (pSDKPlayer->GetSlowMoType() == SLOWMO_PASSIVE || pSDKPlayer->GetSlowMoType() == SLOWMO_ACTIVATED || pSDKPlayer->GetSlowMoType() == SLOWMO_STYLESKILL)
-			GiveSlowMoToNearbyPlayers(pSDKPlayer);
-		else
+		if (pSDKPlayer->GetSlowMoType() == SLOWMO_NONE)
 			CalculateSlowMoForPlayer(pSDKPlayer);
+		else
+			GiveSlowMoToNearbyPlayers(pSDKPlayer);
 	}
 
 	m_flNextSlowMoUpdate = gpGlobals->curtime + 0.2f;
@@ -415,7 +413,7 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 		return;
 	}
 
-	bool bOtherInSlow = false;
+	slowmo_type eOtherInSlow = SLOWMO_NONE;
 
 	CUtlVector<CSDKPlayer*> apOthersInPVS;
 
@@ -444,7 +442,11 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 		{
 			if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() < da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() || pOtherPlayer->IsVisible(pPlayer))
 			{
-				bOtherInSlow = true;
+				if (pOtherPlayer->GetSlowMoType() == SLOWMO_STYLESKILL || pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
+					eOtherInSlow = SLOWMO_PASSIVE_SUPER;
+				else
+					eOtherInSlow = SLOWMO_PASSIVE;
+
 				break;
 			}
 		}
@@ -462,10 +464,10 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 	}
 
 	// If any of these players are in slow then I'm in slow too.
-	if (bOtherInSlow)
-		pPlayer->SetSlowMoType(SLOWMO_PASSIVE);
-	else
+	if (eOtherInSlow == SLOWMO_NONE)
 		pPlayer->SetSlowMoType(SLOWMO_NONE);
+	else
+		pPlayer->SetSlowMoType(eOtherInSlow);
 }
 
 void CSDKGameRules::PlayerSlowMoUpdate(CSDKPlayer* pPlayer)
@@ -516,7 +518,7 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 		if (pOtherPlayer->GetSlowMoType() == SLOWMO_ACTIVATED)
 			continue;
 
-		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE)
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
 			continue;
 
 		if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() > da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() && !pOtherPlayer->IsVisible(pPlayer))
@@ -529,11 +531,20 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 	{
 		CSDKPlayer* pOtherPlayer = apOthersInPVS[i];
 
-		// It could have been already done by a previous iteration of the recursion below.
-		if (pOtherPlayer->GetSlowMoType() != SLOWMO_NONE)
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_STYLESKILL)
 			continue;
 
-		pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_ACTIVATED)
+			continue;
+
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
+			continue;
+
+		if (pPlayer->GetSlowMoType() == SLOWMO_STYLESKILL || pPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
+			pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE_SUPER);
+		else
+			pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
+
 		GiveSlowMoToNearbyPlayers(pOtherPlayer);
 	}
 }

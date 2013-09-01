@@ -233,10 +233,11 @@ enum
 
 typedef enum
 {
-	SLOWMO_NONE,		// I'm not in slow mo
-	SLOWMO_PASSIVE,		// Someone around me activated it
-	SLOWMO_ACTIVATED,	// I activated it from my points reserve
-	SLOWMO_STYLESKILL,	// I activated it from my style skill
+	SLOWMO_NONE,          // I'm not in slow mo
+	SLOWMO_PASSIVE_SUPER, // Someone around me activated super slow mo
+	SLOWMO_PASSIVE,       // Someone around me activated regular slow mo
+	SLOWMO_ACTIVATED,     // I activated it from my points reserve
+	SLOWMO_STYLESKILL,    // I activated it from my style skill
 } slowmo_type;
 
 // Player avoidance
