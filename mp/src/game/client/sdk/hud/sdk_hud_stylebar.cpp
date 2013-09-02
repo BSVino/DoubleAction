@@ -11,8 +11,9 @@
 // implementation of CHudHealth class
 //
 #include "cbase.h"
-#include "hud.h"
-#include "hud_macros.h"
+
+#include "sdk_hud_stylebar.h"
+
 #include "view.h"
 
 #include "iclientmode.h"
@@ -24,18 +25,16 @@
 
 #include <vgui/ILocalize.h>
 
-using namespace vgui;
-
-#include "hudelement.h"
 #include "hud_numericdisplay.h"
 #include "c_sdk_player.h"
+#include "sdk_hud_ammo.h"
 
 #include "convar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#include "da.h"
+using namespace vgui;
 
 static const char* g_apszAnnouncementTextures[] = {
 	"announcement_cool",
@@ -62,43 +61,6 @@ static const char* g_apszAnnouncementTextures[] = {
 	"announcement_headshot",
 	"announcement_point_blank",
 	"announcement_execution",
-};
-
-class CHudStyleBar : public CHudElement, public vgui::Panel
-{
-	DECLARE_CLASS_SIMPLE( CHudStyleBar, vgui::Panel );
-
-public:
-	CHudStyleBar( const char *pElementName );
-	virtual void Init( void );
-	virtual void VidInit( void );
-	virtual void Reset( void );
-	virtual void OnThink();
-
-	virtual void Paint();
-	virtual void PaintBackground() {};
-
-	void	MsgFunc_StyleAnnouncement( bf_read &msg );
-
-private:
-	float   m_flCurrentStyle;
-	int		m_flGoalStyle;
-
-	CPanelAnimationVarAliasType( float, m_flGap, "Gap", "2", "proportional_float" );
-	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
-
-	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
-	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];
-
-	class CAnnouncement
-	{
-	public:
-		float          m_flStartTime;
-		announcement_t m_eAnnouncement;
-		style_point_t  m_ePointStyle;
-		float          m_flBarPosition;
-	};
-	CUtlLinkedList<CAnnouncement> m_aAnnouncements;
 };
 
 DECLARE_HUDELEMENT( CHudStyleBar );
@@ -149,15 +111,149 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 	m_aAnnouncements.AddToTail(oAnnouncement);
 }
 
+void CHudStyleBar::Notice(notice_t eNotice)
+{
+	if (eNotice == NOTICE_MARKSMAN || eNotice == NOTICE_TROLL || eNotice == NOTICE_BOUNCER
+		|| eNotice == NOTICE_ATHLETIC || eNotice == NOTICE_SUPERSLO || eNotice == NOTICE_RESILIENT)
+	{
+		m_flStyleIconLerpStart = gpGlobals->curtime;
+	}
+}
+
+float CHudStyleBar::GetIconX()
+{
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), 350);
+}
+
+float CHudStyleBar::GetIconY()
+{
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), 400);
+}
+
+float CHudStyleBar::GetIconW()
+{
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), 60);
+}
+
+float CHudStyleBar::GetIconH()
+{
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), 60);
+}
+
 void CHudStyleBar::Reset()
 {
 	m_flCurrentStyle = m_flGoalStyle = 0;
 	m_aAnnouncements.RemoveAll();
+	m_flStyleIconLerpStart = 0;
 }
 
 void CHudStyleBar::VidInit()
 {
 	Reset();
+}
+
+void CHudStyleBar::ApplySettings(KeyValues *inResourceData)
+{
+	BaseClass::ApplySettings(inResourceData);
+
+	int wide, tall;
+
+	int screenWide, screenTall;
+	surface()->GetScreenSize(screenWide, screenTall);
+
+	wide = screenWide; 
+	tall = scheme()->GetProportionalScaledValueEx(GetScheme(), 480);
+
+	const char *xstr = inResourceData->GetString( "barxpos", NULL );
+	const char *ystr = inResourceData->GetString( "barypos", NULL );
+	if (xstr)
+	{
+		bool bRightAligned = false;
+		bool bCenterAligned = false;
+
+		// look for alignment flags
+		if (xstr[0] == 'r' || xstr[0] == 'R')
+		{
+			bRightAligned = true;
+			xstr++;
+		}
+		else if (xstr[0] == 'c' || xstr[0] == 'C')
+		{
+			bCenterAligned = true;
+			xstr++;
+		}
+
+		// get the value
+		m_flElementXPos = atoi(xstr);
+
+		// scale the x up to our screen co-ords
+		if ( IsProportional() )
+			m_flElementXPos = scheme()->GetProportionalScaledValueEx(GetScheme(), m_flElementXPos);
+
+		// now correct the alignment
+		if (bRightAligned)
+			m_flElementXPos = screenWide - m_flElementXPos; 
+		else if (bCenterAligned)
+			m_flElementXPos = (screenWide / 2) + m_flElementXPos;
+	}
+
+	if (ystr)
+	{
+		bool bBottomAligned = false;
+		bool bCenterAligned = false;
+
+		// look for alignment flags
+		if (ystr[0] == 'r' || ystr[0] == 'R')
+		{
+			bBottomAligned = true;
+			ystr++;
+		}
+		else if (ystr[0] == 'c' || ystr[0] == 'C')
+		{
+			bCenterAligned = true;
+			ystr++;
+		}
+
+		m_flElementYPos = atoi(ystr);
+		if (IsProportional())
+			// scale the y up to our screen co-ords
+			m_flElementYPos = scheme()->GetProportionalScaledValueEx(GetScheme(), m_flElementYPos);
+
+		// now correct the alignment
+		if (bBottomAligned)
+			m_flElementYPos = screenTall - m_flElementYPos; 
+		else if (bCenterAligned)
+			m_flElementYPos = (screenTall / 2) + m_flElementYPos;
+	}
+
+	const char *wstr = inResourceData->GetString( "barwide", NULL );
+	if ( wstr )
+	{
+		bool bFull = false;
+		if (wstr[0] == 'f' || wstr[0] == 'F')
+		{
+			bFull = true;
+			wstr++;
+		}
+
+		m_flElementWide = atof(wstr);
+		if ( IsProportional() )
+		{
+			// scale the x and y up to our screen co-ords
+			m_flElementWide = scheme()->GetProportionalScaledValueEx(GetScheme(), m_flElementWide);
+		}
+
+		// now correct the alignment
+		if (bFull)
+			m_flElementWide = screenWide - m_flElementWide; 
+	}
+
+	m_flElementTall = inResourceData->GetInt( "bartall", tall );
+	if ( IsProportional() )
+	{
+		// scale the x and y up to our screen co-ords
+		m_flElementTall = scheme()->GetProportionalScaledValueEx(GetScheme(), m_flElementTall);
+	}
 }
 
 ConVar hud_announcementtime("hud_announcementtime", "3", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long announcements stick around, in seconds.");
@@ -221,15 +317,23 @@ void CHudStyleBar::Paint()
 
 	if (pStyleTexture)
 	{
-		flStyleTextureWidth = pStyleTexture->EffectiveWidth(1);
-		flStyleTextureHeight = pStyleTexture->EffectiveHeight(1);
+		flStyleTextureWidth = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveWidth(1)) * 0.8f;
+		flStyleTextureHeight = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveHeight(1)) * 0.8f;
 	}
 
-	int iWidth, iHeight;
-	GetSize(iWidth, iHeight);
+	int iWidth = m_flElementWide;
+	int iHeight = m_flElementTall;
+
+	int flScreenWide, flScreenTall;
+	surface()->GetScreenSize(flScreenWide, flScreenTall);
 
 	surface()->DrawSetColor( Color(0, 0, 0, 100) );
-	surface()->DrawFilledRect( iWidth - flStyleTextureWidth/2 - m_flBarWidth/2, 0, iWidth - flStyleTextureWidth/2 + m_flBarWidth/2, iHeight - flStyleTextureHeight - m_flGap );
+	surface()->DrawFilledRect(
+		m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2,
+		m_flElementYPos,
+		m_flElementXPos + iWidth - flStyleTextureWidth/2 + m_flBarWidth/2,
+		m_flElementYPos + iHeight - flStyleTextureHeight - m_flGap
+		);
 
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
@@ -255,9 +359,9 @@ void CHudStyleBar::Paint()
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 
-	int iBarLeft = iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
-	int iBarRight = iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap;
-	surface()->DrawFilledRect( iBarLeft, m_flGap + flBarHeight*(1-flPercent), iBarRight, flBarHeight );
+	int iBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
+	int iBarRight = m_flElementXPos + iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap;
+	surface()->DrawFilledRect( iBarLeft, m_flElementYPos + m_flGap + flBarHeight*(1-flPercent), iBarRight, m_flElementYPos + flBarHeight );
 
 	float flPulseTime = 0.6f;
 	float flAlphaRamp = RemapValClamped(fmod(gpGlobals->curtime, flPulseTime), 0, flPulseTime, 0, 1);
@@ -271,7 +375,7 @@ void CHudStyleBar::Paint()
 	flBottom = clamp(flBottom, 0, flPercent);
 	flTop = clamp(flTop, 0, flPercent);
 
-	surface()->DrawFilledRect( iBarLeft + 2, m_flGap + flBarHeight*(1-flTop), iBarRight - 2, flBarHeight*(1-flBottom) );
+	surface()->DrawFilledRect( iBarLeft + 2, m_flElementYPos + m_flGap + flBarHeight*(1-flTop), iBarRight - 2, m_flElementYPos + flBarHeight*(1-flBottom) );
 
 	if (pStyleTexture)
 	{
@@ -286,8 +390,10 @@ void CHudStyleBar::Paint()
 			flRed = 1;
 		}
 
+		float flBarIconX = m_flElementXPos + iWidth - flStyleTextureWidth;
+		float flBarIconY = m_flElementYPos + iHeight - flStyleTextureHeight;
 		pStyleTexture->DrawSelf(
-				iWidth - flStyleTextureWidth, iHeight - flStyleTextureHeight,
+				flBarIconX, flBarIconY,
 				flStyleTextureWidth, flStyleTextureHeight,
 				Color(
 					Lerp(flRed, 255, gHUD.m_clrCaution.r()),
@@ -296,6 +402,63 @@ void CHudStyleBar::Paint()
 					255*flAlpha
 				)
 			);
+
+		float flIconXPos = GetIconX();
+		float flIconYPos = GetIconY();
+		float flIconWide = GetIconW();
+		float flIconTall = GetIconH();
+
+		if (pPlayer->IsStyleSkillActive())
+		{
+			pStyleTexture->DrawSelf(
+					flIconXPos, flIconYPos,
+					flIconWide, flIconTall,
+					Color( 255, 255, 255, 255 )
+				);
+		}
+
+		float flLerpTime = 1.0f;
+		float flFadeTime = 1.0f;
+		if (m_flStyleIconLerpStart && gpGlobals->curtime < m_flStyleIconLerpStart + flLerpTime + flFadeTime)
+		{
+			float flRamp = Bias(RemapValClamped(gpGlobals->curtime, m_flStyleIconLerpStart, m_flStyleIconLerpStart + flLerpTime, 0, 1), 0.7f);
+
+			if (pPlayer->m_Shared.m_iStyleSkill == SKILL_TROLL)
+			{
+				CHudAmmo* pElement = dynamic_cast<CHudAmmo*>(gHUD.FindElement("CHudAmmo"));
+				if (pElement)
+				{
+					Vector4D vecGrenade = pElement->GetGrenadePosition(pPlayer->GetAmmoCount("grenades")-1);
+					flIconXPos = vecGrenade.x;
+					flIconYPos = vecGrenade.y;
+					flIconWide = vecGrenade.z;
+					flIconTall = vecGrenade.w;
+				}
+			}
+			else if (pPlayer->m_Shared.m_iStyleSkill == SKILL_REFLEXES)
+			{
+				CHudNumericDisplay* pElement = dynamic_cast<CHudNumericDisplay*>(gHUD.FindElement("CHudSlowMo"));
+				if (pElement)
+				{
+					int x, y;
+					pElement->GetPos(x, y);
+					flIconXPos = x;
+					flIconYPos = y;
+
+					int w, h;
+					pElement->GetSize(w, h);
+					flIconWide = flIconTall = (w + h)/2;
+				}
+			}
+
+			float flAlpha = RemapValClamped(gpGlobals->curtime, m_flStyleIconLerpStart + flLerpTime, m_flStyleIconLerpStart + flLerpTime + flFadeTime, 1, 0);
+
+			pStyleTexture->DrawSelf(
+					RemapVal(flRamp, 0, 1, flBarIconX, flIconXPos), RemapVal(flRamp, 0, 1, flBarIconY, flIconYPos),
+					RemapVal(flRamp, 0, 1, flStyleTextureWidth, flIconWide), RemapVal(flRamp, 0, 1, flStyleTextureHeight, flIconTall),
+					Color( gHUD.m_clrCaution.r(), gHUD.m_clrCaution.g(), gHUD.m_clrCaution.b(), 255*flAlpha )
+				);
+		}
 	}
 
 	int iNext;
@@ -337,7 +500,7 @@ void CHudStyleBar::Paint()
 			flAlpha = RemapValClamped(gpGlobals->curtime, flEndTime-0.5f, flEndTime, 1, 0);
 
 		pTexture->DrawSelf(
-			flSlideIn, RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+			m_flElementXPos + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
 			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
 			Color(255, 255, 255, 255 * flAlpha)
 		);

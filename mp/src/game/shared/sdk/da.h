@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sdk_weapon_parse.h"
+
 #define SDK_DEFAULT_PLAYER_RUNSPEED    230
 #define SDK_DEFAULT_PLAYER_SPRINTSPEED 330
 #define SDK_DEFAULT_PLAYER_PRONESPEED  100

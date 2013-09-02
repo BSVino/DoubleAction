@@ -33,6 +33,11 @@ public:
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
+	float GetTextureDrawWidth(class CHudTexture* pTexture, float flScale=1);
+	float GetTextureDrawHeight(class CHudTexture* pTexture, float flScale=1);
+
+	Vector4D GetGrenadePosition(int i);
+
 protected:
 	virtual void OnThink();
 

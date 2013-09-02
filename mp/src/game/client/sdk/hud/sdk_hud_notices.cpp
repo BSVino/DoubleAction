@@ -14,6 +14,7 @@
 #include "hud.h"
 #include "hud_macros.h"
 #include "view.h"
+#include "convar.h"
 
 #include "iclientmode.h"
 
@@ -29,8 +30,7 @@ using namespace vgui;
 #include "hudelement.h"
 #include "hud_numericdisplay.h"
 #include "c_sdk_player.h"
-
-#include "convar.h"
+#include "sdk_hud_stylebar.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -97,6 +97,10 @@ void CHudNotices::MsgFunc_Notice( bf_read &msg )
 
 	m_flStartTime = gpGlobals->curtime;
 	m_eNotice = eNotice;
+
+	CHudStyleBar* pElement = dynamic_cast<CHudStyleBar*>(gHUD.FindElement("CHudStyleBar"));
+	if (pElement)
+		pElement->Notice(eNotice);
 }
 
 void CHudNotices::Reset()
