@@ -634,8 +634,8 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 		return m_Shared.m_iStyleSkill == eSkill;
 }
 
-static ConVar da_style_decay_max("da_style_decay_max", "2", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar da_style_decay_min("da_style_decay_min", "0.5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_style_decay_max("da_style_decay_max", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_style_decay_min("da_style_decay_min", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayer::DecayStyle()
 {
