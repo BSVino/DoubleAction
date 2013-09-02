@@ -28,6 +28,11 @@ $Project "client"
 	"game\client\client_da.vpc"		[($WIN32||$POSIX) && $DA]
 }
 
+$Project "fgdlib"
+{
+	"fgdlib\fgdlib.vpc" [$WIN32]
+}
+
 $Project "game_shader_dx9"
 {
 	"materialsystem\stdshaders\game_shader_dx9_da.vpc" [$DA]
@@ -61,6 +66,11 @@ $Project "motionmapper"
 $Project "phonemeextractor"
 {
 	"utils\phonemeextractor\phonemeextractor.vpc" [$WIN32]
+}
+
+$Project "raytrace"
+{
+	"raytrace\raytrace.vpc" [$WIN32||$X360||$POSIX]
 }
 
 $Project "qc_eyes"
