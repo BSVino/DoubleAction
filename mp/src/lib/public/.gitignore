@@ -1,2 +1,4 @@
 tier1.lib
 vgui_controls.lib
+mathlib.lib
+raytrace.lib
