@@ -245,5 +245,9 @@ int ClientModeSDKNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum,
 		return 0;
 	}
 
+	// Can't figure out how to get +duck to send a close signal too, so let's just not use the spec menu.
+	if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+duck" ) == 0 )
+		return 0;
+
 	return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
 }
