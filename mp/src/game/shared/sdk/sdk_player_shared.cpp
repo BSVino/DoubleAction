@@ -1065,7 +1065,7 @@ ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "500", FCVAR_REP
 ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 
-ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 Vector CSDKPlayerShared::StartDiving()
 {
