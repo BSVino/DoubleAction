@@ -5,7 +5,7 @@
 // $NoKeywords: $
 //=============================================================================
 
-#include "basevsshader.h"
+#include "BaseVSShader.h"
 
 #include "slowmo_vs20.inc"
 #include "slowmo_ps20b.inc"

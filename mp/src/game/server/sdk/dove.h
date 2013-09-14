@@ -1,6 +1,6 @@
 #pragma once
 
-#include "baseanimatingoverlay.h"
+#include "BaseAnimatingOverlay.h"
 
 class CDove : public CBaseAnimatingOverlay
 {

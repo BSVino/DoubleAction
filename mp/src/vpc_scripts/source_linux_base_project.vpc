@@ -45,8 +45,6 @@ $Configuration
 		
 		$GCC_ExtraCompilerFlags			"-U_FORTIFY_SOURCE" [$LINUXALL]
 		$Create/UsePCHThroughFile	"stdafx.h"
-
-		$GCC_ExtraCompilerFlags			"-std=c++0x" [$LINUXALL]
 	}
 }
 

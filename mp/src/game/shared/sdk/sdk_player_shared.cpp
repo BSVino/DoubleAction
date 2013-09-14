@@ -443,8 +443,8 @@ bool CSDKPlayer::PlayerUse()
 		EyeVectors( &forward, NULL, &up );
 
 		Vector vecSearchCenter = EyePosition();
-		CBaseEntity *pObject = nullptr;
-		CBaseEntity *pNearest = nullptr;
+		CBaseEntity *pObject = NULL;
+		CBaseEntity *pNearest = NULL;
 		float flNearest = FLT_MAX;
 
 		// Look for grenades so we can prioritize picking them up first.

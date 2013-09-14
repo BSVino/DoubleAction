@@ -15,7 +15,7 @@ $Project "datanetworking"
 
 $Project "datatool"
 {
-	"datatool\datatool.vpc" [$DA]
+	"datatool\datatool.vpc" [$DA && $WIN32]
 }
 
 $Project "captioncompiler"

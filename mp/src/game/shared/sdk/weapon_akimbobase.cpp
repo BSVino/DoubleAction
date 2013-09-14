@@ -246,7 +246,7 @@ const Vector CAkimboBase::GetShootPosition(CSDKPlayer* pShooter)
 		return Vector(0, 0, 0);
 
 	Vector vecPosition, vecRight;
-	pShooter->EyePositionAndVectors(&vecPosition, nullptr, &vecRight, nullptr);
+	pShooter->EyePositionAndVectors(&vecPosition, NULL, &vecRight, NULL);
 
 	return vecPosition + vecRight * (shootright?4:-4);
 }
