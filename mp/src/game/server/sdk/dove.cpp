@@ -158,7 +158,7 @@ void CDove::SpawnDoves(CSDKPlayer* pPlayer)
 		{
 			// Move the doves forward a bit so they're more visible to the player.
 			Vector vecForward;
-			pPlayer->GetVectors(&vecForward, nullptr, nullptr);
+			pPlayer->GetVectors(&vecForward, NULL, NULL);
 			vecStart += vecForward * 50;
 		}
 

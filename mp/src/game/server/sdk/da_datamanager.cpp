@@ -50,7 +50,7 @@ static void SendData( CFunctor **pData, unsigned int nCount )
 CDataManager::CDataManager( char const* name )
 	: CAutoGameSystemPerFrame(name)
 {
-	m_pSendData = nullptr;
+	m_pSendData = NULL;
 
 	m_flNextPositionsUpdate = 0;
 }
