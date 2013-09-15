@@ -163,8 +163,8 @@ void CSDKScoreboard::UpdateTeamInfo()
 				else
 					iActivePlayers = iNumPlayersInGame;
 
-				_snwprintf(wNumPlayers, 6, L"%i", iActivePlayers );
-				_snwprintf( name, sizeof(name), L"%s", g_pVGuiLocalize->Find("#SDK_ScoreBoard_Deathmatch") );
+				V_swprintf_safe(wNumPlayers, L"%i", iActivePlayers);
+				V_swprintf_safe( name, L"%s", g_pVGuiLocalize->Find("#SDK_ScoreBoard_Deathmatch") );
 				
 				teamName = name;
 
@@ -179,7 +179,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 			}
 			else
 			{
-				_snwprintf(wNumPlayers, 6, L"%i", team->Get_Number_Players());
+				V_swprintf_safe(wNumPlayers, L"%i", team->Get_Number_Players());
 
 				if (!teamName && team)
 				{
@@ -198,7 +198,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 
 				// update stats
 				wchar_t val[6];
-				swprintf(val, L"%d", team->Get_Score());
+				V_swprintf_safe(val, L"%d", team->Get_Score());
 				m_pPlayerList->ModifyColumn(sectionID, "frags", val);
 				if (team->Get_Ping() < 1)
 				{
@@ -206,7 +206,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 				}
 				else
 				{
-					swprintf(val, L"%d", team->Get_Ping());
+					V_swprintf_safe(val, L"%d", team->Get_Ping());
 					m_pPlayerList->ModifyColumn(sectionID, "ping", val);
 				}
 
@@ -444,7 +444,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
 		wchar_t wszNewLabel[100];
-		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestStuntKills());
+		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestStuntKills());
 
 		pMostLabel->SetText(wszNewLabel);
 	}
@@ -466,7 +466,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
 		wchar_t wszNewLabel[100];
-		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestBrawlKills());
+		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestBrawlKills());
 
 		pMostLabel->SetText(wszNewLabel);
 	}
@@ -488,7 +488,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
 		wchar_t wszNewLabel[100];
-		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestKillStreak());
+		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestKillStreak());
 
 		pMostLabel->SetText(wszNewLabel);
 	}
@@ -510,7 +510,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
 		wchar_t wszNewLabel[100];
-		_snwprintf(wszNewLabel, 100, L"%s %i", wszLabel, sdkPR->GetHighestGrenadeKills());
+		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestGrenadeKills());
 
 		pMostLabel->SetText(wszNewLabel);
 	}

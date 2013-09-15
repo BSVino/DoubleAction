@@ -4595,7 +4595,7 @@ CON_COMMAND( give_weapon, "Give weapon to player.\n\tArguments: <weapon_name>" )
 			pDrop->VPhysicsInitShadow(true, true);
 
 			Vector vecForward;
-			pPlayer->GetVectors(&vecForward, nullptr, nullptr);
+			pPlayer->GetVectors(&vecForward, NULL, NULL);
 
 			pDrop->SetAbsOrigin(pPlayer->EyePosition() + vecForward * 40);
 
