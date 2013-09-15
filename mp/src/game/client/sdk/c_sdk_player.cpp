@@ -34,9 +34,9 @@
 #include "cam_thirdperson.h"
 #include "headtrack/isourcevirtualreality.h"
 #include "engine/ivdebugoverlay.h"
-#include "ProxyEntity.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "proxyentity.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialvar.h"
 #include "functionproxy.h"
 
 #include "da_buymenu.h"
@@ -770,7 +770,7 @@ void C_SDKPlayer::UpdateClientSideAnimation()
 
 	// If in first person, still setup bones so that they're available for the ragdoll when the player dies.
 	if (!IsInThirdPerson())
-		SetupBones(nullptr, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime);
+		SetupBones(NULL, -1, BONE_USED_BY_ANYTHING, gpGlobals->curtime);
 }
 
 //-----------------------------------------------------------------------------

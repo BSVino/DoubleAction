@@ -18,11 +18,11 @@
 #include "voice_status.h"
 #include "glow_overlay.h"
 #include "materialsystem/imesh.h"
-#include "materialsystem/ITexture.h"
-#include "materialsystem/IMaterial.h"
-#include "materialsystem/IMaterialVar.h"
+#include "materialsystem/itexture.h"
+#include "materialsystem/imaterial.h"
+#include "materialsystem/imaterialvar.h"
 #include "materialsystem/imaterialsystemhardwareconfig.h"
-#include "DetailObjectSystem.h"
+#include "detailobjectsystem.h"
 #include "tier0/vprof.h"
 #include "engine/IEngineTrace.h"
 #include "engine/ivmodelinfo.h"
@@ -34,8 +34,8 @@
 #include "c_sdk_player.h"
 #include "sdk_gamerules.h"
 #include "shake.h"
-#include "ClientEffectPrecacheSystem.h"
-#include <vgui/isurface.h>
+#include "clienteffectprecachesystem.h"
+#include <vgui/ISurface.h>
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheDAViewScene )
 CLIENTEFFECT_MATERIAL( "shaders/slowmo" )
