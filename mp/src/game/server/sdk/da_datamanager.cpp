@@ -148,28 +148,28 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 
 	pbGameData->set_timestamp((unsigned)time(NULL));
 
-	auto pPositions = pbGameData->mutable_positions()->mutable_position();
+	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
 	size_t iDataSize = m_avecPlayerPositions.Count();
 	pPositions->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
 		FillProtoBufVector(pPositions->Add(), m_avecPlayerPositions[i]);
 
-	auto pCharacters = pbGameData->mutable_characters_chosen();
+	google::protobuf::RepeatedPtrField<std::string>* pCharacters = pbGameData->mutable_characters_chosen();
 	iDataSize = m_apszCharactersChosen.Count();
 	pCharacters->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
 		pCharacters->Add()->assign(m_apszCharactersChosen[i]);
 
-	auto pWeapons = pbGameData->mutable_weapons_chosen();
+	google::protobuf::RepeatedField<google::protobuf::int32>* pWeapons = pbGameData->mutable_weapons_chosen();
 	iDataSize = m_aeWeaponsChosen.Count();
 	pWeapons->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
 		pWeapons->Add(m_aeWeaponsChosen[i]);
 
-	auto pSkills = pbGameData->mutable_skills_chosen();
+	google::protobuf::RepeatedField<google::protobuf::int32>* pSkills = pbGameData->mutable_skills_chosen();
 	iDataSize = m_aeSkillsChosen.Count();
 	pSkills->Reserve(iDataSize);
 
