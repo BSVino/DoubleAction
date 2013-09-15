@@ -502,6 +502,13 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 
 	CBaseEntity* pOther = NULL;
 
+	slowmo_type eGiveType;
+
+	if (pPlayer->GetSlowMoType() == SLOWMO_STYLESKILL || pPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
+		eGiveType = SLOWMO_PASSIVE_SUPER;
+	else
+		eGiveType = SLOWMO_PASSIVE;
+
 	while ((pOther = UTIL_EntitiesInPVS(pPlayer, pOther)) != NULL)
 	{
 		CSDKPlayer* pOtherPlayer = ToSDKPlayer(pOther);
@@ -521,8 +528,14 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
 			continue;
 
-		if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() > da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat() && !pOtherPlayer->IsVisible(pPlayer))
+		if (pOtherPlayer->GetSlowMoType() == eGiveType)
 			continue;
+
+		if ((pOtherPlayer->GetAbsOrigin() - pPlayer->GetAbsOrigin()).LengthSqr() > da_slow_force_distance.GetFloat()*da_slow_force_distance.GetFloat())
+		{
+			if (!pOtherPlayer->IsVisible(pPlayer))
+				continue;
+		}
 
 		apOthersInPVS.AddToTail(pOtherPlayer);
 	}
@@ -540,10 +553,10 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
 			continue;
 
-		if (pPlayer->GetSlowMoType() == SLOWMO_STYLESKILL || pPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
-			pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE_SUPER);
-		else
-			pOtherPlayer->SetSlowMoType(SLOWMO_PASSIVE);
+		if (pOtherPlayer->GetSlowMoType() == eGiveType)
+			continue;
+
+		pOtherPlayer->SetSlowMoType(eGiveType);
 
 		GiveSlowMoToNearbyPlayers(pOtherPlayer);
 	}
