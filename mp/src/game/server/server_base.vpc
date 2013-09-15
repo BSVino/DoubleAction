@@ -5,8 +5,8 @@
 //-----------------------------------------------------------------------------
 
 $Macro OUTBINNAME	"server"
-$Macro OUTBINDIR "\Dropbox\ActionBoogaloo\dab\debug_bin"    [$WIN32]
-$Macro OUTBINDIR "~\Dropbox\ActionBoogaloo\dab\debug_bin"   [$LINUX]
+$Macro OUTBINDIR "\Dropbox\ActionBoogaloo\dab_debug\dab\debug_bin"    [$WIN32]
+$Macro OUTBINDIR "~\Dropbox\ActionBoogaloo\dab_debug\dab\debug_bin"   [$LINUX]
 $Macro DEVKITBINDIR	"$GAMENAME\bin"							[$X360]
 // It's important to include $GAMENAME in the generated_proto directory
 // to avoid race conditions when multiple games are in one solution.
