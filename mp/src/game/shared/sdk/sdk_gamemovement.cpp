@@ -108,6 +108,8 @@ public:
 
 	virtual unsigned int PlayerSolidMask( bool brushOnly = false );
 
+	void    AccumulateWallFlipTime();
+
 	inline void TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
 	virtual void FullWalkMove ();
 	virtual void StepMove (Vector &vecDestination, trace_t &trace);
@@ -2340,6 +2342,26 @@ bool CSDKGameMovement::CheckMantel()
 	return true;
 }
 
+void CSDKGameMovement::AccumulateWallFlipTime()
+{
+	if (!m_pSDKPlayer->m_Shared.IsWallFlipping())
+		return;
+
+	if (m_pSDKPlayer->GetCurrentTime() < m_pSDKPlayer->m_Shared.GetWallFlipEndTime())
+		return;
+
+	trace_t traceresult;
+
+	//temporarily set player bounds to represent a standing position
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = true;
+	bool bBlocked = (TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, traceresult ) != INVALID_ENTITY_HANDLE);
+	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = false;
+	if ( bBlocked )
+		return;
+
+	m_pSDKPlayer->m_Shared.EndWallFlip();
+}
+
 static ConVar da_terminal_velocity("da_terminal_velocity", "1600", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar da_terminal_velocity_delta("da_terminal_velocity_delta", "400", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
@@ -2373,7 +2395,7 @@ void CSDKGameMovement::FullWalkMove ()
 		mv->m_flForwardMove = 0;
 		mv->m_flSideMove = 0;
 
-		m_pSDKPlayer->m_Shared.AccumulateWallFlipTime();
+		AccumulateWallFlipTime();
 	}
 
 	if (player->GetWaterJumpTime())
@@ -2409,8 +2431,10 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		return;
 	}
+
 	UpdateDuckJumpEyeOffset();
 	Duck();
+
 	if (m_pSDKPlayer->m_Shared.CanChangePosition ())
 	{
 		int pressed = (mv->m_nOldButtons^mv->m_nButtons)&mv->m_nButtons;
@@ -2459,7 +2483,6 @@ void CSDKGameMovement::FullWalkMove ()
 
 					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.StartWallFlip();
-					
 				}
 			}
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
@@ -2485,6 +2508,7 @@ void CSDKGameMovement::FullWalkMove ()
 			}
 		}
 	}
+
 #if 0
 	if (checkrun ())
 	{/*Wallrunning*/
@@ -2606,6 +2630,7 @@ void CSDKGameMovement::FullWalkMove ()
 
 		return;
 	}
+
 	if (m_pSDKPlayer->m_Shared.IsDiving() && !m_pSDKPlayer->GetGroundEntity ())
 	{/*Raise player off the ground*/
 		if (m_pSDKPlayer->m_Shared.GetDiveLerped() < 1)
@@ -2633,6 +2658,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 		else m_pSDKPlayer->SetViewOffset( VEC_DIVE_VIEW );
 	}
+
 	if (mv->m_nButtons&IN_JUMP) CheckJumpButton ();
 	else mv->m_nOldButtons &= ~IN_JUMP;
 	if (player->GetGroundEntity() != NULL)
@@ -2664,6 +2690,7 @@ void CSDKGameMovement::FullWalkMove ()
 		player->m_Local.m_flFallVelocity = -mv->m_vecVelocity[2];
 		AirMove ();
 	}
+
 	CategorizePosition();
 	CheckVelocity();
 	if ( !CheckWater() )
@@ -2674,6 +2701,7 @@ void CSDKGameMovement::FullWalkMove ()
 	{
 		mv->m_vecVelocity[2] = 0;
 	}
+
 	CheckFalling();
 #ifdef GAME_DLL
 	/*The great door hack*/
@@ -2699,6 +2727,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 	}
 #endif
+
 	if ((m_nOldWaterLevel == WL_NotInWater && player->GetWaterLevel() != WL_NotInWater) ||
 		( m_nOldWaterLevel != WL_NotInWater && player->GetWaterLevel() == WL_NotInWater))
 	{/*Water enter/exit sound*/

@@ -409,7 +409,8 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsTryingUnprone = false;
 	m_Shared.m_bIsTryingUnduck = false;
 	m_Shared.m_iWallFlipCount = 0;
-	m_Shared.m_flWallFlipTime = 0;
+	m_Shared.m_bIsWallFlipping = false;
+	m_Shared.m_flWallFlipEndTime = 0;
 	m_Shared.m_flMantelTime = 0;
 
 
@@ -1216,11 +1217,12 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 	}
 }
 
-ConVar da_acro_wallflip_delay ("da_acro_wallflip_delay", "100", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_acro_wallflip_delay ("da_acro_wallflip_delay", ".3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayerShared::StartWallFlip()
 {
-	m_flWallFlipTime = da_acro_wallflip_delay.GetFloat();
+	m_bIsWallFlipping = true;
+	m_flWallFlipEndTime = m_pOuter->GetCurrentTime() + da_acro_wallflip_delay.GetFloat();
 	m_iWallFlipCount++;
 
 	m_pOuter->SetGravity(0.8f);
@@ -1228,12 +1230,11 @@ void CSDKPlayerShared::StartWallFlip()
 	m_pOuter->Instructor_LessonLearned("wallflip");
 }
 
-void CSDKPlayerShared::AccumulateWallFlipTime()
+void CSDKPlayerShared::EndWallFlip()
 {
-	m_flWallFlipTime -= 1000 * gpGlobals->frametime * m_pOuter->GetSlowMoMultiplier();
+	m_bIsWallFlipping = false;
 
-	if (m_flWallFlipTime < 0)
-		m_flWallFlipTime = 0;
+	m_pOuter->SetGravity(1.0f);
 }
 
 bool CSDKPlayerShared::IsAimedIn() const

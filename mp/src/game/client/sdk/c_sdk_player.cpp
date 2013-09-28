@@ -154,7 +154,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 
 	RecvPropInt (RECVINFO (m_iWallFlipCount)),
-	RecvPropFloat (RECVINFO (m_flWallFlipTime)),
+	RecvPropBool (RECVINFO (m_bIsWallFlipping)),
+	RecvPropFloat (RECVINFO (m_flWallFlipEndTime)),
 	RecvPropFloat (RECVINFO (m_flMantelTime)),
 	RecvPropVector (RECVINFO (m_vecMantelWallNormal)),
 END_RECV_TABLE()
@@ -281,7 +282,8 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD (m_iWallFlipCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-	DEFINE_PRED_FIELD (m_flWallFlipTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (m_bIsWallFlipping, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD (m_flWallFlipEndTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD (m_flMantelTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD (m_vecMantelWallNormal, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()

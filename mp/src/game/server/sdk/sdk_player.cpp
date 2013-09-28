@@ -153,7 +153,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	
 	SendPropInt (SENDINFO (m_iWallFlipCount)),
-	SendPropFloat (SENDINFO (m_flWallFlipTime)),
+	SendPropBool (SENDINFO (m_bIsWallFlipping)),
+	SendPropFloat (SENDINFO (m_flWallFlipEndTime)),
 	SendPropFloat (SENDINFO (m_flMantelTime)),
 	SendPropVector (SENDINFO (m_vecMantelWallNormal)),
 

@@ -115,11 +115,12 @@ public:
 	void    AccumulateMantelTime();
 	void    ResetManteling();
 
-	bool    IsWallFlipping() const { return m_flWallFlipTime > 0; }
+	bool    IsWallFlipping() const { return m_bIsWallFlipping; }
 	void    StartWallFlip();
-	void    AccumulateWallFlipTime();
+	void    EndWallFlip();
 	void    ResetWallFlipCount() { m_iWallFlipCount = 0; }
 	int     GetWallFlipCount() const { return m_iWallFlipCount; }
+	float   GetWallFlipEndTime() const { return m_flWallFlipEndTime; }
 
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
@@ -209,7 +210,8 @@ private:
 #endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 
 	CNetworkVar(int,    m_iWallFlipCount);
-	CNetworkVar(float,  m_flWallFlipTime);
+	CNetworkVar(bool,   m_bIsWallFlipping);
+	CNetworkVar(float,  m_flWallFlipEndTime);
 	CNetworkVar(float,  m_flMantelTime);
 	CNetworkVar(Vector, m_vecMantelWallNormal);
 
