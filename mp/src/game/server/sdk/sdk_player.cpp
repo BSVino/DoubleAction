@@ -1352,7 +1352,7 @@ void CSDKPlayer::InitialSpawn( void )
 
 void CSDKPlayer::OnDive()
 {
-	m_bDamagedEnemyDuringDive = false;
+	m_bDamagedEnemyDuringFall = false;
 }
 
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
@@ -1630,8 +1630,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 
 		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
-		if ( pAttackerSDK->m_Shared.IsDiving() && !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
-			pAttackerSDK->m_bDamagedEnemyDuringDive = true;
+		if ( !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+			pAttackerSDK->m_bDamagedEnemyDuringFall = true;
 	}
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
@@ -1664,7 +1664,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	StopSound( "Player.GoSlide" );
 
-	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_Shared.IsDiving() && m_bDamagedEnemyDuringDive)
+	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_bDamagedEnemyDuringFall)
 	{
 		AddStylePoints(10, STYLE_SOUND_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
@@ -3687,6 +3687,9 @@ void CSDKPlayer::State_PreThink_ACTIVE()
 
 		SwitchToNextBestWeapon( NULL );
 	}
+
+	if (GetFlags() & FL_ONGROUND)
+		m_bDamagedEnemyDuringFall = false;
 }
 
 void CSDKPlayer::NoteWeaponFired( void )

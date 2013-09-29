@@ -438,7 +438,7 @@ private:
 
 	Vector m_vecTotalBulletForce;	//Accumulator for bullet force in a single frame
 
-	bool   m_bDamagedEnemyDuringDive;
+	bool   m_bDamagedEnemyDuringFall;
 
 public:
 #if defined ( SDK_USE_PRONE )
