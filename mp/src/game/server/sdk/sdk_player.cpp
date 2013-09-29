@@ -158,6 +158,10 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat (SENDINFO (m_flMantelTime)),
 	SendPropVector (SENDINFO (m_vecMantelWallNormal)),
 
+	SendPropBool( SENDINFO( m_bSuperFalling ) ),
+	SendPropBool( SENDINFO( m_bSuperFallOthersVisible ) ),
+	SendPropTime( SENDINFO( m_flSuperFallOthersNextCheck ) ),
+
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -801,6 +805,9 @@ void CSDKPlayer::PreThink(void)
 		if (pHit)
 			pHit->TakeDamage(CTakeDamageInfo(this, this, 50, DMG_CRUSH));
 	}
+
+	// Make sure the server caches the players visible part for the client.
+	m_Shared.CanSuperFallRespawn();
 
 	State_PreThink();
 
@@ -1664,7 +1671,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	StopSound( "Player.GoSlide" );
 
-	if (FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt") && m_bDamagedEnemyDuringFall)
+	if (m_Shared.IsSuperFalling() && m_bDamagedEnemyDuringFall)
 	{
 		AddStylePoints(10, STYLE_SOUND_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.

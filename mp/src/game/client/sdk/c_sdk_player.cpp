@@ -158,6 +158,10 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropFloat (RECVINFO (m_flWallFlipEndTime)),
 	RecvPropFloat (RECVINFO (m_flMantelTime)),
 	RecvPropVector (RECVINFO (m_vecMantelWallNormal)),
+
+	RecvPropBool( RECVINFO( m_bSuperFalling ) ),
+	RecvPropBool( RECVINFO( m_bSuperFallOthersVisible ) ),
+	RecvPropTime( RECVINFO( m_flSuperFallOthersNextCheck ) ),
 END_RECV_TABLE()
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut );
@@ -286,6 +290,10 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD (m_flWallFlipEndTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD (m_flMantelTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD (m_vecMantelWallNormal, FIELD_VECTOR, FTYPEDESC_INSENDTABLE),
+
+	DEFINE_PRED_FIELD( m_bSuperFalling, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bSuperFallOthersVisible, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flSuperFallOthersNextCheck, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )

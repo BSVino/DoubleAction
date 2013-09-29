@@ -412,6 +412,8 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_bIsWallFlipping = false;
 	m_Shared.m_flWallFlipEndTime = 0;
 	m_Shared.m_flMantelTime = 0;
+	m_Shared.m_flSuperFallOthersNextCheck = 0;
+	m_Shared.m_bSuperFalling = false;
 
 
 	//Tony; todo; fix
@@ -437,6 +439,9 @@ void CSDKPlayer::StartTouch(CBaseEntity *pOther)
 bool CSDKPlayer::PlayerUse()
 {
 #ifdef GAME_DLL
+	if ((m_afButtonPressed & IN_USE) && m_Shared.CanSuperFallRespawn())
+		CommitSuicide();
+
 	// Was use pressed or released?
 	if ( ((m_nButtons | m_afButtonPressed | m_afButtonReleased) & IN_USE) && !IsObserver() )
 	{
@@ -1237,6 +1242,72 @@ void CSDKPlayerShared::EndWallFlip()
 	m_pOuter->SetGravity(1.0f);
 }
 
+ConVar da_superfall_time("da_superfall_time", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+bool CSDKPlayerShared::IsSuperFalling()
+{
+	// Once he's determined in one life to be super-falling, he's super-falling until he super-falls to death.
+	if (m_bSuperFalling)
+		return true;
+
+	if (m_pOuter->GetLocalVelocity().z > -100)
+		return false;
+
+	if (m_pOuter->GetCurrentTime() - m_flTimeLeftGround < da_superfall_time.GetFloat())
+		return false;
+
+	trace_t tr;
+	UTIL_TraceLine(m_pOuter->GetAbsOrigin(), m_pOuter->GetAbsOrigin() + Vector(0, 0, -10000), MASK_PLAYERSOLID_BRUSHONLY, m_pOuter, COLLISION_GROUP_NONE, &tr);
+
+	if ((tr.endpos - m_pOuter->GetAbsOrigin()).LengthSqr() < 2000*2000)
+		return false;
+
+	m_bSuperFalling = true;
+	return true;
+}
+
+ConVar da_superfall_calculate_time("da_superfall_calculate_time", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
+bool CSDKPlayerShared::CanSuperFallRespawn()
+{
+	if (!IsSuperFalling())
+		return false;
+
+	if (!m_pOuter->IsAlive())
+		return false;
+
+	if (gpGlobals->curtime < m_flSuperFallOthersNextCheck)
+		return !m_bSuperFallOthersVisible;
+
+#ifndef CLIENT_DLL
+	m_bSuperFallOthersVisible = false;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer == m_pOuter)
+			continue;
+
+		if (m_pOuter->IsVisible(pPlayer))
+		{
+			m_bSuperFallOthersVisible = true;
+			break;
+		}
+	}
+
+	m_flSuperFallOthersNextCheck = gpGlobals->curtime + da_superfall_calculate_time.GetFloat();
+#endif
+
+	if (m_bSuperFallOthersVisible)
+		return false;
+
+	return true;
+}
+
 bool CSDKPlayerShared::IsAimedIn() const
 {
 	if (IsDiving() || IsRolling())
@@ -1299,6 +1370,7 @@ void CSDKPlayerShared::PlayerOnGround( void )
 {
 	m_flTimeLeftGround = m_pOuter->GetCurrentTime();
 	m_iWallFlipCount = 0;
+	m_flSuperFallOthersNextCheck = 0;
 }
 
 void CSDKPlayerShared::ForceUnzoom( void )

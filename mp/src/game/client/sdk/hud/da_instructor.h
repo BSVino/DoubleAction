@@ -170,7 +170,7 @@ public:
 	void            ShowLesson();
 	void            FinishedLesson(const CUtlString& sLesson, bool bForceNext = false);
 
-	CLesson*        GetCurrentLesson() { return m_apLessons[m_apLessons.Find(m_sCurrentLesson.Get())]; };
+	CLesson*        GetCurrentLesson();
 
 	bool            IsSideHintShowing() { return m_bSideHintShowing; }
 

@@ -261,6 +261,9 @@ bool PlayerActiveWeaponHasAimInConditions( C_SDKPlayer *pPlayer, class CLesson *
 	if (!PlayerAliveConditions(pPlayer, pLesson))
 		return false;
 
+	if (pPlayer->m_Shared.IsSuperFalling())
+		return false;
+
 	CWeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
 
 	if (!pWeapon)
@@ -299,6 +302,17 @@ bool PlayerInThirdPersonConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson
 	return true;
 }
 
+bool PlayerSuperFalling( C_SDKPlayer *pPlayer, class CLesson *pLesson )
+{
+	if (!PlayerAliveConditions(pPlayer, pLesson))
+		return false;
+
+	if (!pPlayer->m_Shared.IsSuperFalling())
+		return false;
+
+	return true;
+}
+
 pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 {
 	if (sConditions == "WhoCares")
@@ -323,6 +337,8 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 		return PlayerHasSlowMoConditions;
 	else if (sConditions == "PlayerInThirdPerson")
 		return PlayerInThirdPersonConditions;
+	else if (sConditions == "PlayerSuperFalling")
+		return PlayerSuperFalling;
 
 	Assert(false);
 	Error(std::string("Couldn't find lesson condition '").append(sConditions.Get()).append("'\n").c_str());
@@ -363,11 +379,14 @@ ConVar lesson_enable("lesson_enable", "1", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Show 
 
 void CInstructor::DisplayLesson(const CUtlString& sLesson)
 {
-	if (!lesson_enable.GetBool())
-		return;
+	if (sLesson != "superfall_respawn")
+	{
+		if (!lesson_enable.GetBool())
+			return;
 
-	if (!m_bActive)
-		return;
+		if (!m_bActive)
+			return;
+	}
 
 	if (sLesson.Length() == 0 || m_apLessons.Find(sLesson) == -1)
 	{
@@ -379,6 +398,9 @@ void CInstructor::DisplayLesson(const CUtlString& sLesson)
 
 		return;
 	}
+
+	if (m_sCurrentLesson == sLesson)
+		return;
 
 	HideLesson();
 
@@ -426,6 +448,8 @@ void CInstructor::HideLesson()
 		m_bSideHintShowing = false;
 		static_cast<CHudSideHintPanel*>(pLessonPanel)->Reset();
 	}
+
+	m_sCurrentLesson = "";
 }
 
 void CInstructor::FinishedLesson(const CUtlString& sLesson, bool bForceNext)
@@ -441,6 +465,14 @@ void CInstructor::FinishedLesson(const CUtlString& sLesson, bool bForceNext)
 	// If we get to the end here then we turn off the instructor as we have finished completely.
 	if (GetCurrentLesson() && GetCurrentLesson()->m_bKillOnFinish)
 		SetActive(false);
+}
+
+CLesson* CInstructor::GetCurrentLesson()
+{
+	if (!m_sCurrentLesson.Length())
+		return NULL;
+
+	return m_apLessons[m_apLessons.Find(m_sCurrentLesson.Get())];
 }
 
 static ConVar lesson_nexttime("lesson_nexttime", "20");	// Time between hints
@@ -505,6 +537,20 @@ void C_SDKPlayer::Instructor_Think()
 
 	if (!m_pInstructor->IsInitialized())
 		m_pInstructor->Initialize();
+
+	if (m_Shared.CanSuperFallRespawn())
+	{
+		m_pInstructor->DisplayLesson("superfall_respawn");
+		return;
+	}
+
+	if (m_pInstructor->GetCurrentLesson())
+	{
+		if (m_pInstructor->GetCurrentLesson()->m_sLessonName == "superfall_respawn" && !m_Shared.CanSuperFallRespawn())
+			m_pInstructor->HideLesson();
+		else if (!IsAlive() && m_pInstructor->GetCurrentLesson()->m_pfnConditions != PlayerDeadConditions)
+			m_pInstructor->HideLesson();
+	}
 
 	if (!m_apLessonProgress.Count() && m_pInstructor->GetLessons().Count())
 	{

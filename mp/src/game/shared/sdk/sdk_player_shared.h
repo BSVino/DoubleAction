@@ -125,6 +125,9 @@ public:
 	bool	IsJumping( void ) { return m_bJumping; }
 	void	SetJumping( bool bJumping );
 
+	bool    IsSuperFalling();
+	bool    CanSuperFallRespawn();
+
 	bool	IsAimedIn() const;
 	void	SetAimIn(bool bAimIn);
 	float	GetAimIn() const { return m_flAimIn; }
@@ -231,6 +234,10 @@ public:
 	CNetworkVar( bool, m_bMustDuckFromSlide );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );
+
+	CNetworkVar( bool, m_bSuperFalling );
+	CNetworkVar( bool, m_bSuperFallOthersVisible );
+	CNetworkVar( float, m_flSuperFallOthersNextCheck );
 
 	bool m_bJumping;
 
