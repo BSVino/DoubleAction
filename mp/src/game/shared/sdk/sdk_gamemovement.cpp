@@ -48,6 +48,7 @@ ConVar  da_acro_wallflip_speed ("da_acro_wallflip_speed", "180", FCVAR_NOTIFY|FC
 ConVar  da_acro_wallflip_gain ("da_acro_wallflip_gain", "420", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 ConVar  da_acro_mantel_height ("da_acro_mantel_height", "92", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar  da_acro_mantel_min_height ("da_acro_mantel_min_height", "40", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_vault_height ("da_acro_vault_height", "45", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
@@ -2324,6 +2325,9 @@ bool CSDKGameMovement::CheckMantel()
 	pr2[2] -= da_acro_mantel_height.GetFloat ();
 	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
 	if (tr.fraction == 1)
+		return false;
+
+	if (tr.endpos.z - mv->GetAbsOrigin().z < da_acro_mantel_min_height.GetFloat())
 		return false;
 
 	pr1 = mv->GetAbsOrigin();
