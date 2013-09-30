@@ -719,7 +719,10 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 
 	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.5f, SKILL_BOUNCER);
 
-	if (!pPlayer->GetGroundEntity())
+	// DIVEPUNCH!
+	if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsRolling() || pPlayer->m_Shared.IsSliding() || pPlayer->m_Shared.IsWallFlipping())
+		flDamage *= 1.8f;
+	else if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
 
 	return flDamage;
@@ -738,7 +741,7 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 	// The heavier it is the longer it takes to swing.
 	float flWeight = GetSDKWpnData().iWeight;
 
-	float flTime = RemapVal(flWeight, 5, 20, 0.25f, 0.6f);
+	float flTime = RemapValClamped(flWeight, 5, 20, 0.25f, 0.6f);
 
 	return flTime;
 }
