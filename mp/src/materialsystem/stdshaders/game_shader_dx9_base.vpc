@@ -4,8 +4,7 @@
 //	Project Script for mods to use an an example of how to override shaders
 //-----------------------------------------------------------------------------
 
-$Macro OUTBINDIR "\Dropbox\ActionBoogaloo\dab_debug\dab\debug_bin"    [$WIN32]
-$Macro OUTBINDIR "~\Dropbox\ActionBoogaloo\dab_debug\dab\debug_bin"   [$LINUX]
+$Macro OUTBINDIR	"$SRCDIR\..\game\$GAMENAME\bin"
 
 $Include "$SRCDIR\vpc_scripts\source_dll_base.vpc"
 
