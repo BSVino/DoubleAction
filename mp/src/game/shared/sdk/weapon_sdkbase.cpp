@@ -238,12 +238,24 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 
 	float flSpread = GetWeaponSpread();
 
-	if (pPlayer->m_Shared.IsAimedIn() && !WeaponSpreadFixed())
+	bool bGetAimInBonus = false;
+
+	bGetAimInBonus = pPlayer->m_Shared.IsAimedIn() || pPlayer->m_Shared.IsSuperFalling();
+
+	if (WeaponSpreadFixed())
+		bGetAimInBonus = false;
+
+	if (bGetAimInBonus)
 	{
+		float flAimIn = pPlayer->m_Shared.GetAimIn();
+
+		if (pPlayer->m_Shared.IsSuperFalling())
+			flAimIn = 1;
+
 		if (GetSDKWpnData().m_bAimInSpreadBonus)
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.3f);
+			flSpread *= RemapVal(flAimIn, 0, 1, 1, 0.3f);
 		else
-			flSpread *= RemapVal(pPlayer->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
+			flSpread *= RemapVal(flAimIn, 0, 1, 1, 0.8f);
 	}
 
 	flSpread = pPlayer->m_Shared.ModifySkillValue(flSpread, -0.25f, SKILL_MARKSMAN);
@@ -872,17 +884,22 @@ void CWeaponSDKBase::AddViewKick()
 
 		float flPunchBonus = 1;
 		float flRecoilBonus = 1;
-		if (GetPlayerOwner()->m_Shared.IsAimedIn())
+		if (GetPlayerOwner()->m_Shared.IsAimedIn() || pPlayer->m_Shared.IsSuperFalling())
 		{
+			float flAimIn = GetPlayerOwner()->m_Shared.GetAimIn();
+
+			if (pPlayer->m_Shared.IsSuperFalling())
+				flAimIn = 1;
+
 			if (HasAimInRecoilBonus())
 			{
-				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.2f);
-				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 0.8f, 1, 0.2f);
+				flPunchBonus = RemapValClamped(flAimIn, 0, 1, 1, 0.2f);
+				flRecoilBonus = RemapValClamped(flAimIn, 0, 0.8f, 1, 0.2f);
 			}
 			else
 			{
-				flPunchBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.8f);
-				flRecoilBonus = RemapValClamped(GetPlayerOwner()->m_Shared.GetAimIn(), 0, 1, 1, 0.6f);
+				flPunchBonus = RemapValClamped(flAimIn, 0, 1, 1, 0.8f);
+				flRecoilBonus = RemapValClamped(flAimIn, 0, 1, 1, 0.6f);
 			}
 		}
 
@@ -1388,6 +1405,9 @@ bool CWeaponSDKBase::Reload( void )
 		float flSpeedMultiplier = GetSDKWpnData().m_flReloadTimeMultiplier;
 
 		flSpeedMultiplier = GetPlayerOwner()->m_Shared.ModifySkillValue(flSpeedMultiplier, -0.2f, SKILL_MARKSMAN);
+
+		if (GetPlayerOwner()->m_Shared.IsSuperFalling())
+			flSpeedMultiplier *= 0.5f;
 
 		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
