@@ -51,11 +51,16 @@ CDAViewRender::CDAViewRender()
 ConVar da_postprocess_compare( "da_postprocess_compare", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Only render to half of the screen for debug purposes" );
 ConVar da_postprocess_deathcam_override( "da_postprocess_deathcam_override", "-1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Override the control for death came mode" );
 
+ConVar da_postprocess_shaders( "da_postprocess_shaders", "1", FCVAR_USERINFO, "Use screen-space post-process shaders?" );
+
 void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if ( !pPlayer )
+		return;
+
+	if (!da_postprocess_shaders.GetBool())
 		return;
 
 	if (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
