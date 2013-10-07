@@ -179,12 +179,13 @@ typedef enum
 
 	SKILL_BOUNCER,
 	SKILL_ATHLETIC,
-	SKILL_RESILIENT,
 	SKILL_REFLEXES,
 	SKILL_MARKSMAN,
 	SKILL_TROLL,
 
 	SKILL_MAX,		// number of weapons weapon index
+
+	SKILL_RESILIENT, // This has been removed.
 } SkillID;
 
 const char *SkillIDToAlias( SkillID id );

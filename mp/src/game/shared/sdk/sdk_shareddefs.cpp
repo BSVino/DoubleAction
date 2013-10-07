@@ -124,10 +124,11 @@ static const char * s_SkillAliasInfo[] =
 	"none",			// SKILL_NONE
 	"bouncer",      // SKILL_BOUNCER
 	"athletic",     // SKILL_ATHLETIC
-	"resilient",    // SKILL_RESILIENT
 	"reflexes",     // SKILL_REFLEXES
 	"marksman",     // SKILL_MARKSMAN
 	"troll",        // SKILL_TROLL
+	"max",          // SKILL_MAX
+	"resilient",    // SKILL_RESILIENT
 	NULL,
 };
 

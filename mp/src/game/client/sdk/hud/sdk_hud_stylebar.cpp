@@ -304,10 +304,10 @@ void CHudStyleBar::Paint()
 	{
 		m_apActiveSkillIcons[SKILL_BOUNCER] = gHUD.GetIcon("bouncer");
 		m_apActiveSkillIcons[SKILL_ATHLETIC] = gHUD.GetIcon("athletic");
-		m_apActiveSkillIcons[SKILL_RESILIENT] = gHUD.GetIcon("resilient");
 		m_apActiveSkillIcons[SKILL_REFLEXES] = gHUD.GetIcon("reflexes");
 		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("marksman");
 		m_apActiveSkillIcons[SKILL_TROLL] = gHUD.GetIcon("troll");
+		//m_apActiveSkillIcons[SKILL_RESILIENT] = gHUD.GetIcon("resilient");
 	}
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
