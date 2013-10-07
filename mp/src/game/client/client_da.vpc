@@ -86,6 +86,7 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_mp5k.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_sdkbase.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
 		}
 
 		$File "sdk/da_view_scene.cpp"

@@ -157,6 +157,7 @@ typedef enum
 	SDK_WEAPON_BRAWL,
 	SDK_WEAPON_AKIMBO_M1911,
 	SDK_WEAPON_AKIMBO_BERETTA,
+	SDK_WEAPON_M16,
 	WEAPON_MAX,		// number of weapons weapon index
 
 } SDKWeaponID;
