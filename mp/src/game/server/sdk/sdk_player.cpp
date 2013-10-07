@@ -1996,7 +1996,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
-	else if (m_Shared.IsAimedIn())
+	else if (m_Shared.GetAimIn() >= 0.99f)
 	{
 		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
 
