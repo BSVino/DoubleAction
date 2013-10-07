@@ -140,6 +140,7 @@ public:
 			m_bFlashlightOverride = false;
 			m_nMuzzleFlashFrameCountdown = 0;
 			m_muzzleFlashTimer.Invalidate();
+			m_flMuzzleFlashStart = 0;
 			delete m_pFlashlightEffect;
 			m_pFlashlightEffect = NULL;
 			return;

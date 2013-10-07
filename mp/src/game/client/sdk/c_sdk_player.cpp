@@ -1995,6 +1995,8 @@ void C_SDKPlayer::UpdateFlashlight()
 	{
 		if ( GetObserverMode() == OBS_MODE_IN_EYE )
 			pFlashlightPlayer = ToSDKPlayer( GetObserverTarget() );
+
+		ProjectedLightEffectManager(index).TurnOffFlashlight(true);
 	}
 
 	if ( !pFlashlightPlayer )
