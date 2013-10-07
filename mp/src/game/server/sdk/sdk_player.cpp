@@ -2697,7 +2697,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_WELCOME )
 		{
-			State_Transition( STATE_MAPINFO );
+			State_Transition( STATE_PICKINGCHARACTER );
 		}
 		
 		return true;
