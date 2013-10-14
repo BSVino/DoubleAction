@@ -48,6 +48,9 @@ private:
 
 	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
 	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];
+	CHudTexture* m_pGoldStar;
+	CHudTexture* m_pSilverStar;
+	CHudTexture* m_pBronzeStar;
 
 	class CAnnouncement
 	{

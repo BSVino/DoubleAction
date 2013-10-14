@@ -308,6 +308,10 @@ void CHudStyleBar::Paint()
 		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("marksman");
 		m_apActiveSkillIcons[SKILL_TROLL] = gHUD.GetIcon("troll");
 		//m_apActiveSkillIcons[SKILL_RESILIENT] = gHUD.GetIcon("resilient");
+
+		m_pGoldStar = gHUD.GetIcon("star_gold");
+		m_pSilverStar = gHUD.GetIcon("star_silver");
+		m_pBronzeStar = gHUD.GetIcon("star_bronze");
 	}
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
@@ -327,9 +331,10 @@ void CHudStyleBar::Paint()
 	int flScreenWide, flScreenTall;
 	surface()->GetScreenSize(flScreenWide, flScreenTall);
 
+	float flBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2;
 	surface()->DrawSetColor( Color(0, 0, 0, 100) );
 	surface()->DrawFilledRect(
-		m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2,
+		flBarLeft,
 		m_flElementYPos,
 		m_flElementXPos + iWidth - flStyleTextureWidth/2 + m_flBarWidth/2,
 		m_flElementYPos + iHeight - flStyleTextureHeight - m_flGap
@@ -488,8 +493,10 @@ void CHudStyleBar::Paint()
 		else if (pAnnouncement->m_ePointStyle == STYLE_POINT_SMALL)
 			flScale = 0.6f;
 
-		float flSlideIn = RemapValClamped(gpGlobals->curtime, pAnnouncement->m_flStartTime, pAnnouncement->m_flStartTime + 0.3f, 0, 1);
-		flSlideIn = RemapVal(Bias(flSlideIn, 0.75), 0, 1, 0, iWidth - m_flBarWidth - pTexture->EffectiveWidth(flScale));
+		float flStarWidth = pTexture->EffectiveHeight(flScale);
+
+		float flSlideInLerp = RemapValClamped(gpGlobals->curtime, pAnnouncement->m_flStartTime, pAnnouncement->m_flStartTime + 0.3f, 0, 1);
+		float flSlideIn = RemapVal(Bias(flSlideInLerp, 0.75), 0, 1, -1000, 0);
 
 		float flEndTime = pAnnouncement->m_flStartTime + hud_announcementtime.GetFloat();
 
@@ -500,9 +507,30 @@ void CHudStyleBar::Paint()
 			flAlpha = RemapValClamped(gpGlobals->curtime, flEndTime-0.5f, flEndTime, 1, 0);
 
 		pTexture->DrawSelf(
-			m_flElementXPos + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
 			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
 			Color(255, 255, 255, 255 * flAlpha)
 		);
+
+		CHudTexture* pStarTexture = m_pGoldStar;
+		if (pAnnouncement->m_ePointStyle == STYLE_POINT_LARGE)
+			pStarTexture = m_pSilverStar;
+		else if (pAnnouncement->m_ePointStyle == STYLE_POINT_SMALL)
+			pStarTexture = m_pBronzeStar;
+
+		if (pStarTexture)
+		{
+			pStarTexture->DrawSelf(
+				flBarLeft - flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+				flStarWidth, flStarWidth,
+				Color(255, 255, 255, 255 * flAlpha)
+			);
+
+			pStarTexture->DrawSelf(
+				flBarLeft - pTexture->EffectiveWidth(flScale) - 2*flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+				flStarWidth, flStarWidth,
+				Color(255, 255, 255, 255 * flAlpha)
+			);
+		}
 	}
 }
