@@ -295,6 +295,7 @@ public:
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
 	void UseStyleCharge(SkillID eSkill, float flCharge);
 	void DecayStyle();
+	void GetStyleStars(int& iGold, int& iSilver, int& iBronze);
 
 	void ActivateMeter();
 

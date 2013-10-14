@@ -36,6 +36,7 @@
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
+	#include "c_sdk_player_resource.h"
 
 	#define CRecipientFilter C_RecipientFilter
 #else
@@ -659,6 +660,34 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 		return;
 
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
+}
+
+void CSDKPlayer::GetStyleStars(int& iGold, int& iSilver, int& iBronze)
+{
+	float flTotalStyle;
+
+#ifdef GAME_DLL
+	Assert(false);
+	flTotalStyle = 0;
+#else
+	C_SDK_PlayerResource *sdkPR = SDKGameResources();
+
+	flTotalStyle = sdkPR->GetStyle(entindex());
+#endif
+
+	float flActivation = da_stylemeteractivationcost.GetFloat();
+
+	float flGold = flTotalStyle / flActivation;
+	iGold = flGold;
+
+	float flRemainder = (flGold - iGold)*flActivation;
+
+	float flSilver = flRemainder / (flActivation/5);
+	iSilver = flSilver;
+
+	flRemainder = (flGold - iSilver)*flActivation;
+
+	iBronze = flRemainder / (flActivation/25);
 }
 
 void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
