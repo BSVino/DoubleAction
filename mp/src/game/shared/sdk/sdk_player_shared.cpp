@@ -685,7 +685,7 @@ void CSDKPlayer::GetStyleStars(int& iGold, int& iSilver, int& iBronze)
 	float flSilver = flRemainder / (flActivation/5);
 	iSilver = flSilver;
 
-	flRemainder = (flGold - iSilver)*flActivation;
+	flRemainder = (flSilver - iSilver)*flActivation;
 
 	iBronze = flRemainder / (flActivation/25);
 }
