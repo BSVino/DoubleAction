@@ -22,7 +22,7 @@
 
 #endif
 
-#define GRENADE_TIMER 1.5f //Seconds
+#define GRENADE_TIMER 2.0f //Seconds
 
 //-----------------------------------------------------------------------------
 // Fragmentation grenades
