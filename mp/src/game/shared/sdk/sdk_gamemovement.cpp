@@ -2342,6 +2342,7 @@ bool CSDKGameMovement::CheckMantel()
 		return false;
 
 	m_pSDKPlayer->m_Shared.StartManteling(tr.plane.normal);
+	m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
 	return true;
 }

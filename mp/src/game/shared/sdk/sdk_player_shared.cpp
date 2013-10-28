@@ -1187,7 +1187,8 @@ void CSDKPlayerShared::DiveLandedProne()
 
 void CSDKPlayerShared::StartManteling(const Vector& vecWallNormal)
 {
-	m_vecMantelWallNormal = vecWallNormal;
+	EndDive();
+	EndWallFlip();
 
 	m_pOuter->DoAnimationEvent (PLAYERANIMEVENT_WALLCLIMB);
 
