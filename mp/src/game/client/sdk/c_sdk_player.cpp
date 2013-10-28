@@ -1159,6 +1159,11 @@ void C_SDKPlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 		if (gpGlobals->curtime < m_flDeathTime + 0.2f)
 			return;
 	}
+	else
+	{
+		if (gpGlobals->curtime < m_flDeathTime + 0.05f)
+			return;
+	}
 
 	if ( !m_bSentFreezeFrame )
 	{
