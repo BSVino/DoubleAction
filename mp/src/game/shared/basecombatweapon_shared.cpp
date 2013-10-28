@@ -951,7 +951,7 @@ void CBaseCombatWeapon::SetPickupTouch( void )
 		if ( GetSpawnFlags() & SF_NORESPAWN )
 		{
 			SetThink( &CBaseEntity::SUB_Remove );
-			SetNextThink( gpGlobals->curtime + 30.0f );
+			SetNextThink( gpGlobals->curtime + 60.0f );
 		}
 	}
 
