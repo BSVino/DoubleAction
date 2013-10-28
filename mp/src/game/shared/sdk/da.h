@@ -61,9 +61,31 @@ typedef enum {
 	NOTICE_SLOMO,
 	NOTICE_STYLESTREAK,
 	NOTICE_WORTHIT,
+
+	NOTICE_FIRST_TOPNOTICE,
+	NOTICE_CAPTURE_BRIEFCASE = NOTICE_FIRST_TOPNOTICE,
 	/*NOTICE_DENIED*/
 	TOTAL_NOTICES
 } notice_t;
+
+inline const char* NoticeToString( notice_t id )
+{
+	static const char* aszNotices[] = {
+		"NOTICE_MARKSMAN",
+		"NOTICE_TROLL",
+		"NOTICE_BOUNCER",
+		"NOTICE_ATHLETIC",
+		"NOTICE_SUPERSLO",
+		"NOTICE_RESILIENT",
+		"NOTICE_SLOMO",
+		"NOTICE_STYLESTREAK",
+		"NOTICE_WORTHIT",
+
+		"briefcase",
+	};
+
+	return aszNotices[id];
+}
 
 inline const char* WeaponTypeToAlias( weapontype_t id )
 {

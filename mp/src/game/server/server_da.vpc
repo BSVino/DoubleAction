@@ -90,6 +90,7 @@ $Project "Server (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
 		}
 
+		$File "sdk/da_briefcase.cpp"
 		$File "sdk/da_datamanager.cpp"
 		$File "sdk/da_ammo_pickup.cpp"
 		$File "sdk/da_powerup.cpp"

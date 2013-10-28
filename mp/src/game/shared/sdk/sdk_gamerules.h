@@ -19,6 +19,7 @@
 #include "convar.h"
 #include "gamevars_shared.h"
 #include "weapon_sdkbase.h"
+#include "da.h"
 
 #ifdef CLIENT_DLL
 	#include "c_baseplayer.h"
@@ -105,6 +106,13 @@ public:
 	Vector m_vDiveHullMax;	
 	Vector m_vDiveView;	
 };
+
+typedef enum
+{
+	MINIOBJECTIVE_NONE = 0,
+	MINIOBJECTIVE_BRIEFCASE,
+	MINIOBJECTIVE_MAX,
+} miniobjective_t;
 
 class CSDKGameRules : public CTeamplayRules
 {
@@ -223,9 +231,20 @@ public:
 	bool    CoderHacks() { return m_bCoderHacks; }
 
 private:
+	CNetworkVar( float, m_flNextMiniObjectiveStartTime );
+	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
+
+public:
+	void StartMiniObjective();
+	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
+	bool SetupMiniObjective_Briefcase();
+
+private:
 	CNetworkVar( float, m_flGameStartTime );
 	CNetworkVar( bool, m_bIsTeamplay );
 	CNetworkVar( bool, m_bCoderHacks );
+
+	CNetworkVar( EHANDLE, m_hBriefcase );
 
 	float	m_flNextSlowMoUpdate;
 };

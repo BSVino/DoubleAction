@@ -51,6 +51,8 @@ public:
 	virtual bool ShouldDraw( void );
 
 	virtual void Paint();
+	virtual void ShowSideNotice();
+	virtual void ShowTopNotice();
 	virtual void PaintBackground() {};
 
 	void	MsgFunc_Notice( bf_read &msg );
@@ -60,6 +62,11 @@ private:
 
 	float    m_flStartTime;
 	notice_t m_eNotice;
+
+	float    m_flTopStartTime;
+	notice_t m_eTopNotice;
+
+	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
 };
 
 DECLARE_HUDELEMENT( CHudNotices );
@@ -76,6 +83,7 @@ CHudNotices::CHudNotices( const char *pElementName )
 	SetHiddenBits( 0 );
 
 	m_flStartTime = -1;
+	m_flTopStartTime = -1;
 }
 
 void CHudNotices::Init()
@@ -86,21 +94,30 @@ void CHudNotices::Init()
 }
 
 ConVar hud_noticetime("hud_noticetime", "3", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long notices stick around, in seconds.");
+ConVar hud_topnoticetime("hud_topnoticetime", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long miniobjective notices stick around, in seconds.");
 
 void CHudNotices::MsgFunc_Notice( bf_read &msg )
 {
 	notice_t eNotice = (notice_t)msg.ReadLong();
 
-	// Don't overwrite a more important notice with a slowmo notice. NOBODY CARES, SLOWMO. GO AWAY.
-	if (gpGlobals->curtime < m_flStartTime + hud_noticetime.GetFloat() && eNotice == NOTICE_SLOMO)
-		return;
+	if (eNotice >= NOTICE_FIRST_TOPNOTICE)
+	{
+		m_flTopStartTime = gpGlobals->curtime;
+		m_eTopNotice = eNotice;
+	}
+	else
+	{
+		// Don't overwrite a more important notice with a slowmo notice. NOBODY CARES, SLOWMO. GO AWAY.
+		if (gpGlobals->curtime < m_flStartTime + hud_noticetime.GetFloat() && eNotice == NOTICE_SLOMO)
+			return;
 
-	m_flStartTime = gpGlobals->curtime;
-	m_eNotice = eNotice;
+		m_flStartTime = gpGlobals->curtime;
+		m_eNotice = eNotice;
 
-	CHudStyleBar* pElement = dynamic_cast<CHudStyleBar*>(gHUD.FindElement("CHudStyleBar"));
-	if (pElement)
-		pElement->Notice(eNotice);
+		CHudStyleBar* pElement = dynamic_cast<CHudStyleBar*>(gHUD.FindElement("CHudStyleBar"));
+		if (pElement)
+			pElement->Notice(eNotice);
+	}
 }
 
 void CHudNotices::Reset()
@@ -119,27 +136,36 @@ void CHudNotices::OnThink()
 
 	if (gpGlobals->curtime > m_flStartTime + hud_noticetime.GetFloat())
 		m_flStartTime = -1;
+
+	if (gpGlobals->curtime < m_flTopStartTime)
+		m_flTopStartTime = -1;
+
+	if (gpGlobals->curtime > m_flTopStartTime + hud_topnoticetime.GetFloat())
+		m_flTopStartTime = -1;
 }
 
 bool CHudNotices::ShouldDraw()
 {
-	if (m_flStartTime < 0)
+	if (m_flStartTime < 0 && m_flTopStartTime < 0)
 		return false;
 
-	if (gpGlobals->curtime > m_flStartTime + hud_noticetime.GetFloat())
+	if (gpGlobals->curtime > m_flStartTime + hud_noticetime.GetFloat() && gpGlobals->curtime > m_flTopStartTime + hud_topnoticetime.GetFloat())
 		return false;
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if ( !pPlayer )
 		return false;
 
+	bool bShowSide = m_flTopStartTime > 0;
+	bool bShowTop = m_flStartTime > 0;
+
 	if (!pPlayer->IsAlive())
 	{
 		if (m_eNotice != NOTICE_WORTHIT)
-			return false;
+			bShowSide = false;
 	}
 
-	return true;
+	return bShowTop || bShowSide;
 }
 
 void CHudNotices::Paint()
@@ -148,6 +174,13 @@ void CHudNotices::Paint()
 	if ( !pPlayer )
 		return;
 
+	ShowSideNotice();
+
+	ShowTopNotice();
+}
+
+void CHudNotices::ShowSideNotice()
+{
 	if (!m_apNotices[NOTICE_MARKSMAN])
 	{
 		m_apNotices[NOTICE_MARKSMAN] = gHUD.GetIcon("notice_marksman");
@@ -228,4 +261,61 @@ void CHudNotices::Paint()
 		pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
 		Color(255, 255, 255, 255 * flAlpha)
 		);
+}
+
+void CHudNotices::ShowTopNotice()
+{
+	if (m_eTopNotice < 0)
+		return;
+
+	if (m_eTopNotice >= TOTAL_NOTICES)
+		return;
+
+	if (gpGlobals->curtime > m_flTopStartTime + hud_topnoticetime.GetFloat())
+		return;
+
+	int iWidth, iHeight;
+	GetSize(iWidth, iHeight);
+
+	float flSlideInTime = m_flTopStartTime + 0.3f;
+	float flEndTime = m_flTopStartTime + hud_topnoticetime.GetFloat();
+	float flSlideOutTime = flEndTime - 0.5f;
+
+	wchar_t* pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
+
+	if (!pszObjectiveGoal)
+		return;
+
+	int iGoalWide, iGoalTall;
+	surface()->GetTextSize(m_hMiniObjectiveFont, pszObjectiveGoal, iGoalWide, iGoalTall);
+
+	float flSlideInXStart = -iGoalWide;
+	float flSlideSlowXStart = iWidth/2 - 30 - iGoalWide/2;
+	float flSlideSlowXEnd = iWidth/2 + 30 - iGoalWide/2;
+	float flSlideOutXEnd = iWidth;
+
+	float flSlideIn;
+	float flAlpha = 1;
+	if (gpGlobals->curtime < flSlideInTime)
+	{
+		float flSlideInRamp = RemapValClamped(gpGlobals->curtime, m_flTopStartTime, flSlideInTime, 0, 1);
+		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.75), 0, 1, flSlideInXStart, flSlideSlowXStart);
+		flAlpha = RemapValClamped(gpGlobals->curtime, m_flTopStartTime, flSlideInTime, 0, 1);
+	}
+	else if (gpGlobals->curtime < flSlideOutTime)
+	{
+		flSlideIn = RemapVal(gpGlobals->curtime, flSlideInTime, flSlideOutTime, flSlideSlowXStart, flSlideSlowXEnd);
+		flAlpha = 1;
+	}
+	else
+	{
+		float flSlideInRamp = RemapValClamped(gpGlobals->curtime, flSlideOutTime, flEndTime, 0, 1);
+		flSlideIn = RemapVal(Bias(flSlideInRamp, 0.25), 0, 1, flSlideSlowXEnd, flSlideOutXEnd);
+		flAlpha = RemapValClamped(gpGlobals->curtime, flSlideOutTime, flEndTime, 1, 0);
+	}
+
+	surface()->DrawSetTextPos( flSlideIn, iHeight/5 );
+	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+	surface()->DrawSetTextFont( m_hMiniObjectiveFont );
+	surface()->DrawUnicodeString( pszObjectiveGoal, vgui::FONT_DRAW_NONADDITIVE );
 }

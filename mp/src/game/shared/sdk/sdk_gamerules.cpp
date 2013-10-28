@@ -30,6 +30,7 @@
 	#include "sdk_basegrenade_projectile.h"
 	#include "da_spawngenerator.h"
 	#include "bots/bot_main.h"
+	#include "da_briefcase.h"
 
 #endif
 
@@ -77,13 +78,19 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
+		RecvPropFloat( RECVINFO( m_flNextMiniObjectiveStartTime ) ),
+		RecvPropInt( RECVINFO( m_eCurrentMiniObjective ) ),
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
 		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
+		RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
 #else
+		SendPropFloat( SENDINFO( m_flNextMiniObjectiveStartTime ), 32, SPROP_NOSCALE ),
+		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
 		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
 		SendPropBool( SENDINFO( m_bCoderHacks ) ),
+		SendPropEHandle( SENDINFO( m_hBriefcase ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -171,6 +178,8 @@ const CSDKViewVectors *CSDKGameRules::GetSDKViewVectors() const
 {
 	return &g_SDKViewVectors;
 }
+
+ConVar da_miniobjective_time("da_miniobjective_time", "3", FCVAR_DEVELOPMENTONLY, "Time until the next miniobjective begins, in minutes.");
 
 #ifdef CLIENT_DLL
 
@@ -283,6 +292,8 @@ CSDKGameRules::CSDKGameRules()
 	m_flGameStartTime = 0;
 
 	m_flNextSlowMoUpdate = 0;
+
+	m_flNextMiniObjectiveStartTime = 0;
 }
 
 void CSDKGameRules::ServerActivate()
@@ -302,6 +313,11 @@ void CSDKGameRules::ServerActivate()
 	}
 
 	//TheBots->ServerActivate();
+
+	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
+
+	float flTimeToFirstMiniObjective = (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + flTimeToFirstMiniObjective * 2; // A little extra time before the first one.
 }
 
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
@@ -828,6 +844,9 @@ void CSDKGameRules::Think()
 
 	if (gpGlobals->curtime > m_flNextSlowMoUpdate)
 		ReCalculateSlowMo();
+
+	if (!m_eCurrentMiniObjective && m_flNextMiniObjectiveStartTime && gpGlobals->curtime > m_flNextMiniObjectiveStartTime)
+		StartMiniObjective();
 }
 
 // The bots do their processing after physics simulation etc so their visibility checks don't recompute
@@ -1884,3 +1903,115 @@ float CSDKGameRules::GetMapElapsedTime( void )
 {
 	return gpGlobals->curtime;
 }
+
+void CSDKGameRules::StartMiniObjective()
+{
+#ifndef CLIENT_DLL
+	if (random->RandomInt(0, 2) != 0)
+	{
+		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+
+		return;
+	}
+
+	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+
+	bool bResult = false;
+	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
+		bResult = SetupMiniObjective_Briefcase();
+	else
+		AssertMsg(false, "Unknown mini objective to set up.");
+
+	if (!bResult)
+	{
+		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+
+		return;
+	}
+
+	m_eCurrentMiniObjective = eObjective;
+
+	CBroadcastRecipientFilter filter;
+	filter.MakeReliable();
+
+	UserMessageBegin( filter, "Notice" );
+		WRITE_LONG( GetNoticeForMiniObjective(m_eCurrentMiniObjective) );
+	MessageEnd();
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		CSingleUserRecipientFilter filter( pPlayer );
+		pPlayer->EmitSound(filter, pPlayer->entindex(), "MiniObjective.Begin");
+	}
+#endif
+}
+
+notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
+{
+	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
+		return NOTICE_CAPTURE_BRIEFCASE;
+
+	AssertMsg(false, "Unknown notice for objective.");
+	return NOTICE_CAPTURE_BRIEFCASE;
+}
+
+bool CSDKGameRules::SetupMiniObjective_Briefcase()
+{
+#ifndef CLIENT_DLL
+	// Find a spawn point to place the briefcase in.
+
+	CUtlVector<CBaseEntity*> apBriefcaseSpawnPoints;
+
+	CBaseEntity* pSpot = NULL;
+	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPlayer)
+				continue;
+
+			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
+
+			if (flDistance < 500 && pPlayer->IsVisible(pSpot->GetAbsOrigin(), true))
+				continue;
+
+			if (flDistance < 200)
+				continue;
+		}
+
+		apBriefcaseSpawnPoints.AddToTail(pSpot);
+	}
+
+	if (apBriefcaseSpawnPoints.Count() == 0)
+		return false;
+
+	int iSpot = random->RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
+
+	CBriefcase* pBriefcase = (CBriefcase*)CreateEntityByName("da_briefcase");
+	pBriefcase->Spawn();
+
+	pBriefcase->SetAbsOrigin(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin());
+
+	m_hBriefcase = pBriefcase;
+
+	return true;
+#endif
+
+	return false;
+}
+
+#ifndef CLIENT_DLL
+extern ConVar *sv_cheats;
+
+void CC_MiniObjective(const CCommand &args)
+{
+	SDKGameRules()->StartMiniObjective();
+}
+
+static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
+#endif

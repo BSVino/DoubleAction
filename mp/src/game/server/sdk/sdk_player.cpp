@@ -911,6 +911,8 @@ void CSDKPlayer::Precache()
 	PrecacheScriptSound( "HudMeter.FillStylish" );
 	PrecacheScriptSound( "HudMeter.Knockout" );
 
+	PrecacheScriptSound( "MiniObjective.Begin" );
+
 	PrecacheScriptSound( "Weapon_Brawl.PunchHit" );
 
 	//Tony; go through our list of player models that we may be using and cache them

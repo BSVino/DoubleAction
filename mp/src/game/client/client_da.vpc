@@ -90,6 +90,7 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
 		}
 
+		$File "sdk/c_da_briefcase.cpp"
 		$File "sdk/da_view_scene.cpp"
 		$File "sdk/c_sdk_env_sparkler.cpp"
 		$File "sdk/c_sdk_team.cpp"
