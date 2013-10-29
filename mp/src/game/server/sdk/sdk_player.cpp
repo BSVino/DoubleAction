@@ -32,6 +32,7 @@
 #include "ammodef.h"
 #include "dove.h"
 #include "da_datamanager.h"
+#include "da_briefcase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -253,6 +254,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 
+	SendPropEHandle( SENDINFO( m_hBriefcase ) ),
+
 	SendPropBool( SENDINFO( m_bCoderHacks ) ),
 	SendPropInt( SENDINFO( m_nCoderHacksButtons ), 32, SPROP_UNSIGNED ),
 
@@ -398,6 +401,7 @@ CSDKPlayer::CSDKPlayer()
 
 CSDKPlayer::~CSDKPlayer()
 {
+	DropBriefcase();
 	DestroyRagdoll();
 	m_PlayerAnimState->Release();
 }
@@ -1749,6 +1753,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 	else
 		m_hObserverTarget.Set( NULL );
+
+	DropBriefcase();
 
 	// Note: since we're dead, it won't draw us on the client, but we don't set EF_NODRAW
 	// because we still want to transmit to the clients in our PVS.
@@ -3988,6 +3994,29 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 		SendNotice(NOTICE_SLOMO);
 
 	m_flSlowMoSeconds = clamp(m_flSlowMoSeconds+flSeconds, 0, flMaxSlow);
+}
+
+void CSDKPlayer::PickUpBriefcase(CBriefcase* pBriefcase)
+{
+	DropBriefcase();
+
+	pBriefcase->FollowEntity(this);
+	pBriefcase->SetOwnerEntity(this);
+
+	m_hBriefcase = pBriefcase;
+}
+
+void CSDKPlayer::DropBriefcase()
+{
+	if (!m_hBriefcase)
+		return;
+
+	m_hBriefcase->FollowEntity(NULL);
+	m_hBriefcase->SetOwnerEntity(NULL);
+
+	m_hBriefcase->Dropped(this);
+
+	m_hBriefcase = NULL;
 }
 
 void CSDKPlayer::CoderHacks(bool bOn)

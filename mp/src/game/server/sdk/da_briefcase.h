@@ -27,4 +27,32 @@ public:
 	int UpdateTransmitState();
 
 	bool MyTouch( CBasePlayer *pPlayer );
+
+	void Dropped(class CSDKPlayer*);
+
+	float GetLastTouchedTime() const { return m_flLastTouched; }
+
+private:
+	float m_flLastTouched;
+};
+
+class CBriefcaseCaptureZone : public CBaseEntity
+{
+	DECLARE_CLASS( CBriefcaseCaptureZone, CBaseEntity );
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+
+public:
+	CBriefcaseCaptureZone();
+
+public:
+	void Precache( void );
+	void Spawn( void );
+
+	int UpdateTransmitState();
+
+	void CaptureThink();
+
+private:
+	CNetworkVar( float, m_flCaptureRadius );
 };

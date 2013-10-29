@@ -13,6 +13,8 @@
 #include "iclientmode.h"
 #include "vgui/ILocalize.h"
 #include "sdk_gamerules.h"
+#include "../c_da_briefcase.h"
+#include "view.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -43,6 +45,10 @@ private:
 	vgui::HFont		m_hFont;
 	int				m_iLastEntIndex;
 	float			m_flLastChangeTime;
+
+	CHudTexture*    m_pBriefcase;
+	float           m_flBriefcaseAlpha;
+	Vector          m_vecLastKnownBriefcase;
 };
 
 DECLARE_HUDELEMENT( CSDKTargetId );
@@ -63,6 +69,10 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	m_iLastEntIndex = 0;
 
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
+
+	m_pBriefcase = NULL;
+
+	m_flBriefcaseAlpha = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -102,6 +112,51 @@ Color CSDKTargetId::GetColorForTargetTeam( int iTeamNumber )
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
+	if (!m_pBriefcase)
+		m_pBriefcase = gHUD.GetIcon("briefcase");
+
+	if (m_pBriefcase && SDKGameRules()->GetBriefcase())
+	{
+		C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
+
+		m_vecLastKnownBriefcase = pBriefcase->WorldSpaceCenter();
+	}
+
+	int iX, iY;
+
+	if (GetVectorInHudSpace(m_vecLastKnownBriefcase, iX, iY))
+	{
+		bool bHide;
+		C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
+
+		if (pBriefcase)
+		{
+			trace_t tr;
+			UTIL_TraceLine(CurrentViewOrigin(), m_vecLastKnownBriefcase, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
+
+			bHide = tr.fraction >= 0.99f || tr.m_pEnt == pBriefcase;
+			if ((CurrentViewOrigin() - pBriefcase->WorldSpaceCenter()).LengthSqr() > 500*500)
+				bHide = false;
+		}
+		else
+			bHide = true;
+
+		float flAlphaGoal;
+		if (!bHide)
+			flAlphaGoal = 1;
+		else
+			flAlphaGoal = 0;
+
+		m_flBriefcaseAlpha = Approach(flAlphaGoal, m_flBriefcaseAlpha, gpGlobals->frametime * 2);
+
+		if (m_flBriefcaseAlpha > 0)
+		{
+			int iWidth = m_pBriefcase->EffectiveWidth(0.7f);
+			int iHeight = m_pBriefcase->EffectiveHeight(0.7f);
+			m_pBriefcase->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_flBriefcaseAlpha));
+		}
+	}
+
 #define MAX_ID_STRING 256
 	wchar_t sIDString[ MAX_ID_STRING ];
 	sIDString[0] = 0;

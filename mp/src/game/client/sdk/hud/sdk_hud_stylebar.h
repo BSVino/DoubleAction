@@ -51,6 +51,7 @@ private:
 	CHudTexture* m_pGoldStar;
 	CHudTexture* m_pSilverStar;
 	CHudTexture* m_pBronzeStar;
+	CHudTexture* m_pBriefcase;
 
 	class CAnnouncement
 	{

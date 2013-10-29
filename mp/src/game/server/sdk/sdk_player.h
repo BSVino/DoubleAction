@@ -230,6 +230,8 @@ public:
 	const Vector GetThirdPersonCameraPosition();
 	const Vector GetThirdPersonCameraTarget();
 
+	bool HasBriefcase() const;
+
 	bool InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 
 // In shared code.
@@ -307,6 +309,9 @@ public:
 	int GetSlowMoType() const { return m_iSlowMoType; }
 	void SetSlowMoType(int iType);
 	void GiveSlowMo(float flSeconds);
+
+	void DropBriefcase();
+	void PickUpBriefcase(class CBriefcase*);
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
@@ -503,6 +508,8 @@ public:
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	CNetworkVar(bool, m_bWasKilledByExplosion);
 	CNetworkVar(Vector, m_vecKillingExplosionPosition);
+
+	CNetworkHandle(CBriefcase, m_hBriefcase);
 
 	CNetworkVar( bool, m_bCoderHacks );
 	CNetworkVar( int, m_nCoderHacksButtons );

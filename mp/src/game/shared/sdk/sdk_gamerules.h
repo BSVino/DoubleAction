@@ -23,6 +23,7 @@
 
 #ifdef CLIENT_DLL
 	#include "c_baseplayer.h"
+	#include "c_da_briefcase.h"
 #else
 	#include "player.h"
 	#include "sdk_player.h"
@@ -37,6 +38,7 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+class CBriefcaseCaptureZone;
 
 class CSDKGameRulesProxy : public CGameRulesProxy
 {
@@ -188,7 +190,7 @@ public:
 	bool TeamStacked( int iNewTeam, int iCurTeam );
 	int SelectDefaultTeam( void );
 
-	virtual void ServerActivate();
+	virtual void LevelInitPostEntity();
 	virtual void ClientDisconnected( edict_t *pClient );
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );
@@ -231,20 +233,30 @@ public:
 	bool    CoderHacks() { return m_bCoderHacks; }
 
 private:
-	CNetworkVar( float, m_flNextMiniObjectiveStartTime );
+	float m_flNextMiniObjectiveStartTime;
+	int   m_iMiniObjectivePasses;
 	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
 
 public:
 	void StartMiniObjective();
 	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
 	bool SetupMiniObjective_Briefcase();
+	void MaintainMiniObjective();
+	void MaintainMiniObjective_Briefcase();
+	void CleanupMiniObjective();
+	void CleanupMiniObjective_Briefcase();
+
+	void PlayerCapturedBriefcase(CSDKPlayer* pPlayer);
+	CBriefcase* GetBriefcase() const;
+	CBriefcaseCaptureZone* GetCaptureZone() const;
 
 private:
 	CNetworkVar( float, m_flGameStartTime );
 	CNetworkVar( bool, m_bIsTeamplay );
 	CNetworkVar( bool, m_bCoderHacks );
 
-	CNetworkVar( EHANDLE, m_hBriefcase );
+	CNetworkHandle( CBriefcase, m_hBriefcase );
+	CNetworkHandle( CBriefcaseCaptureZone, m_hCaptureZone );
 
 	float	m_flNextSlowMoUpdate;
 };

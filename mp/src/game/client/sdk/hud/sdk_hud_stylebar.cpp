@@ -312,6 +312,8 @@ void CHudStyleBar::Paint()
 		m_pGoldStar = gHUD.GetIcon("star_gold");
 		m_pSilverStar = gHUD.GetIcon("star_silver");
 		m_pBronzeStar = gHUD.GetIcon("star_bronze");
+
+		m_pBriefcase = gHUD.GetIcon("briefcase");
 	}
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
@@ -417,6 +419,15 @@ void CHudStyleBar::Paint()
 		{
 			pStyleTexture->DrawSelf(
 					flIconXPos, flIconYPos,
+					flIconWide, flIconTall,
+					Color( 255, 255, 255, 255 )
+				);
+		}
+
+		if (m_pBriefcase && pPlayer->HasBriefcase())
+		{
+			m_pBriefcase->DrawSelf(
+					flIconXPos + flIconWide + 20, flIconYPos,
 					flIconWide, flIconTall,
 					Color( 255, 255, 255, 255 )
 				);

@@ -78,19 +78,19 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
-		RecvPropFloat( RECVINFO( m_flNextMiniObjectiveStartTime ) ),
 		RecvPropInt( RECVINFO( m_eCurrentMiniObjective ) ),
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
 		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 		RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
+		RecvPropEHandle( RECVINFO( m_hCaptureZone ) ),
 #else
-		SendPropFloat( SENDINFO( m_flNextMiniObjectiveStartTime ), 32, SPROP_NOSCALE ),
 		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
 		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
 		SendPropBool( SENDINFO( m_bCoderHacks ) ),
 		SendPropEHandle( SENDINFO( m_hBriefcase ) ),
+		SendPropEHandle( SENDINFO( m_hCaptureZone ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -294,10 +294,13 @@ CSDKGameRules::CSDKGameRules()
 	m_flNextSlowMoUpdate = 0;
 
 	m_flNextMiniObjectiveStartTime = 0;
+	m_iMiniObjectivePasses = 0;
 }
 
-void CSDKGameRules::ServerActivate()
+void CSDKGameRules::LevelInitPostEntity()
 {
+	BaseClass::LevelInitPostEntity();
+
 	//Tony; initialize the level
 	CheckLevelInitialized();
 
@@ -316,8 +319,8 @@ void CSDKGameRules::ServerActivate()
 
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
 
-	float flTimeToFirstMiniObjective = (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + flTimeToFirstMiniObjective * 2; // A little extra time before the first one.
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+	m_iMiniObjectivePasses = 100; // Guarantee we get the first mini-objective.
 }
 
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
@@ -325,6 +328,9 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	BaseClass::ClientDisconnected(pClient);
 
 	CoderHacksUpdate();
+
+	CSDKPlayer* pSDKPlayer = ToSDKPlayer(CBaseEntity::Instance( pClient ));
+	pSDKPlayer->DropBriefcase();
 }
 
 bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
@@ -847,6 +853,9 @@ void CSDKGameRules::Think()
 
 	if (!m_eCurrentMiniObjective && m_flNextMiniObjectiveStartTime && gpGlobals->curtime > m_flNextMiniObjectiveStartTime)
 		StartMiniObjective();
+
+	if (m_eCurrentMiniObjective)
+		MaintainMiniObjective();
 }
 
 // The bots do their processing after physics simulation etc so their visibility checks don't recompute
@@ -956,7 +965,12 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 	// in teamplay only use deathmatch spawns that are near team mates
 	bool bNeedTeamMate = (IsTeamplay() && !stricmp(pSpot->GetClassname(),"info_player_deathmatch"));
 
-	bool bTeammatesAlive = !!(pPlayer->GetTeam()->GetAliveMembers()-1); // Subtract 1 because the spawning player is considered alive by this point.
+	bool bTeammatesAlive;
+	if (pPlayer)
+		bTeammatesAlive = !!(pPlayer->GetTeam()->GetAliveMembers()-1); // Subtract 1 because the spawning player is considered alive by this point.
+	else
+		bTeammatesAlive = false;
+
 	bNeedTeamMate &= bTeammatesAlive;
 
 	for (int i = 0; i <= gpGlobals->maxClients; i++)
@@ -1904,15 +1918,19 @@ float CSDKGameRules::GetMapElapsedTime( void )
 	return gpGlobals->curtime;
 }
 
+#ifndef CLIENT_DLL
 void CSDKGameRules::StartMiniObjective()
 {
-#ifndef CLIENT_DLL
-	if (random->RandomInt(0, 2) != 0)
+	m_iMiniObjectivePasses++;
+
+	if (random->RandomInt(0, 2) >= m_iMiniObjectivePasses)
 	{
 		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
 
 		return;
 	}
+
+	CleanupMiniObjective();
 
 	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
 
@@ -1928,6 +1946,8 @@ void CSDKGameRules::StartMiniObjective()
 
 		return;
 	}
+
+	m_iMiniObjectivePasses = 0;
 
 	m_eCurrentMiniObjective = eObjective;
 
@@ -1947,7 +1967,6 @@ void CSDKGameRules::StartMiniObjective()
 		CSingleUserRecipientFilter filter( pPlayer );
 		pPlayer->EmitSound(filter, pPlayer->entindex(), "MiniObjective.Begin");
 	}
-#endif
 }
 
 notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
@@ -1961,7 +1980,6 @@ notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
 
 bool CSDKGameRules::SetupMiniObjective_Briefcase()
 {
-#ifndef CLIENT_DLL
 	// Find a spawn point to place the briefcase in.
 
 	CUtlVector<CBaseEntity*> apBriefcaseSpawnPoints;
@@ -1969,6 +1987,7 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	CBaseEntity* pSpot = NULL;
 	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
 	{
+		bool bUse = true;
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1977,12 +1996,21 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 
 			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
 
-			if (flDistance < 500 && pPlayer->IsVisible(pSpot->GetAbsOrigin(), true))
-				continue;
-
 			if (flDistance < 200)
-				continue;
+			{
+				bUse = false;
+				break;
+			}
+
+			if (flDistance < 500 && pPlayer->IsVisible(pSpot->GetAbsOrigin(), true))
+			{
+				bUse = false;
+				break;
+			}
 		}
+
+		if (!bUse)
+			continue;
 
 		apBriefcaseSpawnPoints.AddToTail(pSpot);
 	}
@@ -1992,20 +2020,111 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 
 	int iSpot = random->RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
 
+	CUtlVector<CBaseEntity*> apCapturePoints;
+
+	float flAverageDistance = 0;
+	pSpot = NULL;
+	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+	{
+		apCapturePoints.AddToTail(pSpot);
+
+		flAverageDistance += (pSpot->GetAbsOrigin() - apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()).Length();
+	}
+
+	flAverageDistance /= apCapturePoints.Count();
+
+	// Valid capture points are the farthest ones from the spawn point.
+	CUtlVector<CBaseEntity*> apValidCapturePoints;
+
+	for (int i = 0; i < apCapturePoints.Count(); i++)
+	{
+		if ((apCapturePoints[i]->GetAbsOrigin() - apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()).Length() < flAverageDistance)
+			continue;
+
+		apValidCapturePoints.AddToTail(apCapturePoints[i]);
+	}
+
+	if (apValidCapturePoints.Count() == 0)
+		return false;
+
 	CBriefcase* pBriefcase = (CBriefcase*)CreateEntityByName("da_briefcase");
+	pBriefcase->SetAbsOrigin(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin() + Vector(0, 0, 50));
 	pBriefcase->Spawn();
 
-	pBriefcase->SetAbsOrigin(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin());
+	// Update the last touched time so it expires 60 seconds from now.
+	pBriefcase->Dropped(NULL);
 
 	m_hBriefcase = pBriefcase;
 
-	return true;
-#endif
+	int iCapture = random->RandomInt(0, apValidCapturePoints.Count()-1);
 
-	return false;
+	CBriefcaseCaptureZone* pCaptureZone = (CBriefcaseCaptureZone*)CreateEntityByName("da_briefcase_capture");
+	pCaptureZone->SetAbsOrigin(apValidCapturePoints[iCapture]->GetAbsOrigin());
+	pCaptureZone->Spawn();
+
+	m_hCaptureZone = pCaptureZone;
+
+	return true;
 }
 
-#ifndef CLIENT_DLL
+void CSDKGameRules::MaintainMiniObjective()
+{
+	if (!m_eCurrentMiniObjective)
+		return;
+
+	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
+		MaintainMiniObjective_Briefcase();
+	else
+		AssertMsg(false, "Unknown mini objective to maintain.");
+}
+
+void CSDKGameRules::MaintainMiniObjective_Briefcase()
+{
+	if (!m_hBriefcase)
+	{
+		CleanupMiniObjective();
+		return;
+	}
+
+	if (!m_hBriefcase->GetOwnerEntity() && gpGlobals->curtime > m_hBriefcase->GetLastTouchedTime() + 60)
+	{
+		CleanupMiniObjective();
+		return;
+	}
+}
+
+void CSDKGameRules::CleanupMiniObjective()
+{
+	if (!m_eCurrentMiniObjective)
+		return;
+
+	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
+		CleanupMiniObjective_Briefcase();
+	else
+		AssertMsg(false, "Unknown mini objective to maintain.");
+
+	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
+
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+}
+
+void CSDKGameRules::CleanupMiniObjective_Briefcase()
+{
+	UTIL_Remove(m_hBriefcase);
+	UTIL_Remove(m_hCaptureZone);
+}
+
+void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
+{
+	if (pPlayer)
+	{
+		ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
+		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE);
+	}
+
+	CleanupMiniObjective();
+}
+
 extern ConVar *sv_cheats;
 
 void CC_MiniObjective(const CCommand &args)
@@ -2015,3 +2134,13 @@ void CC_MiniObjective(const CCommand &args)
 
 static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
 #endif
+
+CBriefcase* CSDKGameRules::GetBriefcase() const
+{
+	return m_hBriefcase;
+}
+
+CBriefcaseCaptureZone* CSDKGameRules::GetCaptureZone() const
+{
+	return m_hCaptureZone;
+}

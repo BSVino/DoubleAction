@@ -2009,3 +2009,8 @@ CWeaponSDKBase* CSDKPlayer::FindWeapon (SDKWeaponID id)
 	}
 	return NULL;
 }
+
+bool CSDKPlayer::HasBriefcase() const
+{
+	return !!m_hBriefcase;
+}

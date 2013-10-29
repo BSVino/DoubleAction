@@ -203,6 +203,8 @@ public:
 	const Vector GetThirdPersonCameraPosition();
 	const Vector GetThirdPersonCameraTarget();
 
+	bool HasBriefcase() const;
+
 	const char* GetCharacter() const { return m_iszCharacter; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
@@ -379,6 +381,8 @@ private:
 	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
 	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;
 	float                                  m_flLastLesson;
+
+	CNetworkHandle(class C_Briefcase, m_hBriefcase);
 
 	bool    m_bCoderHacks;
 	int     m_nCoderHacksButtons;

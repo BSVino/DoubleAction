@@ -230,6 +230,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 
+	RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
+
 	RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 	RecvPropInt( RECVINFO( m_nCoderHacksButtons ) ),
 
