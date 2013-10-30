@@ -94,6 +94,8 @@ int C_BriefcaseCaptureZone::DrawModel(int flags)
 {
 	if (!g_hCaptureZone.IsValid())
 		g_hCaptureZone.Init( "da/capturezone.vmt", TEXTURE_GROUP_OTHER );
+	if (!g_hBriefcaseArrow.IsValid())
+		g_hBriefcaseArrow.Init( "particle/briefcase.vmt", TEXTURE_GROUP_OTHER );
 
 	int iCylinderEdges = 40;
 	Vector vecCenter = WorldSpaceCenter();

@@ -109,6 +109,9 @@ void CBriefcaseCaptureZone::Spawn( void )
 
 	SetThink(&CBriefcaseCaptureZone::CaptureThink);
 	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
+	UTIL_DropToFloor(this, MASK_SOLID, this);
 }
 
 int CBriefcaseCaptureZone::UpdateTransmitState()

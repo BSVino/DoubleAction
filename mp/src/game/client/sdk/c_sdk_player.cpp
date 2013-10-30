@@ -2196,3 +2196,51 @@ void CSlowIntensityProxy::OnBind( void *pC_BaseEntity )
 }
 
 EXPOSE_INTERFACE( CSlowIntensityProxy, IMaterialProxy, "SlowIntensity" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+class CSlowMoMultiplierProxy : public CResultProxy
+{
+public:
+	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
+	virtual void OnBind( void *pC_BaseEntity );
+
+private:
+	CFloatInput m_Input;
+};
+
+
+bool CSlowMoMultiplierProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	if (!CResultProxy::Init( pMaterial, pKeyValues ))
+		return false;
+
+	m_Input.Init( pMaterial, pKeyValues, "input", 1.0f );
+
+	return true;
+}
+
+void CSlowMoMultiplierProxy::OnBind( void *pC_BaseEntity )
+{
+	Assert( m_pResult );
+
+	float flValue = 1;
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+	{
+		CBaseEntity *target = pPlayer->GetObserverTarget();
+		if (target && target->IsPlayer())
+		{
+			pPlayer = (C_SDKPlayer *)target;
+		}
+	}
+
+	if ( pPlayer )
+		flValue = m_Input.GetFloat() * pPlayer->GetSlowMoMultiplier();
+
+	SetFloatResult( flValue );
+
+	if ( ToolsEnabled() )
+		ToolFramework_RecordMaterialParams( GetMaterial() );
+}
+
+EXPOSE_INTERFACE( CSlowMoMultiplierProxy, IMaterialProxy, "SlowMoMultiplier" IMATERIAL_PROXY_INTERFACE_VERSION );

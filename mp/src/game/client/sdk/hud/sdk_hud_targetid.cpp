@@ -47,8 +47,14 @@ private:
 	float			m_flLastChangeTime;
 
 	CHudTexture*    m_pBriefcase;
-	float           m_flBriefcaseAlpha;
-	Vector          m_vecLastKnownBriefcase;
+	CHudTexture*    m_pCapturePoint;
+
+	CHudTexture*    m_pTargetTexture;
+	wchar_t*        m_pwszHint;
+	float           m_flTargetAlpha;
+	Vector          m_vecLastKnownTarget;
+
+	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
 };
 
 DECLARE_HUDELEMENT( CSDKTargetId );
@@ -71,8 +77,11 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	SetHiddenBits( HIDEHUD_MISCSTATUS );
 
 	m_pBriefcase = NULL;
+	m_pCapturePoint = NULL;
 
-	m_flBriefcaseAlpha = 0;
+	m_pTargetTexture = NULL;
+	m_pwszHint = NULL;
+	m_flTargetAlpha = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -112,19 +121,37 @@ Color CSDKTargetId::GetColorForTargetTeam( int iTeamNumber )
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
-	if (!m_pBriefcase)
-		m_pBriefcase = gHUD.GetIcon("briefcase");
+	if (!C_SDKPlayer::GetLocalSDKPlayer())
+		return;
 
-	if (m_pBriefcase && SDKGameRules()->GetBriefcase())
+	if (!m_pBriefcase)
+	{
+		m_pBriefcase = gHUD.GetIcon("briefcase");
+		m_pCapturePoint = gHUD.GetIcon("capturezone");
+	}
+
+	if (C_SDKPlayer::GetLocalSDKPlayer()->HasBriefcase())
+	{
+		C_BriefcaseCaptureZone* pBriefcase = SDKGameRules()->GetCaptureZone();
+		m_vecLastKnownTarget = pBriefcase->WorldSpaceCenter();
+
+		m_pTargetTexture = m_pCapturePoint;
+
+		m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Capture");
+	}
+	else if (m_pBriefcase && SDKGameRules()->GetBriefcase())
 	{
 		C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
+		m_vecLastKnownTarget = pBriefcase->WorldSpaceCenter();
 
-		m_vecLastKnownBriefcase = pBriefcase->WorldSpaceCenter();
+		m_pTargetTexture = m_pBriefcase;
+
+		m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Retrieve");
 	}
 
 	int iX, iY;
 
-	if (GetVectorInHudSpace(m_vecLastKnownBriefcase, iX, iY))
+	if (GetVectorInHudSpace(m_vecLastKnownTarget, iX, iY))
 	{
 		bool bHide;
 		C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
@@ -132,7 +159,7 @@ void CSDKTargetId::Paint()
 		if (pBriefcase)
 		{
 			trace_t tr;
-			UTIL_TraceLine(CurrentViewOrigin(), m_vecLastKnownBriefcase, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(CurrentViewOrigin(), m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
 
 			bHide = tr.fraction >= 0.99f || tr.m_pEnt == pBriefcase;
 			if ((CurrentViewOrigin() - pBriefcase->WorldSpaceCenter()).LengthSqr() > 500*500)
@@ -147,13 +174,24 @@ void CSDKTargetId::Paint()
 		else
 			flAlphaGoal = 0;
 
-		m_flBriefcaseAlpha = Approach(flAlphaGoal, m_flBriefcaseAlpha, gpGlobals->frametime * 2);
+		m_flTargetAlpha = Approach(flAlphaGoal, m_flTargetAlpha, gpGlobals->frametime * 2);
 
-		if (m_flBriefcaseAlpha > 0)
+		if (m_flTargetAlpha > 0)
 		{
-			int iWidth = m_pBriefcase->EffectiveWidth(0.7f);
-			int iHeight = m_pBriefcase->EffectiveHeight(0.7f);
-			m_pBriefcase->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_flBriefcaseAlpha));
+			int iWidth = m_pTargetTexture->EffectiveWidth(0.7f);
+			int iHeight = m_pTargetTexture->EffectiveHeight(0.7f);
+			m_pTargetTexture->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_flTargetAlpha));
+
+			if (m_pwszHint)
+			{
+				int iHintWide, iHintTall;
+				surface()->GetTextSize(m_hMiniObjectiveFont, m_pwszHint, iHintWide, iHintTall);
+
+				vgui::surface()->DrawSetTextFont( m_hMiniObjectiveFont );
+				vgui::surface()->DrawSetTextPos( iX - iHintWide/2, iY + iHeight/2 );
+				vgui::surface()->DrawSetTextColor( Color(255, 255, 255, 255 * m_flTargetAlpha) );
+				vgui::surface()->DrawPrintText( m_pwszHint, wcslen(m_pwszHint) );
+			}
 		}
 	}
 
