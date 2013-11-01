@@ -1023,6 +1023,26 @@ bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer 
 		pGrenade = gEntList.FindEntityByClassname( pGrenade, "grenade_projectile" );
 	}*/
 
+	// Don't spawn players on top of the briefcase.
+	CBaseEntity* pBriefcase = gEntList.FindEntityByClassname( NULL, "da_briefcase" );
+	while (pBriefcase)
+	{
+		if ((pSpot->GetAbsOrigin() - pBriefcase->GetAbsOrigin()).LengthSqr() < 300*300)
+			return false;
+
+		pBriefcase = gEntList.FindEntityByClassname( pBriefcase, "da_briefcase" );
+	}
+
+	// Don't start me near a capture point, it's probably a hot area.
+	CBaseEntity* pCapture = gEntList.FindEntityByClassname( NULL, "da_briefcase_capture" );
+	while (pCapture)
+	{
+		if ((pSpot->GetAbsOrigin() - pCapture->GetAbsOrigin()).LengthSqr() < 500*500)
+			return false;
+
+		pCapture = gEntList.FindEntityByClassname( pCapture, "da_briefcase_capture" );
+	}
+
 	Vector mins = GetViewVectors()->m_vHullMin;
 	Vector maxs = GetViewVectors()->m_vHullMax;
 
