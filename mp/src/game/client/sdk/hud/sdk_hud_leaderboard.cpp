@@ -35,6 +35,8 @@ using namespace vgui;
 #include "c_sdk_player.h"
 #include "sdk_hud_stylebar.h"
 #include "c_sdk_player_resource.h"
+#include "sdk_gamerules.h"
+#include "c_da_briefcase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -62,6 +64,7 @@ public:
 	virtual bool ShouldDraw( void );
 
 	void         ListPlayer(C_SDKPlayer *pPlayer, int iPosition);
+	void         PaintPlayerAvatar(C_SDKPlayer *pPlayer, float flX, float flY, float flW, float flH);
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
@@ -74,6 +77,7 @@ protected:
 	CHudTexture* m_pGoldStar;
 	CHudTexture* m_pSilverStar;
 	CHudTexture* m_pBronzeStar;
+	CHudTexture* m_pBriefcase;
 
 	vgui::ImageList*      m_pImageList;
 	CUtlMap<CSteamID,int> m_mAvatarsToImageList;
@@ -232,8 +236,24 @@ void CHudLeaderboard::ListPlayer(C_SDKPlayer *pPlayer, int iPosition)
 		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
 		surface()->DrawSetTextFont( m_hTextFont );
 		surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
+
+		int iTextWide;
+		surface()->GetTextSize( m_hTextFont, wszXLabel, iTextWide, iTextTall );
+
+		PaintPlayerAvatar(pPlayer, m_flBorder + iTextTall * iPosition + iTextTall + iTextWide, m_flBorder + iPosition*(iTextTall+5), iTextTall, iTextTall );
 	}
 
+	wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
+	g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
+
+	surface()->DrawSetTextPos( m_flBorder + iTextTall * iPosition + iTextTall*3.5f, m_flBorder + iPosition*(iTextTall+5) );
+	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+	surface()->DrawSetTextFont( m_hTextFont );
+	surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
+}
+
+void CHudLeaderboard::PaintPlayerAvatar(C_SDKPlayer *pPlayer, float flX, float flY, float flW, float flH)
+{
 	player_info_t pi;
 	if ( engine->GetPlayerInfo( pPlayer->entindex(), &pi ) )
 	{
@@ -248,7 +268,7 @@ void CHudLeaderboard::ListPlayer(C_SDKPlayer *pPlayer, int iPosition)
 			{
 				CAvatarImage *pImage = new CAvatarImage();
 				pImage->SetAvatarSteamID( steamIDForPlayer );
-				pImage->SetAvatarSize(iTextTall, iTextTall);
+				pImage->SetAvatarSize(flW, flH);
 				iImageIndex = m_pImageList->AddImage( pImage );
 
 				m_mAvatarsToImageList.Insert( steamIDForPlayer, iImageIndex );
@@ -261,18 +281,10 @@ void CHudLeaderboard::ListPlayer(C_SDKPlayer *pPlayer, int iPosition)
 			CAvatarImage *pAvIm = (CAvatarImage *)m_pImageList->GetImage( iImageIndex );
 			pAvIm->UpdateFriendStatus();
 
-			pAvIm->SetPos(m_flBorder + iTextTall * iPosition + iTextTall*3.5f - pAvIm->GetWide(), m_flBorder + iPosition*(iTextTall+5) );
+			pAvIm->SetPos(flX, flY);
 			pAvIm->Paint();
 		}
 	}
-
-	wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-	g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
-
-	surface()->DrawSetTextPos( m_flBorder + iTextTall * iPosition + iTextTall*3.5f, m_flBorder + iPosition*(iTextTall+5) );
-	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
-	surface()->DrawSetTextFont( m_hTextFont );
-	surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
 }
 
 void CHudLeaderboard::Paint()
@@ -286,6 +298,30 @@ void CHudLeaderboard::Paint()
 		m_pGoldStar = gHUD.GetIcon("star_gold");
 		m_pSilverStar = gHUD.GetIcon("star_silver");
 		m_pBronzeStar = gHUD.GetIcon("star_bronze");
+		m_pBriefcase = gHUD.GetIcon("briefcase");
+	}
+
+	if (SDKGameRules()->GetBriefcase())
+	{
+		CSDKPlayer* pBriefcasePlayer = ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity());
+		if (pBriefcasePlayer)
+		{
+			int iTextTall = surface()->GetFontTall( m_hTextFont );
+
+			if (m_pBriefcase)
+				m_pBriefcase->DrawSelf(m_flBorder, m_flBorder, iTextTall, iTextTall, Color(255, 255, 255, 255));
+
+			PaintPlayerAvatar(pBriefcasePlayer, m_flBorder + iTextTall, m_flBorder, iTextTall, iTextTall);
+
+			wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
+			g_pVGuiLocalize->ConvertANSIToUnicode( pBriefcasePlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
+
+			surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
+			surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+			surface()->DrawSetTextFont( m_hTextFont );
+			surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
+			return;
+		}
 	}
 
 	bool bLocalPlayerShown = false;
