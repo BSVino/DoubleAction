@@ -108,6 +108,16 @@ void CSDKBot::HandleRespawn( CUserCmd &cmd )
 // here bot updates important info that is used multiple times along the thinking process
 void CSDKBot::InfoGathering()
 {
+	if (!GetEnemy())
+	{
+		m_flBotToEnemyDist = 9999;
+		m_flHeightDifToEnemy = 0;
+		m_bEnemyOnSights = false;
+
+		m_flDistTraveled += fabs(GetLocalVelocity().Length()); // this is used for stuck checking,
+		return;
+	}
+
 	m_flBotToEnemyDist = (GetLocalOrigin() - GetEnemy()->GetLocalOrigin()).Length();
 
 	trace_t tr;
@@ -173,8 +183,7 @@ void CSDKBot::BotThink()
 			if( GetEnemy() && !GetEnemy()->IsAlive() )
 				ResetNavigationParams();
 
-			if( !AcquireEnemy() )
-				return;
+			AcquireEnemy();
 
 			m_flTimeToRecheckEnemy = gpGlobals->curtime + 1.0f;
 		}

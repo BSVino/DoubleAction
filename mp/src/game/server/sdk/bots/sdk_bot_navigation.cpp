@@ -4,6 +4,9 @@
 #include "BasePropDoor.h"
 #include "in_buttons.h"
 
+#include "sdk_gamerules.h"
+#include "da_briefcase.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -424,7 +427,17 @@ void CSDKBot::SelectSchedule( bool forcePath )
 {
 	Vector HideSpot;
 
-	if( CreatePath( GetEnemy() ) ) // try to reach enemy
+	if (HasBriefcase() && CreatePath(NULL, SDKGameRules()->GetCaptureZone()->GetAbsOrigin()))
+	{
+		m_nBotState = BOT_NAVIG_PATH;
+		m_nBotSchedule = BOT_SCHED_COMBAT;
+	}
+	else if (SDKGameRules()->GetBriefcase() && CreatePath(NULL, SDKGameRules()->GetBriefcase()->GetAbsOrigin()))
+	{
+		m_nBotState = BOT_NAVIG_PATH;
+		m_nBotSchedule = BOT_SCHED_COMBAT;
+	}
+	else if( CreatePath( GetEnemy() ) ) // try to reach enemy
 	{
 		m_nBotState = forcePath ? BOT_NAVIG_PATH_ENFORCED : BOT_NAVIG_PATH; // the waypoint based route can be forced, it means that bot won't get distracted by any other thing
 		m_nBotSchedule = BOT_SCHED_COMBAT;
@@ -556,6 +569,50 @@ void CSDKBot::Navigation( CUserCmd &cmd )
 					ResetNavigationParams();
 					m_nBotState = BOT_NAVIG_DIRECT;
 					AddWaypoint( GetEnemy()->GetLocalOrigin(), GO_NORTH, 0, 0 );
+				}
+			}
+		}
+	}
+
+	CBaseEntity* pWalkToTarget = NULL;
+	if (SDKGameRules()->GetBriefcase() && !SDKGameRules()->GetBriefcase()->GetOwnerEntity())
+		pWalkToTarget = SDKGameRules()->GetBriefcase();
+	else if (HasBriefcase())
+		pWalkToTarget = SDKGameRules()->GetCaptureZone();
+
+	if (pWalkToTarget && gpGlobals->curtime > m_flDontUseDirectNav)
+	{
+		// If there's a briefcase and it's on the ground, check if I can see it.
+		trace_t tr;
+		UTIL_TraceLine( EyePosition(), pWalkToTarget->WorldSpaceCenter()+Vector(0,0,5), MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &tr );
+
+		if( tr.fraction >= 0.99f || tr.m_pEnt == pWalkToTarget )
+		{
+			float BotToEnemyDist2d = (GetAbsOrigin() - pWalkToTarget->GetAbsOrigin()).Length2D();
+			//Msg(" %f ", tr.fraction );
+
+			if( BotToEnemyDist2d < 16 ) // we are on top of enemy, forget about combat and get down there
+			{
+				m_flDontUseDirectNav = gpGlobals->curtime + 2.5f;
+				//DevMsg("!I'm on top of enemy, literally\n");
+				if( GetLocalOrigin().z > pWalkToTarget->GetAbsOrigin().z ) // let's only move if we are on top
+					AddRandomPath();
+				else
+				{
+					m_nBotState = BOT_NAVIG_UNSTUCK;
+					ResetNavigationParams();
+				}
+			}
+			else
+			{
+				if( m_flHeightDifToEnemy > -50 )
+					// there's a limit regarding enemy's height over chasing bot because direct navigation
+					// would glitch if a bot tries to get to an innacesible enemy
+					// otherwise, if chasing bot is higher than its victim, this should work ok most of the time...
+				{
+					ResetNavigationParams();
+					m_nBotState = BOT_NAVIG_DIRECT;
+					AddWaypoint( pWalkToTarget->GetAbsOrigin(), GO_NORTH, 0, 0 );
 				}
 			}
 		}
