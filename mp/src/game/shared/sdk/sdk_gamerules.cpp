@@ -1951,22 +1951,9 @@ void CSDKGameRules::StartMiniObjective()
 
 	m_eCurrentMiniObjective = eObjective;
 
-	CBroadcastRecipientFilter filter;
-	filter.MakeReliable();
+	CSDKPlayer::SendBroadcastNotice(GetNoticeForMiniObjective(m_eCurrentMiniObjective));
 
-	UserMessageBegin( filter, "Notice" );
-		WRITE_LONG( GetNoticeForMiniObjective(m_eCurrentMiniObjective) );
-	MessageEnd();
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPlayer)
-			continue;
-
-		CSingleUserRecipientFilter filter( pPlayer );
-		pPlayer->EmitSound(filter, pPlayer->entindex(), "MiniObjective.Begin");
-	}
+	CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
 }
 
 notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
@@ -2120,6 +2107,9 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 	{
 		ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
 		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE);
+
+		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
+		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");
 	}
 
 	CleanupMiniObjective();

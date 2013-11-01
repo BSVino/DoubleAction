@@ -65,6 +65,7 @@ private:
 
 	float    m_flTopStartTime;
 	notice_t m_eTopNotice;
+	wchar_t  m_wszPlayerSubject[MAX_PLAYER_NAME_LENGTH];
 
 	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
 };
@@ -99,9 +100,22 @@ ConVar hud_topnoticetime("hud_topnoticetime", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENT
 void CHudNotices::MsgFunc_Notice( bf_read &msg )
 {
 	notice_t eNotice = (notice_t)msg.ReadLong();
+	int iSubject = msg.ReadByte();
 
 	if (eNotice >= NOTICE_FIRST_TOPNOTICE)
 	{
+		if (iSubject > 0)
+		{
+			CSDKPlayer* pSDKPlayer = ToSDKPlayer(UTIL_PlayerByIndex(iSubject));
+			if (!pSDKPlayer)
+				return;
+
+			if (pSDKPlayer->IsDormant())
+				return;
+
+			g_pVGuiLocalize->ConvertANSIToUnicode( pSDKPlayer->GetPlayerName(),  m_wszPlayerSubject, sizeof(m_wszPlayerSubject) );
+		}
+
 		m_flTopStartTime = gpGlobals->curtime;
 		m_eTopNotice = eNotice;
 	}
@@ -281,7 +295,22 @@ void CHudNotices::ShowTopNotice()
 	float flEndTime = m_flTopStartTime + hud_topnoticetime.GetFloat();
 	float flSlideOutTime = flEndTime - 0.5f;
 
-	wchar_t* pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
+#define MAX_NOTICE_STRING 256
+	wchar_t sNoticeString[ MAX_NOTICE_STRING ];
+	wchar_t* pszObjectiveGoal;
+
+	if (m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE)
+	{
+		if (m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE)
+			pszObjectiveGoal = g_pVGuiLocalize->Find("#DA_MiniObjective_Player_Has_Briefcase");
+		else
+			pszObjectiveGoal = g_pVGuiLocalize->Find("#DA_MiniObjective_Player_Captured_Briefcase");
+
+		g_pVGuiLocalize->ConstructString( sNoticeString, sizeof(sNoticeString), pszObjectiveGoal, 1, m_wszPlayerSubject );
+		pszObjectiveGoal = sNoticeString;
+	}
+	else
+		pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
 
 	if (!pszObjectiveGoal)
 		return;

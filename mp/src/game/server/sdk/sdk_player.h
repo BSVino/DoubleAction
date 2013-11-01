@@ -120,6 +120,9 @@ public:
 	void         AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info);
 	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle);
 	void         SendNotice(notice_t eNotice);
+	static void  SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject = NULL);
+
+	static void  SendBroadcastSound(const char* pszName);
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

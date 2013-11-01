@@ -2079,6 +2079,20 @@ void CSDKPlayer::SendNotice(notice_t eNotice)
 	MessageEnd();
 }
 
+void CSDKPlayer::SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject)
+{
+	CBroadcastRecipientFilter filter;
+	filter.MakeReliable();
+
+	UserMessageBegin( filter, "Notice" );
+		WRITE_LONG( eNotice );
+		if (pSubject)
+			WRITE_BYTE( pSubject->entindex() );
+		else
+			WRITE_BYTE( 0 );
+	MessageEnd();
+}
+
 int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
 {
 	if ( !edict() || m_takedamage < DAMAGE_YES )
@@ -4004,6 +4018,23 @@ void CSDKPlayer::PickUpBriefcase(CBriefcase* pBriefcase)
 	pBriefcase->SetOwnerEntity(this);
 
 	m_hBriefcase = pBriefcase;
+
+	SendBroadcastNotice(NOTICE_PLAYER_HAS_BRIEFCASE, this);
+
+	SendBroadcastSound("MiniObjective.BriefcasePickup");
+}
+
+void CSDKPlayer::SendBroadcastSound(const char* pszName)
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		CSingleUserRecipientFilter filter( pPlayer );
+		pPlayer->EmitSound(filter, pPlayer->entindex(), pszName);
+	}
 }
 
 void CSDKPlayer::DropBriefcase()
@@ -4017,6 +4048,8 @@ void CSDKPlayer::DropBriefcase()
 	m_hBriefcase->Dropped(this);
 
 	m_hBriefcase = NULL;
+
+	SendBroadcastSound("MiniObjective.BriefcaseDrop");
 }
 
 void CSDKPlayer::CoderHacks(bool bOn)
