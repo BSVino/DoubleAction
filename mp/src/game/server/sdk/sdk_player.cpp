@@ -2076,6 +2076,7 @@ void CSDKPlayer::SendNotice(notice_t eNotice)
 
 	UserMessageBegin( user, "Notice" );
 		WRITE_LONG( eNotice );
+		WRITE_BYTE( 0 );
 	MessageEnd();
 }
 
