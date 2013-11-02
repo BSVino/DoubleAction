@@ -1860,12 +1860,12 @@ void C_SDKPlayer::UpdateSoundEvents()
 	}
 }
 
-static ConVar da_cam_back("da_cam_back", "60", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits", true, 5, true, 150);
-static ConVar da_cam_right("da_cam_right", "15", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits", true, -30, true, 30);
+static ConVar da_cam_back("da_cam_back", "75", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits", true, 5, true, 150);
+static ConVar da_cam_right("da_cam_right", "25", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits", true, -30, true, 30);
 static ConVar da_cam_up("da_cam_up", "10", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits", true, -20, true, 30);
 
-static ConVar da_cam_back_aim("da_cam_back_aim", "25", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits while aiming in", true, 5, true, 150);
-static ConVar da_cam_right_aim("da_cam_right_aim", "20", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in", true, -30, true, 30);
+static ConVar da_cam_back_aim("da_cam_back_aim", "31", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits while aiming in", true, 5, true, 150);
+static ConVar da_cam_right_aim("da_cam_right_aim", "35", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in", true, -35, true, 35);
 static ConVar da_cam_up_aim("da_cam_up_aim", "5", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits while aiming in", true, -20, true, 30);
 
 static ConVar da_aimin_fov_delta_high("da_aimin_fov_delta_high", "40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
