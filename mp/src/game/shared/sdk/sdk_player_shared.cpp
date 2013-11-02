@@ -1928,12 +1928,22 @@ bool CSDKPlayer::IsInThirdPerson() const
 ConVar da_cam_forward_lerp( "da_cam_forward_lerp", "4", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Speed of camera when lerping backwards." );
 ConVar da_cam_back_lerp( "da_cam_back_lerp", "0.2", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Speed of camera when lerping forward (blocked by something)" );
 ConVar da_cam_max_fastlerp_distance( "da_cam_max_fastlerp_distance", "30", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Use the slow lerp when farther than this distance." );
-ConVar da_cam_standing_back_mult( "da_cam_standing_back_mult", "0.7", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Scale the back distance by this much while standing." );
 
 ConVar da_cam_stunt_up( "da_cam_stunt_up", "20", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Height to raise the camera during stunts." );
 
+ConVar da_cam_lag_velocity( "da_cam_lag_velocity", ".5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much player velocity will affect the camera lag." );
+ConVar da_cam_lag_drag( "da_cam_lag_drag", "8", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast the lagged part of the camera will return to center." );
+ConVar da_cam_lag_max( "da_cam_lag_max", "10", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Maximum camera lag distance." );
+
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
+	m_vecCameraLag -= GetAbsVelocity() * (GetSlowMoMultiplier() * gpGlobals->frametime * da_cam_lag_velocity.GetFloat());
+
+	m_vecCameraLag *= (1 - GetSlowMoMultiplier() * gpGlobals->frametime * da_cam_lag_drag.GetFloat());
+
+	if (m_vecCameraLag.Length() > da_cam_lag_max.GetFloat())
+		m_vecCameraLag = m_vecCameraLag.Normalized() * da_cam_lag_max.GetFloat();
+
 	float flCamBackIdle = GetUserInfoFloat("da_cam_back");
 	float flCamUpIdle = GetUserInfoFloat("da_cam_up");
 	float flCamRightIdle = GetUserInfoFloat("da_cam_right");
@@ -1941,6 +1951,8 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	float flCamBackAim = GetUserInfoFloat("da_cam_back_aim");
 	float flCamUpAim = GetUserInfoFloat("da_cam_up_aim");
 	float flCamRightAim = GetUserInfoFloat("da_cam_right_aim");
+
+	float flCamStandingScale = GetUserInfoFloat("da_cam_standing_back_mult");
 
 	float flCamBack = flCamBackIdle;
 	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);
@@ -1953,6 +1965,8 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	AngleVectors( angCamera, &camForward, &camRight, &camUp );
 
 	Vector vecCameraOffset = -camForward*flCamBack + camRight*flCamRight + camUp*flCamUp;
+
+	vecCameraOffset += m_vecCameraLag * Gain(1-m_Shared.GetAimIn(), 0.8f);
 
 	m_flStuntLerp = Approach((m_Shared.IsDiving()||m_Shared.IsRolling())?1:0, m_flStuntLerp, gpGlobals->frametime*2);
 
@@ -1981,7 +1995,7 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 
 	float flFraction = trace.fraction;
 	if (GetLocalVelocity().Length2DSqr() < 10*10)
-		flFraction = min(trace.fraction, da_cam_standing_back_mult.GetFloat());
+		flFraction = min(trace.fraction, flCamStandingScale);
 
 	float flLerpScale = (fabs(flFraction - m_flCameraLerp) + 0.1f)*5.0f;
 	if (vecCameraOffset.Length() * m_flCameraLerp < da_cam_max_fastlerp_distance.GetFloat() || trace.fraction < m_flCameraLerp)
