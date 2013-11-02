@@ -1961,10 +1961,21 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 
 	Vector vecNewOrigin = vecEye + vecCameraOffset;
 
+	// Start the trace here instead of at the eye so that if something blocks it
+	// the camera doesn't rush up to the back of the player's head.
+	Vector vecCameraOffsetStart = vecEye + camRight*(m_bThirdPersonCamSide?1:-1)*5 + camUp*5;
+
 	trace_t trace;
 
 	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
-	UTIL_TraceHull( vecEye, vecNewOrigin,
+	UTIL_TraceHull( vecEye, vecCameraOffsetStart,
+		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
+		MASK_VISIBLE|CONTENTS_GRATE, &traceFilter, &trace );
+
+	if (trace.fraction < 1)
+		return vecEye * trace.fraction + vecCameraOffsetStart * (1 - trace.fraction);
+
+	UTIL_TraceHull( vecCameraOffsetStart, vecNewOrigin,
 		Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
 		MASK_VISIBLE|CONTENTS_GRATE, &traceFilter, &trace );
 
@@ -1974,7 +1985,7 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 
 	float flLerpScale = (fabs(flFraction - m_flCameraLerp) + 0.1f)*5.0f;
 	if (vecCameraOffset.Length() * m_flCameraLerp < da_cam_max_fastlerp_distance.GetFloat() || trace.fraction < m_flCameraLerp)
-		m_flCameraLerp = Approach(flFraction, m_flCameraLerp, da_cam_forward_lerp.GetFloat()*gpGlobals->frametime*flLerpScale);
+		m_flCameraLerp = Approach(flFraction, m_flCameraLerp, da_cam_forward_lerp.GetFloat()*gpGlobals->frametime);
 	else
 		m_flCameraLerp = Approach(flFraction, m_flCameraLerp, da_cam_back_lerp.GetFloat()*gpGlobals->frametime*flLerpScale);
 
@@ -1985,7 +1996,7 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 			m_flCameraLerp = flCap;
 	}
 
-	return vecEye + vecCameraOffset * m_flCameraLerp;
+	return vecCameraOffsetStart + vecCameraOffset * m_flCameraLerp;
 }
 
 const Vector CSDKPlayer::GetThirdPersonCameraPosition()
