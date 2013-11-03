@@ -163,6 +163,8 @@ void CSDKPlayer::FireBullet(
 			break;
 		}
 
+		flMaxRange *= m_Shared.ModifySkillValue(1, 0.5f, SKILL_MARKSMAN);
+
 		//calculate the damage based on the distance the bullet travelled.
 		flCurrentDistance += tr.fraction * flMaxRange;
 
@@ -242,6 +244,8 @@ void CSDKPlayer::FireBullet(
 
 #ifdef GAME_DLL
 		float flBulletDamage = iDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
+		if (IsStyleSkillActive(SKILL_MARKSMAN))
+			flBulletDamage = iDamage * flDistanceMultiplier / (i/2+1);	// Each iteration the bullet drops in strength but not nearly as much.
 
 		ClearMultiDamage();
 
@@ -278,6 +282,8 @@ void CSDKPlayer::FireBullet(
 			flPenetrationDistance = 15;
 			break;
 		}
+
+		flPenetrationDistance = m_Shared.ModifySkillValue(flPenetrationDistance, 1, SKILL_MARKSMAN);
 
 		Vector vecBackwards = tr.endpos + vecDir * flPenetrationDistance;
 		if (tr.m_pEnt->IsBSPModel())
