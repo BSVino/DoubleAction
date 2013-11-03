@@ -1,5 +1,6 @@
 #include "cbase.h"
 #include "sdk_bot.h"
+#include "sdk_gamerules.h"
 
 #include "in_buttons.h"
 
@@ -15,16 +16,25 @@ bool CSDKBot::AcquireEnemy()
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
 
-		if ( pPlayer && pPlayer != NULL && pPlayer->IsAlive() && pPlayer != this )
-		{
-			float dist = (GetLocalOrigin() - pPlayer->GetLocalOrigin()).Length();
+		if (!pPlayer)
+			continue;
 
-			if( dist < minDist )
-			{
-				minDist = dist;
-				hEnemy.Set(pPlayer);
-				Success = true;
-			}
+		if (pPlayer == this)
+			continue;
+
+		if (!pPlayer->IsAlive())
+			continue;
+
+		if (SDKGameRules()->PlayerRelationship(this, pPlayer) == GR_TEAMMATE)
+			continue;
+
+		float dist = (GetLocalOrigin() - pPlayer->GetLocalOrigin()).Length();
+
+		if( dist < minDist )
+		{
+			minDist = dist;
+			hEnemy.Set(pPlayer);
+			Success = true;
 		}
 	}
 

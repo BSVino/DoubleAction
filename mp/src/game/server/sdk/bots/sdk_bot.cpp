@@ -19,6 +19,8 @@ void CSDKBot::Initialize()
 	m_flSkill[BOT_SKILL_SPEED] = random->RandomFloat(SKILL_MIN_SPEED, SKILL_MAX_SPEED);
 	m_flSkill[BOT_SKILL_STRAFE] = random->RandomFloat(SKILL_MIN_STRAFE, SKILL_MAX_STRAFE);
 
+	JoinTeam(0);
+
 	ClearLoadout();
 	BuyRandom();
 

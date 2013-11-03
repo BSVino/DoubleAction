@@ -237,6 +237,9 @@ public:
 
 	bool InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 
+	// For bots, really.
+	void JoinTeam(int i) { HandleCommand_JoinTeam(i); }
+
 // In shared code.
 public:
 	void FireBullet( 
