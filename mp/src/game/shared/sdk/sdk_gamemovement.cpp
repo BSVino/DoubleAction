@@ -849,6 +849,9 @@ void CSDKGameMovement::ReduceTimers( void )
 	else
 		flAimGoal = 0;
 
+	if (mv->m_vecVelocity.Length2DSqr() > 10*10)
+		m_pSDKPlayer->UseStyleCharge(SKILL_ATHLETIC, 2 * gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier());
+
 	m_pSDKPlayer->m_Shared.SetAimIn(Approach(flAimGoal, m_pSDKPlayer->m_Shared.GetAimIn(), flAimInSpeed));
 
 	m_pSDKPlayer->m_Shared.RampSlowAimIn(flAimGoal);

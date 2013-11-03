@@ -910,7 +910,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	if (!CanSlide())
 		return;
 
-	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 10);
 
 	PlayStartSlideSound();
 
@@ -1116,7 +1116,7 @@ Vector CSDKPlayerShared::StartDiving()
 	m_flDiveLerped = 0;
 	m_flDiveToProneLandTime = -1;
 
-	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 5);
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 10);
 
 	CPASFilter filter( m_pOuter->GetAbsOrigin() );
 	filter.UsePredictionRules();
@@ -1268,6 +1268,8 @@ void CSDKPlayerShared::StartWallFlip()
 	m_pOuter->SetGravity(0.8f);
 
 	m_pOuter->Instructor_LessonLearned("wallflip");
+
+	m_pOuter->UseStyleCharge(SKILL_ATHLETIC, 10);
 }
 
 void CSDKPlayerShared::EndWallFlip()
