@@ -42,7 +42,8 @@ public:
 private:
 	Color			GetColorForTargetTeam( int iTeamNumber );
 
-	vgui::HFont		m_hFont;
+	CPanelAnimationVar( vgui::HFont, m_hFont, "TargetIDFont", "Default" );
+
 	int				m_iLastEntIndex;
 	float			m_flLastChangeTime;
 
@@ -70,7 +71,6 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_hFont = g_hFontTrebuchet24;
 	m_flLastChangeTime = 0;
 	m_iLastEntIndex = 0;
 
