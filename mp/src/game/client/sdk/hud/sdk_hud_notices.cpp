@@ -110,9 +110,6 @@ void CHudNotices::MsgFunc_Notice( bf_read &msg )
 			if (!pSDKPlayer)
 				return;
 
-			if (pSDKPlayer->IsDormant())
-				return;
-
 			g_pVGuiLocalize->ConvertANSIToUnicode( pSDKPlayer->GetPlayerName(),  m_wszPlayerSubject, sizeof(m_wszPlayerSubject) );
 		}
 
