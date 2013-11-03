@@ -60,6 +60,7 @@ private:
 		announcement_t m_eAnnouncement;
 		style_point_t  m_ePointStyle;
 		float          m_flBarPosition;
+		float          m_flStylePoints;
 	};
 	CUtlLinkedList<CAnnouncement> m_aAnnouncements;
 };

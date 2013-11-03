@@ -1483,8 +1483,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					if (m_iSlowMoType != SLOWMO_NONE)
 						flPoints *= 1.3f;
 
-					AddStylePoints(flPoints, STYLE_SOUND_LARGE);
-					SendAnnouncement(ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
 				}
 			}
@@ -1679,7 +1678,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	if (m_Shared.IsSuperFalling() && m_bDamagedEnemyDuringFall)
 	{
-		AddStylePoints(10, STYLE_SOUND_LARGE);
+		AddStylePoints(10, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
 		SendNotice(NOTICE_WORTHIT);
 	}
@@ -1859,62 +1858,52 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	if (info.GetDamageType() == DMG_BLAST)
 	{
 		// Grenades are cool.
-		AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
+			AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
 		else
-			SendAnnouncement(ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
 
 		if (!IsAlive() && bKilledVictim)
 		{
-			AddStylePoints(flPoints, STYLE_SOUND_LARGE);
+			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 			SendNotice(NOTICE_WORTHIT);
 		}
 	}
 	else if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
 		// Killing a player with your last bullet.
-		AddStylePoints(flPoints, STYLE_SOUND_LARGE);
-		SendAnnouncement(ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
+		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
 	}
 	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && vecVictimForward.Dot(vecKillerToVictim) < 0.3f && flDistance < 100)
 	{
 		// Killing a player by shooting in the head from behind.
-		AddStylePoints(flPoints, STYLE_SOUND_LARGE);
-		SendAnnouncement(ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
+		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
 	}
 	else if (pVictim->LastHitGroup() == HITGROUP_HEAD)
 	{
-		AddStylePoints(flPoints, STYLE_SOUND_LARGE);
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
+			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
 		else
-			SendAnnouncement(ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
 	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
-		if (info.GetDamageType() == DMG_CLUB)
-			AddStylePoints(flPoints, bKilledVictim?STYLE_SOUND_KNOCKOUT:STYLE_SOUND_LARGE);
-		else
-			AddStylePoints(flPoints, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
 		if (m_Shared.IsDiving())
 		{
 			if (info.GetDamageType() == DMG_CLUB)
 			{
 				if (bKilledVictim)
-					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
 				else
-					SendAnnouncement(ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
 			}
 			else
 			{
 				if (bKilledVictim)
-					SendAnnouncement(ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
 				else
-					SendAnnouncement(ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
 			}
 		}
 		else
@@ -1922,57 +1911,49 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			if (info.GetDamageType() == DMG_CLUB)
 			{
 				if (bKilledVictim)
-					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
 				else
-					SendAnnouncement(ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
 			}
 			else
 			{
 				if (bKilledVictim)
-					SendAnnouncement(ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
 				else
-					SendAnnouncement(ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
 			}
 		}
 	}
 	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
 	{
-		AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
 		else
-			SendAnnouncement(ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
 	}
 	else if (flDistance > 1200)
 	{
 		// Long range.
-		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
 		else
-			SendAnnouncement(ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_SMALL, ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
 	}
 	else if (!(info.GetDamageType() & DMG_DIRECT) && (info.GetDamageType() & DMG_BULLET))
 	{
 		// Damaging a dude through a wall with a firearm.
-		AddStylePoints(flPoints*0.6f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_LARGE);
 		else
-			SendAnnouncement(ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_SMALL);
+			AddStylePoints(flPoints*0.6f, STYLE_SOUND_SMALL, ANNOUNCEMENT_THROUGH_WALL, STYLE_POINT_SMALL);
 	}
 	else if (m_Shared.IsRolling())
 	{
 		// Rolling, which is easier to do and typically happens after the dive, gives only half.
-		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_STUNT_KILL, STYLE_POINT_STYLISH);
+			AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_STUNT_KILL, STYLE_POINT_STYLISH);
 		else
-			SendAnnouncement(ANNOUNCEMENT_STUNT, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.5f, STYLE_SOUND_SMALL, ANNOUNCEMENT_STUNT, STYLE_POINT_LARGE);
 	}
 	else if (info.GetDamageType() == DMG_CLUB)
 	{
@@ -1992,45 +1973,33 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		if (bExecution)
 			flBrawlPoints *= 2;
 
-		AddStylePoints(flBrawlPoints, bKilledVictim?STYLE_SOUND_KNOCKOUT:STYLE_SOUND_SMALL);
-
 		if (bKilledVictim)
 		{
 			if (bExecution)
-				SendAnnouncement(ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
+				AddStylePoints(flBrawlPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
 			else
-				SendAnnouncement(ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
+				AddStylePoints(flBrawlPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_BRAWL_KILL, STYLE_POINT_STYLISH);
 		}
 		else
-			SendAnnouncement(ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
+			AddStylePoints(flBrawlPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
 	else if (m_Shared.GetAimIn() >= 0.99f)
 	{
-		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
 		if (bKilledVictim)
-			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
 		else
-			SendAnnouncement(ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
+			AddStylePoints(flPoints*0.5f, STYLE_SOUND_SMALL, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
 	}
 	else if (bKilledVictim && m_flSlowMoMultiplier < 1)
 	{
-		AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_SMALL);
-
-		SendAnnouncement(ANNOUNCEMENT_SLOWMO_KILL, STYLE_POINT_LARGE);
+		AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLOWMO_KILL, STYLE_POINT_LARGE);
 	}
 	else
 	{
-		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
-			// Damaging a stunting dude gives me slightly more bar than usual.
-			AddStylePoints(flPoints*0.3f, STYLE_SOUND_NONE);
-		else
-			AddStylePoints(flPoints*0.2f, STYLE_SOUND_NONE);
-
+		announcement_t eAnnouncement = ANNOUNCEMENT_NONE;
 		if (bKilledVictim)
 		{
 			int iRandom = random->RandomInt(0, 1);
-			announcement_t eAnnouncement;
 			switch (iRandom)
 			{
 			case 0:
@@ -2042,13 +2011,17 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				eAnnouncement = ANNOUNCEMENT_COOL;
 				break;
 			}
-
-			SendAnnouncement(eAnnouncement, STYLE_POINT_LARGE);
 		}
+
+		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
+			// Damaging a stunting dude gives me slightly more bar than usual.
+			AddStylePoints(flPoints*0.3f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
+		else
+			AddStylePoints(flPoints*0.2f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
 	}
 }
 
-void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle)
+void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle, float flPoints)
 {
 	CSingleUserRecipientFilter user( this );
 	user.MakeReliable();
@@ -2064,6 +2037,8 @@ void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t eP
 			WRITE_FLOAT( m_flStyleSkillCharge/da_stylemetertotalcharge.GetFloat() );
 		else
 			WRITE_FLOAT( GetStylePoints()/da_stylemeteractivationcost.GetFloat() );
+
+		WRITE_FLOAT( flPoints );
 
 	// End the message block
 	MessageEnd();
@@ -3820,7 +3795,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 	return pEnt;
 }
 
-void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
+void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement_t eAnnouncement, style_point_t ePointStyle)
 {
 	float flDeathRatio = m_iDeaths;
 
@@ -3841,9 +3816,9 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 
 	if (IsStyleSkillActive())
 	{
-		points = RemapValClamped(points, 0, da_stylemeteractivationcost.GetFloat(), 0, da_stylemetertotalcharge.GetFloat());
-		points /= 2;
-		m_flStyleSkillCharge = (m_flStyleSkillCharge+points > da_stylemetertotalcharge.GetFloat()) ? da_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+points;
+		float flDampenedPoints = RemapValClamped(points, 0, da_stylemeteractivationcost.GetFloat(), 0, da_stylemetertotalcharge.GetFloat());
+		flDampenedPoints /= 2;
+		m_flStyleSkillCharge = (m_flStyleSkillCharge+flDampenedPoints > da_stylemetertotalcharge.GetFloat()) ? da_stylemetertotalcharge.GetFloat() : m_flStyleSkillCharge+flDampenedPoints;
 	}
 	else
 		m_flStylePoints += points;
@@ -3882,6 +3857,9 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle)
 		params.m_pSoundName = "HudMeter.FillLarge";
 		EmitSound(filter, entindex(), params);
 	}
+
+	if (eAnnouncement != ANNOUNCEMENT_NONE)
+		SendAnnouncement(eAnnouncement, ePointStyle, points);
 }
 
 void CSDKPlayer::SetStylePoints(float flPoints)
@@ -4574,7 +4552,7 @@ void CC_GiveStyle(const CCommand& args)
 	if (!pPlayer)
 		return;
 
-	pPlayer->AddStylePoints(10, STYLE_SOUND_SMALL);
+	pPlayer->AddStylePoints(10, STYLE_SOUND_SMALL, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 }
 
 static ConCommand give_style("give_style", CC_GiveStyle, "Give the player some style to his bar.", FCVAR_GAMEDLL|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);

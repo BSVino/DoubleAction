@@ -37,6 +37,7 @@
 using namespace vgui;
 
 static const char* g_apszAnnouncementTextures[] = {
+	"announcement_none",
 	"announcement_cool",
 	"announcement_stylish",
 	"announcement_dive",
@@ -92,6 +93,7 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 	announcement_t eAnnouncement = (announcement_t)msg.ReadLong();
 	style_point_t ePointStyle = (style_point_t)msg.ReadByte();
 	float flBar = msg.ReadFloat();
+	float flPoints = msg.ReadFloat();
 
 	CAnnouncement oAnnouncement;
 	oAnnouncement.m_flStartTime = gpGlobals->curtime;
@@ -107,6 +109,8 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 		if (gpGlobals->curtime < m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay)
 			oAnnouncement.m_flStartTime = m_aAnnouncements[m_aAnnouncements.Tail()].m_flStartTime + flDelay;
 	}
+
+	oAnnouncement.m_flStylePoints = flPoints;
 
 	m_aAnnouncements.AddToTail(oAnnouncement);
 }
@@ -523,22 +527,31 @@ void CHudStyleBar::Paint()
 			Color(255, 255, 255, 255 * flAlpha)
 		);
 
-		CHudTexture* pStarTexture = m_pGoldStar;
-		if (pAnnouncement->m_ePointStyle == STYLE_POINT_LARGE)
+		int iGold, iSilver, iBronze;
+		C_SDKPlayer::GetStyleStars(pAnnouncement->m_flStylePoints, iGold, iSilver, iBronze);
+
+		CHudTexture* pStarTexture;
+		int iStars;
+		if (iGold)
+		{
+			pStarTexture = m_pGoldStar;
+			iStars = iGold;
+		}
+		else if (iSilver)
+		{
 			pStarTexture = m_pSilverStar;
-		else if (pAnnouncement->m_ePointStyle == STYLE_POINT_SMALL)
+			iStars = iSilver;
+		}
+		else
+		{
 			pStarTexture = m_pBronzeStar;
+			iStars = iBronze;
+		}
 
 		if (pStarTexture)
 		{
 			pStarTexture->DrawSelf(
 				flBarLeft - flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
-				flStarWidth, flStarWidth,
-				Color(255, 255, 255, 255 * flAlpha)
-			);
-
-			pStarTexture->DrawSelf(
-				flBarLeft - pTexture->EffectiveWidth(flScale) - 2*flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
 				flStarWidth, flStarWidth,
 				Color(255, 255, 255, 255 * flAlpha)
 			);

@@ -124,7 +124,7 @@ Powerup::pickup (CBaseEntity *other)
 		}
 		else if (len != 1) 
 		{
-			taker->SendAnnouncement (ANNOUNCEMENT_COOL, STYLE_POINT_STYLISH);
+			//taker->SendAnnouncement (ANNOUNCEMENT_COOL, STYLE_POINT_STYLISH);
 		}
 	}
 	CPASFilter filter (GetAbsOrigin ());

@@ -662,6 +662,23 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 }
 
+void CSDKPlayer::GetStyleStars(float flPoints, int& iGold, int& iSilver, int& iBronze)
+{
+	float flActivation = da_stylemeteractivationcost.GetFloat();
+
+	float flGold = flPoints / flActivation;
+	iGold = flGold;
+
+	float flRemainder = (flGold - iGold)*flActivation;
+
+	float flSilver = flRemainder / (flActivation/5);
+	iSilver = flSilver;
+
+	flRemainder = (flSilver - iSilver)*flActivation;
+
+	iBronze = flRemainder / (flActivation/25);
+}
+
 void CSDKPlayer::GetStyleStars(int& iGold, int& iSilver, int& iBronze)
 {
 	float flTotalStyle;
@@ -675,19 +692,7 @@ void CSDKPlayer::GetStyleStars(int& iGold, int& iSilver, int& iBronze)
 	flTotalStyle = sdkPR->GetStyle(entindex());
 #endif
 
-	float flActivation = da_stylemeteractivationcost.GetFloat();
-
-	float flGold = flTotalStyle / flActivation;
-	iGold = flGold;
-
-	float flRemainder = (flGold - iGold)*flActivation;
-
-	float flSilver = flRemainder / (flActivation/5);
-	iSilver = flSilver;
-
-	flRemainder = (flSilver - iSilver)*flActivation;
-
-	iBronze = flRemainder / (flActivation/25);
+	GetStyleStars(flTotalStyle, iGold, iSilver, iBronze);
 }
 
 void CSDKPlayer::FreezePlayer(float flAmount, float flTime)

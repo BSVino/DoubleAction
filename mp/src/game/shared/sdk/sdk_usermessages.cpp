@@ -49,7 +49,7 @@ void RegisterUserMessages()
 	// Used to send a sample HUD message
 	usermessages->Register( "GameMessage", -1 );
 
-	usermessages->Register( "StyleAnnouncement", 9 );
+	usermessages->Register( "StyleAnnouncement", 13 );
 	usermessages->Register( "Notice", 5 );
 	usermessages->Register( "LessonLearned", -1 );
 

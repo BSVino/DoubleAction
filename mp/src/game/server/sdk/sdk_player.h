@@ -118,7 +118,7 @@ public:
 	virtual bool        IsReloading( void ) const;
 
 	void         AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info);
-	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle);
+	void         SendAnnouncement(announcement_t eAnnouncement, style_point_t ePointStyle, float flPoints);
 	void         SendNotice(notice_t eNotice);
 	static void  SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject = NULL);
 
@@ -294,12 +294,13 @@ public:
 
 	// Universal Meter
 	float GetStylePoints() { return m_flStylePoints; }
-	void AddStylePoints(float points, style_sound_t eSound);
+	void AddStylePoints(float points, style_sound_t eSound, announcement_t eAnnouncement, style_point_t ePointStyle);
 	void SetStylePoints(float points);
 	bool UseStylePoints();
 	bool IsStyleSkillActive(SkillID eSkill = SKILL_NONE) const;
 	void UseStyleCharge(SkillID eSkill, float flCharge);
 	void DecayStyle();
+	static void GetStyleStars(float flPoints, int& iGold, int& iSilver, int& iBronze);
 	void GetStyleStars(int& iGold, int& iSilver, int& iBronze);
 
 	void ActivateMeter();

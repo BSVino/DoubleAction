@@ -2126,7 +2126,7 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 	if (pPlayer)
 	{
 		ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
-		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE);
+		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");

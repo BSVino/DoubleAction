@@ -24,6 +24,7 @@ typedef enum
 } style_point_t;
 
 typedef enum {
+	ANNOUNCEMENT_NONE=0,
 	ANNOUNCEMENT_COOL,
 	ANNOUNCEMENT_STYLISH,
 	ANNOUNCEMENT_DIVE,
