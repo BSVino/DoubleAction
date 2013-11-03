@@ -8,8 +8,10 @@
 #include "sdk_fx_shared.h"
 #include "weapon_sdkbase.h"
 
-#ifndef CLIENT_DLL
-	#include "ilagcompensationmanager.h"
+#ifdef CLIENT_DLL
+#include "prediction.h"
+#else
+#include "ilagcompensationmanager.h"
 #endif
 
 #ifdef CLIENT_DLL
@@ -133,8 +135,10 @@ void FX_FireBullets(
 	}
 
 #ifdef CLIENT_DLL
+	bDoEffects = prediction->IsFirstTimePredicted();
+
 	// Do the firing animation event.
-	if ( pPlayer && !pPlayer->IsDormant() )
+	if ( pPlayer && !pPlayer->IsDormant() && bDoEffects )
 	{
 		pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 	}
