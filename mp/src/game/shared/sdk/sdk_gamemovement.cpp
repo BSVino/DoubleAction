@@ -2454,7 +2454,7 @@ void CSDKGameMovement::FullWalkMove ()
 			if (m_pSDKPlayer->IsStyleSkillActive(SKILL_ATHLETIC))
 				iWallflips = 9999;
 
-			if (m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips)
+			if (!player->m_Local.m_bDucked && !m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips)
 			{
 				trace_t tr;
 				Vector org, mins, maxs;
