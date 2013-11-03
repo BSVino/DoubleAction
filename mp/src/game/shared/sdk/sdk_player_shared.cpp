@@ -1931,9 +1931,9 @@ ConVar da_cam_max_fastlerp_distance( "da_cam_max_fastlerp_distance", "30", FCVAR
 
 ConVar da_cam_stunt_up( "da_cam_stunt_up", "20", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Height to raise the camera during stunts." );
 
-ConVar da_cam_lag_velocity( "da_cam_lag_velocity", ".5", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much player velocity will affect the camera lag." );
-ConVar da_cam_lag_drag( "da_cam_lag_drag", "8", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast the lagged part of the camera will return to center." );
-ConVar da_cam_lag_max( "da_cam_lag_max", "10", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Maximum camera lag distance." );
+ConVar da_cam_lag_velocity( "da_cam_lag_velocity", ".8", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much player velocity will affect the camera lag." );
+ConVar da_cam_lag_drag( "da_cam_lag_drag", "12", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast the lagged part of the camera will return to center." );
+ConVar da_cam_lag_max( "da_cam_lag_max", "17", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Maximum camera lag distance." );
 
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
