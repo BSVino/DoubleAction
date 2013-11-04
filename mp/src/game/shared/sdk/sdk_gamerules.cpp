@@ -1943,7 +1943,7 @@ void CSDKGameRules::StartMiniObjective()
 {
 	m_iMiniObjectivePasses++;
 
-	if (random->RandomInt(0, 2) >= m_iMiniObjectivePasses)
+	if (random->RandomInt(0, 1) >= m_iMiniObjectivePasses)
 	{
 		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
 

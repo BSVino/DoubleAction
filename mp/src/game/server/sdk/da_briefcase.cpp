@@ -70,6 +70,9 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
 	UTIL_DropToFloor(this, MASK_SOLID, this);
 
+	SetCollisionBounds(-Vector(10, 10, 10), Vector(10, 10, 10));
+	VPhysicsInitShadow( true, true );
+
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 	SetSolid( SOLID_BBOX );
 	SetBlocksLOS( false );
