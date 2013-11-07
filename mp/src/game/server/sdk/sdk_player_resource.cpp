@@ -19,7 +19,7 @@ IMPLEMENT_SERVERCLASS_ST(CSDKPlayerResource, DT_SDKPlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_iPlayerClass), SendPropInt( SENDINFO_ARRAY(m_iPlayerClass), 4 ) ),
 #endif
 	SendPropArray3( SENDINFO_ARRAY3( m_iMaxHealth ), SendPropInt( SENDINFO_ARRAY( m_iMaxHealth ), 11, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iStyle ), SendPropInt( SENDINFO_ARRAY( m_iStyle ), 11, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3( m_iStyle ), SendPropInt( SENDINFO_ARRAY( m_iStyle ), 32, SPROP_UNSIGNED ) ),
 
 	SendPropInt (SENDINFO (m_iHighestStyle)),
 	SendPropInt (SENDINFO (m_iHighestStuntKills)),
