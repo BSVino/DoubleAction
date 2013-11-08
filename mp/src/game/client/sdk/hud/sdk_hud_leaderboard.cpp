@@ -159,6 +159,9 @@ void CHudLeaderboard::OnThink()
 {
 	C_SDK_PlayerResource *sdkPR = SDKGameResources();
 
+	if (!sdkPR)
+		return;
+
 	CHandle<C_SDKPlayer> ahPlayerRanks[TOP_RANKS];
 	ahPlayerRanks[0] = NULL;
 	ahPlayerRanks[1] = NULL;
@@ -341,7 +344,7 @@ void CHudLeaderboard::Paint()
 	if (!bLocalPlayerShown)
 	{
 		C_SDK_PlayerResource *sdkPR = SDKGameResources();
-		if (sdkPR->GetStyle(pLocalPlayer->entindex()))
+		if (sdkPR && sdkPR->GetStyle(pLocalPlayer->entindex()))
 			ListPlayer(pLocalPlayer, 3);
 	}
 }
