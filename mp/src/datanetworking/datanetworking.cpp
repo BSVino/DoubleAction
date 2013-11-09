@@ -74,6 +74,8 @@ bool DASendData(const da::protobuf::GameData& pbGameData, string& sError)
 
 		if (pCurl)
 		{
+			curl_easy_setopt(pCurl, CURLOPT_TIMEOUT, 10L);
+			curl_easy_setopt(pCurl, CURLOPT_NOSIGNAL, 1L);
 			curl_easy_setopt(pCurl, CURLOPT_URL, "http://data.doubleactiongame.com/data/receive.php");
 			curl_easy_setopt(pCurl, CURLOPT_UPLOAD, 1);
 			curl_easy_setopt(pCurl, CURLOPT_READDATA, &ssData);

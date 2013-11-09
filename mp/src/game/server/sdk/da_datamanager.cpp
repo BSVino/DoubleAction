@@ -114,9 +114,14 @@ void CDataManager::AddSkillChosen(SkillID eSkill)
 	m_aeSkillsChosen.AddToTail(eSkill);
 }
 
+ConVar da_data_enabled("da_data_enabled", "1", 0, "Turn on and off data sending.");
+
 void CDataManager::LevelShutdownPostEntity()
 {
 	if (!gpGlobals->maxClients)
+		return;
+
+	if (!da_data_enabled.GetBool())
 		return;
 
 	// If the thread is executing, then wait for it to finish
