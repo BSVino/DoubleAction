@@ -1741,6 +1741,7 @@ void CSDKPlayer::UpdateViewBobRamp()
 }
 
 ConVar  da_cam_fade_distance("sdk_cam_fade_distance", "30", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
+ConVar  da_cam_fade_distance_aimin("da_cam_fade_distance_aimin", "25", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 ConVar	da_cam_fade_alpha_val("sdk_cam_fade_alpha_val", "100", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
@@ -1757,8 +1758,10 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 
 #ifdef CLIENT_DLL
 
-	if (m_vecThirdCamera.DistTo(vecEye) < da_cam_fade_distance.GetFloat()){
+	float flFadeDistance = RemapVal(m_Shared.GetAimIn(), 0, 1, da_cam_fade_distance.GetFloat(), da_cam_fade_distance_aimin.GetFloat());
 
+	if (m_vecThirdCamera.DistTo(vecEye) < flFadeDistance)
+	{
 		m_flCurrentAlphaVal = Approach(da_cam_fade_alpha_val.GetFloat(), m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
 
 		if (GetRenderMode() != kRenderTransTexture){
@@ -1773,8 +1776,9 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 			}
 			pWeapon->SetRenderColorA(m_flCurrentAlphaVal);
 		}
-	}else{
-
+	}
+	else
+	{
 		m_flCurrentAlphaVal = Approach(255.0f, m_flCurrentAlphaVal, 500.0f * gpGlobals->frametime);
 
 		if (GetRenderMode() != kRenderNormal){
