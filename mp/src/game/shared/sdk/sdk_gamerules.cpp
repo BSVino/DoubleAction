@@ -295,6 +295,8 @@ CSDKGameRules::CSDKGameRules()
 
 	m_flNextMiniObjectiveStartTime = 0;
 	m_iMiniObjectivePasses = 0;
+
+	m_bChangelevelDone = false;
 }
 
 void CSDKGameRules::LevelInitPostEntity()
@@ -846,7 +848,29 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 void CSDKGameRules::Think()
 {
-	BaseClass::Think();
+	// Skip CMultiplayGameRules since we're doing the intermission logic ourselves.
+	CGameRules::Think();
+
+	if ( g_fGameOver )   // someone else quit the game already
+	{
+		// check to see if we should change levels now
+		if ( m_flIntermissionEndTime < gpGlobals->curtime )
+		{
+			if ( !m_bChangelevelDone )
+			{
+				ChangeLevel(); // intermission is over
+				m_bChangelevelDone = true;
+			}
+		}
+
+		return;
+	}
+
+	if ( GetMapRemainingTime() < 0 )
+	{
+		GoToIntermission();
+		return;
+	}
 
 	if (gpGlobals->curtime > m_flNextSlowMoUpdate)
 		ReCalculateSlowMo();
@@ -1912,23 +1936,18 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 
 float CSDKGameRules::GetMapRemainingTime()
 {
-#ifdef GAME_DLL
-	if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
-	{
-		return 0;
-	}
-#endif
-
-	// if timelimit is disabled, return -1
+	// if timelimit is disabled, return 0
 	if ( mp_timelimit.GetInt() <= 0 )
-		return -1;
+		return 0;
+
+	if ( GetBriefcase() )
+		return 0;
 
 	// timelimit is in minutes
 	float flTimeLeft =  ( m_flGameStartTime + mp_timelimit.GetInt() * 60 ) - gpGlobals->curtime;
 
-	// never return a negative value
-	if ( flTimeLeft < 0 )
-		flTimeLeft = 0;
+	if ( flTimeLeft <= 0 )
+		flTimeLeft = -1;
 
 	return flTimeLeft;
 }

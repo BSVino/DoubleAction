@@ -259,6 +259,10 @@ private:
 	CNetworkHandle( CBriefcaseCaptureZone, m_hCaptureZone );
 
 	float	m_flNextSlowMoUpdate;
+
+#ifndef CLIENT_DLL
+	bool m_bChangelevelDone;
+#endif
 };
 
 //-----------------------------------------------------------------------------
