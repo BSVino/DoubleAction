@@ -127,6 +127,7 @@ static const char * s_SkillAliasInfo[] =
 	"reflexes",     // SKILL_REFLEXES
 	"marksman",     // SKILL_MARKSMAN
 	"troll",        // SKILL_TROLL
+	"super",        // SKILL_SUPER
 	"max",          // SKILL_MAX
 	"resilient",    // SKILL_RESILIENT
 	NULL,

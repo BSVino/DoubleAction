@@ -311,6 +311,7 @@ void CHudStyleBar::Paint()
 		m_apActiveSkillIcons[SKILL_REFLEXES] = gHUD.GetIcon("reflexes");
 		m_apActiveSkillIcons[SKILL_MARKSMAN] = gHUD.GetIcon("marksman");
 		m_apActiveSkillIcons[SKILL_TROLL] = gHUD.GetIcon("troll");
+		m_apActiveSkillIcons[SKILL_SUPER] = gHUD.GetIcon("super");
 		//m_apActiveSkillIcons[SKILL_RESILIENT] = gHUD.GetIcon("resilient");
 
 		m_pGoldStar = gHUD.GetIcon("star_gold");
@@ -322,13 +323,16 @@ void CHudStyleBar::Paint()
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
 
+	if (pPlayer->m_Shared.m_bSuperSkill)
+		pStyleTexture = m_apActiveSkillIcons[SKILL_SUPER];
+
 	float flStyleTextureWidth = 0;
 	float flStyleTextureHeight = 0;
 
 	if (pStyleTexture)
 	{
-		flStyleTextureWidth = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveWidth(1)) * 0.8f;
-		flStyleTextureHeight = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveHeight(1)) * 0.8f;
+		flStyleTextureWidth = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveWidth(0.5f)) * 0.8f;
+		flStyleTextureHeight = scheme()->GetProportionalScaledValueEx(GetScheme(), pStyleTexture->EffectiveHeight(0.5f)) * 0.8f;
 	}
 
 	int iWidth = m_flElementWide;

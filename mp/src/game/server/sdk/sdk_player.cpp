@@ -152,6 +152,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat( SENDINFO( m_flAimIn ) ),
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
+	SendPropBool( SENDINFO( m_bSuperSkill ) ),
 	
 	SendPropInt (SENDINFO (m_iWallFlipCount)),
 	SendPropBool (SENDINFO (m_bIsWallFlipping)),
@@ -3130,7 +3131,7 @@ bool CSDKPlayer::PickRandomCharacter()
 
 void CSDKPlayer::PickRandomSkill()
 {
-	SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_MAX-1));
+	SetStyleSkill((SkillID)random->RandomInt(SKILL_NONE+1, SKILL_LAST_CHOOSEABLE));
 }
 
 void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
@@ -3870,9 +3871,9 @@ void CSDKPlayer::SetStylePoints(float flPoints)
 		return;
 	}
 
-	if (flPoints > 100)
+	if (flPoints > da_stylemeteractivationcost.GetFloat())
 	{
-		m_flStylePoints = 100;
+		m_flStylePoints = da_stylemeteractivationcost.GetFloat();
 		return;
 	}
 
@@ -3917,6 +3918,9 @@ void CSDKPlayer::ActivateMeter()
 
 	if (m_Shared.m_iStyleSkill != SKILL_TROLL && m_Shared.m_iStyleSkill != SKILL_REFLEXES)
 		CDove::SpawnDoves(this);
+
+	if (m_Shared.m_bSuperSkill)
+		return;
 
 	// Refill ammo
 	if (m_Shared.m_iStyleSkill == SKILL_MARKSMAN)

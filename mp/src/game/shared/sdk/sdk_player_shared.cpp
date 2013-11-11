@@ -421,7 +421,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_flMantelTime = 0;
 	m_Shared.m_flSuperFallOthersNextCheck = 0;
 	m_Shared.m_bSuperFalling = false;
-
+	m_Shared.m_bSuperSkill = false;
 
 	//Tony; todo; fix
 
@@ -634,6 +634,8 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 	{
 		if (eSkill == SKILL_NONE)
 			return true;
+		else if (m_Shared.m_bSuperSkill)
+			return true;
 		else
 			return m_Shared.m_iStyleSkill == eSkill;
 	}
@@ -642,6 +644,8 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 		return false;
 
 	if (eSkill == SKILL_NONE)
+		return true;
+	else if (m_Shared.m_bSuperSkill)
 		return true;
 	else
 		return m_Shared.m_iStyleSkill == eSkill;
@@ -666,6 +670,12 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 		return;
 
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
+
+	if (!m_flStyleSkillCharge)
+	{
+		m_Shared.m_bSuperSkill = false;
+		m_flStylePoints = 0;
+	}
 }
 
 void CSDKPlayer::GetStyleStars(float flPoints, int& iGold, int& iSilver, int& iBronze)
@@ -705,7 +715,7 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER || m_Shared.m_bSuperSkill)
 		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
@@ -2042,8 +2052,11 @@ const Vector CSDKPlayer::GetThirdPersonCameraTarget()
 
 float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID eSkill) const
 {
-	if (m_iStyleSkill != eSkill)
-		return flValue;
+	if (!m_bSuperSkill)
+	{
+		if (m_iStyleSkill != eSkill)
+			return flValue;
+	}
 
 	ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
 	float flMultiplier = RemapValClamped(m_pOuter->GetStylePoints(), 0, da_stylemeteractivationcost.GetFloat(), 1, 2);

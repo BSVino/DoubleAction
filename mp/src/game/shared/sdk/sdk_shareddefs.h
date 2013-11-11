@@ -182,6 +182,9 @@ typedef enum
 	SKILL_REFLEXES,
 	SKILL_MARKSMAN,
 	SKILL_TROLL,
+	SKILL_LAST_CHOOSEABLE =  SKILL_TROLL,
+
+	SKILL_SUPER,    // All skills combined. Special, not chooseable from the menu.
 
 	SKILL_MAX,		// number of weapons weapon index
 

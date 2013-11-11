@@ -794,8 +794,6 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 
 		pPlayer->Instructor_LessonLearned("grenade");
 
-		pPlayer->UseStyleCharge(SKILL_TROLL, 60);
-
 		SendWeaponAnim( ACT_VM_THROW );
 
 #ifdef GAME_DLL
@@ -805,11 +803,8 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 
 		CGrenadeProjectile::Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this, GRENADE_TIMER );
 
-		if (!pPlayer->IsStyleSkillActive(SKILL_TROLL))
-		{
-			if( pPlayer )
-				pPlayer->RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
-		}
+		if( pPlayer )
+			pPlayer->RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
 #endif
 	}
 

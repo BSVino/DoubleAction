@@ -2144,8 +2144,27 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 {
 	if (pPlayer)
 	{
+		pPlayer->m_Shared.m_bSuperSkill = true;
+
 		ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
 		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
+
+		pPlayer->SetStylePoints(da_stylemeteractivationcost.GetFloat());
+
+		if (!pPlayer->IsStyleSkillActive())
+			pPlayer->ActivateMeter();
+
+		if ( pPlayer->Weapon_OwnsThisType("weapon_grenade") )
+			pPlayer->CBasePlayer::GiveAmmo(1, "grenades");
+		else
+			pPlayer->GiveNamedItem( "weapon_grenade" );
+
+		pPlayer->GiveSlowMo(3);
+
+		// Make sure the player's health is 150%
+		pPlayer->TakeHealth(150, 0);
+
+		pPlayer->m_bHasSuperSlowMo = true;
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");

@@ -252,6 +252,7 @@ public:
 	float m_flAimInSpeed;
 
 	CNetworkVar( int, m_iStyleSkill );
+	CNetworkVar( bool, m_bSuperSkill );
 
 private:
 
