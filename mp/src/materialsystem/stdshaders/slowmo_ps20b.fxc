@@ -9,12 +9,10 @@ sampler CombinedSampler  : register( s1 );
 sampler BlurSampler      : register( s2 );
 
 const float flSlowMoScale   : register( c0 );
-const float flSlowMoFilter  : register( c1 );
-const float flVignetteScale : register( c2 );
-const float flNoiseScale    : register( c3 );
-const float flBias          : register( c4 );
+const float flStyleSkillAlpha : register( c1 );
 const float flGrainOffset   : register( c5 );
 const float flDeathCam      : register( c6 );
+const float flStyleSkill    : register( c7 );
 
 struct PS_INPUT
 {
@@ -23,6 +21,11 @@ struct PS_INPUT
 
 HALF4 main( PS_INPUT i ) : COLOR
 {
+	const float flSlowMoFilter = 0.09;
+	const float flVignetteScale = 1;
+	const float flNoiseScale = 0.05;
+	const float flBias = 0.4;
+
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
 	float4 aflCombined = tex2D( CombinedSampler, i.texCoord );
 
@@ -66,9 +69,17 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	// Only do the blue tint if we're not in the death cam.
 	if (flDeathCam > 0)
-		aflOutput.gb = aflOutput.gb - 0.02 * flTotalRamp;
+		aflOutput.gb = aflOutput.gb - 0.1 * flTotalRamp;
 	else
-		aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp;
+	{
+		float3 aflOverlay = float3(1, 0.82, 0);
+		float3 aflConditional = step(0.5, aflOutput.rgb);
+		float3 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
+
+		aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid, flStyleSkill * flStyleSkillAlpha);
+
+		aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp * flSlowMoScale;
+	}
 
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 
@@ -93,7 +104,10 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float3 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
 
 	// Scale it by the overlay scale.
-	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15);
+	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15 * flSlowMoScale);
 
-	return FinalOutput( lerp(aflFB, aflOutput, flSlowMoScale), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+	if (flDeathCam > 0)
+		return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+	else
+		return FinalOutput( lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
 }

@@ -11,4 +11,6 @@ public:
 
 private:
 	void PerformSlowMoEffect( const CViewSetup &view );
+
+	float m_flStyleLerp;
 };

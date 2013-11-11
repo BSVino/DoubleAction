@@ -13,12 +13,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar da_postprocess_slowfilter( "da_postprocess_slowfilter", "0.09", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much does the blue filter show up during slowmo?" );
-ConVar da_postprocess_vignette( "da_postprocess_vignette", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the vignette by?" );
-ConVar da_postprocess_grain( "da_postprocess_grain", "0.05", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the grain by?" );
-ConVar da_postprocess_bias( "da_postprocess_bias", "0.65", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to bias the colors by?" );
+ConVar da_postprocess_skill_alpha( "da_postprocess_skill_alpha", "0.2", FCVAR_CHEAT, "Control for style skill mode. Set by code." );
 
-ConVar da_postprocess_deathcam( "da_postprocess_deathcam", "0", FCVAR_CHEAT, "Control for death came mode. Set by code." );
+ConVar da_postprocess_deathcam( "da_postprocess_deathcam", "0", FCVAR_CHEAT, "Control for death cam mode. Set by code." );
+ConVar da_postprocess_skill( "da_postprocess_skill", "0", FCVAR_CHEAT, "Control for style skill mode. Set by code." );
 
 BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
@@ -75,21 +73,9 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			aflSlowMo[0] = params[SLOWMOAMOUNT]->GetFloatValue();
 			pShaderAPI->SetPixelShaderConstant( 0, aflSlowMo );
 
-			float aflSlowFilter[1] = { 0.0f };
-			aflSlowFilter[0] = da_postprocess_slowfilter.GetFloat();
-			pShaderAPI->SetPixelShaderConstant( 1, aflSlowFilter );
-
-			float aflVignette[1] = { 0.0f };
-			aflVignette[0] = da_postprocess_vignette.GetFloat();
-			pShaderAPI->SetPixelShaderConstant( 2, aflVignette );
-
-			float aflGrain[1] = { 0.0f };
-			aflGrain[0] = da_postprocess_grain.GetFloat();
-			pShaderAPI->SetPixelShaderConstant( 3, aflGrain );
-
-			float aflBias[1] = { 0.0f };
-			aflBias[0] = da_postprocess_bias.GetFloat();
-			pShaderAPI->SetPixelShaderConstant( 4, aflBias );
+			float aflSkillAlpha[1] = { 0.0f };
+			aflSkillAlpha[0] = da_postprocess_skill_alpha.GetFloat();
+			pShaderAPI->SetPixelShaderConstant( 1, aflSkillAlpha );
 
 			float aflOffset[1] = { 0.0f };
 			aflOffset[0] = params[GRAINOFFSET]->GetFloatValue();
@@ -98,6 +84,10 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			float aflDeathCam[1] = { 0.0f };
 			aflDeathCam[0] = da_postprocess_deathcam.GetBool()?1:0;
 			pShaderAPI->SetPixelShaderConstant( 6, aflDeathCam );
+
+			float aflStyleSkill[1] = { 0.0f };
+			aflStyleSkill[0] = da_postprocess_skill.GetFloat();
+			pShaderAPI->SetPixelShaderConstant( 7, aflStyleSkill );
 
 			BindTexture( SHADER_SAMPLER1, COMBINED, -1 );
 			BindTexture( SHADER_SAMPLER2, BLUR, -1 );

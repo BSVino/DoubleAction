@@ -46,6 +46,8 @@ static CDAViewRender g_ViewRender;
 CDAViewRender::CDAViewRender()
 {
 	view = ( IViewRender * )&g_ViewRender;
+
+	m_flStyleLerp = 0;
 }
 
 ConVar da_postprocess_compare( "da_postprocess_compare", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Only render to half of the screen for debug purposes" );
@@ -70,10 +72,29 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 			pPlayer = (C_SDKPlayer *)target;
 	}
 
+	if (!pPlayer->IsAlive())
+		m_flStyleLerp = 0;
+
 	ConVarRef da_postprocess_slowmo("da_postprocess_slowmo");
 	ConVarRef da_postprocess_deathcam("da_postprocess_deathcam");
+	ConVarRef da_postprocess_skill("da_postprocess_skill");
 
-	if ( pPlayer->GetSlowMoMultiplier() < 1 || (!pPlayer->IsAlive() && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM) || da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt() )
+	if (pPlayer->IsStyleSkillActive())
+		m_flStyleLerp = Approach(1, m_flStyleLerp, gpGlobals->frametime*2);
+	else
+		m_flStyleLerp = Approach(0, m_flStyleLerp, gpGlobals->frametime);
+
+	bool bShowPostProcess = false;
+	if (pPlayer->GetSlowMoMultiplier() < 1)
+		bShowPostProcess = true;
+	else if (m_flStyleLerp)
+		bShowPostProcess = true;
+	else if (!pPlayer->IsAlive() && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM)
+		bShowPostProcess = true;
+	else if (da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt())
+		bShowPostProcess = true;
+
+	if ( bShowPostProcess )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
@@ -83,6 +104,8 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 				da_postprocess_deathcam.SetValue(false);
 			else
 				da_postprocess_deathcam.SetValue(true);
+
+			da_postprocess_skill.SetValue(m_flStyleLerp);
 
 			if (da_postprocess_compare.GetInt() == 1)
 				DrawScreenEffectMaterial( pMaterial, 0, 0, XRES(320), ScreenHeight() );
