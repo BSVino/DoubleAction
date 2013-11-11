@@ -64,6 +64,7 @@ $Project "Client (DA)"
 			$File "sdk/vgui/sdk_textwindow.cpp"
 			$File "sdk/vgui/sdkviewport.cpp"
 			$File "sdk/vgui/vgui_rootpanel_sdk.cpp"
+			$File "sdk/vgui/da_newsframe.cpp"
 		}
 
 		$Folder "Weapons"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sdk_weapon_parse.h"
+#define DA_VERSION "1"
 
 #define SDK_DEFAULT_PLAYER_RUNSPEED    230
 #define SDK_DEFAULT_PLAYER_SPRINTSPEED 330
@@ -71,36 +71,14 @@ typedef enum {
 	TOTAL_NOTICES
 } notice_t;
 
-inline const char* NoticeToString( notice_t id )
-{
-	static const char* aszNotices[] = {
-		"NOTICE_MARKSMAN",
-		"NOTICE_TROLL",
-		"NOTICE_BOUNCER",
-		"NOTICE_ATHLETIC",
-		"NOTICE_SUPERSLO",
-		"NOTICE_RESILIENT",
-		"NOTICE_SLOMO",
-		"NOTICE_STYLESTREAK",
-		"NOTICE_WORTHIT",
+typedef enum {
+	WT_NONE = 0,
+	WT_MELEE,
+	WT_RIFLE,
+	WT_SHOTGUN,
+	WT_SMG,
+	WT_PISTOL,
+	WT_GRENADE,
 
-		"briefcase",
-	};
-
-	return aszNotices[id];
-}
-
-inline const char* WeaponTypeToAlias( weapontype_t id )
-{
-	static const char* aszWeaponTypes[] = {
-		"none",
-		"melee",
-		"rifle",
-		"shotgun",
-		"smg",
-		"pistol",
-		"grenade",
-	};
-
-	return aszWeaponTypes[id];
-}
+	WT_MAX
+} weapontype_t;

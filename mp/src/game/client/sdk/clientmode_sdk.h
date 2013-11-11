@@ -12,6 +12,7 @@
 
 #include "clientmode_shared.h"
 #include "sdkviewport.h"
+#include "GameUI/IGameUI.h"
 
 class ClientModeSDKNormal : public ClientModeShared 
 {
@@ -42,6 +43,7 @@ private:
 	
 	//	void	UpdateSpectatorMode( void );
 
+	IGameUI *m_pGameUI;
 };
 
 

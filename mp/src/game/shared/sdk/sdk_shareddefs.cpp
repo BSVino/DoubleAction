@@ -5,6 +5,7 @@
 //=====================================================================================//
 
 #include "cbase.h"
+
 #include "weapon_sdkbase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -151,4 +152,38 @@ const char *SkillIDToAlias( SkillID id )
 		return NULL;
 
 	return s_SkillAliasInfo[id];
+}
+
+const char* NoticeToString( notice_t id )
+{
+	static const char* aszNotices[] = {
+		"NOTICE_MARKSMAN",
+		"NOTICE_TROLL",
+		"NOTICE_BOUNCER",
+		"NOTICE_ATHLETIC",
+		"NOTICE_SUPERSLO",
+		"NOTICE_RESILIENT",
+		"NOTICE_SLOMO",
+		"NOTICE_STYLESTREAK",
+		"NOTICE_WORTHIT",
+
+		"briefcase",
+	};
+
+	return aszNotices[id];
+}
+
+const char* WeaponTypeToAlias( weapontype_t id )
+{
+	static const char* aszWeaponTypes[] = {
+		"none",
+		"melee",
+		"rifle",
+		"shotgun",
+		"smg",
+		"pistol",
+		"grenade",
+	};
+
+	return aszWeaponTypes[id];
 }

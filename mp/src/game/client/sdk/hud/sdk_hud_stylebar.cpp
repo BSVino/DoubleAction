@@ -12,6 +12,8 @@
 //
 #include "cbase.h"
 
+#include "sdk_weapon_parse.h"
+
 #include "sdk_hud_stylebar.h"
 
 #include "view.h"

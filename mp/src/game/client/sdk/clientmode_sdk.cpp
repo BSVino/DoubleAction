@@ -34,6 +34,7 @@
 #include "c_weapon__stubs.h"		//Tony; add stubs
 #include "cam_thirdperson.h"
 #include "sdk_in_main.h"
+#include "da_newsframe.h"
 
 class CHudChat;
 
@@ -119,9 +120,10 @@ ClientModeSDKNormal::~ClientModeSDKNormal()
 {
 }
 
-
 void ClientModeSDKNormal::InitViewport()
 {
+	new CNewsFrame();
+
 	m_pViewport = new SDKViewport();
 	m_pViewport->Start( gameuifuncs, gameeventmanager );
 }

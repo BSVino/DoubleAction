@@ -15,18 +15,6 @@
 #include "networkvar.h"
 #include "sdk_shareddefs.h"
 
-typedef enum {
-	WT_NONE = 0,
-	WT_MELEE,
-	WT_RIFLE,
-	WT_SHOTGUN,
-	WT_SMG,
-	WT_PISTOL,
-	WT_GRENADE,
-
-	WT_MAX
-} weapontype_t;
-
 //--------------------------------------------------------------------------------------------------------
 class CSDKWeaponInfo : public FileWeaponInfo_t
 {

@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#include "da.h"
+
 //=========================
 // GAMEPLAY RELATED OPTIONS
 //=========================
@@ -172,6 +174,8 @@ typedef enum
 
 const char *WeaponIDToAlias( SDKWeaponID id );
 SDKWeaponID AliasToWeaponID( const char *alias );
+const char* NoticeToString( notice_t id );
+const char* WeaponTypeToAlias( weapontype_t id );
 
 typedef enum
 {
