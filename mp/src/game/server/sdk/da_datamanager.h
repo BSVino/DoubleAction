@@ -6,6 +6,8 @@
 
 #include "sdk_shareddefs.h"
 
+#include <map>
+
 namespace da
 {
 	namespace protobuf
@@ -38,7 +40,7 @@ public:
 private:
 	float              m_flNextPositionsUpdate;
 	CUtlVector<Vector> m_avecPlayerPositions;
-	CUtlVector<const char*> m_apszCharactersChosen;
+	std::map<std::string, int> m_asCharactersChosen;
 	CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 	CUtlVector<SkillID>     m_aeSkillsChosen;
 

@@ -86,6 +86,12 @@ int main(int argc, const char** args)
 			continue;
 		}
 
+		if (pbGameData.timestamp() <  1383523200) // Nov 4
+		{
+			pszFileName = g_pFullFileSystem->FindNext( ffh );
+			continue;
+		}
+
 		apbDatas.push_back(pbGameData);
 
 		pszFileName = g_pFullFileSystem->FindNext( ffh );
@@ -127,6 +133,61 @@ int main(int argc, const char** args)
 		Msg("Positions for %s\n", sMap.c_str());
 		for (size_t i = 0; i < avecPositions.size(); i++)
 			Msg("%f %f %f\n", avecPositions[i].x, avecPositions[i].y, avecPositions[i].z);
+	}
+	else if (sCommand == "player_choices")
+	{
+		vector<int> aiWeaponsChosen;
+		aiWeaponsChosen.resize(100);
+		memset(aiWeaponsChosen.data(), 0, aiWeaponsChosen.size());
+
+		vector<int> aiSkillsChosen;
+		aiSkillsChosen.resize(100);
+		memset(aiSkillsChosen.data(), 0, aiSkillsChosen.size());
+
+		map<string, int> asCharactersChosen;
+
+		for (size_t i = 0; i < apbDatas.size(); i++)
+		{
+			for (size_t j = 0; j < apbDatas[i].weapons_chosen().size(); j++)
+				aiWeaponsChosen[apbDatas[i].weapons_chosen(j)]++;
+
+			for (size_t j = 0; j < apbDatas[i].skills_chosen().size(); j++)
+				aiSkillsChosen[apbDatas[i].skills_chosen(j)]++;
+
+			for (size_t j = 0; j < apbDatas[i].characters_chosen().size(); j++)
+			{
+				if (!apbDatas[i].characters_chosen(j).length())
+					continue;
+
+				asCharactersChosen[apbDatas[i].characters_chosen(j)]++;
+			}
+		}
+
+		int iTotal = 0;
+		for (size_t i = 0; i < aiWeaponsChosen.size(); i++)
+			iTotal += aiWeaponsChosen[i];
+
+		Msg("Weapons:\n");
+		for (size_t i = 0; i < aiWeaponsChosen.size(); i++)
+		{
+			if (aiWeaponsChosen[i])
+				Msg(" %i: %i (%.2f%%)\n", i, aiWeaponsChosen[i], (float)((float)aiWeaponsChosen[i]/(float)iTotal)*100);
+		}
+
+		iTotal = 0;
+		for (size_t i = 0; i < aiSkillsChosen.size(); i++)
+			iTotal += aiSkillsChosen[i];
+
+		Msg("Skills:\n");
+		for (size_t i = 0; i < aiSkillsChosen.size(); i++)
+		{
+			if (aiSkillsChosen[i])
+				Msg(" %i: %i (%.2f%%)\n", i, aiSkillsChosen[i], (float)((float)aiSkillsChosen[i]/(float)iTotal)*100);
+		}
+
+		Msg("Characters:\n");
+		for (auto it = asCharactersChosen.begin(); it != asCharactersChosen.end(); it++)
+			Msg(" %s: %i\n", it->first.c_str(), it->second);
 	}
 
 	return 0;
