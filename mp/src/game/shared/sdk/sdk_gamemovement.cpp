@@ -2471,9 +2471,15 @@ void CSDKGameMovement::FullWalkMove ()
 				dir[2] = 0;
 				TraceBBox (org, org + dist*dir, mins, maxs, tr);
 
+				Vector vecForward;
+				AngleVectors(mv->m_vecAbsViewAngles, &vecForward);
 
-				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) &&
-					fabs (tr.plane.normal[2]) < 0.7)
+				// Don't flip if the surface is skybox.
+				// Don't flip if the surface isn't a wall.
+				// Don't flip if the player isn't at least sorta facing the wall.
+				// Don't flip if the player is sliding or getting up from sliding.
+				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f
+					&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
 				{
 					m_pSDKPlayer->m_Shared.EndDive();
 					m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
