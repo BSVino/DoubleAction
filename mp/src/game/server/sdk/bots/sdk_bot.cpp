@@ -15,9 +15,9 @@ LINK_ENTITY_TO_CLASS( bot, CSDKBot );
 void CSDKBot::Initialize()
 {
 	// set bot skills
-	m_flSkill[BOT_SKILL_YAW_RATE] = random->RandomFloat(SKILL_MIN_YAW_RATE, SKILL_MAX_YAW_RATE);
-	m_flSkill[BOT_SKILL_SPEED] = random->RandomFloat(SKILL_MIN_SPEED, SKILL_MAX_SPEED);
-	m_flSkill[BOT_SKILL_STRAFE] = random->RandomFloat(SKILL_MIN_STRAFE, SKILL_MAX_STRAFE);
+	m_flSkill[BOT_SKILL_YAW_RATE] = 10;
+	m_flSkill[BOT_SKILL_SPEED] = SDK_DEFAULT_PLAYER_SPRINTSPEED;
+	m_flSkill[BOT_SKILL_STRAFE] = 5;
 
 	JoinTeam(0);
 

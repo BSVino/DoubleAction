@@ -574,13 +574,39 @@ void CSDKBot::Navigation( CUserCmd &cmd )
 		}
 	}
 
+	bool bRunningFromGrenade = false;
+
+	// Find average position of all nearby grenades
+	Vector vecGrenade(0, 0, 0);
+	int iGrenades = 0;
+	CBaseEntity* pGrenade = NULL;
+	while ((pGrenade = gEntList.FindEntityInSphere(pGrenade, WorldSpaceCenter(), 500)) != NULL)
+	{
+		if (!FStrEq(pGrenade->GetClassname(), "grenade_projectile"))
+			continue;
+
+		iGrenades++;
+		vecGrenade += pGrenade->WorldSpaceCenter();
+	}
+
+	if (iGrenades)
+	{
+		vecGrenade /= iGrenades;
+
+		ResetNavigationParams();
+		m_nBotState = BOT_NAVIG_DIRECT;
+		AddWaypoint( GetAbsOrigin() + (GetAbsOrigin() - vecGrenade).Normalized() * 500, GO_NORTH, 0, 0 );
+
+		bRunningFromGrenade = true;
+	}
+
 	CBaseEntity* pWalkToTarget = NULL;
 	if (SDKGameRules()->GetBriefcase() && !SDKGameRules()->GetBriefcase()->GetOwnerEntity())
 		pWalkToTarget = SDKGameRules()->GetBriefcase();
 	else if (HasBriefcase())
 		pWalkToTarget = SDKGameRules()->GetCaptureZone();
 
-	if (pWalkToTarget && gpGlobals->curtime > m_flDontUseDirectNav)
+	if (!bRunningFromGrenade && pWalkToTarget && gpGlobals->curtime > m_flDontUseDirectNav)
 	{
 		// If there's a briefcase and it's on the ground, check if I can see it.
 		trace_t tr;
@@ -698,7 +724,8 @@ void CSDKBot::Navigation( CUserCmd &cmd )
 			&& m_flNextStrafeTime < gpGlobals->curtime
 			&& m_flStrafeSkillRelatedTimer < gpGlobals->curtime
 			&& !m_bInRangeToAttack
-			&& m_flDontUseDirectNav < gpGlobals->curtime )
+			&& m_flDontUseDirectNav < gpGlobals->curtime
+			&& !pWalkToTarget )
 		{
 			Vector right;
 			EyeVectors( NULL, &right, NULL );
