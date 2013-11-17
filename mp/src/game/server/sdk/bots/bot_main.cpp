@@ -11,6 +11,7 @@
 
 #include "bot_main.h"
 #include "sdk_bot.h"
+#include "sdk_gamerules.h"
 
 // support for nav mesh
 #include "nav_mesh.h"
@@ -108,11 +109,84 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 	return pPlayer;
 }
 
+static ConVar bot_quota("bot_quota", "0", FCVAR_ARCHIVE|FCVAR_GAMEDLL, "Try to keep this many bots in the server");
+
+void Bot_MaintainQuota()
+{
+	int iIdealNumberOfBots = bot_quota.GetInt();
+
+	int iCurrentHumans = 0;
+	int iCurrentBots = 0;
+
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer->IsBot())
+			iCurrentBots++;
+		else
+			iCurrentHumans++;
+	}
+
+	if (!engine->IsDedicatedServer() && iCurrentHumans == 0)
+		return;
+
+	if ( !SDKGameRules() )
+		return;
+
+	if (iCurrentHumans == 0)
+		iIdealNumberOfBots = 0;
+
+	if (iCurrentHumans + iIdealNumberOfBots >= gpGlobals->maxClients - 1)
+		iIdealNumberOfBots = gpGlobals->maxClients - iCurrentHumans - 1;
+
+	if (iCurrentBots == iIdealNumberOfBots)
+		return;
+
+	while (iCurrentBots < iIdealNumberOfBots)
+	{
+		BotPutInServer( false );
+		iCurrentBots++;
+	}
+
+	while (iCurrentBots > iIdealNumberOfBots)
+	{
+		CSDKPlayer* pBotToKick = NULL;
+		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+		{
+			CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+
+			if (!pPlayer)
+				continue;
+
+			if (pPlayer->IsBot())
+			{
+				pBotToKick = pPlayer;
+				break;
+			}
+		}
+
+		Assert(pBotToKick);
+		if (pBotToKick)
+		{
+			engine->ServerCommand(UTIL_VarArgs( "kick \"%s\"\n", pBotToKick->GetPlayerName() ));
+			iCurrentBots--;
+		}
+		else
+			break;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Run through all the Bots in the game and let them think.
 //-----------------------------------------------------------------------------
 void Bot_RunAll( void )
 {	
+	Bot_MaintainQuota();
+
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
