@@ -63,6 +63,8 @@ private:
 		CHudTexture*    m_pTargetTexture;
 		wchar_t*        m_pwszHint;
 		float           m_flTargetAlpha;
+		float           m_flScale;
+		float           m_flMaxAlpha;
 		Vector          m_vecLastKnownTarget;
 		bool            m_bTargetOn;
 	} m_Targets[TARGET_TOTAL];
@@ -155,6 +157,9 @@ void CSDKTargetId::Paint()
 
 		m_Targets[TARGET_CAPTURE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Capture");
 
+		m_Targets[TARGET_CAPTURE].m_flScale = 0.5f;
+		m_Targets[TARGET_CAPTURE].m_flMaxAlpha = 0.5f;
+
 		m_Targets[TARGET_CAPTURE].m_bTargetOn = true;
 	}
 	else
@@ -168,6 +173,9 @@ void CSDKTargetId::Paint()
 		m_Targets[TARGET_BRIEFCASE].m_pTargetTexture = m_pBriefcase;
 
 		m_Targets[TARGET_BRIEFCASE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Retrieve");
+
+		m_Targets[TARGET_BRIEFCASE].m_flScale = 0.7f;
+		m_Targets[TARGET_BRIEFCASE].m_flMaxAlpha = 0.7f;
 
 		m_Targets[TARGET_BRIEFCASE].m_bTargetOn = true;
 	}
@@ -200,7 +208,7 @@ void CSDKTargetId::Paint()
 
 			float flAlphaGoal;
 			if (!bHide)
-				flAlphaGoal = 1;
+				flAlphaGoal = m_Targets[i].m_flMaxAlpha;
 			else
 				flAlphaGoal = 0;
 
@@ -208,8 +216,8 @@ void CSDKTargetId::Paint()
 
 			if (m_Targets[i].m_flTargetAlpha > 0)
 			{
-				int iWidth = m_Targets[i].m_pTargetTexture->EffectiveWidth(0.7f);
-				int iHeight = m_Targets[i].m_pTargetTexture->EffectiveHeight(0.7f);
+				int iWidth = m_Targets[i].m_pTargetTexture->EffectiveWidth(m_Targets[i].m_flScale);
+				int iHeight = m_Targets[i].m_pTargetTexture->EffectiveHeight(m_Targets[i].m_flScale);
 				m_Targets[i].m_pTargetTexture->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha));
 
 				if (m_Targets[i].m_pwszHint)
