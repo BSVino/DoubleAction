@@ -669,6 +669,9 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 	if (!IsStyleSkillActive(eSkill))
 		return;
 
+	if (m_Shared.m_bSuperSkill)
+		flCharge *= 0.5f; // They earned it, let them keep it a while longer.
+
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 
 	if (!m_flStyleSkillCharge)

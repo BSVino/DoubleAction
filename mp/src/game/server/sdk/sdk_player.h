@@ -133,6 +133,7 @@ public:
 
 	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
 	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
+	virtual bool ThrowWeapon( CWeaponSDKBase* pWeapon, bool bAutoSwitch = true );
 	virtual bool ThrowActiveWeapon( bool bAutoSwitch = true );
 	virtual	bool Weapon_CanSwitchTo(CBaseCombatWeapon *pWeapon);
 	virtual CBaseCombatWeapon* GetLastWeapon( void );
@@ -157,6 +158,7 @@ public:
 	int             GetTotalStyle() { return m_flTotalStyle; }
 
 	CWeaponSDKBase *FindWeapon (SDKWeaponID id);
+	CWeaponSDKBase* FindAnyWeaponButBrawl();
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
@@ -499,7 +501,7 @@ public:
 
 	CNetworkVar( string_t, m_iszCharacter );
 
-	CWeaponSDKBase *switchfrom;
+	CNetworkHandle(CWeaponSDKBase, m_hSwitchFrom);
 
 	float  m_flTotalStyle;
 

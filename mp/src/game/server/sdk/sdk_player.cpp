@@ -264,6 +264,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropEHandle( SENDINFO( m_hInflictor ) ),
 	SendPropBool( SENDINFO( m_bWasKilledByExplosion ) ),
 	SendPropVector (SENDINFO (m_vecKillingExplosionPosition)),
+
+	SendPropEHandle( SENDINFO( m_hSwitchFrom ) ),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -769,7 +771,7 @@ void CSDKPlayer::PreThink(void)
 			if (GetHealth() < iMaxHealth)
 				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
 
-			UseStyleCharge(SKILL_RESILIENT, iHealthTaken*3/2);
+			UseStyleCharge(SKILL_RESILIENT, iHealthTaken/2);
 		}
 	}
 
@@ -1657,6 +1659,23 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	return 1;
 }
 
+CWeaponSDKBase* CSDKPlayer::FindAnyWeaponButBrawl()
+{
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetWeapon(i);
+		if (!pWeapon)
+			continue;
+
+		if (pWeapon->GetWeaponID() == SDK_WEAPON_BRAWL)
+			continue;
+
+		return pWeapon;
+	}
+
+	return NULL;
+}
+
 ConVar da_stylemetertotalcharge( "da_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
 extern ConVar da_stylemeteractivationcost;
 
@@ -1702,7 +1721,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	while (ThrowActiveWeapon());
+	CWeaponSDKBase* pWeapon;
+	while ((pWeapon = FindAnyWeaponButBrawl()) != NULL)
+		ThrowWeapon(pWeapon);
 
 	CBaseEntity* pAttacker = info.GetAttacker();
 
@@ -2110,8 +2131,11 @@ int CSDKPlayer::GetMaxHealth() const
 
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
-	CWeaponSDKBase *pWeapon = (CWeaponSDKBase *)GetActiveWeapon();
+	return ThrowWeapon(GetActiveSDKWeapon());
+}
 
+bool CSDKPlayer::ThrowWeapon( CWeaponSDKBase* pWeapon, bool bAutoSwitch )
+{
 	if (pWeapon == NULL)
 		return false;
 
@@ -2142,7 +2166,8 @@ bool CSDKPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex )
 	if (GetCurrentTime() < m_flDisarmRedraw)
 		return false;
 
-	switchfrom = GetActiveSDKWeapon (); 
+	m_hSwitchFrom = GetActiveSDKWeapon(); 
+
 	bool bSwitched = BaseClass::Weapon_Switch(pWeapon, viewmodelindex);
 
 	if (bSwitched)

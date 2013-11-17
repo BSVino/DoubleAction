@@ -240,6 +240,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropEHandle( RECVINFO( m_hInflictor ) ),
 	RecvPropBool( RECVINFO( m_bWasKilledByExplosion ) ),
 	RecvPropVector( RECVINFO( m_vecKillingExplosionPosition ) ),
+
+	RecvPropEHandle( RECVINFO( m_hSwitchFrom ) ),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -323,6 +325,8 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 
 	DEFINE_PRED_FIELD( m_bCoderHacks, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nCoderHacksButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_hSwitchFrom, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );

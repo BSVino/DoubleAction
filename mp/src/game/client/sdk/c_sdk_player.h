@@ -390,7 +390,7 @@ private:
 	int     m_nCoderHacksButtons;
 
 public:
-	CWeaponSDKBase *switchfrom;
+	CNetworkHandle(CWeaponSDKBase, m_hSwitchFrom);
 };
 
 

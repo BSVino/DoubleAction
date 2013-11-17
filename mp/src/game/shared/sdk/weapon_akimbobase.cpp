@@ -77,8 +77,9 @@ Activity CAkimboBase::GetIdleActivity (void)
 }
 
 bool CAkimboBase::Deploy ()
-{/*Transfer iClip1 of single pistol to rightclip*/
-	CWeaponSDKBase *from = GetPlayerOwner ()->switchfrom;
+{
+	/*Transfer iClip1 of single pistol to rightclip*/
+	CWeaponSDKBase *from = GetPlayerOwner ()->m_hSwitchFrom;
 	SDKWeaponID id1 = SDK_WEAPON_NONE;
 	SDKWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
 	if (from) id1 = from->GetWeaponID ();
