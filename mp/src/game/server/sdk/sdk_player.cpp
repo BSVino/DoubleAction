@@ -4066,7 +4066,6 @@ void CSDKPlayer::CoderHacks(bool bOn)
 	// STEAM_X:Y:Z -> 2Z+Y
 	static AccountID_t aiCoders[] = {
 		8238,     // STEAM_0:0:4119     Vino
-		29302461, // STEAM_0:1:14651230 TRP
 		15210559, // STEAM_0:1:7605279  Dementei
 	};
 
