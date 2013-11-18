@@ -31,6 +31,7 @@
 	#include "da_spawngenerator.h"
 	#include "bots/bot_main.h"
 	#include "da_briefcase.h"
+	#include "vote_controller.h"
 
 #endif
 
@@ -299,6 +300,8 @@ CSDKGameRules::CSDKGameRules()
 	m_bChangelevelDone = false;
 }
 
+void RegisterVoteIssues();
+
 void CSDKGameRules::LevelInitPostEntity()
 {
 	BaseClass::LevelInitPostEntity();
@@ -323,6 +326,10 @@ void CSDKGameRules::LevelInitPostEntity()
 
 	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
 	m_iMiniObjectivePasses = 100; // Guarantee we get the first mini-objective.
+
+#ifndef CLIENT_DLL
+	RegisterVoteIssues();
+#endif
 }
 
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
@@ -2192,3 +2199,71 @@ CBriefcaseCaptureZone* CSDKGameRules::GetCaptureZone() const
 {
 	return m_hCaptureZone;
 }
+
+#ifndef CLIENT_DLL
+class CTeamplayModeVoteIssue : public CBaseIssue
+{
+public:
+	CTeamplayModeVoteIssue()
+		: CBaseIssue("teamplay_mode")
+	{
+	}
+
+public:
+	virtual bool		IsEnabled( void ) { return true; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_Teamplay_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_Teamplay_Passed"; }
+
+	virtual void		ExecuteCommand( void )
+	{
+		ConVarRef mp_teamplay("mp_teamplay");
+		mp_teamplay.SetValue(!mp_teamplay.GetBool());
+
+		ConVarRef nextlevel("nextlevel");
+		nextlevel.SetValue(STRING(gpGlobals->mapname));
+
+		SDKGameRules()->ChangeLevel();
+	}
+
+	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
+class CNextMapVoteIssue : public CBaseIssue
+{
+public:
+	CNextMapVoteIssue()
+		: CBaseIssue("nextlevel")
+	{
+	}
+
+public:
+	virtual bool		IsEnabled( void ) { return true; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_NextLevel_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_NextLevel_Passed"; }
+
+	virtual void		ExecuteCommand( void )
+	{
+		ConVarRef nextlevel("nextlevel");
+		nextlevel.SetValue(m_szDetailsString);
+	}
+
+	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
+void RegisterVoteIssues()
+{
+	CVoteController* pController = (CVoteController*)CreateEntityByName( "vote_controller" );
+	pController->Spawn();
+
+	new CTeamplayModeVoteIssue();
+	new CNextMapVoteIssue();
+}
+#endif
