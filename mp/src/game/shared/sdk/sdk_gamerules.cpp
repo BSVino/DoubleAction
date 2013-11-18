@@ -298,6 +298,7 @@ CSDKGameRules::CSDKGameRules()
 	m_iMiniObjectivePasses = 0;
 
 	m_bChangelevelDone = false;
+	m_bNextMapVoteDone = false;
 }
 
 void RegisterVoteIssues();
@@ -871,6 +872,12 @@ void CSDKGameRules::Think()
 		}
 
 		return;
+	}
+
+	if ( !m_bNextMapVoteDone && GetMapRemainingTime() && GetMapRemainingTime() < 2 * 60 )
+	{
+		if (g_voteController->CreateVote(DEDICATED_SERVER, "nextlevel", ""))
+			m_bNextMapVoteDone = true;
 	}
 
 	if ( GetMapRemainingTime() < 0 )
@@ -2242,8 +2249,38 @@ public:
 
 public:
 	virtual bool		IsEnabled( void ) { return false; }
-	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_NextLevel_Display"; }
+	virtual bool		IsYesNoVote( void ) { return false; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_NextLevel_Display "; }
 	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_NextLevel_Passed"; }
+
+	virtual bool        GetVoteOptions( CUtlVector <const char*> &vecNames )
+	{
+		CUtlVector<char*> apszMapList;
+		apszMapList.AddVectorToTail(SDKGameRules()->GetMapList());
+
+		static char szNextMap[MAX_MAP_NAME];
+		SDKGameRules()->GetNextLevelName( szNextMap, sizeof( szNextMap ) );
+		vecNames.AddToTail( szNextMap );
+
+		while (vecNames.Count() < 5)
+		{
+			if (!apszMapList.Count())
+				break;
+
+			int iRandom = random->RandomInt(0, apszMapList.Count()-1);
+
+			if (FStrEq(apszMapList[iRandom], szNextMap))
+			{
+				apszMapList.Remove(iRandom);
+				continue;
+			}
+
+			vecNames.AddToTail( apszMapList[iRandom] );
+			apszMapList.Remove(iRandom);
+		}
+
+		return true;
+	}
 
 	virtual void		ExecuteCommand( void )
 	{

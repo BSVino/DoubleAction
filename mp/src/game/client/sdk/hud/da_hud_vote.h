@@ -91,7 +91,6 @@ private:
 
 	vgui::SectionedListPanel	*m_pVoteSetupList;
 	vgui::SectionedListPanel	*m_pVoteParameterList;
-	vgui::Button				*m_pCallVoteButton;
 	vgui::ImageList				*m_pImageList;
 
 	CUtlVector<const char*>	m_VoteIssues;

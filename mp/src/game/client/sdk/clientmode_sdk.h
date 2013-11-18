@@ -38,6 +38,7 @@ public:
 	virtual void	OverrideMouseInput( float *x, float *y );
 
 	virtual int     HandleSpectatorKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
+	virtual int		HudElementKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding );
 
 private:
 	

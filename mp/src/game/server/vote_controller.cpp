@@ -15,6 +15,10 @@
 #include "tf/tf_gamerules.h"
 #endif
 
+#ifdef SDK_DLL
+#include "sdk/sdk_player.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -114,6 +118,11 @@ CON_COMMAND( callvote, "Start a vote on an issue." )
 		g_voteController->SendVoteFailedMessage( VOTE_FAILED_RATE_EXCEEDED, pVoteCaller, nCooldown );
 		return;
 	}
+#endif
+
+#ifdef SDK_DLL
+	if (ToSDKPlayer(pVoteCaller))
+		ToSDKPlayer(pVoteCaller)->Instructor_LessonLearned("callavote");
 #endif
 
 	// Parameters

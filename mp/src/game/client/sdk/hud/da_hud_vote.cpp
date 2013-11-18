@@ -47,7 +47,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar cl_vote_ui_active_after_voting( "cl_vote_ui_active_after_voting", "0" );
+ConVar cl_vote_ui_active_after_voting( "cl_vote_ui_active_after_voting", "1" );
 ConVar cl_vote_ui_show_notification( "cl_vote_ui_show_notification", "0" );
 
 #ifdef TF_CLIENT_DLL
@@ -195,7 +195,6 @@ CVoteSetupDialog::CVoteSetupDialog( vgui::Panel *parent ) : BaseClass( parent, "
 
 	m_pVoteSetupList = new SectionedListPanel( this, "VoteSetupList" );
 	m_pVoteParameterList = new SectionedListPanel( this, "VoteParameterList" );
-	m_pCallVoteButton = new Button( this, "CallVoteButton", "CallVote", this, "CallVote" );
 	m_pComboBox = new ComboBox( this, "ComboBox", 5, false );
 	m_pImageList = NULL;
 
@@ -735,7 +734,10 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 		}
 	}
 
-	m_pCallVoteButton->SetEnabled( m_bVoteButtonEnabled );
+	Button* pCallVoteButton = dynamic_cast<Button *>(FindChildByName("CallVoteButton"));
+	if (pCallVoteButton)
+		pCallVoteButton->SetEnabled( m_bVoteButtonEnabled );
+
 	RefreshIssueParameters();
 }
 

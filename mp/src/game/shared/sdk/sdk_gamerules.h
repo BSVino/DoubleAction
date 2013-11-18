@@ -224,6 +224,8 @@ public:
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID );
 
+	const CUtlVector<char*>& GetMapList() const { return m_MapList; }
+
 #endif
 
 public:
@@ -262,6 +264,7 @@ private:
 
 #ifndef CLIENT_DLL
 	bool m_bChangelevelDone;
+	bool m_bNextMapVoteDone;
 #endif
 };
 

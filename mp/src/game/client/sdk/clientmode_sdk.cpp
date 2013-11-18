@@ -35,6 +35,7 @@
 #include "cam_thirdperson.h"
 #include "sdk_in_main.h"
 #include "da_newsframe.h"
+#include "hud/da_hud_vote.h"
 
 class CHudChat;
 
@@ -252,4 +253,13 @@ int ClientModeSDKNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum,
 		return 0;
 
 	return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
+}
+
+int ClientModeSDKNormal::HudElementKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
+{
+	CHudVote* pElement = (CHudVote*)gHUD.FindElement("CHudVote");
+	if (pElement)
+		return pElement->KeyInput(down, keynum, pszCurrentBinding);
+	else
+		return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
 }
