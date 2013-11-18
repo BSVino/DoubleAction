@@ -2241,7 +2241,7 @@ public:
 	}
 
 public:
-	virtual bool		IsEnabled( void ) { return true; }
+	virtual bool		IsEnabled( void ) { return false; }
 	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_NextLevel_Display"; }
 	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_NextLevel_Passed"; }
 
@@ -2258,6 +2258,33 @@ public:
 	}
 };
 
+class CChangelevelVoteIssue : public CBaseIssue
+{
+public:
+	CChangelevelVoteIssue()
+		: CBaseIssue("changelevel")
+	{
+	}
+
+public:
+	virtual bool		IsEnabled( void ) { return true; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_ChangeLevel_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_ChangeLevel_Passed"; }
+
+	virtual void		ExecuteCommand( void )
+	{
+		ConVarRef nextlevel("nextlevel");
+		nextlevel.SetValue(m_szDetailsString);
+		SDKGameRules()->ChangeLevel();
+	}
+
+	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
 void RegisterVoteIssues()
 {
 	CVoteController* pController = (CVoteController*)CreateEntityByName( "vote_controller" );
@@ -2265,5 +2292,6 @@ void RegisterVoteIssues()
 
 	new CTeamplayModeVoteIssue();
 	new CNextMapVoteIssue();
+	new CChangelevelVoteIssue();
 }
 #endif

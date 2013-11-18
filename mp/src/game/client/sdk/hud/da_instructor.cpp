@@ -14,6 +14,7 @@
 #include "c_sdk_player.h"
 #include "da_buymenu.h"
 #include "ammodef.h"
+#include "da_hud_vote.h"
 
 #undef min
 #undef max
@@ -563,6 +564,10 @@ void C_SDKPlayer::Instructor_Think()
 			oProgress.m_sLessonName = m_pInstructor->GetLessons().Key(i);
 		}
 	}
+
+	CHudVote* pElement = dynamic_cast<CHudVote*>(gHUD.FindElement("CHudVote"));
+	if (pElement && pElement->IsVoteUIActive())
+		return;
 
 	if (m_pInstructor->IsSideHintShowing())
 		m_flLastLesson = gpGlobals->curtime;

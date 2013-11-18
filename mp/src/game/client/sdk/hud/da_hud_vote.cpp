@@ -41,6 +41,9 @@
 #include "c_tf_objective_resource.h"
 #endif
 
+#include "c_sdk_player.h"
+#include "da_instructor.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -975,6 +978,9 @@ void CHudVote::MsgFunc_CallVoteFailed( bf_read &msg )
 	if ( !pLocalPlayer )
 		return;
 
+	if (ToSDKPlayer(pLocalPlayer) && ToSDKPlayer(pLocalPlayer)->GetInstructor())
+		ToSDKPlayer(pLocalPlayer)->GetInstructor()->HideLesson();
+
 	pLocalPlayer->EmitSound("Vote.Failed");
 
 	m_pVoteActive->SetVisible( false );
@@ -1111,6 +1117,9 @@ void CHudVote::MsgFunc_VoteFailed( bf_read &msg )
 	if ( !pLocalPlayer )
 		return;
 
+	if (ToSDKPlayer(pLocalPlayer) && ToSDKPlayer(pLocalPlayer)->GetInstructor())
+		ToSDKPlayer(pLocalPlayer)->GetInstructor()->HideLesson();
+
 	pLocalPlayer->EmitSound("Vote.Failed");
 }
 
@@ -1125,6 +1134,9 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 	if ( !pLocalPlayer )
 		return;
+
+	if (ToSDKPlayer(pLocalPlayer) && ToSDKPlayer(pLocalPlayer)->GetInstructor())
+		ToSDKPlayer(pLocalPlayer)->GetInstructor()->HideLesson();
 
 	// Is this a team-only vote?
 	int iTeam = msg.ReadByte();
@@ -1173,7 +1185,7 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	m_pVotePassed->SetVisible( false );
 	m_pCallVoteFailed->SetVisible( false );
 	m_pVoteSetupDialog->SetVisible( false );
-	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( m_pVoteActive, "HideVoteBackgrounds" );
+	m_pVoteActive->SetVisible( true );
 
 	m_voteBar->SetVisible( m_bIsYesNoVote );
 
@@ -1402,6 +1414,9 @@ void CHudVote::MsgFunc_VotePass( bf_read &msg )
 	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
 	if ( !pLocalPlayer )
 		return;
+
+	if (ToSDKPlayer(pLocalPlayer) && ToSDKPlayer(pLocalPlayer)->GetInstructor())
+		ToSDKPlayer(pLocalPlayer)->GetInstructor()->HideLesson();
 
 	pLocalPlayer->EmitSound( "Vote.Passed" );
 }
