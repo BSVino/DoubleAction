@@ -85,6 +85,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 		RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
 		RecvPropEHandle( RECVINFO( m_hCaptureZone ) ),
+		RecvPropVector( RECVINFO( m_vecLowestSpawnPoint ) ),
 #else
 		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
@@ -92,6 +93,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		SendPropBool( SENDINFO( m_bCoderHacks ) ),
 		SendPropEHandle( SENDINFO( m_hBriefcase ) ),
 		SendPropEHandle( SENDINFO( m_hCaptureZone ) ),
+		SendPropVector( SENDINFO( m_vecLowestSpawnPoint ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -330,6 +332,20 @@ void CSDKGameRules::LevelInitPostEntity()
 
 #ifndef CLIENT_DLL
 	RegisterVoteIssues();
+
+	CBaseEntity* pSpot = NULL;
+	pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
+
+	if (pSpot)
+	{
+		m_vecLowestSpawnPoint = pSpot->GetAbsOrigin();
+
+		while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+		{
+			if (pSpot->GetAbsOrigin().z < m_vecLowestSpawnPoint.Get().z)
+				m_vecLowestSpawnPoint = pSpot->GetAbsOrigin();
+		}
+	}
 #endif
 }
 
@@ -1969,6 +1985,11 @@ float CSDKGameRules::GetMapRemainingTime()
 float CSDKGameRules::GetMapElapsedTime( void )
 {
 	return gpGlobals->curtime;
+}
+
+Vector CSDKGameRules::GetLowestSpawnPoint()
+{
+	return m_vecLowestSpawnPoint;
 }
 
 #ifndef CLIENT_DLL

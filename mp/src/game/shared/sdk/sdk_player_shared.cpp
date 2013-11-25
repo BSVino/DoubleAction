@@ -1318,6 +1318,9 @@ bool CSDKPlayerShared::IsSuperFalling()
 	if ((tr.endpos - m_pOuter->GetAbsOrigin()).LengthSqr() < 2000*2000)
 		return false;
 
+	if (m_pOuter->GetAbsOrigin().z > SDKGameRules()->GetLowestSpawnPoint().z - 400)
+		return false;
+
 	m_bSuperFalling = true;
 	return true;
 }

@@ -232,6 +232,8 @@ public:
 	float GetMapRemainingTime();	// time till end of map, -1 if timelimit is disabled
 	float GetMapElapsedTime();		// How much time has elapsed since the map started.
 
+	Vector GetLowestSpawnPoint();
+
 	bool    CoderHacks() { return m_bCoderHacks; }
 
 private:
@@ -266,6 +268,8 @@ private:
 	bool m_bChangelevelDone;
 	bool m_bNextMapVoteDone;
 #endif
+
+	CNetworkVar( Vector, m_vecLowestSpawnPoint );
 };
 
 //-----------------------------------------------------------------------------
