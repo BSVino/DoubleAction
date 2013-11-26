@@ -86,7 +86,7 @@ int main(int argc, const char** args)
 			continue;
 		}
 
-		if (pbGameData.timestamp() <  1383523200) // Nov 4
+		if (sCommand != "daily_players" && pbGameData.timestamp() <  1383523200) // Nov 4
 		{
 			pszFileName = g_pFullFileSystem->FindNext( ffh );
 			continue;
@@ -188,6 +188,22 @@ int main(int argc, const char** args)
 		Msg("Characters:\n");
 		for (auto it = asCharactersChosen.begin(); it != asCharactersChosen.end(); it++)
 			Msg(" %s: %i\n", it->first.c_str(), it->second);
+	}
+	else if (sCommand == "daily_players")
+	{
+		map<long, int> aiDates;
+
+		for (size_t i = 0; i < apbDatas.size(); i++)
+		{
+			long iDay = apbDatas[i].timestamp() - apbDatas[i].timestamp()%86400;
+
+			// Characters chosen serves as an estimate if we don't have better data
+			aiDates[iDay] += apbDatas[i].characters_chosen().size();
+		}
+
+		Msg("Days:\n");
+		for (auto it = aiDates.begin(); it != aiDates.end(); it++)
+			Msg(" %i: %i\n", it->first, it->second);
 	}
 
 	return 0;
