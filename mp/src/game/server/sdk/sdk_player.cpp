@@ -4423,7 +4423,8 @@ void CC_Character(const CCommand& args)
 
 		if (pPlayer->SetCharacter(args[1]))
 		{
-			DataManager().AddCharacterChosen(args[1]);
+			if (!pPlayer->IsBot())
+				DataManager().AddCharacterChosen(args[1]);
 
 			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
 			{
@@ -4505,7 +4506,10 @@ void CC_Buy(const CCommand& args)
 	{
 		pPlayer->StopObserverMode();
 		pPlayer->AddToLoadout(eWeapon);
-		DataManager().AddWeaponChosen(eWeapon);
+
+		if (!pPlayer->IsBot())
+			DataManager().AddWeaponChosen(eWeapon);
+
 		return;
 	}
 }
@@ -4540,7 +4544,9 @@ void CC_Skill(const CCommand& args)
 	}
 
 	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
-	DataManager().AddSkillChosen(AliasToSkillID(args[1]));
+
+	if (!pPlayer->IsBot())
+		DataManager().AddSkillChosen(AliasToSkillID(args[1]));
 
 	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGSKILL || pPlayer->IsDead()) )
 		pPlayer->State_Transition( STATE_ACTIVE );
