@@ -215,3 +215,41 @@ void CSDKBot::BotThink()
 
 	RunPlayerMove( cmd, gpGlobals->frametime );
 }
+
+CON_COMMAND_F( bot_teleport, "Give weapon to player.\n\tArguments: <weapon_name>", FCVAR_CHEAT )
+{
+	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+
+	Vector vecEye = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset();
+
+	Vector vecForward;
+	AngleVectors(pPlayer->EyeAngles(), &vecForward, NULL, NULL);
+
+	trace_t tr;
+	UTIL_TraceHull(vecEye, vecEye + vecForward * 100, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+
+	NDebugOverlay::Line(vecEye, tr.endpos, 0, 0, 255, false, 10);
+
+	CSDKPlayer* pBot = NULL;
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+
+		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsAlive())
+			continue;
+
+		if (pPlayer->IsBot())
+		{
+			pBot = pPlayer;
+			break;
+		}
+	}
+
+	if (!pBot)
+		return;
+
+	pBot->SetAbsOrigin(tr.endpos);
+}
