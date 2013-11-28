@@ -1748,7 +1748,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	CBaseEntity* pAttacker = info.GetAttacker();
 
-	if( pAttacker && pAttacker->IsPlayer() )
+	if (!IsBot() && pAttacker != this)
+		DataManager().AddPlayerDeath(GetAbsOrigin());
+
+	if( pAttacker && pAttacker->IsPlayer() && pAttacker != this )
 	{
 		CSDKPlayer* pSDKAttacker = ToSDKPlayer(pAttacker);
 
@@ -1770,6 +1773,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		// kill, ie one player shooting another, and not eg a suicide.
 		m_iDeaths += 1;
 		pSDKAttacker->m_iKills += 1;
+
+		if (!pSDKAttacker->IsBot())
+			DataManager().AddPlayerKill(pSDKAttacker->GetAbsOrigin());
 	}
 
 	// show killer in death cam mode

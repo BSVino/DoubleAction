@@ -20,6 +20,7 @@ class CDataManager : public CAutoGameSystemPerFrame
 {
 public:
 	CDataManager( char const *name );
+	virtual ~CDataManager();
 
 public:
 	virtual void LevelInitPostEntity();
@@ -27,6 +28,9 @@ public:
 	virtual void LevelShutdownPostEntity();
 
 	virtual void SavePositions();
+
+	void AddPlayerKill(const Vector& vecPosition);
+	void AddPlayerDeath(const Vector& vecPosition);
 
 	void AddCharacterChosen(const char* pszCharacter);
 	void AddWeaponChosen(SDKWeaponID eWeapon);
@@ -38,14 +42,28 @@ public:
 	void ClearData();
 
 private:
-	float              m_flNextPositionsUpdate;
-	CUtlVector<Vector> m_avecPlayerPositions;
-	std::map<std::string, int> m_asCharactersChosen;
-	CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
-	CUtlVector<SkillID>     m_aeSkillsChosen;
+	class CDataContainer
+	{
+	public:
+		CDataContainer()
+		{
+			m_flNextPositionsUpdate = 0;
 
-	bool               m_bCheated;
+			m_bCheated = false;
+		}
 
+		float              m_flNextPositionsUpdate;
+		CUtlVector<Vector> m_avecPlayerPositions;
+		CUtlVector<Vector> m_avecPlayerKills;
+		CUtlVector<Vector> m_avecPlayerDeaths;
+		std::map<std::string, int> m_asCharactersChosen;
+		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
+		CUtlVector<SkillID>     m_aeSkillsChosen;
+
+		bool               m_bCheated;
+	}* d;
+
+	bool  m_bLevelStarted;
 	CJob* m_pSendData;
 };
 

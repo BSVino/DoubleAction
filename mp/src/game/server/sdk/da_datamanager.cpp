@@ -52,7 +52,15 @@ CDataManager::CDataManager( char const* name )
 {
 	m_pSendData = NULL;
 
-	m_flNextPositionsUpdate = 0;
+	d = NULL;
+
+	m_bLevelStarted = false;
+	ClearData();
+}
+
+CDataManager::~CDataManager()
+{
+	delete d;
 }
 
 void CDataManager::LevelInitPostEntity( void )
@@ -63,11 +71,14 @@ void CDataManager::LevelInitPostEntity( void )
 		m_pSendData->WaitForFinishAndRelease();
 		m_pSendData = NULL;
 	}
+
+	m_bLevelStarted = true;
+	d->m_flNextPositionsUpdate = gpGlobals->curtime;
 }
 
 void CDataManager::FrameUpdatePostEntityThink( void )
 {
-	if (gpGlobals->curtime > m_flNextPositionsUpdate)
+	if (gpGlobals->curtime > d->m_flNextPositionsUpdate)
 		SavePositions();
 }
 
@@ -78,7 +89,7 @@ void CDataManager::SavePositions()
 	if (IsSendingData())
 		return;
 
-	m_flNextPositionsUpdate = gpGlobals->curtime + da_data_positions_interval.GetFloat();
+	d->m_flNextPositionsUpdate = gpGlobals->curtime + da_data_positions_interval.GetFloat();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -92,26 +103,36 @@ void CDataManager::SavePositions()
 		if (!pPlayer->IsAlive())
 			continue;
 
-		m_avecPlayerPositions.AddToTail(pPlayer->GetAbsOrigin());
+		d->m_avecPlayerPositions.AddToTail(pPlayer->GetAbsOrigin());
 	}
 
 	ConVarRef sv_cheats("sv_cheats");
-	m_bCheated |= sv_cheats.GetBool();
+	d->m_bCheated |= sv_cheats.GetBool();
+}
+
+void CDataManager::AddPlayerKill(const Vector& vecPosition)
+{
+	d->m_avecPlayerKills.AddToTail(vecPosition);
+}
+
+void CDataManager::AddPlayerDeath(const Vector& vecPosition)
+{
+	d->m_avecPlayerDeaths.AddToTail(vecPosition);
 }
 
 void CDataManager::AddCharacterChosen(const char* pszCharacter)
 {
-	m_asCharactersChosen[pszCharacter]++;
+	d->m_asCharactersChosen[pszCharacter]++;
 }
 
 void CDataManager::AddWeaponChosen(SDKWeaponID eWeapon)
 {
-	m_aeWeaponsChosen.AddToTail(eWeapon);
+	d->m_aeWeaponsChosen.AddToTail(eWeapon);
 }
 
 void CDataManager::AddSkillChosen(SkillID eSkill)
 {
-	m_aeSkillsChosen.AddToTail(eSkill);
+	d->m_aeSkillsChosen.AddToTail(eSkill);
 }
 
 ConVar da_data_enabled("da_data_enabled", "1", 0, "Turn on and off data sending.");
@@ -124,11 +145,17 @@ void CDataManager::LevelShutdownPostEntity()
 	if (!da_data_enabled.GetBool())
 		return;
 
+	// This function is sometimes called twice for every LevelInitPostEntity(), so remove duplicates.
+	if (!m_bLevelStarted)
+		return;
+
 	// If the thread is executing, then wait for it to finish
 	if ( m_pSendData )
 		m_pSendData->WaitForFinishAndRelease();
 
 	m_pSendData = ThreadExecute( &SendData, (CFunctor**)NULL, 0 );
+
+	m_bLevelStarted = false;
 }
 
 bool CDataManager::IsSendingData()
@@ -146,7 +173,7 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_debug(false);
 #endif
 
-	pbGameData->set_cheats(m_bCheated);
+	pbGameData->set_cheats(d->m_bCheated);
 
 	const ConVar* pHostname = cvar->FindVar( "hostname" );
 	pbGameData->set_server_name(pHostname->GetString());
@@ -154,42 +181,59 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_timestamp((unsigned)time(NULL));
 
 	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
-	size_t iDataSize = m_avecPlayerPositions.Count();
+	size_t iDataSize = d->m_avecPlayerPositions.Count();
 	pPositions->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
-		FillProtoBufVector(pPositions->Add(), m_avecPlayerPositions[i]);
+		FillProtoBufVector(pPositions->Add(), d->m_avecPlayerPositions[i]);
+
+	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pKills = pbGameData->mutable_kills()->mutable_position();
+	iDataSize = d->m_avecPlayerKills.Count();
+	pKills->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		FillProtoBufVector(pKills->Add(), d->m_avecPlayerKills[i]);
+
+	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pDeaths = pbGameData->mutable_deaths()->mutable_position();
+	iDataSize = d->m_avecPlayerDeaths.Count();
+	pDeaths->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		FillProtoBufVector(pDeaths->Add(), d->m_avecPlayerDeaths[i]);
 
 	google::protobuf::RepeatedPtrField<std::string>* pCharacters = pbGameData->mutable_characters_chosen();
-	iDataSize = m_asCharactersChosen.size();
+	iDataSize = d->m_asCharactersChosen.size();
 	pCharacters->Reserve(iDataSize);
 
-	for (std::map<std::string, int>::iterator it = m_asCharactersChosen.begin(); it != m_asCharactersChosen.end(); it++)
+	for (std::map<std::string, int>::iterator it = d->m_asCharactersChosen.begin(); it != d->m_asCharactersChosen.end(); it++)
 	{
 		for (int i = 0; i < it->second; i++)
 			pCharacters->Add()->assign(it->first);
 	}
 
 	google::protobuf::RepeatedField<google::protobuf::int32>* pWeapons = pbGameData->mutable_weapons_chosen();
-	iDataSize = m_aeWeaponsChosen.Count();
+	iDataSize = d->m_aeWeaponsChosen.Count();
 	pWeapons->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
-		pWeapons->Add(m_aeWeaponsChosen[i]);
+		pWeapons->Add(d->m_aeWeaponsChosen[i]);
 
 	google::protobuf::RepeatedField<google::protobuf::int32>* pSkills = pbGameData->mutable_skills_chosen();
-	iDataSize = m_aeSkillsChosen.Count();
+	iDataSize = d->m_aeSkillsChosen.Count();
 	pSkills->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
-		pSkills->Add(m_aeSkillsChosen[i]);
+		pSkills->Add(d->m_aeSkillsChosen[i]);
 
 	ClearData();
 }
 
 void CDataManager::ClearData()
 {
-	m_avecPlayerPositions.SetCount(0);
+	// Delete the data container and re-create it every level
+	// to remove the possibility of old data remaining.
+	delete d;
+	d = new CDataContainer();
 }
 
 #endif
