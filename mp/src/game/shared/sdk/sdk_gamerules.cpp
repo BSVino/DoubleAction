@@ -32,6 +32,7 @@
 	#include "bots/bot_main.h"
 	#include "da_briefcase.h"
 	#include "vote_controller.h"
+	#include "da_datamanager.h"
 
 #endif
 
@@ -349,6 +350,16 @@ void CSDKGameRules::LevelInitPostEntity()
 #endif
 }
 
+bool CSDKGameRules::ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
+{
+	bool bConnected = BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
+
+	if (bConnected)
+		DataManager().ClientConnected(engine->GetClientSteamID(pEntity)->GetAccountID());
+
+	return bConnected;
+}
+
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
 	BaseClass::ClientDisconnected(pClient);
@@ -360,6 +371,9 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 	if (pSDKPlayer == GetBountyPlayer())
 		CleanupMiniObjective();
+
+	if (!pSDKPlayer->IsBot())
+		DataManager().ClientDisconnected(engine->GetClientSteamID(pSDKPlayer->edict())->GetAccountID());
 }
 
 bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )

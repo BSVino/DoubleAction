@@ -12,6 +12,7 @@ message GameData
 	optional bool cheats = 6;
 	optional PlayerPositions kills = 7;
 	optional PlayerPositions deaths = 8;
+	optional int32 connections = 9;
 
 	repeated string characters_chosen = 16;
 	repeated int32 weapons_chosen = 17;

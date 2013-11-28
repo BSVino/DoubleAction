@@ -184,6 +184,7 @@ public:
 	int SelectDefaultTeam( void );
 
 	virtual void LevelInitPostEntity();
+	virtual bool ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );
 	virtual void ClientDisconnected( edict_t *pClient );
 
 	virtual bool IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer );

@@ -36,6 +36,9 @@ public:
 	void AddWeaponChosen(SDKWeaponID eWeapon);
 	void AddSkillChosen(SkillID eSkill);
 
+	void ClientConnected(AccountID_t eAccountID);
+	void ClientDisconnected(AccountID_t eAccountID);
+
 	bool IsSendingData();
 
 	void FillProtoBuffer(da::protobuf::GameData* pbGameData);
@@ -49,6 +52,8 @@ private:
 		{
 			m_flNextPositionsUpdate = 0;
 
+			m_iConnections = 0;
+
 			m_bCheated = false;
 		}
 
@@ -59,9 +64,14 @@ private:
 		std::map<std::string, int> m_asCharactersChosen;
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
+		int                m_iConnections;
 
 		bool               m_bCheated;
 	}* d;
+
+	// We use this to figure out if a client has really connected
+	// so it needs to be outside the data container so it doesn't get wiped.
+	std::map<AccountID_t, char> m_aiConnectedClients;
 
 	bool  m_bLevelStarted;
 	CJob* m_pSendData;

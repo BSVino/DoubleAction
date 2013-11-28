@@ -1,5 +1,7 @@
 #include "cbase.h"
 
+using namespace std;
+
 #ifdef WITH_DATA_COLLECTION
 
 #undef min
@@ -135,6 +137,26 @@ void CDataManager::AddSkillChosen(SkillID eSkill)
 	d->m_aeSkillsChosen.AddToTail(eSkill);
 }
 
+void CDataManager::ClientConnected(AccountID_t eAccountID)
+{
+	// ClientConnected is called for every non-bot client every time a map loads, even with changelevel.
+	// So we have to eliminate duplicate connections.
+	map<AccountID_t, char>::iterator it = m_aiConnectedClients.find(eAccountID);
+	if (it == m_aiConnectedClients.end() || it->second == 0)
+	{
+		// This client was not previously in the list, so he has truly connected.
+		d->m_iConnections++;
+
+		m_aiConnectedClients[eAccountID] = 1;
+	}
+}
+
+void CDataManager::ClientDisconnected(AccountID_t eAccountID)
+{
+	// This is called only once for each client, never just for changelevels.
+	m_aiConnectedClients.erase(eAccountID);
+}
+
 ConVar da_data_enabled("da_data_enabled", "1", 0, "Turn on and off data sending.");
 
 void CDataManager::LevelShutdownPostEntity()
@@ -179,6 +201,8 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_server_name(pHostname->GetString());
 
 	pbGameData->set_timestamp((unsigned)time(NULL));
+
+	pbGameData->set_connections(d->m_iConnections);
 
 	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
 	size_t iDataSize = d->m_avecPlayerPositions.Count();
