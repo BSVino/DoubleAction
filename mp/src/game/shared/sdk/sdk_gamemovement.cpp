@@ -190,7 +190,7 @@ void CSDKGameMovement::SetPlayerSpeed( void )
 	}	
 #endif // SDK_USE_PRONE
 
-	mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, 0.25f, SKILL_ATHLETIC);
+	mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.ModifySkillValue(mv->m_flClientMaxSpeed, 0.2f, SKILL_ATHLETIC);
 
 	Assert(IsFinite(mv->m_flClientMaxSpeed));
 }
