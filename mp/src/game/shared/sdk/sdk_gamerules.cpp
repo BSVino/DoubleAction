@@ -85,6 +85,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 		RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
 		RecvPropEHandle( RECVINFO( m_hCaptureZone ) ),
+		RecvPropEHandle( RECVINFO( m_hBountyPlayer ) ),
 		RecvPropVector( RECVINFO( m_vecLowestSpawnPoint ) ),
 #else
 		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
@@ -93,6 +94,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		SendPropBool( SENDINFO( m_bCoderHacks ) ),
 		SendPropEHandle( SENDINFO( m_hBriefcase ) ),
 		SendPropEHandle( SENDINFO( m_hCaptureZone ) ),
+		SendPropEHandle( SENDINFO( m_hBountyPlayer ) ),
 		SendPropVector( SENDINFO( m_vecLowestSpawnPoint ) ),
 #endif
 END_NETWORK_TABLE()
@@ -297,7 +299,6 @@ CSDKGameRules::CSDKGameRules()
 	m_flNextSlowMoUpdate = 0;
 
 	m_flNextMiniObjectiveStartTime = 0;
-	m_iMiniObjectivePasses = 0;
 
 	m_bChangelevelDone = false;
 	m_bNextMapVoteDone = false;
@@ -328,7 +329,6 @@ void CSDKGameRules::LevelInitPostEntity()
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
 
 	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
-	m_iMiniObjectivePasses = 100; // Guarantee we get the first mini-objective.
 
 #ifndef CLIENT_DLL
 	RegisterVoteIssues();
@@ -357,6 +357,9 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 	CSDKPlayer* pSDKPlayer = ToSDKPlayer(CBaseEntity::Instance( pClient ));
 	pSDKPlayer->DropBriefcase();
+
+	if (pSDKPlayer == GetBountyPlayer())
+		CleanupMiniObjective();
 }
 
 bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
@@ -1731,6 +1734,32 @@ const char *CSDKGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CS
 	return killer_weapon_name;
 }
 
+void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
+{
+	if (pVictim && pVictim == GetBountyPlayer())
+	{
+		CSDKPlayer::SendBroadcastSound("MiniObjective.BountyKilled");
+
+		CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
+		if (pPlayerKiller)
+		{
+			GiveMiniObjectiveReward(pPlayerKiller);
+
+			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
+		}
+		else
+			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_LOST);
+
+		CleanupMiniObjective();
+	}
+	else if (GetBountyPlayer() && GetBountyPlayer() == ToSDKPlayer(info.GetAttacker()))
+	{
+		GetBountyPlayer()->TakeHealth(25, 0);
+	}
+
+	BaseClass::PlayerKilled(pVictim, info);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pVictim - 
@@ -1970,7 +1999,7 @@ float CSDKGameRules::GetMapRemainingTime()
 	if ( mp_timelimit.GetInt() <= 0 )
 		return 0;
 
-	if ( GetBriefcase() )
+	if (m_eCurrentMiniObjective != MINIOBJECTIVE_NONE)
 		return 0;
 
 	// timelimit is in minutes
@@ -1995,22 +2024,16 @@ Vector CSDKGameRules::GetLowestSpawnPoint()
 #ifndef CLIENT_DLL
 void CSDKGameRules::StartMiniObjective()
 {
-	m_iMiniObjectivePasses++;
-
-	if (random->RandomInt(0, 1) >= m_iMiniObjectivePasses)
-	{
-		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
-
-		return;
-	}
-
 	CleanupMiniObjective();
 
+	random->SetSeed((int)(gpGlobals->curtime*1000));
 	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
 
 	bool bResult = false;
 	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
 		bResult = SetupMiniObjective_Briefcase();
+	else if (eObjective == MINIOBJECTIVE_BOUNTY)
+		bResult = SetupMiniObjective_Bounty();
 	else
 		AssertMsg(false, "Unknown mini objective to set up.");
 
@@ -2020,8 +2043,6 @@ void CSDKGameRules::StartMiniObjective()
 
 		return;
 	}
-
-	m_iMiniObjectivePasses = 0;
 
 	m_eCurrentMiniObjective = eObjective;
 
@@ -2035,8 +2056,66 @@ notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
 	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
 		return NOTICE_CAPTURE_BRIEFCASE;
 
+	if (eObjective == MINIOBJECTIVE_BOUNTY)
+		return NOTICE_BOUNTY_ON_PLAYER;
+
 	AssertMsg(false, "Unknown notice for objective.");
 	return NOTICE_CAPTURE_BRIEFCASE;
+}
+
+void CSDKGameRules::MaintainMiniObjective()
+{
+	if (!m_eCurrentMiniObjective)
+		return;
+
+	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
+		MaintainMiniObjective_Briefcase();
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_BOUNTY)
+		MaintainMiniObjective_Bounty();
+	else
+		AssertMsg(false, "Unknown mini objective to maintain.");
+}
+
+void CSDKGameRules::CleanupMiniObjective()
+{
+	if (!m_eCurrentMiniObjective)
+		return;
+
+	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
+		CleanupMiniObjective_Briefcase();
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_BOUNTY)
+		CleanupMiniObjective_Bounty();
+	else
+		AssertMsg(false, "Unknown mini objective to maintain.");
+
+	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
+
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+}
+
+void CSDKGameRules::GiveMiniObjectiveReward(CSDKPlayer* pPlayer)
+{
+	pPlayer->m_Shared.m_bSuperSkill = true;
+
+	ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
+	pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
+
+	pPlayer->SetStylePoints(da_stylemeteractivationcost.GetFloat());
+
+	if (!pPlayer->IsStyleSkillActive())
+		pPlayer->ActivateMeter();
+
+	if ( pPlayer->Weapon_OwnsThisType("weapon_grenade") )
+		pPlayer->CBasePlayer::GiveAmmo(1, "grenades");
+	else
+		pPlayer->GiveNamedItem( "weapon_grenade" );
+
+	pPlayer->GiveSlowMo(3);
+
+	// Make sure the player's health is 150%
+	pPlayer->TakeHealth(150, 0);
+
+	pPlayer->m_bHasSuperSlowMo = true;
 }
 
 bool CSDKGameRules::SetupMiniObjective_Briefcase()
@@ -2079,6 +2158,7 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	if (apBriefcaseSpawnPoints.Count() == 0)
 		return false;
 
+	random->SetSeed((int)(gpGlobals->curtime*1000));
 	int iSpot = random->RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
 
 	CUtlVector<CBaseEntity*> apCapturePoints;
@@ -2128,17 +2208,6 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	return true;
 }
 
-void CSDKGameRules::MaintainMiniObjective()
-{
-	if (!m_eCurrentMiniObjective)
-		return;
-
-	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
-		MaintainMiniObjective_Briefcase();
-	else
-		AssertMsg(false, "Unknown mini objective to maintain.");
-}
-
 void CSDKGameRules::MaintainMiniObjective_Briefcase()
 {
 	if (!m_hBriefcase)
@@ -2154,21 +2223,6 @@ void CSDKGameRules::MaintainMiniObjective_Briefcase()
 	}
 }
 
-void CSDKGameRules::CleanupMiniObjective()
-{
-	if (!m_eCurrentMiniObjective)
-		return;
-
-	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
-		CleanupMiniObjective_Briefcase();
-	else
-		AssertMsg(false, "Unknown mini objective to maintain.");
-
-	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
-
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
-}
-
 void CSDKGameRules::CleanupMiniObjective_Briefcase()
 {
 	UTIL_Remove(m_hBriefcase);
@@ -2179,33 +2233,106 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 {
 	if (pPlayer)
 	{
-		pPlayer->m_Shared.m_bSuperSkill = true;
-
-		ConVarRef da_stylemeteractivationcost("da_stylemeteractivationcost");
-		pPlayer->AddStylePoints(da_stylemeteractivationcost.GetFloat() + 1, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
-
-		pPlayer->SetStylePoints(da_stylemeteractivationcost.GetFloat());
-
-		if (!pPlayer->IsStyleSkillActive())
-			pPlayer->ActivateMeter();
-
-		if ( pPlayer->Weapon_OwnsThisType("weapon_grenade") )
-			pPlayer->CBasePlayer::GiveAmmo(1, "grenades");
-		else
-			pPlayer->GiveNamedItem( "weapon_grenade" );
-
-		pPlayer->GiveSlowMo(3);
-
-		// Make sure the player's health is 150%
-		pPlayer->TakeHealth(150, 0);
-
-		pPlayer->m_bHasSuperSlowMo = true;
+		GiveMiniObjectiveReward(pPlayer);
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");
 	}
 
 	CleanupMiniObjective();
+}
+
+int PlayerKDCompare(CSDKPlayer*const* l, CSDKPlayer*const* r)
+{
+	float flLRatio = (*l)->GetDKRatio();
+	float flRRatio = (*r)->GetDKRatio();
+
+	return flLRatio > flRRatio;
+}
+
+bool CSDKGameRules::SetupMiniObjective_Bounty()
+{
+	// Find a player with a high K:D ratio.
+
+	CUtlVector<CSDKPlayer*> apPlayers;
+
+	int iPlayingPlayers = 0;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
+			continue;
+
+		iPlayingPlayers++;
+
+#ifndef _DEBUG
+		// Never choose a bot instead of a player
+		if (pPlayer->IsBot())
+			continue;
+#endif
+
+		if (!pPlayer->IsAlive())
+			continue;
+
+		apPlayers.AddToTail(pPlayer);
+	}
+
+	// Need a few players before this mode is any fun.
+	if (iPlayingPlayers < 4)
+		return false;
+
+	if (apPlayers.Count() == 0)
+		return false;
+
+	apPlayers.Sort(&PlayerKDCompare);
+
+	if (iPlayingPlayers <= 6)
+	{
+		if (apPlayers.Count() >= 2)
+			// Six or fewer players, choose from top 2
+			apPlayers.RemoveMultipleFromTail(apPlayers.Count()-2);
+	}
+	else
+	{
+		if (apPlayers.Count() >= 3)
+			// More players, choose from top 3
+			apPlayers.RemoveMultipleFromTail(apPlayers.Count()-3);
+	}
+
+	random->SetSeed((int)(gpGlobals->curtime*1000));
+	CSDKPlayer* pChosen = apPlayers[random->RandomInt(0, apPlayers.Count()-1)];
+
+	m_hBountyPlayer = pChosen;
+
+	GiveMiniObjectiveReward(pChosen);
+
+	CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_ON_PLAYER, pChosen);
+
+	return true;
+}
+
+void CSDKGameRules::MaintainMiniObjective_Bounty()
+{
+	if (!m_hBountyPlayer)
+	{
+		CleanupMiniObjective();
+		return;
+	}
+
+	if (!m_hBountyPlayer->IsAlive())
+	{
+		CleanupMiniObjective();
+		return;
+	}
+}
+
+void CSDKGameRules::CleanupMiniObjective_Bounty()
+{
+	m_hBountyPlayer = NULL;
 }
 
 extern ConVar *sv_cheats;
@@ -2226,6 +2353,11 @@ CBriefcase* CSDKGameRules::GetBriefcase() const
 CBriefcaseCaptureZone* CSDKGameRules::GetCaptureZone() const
 {
 	return m_hCaptureZone;
+}
+
+CSDKPlayer* CSDKGameRules::GetBountyPlayer() const
+{
+	return m_hBountyPlayer;
 }
 
 #ifndef CLIENT_DLL

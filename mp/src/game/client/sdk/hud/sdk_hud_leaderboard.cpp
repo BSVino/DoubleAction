@@ -78,6 +78,7 @@ protected:
 	CHudTexture* m_pSilverStar;
 	CHudTexture* m_pBronzeStar;
 	CHudTexture* m_pBriefcase;
+	CHudTexture* m_pBounty;
 
 	vgui::ImageList*      m_pImageList;
 	CUtlMap<CSteamID,int> m_mAvatarsToImageList;
@@ -302,9 +303,31 @@ void CHudLeaderboard::Paint()
 		m_pSilverStar = gHUD.GetIcon("star_silver");
 		m_pBronzeStar = gHUD.GetIcon("star_bronze");
 		m_pBriefcase = gHUD.GetIcon("briefcase");
+		m_pBounty = gHUD.GetIcon("bounty");
 	}
 
-	if (SDKGameRules()->GetBriefcase())
+	if (SDKGameRules()->GetBountyPlayer())
+	{
+		CSDKPlayer* pBountyPlayer = SDKGameRules()->GetBountyPlayer();
+
+		int iTextTall = surface()->GetFontTall( m_hTextFont );
+
+		if (m_pBounty)
+			m_pBounty->DrawSelf(m_flBorder, m_flBorder, iTextTall, iTextTall, Color(255, 255, 255, 255));
+
+		PaintPlayerAvatar(pBountyPlayer, m_flBorder + iTextTall, m_flBorder, iTextTall, iTextTall);
+
+		wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pBountyPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
+
+		surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
+		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+		surface()->DrawSetTextFont( m_hTextFont );
+		surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
+
+		return;
+	}
+	else if (SDKGameRules()->GetBriefcase())
 	{
 		CSDKPlayer* pBriefcasePlayer = ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity());
 		if (pBriefcasePlayer)

@@ -167,8 +167,8 @@ bool CHudNotices::ShouldDraw()
 	if ( !pPlayer )
 		return false;
 
-	bool bShowSide = m_flTopStartTime > 0;
-	bool bShowTop = m_flStartTime > 0;
+	bool bShowSide = m_flStartTime > 0;
+	bool bShowTop = m_flTopStartTime > 0;
 
 	if (!pPlayer->IsAlive())
 	{
@@ -296,18 +296,13 @@ void CHudNotices::ShowTopNotice()
 	wchar_t sNoticeString[ MAX_NOTICE_STRING ];
 	wchar_t* pszObjectiveGoal;
 
-	if (m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE)
-	{
-		if (m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE)
-			pszObjectiveGoal = g_pVGuiLocalize->Find("#DA_MiniObjective_Player_Has_Briefcase");
-		else
-			pszObjectiveGoal = g_pVGuiLocalize->Find("#DA_MiniObjective_Player_Captured_Briefcase");
+	pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
 
+	if (m_eTopNotice == NOTICE_BOUNTY_ON_PLAYER || m_eTopNotice == NOTICE_BOUNTY_COLLECTED || m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE)
+	{
 		g_pVGuiLocalize->ConstructString( sNoticeString, sizeof(sNoticeString), pszObjectiveGoal, 1, m_wszPlayerSubject );
 		pszObjectiveGoal = sNoticeString;
 	}
-	else
-		pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
 
 	if (!pszObjectiveGoal)
 		return;

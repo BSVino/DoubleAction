@@ -109,13 +109,6 @@ public:
 	Vector m_vDiveView;	
 };
 
-typedef enum
-{
-	MINIOBJECTIVE_NONE = 0,
-	MINIOBJECTIVE_BRIEFCASE,
-	MINIOBJECTIVE_MAX,
-} miniobjective_t;
-
 class CSDKGameRules : public CTeamplayRules
 {
 public:
@@ -221,6 +214,7 @@ private:
 	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
 
 public:
+	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID );
 
@@ -238,21 +232,28 @@ public:
 
 private:
 	float m_flNextMiniObjectiveStartTime;
-	int   m_iMiniObjectivePasses;
 	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
 
 public:
 	void StartMiniObjective();
 	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
-	bool SetupMiniObjective_Briefcase();
 	void MaintainMiniObjective();
-	void MaintainMiniObjective_Briefcase();
 	void CleanupMiniObjective();
+	void GiveMiniObjectiveReward(CSDKPlayer* pPlayer);
+
+	bool SetupMiniObjective_Briefcase();
+	void MaintainMiniObjective_Briefcase();
 	void CleanupMiniObjective_Briefcase();
 
 	void PlayerCapturedBriefcase(CSDKPlayer* pPlayer);
 	CBriefcase* GetBriefcase() const;
 	CBriefcaseCaptureZone* GetCaptureZone() const;
+
+	bool SetupMiniObjective_Bounty();
+	void MaintainMiniObjective_Bounty();
+	void CleanupMiniObjective_Bounty();
+
+	CSDKPlayer* GetBountyPlayer() const;
 
 private:
 	CNetworkVar( float, m_flGameStartTime );
@@ -261,6 +262,8 @@ private:
 
 	CNetworkHandle( CBriefcase, m_hBriefcase );
 	CNetworkHandle( CBriefcaseCaptureZone, m_hCaptureZone );
+
+	CNetworkHandle( CSDKPlayer, m_hBountyPlayer );
 
 	float	m_flNextSlowMoUpdate;
 

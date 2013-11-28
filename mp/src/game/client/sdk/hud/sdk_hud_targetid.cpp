@@ -49,11 +49,13 @@ private:
 
 	CHudTexture*    m_pBriefcase;
 	CHudTexture*    m_pCapturePoint;
+	CHudTexture*    m_pBounty;
 
 	typedef enum
 	{
 		TARGET_BRIEFCASE = 0,
 		TARGET_CAPTURE,
+		TARGET_BOUNTY,
 		TARGET_TOTAL,
 	} target_type_t;
 
@@ -67,6 +69,7 @@ private:
 		float           m_flMaxAlpha;
 		Vector          m_vecLastKnownTarget;
 		bool            m_bTargetOn;
+		EHANDLE         m_hEntity;
 	} m_Targets[TARGET_TOTAL];
 
 	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
@@ -92,6 +95,7 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 
 	m_pBriefcase = NULL;
 	m_pCapturePoint = NULL;
+	m_pBounty = NULL;
 
 	for (int i = 0; i < TARGET_TOTAL; i++)
 	{
@@ -146,12 +150,14 @@ void CSDKTargetId::Paint()
 	{
 		m_pBriefcase = gHUD.GetIcon("briefcase");
 		m_pCapturePoint = gHUD.GetIcon("capturezone");
+		m_pBounty = gHUD.GetIcon("bounty");
 	}
 
 	if (SDKGameRules()->GetBriefcase() && SDKGameRules()->GetBriefcase()->GetOwnerEntity())
 	{
 		C_BriefcaseCaptureZone* pBriefcase = SDKGameRules()->GetCaptureZone();
 		m_Targets[TARGET_CAPTURE].m_vecLastKnownTarget = pBriefcase->WorldSpaceCenter();
+		m_Targets[TARGET_CAPTURE].m_hEntity = pBriefcase;
 
 		m_Targets[TARGET_CAPTURE].m_pTargetTexture = m_pCapturePoint;
 
@@ -169,6 +175,7 @@ void CSDKTargetId::Paint()
 	{
 		C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
 		m_Targets[TARGET_BRIEFCASE].m_vecLastKnownTarget = pBriefcase->WorldSpaceCenter();
+		m_Targets[TARGET_BRIEFCASE].m_hEntity = pBriefcase;
 
 		m_Targets[TARGET_BRIEFCASE].m_pTargetTexture = m_pBriefcase;
 
@@ -182,6 +189,24 @@ void CSDKTargetId::Paint()
 	else
 		m_Targets[TARGET_BRIEFCASE].m_bTargetOn = false;
 
+	if (SDKGameRules()->GetBountyPlayer() && SDKGameRules()->GetBountyPlayer() != C_SDKPlayer::GetLocalSDKPlayer())
+	{
+		C_SDKPlayer* pBounty = SDKGameRules()->GetBountyPlayer();
+		m_Targets[TARGET_BOUNTY].m_vecLastKnownTarget = pBounty->WorldSpaceCenter();
+		m_Targets[TARGET_BOUNTY].m_hEntity = pBounty;
+
+		m_Targets[TARGET_BOUNTY].m_pTargetTexture = m_pBounty;
+
+		m_Targets[TARGET_BOUNTY].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Bounty");
+
+		m_Targets[TARGET_BOUNTY].m_flScale = 0.7f;
+		m_Targets[TARGET_BOUNTY].m_flMaxAlpha = 0.5f;
+
+		m_Targets[TARGET_BOUNTY].m_bTargetOn = true;
+	}
+	else
+		m_Targets[TARGET_BOUNTY].m_bTargetOn = false;
+
 	int iX, iY;
 
 	for (int i = 0; i < TARGET_TOTAL; i++)
@@ -189,47 +214,55 @@ void CSDKTargetId::Paint()
 		if (!m_Targets[i].m_bTargetOn && m_Targets[i].m_flTargetAlpha == 0)
 			continue;
 
+		float flAlphaGoal = 1;
+
 		if (GetVectorInHudSpace(m_Targets[i].m_vecLastKnownTarget, iX, iY))
 		{
-			bool bHide;
-			C_Briefcase* pBriefcase = SDKGameRules()->GetBriefcase();
+			C_BaseEntity* pTarget = m_Targets[i].m_hEntity;
 
-			if (pBriefcase)
+			bool bHide;
+			if (!m_Targets[i].m_bTargetOn)
+				bHide = true;
+			else if (pTarget)
 			{
 				trace_t tr;
 				UTIL_TraceLine(CurrentViewOrigin(), m_Targets[i].m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
 
-				bHide = tr.fraction >= 0.99f || tr.m_pEnt == pBriefcase;
-				if ((CurrentViewOrigin() - pBriefcase->WorldSpaceCenter()).LengthSqr() > 500*500)
+				bHide = tr.fraction >= 0.99f || tr.m_pEnt == pTarget;
+				if ((CurrentViewOrigin() - pTarget->WorldSpaceCenter()).LengthSqr() > 1000*1000)
 					bHide = false;
 			}
 			else
 				bHide = true;
 
-			float flAlphaGoal;
 			if (!bHide)
 				flAlphaGoal = m_Targets[i].m_flMaxAlpha;
 			else
 				flAlphaGoal = 0;
+		}
+		else
+		{
+			if (!m_Targets[i].m_bTargetOn)
+				flAlphaGoal = 0;
+		}
 
-			m_Targets[i].m_flTargetAlpha = Approach(flAlphaGoal, m_Targets[i].m_flTargetAlpha, gpGlobals->frametime * 2);
+		m_Targets[i].m_flTargetAlpha = Approach(flAlphaGoal, m_Targets[i].m_flTargetAlpha, gpGlobals->frametime * 2);
 
-			if (m_Targets[i].m_flTargetAlpha > 0)
+		if (m_Targets[i].m_flTargetAlpha > 0)
+		{
+			int iWidth = m_Targets[i].m_pTargetTexture->EffectiveWidth(m_Targets[i].m_flScale);
+			int iHeight = m_Targets[i].m_pTargetTexture->EffectiveHeight(m_Targets[i].m_flScale);
+			m_Targets[i].m_pTargetTexture->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha));
+
+			if (m_Targets[i].m_pwszHint)
 			{
-				int iWidth = m_Targets[i].m_pTargetTexture->EffectiveWidth(m_Targets[i].m_flScale);
-				int iHeight = m_Targets[i].m_pTargetTexture->EffectiveHeight(m_Targets[i].m_flScale);
-				m_Targets[i].m_pTargetTexture->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha));
+				int iHintWide, iHintTall;
+				surface()->GetTextSize(m_hMiniObjectiveFont, m_Targets[i].m_pwszHint, iHintWide, iHintTall);
 
-				if (m_Targets[i].m_pwszHint)
-				{
-					int iHintWide, iHintTall;
-					surface()->GetTextSize(m_hMiniObjectiveFont, m_Targets[i].m_pwszHint, iHintWide, iHintTall);
-
-					vgui::surface()->DrawSetTextFont( m_hMiniObjectiveFont );
-					vgui::surface()->DrawSetTextPos( iX - iHintWide/2, iY + iHeight/2 );
-					vgui::surface()->DrawSetTextColor( Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha) );
-					vgui::surface()->DrawPrintText( m_Targets[i].m_pwszHint, wcslen(m_Targets[i].m_pwszHint) );
-				}
+				vgui::surface()->DrawSetTextFont( m_hMiniObjectiveFont );
+				vgui::surface()->DrawSetTextPos( iX - iHintWide/2, iY + iHeight/2 );
+				vgui::surface()->DrawSetTextColor( Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha) );
+				vgui::surface()->DrawPrintText( m_Targets[i].m_pwszHint, wcslen(m_Targets[i].m_pwszHint) );
 			}
 		}
 	}

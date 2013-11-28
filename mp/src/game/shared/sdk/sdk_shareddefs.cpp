@@ -168,6 +168,12 @@ const char* NoticeToString( notice_t id )
 		"NOTICE_WORTHIT",
 
 		"briefcase",
+		"player_has_briefcase",
+		"player_captured_briefcase",
+
+		"bounty_on_player",
+		"bounty_collected",
+		"bounty_lost",
 	};
 
 	return aszNotices[id];

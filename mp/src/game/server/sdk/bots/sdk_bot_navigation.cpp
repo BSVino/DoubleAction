@@ -427,7 +427,12 @@ void CSDKBot::SelectSchedule( bool forcePath )
 {
 	Vector HideSpot;
 
-	if (HasBriefcase() && CreatePath(NULL, SDKGameRules()->GetCaptureZone()->GetAbsOrigin()))
+	if (SDKGameRules()->GetBountyPlayer() && CreatePath(NULL, SDKGameRules()->GetBountyPlayer()->GetAbsOrigin()))
+	{
+		m_nBotState = BOT_NAVIG_PATH;
+		m_nBotSchedule = BOT_SCHED_COMBAT;
+	}
+	else if (HasBriefcase() && CreatePath(NULL, SDKGameRules()->GetCaptureZone()->GetAbsOrigin()))
 	{
 		m_nBotState = BOT_NAVIG_PATH;
 		m_nBotSchedule = BOT_SCHED_COMBAT;

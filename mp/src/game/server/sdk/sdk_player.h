@@ -69,6 +69,8 @@ public:
 	static CSDKPlayer *CreatePlayer( const char *className, edict_t *ed );
 	static CSDKPlayer* Instance( int iEnt );
 
+	virtual int UpdateTransmitState();
+
 	// This passes the event to the client's and server's CPlayerAnimState.
 	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
@@ -94,7 +96,7 @@ public:
 
 	virtual void			GetStepSoundVelocities( float *velwalk, float *velrun );
 
-	// Animstate handles this.
+		// Animstate handles this.
 	void SetAnimation( PLAYER_ANIM playerAnim ) { return; }
 
 	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
@@ -156,6 +158,8 @@ public:
 	virtual void	Instructor_LessonLearned(const char* pszLesson);
 
 	int             GetTotalStyle() { return m_flTotalStyle; }
+
+	float GetDKRatio(float flMin = 0.7f, float flMax = 2, bool bDampen = true) const;
 
 	CWeaponSDKBase *FindWeapon (SDKWeaponID id);
 	CWeaponSDKBase* FindAnyWeaponButBrawl();
@@ -298,7 +302,7 @@ public:
 	virtual bool	ModeWantsSpectatorGUI( int iMode ) { return ( iMode != OBS_MODE_DEATHCAM && iMode != OBS_MODE_FREEZECAM ); }
 
 	// Universal Meter
-	float GetStylePoints() { return m_flStylePoints; }
+	float GetStylePoints();
 	void AddStylePoints(float points, style_sound_t eSound, announcement_t eAnnouncement, style_point_t ePointStyle);
 	void SetStylePoints(float points);
 	bool UseStylePoints();

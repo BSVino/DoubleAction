@@ -30,6 +30,7 @@
 #include "hud_numericdisplay.h"
 #include "c_sdk_player.h"
 #include "sdk_hud_ammo.h"
+#include "sdk_gamerules.h"
 
 #include "convar.h"
 
@@ -325,7 +326,7 @@ void CHudStyleBar::Paint()
 
 	CHudTexture* pStyleTexture = m_apActiveSkillIcons[pPlayer->m_Shared.m_iStyleSkill];
 
-	if (pPlayer->m_Shared.m_bSuperSkill)
+	if (pPlayer->m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == pPlayer)
 		pStyleTexture = m_apActiveSkillIcons[SKILL_SUPER];
 
 	float flStyleTextureWidth = 0;

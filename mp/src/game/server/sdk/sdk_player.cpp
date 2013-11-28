@@ -416,6 +416,14 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 	return (CSDKPlayer*)CreateEntityByName( className );
 }
 
+int CSDKPlayer::UpdateTransmitState()
+{
+	if (SDKGameRules()->GetBountyPlayer() == this)
+		return SetTransmitState( FL_EDICT_ALWAYS );
+
+	return BaseClass::UpdateTransmitState();
+}
+
 void CSDKPlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles )
 {
 	BaseClass::LeaveVehicle( vecExitPoint, vecExitAngles );
@@ -1426,8 +1434,21 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 	//
 
-	if (bot_easy.GetBool() && !IsBot() && pAttacker && pAttacker->IsBot())
-		flDamage *= 0.3f;
+	CSDKPlayer *pSDKAttacker = ToSDKPlayer(info.GetAttacker());
+	if (pSDKAttacker)
+	{
+		// Turn down easy bots if the player is the bounty, to make it a tad harder.
+		if (SDKGameRules()->GetBountyPlayer() != this && SDKGameRules()->GetBountyPlayer() != pSDKAttacker)
+		{
+			if (bot_easy.GetBool() && !IsBot() && pAttacker->IsBot())
+				flDamage *= 0.3f;
+		}
+		else
+		{
+			if (bot_easy.GetBool() && !IsBot() && pAttacker->IsBot())
+				flDamage *= 0.65f;
+		}
+	}
 
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
@@ -3823,20 +3844,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement_t eAnnouncement, style_point_t ePointStyle)
 {
-	float flDeathRatio = m_iDeaths;
-
-	// D/K means that a player with a lot of deaths will get a higher ratio.
-	if (m_iKills > 0)
-		flDeathRatio = (float)m_iDeaths/(float)m_iKills;
-
-	flDeathRatio = clamp(flDeathRatio, 0.7f, 2);
-
-	// Dampen the ratio if there's not enough data.
-	float flRatioWeight = RemapValClamped(m_iKills + m_iDeaths, 0, 10, 0, 1);
-
-	// Weight the amount of style given by how well a player is doing.
-	float flFinalWeight = (flDeathRatio - 1) * flRatioWeight + 1;
-	points *= flFinalWeight;
+	points *= GetDKRatio(0.7, 2, true);
 
 	m_flTotalStyle += points;
 
@@ -3944,7 +3952,7 @@ void CSDKPlayer::ActivateMeter()
 	if (m_Shared.m_iStyleSkill != SKILL_TROLL && m_Shared.m_iStyleSkill != SKILL_REFLEXES)
 		CDove::SpawnDoves(this);
 
-	if (m_Shared.m_bSuperSkill)
+	if (m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
 		return;
 
 	// Refill ammo
@@ -4384,6 +4392,27 @@ int CSDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
 	int iCVarValue = atoi(engine->GetClientConVarValue( entindex(), pszCVar ));
 
 	return iCVarValue;
+}
+
+float CSDKPlayer::GetDKRatio(float flMin, float flMax, bool bDampen) const
+{
+	float flDeathRatio = m_iDeaths;
+
+	// D/K means that a player with a lot of deaths will get a higher ratio.
+	if (m_iKills > 0)
+		flDeathRatio = (float)m_iDeaths/(float)m_iKills;
+
+	flDeathRatio = clamp(flDeathRatio, 0.7f, 2);
+
+	if (bDampen)
+	{
+		// Dampen the ratio if there's not enough data.
+		float flRatioWeight = RemapValClamped(m_iKills + m_iDeaths, 0, 10, 0, 1);
+
+		return (flDeathRatio - 1) * flRatioWeight + 1;
+	}
+	else
+		return flDeathRatio;
 }
 
 void CC_ActivateSlowmo_f (void)

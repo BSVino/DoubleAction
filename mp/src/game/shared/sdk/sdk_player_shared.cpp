@@ -627,6 +627,14 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 	}
 }
 
+float CSDKPlayer::GetStylePoints()
+{
+	if (SDKGameRules()->GetBountyPlayer() == this)
+		return da_stylemeteractivationcost.GetFloat();
+
+	return m_flStylePoints;
+}
+
 ConVar da_styletime( "da_styletime", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Turns on the player's style skill all the time." );
 bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 {
@@ -634,7 +642,7 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 	{
 		if (eSkill == SKILL_NONE)
 			return true;
-		else if (m_Shared.m_bSuperSkill)
+		else if (m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
 			return true;
 		else
 			return m_Shared.m_iStyleSkill == eSkill;
@@ -645,7 +653,7 @@ bool CSDKPlayer::IsStyleSkillActive(SkillID eSkill) const
 
 	if (eSkill == SKILL_NONE)
 		return true;
-	else if (m_Shared.m_bSuperSkill)
+	else if (m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
 		return true;
 	else
 		return m_Shared.m_iStyleSkill == eSkill;
@@ -666,6 +674,9 @@ void CSDKPlayer::DecayStyle()
 
 void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 {
+	if (SDKGameRules()->GetBountyPlayer() == this)
+		return;
+
 	if (!IsStyleSkillActive(eSkill))
 		return;
 
@@ -718,7 +729,7 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER || m_Shared.m_bSuperSkill)
+	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER || m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
 		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
@@ -2058,7 +2069,7 @@ const Vector CSDKPlayer::GetThirdPersonCameraTarget()
 
 float CSDKPlayerShared::ModifySkillValue(float flValue, float flModify, SkillID eSkill) const
 {
-	if (!m_bSuperSkill)
+	if (!m_bSuperSkill && SDKGameRules()->GetBountyPlayer() != m_pOuter)
 	{
 		if (m_iStyleSkill != eSkill)
 			return flValue;
