@@ -1404,7 +1404,17 @@ bool CWeaponSDKBase::Reload( void )
 		if (GetPlayerOwner()->m_Shared.IsSuperFalling())
 			flSpeedMultiplier *= 0.5f;
 
-		float flSequenceEndTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
+		float flReloadSequenceDuration = SequenceDuration();
+
+		// The client uses the w model and the server uses the v model so
+		// client will return sequence duration 0 and server will return the
+		// actual. This causes prediction problems, so instead of mucking
+		// around with the SDK base code I just make sure there's some
+		// substantive value larger than ping.
+		if (flReloadSequenceDuration < 0.5f)
+			flReloadSequenceDuration = 0.5f;
+
+		float flSequenceEndTime = GetCurrentTime() + flReloadSequenceDuration * flSpeedMultiplier;
 
 		if (pSDKOwner)
 		{
