@@ -240,6 +240,8 @@ bool CDataManager::IsSendingData()
 
 void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 {
+	pbGameData->set_da_version(atoi(DA_VERSION));
+
 	pbGameData->set_map_name(STRING(gpGlobals->mapname));
 
 #ifdef _DEBUG
