@@ -143,6 +143,9 @@ void CDAMainMenu::Paint( void )
 	if (m_bToolsMode)
 		return;
 
+	if (engine->IsConnected())
+		return;
+
 	if (m_bPaintVideo)
 	{
 		// No video to play, so do nothing
