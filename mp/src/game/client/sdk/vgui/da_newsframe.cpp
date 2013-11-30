@@ -24,6 +24,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+// Don't judge me.
+static CNewsFrame* g_pNewsFrame = NULL;
+
 using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -50,6 +53,8 @@ CNewsFrame::CNewsFrame() : Frame(NULL, "news")
 	Activate();
 
 	Update();
+
+	g_pNewsFrame = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -168,12 +173,23 @@ void CNewsFrame::OnCommand( const char *command)
 
 CON_COMMAND(gui_reload_news, "Reload resource for news frame.")
 {
-	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( "news" );
-	CNewsFrame *pNews = dynamic_cast<CNewsFrame*>(pPanel);
+	CNewsFrame *pNews = g_pNewsFrame;
 	if (!pNews)
 		return;
 
 	pNews->LoadControlSettings( "Resource/UI/news.res" );
 	pNews->InvalidateLayout();
+	pNews->Update();
+}
+
+CON_COMMAND(da_news, "Show news frame.")
+{
+	CNewsFrame *pNews = g_pNewsFrame;
+	if (!pNews)
+		return;
+
+	pNews->LoadControlSettings( "Resource/UI/news.res" );
+	pNews->InvalidateLayout();
+	pNews->Activate();
 	pNews->Update();
 }

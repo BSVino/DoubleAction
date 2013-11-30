@@ -36,6 +36,7 @@
 #include "sdk_in_main.h"
 #include "da_newsframe.h"
 #include "hud/da_hud_vote.h"
+#include "da_credits.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -127,6 +128,7 @@ ClientModeSDKNormal::~ClientModeSDKNormal()
 void ClientModeSDKNormal::InitViewport()
 {
 	new CNewsFrame();
+	new CDACredits();
 
 	m_pViewport = new SDKViewport();
 	m_pViewport->Start( gameuifuncs, gameeventmanager );
