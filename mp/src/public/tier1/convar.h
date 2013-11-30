@@ -136,7 +136,7 @@ public:
 	// Returns the DLL identifier
 	virtual CVarDLLIdentifier_t	GetDLLIdentifier() const;
 
-protected:
+public:
 	virtual void				Create( const char *pName, const char *pHelpString = 0, 
 									int flags = 0 );
 

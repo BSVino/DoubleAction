@@ -37,6 +37,9 @@
 #include "da_newsframe.h"
 #include "hud/da_hud_vote.h"
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 class CHudChat;
 
 ConVar default_fov( "default_fov", "90", FCVAR_CHEAT );
