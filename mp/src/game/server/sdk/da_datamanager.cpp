@@ -157,6 +157,11 @@ void CDataManager::ClientDisconnected(AccountID_t eAccountID)
 	m_aiConnectedClients.erase(eAccountID);
 }
 
+void CDataManager::SetTeamplay(bool bOn)
+{
+	d->m_bTeamplay = bOn;
+}
+
 ConVar da_data_enabled("da_data_enabled", "1", 0, "Turn on and off data sending.");
 
 void CDataManager::LevelShutdownPostEntity()
@@ -203,6 +208,8 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_timestamp((unsigned)time(NULL));
 
 	pbGameData->set_connections(d->m_iConnections);
+
+	pbGameData->set_teamplay(d->m_bTeamplay);
 
 	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
 	size_t iDataSize = d->m_avecPlayerPositions.Count();

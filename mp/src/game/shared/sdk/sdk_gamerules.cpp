@@ -347,6 +347,8 @@ void CSDKGameRules::LevelInitPostEntity()
 				m_vecLowestSpawnPoint = pSpot->GetAbsOrigin();
 		}
 	}
+
+	DataManager().SetTeamplay(m_bIsTeamplay);
 #endif
 }
 

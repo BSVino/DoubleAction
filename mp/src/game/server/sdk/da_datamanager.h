@@ -39,6 +39,8 @@ public:
 	void ClientConnected(AccountID_t eAccountID);
 	void ClientDisconnected(AccountID_t eAccountID);
 
+	void SetTeamplay(bool bOn);
+
 	bool IsSendingData();
 
 	void FillProtoBuffer(da::protobuf::GameData* pbGameData);
@@ -57,6 +59,7 @@ private:
 			m_bCheated = false;
 		}
 
+		bool               m_bTeamplay;
 		float              m_flNextPositionsUpdate;
 		CUtlVector<Vector> m_avecPlayerPositions;
 		CUtlVector<Vector> m_avecPlayerKills;
