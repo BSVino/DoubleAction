@@ -55,6 +55,8 @@ private:
 			m_flNextPositionsUpdate = 0;
 
 			m_iConnections = 0;
+			m_iDisconnections = 0;
+			m_iUniquePlayers = 0;
 
 			m_iThirdPersonActive = 0;
 			m_iThirdPersonInactive = 0;
@@ -71,6 +73,8 @@ private:
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
 		int                m_iConnections;
+		int                m_iDisconnections;
+		int                m_iUniquePlayers;
 		int                m_iThirdPersonActive;
 		int                m_iThirdPersonInactive;
 

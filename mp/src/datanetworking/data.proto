@@ -16,6 +16,8 @@ message GameData
 	optional bool teamplay = 10;
 	optional int32 thirdperson_active = 11;
 	optional int32 thirdperson_inactive = 12;
+	optional int32 disconnections = 13;
+	optional int32 unique_players_this_map = 14;
 
 	repeated string characters_chosen = 16;
 	repeated int32 weapons_chosen = 17;

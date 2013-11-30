@@ -76,6 +76,23 @@ void CDataManager::LevelInitPostEntity( void )
 
 	m_bLevelStarted = true;
 	d->m_flNextPositionsUpdate = gpGlobals->curtime;
+
+	map<AccountID_t, char>::iterator it = m_aiConnectedClients.begin();
+	while (it != m_aiConnectedClients.end())
+	{
+		// This player is gone for good. Remove him from the list and we'll
+		// count him as unique next time he shows up.
+		if (it->second == 0)
+		{
+			m_aiConnectedClients.erase(it++);
+			continue;
+		}
+
+		// This player will be a unique player for the next map.
+		d->m_iUniquePlayers++;
+
+		++it;
+	}
 }
 
 void CDataManager::FrameUpdatePostEntityThink( void )
@@ -150,7 +167,14 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 	if (it == m_aiConnectedClients.end() || it->second == 0)
 	{
 		// This client was not previously in the list, so he has truly connected.
-		d->m_iConnections++;
+
+		if (it == m_aiConnectedClients.end())
+		{
+			// This client has not disconnected and reconnected.
+			// We want to eliminate repeated connections as extra information.
+			d->m_iConnections++;
+			d->m_iUniquePlayers++;
+		}
 
 		m_aiConnectedClients[eAccountID] = 1;
 	}
@@ -159,7 +183,9 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 void CDataManager::ClientDisconnected(AccountID_t eAccountID)
 {
 	// This is called only once for each client, never just for changelevels.
-	m_aiConnectedClients.erase(eAccountID);
+	m_aiConnectedClients[eAccountID] = 0;
+
+	d->m_iDisconnections++;
 }
 
 void CDataManager::SetTeamplay(bool bOn)
@@ -213,6 +239,8 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_timestamp((unsigned)time(NULL));
 
 	pbGameData->set_connections(d->m_iConnections);
+	pbGameData->set_disconnections(d->m_iDisconnections);
+	pbGameData->set_unique_players_this_map(d->m_iUniquePlayers);
 
 	pbGameData->set_teamplay(d->m_bTeamplay);
 
