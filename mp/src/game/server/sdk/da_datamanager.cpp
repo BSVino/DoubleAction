@@ -193,6 +193,23 @@ void CDataManager::SetTeamplay(bool bOn)
 	d->m_bTeamplay = bOn;
 }
 
+void CDataManager::VotePassed(const char* pszIssue, const char* pszDetails)
+{
+	int i = d->m_aVoteResults.AddToTail();
+
+	d->m_aVoteResults[i].m_bResult = true;
+	d->m_aVoteResults[i].m_sIssue = pszIssue;
+	d->m_aVoteResults[i].m_sDetails = pszDetails;
+}
+
+void CDataManager::VoteFailed(const char* pszIssue)
+{
+	int i = d->m_aVoteResults.AddToTail();
+
+	d->m_aVoteResults[i].m_bResult = false;
+	d->m_aVoteResults[i].m_sIssue = pszIssue;
+}
+
 ConVar da_data_enabled("da_data_enabled", "1", 0, "Turn on and off data sending.");
 
 void CDataManager::LevelShutdownPostEntity()
@@ -291,6 +308,18 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 
 	for (size_t i = 0; i < iDataSize; i++)
 		pSkills->Add(d->m_aeSkillsChosen[i]);
+
+	google::protobuf::RepeatedPtrField<da::protobuf::VoteResult>* pVotes = pbGameData->mutable_votes();
+	iDataSize = d->m_aVoteResults.Count();
+	pVotes->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+	{
+		da::protobuf::VoteResult* pVR = pVotes->Add();
+		pVR->set_result(d->m_aVoteResults[i].m_bResult);
+		pVR->set_issue(d->m_aVoteResults[i].m_sIssue);
+		pVR->set_details(d->m_aVoteResults[i].m_sDetails);
+	}
 
 	ClearData();
 }

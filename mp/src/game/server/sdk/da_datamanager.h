@@ -41,6 +41,9 @@ public:
 
 	void SetTeamplay(bool bOn);
 
+	void VotePassed(const char* pszIssue, const char* pszDetails);
+	void VoteFailed(const char* pszIssue);
+
 	bool IsSendingData();
 
 	void FillProtoBuffer(da::protobuf::GameData* pbGameData);
@@ -77,6 +80,14 @@ private:
 		int                m_iUniquePlayers;
 		int                m_iThirdPersonActive;
 		int                m_iThirdPersonInactive;
+
+		struct VoteResult
+		{
+			std::string m_sIssue;
+			std::string m_sDetails;
+			bool        m_bResult;
+		};
+		CUtlVector<VoteResult> m_aVoteResults;
 
 		bool               m_bCheated;
 	}* d;

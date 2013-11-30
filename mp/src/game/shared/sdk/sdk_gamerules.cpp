@@ -2377,11 +2377,30 @@ CSDKPlayer* CSDKGameRules::GetBountyPlayer() const
 }
 
 #ifndef CLIENT_DLL
-class CTeamplayModeVoteIssue : public CBaseIssue
+class CDAIssue : public CBaseIssue
+{
+public:
+	CDAIssue(const char* pszName) : CBaseIssue(pszName) {}
+
+public:
+	virtual void OnVoteFailed( void )
+	{
+		DataManager().VoteFailed(m_szTypeString);
+
+		CBaseIssue::OnVoteFailed();
+	}
+
+	virtual void ExecuteCommand( void )
+	{
+		DataManager().VotePassed(m_szTypeString, m_szDetailsString);
+	}
+};
+
+class CTeamplayModeVoteIssue : public CDAIssue
 {
 public:
 	CTeamplayModeVoteIssue()
-		: CBaseIssue("teamplay_mode")
+		: CDAIssue("teamplay_mode")
 	{
 	}
 
@@ -2392,6 +2411,8 @@ public:
 
 	virtual void		ExecuteCommand( void )
 	{
+		CDAIssue::ExecuteCommand();
+
 		ConVarRef mp_teamplay("mp_teamplay");
 		mp_teamplay.SetValue(!mp_teamplay.GetBool());
 
@@ -2408,11 +2429,11 @@ public:
 	}
 };
 
-class CNextMapVoteIssue : public CBaseIssue
+class CNextMapVoteIssue : public CDAIssue
 {
 public:
 	CNextMapVoteIssue()
-		: CBaseIssue("nextlevel")
+		: CDAIssue("nextlevel")
 	{
 	}
 
@@ -2453,6 +2474,8 @@ public:
 
 	virtual void		ExecuteCommand( void )
 	{
+		CDAIssue::ExecuteCommand();
+
 		ConVarRef nextlevel("nextlevel");
 		nextlevel.SetValue(m_szDetailsString);
 	}
@@ -2464,11 +2487,11 @@ public:
 	}
 };
 
-class CChangelevelVoteIssue : public CBaseIssue
+class CChangelevelVoteIssue : public CDAIssue
 {
 public:
 	CChangelevelVoteIssue()
-		: CBaseIssue("changelevel")
+		: CDAIssue("changelevel")
 	{
 	}
 
@@ -2479,6 +2502,8 @@ public:
 
 	virtual void		ExecuteCommand( void )
 	{
+		CDAIssue::ExecuteCommand();
+
 		ConVarRef nextlevel("nextlevel");
 		nextlevel.SetValue(m_szDetailsString);
 		SDKGameRules()->ChangeLevel();

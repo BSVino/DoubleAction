@@ -22,9 +22,17 @@ message GameData
 	repeated string characters_chosen = 16;
 	repeated int32 weapons_chosen = 17;
 	repeated int32 skills_chosen = 18;
+	repeated VoteResult votes = 19;
 }
 
 message PlayerPositions
 {
 	repeated Vector position = 1;
+}
+
+message VoteResult
+{
+	optional string issue = 1;
+	optional string details = 2;
+	optional bool result = 3;
 }
