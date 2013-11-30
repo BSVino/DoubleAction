@@ -14,6 +14,8 @@ message GameData
 	optional PlayerPositions deaths = 8;
 	optional int32 connections = 9;
 	optional bool teamplay = 10;
+	optional int32 thirdperson_active = 11;
+	optional int32 thirdperson_inactive = 12;
 
 	repeated string characters_chosen = 16;
 	repeated int32 weapons_chosen = 17;

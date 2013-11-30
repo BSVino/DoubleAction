@@ -106,6 +106,11 @@ void CDataManager::SavePositions()
 			continue;
 
 		d->m_avecPlayerPositions.AddToTail(pPlayer->GetAbsOrigin());
+
+		if (pPlayer->IsInThirdPerson())
+			d->m_iThirdPersonActive++;
+		else
+			d->m_iThirdPersonInactive++;
 	}
 
 	ConVarRef sv_cheats("sv_cheats");
@@ -210,6 +215,9 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_connections(d->m_iConnections);
 
 	pbGameData->set_teamplay(d->m_bTeamplay);
+
+	pbGameData->set_thirdperson_active(d->m_iThirdPersonActive);
+	pbGameData->set_thirdperson_inactive(d->m_iThirdPersonInactive);
 
 	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
 	size_t iDataSize = d->m_avecPlayerPositions.Count();
