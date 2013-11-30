@@ -862,8 +862,13 @@ void CWeaponSDKBase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QA
 	vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
 }
 
+static ConVar scoutmode("scoutmode", "0", FCVAR_DEVELOPMENTONLY|FCVAR_USERINFO);
+
 void CWeaponSDKBase::AddViewKick()
 {
+	if (scoutmode.GetBool())
+		return;
+
 #ifdef CLIENT_DLL
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
 		return;
