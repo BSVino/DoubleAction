@@ -67,6 +67,8 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	return true;
 }
 
+static ConVar da_ctb_changecap("da_ctb_changecap", "0.5", FCVAR_NOTIFY|FCVAR_DEVELOPMENTONLY, "Probability to change capture point location when the briefcase is dropped.");
+
 void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 {
 	m_flLastTouched = gpGlobals->curtime;
@@ -105,6 +107,9 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	CollisionProp()->UseTriggerBounds( true, 24 );
 	SetTouch(&CItem::ItemTouch);
+
+	if (random->RandomFloat(0, 1) < da_ctb_changecap.GetFloat())
+		SDKGameRules()->ChooseRandomCapturePoint(GetAbsOrigin());
 }
 
 BEGIN_DATADESC( CBriefcaseCaptureZone )

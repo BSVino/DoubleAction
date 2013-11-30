@@ -246,6 +246,7 @@ public:
 	void MaintainMiniObjective_Briefcase();
 	void CleanupMiniObjective_Briefcase();
 
+	bool ChooseRandomCapturePoint(Vector vecBriefcaseLocation);
 	void PlayerCapturedBriefcase(CSDKPlayer* pPlayer);
 	CBriefcase* GetBriefcase() const;
 	CBriefcaseCaptureZone* GetCaptureZone() const;

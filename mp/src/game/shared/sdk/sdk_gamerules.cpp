@@ -2177,31 +2177,7 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	random->SetSeed((int)(gpGlobals->curtime*1000));
 	int iSpot = random->RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
 
-	CUtlVector<CBaseEntity*> apCapturePoints;
-
-	float flAverageDistance = 0;
-	pSpot = NULL;
-	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
-	{
-		apCapturePoints.AddToTail(pSpot);
-
-		flAverageDistance += (pSpot->GetAbsOrigin() - apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()).Length();
-	}
-
-	flAverageDistance /= apCapturePoints.Count();
-
-	// Valid capture points are the farthest ones from the spawn point.
-	CUtlVector<CBaseEntity*> apValidCapturePoints;
-
-	for (int i = 0; i < apCapturePoints.Count(); i++)
-	{
-		if ((apCapturePoints[i]->GetAbsOrigin() - apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()).Length() < flAverageDistance)
-			continue;
-
-		apValidCapturePoints.AddToTail(apCapturePoints[i]);
-	}
-
-	if (apValidCapturePoints.Count() == 0)
+	if (!ChooseRandomCapturePoint(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()))
 		return false;
 
 	CBriefcase* pBriefcase = (CBriefcase*)CreateEntityByName("da_briefcase");
@@ -2212,14 +2188,6 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	pBriefcase->Dropped(NULL);
 
 	m_hBriefcase = pBriefcase;
-
-	int iCapture = random->RandomInt(0, apValidCapturePoints.Count()-1);
-
-	CBriefcaseCaptureZone* pCaptureZone = (CBriefcaseCaptureZone*)CreateEntityByName("da_briefcase_capture");
-	pCaptureZone->SetAbsOrigin(apValidCapturePoints[iCapture]->GetAbsOrigin());
-	pCaptureZone->Spawn();
-
-	m_hCaptureZone = pCaptureZone;
 
 	return true;
 }
@@ -2243,6 +2211,49 @@ void CSDKGameRules::CleanupMiniObjective_Briefcase()
 {
 	UTIL_Remove(m_hBriefcase);
 	UTIL_Remove(m_hCaptureZone);
+}
+
+bool CSDKGameRules::ChooseRandomCapturePoint(Vector vecBriefcaseLocation)
+{
+	CUtlVector<CBaseEntity*> apCapturePoints;
+
+	float flAverageDistance = 0;
+	CBaseEntity* pSpot = NULL;
+	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+	{
+		apCapturePoints.AddToTail(pSpot);
+
+		flAverageDistance += (pSpot->GetAbsOrigin() - vecBriefcaseLocation).Length();
+	}
+
+	flAverageDistance /= apCapturePoints.Count();
+
+	// Valid capture points are the farthest ones from the spawn point.
+	CUtlVector<CBaseEntity*> apValidCapturePoints;
+
+	for (int i = 0; i < apCapturePoints.Count(); i++)
+	{
+		if ((apCapturePoints[i]->GetAbsOrigin() - vecBriefcaseLocation).Length() < flAverageDistance)
+			continue;
+
+		apValidCapturePoints.AddToTail(apCapturePoints[i]);
+	}
+
+	if (apValidCapturePoints.Count() == 0)
+		return false;
+
+	if (!!m_hCaptureZone)
+		UTIL_Remove(m_hCaptureZone);
+
+	int iCapture = random->RandomInt(0, apValidCapturePoints.Count()-1);
+
+	CBriefcaseCaptureZone* pCaptureZone = (CBriefcaseCaptureZone*)CreateEntityByName("da_briefcase_capture");
+	pCaptureZone->SetAbsOrigin(apValidCapturePoints[iCapture]->GetAbsOrigin());
+	pCaptureZone->Spawn();
+
+	m_hCaptureZone = pCaptureZone;
+
+	return true;
 }
 
 void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)

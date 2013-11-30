@@ -4722,6 +4722,11 @@ void CC_CoderHacks_f(const CCommand &args)
 				UTIL_SayText(UTIL_VarArgs("%s (INVALID)\n", pSDKPlayer->GetPlayerName()), pSDKPlayer);
 		}
 	}
+	else if (FStrEq(args[2], "da_ctb_changecap") && pPlayer->CanDoCoderHacks() && args.ArgC() >= 4)
+	{
+		ConVarRef da_ctb_changecap("da_ctb_changecap");
+		da_ctb_changecap.SetValue(args[3]);
+	}
 }
 
 static ConCommand coder("coder", CC_CoderHacks_f, "C0d3r h4c|<s", FCVAR_HIDDEN);
