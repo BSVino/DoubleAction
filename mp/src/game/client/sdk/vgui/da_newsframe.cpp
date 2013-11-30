@@ -73,10 +73,19 @@ CNewsFrame::~CNewsFrame()
 {
 }
 
+static ConVar da_first_launch("da_first_launch", "1", FCVAR_ARCHIVE);
+
 void CNewsFrame::Update( void )
 {
 	m_pNewsMessage->SetVisible( true );
-	m_pNewsMessage->OpenURL( "http://forums.doubleactiongame.com/news.php?version=" DA_VERSION, NULL );
+
+	if (da_first_launch.GetBool())
+	{
+		m_pNewsMessage->OpenURL( "http://forums.doubleactiongame.com/news.php?firstlaunch&version=" DA_VERSION, NULL );
+		da_first_launch.SetValue(false);
+	}
+	else
+		m_pNewsMessage->OpenURL( "http://forums.doubleactiongame.com/news.php?version=" DA_VERSION, NULL );
 
 #ifdef _WIN32
 	m_pWebsiteButton->SetVisible(true);
