@@ -1742,3 +1742,8 @@ bool CHudVote::IsVoteUIActive( void )
 }
 
 // Client side VoteController talking to HUD
+CON_COMMAND( da_callvote, "For the sake of the main menu which can't send server commands." )
+{
+	engine->ExecuteClientCmd("callvote");
+	engine->ExecuteClientCmd("gamemenucommand resumegame");
+}
