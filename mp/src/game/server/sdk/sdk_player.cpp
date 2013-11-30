@@ -4074,7 +4074,7 @@ void CSDKPlayer::DropBriefcase()
 	SendBroadcastSound("MiniObjective.BriefcaseDrop");
 }
 
-void CSDKPlayer::CoderHacks(bool bOn)
+bool CSDKPlayer::CanDoCoderHacks()
 {
 	// Steam ID to account ID conversion:
 	// STEAM_X:Y:Z -> 2Z+Y
@@ -4089,19 +4089,20 @@ void CSDKPlayer::CoderHacks(bool bOn)
 	GetSteamID(&ID);
 
 	if (!ID.IsValid())
-		return;
+		return false;
 
-	bool bFound = false;
 	for (int i = 0; i < iSize; i++)
 	{
 		if (aiCoders[0] == ID.GetAccountID())
-		{
-			bFound = true;
-			break;
-		}
+			return true;
 	}
 
-	if (!bFound)
+	return false;
+}
+
+void CSDKPlayer::CoderHacks(bool bOn)
+{
+	if (!CanDoCoderHacks())
 		return;
 
 	if (m_bCoderHacks == bOn)
@@ -4687,6 +4688,9 @@ void CC_CoderHacks_f(const CCommand &args)
 	if ( !pPlayer )
 		return;
 
+	if (args.ArgC() < 3)
+		return;
+
 	if (!FStrEq(args[0], "coder") || !FStrEq(args[1], "hacks"))
 		return;
 
@@ -4694,6 +4698,30 @@ void CC_CoderHacks_f(const CCommand &args)
 		pPlayer->CoderHacks(true);
 	else if (FStrEq(args[2], "off"))
 		pPlayer->CoderHacks(false);
+	else if (FStrEq(args[2], "changelevel") && pPlayer->CanDoCoderHacks() && args.ArgC() >= 4)
+	{
+		ConVarRef nextlevel("nextlevel");
+		nextlevel.SetValue(args[3]);
+		SDKGameRules()->ChangeLevel();
+	}
+	else if (FStrEq(args[2], "list") && pPlayer->CanDoCoderHacks())
+	{
+		for (int i = 1; i < gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pSDKPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+			if (!pSDKPlayer)
+				continue;
+
+			CSteamID ID;
+			pSDKPlayer->GetSteamID(&ID);
+
+			if (ID.IsValid())
+				UTIL_SayText(UTIL_VarArgs("%s (%d)\n", pSDKPlayer->GetPlayerName(), ID.GetAccountID()), pSDKPlayer);
+			else
+				UTIL_SayText(UTIL_VarArgs("%s (INVALID)\n", pSDKPlayer->GetPlayerName()), pSDKPlayer);
+		}
+	}
 }
 
 static ConCommand coder("coder", CC_CoderHacks_f, "C0d3r h4c|<s", FCVAR_HIDDEN);

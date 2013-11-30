@@ -328,6 +328,7 @@ public:
 
 	float GetCurrentTime() const { return m_flCurrentTime; }
 
+	bool CanDoCoderHacks();
 	void CoderHacks(bool bOn);
 
 private:
