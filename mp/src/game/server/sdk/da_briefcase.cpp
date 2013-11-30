@@ -31,6 +31,7 @@ CBriefcase::CBriefcase()
 void CBriefcase::Precache( void )
 {
 	CBaseEntity::PrecacheModel( "particle/briefcase.vmt" );
+	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01.mdl" );
 }
 
 void CBriefcase::Spawn( void )
@@ -38,6 +39,11 @@ void CBriefcase::Spawn( void )
 	BaseClass::Spawn( );
 
 	m_flLastTouched = -1;
+
+	SetModel("models/briefcase/briefcase_01.mdl");
+	VPhysicsDestroyObject();
+
+	AddEffects( EF_BONEMERGE_FASTCULL );
 }
 
 int CBriefcase::UpdateTransmitState()
@@ -55,6 +61,7 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	if (!pPlayer->IsAlive())
 		return false;
 
+	VPhysicsDestroyObject();
 	pSDKPlayer->PickUpBriefcase(this);
 
 	return true;
@@ -64,6 +71,8 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 {
 	m_flLastTouched = gpGlobals->curtime;
 
+	FollowEntity(NULL);
+
 	if (pPlayer)
 		SetAbsOrigin(pPlayer->GetAbsOrigin());
 
@@ -71,9 +80,22 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	UTIL_DropToFloor(this, MASK_SOLID, this);
 
 	SetCollisionBounds(-Vector(10, 10, 10), Vector(10, 10, 10));
-	VPhysicsInitShadow( true, true );
+	VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
 
-	SetMoveType( MOVETYPE_FLYGRAVITY );
+	if (pPlayer)
+	{
+		Vector vecVelocity = pPlayer->GetAbsVelocity()*2 + Vector(0, 0, random->RandomFloat(50, 200));
+		vecVelocity *= 3;
+		if (VPhysicsGetObject())
+		{
+			AngularImpulse angImp( 200, 200, 200 );
+			VPhysicsGetObject()->AddVelocity( &vecVelocity, &angImp );
+		}
+		else
+			SetAbsVelocity(vecVelocity);
+	}
+
+	SetMoveType( MOVETYPE_VPHYSICS );
 	SetSolid( SOLID_BBOX );
 	SetBlocksLOS( false );
 	AddEFlags( EFL_NO_ROTORWASH_PUSH );

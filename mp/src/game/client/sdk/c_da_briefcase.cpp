@@ -49,7 +49,7 @@ int C_Briefcase::DrawModel(int flags)
 
 	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
 
-	Vector vecOrigin = GetAbsOrigin() + Vector(0, 0, 20);
+	Vector vecOrigin = GetAbsOrigin() + Vector(0, 0, 40);
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
 	Vector vecUp = Vector(0, 0, 1);
 
