@@ -1343,7 +1343,7 @@ void CSDKPlayer::CommitSuicide( bool bExplode /* = false */, bool bForce /*= fal
 		)
 		return;
 
-	if (!SuicideAllowed())
+	if (!bForce && !SuicideAllowed())
 	{		
 		ClientPrint( this, HUD_PRINTCENTER, "DA_No_Suicide" );
 		return;

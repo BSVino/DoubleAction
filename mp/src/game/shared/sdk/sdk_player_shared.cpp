@@ -447,7 +447,7 @@ bool CSDKPlayer::PlayerUse()
 {
 #ifdef GAME_DLL
 	if ((m_afButtonPressed & IN_USE) && m_Shared.CanSuperFallRespawn())
-		CommitSuicide();
+		CommitSuicide(false, true);
 
 	// Was use pressed or released?
 	if ( ((m_nButtons | m_afButtonPressed | m_afButtonReleased) & IN_USE) && !IsObserver() )
