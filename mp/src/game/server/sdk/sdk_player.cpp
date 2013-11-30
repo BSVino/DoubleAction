@@ -1376,7 +1376,6 @@ void CSDKPlayer::InitialSpawn( void )
 
 void CSDKPlayer::OnDive()
 {
-	m_bDamagedEnemyDuringFall = false;
 }
 
 void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
@@ -3746,7 +3745,7 @@ void CSDKPlayer::State_PreThink_ACTIVE()
 		SwitchToNextBestWeapon( NULL );
 	}
 
-	if (GetFlags() & FL_ONGROUND)
+	if (IsAlive() && !m_Shared.m_bSuperFalling && (GetFlags() & FL_ONGROUND))
 		m_bDamagedEnemyDuringFall = false;
 }
 
