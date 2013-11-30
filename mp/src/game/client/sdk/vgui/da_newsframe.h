@@ -43,4 +43,7 @@ protected:
 	virtual void OnCommand( const char *command);
 
 	vgui::HTML* m_pNewsMessage;
+
+	vgui::Button* m_pWebsiteButton;
+	vgui::Button* m_pForumsButton;
 };

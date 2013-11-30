@@ -43,6 +43,9 @@ CNewsFrame::CNewsFrame() : Frame(NULL, "news")
 
 	m_pNewsMessage = new HTML(this, "NewsMessage");
 
+	m_pWebsiteButton = new Button(this, "WebsiteButton", "#DA_Visit_Website");
+	m_pForumsButton = new Button(this, "ForumsButton", "#DA_Visit_Forums");
+
 	MakeReadyForUse();
 	Activate();
 
@@ -74,6 +77,14 @@ void CNewsFrame::Update( void )
 {
 	m_pNewsMessage->SetVisible( true );
 	m_pNewsMessage->OpenURL( "http://forums.doubleactiongame.com/news.php?version=" DA_VERSION, NULL );
+
+#ifdef _WIN32
+	m_pWebsiteButton->SetVisible(true);
+	m_pForumsButton->SetVisible(true);
+#else
+	m_pWebsiteButton->SetVisible(false);
+	m_pForumsButton->SetVisible(false);
+#endif
 }
 
 void CNewsFrame::ShowPanel(bool bShow)
@@ -95,11 +106,51 @@ void CNewsFrame::OnKeyCodePressed( KeyCode code )
 		BaseClass::OnKeyCodePressed( code );
 }
 
+#ifdef _WIN32
+//#include <Windows.h>
+
+extern "C" {
+#define FAKE_DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
+FAKE_DECLARE_HANDLE(HINSTANCE);
+FAKE_DECLARE_HANDLE(HWND);
+
+// This phenomenally ugly hack brought to you by yours truly so that I wouldn't have to include windows.h
+// I'm not worried about anything going horribly wrong since any problems will just throw a linker error.
+extern __declspec(dllimport) HINSTANCE __stdcall ShellExecuteA(
+  _In_opt_  HWND hwnd,
+  _In_opt_  const char* lpOperation,
+  _In_      const char* lpFile,
+  _In_opt_  const char* lpParameters,
+  _In_opt_  const char* lpDirectory,
+  _In_      int nShowCmd
+);
+}
+
+void OpenWebsite (char * cpURL)
+{
+	ShellExecuteA (NULL, "open", cpURL, NULL, NULL, 1/*SW_SHOWNORMAL*/);
+}
+#else
+void OpenWebsite (char * cpURL)
+{
+}
+#endif
+
 void CNewsFrame::OnCommand( const char *command)
 {
 	if (!Q_strcmp(command, "okay"))
 	{
 		SetVisible(false);
+		return;
+	}
+	else if (!Q_strcmp(command, "website"))
+	{
+		OpenWebsite("http://doubleactiongame.com");
+		return;
+	}
+	else if (!Q_strcmp(command, "forums"))
+	{
+		OpenWebsite("http://forums.doubleactiongame.com");
 		return;
 	}
 
