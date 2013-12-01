@@ -408,9 +408,6 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if ( !pOwner )
 		return;
 
-	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
-		return;
-
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
@@ -459,9 +456,6 @@ void CWeaponSDKBase::Swing()
 	// Try a ray
 	CSDKPlayer *pOwner = ToSDKPlayer( GetOwner() );
 	if ( !pOwner )
-		return;
-
-	if (pOwner->m_Shared.IsRolling() || pOwner->m_Shared.IsProne() || pOwner->m_Shared.IsGoingProne())
 		return;
 
 	m_flSwingTime = 0;
