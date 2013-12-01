@@ -2403,7 +2403,20 @@ public:
 
 	virtual void ExecuteCommand( void )
 	{
-		DataManager().VotePassed(m_szTypeString, m_szDetailsString);
+		const char* pszDetails = m_szDetailsString;
+		if (FStrEq(m_szTypeString, "kick"))
+		{
+			CBasePlayer *pPlayer = UTIL_PlayerByUserId( atoi(pszDetails) );
+			CSteamID id;
+			pPlayer->GetSteamID(&id);
+
+			if (pPlayer->IsBot())
+				pszDetails = UTIL_VarArgs("%s (BOT)", pPlayer->GetPlayerName());
+			else
+				pszDetails = UTIL_VarArgs("%s (Account id: %d)", pPlayer->GetPlayerName(), (int)id.GetAccountID());
+		}
+
+		DataManager().VotePassed(m_szTypeString, pszDetails);
 	}
 };
 
@@ -2527,6 +2540,33 @@ public:
 	}
 };
 
+class CKickPlayerVoteIssue : public CDAIssue
+{
+public:
+	CKickPlayerVoteIssue()
+		: CDAIssue("kick")
+	{
+	}
+
+public:
+	virtual bool		IsEnabled( void ) { return true; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_Kick_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_Kick_Passed"; }
+
+	virtual void		ExecuteCommand( void )
+	{
+		CDAIssue::ExecuteCommand();
+
+		engine->ServerCommand(UTIL_VarArgs( "kickid %s\n", GetDetailsString() ));
+	}
+
+	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
 void RegisterVoteIssues()
 {
 	CVoteController* pController = (CVoteController*)CreateEntityByName( "vote_controller" );
@@ -2535,5 +2575,6 @@ void RegisterVoteIssues()
 	new CTeamplayModeVoteIssue();
 	new CNextMapVoteIssue();
 	new CChangelevelVoteIssue();
+	new CKickPlayerVoteIssue();
 }
 #endif

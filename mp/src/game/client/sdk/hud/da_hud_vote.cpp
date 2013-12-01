@@ -478,7 +478,7 @@ void CVoteSetupDialog::OnCommand(const char *command)
 					{
 						// Is Player valid?
 						int playerIndex = pKeyValues->GetInt( "index" );
-						const char *pReasonString = m_pComboBox->GetActiveItemUserData() ? m_pComboBox->GetActiveItemUserData()->GetName() : "other";
+						const char *pReasonString = m_pComboBox->GetActiveItemUserData() ? m_pComboBox->GetActiveItemUserData()->GetName() : "";
 						player_info_t playerInfo;
 						if ( engine->GetPlayerInfo( playerIndex, &playerInfo ) )
 						{
@@ -1180,6 +1180,15 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	szParam1[0] = 0;
 	msg.ReadString( szParam1, sizeof(szParam1) );
 
+	// A bit of a hack, if this is a vote kick then replace the details with the player's actual name.
+	if (FStrEq(szIssue, "#DA_VoteIssue_Kick_Display"))
+	{
+		C_BasePlayer* pVictim = USERID2PLAYER(atoi(szParam1));
+
+		if (pVictim)
+			strcpy(szParam1, pVictim->GetPlayerName());
+	}
+
 	m_bIsYesNoVote = msg.ReadByte();
 
 	SetVoteActive( true );
@@ -1366,6 +1375,15 @@ void CHudVote::MsgFunc_VotePass( bf_read &msg )
 	char szParam1[256];
 	szParam1[0] = 0;
 	msg.ReadString( szParam1, sizeof(szParam1) );
+
+	// A bit of a hack, if this is a vote kick then replace the details with the player's actual name.
+	if (FStrEq(szResult, "#DA_VoteIssue_Kick_Passed"))
+	{
+		C_BasePlayer* pVictim = USERID2PLAYER(atoi(szParam1));
+
+		if (pVictim)
+			strcpy(szParam1, pVictim->GetPlayerName());
+	}
 
 	// Localize
 	wchar_t *pwcParam;
