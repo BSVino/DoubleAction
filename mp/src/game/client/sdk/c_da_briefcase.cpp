@@ -38,6 +38,31 @@ void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Ve
 CMaterialReference g_hBriefcaseArrow;
 int C_Briefcase::DrawModel(int flags)
 {
+	if ( vcollide_wireframe.GetBool() )
+	{
+		if ( IsSolid() && CollisionProp()->GetSolid() == SOLID_VPHYSICS )
+		{
+			vcollide_t *pCollide = modelinfo->GetVCollide( GetModelIndex() );
+			if (pCollide)
+			{
+				for (int i = 0; i < pCollide->solidCount; i++)
+				{
+					static color32 debugColor = {0,255,255,0};
+					matrix3x4_t matrix;
+					AngleMatrix( GetAbsAngles(), GetAbsOrigin(), matrix );
+					engine->DebugDrawPhysCollide( pCollide->solids[i], NULL, matrix, debugColor );
+					if ( VPhysicsGetObject() )
+					{
+						static color32 debugColorPhys = {255,0,0,0};
+						matrix3x4_t matrix;
+						VPhysicsGetObject()->GetPositionMatrix( &matrix );
+						engine->DebugDrawPhysCollide( pCollide->solids[i], NULL, matrix, debugColorPhys );
+					}
+				}
+			}
+		}
+	}
+
 	if (!g_hBriefcaseArrow.IsValid())
 		g_hBriefcaseArrow.Init( "particle/briefcase.vmt", TEXTURE_GROUP_OTHER );
 

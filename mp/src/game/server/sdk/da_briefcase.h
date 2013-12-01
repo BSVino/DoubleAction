@@ -26,6 +26,7 @@ public:
 
 	int UpdateTransmitState();
 
+	void AnimateThink();
 	bool MyTouch( CBasePlayer *pPlayer );
 
 	void Dropped(class CSDKPlayer*);

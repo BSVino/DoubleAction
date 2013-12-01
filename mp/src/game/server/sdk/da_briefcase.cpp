@@ -44,11 +44,31 @@ void CBriefcase::Spawn( void )
 	VPhysicsDestroyObject();
 
 	AddEffects( EF_BONEMERGE_FASTCULL );
+
+	SetSequence(LookupSequence("closed_idle"));
 }
 
 int CBriefcase::UpdateTransmitState()
 {
 	return SetTransmitState( FL_EDICT_ALWAYS );
+}
+
+void CBriefcase::AnimateThink()
+{
+	// Why is this necessary.
+
+	if (GetCycle() >= 1)
+	{
+		SetSequence(LookupSequence("open_idle"));
+		SetCycle(0);
+		return;
+	}
+
+	SetPlaybackRate(1);
+
+	SetNextThink(gpGlobals->curtime);
+
+	StudioFrameAdvance();
 }
 
 bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
@@ -64,6 +84,8 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	VPhysicsDestroyObject();
 	pSDKPlayer->PickUpBriefcase(this);
 
+	SetSequence(LookupSequence("closed_idle"));
+
 	return true;
 }
 
@@ -76,13 +98,15 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	FollowEntity(NULL);
 
 	if (pPlayer)
-		SetAbsOrigin(pPlayer->GetAbsOrigin());
-
-	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
-	UTIL_DropToFloor(this, MASK_SOLID, this);
+		SetAbsOrigin(pPlayer->GetAbsOrigin() + Vector(0, 0, 60));
+	else
+	{
+		SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
+		UTIL_DropToFloor(this, MASK_SOLID, this);
+	}
 
 	SetCollisionBounds(-Vector(10, 10, 10), Vector(10, 10, 10));
-	VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
+	VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags() | FSOLID_TRIGGER, false );
 
 	if (pPlayer)
 	{
@@ -98,7 +122,7 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	}
 
 	SetMoveType( MOVETYPE_VPHYSICS );
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_VPHYSICS );
 	SetBlocksLOS( false );
 	AddEFlags( EFL_NO_ROTORWASH_PUSH );
 
@@ -107,6 +131,13 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 	SetCollisionGroup( COLLISION_GROUP_WEAPON );
 	CollisionProp()->UseTriggerBounds( true, 24 );
 	SetTouch(&CItem::ItemTouch);
+
+	if (pPlayer)
+	{
+		SetSequence(LookupSequence("opening"));
+		SetThink(&CBriefcase::AnimateThink);
+		SetNextThink( gpGlobals->curtime );
+	}
 
 	if (random->RandomFloat(0, 1) < da_ctb_changecap.GetFloat())
 		SDKGameRules()->ChooseRandomCapturePoint(GetAbsOrigin());
