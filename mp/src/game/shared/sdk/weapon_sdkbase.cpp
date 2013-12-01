@@ -42,6 +42,7 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponSDKBase, DT_WeaponSDKBase )
 
 BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 #ifdef CLIENT_DLL
+	RecvPropTime( RECVINFO( m_flReloadEndTime ) ),
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
   	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
@@ -59,6 +60,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
+	SendPropTime( SENDINFO( m_flReloadEndTime ) ),
 	SendPropFloat( SENDINFO( m_flDecreaseShotsFired ) ),
 	SendPropFloat( SENDINFO( m_flAccuracyDecay ) ),
 	SendPropFloat( SENDINFO( m_flCycleTime ) ),
@@ -78,6 +80,8 @@ END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponSDKBase )
+	DEFINE_PRED_FIELD_TOL( m_flReloadEndTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
+
 	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
@@ -411,9 +415,6 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
-	// cancel reload
-	m_bInReload = false;
-
 	pOwner->Instructor_LessonLearned("brawl");
 
 	pOwner->ReadyWeapon();
@@ -441,11 +442,19 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 		flFireRate = GetBrawlFireRate();
 
 	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
+	float flTimeToSwing = flFireRate * 0.3f;
+
+	if (m_bInReload)
+	{
+		// Brawl interrupts the reload and tacks the extra time onto it.
+		m_flReloadEndTime += flTimeToSwing;
+		m_flNextPrimaryAttack = m_flReloadEndTime;
+	}
 
 	//Setup our next attack times
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
+	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
 
-	m_flSwingTime = GetCurrentTime() + flFireRate * 0.3f;
+	m_flSwingTime = GetCurrentTime() + flTimeToSwing;
 	m_bSwingSecondary = bIsSecondary;
 
 	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
@@ -1437,6 +1446,7 @@ bool CWeaponSDKBase::Reload( void )
 		if (GetPlayerOwner())
 			GetPlayerOwner()->SetNextAttack( flSequenceEndTime );
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;
+		m_flReloadEndTime = flSequenceEndTime;
 
 		SendReloadEvents();
 
@@ -1532,7 +1542,7 @@ void CWeaponSDKBase::CheckReload()
 		if ( !pOwner )
 			return;
 
-		if ((m_bInReload) && (m_flNextPrimaryAttack <= GetCurrentTime()))
+		if ((m_bInReload) && (m_flReloadEndTime <= GetCurrentTime()))
 		{
 			if ( pOwner->m_nButtons & (IN_ATTACK | IN_ATTACK2) && m_iClip1 > 0 )
 			{
@@ -1568,7 +1578,7 @@ void CWeaponSDKBase::CheckReload()
 	}
 	else
 	{
-		if ( (m_bInReload) && (m_flNextPrimaryAttack <= GetCurrentTime()))
+		if ( (m_bInReload) && (m_flReloadEndTime <= GetCurrentTime()))
 		{
 			FinishReload();
 			m_flNextPrimaryAttack	= GetCurrentTime();

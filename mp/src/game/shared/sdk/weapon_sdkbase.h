@@ -180,6 +180,8 @@ private:
 
 	CNetworkVar(float, m_flAccuracyDecay);
 	
+	CNetworkVar(float, m_flReloadEndTime);
+
 	// server must enforce these values
 	CNetworkVar(float, m_flCycleTime);
 	CNetworkVar(float, m_flViewPunchMultiplier);

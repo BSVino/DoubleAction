@@ -61,9 +61,6 @@ void CWeaponShotgun::PrimaryAttack()
 
 void CWeaponShotgun::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 {
-	//cancel reload loop
-	m_iInSpecialReload = 0;
-
 	BaseClass::StartSwing( bIsSecondary, bIsStockAttack );
 }
 
