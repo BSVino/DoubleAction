@@ -2078,6 +2078,9 @@ void CSDKGameMovement::Duck( void )
 	if (m_pSDKPlayer->m_Shared.IsSliding())
 		return;
 
+	if (m_pSDKPlayer->m_Shared.IsWallFlipping())
+		return;
+
 	HandleDuckingSpeedCrop();
 
 	if ( !( player->GetFlags() & FL_DUCKING ) && ( player->m_Local.m_bDucked ) )
