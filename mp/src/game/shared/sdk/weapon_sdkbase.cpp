@@ -27,6 +27,7 @@
 	#include "sdk_player.h"
 	#include "te_effect_dispatch.h"
 	#include "weapon_grenade.h"
+	#include "ilagcompensationmanager.h"
 
 #endif
 
@@ -473,9 +474,16 @@ void CWeaponSDKBase::Swing()
 	pOwner->EyeVectors( &forward, NULL, NULL );
 
 	Vector swingEnd = swingStart + forward * GetMeleeRange();
+
+#ifndef CLIENT_DLL
+	lagcompensation->StartLagCompensation( pOwner, pOwner->GetCurrentCommand() );
+#endif
+
 	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT_HULL, pOwner, COLLISION_GROUP_NONE, &traceHit );
 
 #ifndef CLIENT_DLL
+	lagcompensation->FinishLagCompensation( pOwner );
+
 	// Like bullets, melee traces have to trace against triggers.
 	CTakeDamageInfo triggerInfo( GetOwner(), GetOwner(), GetMeleeDamage( m_bSwingSecondary, ToSDKPlayer(traceHit.m_pEnt) ), DMG_CLUB );
 	TraceAttackToTriggers( triggerInfo, traceHit.startpos, traceHit.endpos, vec3_origin );

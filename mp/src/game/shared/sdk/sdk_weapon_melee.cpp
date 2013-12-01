@@ -98,16 +98,9 @@ void CWeaponSDKMelee::PrimaryAttack()
 #ifndef CLIENT_DLL
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetPlayerOwner() );
 	pPlayer->NoteWeaponFired();
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->StartLagCompensation( pPlayer, pPlayer->GetCurrentCommand() );
 #endif
+
 	StartSwing( false );
-
-#ifndef CLIENT_DLL
-	// Move other players back to history positions based on local player's lag
-	lagcompensation->FinishLagCompensation( pPlayer );
-#endif
-
 }
 
 void CWeaponSDKMelee::SecondaryAttack()

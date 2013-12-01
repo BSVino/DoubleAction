@@ -3765,7 +3765,42 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
 		return false;
 
-	return BaseClass::WantsLagCompensationOnEntity( pPlayer, pCmd, pEntityTransmitBits );
+	if (!pPlayer->IsAlive())
+		return false;
+
+	// Team members shouldn't be adjusted unless friendly fire is on.
+	if ( SDKGameRules()->PlayerRelationship(const_cast<CSDKPlayer*>(this), const_cast<CBasePlayer*>(pPlayer)) == GR_TEAMMATE )
+		return false;
+
+	// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
+	if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
+		return false;
+
+	const Vector &vMyOrigin = GetAbsOrigin();
+	const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
+
+	ConVarRef sv_maxunlag("sv_maxunlag");
+
+	// get max distance player could have moved within max lag compensation time, 
+	// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
+	float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
+
+	// If the player is within this distance, lag compensate them in case they're running past us.
+	if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
+		return true;
+
+	// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
+	Vector vForward;
+	AngleVectors( pCmd->viewangles, &vForward );
+	
+	Vector vDiff = vHisOrigin - vMyOrigin;
+	VectorNormalize( vDiff );
+
+	float flCosAngle = 0.707107f;	// 45 degree angle
+	if ( vForward.Dot( vDiff ) < flCosAngle )
+		return false;
+
+	return true;
 }
 
 // Don't automatically pick weapons up just because the player touched them. You clepto.
