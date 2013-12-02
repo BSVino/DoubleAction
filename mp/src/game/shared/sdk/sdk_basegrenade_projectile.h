@@ -17,6 +17,7 @@
 
 #ifdef CLIENT_DLL
 	#define CBaseGrenadeProjectile C_BaseGrenadeProjectile
+	#define CSDKPlayer C_SDKPlayer
 #endif
 
 
@@ -30,6 +31,9 @@ public:
 	virtual void Spawn();
 
 public:
+	class CSDKPlayer* GetSDKOwner();
+	float GetCurrentTime();
+
 	//Tony; by default projectiles don't have one, so make sure derived weapons do!!
 	virtual SDKWeaponID GetWeaponID( void ) const		{	return SDK_WEAPON_NONE; }
 

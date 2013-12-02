@@ -19,9 +19,7 @@ extern ConVar sv_gravity;
 	#include "soundent.h"
 	#include "particle_parse.h"
 
-	BEGIN_DATADESC( CBaseGrenadeProjectile )
-		DEFINE_THINKFUNC( DangerSoundThink ),
-	END_DATADESC()
+	#include "sdk_player.h"
 
 #endif
 
@@ -30,6 +28,11 @@ extern ConVar sv_gravity;
 
 const float GRENADE_COEFFICIENT_OF_RESTITUTION = 0.2f;
 
+#ifndef CLIENT_DLL
+BEGIN_DATADESC( CBaseGrenadeProjectile )
+	DEFINE_THINKFUNC( DangerSoundThink ),
+END_DATADESC()
+#endif
 
 IMPLEMENT_NETWORKCLASS_ALIASED( BaseGrenadeProjectile, DT_BaseGrenadeProjectile )
 
@@ -52,6 +55,19 @@ void CBaseGrenadeProjectile::Precache()
 	PrecacheScriptSound( "Grenade.Bounce" );
 	PrecacheParticleSystem( "grenade_exp1" );
 	PrecacheModel( "particle/grenadearrow.vmt" );
+}
+
+CSDKPlayer* CBaseGrenadeProjectile::GetSDKOwner()
+{
+	return ToSDKPlayer(GetOwnerEntity());
+}
+
+float CBaseGrenadeProjectile::GetCurrentTime()
+{
+	if (GetSDKOwner())
+		return GetSDKOwner()->GetCurrentTime();
+
+	return gpGlobals->curtime;
 }
 
 #ifdef CLIENT_DLL
@@ -89,7 +105,7 @@ void CBaseGrenadeProjectile::Precache()
 		// (better yet, we could draw ourselves in his hand).
 		if ( GetThrower() != C_BasePlayer::GetLocalPlayer() )
 		{
-			if ( gpGlobals->curtime - m_flSpawnTime < 0.5 )
+			if ( GetCurrentTime() - m_flSpawnTime < 0.5 )
 			{
 //Tony; FIXME!
 //				C_SDKPlayer *pPlayer = dynamic_cast<C_SDKPlayer*>( GetThrower() );
@@ -147,7 +163,7 @@ void CBaseGrenadeProjectile::Precache()
 
 	void CBaseGrenadeProjectile::Spawn()
 	{
-		m_flSpawnTime = gpGlobals->curtime;
+		m_flSpawnTime = GetCurrentTime();
 		BaseClass::Spawn();
 
 		m_flArrowGoalSize = 0;
@@ -335,7 +351,7 @@ void CBaseGrenadeProjectile::Precache()
 			return;
 		}
 
-		if( gpGlobals->curtime > m_flDetonateTime )
+		if ( GetCurrentTime() > m_flDetonateTime )
 		{
 			Detonate();
 			return;
@@ -354,7 +370,7 @@ void CBaseGrenadeProjectile::Precache()
 	//Sets the time at which the grenade will explode
 	void CBaseGrenadeProjectile::SetDetonateTimerLength( float timer )
 	{
-		m_flDetonateTime = gpGlobals->curtime + timer;
+		m_flDetonateTime = GetCurrentTime() + timer;
 	}
 
 	void CBaseGrenadeProjectile::ResolveFlyCollisionCustom( trace_t &trace, Vector &vecVelocity )
