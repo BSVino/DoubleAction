@@ -6,6 +6,8 @@
 
 #include "cbase.h"
 
+#include "tier0/vprof.h"
+
 #ifdef CLIENT_DLL
 	#include "input.h"
 #endif
@@ -48,6 +50,54 @@
 #endif
 
 #include "da.h"
+
+// Have to override all of ItemPostFrame to s/gpGlobals->curtime/GetCurrentTime()/
+void CSDKPlayer::ItemPostFrame()
+{
+	VPROF( "CSDKPlayer::ItemPostFrame" );
+
+	// Put viewmodels into basically correct place based on new player origin
+	CalcViewModelView( EyePosition(), EyeAngles() );
+
+	Assert(!GetVehicle());
+	// If we ever add vehicles, add the vehicle bits from CBasePlayer::ItemPostFrame()
+
+	// check if the player is using something
+	if ( GetUseEntity() != NULL )
+	{
+#if !defined( CLIENT_DLL )
+		Assert( !IsInAVehicle() );
+		ImpulseCommands();// this will call playerUse
+#endif
+		return;
+	}
+
+	if ( GetCurrentTime() < m_flNextAttack )
+	{
+		if ( GetActiveWeapon() )
+			GetActiveWeapon()->ItemBusyFrame();
+	}
+	else
+	{
+		if ( GetActiveWeapon() && (!IsInAVehicle() || UsingStandardWeaponsInVehicle()) )
+		{
+#if defined( CLIENT_DLL )
+			// Not predicting this weapon
+			if ( GetActiveWeapon()->IsPredicted() )
+#endif
+
+				GetActiveWeapon()->ItemPostFrame( );
+		}
+	}
+
+#if !defined( CLIENT_DLL )
+	ImpulseCommands();
+#else
+	// NOTE: If we ever support full impulse commands on the client,
+	// remove this line and call ImpulseCommands instead.
+	ResetImpulse();
+#endif
+}
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet impact point" );
 ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "75", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );

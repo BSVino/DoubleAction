@@ -20,10 +20,39 @@ IMPLEMENT_NETWORKCLASS_ALIASED( DAViewModel, DT_DAViewModel )
 BEGIN_NETWORK_TABLE( CDAViewModel, DT_DAViewModel )
 END_NETWORK_TABLE()
 
+#ifdef CLIENT_DLL
+void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	CDAViewModel *model = (CDAViewModel *)pStruct;
+	if (pData->m_Value.m_Int != model->GetSequence())
+	{
+		MDLCACHE_CRITICAL_SECTION();
+
+		model->SetSequence(pData->m_Value.m_Int);
+
+		if (model->m_flResumeAnimTime)
+			model->m_flAnimTime = model->m_flResumeAnimTime;
+		else
+			model->m_flAnimTime = gpGlobals->curtime;
+		model->m_flResumeAnimTime = 0;
+
+		model->SetCycle(model->m_flResumeCycle);
+		model->m_flResumeCycle = 0;
+	}
+}
+#endif
+
 CDAViewModel::CDAViewModel()
 {
 	m_vecPlayerVelocityLerp = Vector(0, 0, 0);
 	m_angLastPlayerEyeAngles = QAngle(0, 0, 0);
+
+	m_bPaused = false;
+
+#ifdef CLIENT_DLL
+	m_flResumeCycle = 0;
+	m_flResumeAnimTime = 0;
+#endif
 }
 
 float CDAViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence )
@@ -35,6 +64,29 @@ float CDAViewModel::GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence 
 		flSlow *= pOwner->GetSlowMoMultiplier();
 
 	return BaseClass::GetSequenceCycleRate(pStudioHdr, iSequence) * flSlow;
+}
+
+void CDAViewModel::PauseAnimation()
+{
+	m_bPaused = true;
+	m_flPauseCycle = GetCycle();
+	m_nPauseSequence = GetSequence();
+	m_flPauseAnimTime = GetAnimTime();
+}
+
+void CDAViewModel::UnpauseAnimation(float flRewind)
+{
+	m_bPaused = false;
+	SetSequence(m_nPauseSequence);
+	SetCycle(m_flPauseCycle - flRewind * BaseClass::GetSequenceCycleRate(GetModelPtr(), m_nPauseSequence));
+	SetAnimTime(m_flPauseAnimTime - flRewind);
+
+#ifdef CLIENT_DLL
+	// Remember this so that when the message comes in from the server
+	// we can set it back to this.
+	m_flResumeCycle = m_flPauseCycle;
+	m_flResumeAnimTime = m_flPauseAnimTime;
+#endif
 }
 
 void CDAViewModel::DoMuzzleFlash()

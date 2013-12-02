@@ -484,6 +484,8 @@ protected:
 	float			m_flStepSoundTime;
 	bool			m_IsFootprintOnLeft;
 
+	void            ResetImpulse() { m_nImpulse = 0; }
+
 private:
 	// Make sure no one calls this...
 	C_BasePlayer& operator=( const C_BasePlayer& src );

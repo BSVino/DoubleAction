@@ -190,6 +190,7 @@ private:
 
 	CNetworkVar(float, m_flSwingTime);
 	CNetworkVar(bool, m_bSwingSecondary);
+	CNetworkVar(float, m_flUnpauseFromSwingTime);
 
 	CNetworkVar(float, m_flGrenadeThrowStart);
 	bool m_bGrenadeThrown;

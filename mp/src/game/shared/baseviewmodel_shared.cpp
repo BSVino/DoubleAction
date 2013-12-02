@@ -622,6 +622,7 @@ BEGIN_PREDICTION_DATA( CBaseViewModel )
 
 END_PREDICTION_DATA()
 
+#ifndef SDK_DLL
 void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	CBaseViewModel *model = (CBaseViewModel *)pStruct;
@@ -634,6 +635,7 @@ void RecvProxy_SequenceNum( const CRecvProxyData *pData, void *pStruct, void *pO
 		model->SetCycle(0);
 	}
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 

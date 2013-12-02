@@ -15,6 +15,7 @@
 
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"
+#include "da_viewmodel.h"
 
 #if defined( CLIENT_DLL )
 
@@ -46,6 +47,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
   	RecvPropFloat( RECVINFO( m_flDecreaseShotsFired ) ),
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
   	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
+  	RecvPropFloat( RECVINFO( m_flUnpauseFromSwingTime ) ),
 	RecvPropFloat( RECVINFO( m_flCycleTime ) ),
 	RecvPropFloat( RECVINFO( m_flViewPunchMultiplier ) ),
 	RecvPropFloat( RECVINFO( m_flRecoil ) ),
@@ -68,6 +70,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	SendPropFloat( SENDINFO( m_flRecoil ) ),
 	SendPropFloat( SENDINFO( m_flSpread ) ),
 	SendPropFloat( SENDINFO( m_flSwingTime ) ),
+	SendPropFloat( SENDINFO( m_flUnpauseFromSwingTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 
 	SendPropInt(SENDINFO(leftclip)),
@@ -85,6 +88,7 @@ BEGIN_PREDICTION_DATA( CWeaponSDKBase )
 	DEFINE_PRED_FIELD( m_flTimeWeaponIdle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flUnpauseFromSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bSwingSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD(leftclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),			
@@ -128,6 +132,7 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+	m_flUnpauseFromSwingTime = 0;
 
 #ifdef CLIENT_DLL
 	m_flArrowGoalSize = 0;
@@ -415,6 +420,17 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
+	bool bNeedsUnpause = false;
+	if (m_bInReload)
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pOwner->GetViewModel( m_nViewModelIndex ));
+		if (vm)
+		{
+			vm->PauseAnimation();
+			bNeedsUnpause = true;
+		}
+	}
+
 	pOwner->Instructor_LessonLearned("brawl");
 
 	pOwner->ReadyWeapon();
@@ -449,6 +465,9 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 		// Brawl interrupts the reload and tacks the extra time onto it.
 		m_flReloadEndTime += flTimeToSwing;
 		m_flNextPrimaryAttack = m_flReloadEndTime;
+
+		if (bNeedsUnpause)
+			m_flUnpauseFromSwingTime = GetCurrentTime() + flFireRate * 0.7f;
 	}
 
 	//Setup our next attack times
@@ -773,10 +792,26 @@ ConVar da_grenade_throw_time( "da_grenade_throw_time", "1.0", FCVAR_REPLICATED|F
 
 void CWeaponSDKBase::StartGrenadeToss()
 {
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+
+	if (m_bInReload && pOwner)
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pOwner->GetViewModel( m_nViewModelIndex ));
+		if (vm)
+			vm->PauseAnimation();
+	}
+
 	// Don't let weapon idle interfere in the middle of a throw!
 	SetWeaponIdleTime( GetCurrentTime() + da_grenade_throw_time.GetFloat() );
 
-	m_flNextPrimaryAttack	= GetCurrentTime() + da_grenade_throw_time.GetFloat();
+	if (m_bInReload)
+	{
+		m_flReloadEndTime += da_grenade_throw_time.GetFloat() * 0.7f;
+		m_flNextPrimaryAttack = m_flReloadEndTime;
+	}
+	else 
+		m_flNextPrimaryAttack = GetCurrentTime() + da_grenade_throw_time.GetFloat();
+
 	m_flNextSecondaryAttack	= GetCurrentTime() + da_grenade_throw_time.GetFloat();
 
 	m_bGrenadeThrown = false;
@@ -798,6 +833,15 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 
 	SetViewModel();
 	SetModel(GetViewModel());
+
+	if (pPlayer && GetCurrentTime() > GetGrenadeThrowWeaponDeployTime())
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pPlayer->GetViewModel( m_nViewModelIndex ));
+		if (vm && vm->IsAnimationPaused())
+			// Technically unpausing it here instead of after the throw means we'll lose a tad of it,
+			// so we rewind it a bit.
+			vm->UnpauseAnimation(da_grenade_weaponlerp_time.GetFloat());
+	}
 
 	if (!m_bGrenadeThrown && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime())
 	{
@@ -1115,12 +1159,19 @@ void CWeaponSDKBase::ItemPostFrame( void )
 		if (MaintainGrenadeToss())
 			return;
 	}
-	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
 	{
-		m_flGrenadeThrowStart = GetCurrentTime();
+		bool bAllow = (m_flNextPrimaryAttack < GetCurrentTime());
+		if (m_bInReload)
+			bAllow = true;
 
-		StartGrenadeToss();
-		return;
+		if (bAllow)
+		{
+			m_flGrenadeThrowStart = GetCurrentTime();
+
+			StartGrenadeToss();
+			return;
+		}
 	}
 
 	// Secondary attack has priority
@@ -1162,7 +1213,16 @@ void CWeaponSDKBase::ItemPostFrame( void )
 			}
 		}
 	}
-	
+
+	if (m_flUnpauseFromSwingTime > 0 && m_flUnpauseFromSwingTime <= GetCurrentTime())
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pPlayer->GetViewModel( m_nViewModelIndex ));
+		if (vm && vm->IsAnimationPaused())
+			vm->UnpauseAnimation();
+
+		m_flUnpauseFromSwingTime = 0;
+	}
+
 	if ( !bFired && (pPlayer->m_nButtons & IN_ATTACK) && (m_flNextPrimaryAttack <= GetCurrentTime()) && pPlayer->CanAttack())
 	{
 		// Clip empty? Or out of ammo on a no-clip weapon?
@@ -1443,8 +1503,8 @@ bool CWeaponSDKBase::Reload( void )
 		}
 
 		MDLCACHE_CRITICAL_SECTION();
-		if (GetPlayerOwner())
-			GetPlayerOwner()->SetNextAttack( flSequenceEndTime );
+		// Don't SetNextAttack since that forces ItemBusyFrame
+		// meaning we won't be able to throw grenades during reload.
 		m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;
 		m_flReloadEndTime = flSequenceEndTime;
 
@@ -1659,6 +1719,7 @@ bool CWeaponSDKBase::Deploy( )
 		pOwner->ReadyWeapon();
 
 	m_flSwingTime = 0;
+	m_flUnpauseFromSwingTime = 0;
 
 	return bDeploy;
 }
@@ -1706,6 +1767,7 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	m_flSwingTime = 0;
+	m_flUnpauseFromSwingTime = 0;
 	return true;
 }
 

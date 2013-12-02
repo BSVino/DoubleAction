@@ -133,6 +133,8 @@ public:
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
 
+	virtual void ItemPostFrame( void );
+
 	void FireBullet( 
 		Vector vecSrc, 
 		const QAngle &shootAngles, 

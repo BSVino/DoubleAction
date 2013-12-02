@@ -12,6 +12,8 @@ class CDAViewModel : public CPredictedViewModel
 {
 	DECLARE_CLASS( CDAViewModel, CPredictedViewModel );
 
+	friend void RecvProxy_SequenceNum( const class CRecvProxyData *pData, void *pStruct, void *pOut );
+
 public:
 	CDAViewModel();
 
@@ -19,6 +21,10 @@ public:
 	DECLARE_NETWORKCLASS();
 
 	virtual float	GetSequenceCycleRate( CStudioHdr *pStudioHdr, int iSequence );
+
+	bool IsAnimationPaused() { return m_bPaused; }
+	void PauseAnimation();
+	void UnpauseAnimation(float flRewind = 0);
 
 	virtual void DoMuzzleFlash();
 
@@ -30,4 +36,11 @@ public:
 private:
 	Vector m_vecPlayerVelocityLerp;
 	QAngle m_angLastPlayerEyeAngles;
+
+	bool   m_bPaused;
+	float  m_flPauseCycle;
+	float  m_flPauseAnimTime;
+	int    m_nPauseSequence;
+	float  m_flResumeCycle;
+	float  m_flResumeAnimTime;
 };
