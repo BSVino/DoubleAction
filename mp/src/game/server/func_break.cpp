@@ -31,7 +31,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar func_break_max_pieces( "func_break_max_pieces", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED );
+ConVar func_break_max_pieces( "func_break_max_pieces", "100", FCVAR_ARCHIVE | FCVAR_REPLICATED ); //Pow!
 ConVar func_break_reduction_factor( "func_break_reduction_factor", ".5" );
 
 #ifdef HL1_DLL
@@ -1047,7 +1047,7 @@ void CBreakable::Die( void )
 	CCollisionProperty *pCollisionProp = CollisionProp();
 
 	Vector vSize = pCollisionProp->OBBSize();
-	int iCount = ( vSize[0] * vSize[1] + vSize[1] * vSize[2] + vSize[2] * vSize[0] ) / ( 3 * 12 * 12 );
+	int iCount = ( vSize[0] * vSize[1] + vSize[1] * vSize[2] + vSize[2] * vSize[0] ) / ( 1 * 4 * 4 ); //Pow!
 
 	if ( iCount > func_break_max_pieces.GetInt() )
 	{
