@@ -891,6 +891,11 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 void CSDKGameRules::Think()
 {
+	// Not terribly happy about this but also not terribly distraught.
+	// Can't put it in PostEntity because it gets wiped if it's there.
+	if (!FStrEq(TheNavMesh->GetPlayerSpawnName(), "info_player_deathmatch"))
+		TheNavMesh->SetPlayerSpawnName("info_player_deathmatch");
+
 	// Skip CMultiplayGameRules since we're doing the intermission logic ourselves.
 	CGameRules::Think();
 

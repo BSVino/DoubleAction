@@ -3374,12 +3374,11 @@ void CNavMesh::CreateNavAreasFromNodes( void )
 // adds walkable positions for any/all positions a mod specifies
 void CNavMesh::AddWalkableSeeds( void )
 {
-	CBaseEntity *spawn = gEntList.FindEntityByClassname( NULL, GetPlayerSpawnName() );
-
-	if (spawn )
+	CBaseEntity* pSpawn = NULL;
+	while ((pSpawn = gEntList.FindEntityByClassname( pSpawn, GetPlayerSpawnName() )) != NULL)
 	{
 		// snap it to the sampling grid
-		Vector pos = spawn->GetAbsOrigin();
+		Vector pos = pSpawn->GetAbsOrigin();
 		pos.x = TheNavMesh->SnapToGrid( pos.x );
 		pos.y = TheNavMesh->SnapToGrid( pos.y );
 
@@ -3638,6 +3637,8 @@ bool CNavMesh::UpdateGeneration( float maxTime )
 					return true;
 				}
 			}
+
+			Assert(m_seedIdx == m_walkableSeeds.Count());
 
 			// sampling is complete, now build nav areas
 			m_generationState = CREATE_AREAS_FROM_SAMPLES;
@@ -4649,7 +4650,7 @@ CNavNode *CNavMesh::GetNextWalkableSeedNode( void )
 	// check if a node exists at this location
 	CNavNode *node = CNavNode::GetNode( spot.pos );
 	if ( node )
-		return NULL;
+		return node; // Okay to return the node, it will be skipped. Not okay to return null, that terminates the loop.
 
 	return new CNavNode( spot.pos, spot.normal, NULL, false );
 }

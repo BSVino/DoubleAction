@@ -48,6 +48,15 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 	}
 }
 
+CON_COMMAND_F( bot_kick, "Kick all bots.", FCVAR_GAMEDLL )
+{
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
+	ConVarRef bot_quota("bot_quota");
+	bot_quota.SetValue(0);
+}
+
 static int g_CurBotNumber = 1;
 
 
