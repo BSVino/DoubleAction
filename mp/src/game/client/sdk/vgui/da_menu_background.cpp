@@ -110,7 +110,9 @@ void CDAMainMenu::OnThink()
 			if (isWide)
 			{
 //					DevMsg("attempting to play widescreen video\n");
-				if (!BeginPlayback( "media/mainmenu_wide.bik" ))
+				if (BeginPlayback( "media/mainmenu_wide.bik" ))
+					m_bLoaded = true;
+				else
 				{
 					if (BeginPlayback( "media/mainmenu.bik" ))
 						m_bLoaded = true;
