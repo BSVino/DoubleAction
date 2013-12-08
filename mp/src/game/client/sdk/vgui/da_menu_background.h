@@ -36,6 +36,7 @@ public:
 	MESSAGE_FUNC( OnDisconnectFromGame, "DisconnectedFromGame" );
 
 private:
+	bool            m_bLoaded;
 	bool			m_bToolsMode;
 	bool			m_bPaintVideo;
 	float			m_flActionThink;

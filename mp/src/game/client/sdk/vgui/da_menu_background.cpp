@@ -57,6 +57,7 @@ CDAMainMenu::CDAMainMenu(vgui::Panel* parent, const char *pElementName ) : vgui:
 	m_flActionThink = -1;
 	m_iAction = MAINMENU_NONE;
 	m_bToolsMode = false;
+	m_bLoaded = false;
 
 	m_MainMenuRef.Init( "console/mainmenu.vmt", TEXTURE_GROUP_OTHER );
 }
@@ -105,14 +106,21 @@ void CDAMainMenu::OnThink()
 			if ((ScreenWidth() / 4) != (ScreenHeight() / 3))
 				isWide = true;
 
+			m_bLoaded = false;
 			if (isWide)
 			{
 //					DevMsg("attempting to play widescreen video\n");
 				if (!BeginPlayback( "media/mainmenu_wide.bik" ))
-					BeginPlayback( "media/mainmenu.bik" );
+				{
+					if (BeginPlayback( "media/mainmenu.bik" ))
+						m_bLoaded = true;
+				}
 			}
 			else
-				BeginPlayback( "media/mainmenu.bik" );
+			{
+				if (BeginPlayback( "media/mainmenu.bik" ))
+					m_bLoaded = true;
+			}
 		}
 		else if ( m_iAction == MAINMENU_STOPVIDEO )
 			ReleaseVideo();
@@ -144,6 +152,9 @@ void CDAMainMenu::Paint( void )
 		return;
 
 	if (engine->IsConnected())
+		return;
+
+	if (!m_bLoaded)
 		return;
 
 	if (m_bPaintVideo)
