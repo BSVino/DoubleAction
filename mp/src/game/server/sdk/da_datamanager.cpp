@@ -11,10 +11,13 @@ using namespace std;
 
 #include "da_datamanager.h"
 
+#include "sdk_player.h"
+
+#undef min
+#undef max
+
 #include "../datanetworking/math.pb.h"
 #include "../datanetworking/data.pb.h"
-
-#include "sdk_player.h"
 
 #endif
 

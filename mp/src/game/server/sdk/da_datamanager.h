@@ -6,7 +6,18 @@
 
 #include "sdk_shareddefs.h"
 
+#ifdef __linux__
+#undef min
+#undef max
+#endif
+
 #include <map>
+#include <string>
+
+#ifdef __linux__
+#define min(x, y) (((x)<(y))?(x):(y))
+#define max(x, y) (((x)>(y))?(x):(y))
+#endif
 
 namespace da
 {
