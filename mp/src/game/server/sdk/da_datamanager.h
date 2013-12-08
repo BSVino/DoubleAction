@@ -6,19 +6,6 @@
 
 #include "sdk_shareddefs.h"
 
-#ifdef __linux__
-#undef min
-#undef max
-#endif
-
-#include <map>
-#include <string>
-
-#ifdef __linux__
-#define min(x, y) (((x)<(y))?(x):(y))
-#define max(x, y) (((x)>(y))?(x):(y))
-#endif
-
 namespace da
 {
 	namespace protobuf
@@ -63,6 +50,12 @@ public:
 private:
 	class CDataContainer
 	{
+	private:
+		static bool Str_LessFunc( CUtlString const &a, CUtlString const &b )
+		{
+			return strcmp(a.Get(), b.Get()) < 0;
+		}
+
 	public:
 		CDataContainer()
 		{
@@ -76,6 +69,8 @@ private:
 			m_iThirdPersonInactive = 0;
 
 			m_bCheated = false;
+
+			m_asCharactersChosen.SetLessFunc(Str_LessFunc);
 		}
 
 		bool               m_bTeamplay;
@@ -83,7 +78,7 @@ private:
 		CUtlVector<Vector> m_avecPlayerPositions;
 		CUtlVector<Vector> m_avecPlayerKills;
 		CUtlVector<Vector> m_avecPlayerDeaths;
-		std::map<std::string, int> m_asCharactersChosen;
+		CUtlMap<CUtlString, int> m_asCharactersChosen;
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
 		int                m_iConnections;
@@ -94,8 +89,8 @@ private:
 
 		struct VoteResult
 		{
-			std::string m_sIssue;
-			std::string m_sDetails;
+			CUtlString  m_sIssue;
+			CUtlString  m_sDetails;
 			bool        m_bResult;
 		};
 		CUtlVector<VoteResult> m_aVoteResults;
@@ -105,7 +100,7 @@ private:
 
 	// We use this to figure out if a client has really connected
 	// so it needs to be outside the data container so it doesn't get wiped.
-	std::map<AccountID_t, char> m_aiConnectedClients;
+	CUtlMap<AccountID_t, char> m_aiConnectedClients;
 
 	bool  m_bLevelStarted;
 	CJob* m_pSendData;

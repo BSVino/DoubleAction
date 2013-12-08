@@ -13,9 +13,6 @@ using namespace std;
 
 #include "sdk_player.h"
 
-#undef min
-#undef max
-
 #include "../datanetworking/math.pb.h"
 #include "../datanetworking/data.pb.h"
 
@@ -52,9 +49,16 @@ static void SendData( CFunctor **pData, unsigned int nCount )
 		Msg("Error sending game data: %s", sError.c_str());
 }
 
+static bool Account_LessFunc( AccountID_t const &a, AccountID_t const &b )
+{
+	return a < b;
+}
+
 CDataManager::CDataManager( char const* name )
 	: CAutoGameSystemPerFrame(name)
 {
+	m_aiConnectedClients.SetLessFunc(Account_LessFunc);
+
 	m_pSendData = NULL;
 
 	d = NULL;
@@ -80,21 +84,23 @@ void CDataManager::LevelInitPostEntity( void )
 	m_bLevelStarted = true;
 	d->m_flNextPositionsUpdate = gpGlobals->curtime;
 
-	map<AccountID_t, char>::iterator it = m_aiConnectedClients.begin();
-	while (it != m_aiConnectedClients.end())
+	CUtlMap<AccountID_t, char>::IndexType_t it = m_aiConnectedClients.FirstInorder();
+	while (it != m_aiConnectedClients.InvalidIndex())
 	{
 		// This player is gone for good. Remove him from the list and we'll
 		// count him as unique next time he shows up.
-		if (it->second == 0)
+		if (m_aiConnectedClients[it] == 0)
 		{
-			m_aiConnectedClients.erase(it++);
+			CUtlMap<AccountID_t, char>::IndexType_t iRemove = it;
+			m_aiConnectedClients.RemoveAt(iRemove);
+			it = m_aiConnectedClients.NextInorder(it);
 			continue;
 		}
 
 		// This player will be a unique player for the next map.
 		d->m_iUniquePlayers++;
 
-		++it;
+		it = m_aiConnectedClients.NextInorder(it);
 	}
 }
 
@@ -149,7 +155,11 @@ void CDataManager::AddPlayerDeath(const Vector& vecPosition)
 
 void CDataManager::AddCharacterChosen(const char* pszCharacter)
 {
-	d->m_asCharactersChosen[pszCharacter]++;
+	CUtlMap<CUtlString, int>::IndexType_t it = d->m_asCharactersChosen.Find(CUtlString(pszCharacter));
+	if (it == d->m_asCharactersChosen.InvalidIndex())
+		d->m_asCharactersChosen.Insert(CUtlString(pszCharacter), 1);
+	else
+		d->m_asCharactersChosen[it]++;
 }
 
 void CDataManager::AddWeaponChosen(SDKWeaponID eWeapon)
@@ -166,20 +176,23 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 {
 	// ClientConnected is called for every non-bot client every time a map loads, even with changelevel.
 	// So we have to eliminate duplicate connections.
-	map<AccountID_t, char>::iterator it = m_aiConnectedClients.find(eAccountID);
-	if (it == m_aiConnectedClients.end() || it->second == 0)
+	CUtlMap<AccountID_t, char>::IndexType_t it = m_aiConnectedClients.Find(eAccountID);
+
+	if (it == m_aiConnectedClients.InvalidIndex() || m_aiConnectedClients[it] == 0)
 	{
 		// This client was not previously in the list, so he has truly connected.
 
-		if (it == m_aiConnectedClients.end())
+		if (it == m_aiConnectedClients.InvalidIndex())
 		{
 			// This client has not disconnected and reconnected.
 			// We want to eliminate repeated connections as extra information.
 			d->m_iConnections++;
 			d->m_iUniquePlayers++;
-		}
 
-		m_aiConnectedClients[eAccountID] = 1;
+			m_aiConnectedClients.Insert(eAccountID, 1);
+		}
+		else
+			m_aiConnectedClients[eAccountID] = 1;
 	}
 }
 
@@ -291,13 +304,13 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 		FillProtoBufVector(pDeaths->Add(), d->m_avecPlayerDeaths[i]);
 
 	google::protobuf::RepeatedPtrField<std::string>* pCharacters = pbGameData->mutable_characters_chosen();
-	iDataSize = d->m_asCharactersChosen.size();
+	iDataSize = d->m_asCharactersChosen.Count();
 	pCharacters->Reserve(iDataSize);
 
-	for (std::map<std::string, int>::iterator it = d->m_asCharactersChosen.begin(); it != d->m_asCharactersChosen.end(); it++)
+	for (CUtlMap<CUtlString, int>::IndexType_t it = d->m_asCharactersChosen.FirstInorder(); it != d->m_asCharactersChosen.InvalidIndex(); it = d->m_asCharactersChosen.NextInorder(it))
 	{
-		for (int i = 0; i < it->second; i++)
-			pCharacters->Add()->assign(it->first);
+		for (int i = 0; i < d->m_asCharactersChosen[it]; i++)
+			pCharacters->Add()->assign(d->m_asCharactersChosen.Key(it).String());
 	}
 
 	google::protobuf::RepeatedField<google::protobuf::int32>* pWeapons = pbGameData->mutable_weapons_chosen();
