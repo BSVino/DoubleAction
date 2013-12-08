@@ -155,10 +155,10 @@ SDKViewport::~SDKViewport()
 
 void SDKViewport::Start(IGameUIFuncs *pGameUIFuncs, IGameEventManager2 *pGameEventManager)
 {
-	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
+/*	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
 	m_pMainMenuPanel->SetZPos( 500 );
 	m_pMainMenuPanel->SetVisible( false );
-	m_pMainMenuPanel->StartVideo();
+	m_pMainMenuPanel->StartVideo();*/
 
 	BaseClass::Start(pGameUIFuncs, pGameEventManager);
 }
@@ -180,11 +180,11 @@ void SDKViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
 
-	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
+/*	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
 	m_pMainMenuPanel->SetZPos( 500 );
 	m_pMainMenuPanel->SetVisible( false );
 	if (bRestartMainMenuVideo)
-		m_pMainMenuPanel->StartVideo();
+		m_pMainMenuPanel->StartVideo();*/
 }
 
 void SDKViewport::RemoveAllPanels( void)
