@@ -379,7 +379,7 @@ void CHudAmmo::Paint()
 		if (!oRound.bActive)
 			continue;
 
-		if (oRound.vecPosition.y > 1000)
+		if (oRound.vecPosition.y > iHeight+1000)
 		{
 			oRound.bActive = false;
 			continue;
