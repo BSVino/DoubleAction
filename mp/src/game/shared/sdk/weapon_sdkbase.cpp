@@ -138,6 +138,8 @@ CWeaponSDKBase::CWeaponSDKBase()
 	m_flArrowGoalSize = 0;
 	m_flArrowCurSize = 0;
 	m_flArrowSpinOffset = RandomFloat(0, 10);
+
+	m_flMarksmanGold = 0;
 #endif
 
 	m_flGrenadeThrowStart = -1;
@@ -1087,6 +1089,39 @@ int CWeaponSDKBase::DrawModel(int flags)
 		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize);
 
 	return iReturn;
+}
+
+void CWeaponSDKBase::ClientThink()
+{
+	SetNextClientThink( CLIENT_THINK_ALWAYS );
+
+	BaseClass::ClientThink();
+
+	float flFrameTime = gpGlobals->frametime;
+	if (C_SDKPlayer::GetLocalSDKPlayer())
+		flFrameTime *= C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+
+	float flMarksmanGoldGoal = 0;
+	if (GetPlayerOwner())
+		flMarksmanGoldGoal = GetPlayerOwner()->IsStyleSkillActive(SKILL_MARKSMAN);
+
+	if (flMarksmanGoldGoal > m_flMarksmanGold)
+		flFrameTime *= 2;
+
+	m_flMarksmanGold = Approach(flMarksmanGoldGoal, m_flMarksmanGold, flFrameTime);
+}
+
+void C_WeaponSDKBase::OnDataChanged( DataUpdateType_t type )
+{
+	BaseClass::OnDataChanged( type );
+
+	if ( type == DATA_UPDATE_CREATED )
+		SetNextClientThink( CLIENT_THINK_ALWAYS );
+}
+
+float C_WeaponSDKBase::GetMarksmanGold()
+{
+	return m_flMarksmanGold;
 }
 #endif
 

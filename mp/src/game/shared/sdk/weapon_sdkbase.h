@@ -118,6 +118,10 @@ public:
 
 #ifdef CLIENT_DLL
 	virtual int     DrawModel( int flags );
+
+	virtual void OnDataChanged( DataUpdateType_t updateType );
+	virtual void ClientThink();
+	float GetMarksmanGold();
 #endif
 
 	virtual float GetWeaponSpread();
@@ -201,6 +205,8 @@ private:
 	float       m_flArrowGoalSize;
 	float       m_flArrowCurSize;
 	float       m_flArrowSpinOffset;
+
+	float m_flMarksmanGold;
 #endif
 
 public:

@@ -43,6 +43,7 @@
 #include "sdk_teammenu.h"
 #include "da_charactermenu.h"
 #include "da_skillmenu.h"
+#include "da_viewmodel.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -2252,3 +2253,73 @@ void CSlowMoMultiplierProxy::OnBind( void *pC_BaseEntity )
 }
 
 EXPOSE_INTERFACE( CSlowMoMultiplierProxy, IMaterialProxy, "SlowMoMultiplier" IMATERIAL_PROXY_INTERFACE_VERSION );
+
+class CMarksmanGoldSkinProxy : public CEntityMaterialProxy
+{
+public:
+	CMarksmanGoldSkinProxy( void );
+	virtual ~CMarksmanGoldSkinProxy( void );
+
+public:
+	virtual bool       Init( IMaterial *pMaterial, KeyValues* pKeyValues );
+	virtual void       OnBind( C_BaseEntity *pC_BaseEntity );
+	virtual IMaterial* GetMaterial();
+
+private:
+	IMaterialVar* m_pDetail;
+	IMaterialVar* m_pDetailScale;
+	IMaterialVar* m_pDetailBlend;
+	IMaterialVar* m_pDetailMode;
+};
+
+CMarksmanGoldSkinProxy::CMarksmanGoldSkinProxy()
+{
+	m_pDetail = NULL;
+	m_pDetailScale = NULL;
+	m_pDetailBlend = NULL;
+	m_pDetailMode = NULL;
+}
+
+CMarksmanGoldSkinProxy::~CMarksmanGoldSkinProxy()
+{
+}
+
+bool CMarksmanGoldSkinProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
+{
+	bool bFoundDetail, bFoundScale, bFoundBlend, bFoundMode;
+
+	m_pDetail = pMaterial->FindVar( "$detail", &bFoundDetail, false );
+	m_pDetailScale = pMaterial->FindVar( "$detailscale", &bFoundScale, false );
+	m_pDetailBlend = pMaterial->FindVar( "$detailblendfactor", &bFoundBlend, false );
+	m_pDetailMode = pMaterial->FindVar( "$detailblendmode", &bFoundMode, false );
+
+	return bFoundDetail && bFoundScale && bFoundBlend && bFoundMode;
+}
+
+void CMarksmanGoldSkinProxy::OnBind( C_BaseEntity *pEnt )
+{
+	C_WeaponSDKBase* pWeapon = dynamic_cast<C_WeaponSDKBase*>(pEnt);
+
+	if (!pWeapon)
+	{
+		C_DAViewModel* pViewModel = dynamic_cast<C_DAViewModel*>(pEnt);
+		if (pViewModel)
+			pWeapon = pViewModel->GetDAWeapon();
+	}
+
+	if (!pWeapon)
+		return;
+
+	if (m_pDetailBlend)
+		m_pDetailBlend->SetFloatValue( pWeapon->GetMarksmanGold() );
+}
+
+IMaterial *CMarksmanGoldSkinProxy::GetMaterial()
+{
+	if ( !m_pDetail )
+		return NULL;
+
+	return m_pDetail->GetOwningMaterial();
+}
+
+EXPOSE_INTERFACE( CMarksmanGoldSkinProxy, IMaterialProxy, "GoldSkin" IMATERIAL_PROXY_INTERFACE_VERSION );
