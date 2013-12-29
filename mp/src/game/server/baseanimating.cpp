@@ -2656,6 +2656,7 @@ bool CBaseAnimating::TestCollision( const Ray_t &ray, unsigned int fContentsMask
 
 bool CBaseAnimating::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr )
 {
+	MDLCACHE_CRITICAL_SECTION();
 	CStudioHdr *pStudioHdr = GetModelPtr( );
 	if (!pStudioHdr)
 	{

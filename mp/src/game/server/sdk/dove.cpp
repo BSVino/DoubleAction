@@ -2,6 +2,8 @@
 
 #include "dove.h"
 
+#include "datacache/imdlcache.h"
+
 #include "sdk_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -29,6 +31,7 @@ void CDove::Spawn()
 
 	m_flSpeed = 200;
 
+	MDLCACHE_CRITICAL_SECTION();
 	if (random->RandomInt(0, 1) == 0)
 		SetSequence(LookupSequence("fly01"));
 	else
