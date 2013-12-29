@@ -32,6 +32,7 @@ void CBriefcase::Precache( void )
 {
 	CBaseEntity::PrecacheModel( "particle/briefcase.vmt" );
 	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01.mdl" );
+	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01_player.mdl" );
 }
 
 void CBriefcase::Spawn( void )
@@ -84,7 +85,8 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	VPhysicsDestroyObject();
 	pSDKPlayer->PickUpBriefcase(this);
 
-	SetSequence(LookupSequence("closed_idle"));
+	SetModel("models/briefcase/briefcase_01_player.mdl");
+	SetSequence(LookupSequence("idle"));
 
 	return true;
 }
@@ -104,6 +106,8 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 		SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
 		UTIL_DropToFloor(this, MASK_SOLID, this);
 	}
+
+	SetModel("models/briefcase/briefcase_01.mdl");
 
 	SetCollisionBounds(-Vector(10, 10, 10), Vector(10, 10, 10));
 	VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags() | FSOLID_TRIGGER, false );
