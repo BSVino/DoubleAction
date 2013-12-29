@@ -2189,8 +2189,7 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	pBriefcase->SetAbsOrigin(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin() + Vector(0, 0, 50));
 	pBriefcase->Spawn();
 
-	// Update the last touched time so it expires 60 seconds from now.
-	pBriefcase->Dropped(NULL);
+	pBriefcase->Touch();
 
 	m_hBriefcase = pBriefcase;
 

@@ -10,6 +10,7 @@
 #include "da_briefcase.h"
 #include "sdk_player.h"
 #include "sdk_gamerules.h"
+#include "te_effect_dispatch.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -33,6 +34,8 @@ void CBriefcase::Precache( void )
 	CBaseEntity::PrecacheModel( "particle/briefcase.vmt" );
 	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01.mdl" );
 	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01_player.mdl" );
+	PrecacheParticleSystem( "dinero_trail" );
+	PrecacheParticleSystem( "dinero_splode" );
 }
 
 void CBriefcase::Spawn( void )
@@ -88,14 +91,21 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	SetModel("models/briefcase/briefcase_01_player.mdl");
 	SetSequence(LookupSequence("idle"));
 
+	DispatchParticleEffect( "dinero_trail", PATTACH_ABSORIGIN_FOLLOW, pPlayer, "head" );
+
 	return true;
+}
+
+void CBriefcase::Touch()
+{
+	m_flLastTouched = gpGlobals->curtime;
 }
 
 static ConVar da_ctb_changecap("da_ctb_changecap", "0.5", FCVAR_NOTIFY|FCVAR_DEVELOPMENTONLY, "Probability to change capture point location when the briefcase is dropped.");
 
 void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 {
-	m_flLastTouched = gpGlobals->curtime;
+	Touch();
 
 	FollowEntity(NULL);
 
@@ -142,6 +152,9 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 		SetThink(&CBriefcase::AnimateThink);
 		SetNextThink( gpGlobals->curtime );
 	}
+
+	StopParticleEffects( pPlayer );
+	DispatchParticleEffect( "dinero_splode", GetAbsOrigin(), GetAbsAngles() );
 
 	if (random->RandomFloat(0, 1) < da_ctb_changecap.GetFloat())
 		SDKGameRules()->ChooseRandomCapturePoint(GetAbsOrigin());
@@ -198,6 +211,8 @@ void CBriefcaseCaptureZone::CaptureThink()
 
 		if (pPlayer->HasBriefcase() && (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flCaptureRadiusSqr)
 		{
+			DispatchParticleEffect( "dinero_splode", GetAbsOrigin(), GetAbsAngles() );
+
 			SDKGameRules()->PlayerCapturedBriefcase(pPlayer);
 			return;
 		}

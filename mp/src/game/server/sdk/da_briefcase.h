@@ -29,6 +29,7 @@ public:
 	void AnimateThink();
 	bool MyTouch( CBasePlayer *pPlayer );
 
+	void Touch();
 	void Dropped(class CSDKPlayer*);
 
 	float GetLastTouchedTime() const { return m_flLastTouched; }
