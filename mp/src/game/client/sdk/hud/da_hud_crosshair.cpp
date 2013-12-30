@@ -41,6 +41,8 @@ CDAHudCrosshair::CDAHudCrosshair( const char *pElementName ) :
 	m_vecCrossHairOffsetAngle.Init();
 
 	SetHiddenBits( HIDEHUD_PLAYERDEAD | HIDEHUD_CROSSHAIR );
+
+	m_flWatchAlpha = 0;
 }
 
 void CDAHudCrosshair::ApplySchemeSettings( IScheme *scheme )
@@ -53,6 +55,9 @@ void CDAHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 	SetPaintBackgroundEnabled( false );
 
     SetSize( ScreenWidth(), ScreenHeight() );
+
+	// Not sure why but it won't grab it from the script.
+	m_hWatchFont = vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme( "ClientScheme" ))->GetFont( "SlowMoTimer" );
 }
 
 //-----------------------------------------------------------------------------
@@ -211,6 +216,31 @@ void CDAHudCrosshair::Paint( void )
 			x - 0.5f * m_pCrosshair->Width(), 
 			y - 0.5f * m_pCrosshair->Height(),
 			bObstruction?Color(128, 128, 128, m_clrCrosshair.a()/2):m_clrCrosshair );
+
+	float flWatchAlphaGoal = (pPlayer->GetSlowMoTime() > 0)?1:0;
+	m_flWatchAlpha = Approach(flWatchAlphaGoal, m_flWatchAlpha, gpGlobals->frametime * 3);
+
+	if (m_flWatchAlpha > 0)
+	{
+		float flValue = (pPlayer->GetSlowMoTime() - gpGlobals->curtime)*60;
+		if (flValue < 0)
+			flValue = 0;
+
+		int iMinutes = flValue / 60;
+		int iSeconds = flValue - iMinutes * 60;
+
+		wchar_t wcsUnicode[6];
+
+		if ( iSeconds < 10 )
+			V_snwprintf( wcsUnicode, ARRAYSIZE(wcsUnicode), L"%d:0%d", iMinutes, iSeconds );
+		else
+			V_snwprintf( wcsUnicode, ARRAYSIZE(wcsUnicode), L"%d:%d", iMinutes, iSeconds );
+
+		surface()->DrawSetTextPos( x  + m_pCrosshair->Width(), y - surface()->GetFontTall(m_hWatchFont)/2 );
+		surface()->DrawSetTextColor( Color(m_clrCrosshair.r(), m_clrCrosshair.g(), m_clrCrosshair.b(), m_clrCrosshair.a()*m_flWatchAlpha*0.5) );
+		surface()->DrawSetTextFont( m_hWatchFont );
+		surface()->DrawUnicodeString( wcsUnicode, vgui::FONT_DRAW_NONADDITIVE );
+	}
 }
 
 //-----------------------------------------------------------------------------

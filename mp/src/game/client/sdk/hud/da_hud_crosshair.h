@@ -48,6 +48,9 @@ private:
 	Vector			m_curViewOrigin;
 
 	CPanelAnimationVar( bool, m_bHideCrosshair, "never_draw", "false" );
+
+	float           m_flWatchAlpha;
+	CPanelAnimationVar( vgui::HFont, m_hWatchFont, "WatchFont", "Default" );
 };
 
 

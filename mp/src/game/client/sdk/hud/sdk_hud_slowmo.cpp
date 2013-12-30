@@ -46,13 +46,15 @@ protected:
 
 	void UpdatePlayerSlowMo( C_BasePlayer *player );
 
-private:
-	float m_flSlowMo;
-	float m_flSlowMoGoal;
+	CPanelAnimationVarAliasType( float, watch_xpos, "watch_xpos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, watch_ypos, "watch_ypos", "0", "proportional_float" );
+	CPanelAnimationVarAliasType( float, watch_tall, "watch_tall", "10", "proportional_float" );
+	CPanelAnimationVarAliasType( float, watch_wide, "watch_wide", "10", "proportional_float" );
 
+	CPanelAnimationVar( vgui::HFont, m_hHintFont, "HintFont", "Default" );
+
+private:
 	CHudTexture* m_pBackground;
-	CHudTexture* m_pRed;
-	CHudTexture* m_pNeedle;
 };
 
 DECLARE_HUDELEMENT( CHudSlowMo );
@@ -64,7 +66,9 @@ CHudSlowMo::CHudSlowMo( const char *pElementName ) : BaseClass(NULL, "HudSlowMo"
 {
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
 
-	m_pBackground = m_pRed = m_pNeedle = NULL;
+	m_pBackground = NULL;
+
+	SetIsTime(true);
 }
 
 void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
@@ -72,8 +76,6 @@ void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	m_pBackground = gHUD.GetIcon("slowmo_background");
-	m_pRed = gHUD.GetIcon("slowmo_red");
-	m_pNeedle = gHUD.GetIcon("slowmo_needle");
 }
 
 //-----------------------------------------------------------------------------
@@ -81,7 +83,6 @@ void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
 //-----------------------------------------------------------------------------
 void CHudSlowMo::Init( void )
 {
-	m_flSlowMo = m_flSlowMoGoal = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -98,7 +99,7 @@ void CHudSlowMo::Reset()
 {
 	BaseClass::Reset();
 
-	m_flSlowMo = m_flSlowMoGoal = 0;
+//	SetLabelText(g_pVGuiLocalize->Find("#DA_HUD_Slowmo"));
 
 	UpdatePlayerSlowMo( C_BasePlayer::GetLocalPlayer() );
 }
@@ -129,21 +130,13 @@ void CHudSlowMo::OnThink()
 	if ( !pPlayer )
 		return;
 
-	float m_flSlowMoGoal = pPlayer->GetSlowMoSeconds();
 	if (pPlayer->GetSlowMoTime() > 0)
-		m_flSlowMoGoal = pPlayer->GetSlowMoTime() - gpGlobals->curtime;
-
-	m_flSlowMo = Approach(m_flSlowMoGoal, m_flSlowMo, hud_slowmo_needle_lerp.GetFloat() * gpGlobals->frametime * fabs(m_flSlowMoGoal - m_flSlowMo));
+		SetDisplayValue((pPlayer->GetSlowMoTime() - gpGlobals->curtime)*60);
 }
 
 void CHudSlowMo::SetSlowMo(float flSlowMo)
 {
-	if (flSlowMo != m_flSlowMoGoal)
-	{
-		m_flSlowMoGoal = flSlowMo;
-	}
-
-	SetDisplayValue(flSlowMo);
+	SetDisplayValue(flSlowMo*60);
 }
 
 extern float Oscillate(float flTime, float flLength);
@@ -157,15 +150,25 @@ void CHudSlowMo::Paint()
 	if (!pPlayer->IsAlive())
 		return;
 
-	int iWide = GetWide();
-	int iTall = GetTall();
-
 	if (m_pBackground)
-		m_pBackground->DrawSelf( 0, 0, iWide, iTall, Color(255, 255, 255, 255) );
+		m_pBackground->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
 
-	if (pPlayer->GetSlowMoTime() > 0 && m_pRed)
-		m_pRed->DrawSelf( 0, 0, iWide, iTall, Color(255, 255, 255, 255 * Oscillate(gpGlobals->curtime, 0.5f)) );
+	BaseClass::Paint();
 
-	if (m_pNeedle)
-		SDKViewport::DrawPolygon(m_pNeedle, 0, iTall-iWide, iWide, iWide, m_flSlowMo * 90);
+	wchar_t* pszActivate = g_pVGuiLocalize->Find("#DA_HUD_Slowmo_Activate");
+
+	if (pszActivate && pPlayer->GetSlowMoTime() == 0 && pPlayer->GetSlowMoSeconds() >= 2)
+	{
+#define WSTRLEN 100
+		wchar_t wszHintLabel[WSTRLEN];
+		V_wcsncpy(wszHintLabel, pszActivate, WSTRLEN);
+
+		int iTextWide, iTextTall;
+		surface()->GetTextSize( m_hHintFont, wszHintLabel, iTextWide, iTextTall );
+
+		surface()->DrawSetTextPos( GetWide()/2 - iTextWide/2, RemapVal(fabs(sin(gpGlobals->curtime*3)), 0, 1, watch_ypos - surface()->GetFontTall(m_hHintFont), 0) );
+		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+		surface()->DrawSetTextFont( m_hHintFont );
+		surface()->DrawUnicodeString( wszHintLabel, vgui::FONT_DRAW_NONADDITIVE );
+	}
 }
