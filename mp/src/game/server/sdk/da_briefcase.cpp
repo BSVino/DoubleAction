@@ -91,7 +91,7 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	SetModel("models/briefcase/briefcase_01_player.mdl");
 	SetSequence(LookupSequence("idle"));
 
-	DispatchParticleEffect( "dinero_trail", PATTACH_ABSORIGIN_FOLLOW, pPlayer, "head" );
+	DispatchParticleEffect( "dinero_trail", PATTACH_ABSORIGIN_FOLLOW, this );
 
 	return true;
 }
@@ -153,7 +153,7 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 		SetNextThink( gpGlobals->curtime );
 	}
 
-	StopParticleEffects( pPlayer );
+	StopParticleEffects( this );
 	DispatchParticleEffect( "dinero_splode", GetAbsOrigin(), GetAbsAngles() );
 
 	if (random->RandomFloat(0, 1) < da_ctb_changecap.GetFloat())
@@ -211,6 +211,7 @@ void CBriefcaseCaptureZone::CaptureThink()
 
 		if (pPlayer->HasBriefcase() && (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flCaptureRadiusSqr)
 		{
+			StopParticleEffects( SDKGameRules()->GetBriefcase() );
 			DispatchParticleEffect( "dinero_splode", GetAbsOrigin(), GetAbsAngles() );
 
 			SDKGameRules()->PlayerCapturedBriefcase(pPlayer);
