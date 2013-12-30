@@ -100,28 +100,22 @@ SkillID CSkillButton::GetSkill()
 	return AliasToSkillID(m_szSkillName);
 }
 
-CDASkillMenu::CDASkillMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY_EQUIP_CT )
+CDASkillMenu::CDASkillMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY_EQUIP_CT )
 {
-	m_pViewPort = pViewPort;
-
-	m_iSkillMenuKey = BUTTON_CODE_INVALID;
-
 	m_pSkillInfo = new CFolderLabel(this, "SkillInfo");
 	m_pSkillIcon = new CPanelTexture(this, "SkillIcon");
 
+	m_iSkillMenuKey = BUTTON_CODE_INVALID;
+
+	SetVisible(true);
+
 	LoadControlSettings( "Resource/UI/SkillMenu.res" );
 	InvalidateLayout();
-}
-
-//Destructor
-CDASkillMenu::~CDASkillMenu()
-{
+	Update();
 }
 
 void CDASkillMenu::Update()
 {
-	BaseClass::Update();
-
 	CSkillButton* pCancel = dynamic_cast<CSkillButton*>(FindChildByName("skill_cancel"));
 	if (pCancel)
 	{
@@ -139,7 +133,7 @@ void CDASkillMenu::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
-		Activate();
+		//Activate();
 		SetMouseInputEnabled( true );
 	}
 	else
@@ -171,7 +165,14 @@ Panel *CDASkillMenu::CreateControlByName( const char *controlName )
 	if ( !Q_stricmp( "SkillButton", controlName ) )
 		return new CSkillButton( this, NULL );
 	else
-		return BaseClass::CreateControlByName( controlName );
+	{
+		Panel* pPanel = CFolderMenu::CreateControlByNameStatic(this, controlName);
+
+		if (pPanel)
+			return pPanel;
+
+		return BaseClass::CreateControlByName(controlName);
+	}
 }
 
 void CDASkillMenu::SetVisible( bool state )
@@ -196,9 +197,9 @@ void CDASkillMenu::OnCommand( const char *command )
 	{
 		engine->ClientCmd( command );
 
-		Close();
-
 		gViewPortInterface->ShowBackGround( false );
+
+		GetFolderMenu()->Close();
 	}
 	else
 		BaseClass::OnCommand(command);
@@ -220,8 +221,6 @@ void CDASkillMenu::PaintBorder()
 void CDASkillMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
 CFolderLabel* CDASkillMenu::GetSkillInfo()

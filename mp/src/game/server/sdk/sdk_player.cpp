@@ -3045,6 +3045,16 @@ bool CSDKPlayer::IsClassMenuOpen( void )
 }
 #endif // SDK_USE_PLAYERCLASSES
 
+void CSDKPlayer::ShowFolderPanel( const char* pszName )
+{
+	CSingleUserRecipientFilter filter( this );
+	filter.MakeReliable();
+
+	UserMessageBegin( filter, "FolderPanel" );
+		WRITE_STRING( pszName ); // menu name
+	MessageEnd();
+}
+
 #ifdef SDK_USE_TEAMS
 void CSDKPlayer::SetTeamMenuOpen( bool bOpen )
 {
@@ -3074,7 +3084,7 @@ bool CSDKPlayer::IsCharacterMenuOpen( void )
 
 void CSDKPlayer::ShowCharacterMenu()
 {
-	ShowViewPortPanel( PANEL_CLASS );
+	ShowFolderPanel( PANEL_CLASS );
 }
 
 void CSDKPlayer::SetBuyMenuOpen( bool bOpen )
@@ -3089,7 +3099,7 @@ bool CSDKPlayer::IsBuyMenuOpen( void )
 
 void CSDKPlayer::ShowBuyMenu()
 {
-	ShowViewPortPanel( PANEL_BUY );
+	ShowFolderPanel( PANEL_BUY );
 }
 
 void CSDKPlayer::ClearLoadout()
@@ -3212,7 +3222,7 @@ bool CSDKPlayer::IsSkillMenuOpen( void )
 
 void CSDKPlayer::ShowSkillMenu()
 {
-	ShowViewPortPanel( PANEL_BUY_EQUIP_CT );
+	ShowFolderPanel( PANEL_BUY_EQUIP_CT );
 }
 
 void CSDKPlayer::SetStyleSkill(SkillID eSkill)

@@ -169,6 +169,9 @@ public:
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
+
+	void ShowFolderPanel( const char* pszName );
+
 #if defined ( SDK_USE_PLAYERCLASSES )
 	int GetPlayerClassAsString( char *pDest, int iDestSize );
 	void SetClassMenuOpen( bool bIsOpen );

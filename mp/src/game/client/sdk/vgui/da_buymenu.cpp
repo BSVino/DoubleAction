@@ -121,22 +121,18 @@ SDKWeaponID CWeaponButton::GetWeaponID()
 	return AliasToWeaponID(m_szWeaponID);
 }
 
-CDABuyMenu::CDABuyMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_BUY )
+CDABuyMenu::CDABuyMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY )
 {
-	m_pViewPort = pViewPort;
+	m_pWeaponInfo = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponInfo"));
+	m_pWeaponImage = dynamic_cast<CModelPanel*>(FindChildByName("WeaponImage"));
 
 	m_iBuyMenuKey = BUTTON_CODE_INVALID;
 
+	SetVisible(true);
+
 	LoadControlSettings( "Resource/UI/BuyMenu.res" );
 	InvalidateLayout();
-
-	m_pWeaponInfo = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponInfo"));
-	m_pWeaponImage = dynamic_cast<CModelPanel*>(FindChildByName("WeaponImage"));
-}
-
-//Destructor
-CDABuyMenu::~CDABuyMenu()
-{
+	Update();
 }
 
 void CDABuyMenu::Reset()
@@ -155,7 +151,7 @@ void CDABuyMenu::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
-		Activate();
+		//Activate();
 		SetMouseInputEnabled( true );
 	}
 	else
@@ -168,6 +164,9 @@ void CDABuyMenu::ShowPanel( bool bShow )
 void CDABuyMenu::OnCommand( const char *command )
 {
 	BaseClass::OnCommand(command);
+
+	if (V_strncasecmp("buy ", command, 4) == 0)
+		engine->ServerCmd(command);
 
 	if (FStrEq(command, "close"))
 	{
@@ -368,16 +367,21 @@ void CDABuyMenu::Update()
 			m_apQuantities.Tail()->SetScheme("FolderScheme");
 		}
 	}
-
-	BaseClass::Update();
 }
 
 Panel *CDABuyMenu::CreateControlByName( const char *controlName )
 {
 	if (FStrEq(controlName, "WeaponButton"))
 		return new CWeaponButton(this, NULL);
+	else
+	{
+		Panel* pPanel = CFolderMenu::CreateControlByNameStatic(this, controlName);
 
-	return BaseClass::CreateControlByName(controlName);
+		if (pPanel)
+			return pPanel;
+
+		return BaseClass::CreateControlByName(controlName);
+	}
 }
 
 void CDABuyMenu::SetVisible( bool state )
@@ -412,8 +416,6 @@ void CDABuyMenu::PaintBorder()
 void CDABuyMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
 vgui::Label* CDABuyMenu::GetWeaponInfo()

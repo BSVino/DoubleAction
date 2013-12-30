@@ -37,6 +37,7 @@
 #include "da_newsframe.h"
 #include "hud/da_hud_vote.h"
 #include "da_credits.h"
+#include "hud_macros.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -74,11 +75,15 @@ IVModeManager *modemanager = ( IVModeManager * )&g_ModeManager;
 
 #define SCREEN_FILE		"scripts/vgui_screens.txt"
 
+extern void __MsgFunc_FolderPanel( bf_read &msg );
+
 void CSDKModeManager::Init()
 {
 	g_pClientMode = GetClientModeNormal();
-	
+
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
+
+	HOOK_MESSAGE( FolderPanel );
 }
 
 void CSDKModeManager::LevelInit( const char *newmap )

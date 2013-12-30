@@ -52,6 +52,7 @@ void RegisterUserMessages()
 	usermessages->Register( "StyleAnnouncement", 13 );
 	usermessages->Register( "Notice", 5 );
 	usermessages->Register( "LessonLearned", -1 );
+	usermessages->Register( "FolderPanel", -1 );	// Show folder VGUI menu
 
 	usermessages->Register( "VoteStart", -1 );
 	usermessages->Register( "CallVoteFailed", -1 );

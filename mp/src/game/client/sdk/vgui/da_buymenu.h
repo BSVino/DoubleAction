@@ -15,6 +15,7 @@
 #include <vgui_controls/CheckButton.h>
 
 #include "folder_gui.h"
+#include "da.h"
 
 class CWeaponButton : public vgui::Button
 {
@@ -40,15 +41,14 @@ private:
 	IBorder* m_pArmedBorder;
 };
 
-class CDABuyMenu : public CFolderMenu, public IViewPortPanel
+class CDABuyMenu : public CFolderMenuPanel
 {
-private:
-	DECLARE_CLASS_SIMPLE( CDABuyMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CDABuyMenu, CFolderMenuPanel );
 
 public:
-	CDABuyMenu(IViewPort *pViewPort);
-	virtual ~CDABuyMenu();
+	CDABuyMenu(Panel *parent);
 
+public:
 	virtual const char *GetName( void ) { return PANEL_BUY; }
 
 	virtual void Reset();
@@ -76,8 +76,6 @@ protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 
 private:
-	IViewPort	*m_pViewPort;
-
 	class CFolderLabel* m_pWeaponInfo;
 	class CModelPanel*  m_pWeaponImage;
 

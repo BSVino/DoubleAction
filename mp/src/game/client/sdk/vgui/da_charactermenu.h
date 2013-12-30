@@ -35,15 +35,14 @@ private:
 	float m_flBodyYaw;
 };
 
-class CDACharacterMenu : public CFolderMenu, public IViewPortPanel
+class CDACharacterMenu : public CFolderMenuPanel
 {
-private:
-	DECLARE_CLASS_SIMPLE( CDACharacterMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CDACharacterMenu, CFolderMenuPanel );
 
 public:
-	CDACharacterMenu(IViewPort *pViewPort);
-	virtual ~CDACharacterMenu();
+	CDACharacterMenu(Panel *parent);
 
+public:
 	virtual const char *GetName( void ) { return PANEL_CLASS; }
 
 	virtual void Reset();
@@ -67,8 +66,6 @@ public:
 	class CModelPanel* GetCharacterImage();
 
 private:
-	IViewPort	*m_pViewPort;
-
 	class CFolderLabel* m_pCharacterInfo;
 	class CModelPanel*  m_pCharacterImage;
 

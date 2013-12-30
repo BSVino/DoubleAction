@@ -95,10 +95,8 @@ void CCharacterButton::OnCursorEntered()
 	}
 }
 
-CDACharacterMenu::CDACharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_CLASS )
+CDACharacterMenu::CDACharacterMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_CLASS )
 {
-	m_pViewPort = pViewPort;
-
 	m_pszCharacterModel = "";
 
 	m_pCharacterInfo = new CFolderLabel(this, "CharacterInfo");
@@ -106,13 +104,11 @@ CDACharacterMenu::CDACharacterMenu(IViewPort* pViewPort) : CFolderMenu( PANEL_CL
 
 	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
 
+	SetVisible(true);
+
 	LoadControlSettings( "Resource/UI/CharacterMenu.res" );
 	InvalidateLayout();
-}
-
-//Destructor
-CDACharacterMenu::~CDACharacterMenu()
-{
+	Update();
 }
 
 void CDACharacterMenu::Reset()
@@ -129,7 +125,7 @@ void CDACharacterMenu::ShowPanel( bool bShow )
 
 	if ( bShow )
 	{
-		Activate();
+		//Activate();
 		SetMouseInputEnabled( true );
 	}
 	else
@@ -228,8 +224,6 @@ void CDACharacterMenu::Update()
 
 		pValues->deleteThis();
 	}
-
-	BaseClass::Update();
 }
 
 //-----------------------------------------------------------------------------
@@ -242,7 +236,14 @@ Panel *CDACharacterMenu::CreateControlByName( const char *controlName )
 	else if ( !Q_stricmp( "CIconPanel", controlName ) )
 		return new CIconPanel(this, "icon_panel");
 	else
-		return BaseClass::CreateControlByName( controlName );
+	{
+		Panel* pPanel = CFolderMenu::CreateControlByNameStatic(this, controlName);
+
+		if (pPanel)
+			return pPanel;
+
+		return BaseClass::CreateControlByName(controlName);
+	}
 }
 
 void CDACharacterMenu::SetVisible( bool state )
@@ -265,13 +266,11 @@ void CDACharacterMenu::OnCommand( const char *command )
 {
 	if ( Q_strncmp( command, "character ", 10 ) == 0 )
 	{
-		Close();
-
 		gViewPortInterface->ShowBackGround( false );
 
 		BaseClass::OnCommand( command );
 
-		//engine->ClientCmd( command );
+		engine->ServerCmd( command );
 	}
 	else
 		BaseClass::OnCommand(command);
@@ -304,8 +303,6 @@ void CDACharacterMenu::PaintBorder()
 void CDACharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 }
 
 Label* CDACharacterMenu::GetCharacterInfo()

@@ -1960,9 +1960,7 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }
 
@@ -1973,9 +1971,7 @@ void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }
 
@@ -1986,9 +1982,7 @@ void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
 		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
-		static_cast<CDACharacterMenu*>(gViewPortInterface->FindPanelByName(PANEL_CLASS))->MarkForUpdate();
-		static_cast<CDABuyMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY))->MarkForUpdate();
-		static_cast<CDASkillMenu*>(gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT))->MarkForUpdate();
+		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }
 

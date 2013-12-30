@@ -50,6 +50,7 @@
 #include "da_charactermenu.h"
 #include "sdk_mapinfo.h"
 #include "da_menu_background.h"
+#include "folder_gui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -242,17 +243,9 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 		newpanel = new CSDKTeamMenu( this );
 	}
 #endif
-	else if ( Q_strcmp( PANEL_BUY, szPanelName) == 0 )
+	else if ( Q_strcmp( PANEL_FOLDER, szPanelName) == 0 )
 	{
-		newpanel = new CDABuyMenu( this );
-	}
-	else if ( Q_strcmp( PANEL_BUY_EQUIP_CT, szPanelName) == 0 )
-	{
-		newpanel = new CDASkillMenu( this );
-	}
-	else if ( Q_strcmp( PANEL_CLASS, szPanelName) == 0 )
-	{
-		newpanel = new CDACharacterMenu( this );
+		newpanel = new CFolderMenu( this );
 	}
 	else
 	{
@@ -277,9 +270,9 @@ void SDKViewport::CreateDefaultPanels( void )
 #if defined ( SDK_USE_TEAMS )
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );
 #endif
-	AddNewPanel( CreatePanelByName( PANEL_BUY ), "PANEL_BUY" );
-	AddNewPanel( CreatePanelByName( PANEL_BUY_EQUIP_CT ), "PANEL_BUY_EQUIP_CT" );
-	AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );
+
+	AddNewPanel( CreatePanelByName( PANEL_FOLDER ), "PANEL_FOLDER" );
+
 	BaseClass::CreateDefaultPanels();
 }
 

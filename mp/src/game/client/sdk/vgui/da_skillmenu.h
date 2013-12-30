@@ -32,15 +32,14 @@ private:
 	char m_szSkillName[100];
 };
 
-class CDASkillMenu : public CFolderMenu, public IViewPortPanel
+class CDASkillMenu : public CFolderMenuPanel
 {
-private:
-	DECLARE_CLASS_SIMPLE( CDASkillMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CDASkillMenu, CFolderMenuPanel );
 
 public:
-	CDASkillMenu(IViewPort *pViewPort);
-	virtual ~CDASkillMenu();
+	CDASkillMenu(Panel *parent);
 
+public:
 	virtual const char *GetName( void ) { return PANEL_BUY_EQUIP_CT; }
 
 	virtual void Reset() {};
@@ -62,8 +61,6 @@ public:
 	CPanelTexture*     GetSkillIcon();
 
 private:
-	IViewPort	*m_pViewPort;
-
 	ButtonCode_t m_iSkillMenuKey;
 
 	CFolderLabel*      m_pSkillInfo;

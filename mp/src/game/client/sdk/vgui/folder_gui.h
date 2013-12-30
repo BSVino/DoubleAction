@@ -3,25 +3,45 @@
 #include <vgui_controls/Label.h>
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Button.h>
+#include <game/client/iviewport.h>
+
+#include "da.h"
 
 namespace vgui
 {
 	class CCheckButton;
 }
 
-class CFolderMenu : public vgui::Frame
+class CFolderMenuPanel : public vgui::EditablePanel
+{
+private:
+	DECLARE_CLASS_SIMPLE( CFolderMenuPanel, vgui::EditablePanel );
+
+public:
+	CFolderMenuPanel(Panel *parent, const char* pszName) : vgui::EditablePanel( parent, pszName ) {}
+
+public:
+	class CFolderMenu* GetFolderMenu();
+};
+
+class CFolderMenu : public vgui::Frame, public IViewPortPanel
 {
 private:
 	DECLARE_CLASS_SIMPLE( CFolderMenu, vgui::Frame );
 
 public:
-	CFolderMenu(const char* pszName);
+	CFolderMenu(IViewPort *pViewPort);
 	virtual ~CFolderMenu();
 
+public:
+	virtual const char *GetName( void ) { return PANEL_FOLDER; }
+
+	virtual void Reset();
 	void MarkForUpdate() { m_bNeedsUpdate = true; }
 	virtual void Update( void );
 	void MoveToCenterOfScreen();
 	virtual Panel *CreateControlByName( const char *controlName );
+	static Panel* CreateControlByNameStatic( vgui::Panel* pParent, const char *controlName );
 	virtual void ShowPanel(bool bShow);
 	void OnCommand( const char *command );
 	virtual void OnTick( void );
@@ -34,6 +54,8 @@ public:
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
 	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
+
+	void ShowPage(const char* pszPage);
 
 protected:
 	virtual void PaintBackground();
@@ -49,6 +71,8 @@ private:
 	vgui::CheckButton*  m_pSuicideOption;
 
 	char                m_szCharacter[100];
+
+	CFolderMenuPanel*   m_pPage;
 };
 
 class CFolderLabel : public vgui::Label

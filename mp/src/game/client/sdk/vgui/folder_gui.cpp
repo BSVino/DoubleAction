@@ -11,10 +11,16 @@
 
 #include "viewport_panel_names.h"
 #include "basemodelpanel.h"
+#include "game/client/iviewport.h"
+#include "clientmode_shared.h"
 
 #include "ammodef.h"
 #include "c_sdk_player.h"
 #include "sdk_gamerules.h"
+
+#include "da_buymenu.h"
+#include "da_charactermenu.h"
+#include "da_skillmenu.h"
 
 // Using std version
 #undef min
@@ -27,9 +33,14 @@
 
 using namespace vgui;
 
+CFolderMenu* CFolderMenuPanel::GetFolderMenu()
+{
+	return dynamic_cast<CFolderMenu*>(GetParent());
+}
+
 ConVar hud_buyautokill("hud_buyautokill", "0");
 
-CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
+CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 {
 	m_bNeedsUpdate = false;
 
@@ -53,6 +64,11 @@ CFolderMenu::CFolderMenu(const char* pszName) : Frame( null, pszName )
 	// hide the system buttons
 	SetTitleBarVisible( false );
 	SetProportional(true);
+
+	LoadControlSettings( "Resource/UI/Folder.res" );
+	InvalidateLayout();
+
+	m_pPage = NULL;
 }
 
 //Destructor
@@ -60,10 +76,25 @@ CFolderMenu::~CFolderMenu()
 {
 }
 
+void CFolderMenu::Reset()
+{
+}
+
 void CFolderMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
 		m_pSuicideOption->SetSelected( hud_buyautokill.GetBool() );
+
+	if ( bShow )
+	{
+		Activate();
+		SetMouseInputEnabled( true );
+	}
+	else
+	{
+		SetVisible( false );
+		SetMouseInputEnabled( false );
+	}
 }
 
 void CFolderMenu::MoveToCenterOfScreen()
@@ -75,16 +106,26 @@ void CFolderMenu::MoveToCenterOfScreen()
 
 Panel *CFolderMenu::CreateControlByName( const char *controlName )
 {
-	if (FStrEq(controlName, "FolderLabel"))
-		return new CFolderLabel( this, NULL );
+	Panel* pPanel = CreateControlByNameStatic(this, controlName);
 
-	if (FStrEq(controlName, "PanelTexture"))
-		return new CPanelTexture( this, NULL );
-
-	if (FStrEq(controlName, "ImageButton"))
-		return new CImageButton( this, NULL );
+	if (pPanel)
+		return pPanel;
 
 	return BaseClass::CreateControlByName(controlName);
+}
+
+Panel *CFolderMenu::CreateControlByNameStatic( vgui::Panel* pParent, const char *controlName )
+{
+	if (FStrEq(controlName, "FolderLabel"))
+		return new CFolderLabel( pParent, NULL );
+
+	if (FStrEq(controlName, "PanelTexture"))
+		return new CPanelTexture( pParent, NULL );
+
+	if (FStrEq(controlName, "ImageButton"))
+		return new CImageButton( pParent, NULL );
+
+	return NULL;
 }
 
 static ConVar hud_playerpreview_x("hud_playerpreview_x", "120", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
@@ -163,16 +204,6 @@ void CFolderMenu::Update()
 			sLabel << " x" << pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i) << "\n";
 		else
 			sLabel << "\n";
-
-		if (pWeaponInfo->szAmmo1[0] && !FStrEq(pWeaponInfo->szAmmo1, "grenades"))
-		{
-			int iAmmo = std::min(pWeaponInfo->iMaxClip1*pWeaponInfo->m_iDefaultAmmoClips, GetAmmoDef()->GetAmmoOfIndex(GetAmmoDef()->Index(pWeaponInfo->szAmmo1))->pMaxCarry);
-			int iMags = iAmmo/pWeaponInfo->iMaxClip1;
-			sLabel << "  " << pWeaponInfo->szAmmo1 << " x" << iAmmo << "\n";
-			sLabel << "  " << pWeaponInfo->iMaxClip1 << " round mag x" << iMags << "\n";
-		}
-
-		sLabel << "\n";
 
 		if (iArmamentsOn1 >= 2)
 			sLabel2 << sLabel.str();
@@ -351,6 +382,18 @@ void CFolderMenu::ApplySchemeSettings( IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
+}
+
+void CFolderMenu::ShowPage(const char* pszPage)
+{
+	delete m_pPage;
+
+	if (FStrEq(pszPage, PANEL_CLASS))
+		m_pPage = new CDACharacterMenu(this);
+	else if (FStrEq(pszPage, PANEL_BUY))
+		m_pPage = new CDABuyMenu(this);
+	else if (FStrEq(pszPage, PANEL_BUY_EQUIP_CT))
+		m_pPage = new CDASkillMenu(this);
 }
 
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)
@@ -649,4 +692,33 @@ void CImageButton::ApplySchemeSettings(IScheme *pScheme)
 
 	SetImage( m_szImageName );
 	SetPaintBorderEnabled(false);
+}
+
+void __MsgFunc_FolderPanel( bf_read &msg )
+{
+	char panelname[2048]; 
+
+	msg.ReadString( panelname, sizeof(panelname) );
+
+	IViewPortPanel *viewport = gViewPortInterface->FindPanelByName( "folder" );
+
+	CFolderMenu* pFolder = dynamic_cast<CFolderMenu*>(viewport);
+
+	if ( !pFolder )
+		return;
+
+	gViewPortInterface->ShowPanel( (IViewPortPanel*)pFolder, true );
+	pFolder->ShowPage(panelname);
+}
+
+CON_COMMAND(hud_reload_folder, "Reload resource for folder menu.")
+{
+	IViewPortPanel *pViewportPanel = gViewPortInterface->FindPanelByName( PANEL_BUY );
+	CFolderMenu *pPanel = dynamic_cast<CFolderMenu*>(pViewportPanel);
+	if (!pPanel)
+		return;
+
+	pPanel->LoadControlSettings( "Resource/UI/Folder.res" );
+	pPanel->InvalidateLayout();
+	pPanel->Update();
 }

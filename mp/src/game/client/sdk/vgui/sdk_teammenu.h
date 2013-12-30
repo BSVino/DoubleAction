@@ -39,7 +39,7 @@ private:
 	int m_iSkin;
 };
 
-class CSDKTeamMenu : public CFolderMenu, public IViewPortPanel
+class CSDKTeamMenu : public CFolderMenu
 {
 private:
 	DECLARE_CLASS_SIMPLE( CSDKTeamMenu, CFolderMenu );

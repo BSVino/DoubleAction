@@ -79,7 +79,7 @@ void CTeamButton::OnCursorEntered()
 	pParent->SetCharacterSkin(m_iSkin);
 }
 
-CSDKTeamMenu::CSDKTeamMenu(IViewPort *pViewPort) : CFolderMenu( PANEL_TEAM )
+CSDKTeamMenu::CSDKTeamMenu(IViewPort *pViewPort) : CFolderMenu( pViewPort )
 {
 	m_pViewPort = pViewPort;
 

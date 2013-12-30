@@ -156,15 +156,7 @@ bool ValidPlayerConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 		return false;
 
 	// Choose character screen
-	if (gViewPortInterface->FindPanelByName(PANEL_CLASS)->IsVisible())
-		return false;
-
-	// Equipment screen
-	if (gViewPortInterface->FindPanelByName(PANEL_BUY)->IsVisible())
-		return false;
-
-	// Style skill screen
-	if (gViewPortInterface->FindPanelByName(PANEL_BUY_EQUIP_CT)->IsVisible())
+	if (gViewPortInterface->FindPanelByName(PANEL_FOLDER)->IsVisible())
 		return false;
 
 	return true;
