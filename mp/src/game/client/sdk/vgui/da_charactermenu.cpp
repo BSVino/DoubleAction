@@ -84,22 +84,21 @@ void CCharacterButton::OnCursorEntered()
 		return;
 
 	pParent->SetCharacterPreview(m_szCharacter, m_szSequence, m_szWeaponModel, m_flBodyYaw, m_flBodyPitch);
+}
 
-	vgui::Label* pInfoLabel = pParent->GetCharacterInfo();
-	if (pInfoLabel)
-	{
-		if (m_szCharacter[0])
-			pInfoLabel->SetText((std::string("#characterinfo_") + m_szCharacter).c_str());
-		else
-			pInfoLabel->SetText(m_szCharacter);
-	}
+void CCharacterButton::OnCursorExited()
+{
+	BaseClass::OnCursorExited();
+
+	CDACharacterMenu* pParent = dynamic_cast<CDACharacterMenu*>(GetParent());
+	if (!pParent)
+		return;
+
+	pParent->SetCharacterPreview(NULL, NULL, NULL, 0, 0);
 }
 
 CDACharacterMenu::CDACharacterMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_CLASS )
 {
-	m_pszCharacterModel = "";
-
-	m_pCharacterInfo = new CFolderLabel(this, "CharacterInfo");
 	m_pCharacterImage = new CModelPanel(this, "CharacterImage");
 
 	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
@@ -122,7 +121,6 @@ void CDACharacterMenu::ShowPanel( bool bShow )
 	if ( bShow )
 		m_iCharacterMenuKey = gameuifuncs->GetButtonCodeForBind( "character" );
 
-	m_pCharacterInfo->SetText("");
 	m_pCharacterImage->SwapModel("");
 
 	if ( bShow )
@@ -154,78 +152,12 @@ void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-static ConVar hud_characterpreview_x("hud_characterpreview_x", "220", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-static ConVar hud_characterpreview_z("hud_characterpreview_z", "-40", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-
 void CDACharacterMenu::Update()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)
 		return;
-
-	const char szPlayerPreviewTemplate[] =
-		"	\"model\"\n"
-		"	{\n"
-		"		\"spotlight\"	\"1\"\n"
-		"		\"modelname\"	\"models/player/frank.mdl\"\n"
-		"		\"origin_z\"	\"-35\"\n"
-		"		\"origin_y\"	\"0\"\n"
-		"		\"origin_x\"	\"130\"\n"
-		"		\"angles_y\"	\"180\"\n"
-
-		"		\"animation\"\n"
-		"		{\n"
-		"			\"sequence\"		\"m1911_idle\"\n"
-		"			\"pose_parameters\"\n"
-		"			{\n"
-		"				\"body_yaw\" \"25.0\"\n"
-		"				\"body_pitch\" \"-30.0\"\n"
-		"			}\n"
-		"		}\n"
-			
-		"		\"attached_model\"\n"
-		"		{\n"
-		"			\"modelname\" \"models/weapons/m1911.mdl\"\n"
-		"		}\n"
-		"	}";
-
-	if (strcmp(m_pszCharacterModel, "random") == 0)
-		m_pCharacterImage->SwapModel("");
-	else if (m_pszCharacterModel[0])
-	{
-		KeyValues* pValues = new KeyValues("preview");
-		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
-
-		std::string sCharacter = std::string("models/player/") + m_pszCharacterModel + ".mdl";
-		pValues->SetString("modelname", sCharacter.c_str());
-
-		pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
-		pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());
-		pValues->SetFloat("origin_z", hud_characterpreview_z.GetFloat());
-
-		KeyValues* pAnimation = pValues->FindKey("animation");
-		if (pAnimation)
-		{
-			pAnimation->SetString("sequence", m_pszCharacterSequence);
-
-			KeyValues* pPoseParameters = pAnimation->FindKey("pose_parameters");
-			if (pPoseParameters)
-			{
-				pPoseParameters->SetFloat("body_pitch", m_flBodyPitch);
-				pPoseParameters->SetFloat("body_yaw", m_flBodyYaw);
-			}
-		}
-
-		KeyValues* pWeapon = pValues->FindKey("attached_model");
-		if (pWeapon)
-			pWeapon->SetString("modelname", m_pszCharacterWeaponModel);
-
-		m_pCharacterImage->ParseModelInfo(pValues);
-
-		pValues->deleteThis();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -282,13 +214,7 @@ void CDACharacterMenu::OnCommand( const char *command )
 
 void CDACharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
-	m_pszCharacterModel = pszPreview;
-	m_pszCharacterSequence = pszSequence;
-	m_pszCharacterWeaponModel = pszWeaponModel;
-	m_flBodyPitch = flPitch;
-	m_flBodyYaw = flYaw;
-
-	Update();
+	GetFolderMenu()->SetCharacterPreview(pszPreview, pszSequence, pszWeaponModel, flYaw, flPitch);
 }
 
 void CDACharacterMenu::PaintBackground()
@@ -307,9 +233,4 @@ void CDACharacterMenu::PaintBorder()
 void CDACharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-}
-
-Label* CDACharacterMenu::GetCharacterInfo()
-{
-	return m_pCharacterInfo;
 }

@@ -254,6 +254,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
 	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
+	SendPropBool( SENDINFO( m_bCharacterChosen ) ),
 
 	SendPropEHandle( SENDINFO( m_hBriefcase ) ),
 
@@ -399,6 +400,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iszCharacter = NULL_STRING;
+	m_bCharacterChosen = false;
 }
 
 
@@ -4514,6 +4516,8 @@ void CC_Character(const CCommand& args)
 					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
 			}
 
+			pPlayer->m_bCharacterChosen = true;
+
 			return;
 		}
 
@@ -4528,6 +4532,8 @@ void CC_Character(const CCommand& args)
 					else
 						pPlayer->State_Transition( STATE_BUYINGWEAPONS );
 				}
+
+				pPlayer->m_bCharacterChosen = true;
 
 				return;
 			}

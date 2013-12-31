@@ -66,7 +66,11 @@ public:
 
 	void ShowPage(const char* pszPage);
 
-	void ReloadControlSettings(bool bUpdate = true);
+	bool ShouldShowWeaponsAndSkills();
+
+	void ReloadControlSettings(bool bUpdate = true, bool bReloadPage = true);
+
+	void SetCharacterPreview(const char* pszCharacter, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch);
 
 protected:
 	virtual void PaintBackground();
@@ -84,6 +88,12 @@ private:
 	char                m_szCharacter[100];
 
 	CFolderMenuPanel*   m_pPage;
+
+	char        m_szPreviewCharacter[100];
+	char        m_szPreviewSequence[100];
+	char        m_szPreviewWeaponModel[100];
+	float       m_flBodyYaw;
+	float       m_flBodyPitch;
 };
 
 class CFolderLabel : public vgui::Label

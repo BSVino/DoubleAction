@@ -510,6 +510,7 @@ public:
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );
+	CNetworkVar( bool, m_bCharacterChosen );
 
 	CNetworkHandle(CWeaponSDKBase, m_hSwitchFrom);
 

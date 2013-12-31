@@ -25,6 +25,7 @@ public:
 	virtual void ApplySettings( KeyValues *resourceData );
 
 	virtual void OnCursorEntered();
+	virtual void OnCursorExited();
 
 private:
 	char m_szCharacter[100];
@@ -62,20 +63,12 @@ public:
 
 	void SetCharacterPreview( const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch );
 
-	vgui::Label*       GetCharacterInfo();
 	class CModelPanel* GetCharacterImage();
 
 private:
-	class CFolderLabel* m_pCharacterInfo;
 	class CModelPanel*  m_pCharacterImage;
 
 	ButtonCode_t m_iCharacterMenuKey;
-
-	const char*	m_pszCharacterModel;
-	const char*	m_pszCharacterSequence;
-	const char*	m_pszCharacterWeaponModel;
-	float		m_flBodyYaw;
-	float		m_flBodyPitch;
 
 protected:
 	// vgui overrides for rounded corner background

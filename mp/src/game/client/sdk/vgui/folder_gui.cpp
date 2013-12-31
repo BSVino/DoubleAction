@@ -45,6 +45,9 @@ CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 	m_bNeedsUpdate = false;
 
 	m_szCharacter[0] = '\0';
+	m_szPreviewCharacter[0] = '\0';
+	m_szPreviewSequence[0] = '\0';
+	m_szPreviewWeaponModel[0] = '\0';
 
 	// initialize dialog
 	SetTitle("", true);
@@ -132,9 +135,13 @@ static ConVar hud_playerpreview_x("hud_playerpreview_x", "120", FCVAR_CHEAT|FCVA
 static ConVar hud_playerpreview_y("hud_playerpreview_y", "-5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
+static ConVar hud_characterpreview_x("hud_characterpreview_x", "300", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_y("hud_characterpreview_y", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar hud_characterpreview_z("hud_characterpreview_z", "-35", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CFolderMenu::Update()
 {
-	ReloadControlSettings(false);
+	ReloadControlSettings(false, false);
 
 	MoveToCenterOfScreen();
 
@@ -147,18 +154,33 @@ void CFolderMenu::Update()
 	if (!pPlayer)
 		return;
 
-	Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
+	if (pPlayer->CharacterHasBeenChosen())
+		Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
 
-	if (!m_pPage || FStrEq(m_pPage->GetName(), "buy") && !pPlayer->GetLoadoutWeight())
+	if (ShouldShowWeaponsAndSkills())
+		m_pProfileInfo->SetVisible(false);
+	else
 	{
 		m_pProfileInfo->SetVisible(true);
-		if (m_szCharacter[0])
+		if (m_szPreviewCharacter[0])
+			m_pProfileInfo->SetText((std::string("#DA_CharacterInfo_") + m_szPreviewCharacter).c_str());
+		else if (m_szCharacter[0])
 			m_pProfileInfo->SetText((std::string("#DA_CharacterInfo_") + m_szCharacter).c_str());
 		else
 			m_pProfileInfo->SetText("#DA_CharacterInfo_None");
 	}
-	else
-		m_pProfileInfo->SetVisible(false);
+
+	CFolderLabel *pCharacterName = dynamic_cast<CFolderLabel *>(FindChildByName("AgentName"));
+	if (pCharacterName)
+	{
+		std::string sCharacter;
+		if (m_szPreviewCharacter[0])
+			sCharacter = std::string("#DA_Character_") + m_szPreviewCharacter;
+		else if (m_szCharacter[0])
+			sCharacter = std::string("#DA_Character_") + m_szCharacter;
+
+		pCharacterName->SetText(sCharacter.c_str());
+	}
 
 	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
 	if (pSlotsLabel)
@@ -258,18 +280,41 @@ void CFolderMenu::Update()
 	if (eFirst)
 		pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
 
-	if (m_szCharacter[0] && pPlayerPreview)
+	if ((m_szCharacter[0] || m_szPreviewCharacter[0]) && pPlayerPreview)
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
 
-		pValues->SetString("modelname", VarArgs("models/player/%s.mdl", m_szCharacter));
+		const char* pCharacter = m_szCharacter;
+		if (m_szPreviewCharacter[0])
+			pCharacter = m_szPreviewCharacter;
 
-		pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
-		pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
-		pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
+		pValues->SetString("modelname", VarArgs("models/player/%s.mdl", pCharacter));
 
-		if (pWeaponInfo)
+		if (ShouldShowWeaponsAndSkills())
+		{
+			pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
+			pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
+			pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
+		}
+		else
+		{
+			pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
+			pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());
+			pValues->SetFloat("origin_z", hud_characterpreview_z.GetFloat());
+		}
+
+		if (m_pPage && FStrEq(m_pPage->GetName(), "class") && m_szPreviewSequence[0] && m_szPreviewWeaponModel[0])
+		{
+			KeyValues* pAnimation = pValues->FindKey("animation");
+			if (pAnimation)
+				pAnimation->SetString("sequence", m_szPreviewSequence);
+
+			KeyValues* pWeapon = pValues->FindKey("attached_model");
+			if (pWeapon)
+				pWeapon->SetString("modelname", m_szPreviewWeaponModel);
+		}
+		else if (pWeaponInfo)
 		{
 			KeyValues* pAnimation = pValues->FindKey("animation");
 			if (pAnimation)
@@ -406,14 +451,37 @@ void CFolderMenu::ShowPage(const char* pszPage)
 	Update();
 }
 
-void CFolderMenu::ReloadControlSettings(bool bUpdate)
+bool CFolderMenu::ShouldShowWeaponsAndSkills()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return false;
+
+	// If the player has anything, show the weapons version
+	if (pPlayer->GetLoadoutWeight())
+		return true;
+
+	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
+		return true;
+
+	if (m_pPage)
+	{
+		if (FStrEq(m_pPage->GetName(), PANEL_BUY) || FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
+			return true;
+	}
+
+	return false;
+}
+
+void CFolderMenu::ReloadControlSettings(bool bUpdate, bool bReloadPage)
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)
 		return;
 
-	if (pPlayer->GetLoadoutWeight() || (m_pPage && FStrEq(m_pPage->GetName(), "buy")))
+	if (ShouldShowWeaponsAndSkills())
 		LoadControlSettings( "Resource/UI/Folder_Weapons.res" );
 	else
 		LoadControlSettings( "Resource/UI/Folder_NoWeapons.res" );
@@ -422,12 +490,36 @@ void CFolderMenu::ReloadControlSettings(bool bUpdate)
 	if (bUpdate)
 		Update();
 
-	if (m_pPage)
+	if (m_pPage && bReloadPage)
 	{
 		m_pPage->LoadControlSettings(m_pPage->GetControlSettingsFile());
 		m_pPage->InvalidateLayout();
-		m_pPage->Update();
+		if (bUpdate)
+			m_pPage->Update();
 	}
+}
+
+void CFolderMenu::SetCharacterPreview(const char* pszCharacter, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
+{
+	if (pszCharacter)
+		strcpy(m_szPreviewCharacter, pszCharacter);
+	else
+		m_szPreviewCharacter[0] = '\0';
+
+	if (pszSequence)
+		strcpy(m_szPreviewSequence, pszSequence);
+	else
+		m_szPreviewSequence[0] = '\0';
+
+	if (pszWeaponModel)
+		strcpy(m_szPreviewWeaponModel, pszWeaponModel);
+	else
+		m_szPreviewWeaponModel[0] = '\0';
+
+	m_flBodyPitch = flPitch;
+	m_flBodyYaw = flYaw;
+
+	Update();
 }
 
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)

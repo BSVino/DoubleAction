@@ -209,6 +209,7 @@ public:
 	bool HasBriefcase() const;
 
 	const char* GetCharacter() const { return m_iszCharacter; }
+	bool CharacterHasBeenChosen() const { return m_bCharacterChosen; }
 
 	virtual void PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float fvol, bool force );
 
@@ -368,6 +369,7 @@ private:
 	float  m_flSideLerp;
 
 	char m_iszCharacter[256];
+	bool m_bCharacterChosen;
 
 	CNetworkHandle(CSDKPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
