@@ -2301,11 +2301,12 @@ void CMarksmanGoldSkinProxy::OnBind( C_BaseEntity *pEnt )
 			pWeapon = pViewModel->GetDAWeapon();
 	}
 
-	if (!pWeapon)
-		return;
+	float flBlend = 0;
+	if (pWeapon)
+		flBlend = pWeapon->GetMarksmanGold();
 
 	if (m_pDetailBlend)
-		m_pDetailBlend->SetFloatValue( pWeapon->GetMarksmanGold() );
+		m_pDetailBlend->SetFloatValue( flBlend );
 }
 
 IMaterial *CMarksmanGoldSkinProxy::GetMaterial()
