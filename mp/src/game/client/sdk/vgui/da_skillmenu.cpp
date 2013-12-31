@@ -107,9 +107,11 @@ CDASkillMenu::CDASkillMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY_
 
 	m_iSkillMenuKey = BUTTON_CODE_INVALID;
 
+	m_pszControlSettingsFile = "Resource/UI/SkillMenu.res";
+
 	SetVisible(true);
 
-	LoadControlSettings( "Resource/UI/SkillMenu.res" );
+	LoadControlSettings( m_pszControlSettingsFile );
 	InvalidateLayout();
 	Update();
 }

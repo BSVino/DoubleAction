@@ -65,7 +65,7 @@ CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 	SetTitleBarVisible( false );
 	SetProportional(true);
 
-	LoadControlSettings( "Resource/UI/Folder.res" );
+	ReloadControlSettings(false);
 	InvalidateLayout();
 
 	m_pPage = NULL;
@@ -134,6 +134,8 @@ static ConVar hud_playerpreview_z("hud_playerpreview_z", "-57", FCVAR_CHEAT|FCVA
 
 void CFolderMenu::Update()
 {
+	ReloadControlSettings(false);
+
 	MoveToCenterOfScreen();
 
 	Button *entry = dynamic_cast<Button *>(FindChildByName("ApproveButton"));
@@ -147,10 +149,16 @@ void CFolderMenu::Update()
 
 	Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
 
-	if (m_szCharacter[0])
-		m_pProfileInfo->SetText((std::string("#DA_CharacterInfo_") + m_szCharacter).c_str());
+	if (!m_pPage || FStrEq(m_pPage->GetName(), "buy") && !pPlayer->GetLoadoutWeight())
+	{
+		m_pProfileInfo->SetVisible(true);
+		if (m_szCharacter[0])
+			m_pProfileInfo->SetText((std::string("#DA_CharacterInfo_") + m_szCharacter).c_str());
+		else
+			m_pProfileInfo->SetText("#DA_CharacterInfo_None");
+	}
 	else
-		m_pProfileInfo->SetText("#DA_CharacterInfo_None");
+		m_pProfileInfo->SetVisible(false);
 
 	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
 	if (pSlotsLabel)
@@ -394,6 +402,32 @@ void CFolderMenu::ShowPage(const char* pszPage)
 		m_pPage = new CDABuyMenu(this);
 	else if (FStrEq(pszPage, PANEL_BUY_EQUIP_CT))
 		m_pPage = new CDASkillMenu(this);
+
+	Update();
+}
+
+void CFolderMenu::ReloadControlSettings(bool bUpdate)
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return;
+
+	if (pPlayer->GetLoadoutWeight() || (m_pPage && FStrEq(m_pPage->GetName(), "buy")))
+		LoadControlSettings( "Resource/UI/Folder_Weapons.res" );
+	else
+		LoadControlSettings( "Resource/UI/Folder_NoWeapons.res" );
+
+	InvalidateLayout();
+	if (bUpdate)
+		Update();
+
+	if (m_pPage)
+	{
+		m_pPage->LoadControlSettings(m_pPage->GetControlSettingsFile());
+		m_pPage->InvalidateLayout();
+		m_pPage->Update();
+	}
 }
 
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)
@@ -713,12 +747,10 @@ void __MsgFunc_FolderPanel( bf_read &msg )
 
 CON_COMMAND(hud_reload_folder, "Reload resource for folder menu.")
 {
-	IViewPortPanel *pViewportPanel = gViewPortInterface->FindPanelByName( PANEL_BUY );
+	IViewPortPanel *pViewportPanel = gViewPortInterface->FindPanelByName( PANEL_FOLDER );
 	CFolderMenu *pPanel = dynamic_cast<CFolderMenu*>(pViewportPanel);
 	if (!pPanel)
 		return;
 
-	pPanel->LoadControlSettings( "Resource/UI/Folder.res" );
-	pPanel->InvalidateLayout();
-	pPanel->Update();
+	pPanel->ReloadControlSettings();
 }

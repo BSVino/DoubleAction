@@ -128,9 +128,11 @@ CDABuyMenu::CDABuyMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY )
 
 	m_iBuyMenuKey = BUTTON_CODE_INVALID;
 
+	m_pszControlSettingsFile = "Resource/UI/BuyMenu.res";
+
 	SetVisible(true);
 
-	LoadControlSettings( "Resource/UI/BuyMenu.res" );
+	LoadControlSettings( m_pszControlSettingsFile );
 	InvalidateLayout();
 	Update();
 }
@@ -166,13 +168,20 @@ void CDABuyMenu::OnCommand( const char *command )
 	BaseClass::OnCommand(command);
 
 	if (V_strncasecmp("buy ", command, 4) == 0)
+	{
 		engine->ServerCmd(command);
+
+		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
+			GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
+		else
+			GetFolderMenu()->Close();
+	}
 
 	if (FStrEq(command, "close"))
 	{
 		// Automatically bring up the next menu if the player is dead.
 		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
-			engine->ServerCmd( "setskill" );
+			GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
 	}
 }
 
@@ -181,7 +190,8 @@ void CDABuyMenu::OnKeyCodePressed( KeyCode code )
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
 		engine->ClientCmd("buy random");
-		OnCommand("close");
+
+		GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
 	}
 	else if ( m_iBuyMenuKey != BUTTON_CODE_INVALID && m_iBuyMenuKey == code )
 	{
@@ -426,16 +436,4 @@ vgui::Label* CDABuyMenu::GetWeaponInfo()
 CModelPanel* CDABuyMenu::GetWeaponImage()
 {
 	return m_pWeaponImage;
-}
-
-CON_COMMAND(hud_reload_buy, "Reload resource for buy menu.")
-{
-	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_BUY );
-	CDABuyMenu *pBuy = dynamic_cast<CDABuyMenu*>(pPanel);
-	if (!pBuy)
-		return;
-
-	pBuy->LoadControlSettings( "Resource/UI/BuyMenu.res" );
-	pBuy->InvalidateLayout();
-	pBuy->Update();
 }

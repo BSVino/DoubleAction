@@ -104,9 +104,11 @@ CDACharacterMenu::CDACharacterMenu(Panel *parent) : CFolderMenuPanel( parent, PA
 
 	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
 
+	m_pszControlSettingsFile = "Resource/UI/CharacterMenu.res";
+
 	SetVisible(true);
 
-	LoadControlSettings( "Resource/UI/CharacterMenu.res" );
+	LoadControlSettings( m_pszControlSettingsFile );
 	InvalidateLayout();
 	Update();
 }
@@ -271,6 +273,8 @@ void CDACharacterMenu::OnCommand( const char *command )
 		BaseClass::OnCommand( command );
 
 		engine->ServerCmd( command );
+
+		GetFolderMenu()->ShowPage( PANEL_BUY );
 	}
 	else
 		BaseClass::OnCommand(command);
@@ -308,16 +312,4 @@ void CDACharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 Label* CDACharacterMenu::GetCharacterInfo()
 {
 	return m_pCharacterInfo;
-}
-
-CON_COMMAND(hud_reload_character, "Reload resource for character menu.")
-{
-	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_CLASS );
-	CDACharacterMenu *pCharacter = dynamic_cast<CDACharacterMenu*>(pPanel);
-	if (!pCharacter)
-		return;
-	
-	pCharacter->LoadControlSettings( "Resource/UI/CharacterMenu.res" );
-	pCharacter->InvalidateLayout();
-	pCharacter->Update();
 }

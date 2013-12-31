@@ -18,10 +18,19 @@ private:
 	DECLARE_CLASS_SIMPLE( CFolderMenuPanel, vgui::EditablePanel );
 
 public:
-	CFolderMenuPanel(Panel *parent, const char* pszName) : vgui::EditablePanel( parent, pszName ) {}
+	CFolderMenuPanel(Panel *parent, const char* pszName) : vgui::EditablePanel( parent, pszName )
+	{
+		m_pszControlSettingsFile = NULL;
+	}
 
 public:
+	virtual void Update() {}
+
 	class CFolderMenu* GetFolderMenu();
+	virtual const char* GetControlSettingsFile() { return m_pszControlSettingsFile; }
+
+protected:
+	const char* m_pszControlSettingsFile;
 };
 
 class CFolderMenu : public vgui::Frame, public IViewPortPanel
@@ -56,6 +65,8 @@ public:
 	MESSAGE_FUNC_PTR( OnSuicideOptionChanged, "CheckButtonChecked", panel );
 
 	void ShowPage(const char* pszPage);
+
+	void ReloadControlSettings(bool bUpdate = true);
 
 protected:
 	virtual void PaintBackground();
