@@ -115,7 +115,7 @@ CBasePlayer *BotPutInServer( bool bFrozen )
 
 	SDKWeaponID eWeapon = SDK_WEAPON_NONE;
 	
-	while (eWeapon == SDK_WEAPON_NONE || eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_CROWBAR)
+	while (eWeapon == SDK_WEAPON_NONE || eWeapon == SDK_WEAPON_BRAWL)
 		eWeapon = (SDKWeaponID)RandomInt(1, WEAPON_MAX-1);
 
 	pPlayer->AddToLoadout(eWeapon);

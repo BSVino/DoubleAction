@@ -79,16 +79,15 @@ static const char * s_WeaponAliasInfo[] =
 	"none",		// WEAPON_NONE
 	"fal",		// SDK_WEAPON_FAL
 	"mossberg", // SDK_WEAPON_MOSSBERG
+	"m16",
 	"mac10",    // SDK_WEAPON_MAC10
 	"mp5k",		// SDK_WEAPON_MP5
-	"m1911",	// SDK_WEAPON_M1911
-	"beretta",  // SDK_WEAPON_BERETTA
-	"crowbar",	// SDK_WEAPON_CROWBAR
-	"grenade",	// SDK_WEAPON_GRENADE
-	"brawl",	// SDK_WEAPON_BRAWL
 	"akimbo_m1911",
 	"akimbo_beretta",
-	"m16",
+	"m1911",	// SDK_WEAPON_M1911
+	"beretta",  // SDK_WEAPON_BERETTA
+	"grenade",	// SDK_WEAPON_GRENADE
+	"brawl",	// SDK_WEAPON_BRAWL
 	NULL,		// WEAPON_NONE
 };
 

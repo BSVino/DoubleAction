@@ -66,7 +66,9 @@ public:
 
 	void ShowPage(const char* pszPage);
 
-	bool ShouldShowWeaponsAndSkills();
+	bool ShouldShowCharacterOnly();
+	bool ShouldShowCharacterAndWeapons();
+	bool IsLoadoutComplete();
 
 	void ReloadControlSettings(bool bUpdate = true, bool bReloadPage = true);
 
@@ -105,7 +107,12 @@ public:
 	CFolderLabel(vgui::Panel *parent, const char *panelName);
 
 public:
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void ApplySettings(KeyValues *inResourceData);
+
+	virtual void Paint();
+
+private:
+	bool m_bUnderline;
 };
 
 class CPanelTexture : public vgui::Panel

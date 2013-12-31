@@ -206,6 +206,9 @@ void CDACharacterMenu::OnCommand( const char *command )
 
 		engine->ServerCmd( command );
 
+		if (C_SDKPlayer::GetLocalSDKPlayer())
+			C_SDKPlayer::GetLocalSDKPlayer()->CharacterChosen();
+
 		GetFolderMenu()->ShowPage( PANEL_BUY );
 	}
 	else

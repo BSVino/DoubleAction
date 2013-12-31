@@ -109,6 +109,9 @@ CDASkillMenu::CDASkillMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY_
 
 	m_pszControlSettingsFile = "Resource/UI/SkillMenu.res";
 
+	if (C_SDKPlayer::GetLocalSDKPlayer())
+		C_SDKPlayer::GetLocalSDKPlayer()->SkillsTabSeen();
+
 	SetVisible(true);
 
 	LoadControlSettings( m_pszControlSettingsFile );

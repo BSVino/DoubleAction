@@ -170,7 +170,11 @@ void CDABuyMenu::OnCommand( const char *command )
 	if (V_strncasecmp("buy ", command, 4) == 0)
 	{
 		engine->ServerCmd(command);
+		Update();
+	}
 
+	if (V_strncasecmp("buy random", command, 10) == 0)
+	{
 		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
 			GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
 		else
@@ -219,21 +223,9 @@ void CDABuyMenu::Update()
 	if (entry)
 		entry->SetVisible(true);
 
-	CFolderLabel* pWeaponType = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponType"));
-	int iWeaponTypeX, iWeaponTypeY;
-	pWeaponType->GetPos(iWeaponTypeX, iWeaponTypeY);
-
-	CFolderLabel* pWeaponAmmo = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponAmmo"));
-	int iWeaponAmmoX, iWeaponAmmoY;
-	pWeaponAmmo->GetPos(iWeaponAmmoX, iWeaponAmmoY);
-
 	CFolderLabel* pWeaponWeight = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponWeight"));
 	int iWeaponWeightX, iWeaponWeightY;
 	pWeaponWeight->GetPos(iWeaponWeightX, iWeaponWeightY);
-
-	CFolderLabel* pWeaponQuantity = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponQuantity"));
-	int iWeaponQuantityX, iWeaponQuantityY;
-	pWeaponQuantity->GetPos(iWeaponQuantityX, iWeaponQuantityY);
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -334,26 +326,6 @@ void CDABuyMenu::Update()
 
 		CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(pPanel->GetWeaponID());
 
-		m_apTypes.AddToTail(new CFolderLabel(this, NULL));
-
-		const char* pWeaponType = WeaponTypeToAlias(pInfo->m_eWeaponType);
-		if (pWeaponType)
-			m_apTypes.Tail()->SetText((std::string("#DA_WeaponType_") + pWeaponType).c_str());
-		else
-			m_apTypes.Tail()->SetText("#DA_WeaponType_None");
-		m_apTypes.Tail()->SetPos(iWeaponTypeX, iWeaponY);
-		m_apTypes.Tail()->SetZPos(-5);
-		m_apTypes.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));
-		m_apTypes.Tail()->SetScheme("FolderScheme");
-
-		m_apAmmos.AddToTail(new CFolderLabel(this, NULL));
-
-		m_apAmmos.Tail()->SetText((std::string("#DA_Ammo_") + pInfo->szAmmo1).c_str());
-		m_apAmmos.Tail()->SetPos(iWeaponAmmoX, iWeaponY);
-		m_apAmmos.Tail()->SetZPos(-5);
-		m_apAmmos.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));
-		m_apAmmos.Tail()->SetScheme("FolderScheme");
-
 		m_apWeights.AddToTail(new CFolderLabel(this, NULL));
 
 		std::ostringstream sWeight;
@@ -363,19 +335,6 @@ void CDABuyMenu::Update()
 		m_apWeights.Tail()->SetZPos(-5);
 		m_apWeights.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderMedium"));
 		m_apWeights.Tail()->SetScheme("FolderScheme");
-
-		if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()))
-		{
-			m_apQuantities.AddToTail(new CFolderLabel(this, NULL));
-
-			std::ostringstream sCount;
-			sCount << pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID());
-			m_apQuantities.Tail()->SetText(sCount.str().c_str());
-			m_apQuantities.Tail()->SetPos(iWeaponQuantityX, iWeaponY);
-			m_apQuantities.Tail()->SetZPos(-5);
-			m_apQuantities.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderMedium"));
-			m_apQuantities.Tail()->SetScheme("FolderScheme");
-		}
 	}
 }
 

@@ -154,12 +154,10 @@ void CFolderMenu::Update()
 	if (!pPlayer)
 		return;
 
-	if (pPlayer->CharacterHasBeenChosen())
+	if (pPlayer->HasCharacterBeenChosen())
 		Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
 
-	if (ShouldShowWeaponsAndSkills())
-		m_pProfileInfo->SetVisible(false);
-	else
+	if (ShouldShowCharacterOnly())
 	{
 		m_pProfileInfo->SetVisible(true);
 		if (m_szPreviewCharacter[0])
@@ -169,6 +167,8 @@ void CFolderMenu::Update()
 		else
 			m_pProfileInfo->SetText("#DA_CharacterInfo_None");
 	}
+	else
+		m_pProfileInfo->SetVisible(false);
 
 	CFolderLabel *pCharacterName = dynamic_cast<CFolderLabel *>(FindChildByName("AgentName"));
 	if (pCharacterName)
@@ -220,7 +220,36 @@ void CFolderMenu::Update()
 			continue;
 
 		if (!eFirst)
+		{
 			eFirst = (SDKWeaponID)i;
+
+			if (pPlayer->GetLoadoutWeaponCount(eFirst) > 1)
+			{
+				CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
+				if (pWeaponInfo && pWeaponInfo->m_szAkimbo[0])
+				{
+					// If we have two of this weapon and this weapon has an akimbo, use the akimbo instead.
+					eFirst = AliasToWeaponID(pWeaponInfo->m_szAkimbo);
+				}
+			}
+		}
+		else
+		{
+			if (pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i) > 1)
+			{
+				CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+				if (pWeaponInfo && pWeaponInfo->m_szAkimbo[0])
+				{
+					SDKWeaponID eAkimbo = AliasToWeaponID(pWeaponInfo->m_szAkimbo);
+					if (eAkimbo < eFirst)
+					{
+						// If we have this akimbo and it's preferred to the current weapon, use it instead.
+						// (Preferred means lower weapon ID.)
+						eFirst = eAkimbo;
+					}
+				}
+			}
+		}
 
 		std::wostringstream sLabel;
 
@@ -291,20 +320,20 @@ void CFolderMenu::Update()
 
 		pValues->SetString("modelname", VarArgs("models/player/%s.mdl", pCharacter));
 
-		if (ShouldShowWeaponsAndSkills())
-		{
-			pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
-			pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
-			pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
-		}
-		else
+		if (ShouldShowCharacterOnly() || ShouldShowCharacterAndWeapons())
 		{
 			pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
 			pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());
 			pValues->SetFloat("origin_z", hud_characterpreview_z.GetFloat());
 		}
+		else
+		{
+			pValues->SetFloat("origin_x", hud_playerpreview_x.GetFloat());
+			pValues->SetFloat("origin_y", hud_playerpreview_y.GetFloat());
+			pValues->SetFloat("origin_z", hud_playerpreview_z.GetFloat());
+		}
 
-		if (m_pPage && FStrEq(m_pPage->GetName(), "class") && m_szPreviewSequence[0] && m_szPreviewWeaponModel[0])
+		if (m_pPage && FStrEq(m_pPage->GetName(), "class") && m_szPreviewSequence[0] && m_szPreviewWeaponModel[0] && !pPlayer->GetLoadoutWeight())
 		{
 			KeyValues* pAnimation = pValues->FindKey("animation");
 			if (pAnimation)
@@ -358,6 +387,24 @@ void CFolderMenu::Update()
 		m_pCharacteristicsInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
 	else
 		m_pCharacteristicsInfo->SetText("");
+
+	m_pSuicideOption->SetVisible(pPlayer->IsAlive());
+
+	Button *pProceedButton = dynamic_cast<Button *>(FindChildByName("ProceedButton"));
+	if (pProceedButton)
+		pProceedButton->SetVisible(m_pPage && FStrEq(m_pPage->GetName(), PANEL_BUY));
+
+	Button *pAgentsTab = dynamic_cast<Button *>(FindChildByName("AgentsTab"));
+	if (pAgentsTab)
+		pAgentsTab->SetVisible(pPlayer->HasCharacterBeenChosen());
+
+	Button *pWeaponsTab = dynamic_cast<Button *>(FindChildByName("WeaponsTab"));
+	if (pWeaponsTab)
+		pWeaponsTab->SetVisible(pPlayer->HasCharacterBeenChosen());
+
+	Button *pSkillsTab = dynamic_cast<Button *>(FindChildByName("SkillsTab"));
+	if (pSkillsTab)
+		pSkillsTab->SetVisible(pPlayer->HasSkillsTabBeenSeen());
 }
 
 void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
@@ -370,20 +417,11 @@ void CFolderMenu::OnCommand( const char *command )
 	if ( Q_strncasecmp( command, "tab ", 4 ) == 0)
 	{
 		if (FStrEq(command+4, "characters"))
-		{
-			Close();
-			engine->ServerCmd("character");
-		}
+			ShowPage(PANEL_CLASS);
 		else if (FStrEq(command+4, "weapons"))
-		{
-			Close();
-			engine->ServerCmd("buy");
-		}
+			ShowPage(PANEL_BUY);
 		else if (FStrEq(command+4, "skills"))
-		{
-			Close();
-			engine->ServerCmd("setskill");
-		}
+			ShowPage(PANEL_BUY_EQUIP_CT);
 	}
 	else if ( Q_stricmp( command, "close" ) == 0 )
 	{
@@ -411,6 +449,10 @@ void CFolderMenu::OnTick()
 	if (m_bNeedsUpdate)
 	{
 		Update();
+
+		if (m_pPage)
+			m_pPage->Update();
+
 		m_bNeedsUpdate = false;
 	}
 
@@ -451,27 +493,62 @@ void CFolderMenu::ShowPage(const char* pszPage)
 	Update();
 }
 
-bool CFolderMenu::ShouldShowWeaponsAndSkills()
+bool CFolderMenu::ShouldShowCharacterOnly()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return true;
+
+	// If the player has anything, show the weapons version
+	if (pPlayer->GetLoadoutWeight())
+		return false;
+
+	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
+		return false;
+
+	if (m_pPage)
+	{
+		if (FStrEq(m_pPage->GetName(), PANEL_BUY) || FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
+			return false;
+	}
+
+	return true;
+}
+
+bool CFolderMenu::ShouldShowCharacterAndWeapons()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return true;
+
+	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
+		return false;
+
+	if (m_pPage)
+	{
+		if (FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
+			return false;
+	}
+
+	return true;
+}
+
+bool CFolderMenu::IsLoadoutComplete()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pPlayer)
 		return false;
 
-	// If the player has anything, show the weapons version
-	if (pPlayer->GetLoadoutWeight())
-		return true;
+	if (!pPlayer->HasCharacterBeenChosen())
+		return false;
 
-	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
-		return true;
+	if (pPlayer->m_Shared.m_iStyleSkill == SKILL_NONE)
+		return false;
 
-	if (m_pPage)
-	{
-		if (FStrEq(m_pPage->GetName(), PANEL_BUY) || FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
-			return true;
-	}
-
-	return false;
+	return true;
 }
 
 void CFolderMenu::ReloadControlSettings(bool bUpdate, bool bReloadPage)
@@ -481,10 +558,12 @@ void CFolderMenu::ReloadControlSettings(bool bUpdate, bool bReloadPage)
 	if (!pPlayer)
 		return;
 
-	if (ShouldShowWeaponsAndSkills())
+	if (ShouldShowCharacterOnly())
+		LoadControlSettings( "Resource/UI/Folder_NoWeapons.res" );
+	else if (ShouldShowCharacterAndWeapons())
 		LoadControlSettings( "Resource/UI/Folder_Weapons.res" );
 	else
-		LoadControlSettings( "Resource/UI/Folder_NoWeapons.res" );
+		LoadControlSettings( "Resource/UI/Folder_Complete.res" );
 
 	InvalidateLayout();
 	if (bUpdate)
@@ -525,11 +604,33 @@ void CFolderMenu::SetCharacterPreview(const char* pszCharacter, const char* pszS
 CFolderLabel::CFolderLabel(Panel *parent, const char *panelName)
 	: Label( parent, panelName, "")
 {
+	m_bUnderline = false;
 }
 
-void CFolderLabel::ApplySchemeSettings( IScheme *pScheme )
+void CFolderLabel::ApplySettings(KeyValues *inResourceData)
 {
-	BaseClass::ApplySchemeSettings(pScheme);
+	BaseClass::ApplySettings(inResourceData);
+
+	m_bUnderline = inResourceData->GetBool("underline", false);
+}
+
+void CFolderLabel::Paint()
+{
+	BaseClass::Paint();
+
+	vgui::TextImage* pTextImage = GetTextImage();
+
+	if (m_bUnderline && pTextImage)
+	{
+		int x, y;
+		pTextImage->GetPos(x, y);
+
+		int w, h;
+		pTextImage->GetSize(w, h);
+
+		surface()->DrawSetColor(0, 0, 0, 255);
+		surface()->DrawFilledRect(x, y+h-2, x+w, y+h);
+	}
 }
 
 CPanelTexture::CPanelTexture(Panel *parent, const char *panelName)

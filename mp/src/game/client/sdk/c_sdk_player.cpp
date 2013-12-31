@@ -231,7 +231,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),	
 
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
-	RecvPropBool( RECVINFO( m_bCharacterChosen ) ),
 
 	RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
 
