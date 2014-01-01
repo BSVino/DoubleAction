@@ -258,34 +258,13 @@ void CDABuyMenu::Update()
 		pWeaponTotalWeightNumber->SetText(szText);
 	}
 
-	for ( int i = 0; i < m_apTypes.Count(); i++)
-	{
-		m_apTypes[i]->DeletePanel();
-		m_apTypes[i] = NULL;
-	}
-
-	for ( int i = 0; i < m_apAmmos.Count(); i++)
-	{
-		m_apAmmos[i]->DeletePanel();
-		m_apAmmos[i] = NULL;
-	}
-
 	for ( int i = 0; i < m_apWeights.Count(); i++)
 	{
 		m_apWeights[i]->DeletePanel();
 		m_apWeights[i] = NULL;
 	}
 
-	for ( int i = 0; i < m_apQuantities.Count(); i++)
-	{
-		m_apQuantities[i]->DeletePanel();
-		m_apQuantities[i] = NULL;
-	}
-
-	m_apTypes.RemoveAll();
-	m_apAmmos.RemoveAll();
 	m_apWeights.RemoveAll();
-	m_apQuantities.RemoveAll();
 
 	CUtlVector<CWeaponButton*> apWeaponButtons;
 

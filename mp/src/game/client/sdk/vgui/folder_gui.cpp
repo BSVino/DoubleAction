@@ -156,6 +156,8 @@ void CFolderMenu::Update()
 
 	if (pPlayer->HasCharacterBeenChosen())
 		Q_strcpy(m_szCharacter, pPlayer->GetCharacter());
+	else
+		m_szCharacter[0] = '\0';
 
 	if (ShouldShowCharacterOnly())
 	{
@@ -382,6 +384,144 @@ void CFolderMenu::Update()
 	}
 	else if (pPlayerPreview)
 		pPlayerPreview->SwapModel("");
+
+	for ( int i = 0; i < m_apWeaponIcons.Count(); i++)
+	{
+		if (m_apWeaponIcons[i].m_pWeaponName)
+			m_apWeaponIcons[i].m_pWeaponName->DeletePanel();
+	
+		if (m_apWeaponIcons[i].m_pSlots)
+			m_apWeaponIcons[i].m_pSlots->DeletePanel();
+
+		if (m_apWeaponIcons[i].m_pImage)
+			m_apWeaponIcons[i].m_pImage->DeletePanel();
+
+		if (m_apWeaponIcons[i].m_pDelete)
+			m_apWeaponIcons[i].m_pDelete->DeletePanel();
+	}
+
+	m_apWeaponIcons.RemoveAll();
+
+	const char szWeaponPreviewTemplate[] =
+		"	\"model\"\n"
+		"	{\n"
+		"		\"spotlight\"	\"1\"\n"
+		"		\"modelname\"	\"models/weapons/beretta.mdl\"\n"
+		"		\"origin_x\"	\"30\"\n"
+		"		\"origin_y\"	\"3\"\n"
+		"		\"origin_z\"	\"-3\"\n"
+		"		\"angles_y\"	\"200\"\n"
+		"	}";
+
+	Panel *pWeaponIconArea = FindChildByName("WeaponIconArea");
+	if (ShouldShowCharacterAndWeapons() && pWeaponIconArea)
+	{
+		int iWeaponAreaX, iWeaponAreaY, iWeaponAreaW, iWeaponAreaH;
+		pWeaponIconArea->GetPos(iWeaponAreaX, iWeaponAreaY);
+		pWeaponIconArea->GetSize(iWeaponAreaW, iWeaponAreaH);
+
+		int iMargin = 5;
+
+		int iBoxSize = (iWeaponAreaW-5)/2;
+
+		int iWeapon = 0;
+
+		for (int i = 0; i < MAX_LOADOUT; i++)
+		{
+			if (!pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i))
+				continue;
+
+			CSDKWeaponInfo* pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
+			if (!pWeaponInfo)
+				continue;
+
+			for (int j = 0; j < pPlayer->GetLoadoutWeaponCount((SDKWeaponID)i); j++)
+			{
+				float flMoveRight = 0;
+				if (iWeapon%2 == 1)
+					flMoveRight = iBoxSize + iMargin;
+
+				CWeaponIcon* pIcon = &m_apWeaponIcons[m_apWeaponIcons.AddToTail()];
+
+				pIcon->m_pWeaponName = new CFolderLabel(this, NULL);
+				pIcon->m_pWeaponName->SetText(pWeaponInfo->szPrintName);
+				pIcon->m_pWeaponName->SetPos(iWeaponAreaX + flMoveRight, iWeaponAreaY + 10 + (iWeapon/2) * (iBoxSize+iMargin));
+				pIcon->m_pWeaponName->SetSize(iBoxSize, 15);
+				pIcon->m_pWeaponName->SetContentAlignment(Label::a_center);
+				pIcon->m_pWeaponName->SetZPos(-5);
+				pIcon->m_pWeaponName->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderLarge"));
+				pIcon->m_pWeaponName->SetScheme("FolderScheme");
+
+				std::wostringstream sSlotsLabel;
+
+				if (pWeaponInfo->iWeight)
+				{
+					const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_BuyMenu_Weapon_Slots" );
+					if ( pchFmt && pchFmt[0] )
+						sSlotsLabel << pchFmt;
+					else
+						sSlotsLabel << "Slots: ";
+
+					sSlotsLabel << pWeaponInfo->iWeight;
+
+					pIcon->m_pSlots = new CFolderLabel(this, NULL);
+					pIcon->m_pSlots->SetText(sSlotsLabel.str().c_str());
+					pIcon->m_pSlots->SetPos(iWeaponAreaX + flMoveRight, iWeaponAreaY + iBoxSize - 10 + (iWeapon/2) * (iBoxSize+iMargin));
+					pIcon->m_pSlots->SetSize(iBoxSize, 15);
+					pIcon->m_pSlots->SetContentAlignment(Label::a_center);
+					pIcon->m_pSlots->SetZPos(-5);
+					pIcon->m_pSlots->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderSmall"));
+					pIcon->m_pSlots->SetScheme("FolderScheme");
+				}
+
+				KeyValues* pValues = new KeyValues("preview");
+				pValues->LoadFromBuffer("model", szWeaponPreviewTemplate);
+				pValues->SetString("modelname", pWeaponInfo->szWorldModel);
+
+				if (pWeaponInfo->m_eWeaponType == WT_PISTOL)
+				{
+					pValues->SetInt("origin_x", 20);
+				}
+				else if (pWeaponInfo->m_eWeaponType == WT_RIFLE)
+				{
+					pValues->SetInt("origin_x", 50);
+					pValues->SetInt("angles_y", 210);
+				}
+				else if (pWeaponInfo->m_eWeaponType == WT_SHOTGUN)
+				{
+					pValues->SetInt("origin_x", 50);
+					pValues->SetInt("origin_y", 10);
+					pValues->SetInt("angles_y", 150);
+				}
+				else if (pWeaponInfo->m_eWeaponType == WT_SMG)
+				{
+				}
+				else if (pWeaponInfo->m_eWeaponType == WT_GRENADE)
+				{
+					pValues->SetInt("origin_x", 20);
+				}
+
+				pIcon->m_pImage = new CModelPanel(this, NULL);
+				pIcon->m_pImage->SetPos(iWeaponAreaX + flMoveRight, iWeaponAreaY + (iWeapon/2) * (iBoxSize+iMargin));
+				pIcon->m_pImage->SetSize(iBoxSize, iBoxSize);
+				pIcon->m_pImage->SetZPos(-15);
+				pIcon->m_pImage->SetScheme("FolderScheme");
+				pIcon->m_pImage->ParseModelInfo(pValues);
+
+				pValues->deleteThis();
+
+				pIcon->m_pDelete = new CImageButton(this, VarArgs("delete_%d", iWeapon));
+				pIcon->m_pDelete->SetDimensions(iWeaponAreaX + iBoxSize - 8 + flMoveRight, iWeaponAreaY + 30 + (iWeapon/2) * (iBoxSize+iMargin), 12, 12);
+				pIcon->m_pDelete->SetZPos(15);
+				pIcon->m_pDelete->SetImage("folder_delete");
+				pIcon->m_pDelete->SetPaintBorderEnabled(false);
+				pIcon->m_pDelete->SetPaintBackgroundEnabled(true);
+				pIcon->m_pDelete->SetCommand(VarArgs("buy remove %d", i));
+
+				iWeapon++;
+			}
+		}
+	}
 
 	if (pPlayer->m_Shared.m_iStyleSkill)
 		m_pCharacteristicsInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
@@ -644,7 +784,19 @@ CPanelTexture::CPanelTexture(Panel *parent, const char *panelName)
 
 void CPanelTexture::SetImage(const char* pszName)
 {
+	V_strncpy(m_szImageName, pszName, ARRAYSIZE(m_szImageName));
 	m_pImage = gHUD.GetIcon(pszName);
+}
+
+void CPanelTexture::SetDimensions(int x, int y, int w, int h)
+{
+	m_iX = x;
+	m_iY = y;
+	m_iWidth = w;
+	m_iHeight = h;
+
+	SetPos(x, y);
+	SetSize(w, h);
 }
 
 void CPanelTexture::PaintBackground()
@@ -786,7 +938,19 @@ CImageButton::CImageButton(Panel *parent, const char *panelName)
 
 void CImageButton::SetImage(const char* pszName)
 {
+	V_strncpy(m_szImageName, pszName, ARRAYSIZE(m_szImageName));
 	m_pImage = gHUD.GetIcon(pszName);
+}
+
+void CImageButton::SetDimensions(int x, int y, int w, int h)
+{
+	m_iX = x;
+	m_iY = y;
+	m_iWidth = w;
+	m_iHeight = h;
+
+	SetPos(x, y);
+	SetSize(w, h);
 }
 
 void CImageButton::PaintBackground()

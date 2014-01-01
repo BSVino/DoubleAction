@@ -4574,6 +4574,8 @@ void CC_Buy(const CCommand& args)
 	if (args.ArgC() == 3 && Q_strncmp(args[1], "remove", 6) == 0)
 	{
 		eWeapon = AliasToWeaponID(args[2]);
+		if (eWeapon == WEAPON_NONE)
+			eWeapon = (SDKWeaponID)atoi(args[2]);
 		pPlayer->StopObserverMode();
 		pPlayer->RemoveFromLoadout(eWeapon);
 		return;

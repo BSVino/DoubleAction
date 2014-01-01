@@ -12,6 +12,9 @@ namespace vgui
 	class CCheckButton;
 }
 
+class CModelPanel;
+class CImageButton;
+
 class CFolderMenuPanel : public vgui::EditablePanel
 {
 private:
@@ -96,6 +99,25 @@ private:
 	char        m_szPreviewWeaponModel[100];
 	float       m_flBodyYaw;
 	float       m_flBodyPitch;
+
+	class CWeaponIcon
+	{
+	public:
+		CWeaponIcon()
+		{
+			m_pWeaponName = NULL;
+			m_pSlots = NULL;
+			m_pImage = NULL;
+			m_pDelete = NULL;
+		}
+
+	public:
+		CFolderLabel* m_pWeaponName;
+		CFolderLabel* m_pSlots;
+		CModelPanel*  m_pImage;
+		CImageButton* m_pDelete;
+	};
+	CUtlVector<CWeaponIcon> m_apWeaponIcons;
 };
 
 class CFolderLabel : public vgui::Label
@@ -123,6 +145,7 @@ public:
 	CPanelTexture(vgui::Panel *parent, const char *panelName);
 
 	virtual void SetImage(const char *imageName);
+	virtual void SetDimensions(int x, int y, int w, int h);
 
 	virtual void PaintBackground();
 	virtual void ApplySettings(KeyValues *inResourceData);
@@ -148,6 +171,7 @@ public:
 
 public:
 	virtual void SetImage(const char *imageName);
+	virtual void SetDimensions(int x, int y, int w, int h);
 
 	virtual void PaintBackground();
 	virtual void PaintBorder() {};

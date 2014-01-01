@@ -79,10 +79,7 @@ private:
 	class CFolderLabel* m_pWeaponInfo;
 	class CModelPanel*  m_pWeaponImage;
 
-	CUtlVector<CFolderLabel*> m_apTypes;
-	CUtlVector<CFolderLabel*> m_apAmmos;
 	CUtlVector<CFolderLabel*> m_apWeights;
-	CUtlVector<CFolderLabel*> m_apQuantities;
 
 	ButtonCode_t m_iBuyMenuKey;
 };
