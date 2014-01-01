@@ -57,7 +57,6 @@ CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 	m_pSuicideOption = new CheckButton( this, "suicide_option", "" );
 
 	m_pProfileInfo = new CFolderLabel( this, "ProfileInfo" );
-	m_pCharacteristicsInfo = new CFolderLabel( this, "CharacteristicsInfo" );
 
 	// load the new scheme early!!
 	SetScheme(scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
@@ -181,25 +180,23 @@ void CFolderMenu::Update()
 		else if (m_szCharacter[0])
 			sCharacter = std::string("#DA_Character_") + m_szCharacter;
 
-		pCharacterName->SetText(sCharacter.c_str());
-	}
+		std::wstring sLocalized;
+		wchar_t* pszLocalized = g_pVGuiLocalize->Find( sCharacter.c_str() );
 
-	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
-	if (pSlotsLabel)
-	{
-		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_BuyMenu_SlotsRemaining" );
-		if ( pchFmt && pchFmt[0] )
+		if (pszLocalized)
+			sLocalized += pszLocalized;
+
+		if (pPlayer->m_Shared.m_iStyleSkill)
 		{
-			wchar_t szText[512]=L"";
-			wchar_t szLoadoutWeight[ 10 ];
+			std::string sSkill = std::string("#DA_Skill_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()) + "_Adjective";
 
-			Q_wcsncpy( szFmt, pchFmt, sizeof( szFmt ) );
-			_snwprintf( szLoadoutWeight, ARRAYSIZE(szLoadoutWeight) - 1, L"%d",  MAX_LOADOUT_WEIGHT-pPlayer->GetLoadoutWeight() );
-			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 1, szLoadoutWeight );
+			pszLocalized = g_pVGuiLocalize->Find( sSkill.c_str() );
 
-			pSlotsLabel->SetText(szText);
+			if (pszLocalized)
+				sLocalized += pszLocalized;
 		}
+
+		pCharacterName->SetText(sLocalized.c_str());
 	}
 
 	CFolderLabel* pLabels[2];
@@ -414,7 +411,7 @@ void CFolderMenu::Update()
 		"	}";
 
 	Panel *pWeaponIconArea = FindChildByName("WeaponIconArea");
-	if (ShouldShowCharacterAndWeapons() && pWeaponIconArea)
+	if ((ShouldShowCharacterAndWeapons() || ShouldShowEverything()) && pWeaponIconArea)
 	{
 		int iWeaponAreaX, iWeaponAreaY, iWeaponAreaW, iWeaponAreaH;
 		pWeaponIconArea->GetPos(iWeaponAreaX, iWeaponAreaY);
@@ -444,7 +441,7 @@ void CFolderMenu::Update()
 				CWeaponIcon* pIcon = &m_apWeaponIcons[m_apWeaponIcons.AddToTail()];
 
 				pIcon->m_pWeaponName = new CFolderLabel(this, NULL);
-				pIcon->m_pWeaponName->SetText(pWeaponInfo->szPrintName);
+				pIcon->m_pWeaponName->SetText(VarArgs("#DA_Weapon_Obituary_%s", pWeaponInfo->szClassName+7)); // Use the obit version because it's shorter
 				pIcon->m_pWeaponName->SetPos(iWeaponAreaX + flMoveRight, iWeaponAreaY + 10 + (iWeapon/2) * (iBoxSize+iMargin));
 				pIcon->m_pWeaponName->SetSize(iBoxSize, 15);
 				pIcon->m_pWeaponName->SetContentAlignment(Label::a_center);
@@ -523,16 +520,56 @@ void CFolderMenu::Update()
 		}
 	}
 
-	if (pPlayer->m_Shared.m_iStyleSkill)
-		m_pCharacteristicsInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
+	CFolderLabel* pWeaponTotalWeightNumber = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponTotalWeightNumber"));
+	CFolderLabel* pWeaponTotalWeight = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponTotalWeight"));
+	if ((ShouldShowCharacterAndWeapons() || ShouldShowEverything()) && pPlayer->GetLoadoutWeight())
+	{
+		if (pWeaponTotalWeightNumber)
+		{
+			wchar_t szText[20];
+			_snwprintf( szText, ARRAYSIZE(szText) - 1, L"%d/%d", pPlayer->GetLoadoutWeight(), MAX_LOADOUT_WEIGHT );
+			pWeaponTotalWeightNumber->SetText(szText);
+			pWeaponTotalWeightNumber->SetVisible(true);
+		}
+
+		if (pWeaponTotalWeight)
+			pWeaponTotalWeight->SetVisible(true);
+	}
 	else
-		m_pCharacteristicsInfo->SetText("");
+	{
+		if (pWeaponTotalWeightNumber)
+			pWeaponTotalWeightNumber->SetVisible(false);
+
+		if (pWeaponTotalWeight)
+			pWeaponTotalWeight->SetVisible(false);
+	}
+
+	if (ShouldShowEverything())
+	{
+		CFolderLabel *pSkillInfo = dynamic_cast<CFolderLabel *>(FindChildByName("SkillInfo"));
+		CPanelTexture *pSkillIcon = dynamic_cast<CPanelTexture *>(FindChildByName("SkillIcon"));
+
+		if (pPlayer->m_Shared.m_iStyleSkill)
+		{
+			pSkillInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
+			pSkillIcon->SetImage(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()));
+		}
+		else
+		{
+			pSkillInfo->SetText("");
+			pSkillIcon->SetImage("");
+		}
+	}
 
 	m_pSuicideOption->SetVisible(pPlayer->IsAlive());
 
 	Button *pProceedButton = dynamic_cast<Button *>(FindChildByName("ProceedButton"));
 	if (pProceedButton)
 		pProceedButton->SetVisible(m_pPage && FStrEq(m_pPage->GetName(), PANEL_BUY));
+
+	Button *pApproveButton = dynamic_cast<Button *>(FindChildByName("ApproveButton"));
+	if (pApproveButton)
+		pApproveButton->SetVisible(IsLoadoutComplete());
 
 	Button *pAgentsTab = dynamic_cast<Button *>(FindChildByName("AgentsTab"));
 	if (pAgentsTab)
@@ -571,6 +608,17 @@ void CFolderMenu::OnCommand( const char *command )
 
 		if ( hud_buyautokill.GetBool() )
 			engine->ClientCmd( "kill" );
+	}
+	else if ( Q_stricmp( command, "respawn" ) == 0 )
+	{
+		Close();
+
+		BaseClass::OnCommand( command );
+
+		if ( hud_buyautokill.GetBool() )
+			engine->ClientCmd( "kill" );
+
+		engine->ServerCmd("respawn");
 	}
 	else if ( Q_stricmp( command, "spectate" ) == 0 )
 	{
@@ -673,6 +721,19 @@ bool CFolderMenu::ShouldShowCharacterAndWeapons()
 	}
 
 	return true;
+}
+
+bool CFolderMenu::ShouldShowEverything()
+{
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return true;
+
+	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE || m_pPage && FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
+		return true;
+
+	return false;
 }
 
 bool CFolderMenu::IsLoadoutComplete()

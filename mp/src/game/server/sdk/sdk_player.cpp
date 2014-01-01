@@ -4617,9 +4617,6 @@ void CC_Skill(const CCommand& args)
 	{
 		pPlayer->PickRandomSkill();
 
-		if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGSKILL || pPlayer->IsDead()) )
-			pPlayer->State_Transition( STATE_ACTIVE );
-
 		return;
 	}
 
@@ -4627,12 +4624,22 @@ void CC_Skill(const CCommand& args)
 
 	if (!pPlayer->IsBot())
 		DataManager().AddSkillChosen(AliasToSkillID(args[1]));
-
-	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGSKILL || pPlayer->IsDead()) )
-		pPlayer->State_Transition( STATE_ACTIVE );
 }
 
 static ConCommand skill("setskill", CC_Skill, "Open the skill menu.", FCVAR_GAMEDLL);
+
+void CC_Respawn(const CCommand& args)
+{
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
+
+	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && pPlayer->State_Get() != STATE_ACTIVE && pPlayer->IsDead() )
+		pPlayer->State_Transition( STATE_ACTIVE );
+}
+
+static ConCommand respawn("respawn", CC_Respawn, "Respawn.", FCVAR_GAMEDLL);
 
 void CC_Drop(const CCommand& args)
 {

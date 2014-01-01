@@ -173,14 +173,6 @@ void CDABuyMenu::OnCommand( const char *command )
 		Update();
 	}
 
-	if (V_strncasecmp("buy random", command, 10) == 0)
-	{
-		if (C_SDKPlayer::GetLocalSDKPlayer() && !C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
-			GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
-		else
-			GetFolderMenu()->Close();
-	}
-
 	if (FStrEq(command, "close"))
 	{
 		// Automatically bring up the next menu if the player is dead.
@@ -231,32 +223,6 @@ void CDABuyMenu::Update()
 
 	if (!pPlayer)
 		return;
-
-	Label *pSlotsLabel = dynamic_cast<Label *>(FindChildByName("SlotsRemaining"));
-	if (pSlotsLabel)
-	{
-		wchar_t szFmt[128]=L"";
-		const wchar_t *pchFmt = g_pVGuiLocalize->Find( "#DA_BuyMenu_SlotsRemaining" );
-		if ( pchFmt && pchFmt[0] )
-		{
-			wchar_t szText[512]=L"";
-			wchar_t szLoadoutWeight[ 10 ];
-
-			Q_wcsncpy( szFmt, pchFmt, sizeof( szFmt ) );
-			_snwprintf( szLoadoutWeight, ARRAYSIZE(szLoadoutWeight) - 1, L"%d",  MAX_LOADOUT_WEIGHT-pPlayer->GetLoadoutWeight() );
-			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 1, szLoadoutWeight );
-
-			pSlotsLabel->SetText(szText);
-		}
-	}
-
-	CFolderLabel* pWeaponTotalWeightNumber = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponTotalWeightNumber"));
-	if (pWeaponTotalWeightNumber)
-	{
-		wchar_t szText[20];
-		_snwprintf( szText, ARRAYSIZE(szText) - 1, L"%d/%d", pPlayer->GetLoadoutWeight(), MAX_LOADOUT_WEIGHT );
-		pWeaponTotalWeightNumber->SetText(szText);
-	}
 
 	for ( int i = 0; i < m_apWeights.Count(); i++)
 	{

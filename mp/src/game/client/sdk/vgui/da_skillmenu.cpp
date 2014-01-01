@@ -95,6 +95,14 @@ void CSkillButton::OnCursorExited()
 	InvalidateLayout();
 }
 
+void CSkillButton::Paint()
+{
+	surface()->DrawSetColor(255, 255, 255, 100);
+	surface()->DrawFilledRect(0, 0, GetWide(), GetTall());
+
+	BaseClass::Paint();
+}
+
 SkillID CSkillButton::GetSkill()
 {
 	return AliasToSkillID(m_szSkillName);
@@ -121,14 +129,6 @@ CDASkillMenu::CDASkillMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_BUY_
 
 void CDASkillMenu::Update()
 {
-	CSkillButton* pCancel = dynamic_cast<CSkillButton*>(FindChildByName("skill_cancel"));
-	if (pCancel)
-	{
-		if (C_SDKPlayer::GetLocalSDKPlayer() && C_SDKPlayer::GetLocalSDKPlayer()->m_Shared.m_iStyleSkill != SKILL_NONE)
-			pCancel->SetVisible(true);
-		else
-			pCancel->SetVisible(false);
-	}
 }
 
 void CDASkillMenu::ShowPanel( bool bShow )
@@ -203,8 +203,6 @@ void CDASkillMenu::OnCommand( const char *command )
 		engine->ClientCmd( command );
 
 		gViewPortInterface->ShowBackGround( false );
-
-		GetFolderMenu()->Close();
 	}
 	else
 		BaseClass::OnCommand(command);

@@ -26,6 +26,8 @@ public:
 	virtual void OnCursorEntered();
 	virtual void OnCursorExited();
 
+	virtual void Paint();
+
 	SkillID GetSkill();
 
 private:

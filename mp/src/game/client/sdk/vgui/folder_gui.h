@@ -71,6 +71,7 @@ public:
 
 	bool ShouldShowCharacterOnly();
 	bool ShouldShowCharacterAndWeapons();
+	bool ShouldShowEverything();
 	bool IsLoadoutComplete();
 
 	void ReloadControlSettings(bool bUpdate = true, bool bReloadPage = true);
@@ -86,7 +87,6 @@ private:
 	bool                m_bNeedsUpdate;
 
 	class CFolderLabel* m_pProfileInfo;
-	class CFolderLabel* m_pCharacteristicsInfo;
 
 	vgui::CheckButton*  m_pSuicideOption;
 
