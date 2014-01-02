@@ -171,6 +171,7 @@ public:
 
 public:
 	virtual void SetImage(const char *imageName);
+	virtual void SetImageColor(const Color& clrImage);
 	virtual void SetDimensions(int x, int y, int w, int h);
 
 	virtual void PaintBackground();
@@ -181,6 +182,7 @@ public:
 private:
 	char         m_szImageName[100];
 	CHudTexture* m_pImage;
+	Color        m_clrImage;
 
 	int          m_iX;
 	int          m_iY;

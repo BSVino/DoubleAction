@@ -230,7 +230,14 @@ void CDABuyMenu::Update()
 		m_apWeights[i] = NULL;
 	}
 
+	for ( int i = 0; i < m_apCheckMarks.Count(); i++)
+	{
+		m_apCheckMarks[i]->DeletePanel();
+		m_apCheckMarks[i] = NULL;
+	}
+
 	m_apWeights.RemoveAll();
+	m_apCheckMarks.RemoveAll();
 
 	CUtlVector<CWeaponButton*> apWeaponButtons;
 
@@ -280,6 +287,61 @@ void CDABuyMenu::Update()
 		m_apWeights.Tail()->SetZPos(-5);
 		m_apWeights.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderMedium"));
 		m_apWeights.Tail()->SetScheme("FolderScheme");
+
+		int iWeaponInfoX, iWeaponInfoY;
+		m_pWeaponInfo->GetPos(iWeaponInfoX, iWeaponInfoY);
+
+		m_apCheckMarks.AddToTail(new CImageButton(this, "checkmark"));
+
+		m_apCheckMarks.Tail()->SetDimensions(iWeaponInfoX, iWeaponY, pPanel->GetTall(), pPanel->GetTall());
+		m_apCheckMarks.Tail()->SetZPos(5);
+		m_apCheckMarks.Tail()->SetVisible(true);
+
+		if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()))
+		{
+			m_apCheckMarks.Tail()->SetImage("folder_check");
+			m_apCheckMarks.Tail()->SetCommand(VarArgs("buy remove %s", pInfo->szClassName+7));
+		}
+		else if (pPlayer->CanAddToLoadout(pPanel->GetWeaponID()))
+		{
+			m_apCheckMarks.Tail()->SetImage("folder_nocheck");
+			m_apCheckMarks.Tail()->SetCommand(VarArgs("buy %s", pInfo->szClassName+7));
+		}
+		else
+		{
+			m_apCheckMarks.Tail()->SetImage("folder_nocheck");
+			m_apCheckMarks.Tail()->SetImageColor(Color(255, 255, 255, 100));
+		}
+
+		if (pInfo->m_szAkimbo[0])
+		{
+			m_apCheckMarks.AddToTail(new CImageButton(this, "checkmark"));
+
+			m_apCheckMarks.Tail()->SetDimensions(iWeaponInfoX + pPanel->GetTall() + 5, iWeaponY, pPanel->GetTall(), pPanel->GetTall());
+			m_apCheckMarks.Tail()->SetZPos(5);
+			m_apCheckMarks.Tail()->SetVisible(true);
+
+			if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()) == 2)
+			{
+				m_apCheckMarks.Tail()->SetImage("folder_check");
+				m_apCheckMarks.Tail()->SetCommand(VarArgs("buy remove %s", pInfo->szClassName+7));
+			}
+			else if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()) == 0)
+			{
+				m_apCheckMarks.Tail()->SetImage("folder_nocheck");
+				m_apCheckMarks.Tail()->SetImageColor(Color(255, 255, 255, 100));
+			}
+			else if (pPlayer->CanAddToLoadout(pPanel->GetWeaponID()))
+			{
+				m_apCheckMarks.Tail()->SetImage("folder_nocheck");
+				m_apCheckMarks.Tail()->SetCommand(VarArgs("buy %s", pInfo->szClassName+7));
+			}
+			else
+			{
+				m_apCheckMarks.Tail()->SetImage("folder_nocheck");
+				m_apCheckMarks.Tail()->SetImageColor(Color(255, 255, 255, 100));
+			}
+		}
 	}
 }
 

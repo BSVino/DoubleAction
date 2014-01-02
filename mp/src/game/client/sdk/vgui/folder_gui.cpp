@@ -991,6 +991,7 @@ CImageButton::CImageButton(Panel *parent, const char *panelName)
 	: Button(parent, panelName, "")
 {
 	m_pImage = NULL;
+	m_clrImage = Color(255, 255, 255, 255);
 
 	m_iX = m_iY = 0;
 	m_iWidth = m_iHeight = 100;
@@ -1001,6 +1002,11 @@ void CImageButton::SetImage(const char* pszName)
 {
 	V_strncpy(m_szImageName, pszName, ARRAYSIZE(m_szImageName));
 	m_pImage = gHUD.GetIcon(pszName);
+}
+
+void CImageButton::SetImageColor(const Color& clrImage)
+{
+	m_clrImage = clrImage;
 }
 
 void CImageButton::SetDimensions(int x, int y, int w, int h)
@@ -1020,7 +1026,7 @@ void CImageButton::PaintBackground()
 	{
 		int x, y;
 		GetPos(x, y);
-		m_pImage->DrawSelf(0, 0, m_iWidth, m_iHeight, Color(255, 255, 255, 255));
+		m_pImage->DrawSelf(0, 0, m_iWidth, m_iHeight, m_clrImage);
 	}
 }
 

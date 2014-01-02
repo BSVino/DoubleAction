@@ -80,6 +80,7 @@ private:
 	class CModelPanel*  m_pWeaponImage;
 
 	CUtlVector<CFolderLabel*> m_apWeights;
+	CUtlVector<CImageButton*> m_apCheckMarks;
 
 	ButtonCode_t m_iBuyMenuKey;
 };
