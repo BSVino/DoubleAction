@@ -353,18 +353,21 @@ void CHudStyleBar::Paint()
 		m_flElementYPos + iHeight - flStyleTextureHeight - m_flGap
 		);
 
+	Color clrActivated = Color(255, 190, 20, 255);
+	Color clrNormal = Color(170, 140, 33, 255);
+
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
 	{
-		clrBar = gHUD.m_clrCaution;
+		clrBar = clrActivated;
 		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), RemapValClamped(Gain(Oscillate(gpGlobals->curtime, 1), 0.7f), 0, 1, 0.1f, 1)*255);
 	}
 	else
 	{
-		int r = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.r()/2, gHUD.m_clrNormal.r());
-		int g = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.g()/2, gHUD.m_clrNormal.g());
-		int b = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), gHUD.m_clrNormal.b()/2, gHUD.m_clrNormal.b());
-		clrBar.SetColor(r, g, b, gHUD.m_clrNormal.a());
+		int r = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), clrNormal.r()/2, clrNormal.r());
+		int g = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), clrNormal.g()/2, clrNormal.g());
+		int b = Lerp(m_flCurrentStyle/da_stylemeteractivationcost.GetFloat(), clrNormal.b()/2, clrNormal.b());
+		clrBar.SetColor(r, g, b, clrNormal.a());
 	}
 
 	surface()->DrawSetColor( clrBar );
@@ -414,9 +417,9 @@ void CHudStyleBar::Paint()
 				flBarIconX, flBarIconY,
 				flStyleTextureWidth, flStyleTextureHeight,
 				Color(
-					Lerp(flRed, 255, gHUD.m_clrCaution.r()),
-					Lerp(flNonRed, 255, gHUD.m_clrCaution.g()),
-					Lerp(flNonRed, 255, gHUD.m_clrCaution.b()),
+					Lerp(flRed, 255, clrActivated.r()),
+					Lerp(flNonRed, 255, clrActivated.g()),
+					Lerp(flNonRed, 255, clrActivated.b()),
 					255*flAlpha
 				)
 			);
@@ -483,7 +486,7 @@ void CHudStyleBar::Paint()
 			pStyleTexture->DrawSelf(
 					RemapVal(flRamp, 0, 1, flBarIconX, flIconXPos), RemapVal(flRamp, 0, 1, flBarIconY, flIconYPos),
 					RemapVal(flRamp, 0, 1, flStyleTextureWidth, flIconWide), RemapVal(flRamp, 0, 1, flStyleTextureHeight, flIconTall),
-					Color( gHUD.m_clrCaution.r(), gHUD.m_clrCaution.g(), gHUD.m_clrCaution.b(), 255*flAlpha )
+					Color( clrActivated.r(), clrActivated.g(), clrActivated.b(), 255*flAlpha )
 				);
 		}
 	}
