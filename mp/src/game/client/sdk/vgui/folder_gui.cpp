@@ -589,6 +589,14 @@ void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
 	hud_buyautokill.SetValue( m_pSuicideOption->IsSelected() );
 }
 
+void CFolderMenu::OnKeyCodePressed( KeyCode code )
+{
+	if (m_pPage)
+		m_pPage->OnKeyCodePressed(code);
+
+	BaseClass::OnKeyCodePressed(code);
+}
+
 void CFolderMenu::OnCommand( const char *command )
 {
 	if ( Q_strncasecmp( command, "tab ", 4 ) == 0)

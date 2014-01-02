@@ -152,16 +152,13 @@ void CDASkillMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ClientCmd("setskill random");
-		ShowPanel(false);
+		engine->ServerCmd("setskill random");
+		engine->ServerCmd("respawn");
+		GetFolderMenu()->Close();
 	}
 	else if ( m_iSkillMenuKey != BUTTON_CODE_INVALID && m_iSkillMenuKey == code )
 	{
 		ShowPanel( false );
-	}
-	else
-	{
-		BaseClass::OnKeyCodePressed( code );
 	}
 }
 

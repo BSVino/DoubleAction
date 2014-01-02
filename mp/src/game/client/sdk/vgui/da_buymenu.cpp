@@ -185,17 +185,13 @@ void CDABuyMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ClientCmd("buy random");
+		engine->ServerCmd("buy random");
 
 		GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
 	}
 	else if ( m_iBuyMenuKey != BUTTON_CODE_INVALID && m_iBuyMenuKey == code )
 	{
 		ShowPanel( false );
-	}
-	else
-	{
-		BaseClass::OnKeyCodePressed( code );
 	}
 }
 

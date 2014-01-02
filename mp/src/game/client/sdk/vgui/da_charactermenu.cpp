@@ -139,16 +139,12 @@ void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ClientCmd("character random");
-		OnCommand("close");
+		engine->ServerCmd("character random");
+		GetFolderMenu()->ShowPage(PANEL_BUY);
 	}
 	else if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
 	{
 		ShowPanel( false );
-	}
-	else
-	{
-		BaseClass::OnKeyCodePressed( code );
 	}
 }
 
