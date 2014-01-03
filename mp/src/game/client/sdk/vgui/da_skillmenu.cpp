@@ -49,8 +49,6 @@
 
 using namespace vgui;
 
-ConVar _cl_skillmenuopen( "_cl_skillmenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "internal cvar used to tell server when skill menu is open" );
-
 CSkillButton::CSkillButton(vgui::Panel *parent, const char *panelName )
 	: Button( parent, panelName, "WeaponButton")
 {
@@ -174,22 +172,6 @@ Panel *CDASkillMenu::CreateControlByName( const char *controlName )
 			return pPanel;
 
 		return BaseClass::CreateControlByName(controlName);
-	}
-}
-
-void CDASkillMenu::SetVisible( bool state )
-{
-	BaseClass::SetVisible( state );
-
-	if ( state )
-	{
-		engine->ServerCmd( "skillmenuopen" );			// to the server
-		engine->ClientCmd( "_cl_skillmenuopen 1" );	// for other panels
-	}
-	else
-	{
-		engine->ServerCmd( "skillmenuclosed" );	
-		engine->ClientCmd( "_cl_skillmenuopen 0" );
 	}
 }
 

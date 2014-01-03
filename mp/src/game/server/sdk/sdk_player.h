@@ -184,8 +184,6 @@ public:
 	void ShowTeamMenu();
 #endif
 
-	void SetCharacterMenuOpen( bool bIsOpen );
-	bool IsCharacterMenuOpen( void );
 	void ShowCharacterMenu();
 
 	void SetBuyMenuOpen( bool bIsOpen );
@@ -205,8 +203,6 @@ public:
 
 	void SelectItem( const char *pstr, int iSubType = 0 );
 
-	void SetSkillMenuOpen( bool bIsOpen );
-	bool IsSkillMenuOpen( void );
 	void ShowSkillMenu();
 
 	void SetStyleSkill(SkillID eSkill);
@@ -400,10 +396,7 @@ private:
 	bool m_bIsTeamMenuOpen;
 #endif
 
-	bool m_bIsCharacterMenuOpen;
-
 	bool m_bIsBuyMenuOpen;
-	bool m_bIsSkillMenuOpen;
 
 #if defined ( SDK_USE_PRONE )
 	void InitProne( void );

@@ -356,22 +356,6 @@ Panel *CDABuyMenu::CreateControlByName( const char *controlName )
 	}
 }
 
-void CDABuyMenu::SetVisible( bool state )
-{
-	BaseClass::SetVisible( state );
-
-	if ( state )
-	{
-		engine->ServerCmd( "menuopen" );			// to the server
-		engine->ClientCmd( "_cl_buymenuopen 1" );	// for other panels
-	}
-	else
-	{
-		engine->ServerCmd( "menuclosed" );	
-		engine->ClientCmd( "_cl_buymenuopen 0" );
-	}
-}
-
 void CDABuyMenu::PaintBackground()
 {
 	// Don't

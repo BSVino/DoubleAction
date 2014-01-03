@@ -2799,26 +2799,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if ( FStrEq( pcmd, "charmenuopen" ) )
-	{
-		SetCharacterMenuOpen( true );
-		return true;
-	}
-	else if ( FStrEq( pcmd, "charmenuclosed" ) )
-	{
-		SetCharacterMenuOpen( false );
-		return true;
-	}
-	else if ( FStrEq( pcmd, "skillmenuopen" ) )
-	{
-		SetSkillMenuOpen( true );
-		return true;
-	}
-	else if ( FStrEq( pcmd, "skillmenuclosed" ) )
-	{
-		SetSkillMenuOpen( false );
-		return true;
-	}
 	else if ( FStrEq( pcmd, "droptest" ) )
 	{
 		ThrowActiveWeapon();
@@ -3072,16 +3052,6 @@ void CSDKPlayer::ShowTeamMenu()
 }
 #endif
 
-void CSDKPlayer::SetCharacterMenuOpen( bool bOpen )
-{
-	m_bIsCharacterMenuOpen = bOpen;
-}
-
-bool CSDKPlayer::IsCharacterMenuOpen( void )
-{
-	return m_bIsCharacterMenuOpen;
-}
-
 void CSDKPlayer::ShowCharacterMenu()
 {
 	ShowFolderPanel( PANEL_CLASS );
@@ -3208,16 +3178,6 @@ void CSDKPlayer::SelectItem(const char *pstr, int iSubType)
 		Instructor_LessonLearned("outofammo");
 	else
 		Instructor_LessonLearned("switchweapons");
-}
-
-void CSDKPlayer::SetSkillMenuOpen( bool bOpen )
-{
-	m_bIsSkillMenuOpen = bOpen;
-}
-
-bool CSDKPlayer::IsSkillMenuOpen( void )
-{
-	return m_bIsCharacterMenuOpen;
 }
 
 void CSDKPlayer::ShowSkillMenu()
@@ -3595,13 +3555,7 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 		if (IsTeamMenuOpen())
 			return;
 
-		if (IsCharacterMenuOpen())
-			return;
-
 		if (IsBuyMenuOpen())
-			return;
-
-		if (IsSkillMenuOpen())
 			return;
 
 		State_Transition( STATE_OBSERVER_MODE );

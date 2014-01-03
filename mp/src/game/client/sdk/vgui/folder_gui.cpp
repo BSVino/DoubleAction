@@ -76,10 +76,21 @@ CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 //Destructor
 CFolderMenu::~CFolderMenu()
 {
+	delete m_pPage;
 }
 
 void CFolderMenu::Reset()
 {
+}
+
+void CFolderMenu::SetVisible( bool state )
+{
+	BaseClass::SetVisible( state );
+
+	if ( state )
+		engine->ServerCmd( "menuopen" );
+	else
+		engine->ServerCmd( "menuclosed" );
 }
 
 void CFolderMenu::ShowPanel( bool bShow )
@@ -1173,8 +1184,14 @@ void __MsgFunc_FolderPanel( bf_read &msg )
 	if ( !pFolder )
 		return;
 
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
 	gViewPortInterface->ShowPanel( (IViewPortPanel*)pFolder, true );
-	pFolder->ShowPage(panelname);
+
+	if (pPlayer && !pPlayer->HasCharacterBeenChosen())
+		pFolder->ShowPage(PANEL_CLASS);
+	else
+		pFolder->ShowPage(panelname);
 }
 
 CON_COMMAND(hud_reload_folder, "Reload resource for folder menu.")

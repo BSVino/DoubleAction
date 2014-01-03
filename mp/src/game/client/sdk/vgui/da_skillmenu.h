@@ -48,7 +48,6 @@ public:
 	virtual void Update( void );
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
-	virtual void SetVisible( bool state );
 	virtual void ShowPanel(bool bShow);
 	void OnCommand( const char *command );
 

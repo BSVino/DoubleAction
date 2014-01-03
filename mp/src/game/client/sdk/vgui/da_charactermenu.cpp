@@ -50,8 +50,6 @@
 
 using namespace vgui;
 
-ConVar _cl_charactermenuopen( "_cl_charactermenuopen", "0", FCVAR_CLIENTCMD_CAN_EXECUTE, "internal cvar used to tell server when character selection menu is open" );
-
 CCharacterButton::CCharacterButton(vgui::Panel *parent, const char *panelName)
 	: Button( parent, panelName, "CharacterButton")
 {
@@ -139,6 +137,9 @@ void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
+		if (C_SDKPlayer::GetLocalSDKPlayer())
+			C_SDKPlayer::GetLocalSDKPlayer()->CharacterChosen();
+
 		engine->ServerCmd("character random");
 		GetFolderMenu()->ShowPage(PANEL_BUY);
 	}
@@ -173,22 +174,6 @@ Panel *CDACharacterMenu::CreateControlByName( const char *controlName )
 			return pPanel;
 
 		return BaseClass::CreateControlByName(controlName);
-	}
-}
-
-void CDACharacterMenu::SetVisible( bool state )
-{
-	BaseClass::SetVisible( state );
-
-	if ( state )
-	{
-		engine->ServerCmd( "charmenuopen" );			// to the server
-		engine->ClientCmd( "_cl_charactermenuopen 1" );	// for other panels
-	}
-	else
-	{
-		engine->ServerCmd( "charmenuclosed" );	
-		engine->ClientCmd( "_cl_charactermenuopen 0" );
 	}
 }
 
