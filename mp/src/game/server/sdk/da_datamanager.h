@@ -59,6 +59,8 @@ private:
 	public:
 		CDataContainer()
 		{
+			m_flStartTime = 0;
+
 			m_flNextPositionsUpdate = 0;
 
 			m_iConnections = 0;
@@ -73,6 +75,7 @@ private:
 			m_asCharactersChosen.SetLessFunc(Str_LessFunc);
 		}
 
+		float              m_flStartTime;
 		bool               m_bTeamplay;
 		float              m_flNextPositionsUpdate;
 		CUtlVector<Vector> m_avecPlayerPositions;

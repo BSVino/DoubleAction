@@ -24,6 +24,11 @@ message GameData
 	repeated int32 weapons_chosen = 17;
 	repeated int32 skills_chosen = 18;
 	repeated VoteResult votes = 19;
+
+	repeated string weapons_chosen_s = 20;
+	repeated string skills_chosen_s = 21;
+
+	optional float map_time = 22;
 }
 
 message PlayerPositions

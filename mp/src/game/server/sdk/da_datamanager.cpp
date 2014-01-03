@@ -82,6 +82,7 @@ void CDataManager::LevelInitPostEntity( void )
 	}
 
 	m_bLevelStarted = true;
+	d->m_flStartTime = gpGlobals->curtime;
 	d->m_flNextPositionsUpdate = gpGlobals->curtime;
 
 	CUtlMap<AccountID_t, char>::IndexType_t it = m_aiConnectedClients.FirstInorder();
@@ -259,6 +260,7 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_da_version(atoi(DA_VERSION));
 
 	pbGameData->set_map_name(STRING(gpGlobals->mapname));
+	pbGameData->set_map_time(gpGlobals->curtime - d->m_flStartTime);
 
 #ifdef _DEBUG
 	pbGameData->set_debug(true);
@@ -313,19 +315,19 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 			pCharacters->Add()->assign(d->m_asCharactersChosen.Key(it).String());
 	}
 
-	google::protobuf::RepeatedField<google::protobuf::int32>* pWeapons = pbGameData->mutable_weapons_chosen();
+	google::protobuf::RepeatedPtrField<std::string>* pWeapons = pbGameData->mutable_weapons_chosen_s();
 	iDataSize = d->m_aeWeaponsChosen.Count();
 	pWeapons->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
-		pWeapons->Add(d->m_aeWeaponsChosen[i]);
+		pWeapons->Add()->assign(WeaponIDToAlias(d->m_aeWeaponsChosen[i]));
 
-	google::protobuf::RepeatedField<google::protobuf::int32>* pSkills = pbGameData->mutable_skills_chosen();
+	google::protobuf::RepeatedPtrField<std::string>* pSkills = pbGameData->mutable_skills_chosen_s();
 	iDataSize = d->m_aeSkillsChosen.Count();
 	pSkills->Reserve(iDataSize);
 
 	for (size_t i = 0; i < iDataSize; i++)
-		pSkills->Add(d->m_aeSkillsChosen[i]);
+		pSkills->Add()->assign(SkillIDToAlias(d->m_aeSkillsChosen[i]));
 
 	google::protobuf::RepeatedPtrField<da::protobuf::VoteResult>* pVotes = pbGameData->mutable_votes();
 	iDataSize = d->m_aVoteResults.Count();
