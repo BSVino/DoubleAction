@@ -56,6 +56,7 @@ public:
 	static Panel* CreateControlByNameStatic( vgui::Panel* pParent, const char *controlName );
 	virtual void SetVisible(bool);
 	virtual void ShowPanel(bool bShow);
+	virtual void OnKeyCodeTyped(vgui::KeyCode code);
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	void OnCommand( const char *command );
 	virtual void OnTick( void );

@@ -88,9 +88,15 @@ void CFolderMenu::SetVisible( bool state )
 	BaseClass::SetVisible( state );
 
 	if ( state )
+	{
+		engine->ClientCmd_Unrestricted( "gameui_preventescapetoshow\n" );
 		engine->ServerCmd( "menuopen" );
+	}
 	else
+	{
+		engine->ClientCmd_Unrestricted( "gameui_allowescapetoshow\n" );
 		engine->ServerCmd( "menuclosed" );
+	}
 }
 
 void CFolderMenu::ShowPanel( bool bShow )
@@ -598,6 +604,19 @@ void CFolderMenu::Update()
 void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
 {
 	hud_buyautokill.SetValue( m_pSuicideOption->IsSelected() );
+}
+
+void CFolderMenu::OnKeyCodeTyped( KeyCode code )
+{
+	BaseClass::OnKeyCodeTyped(code);
+
+	if (code == KEY_ESCAPE)
+	{
+		Close();
+
+		if (!IsLoadoutComplete())
+			engine->ServerCmd("spectate");
+	}
 }
 
 void CFolderMenu::OnKeyCodePressed( KeyCode code )
