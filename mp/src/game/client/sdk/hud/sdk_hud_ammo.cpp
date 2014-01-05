@@ -20,6 +20,7 @@
 #include "c_sdk_player.h"
 #include "sdkviewport.h"
 #include "weapon_sdkbase.h"
+#include "ammodef.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -52,6 +53,7 @@ void CHudAmmo::ApplySchemeSettings( IScheme *scheme )
 	m_p45acpRound = gHUD.GetIcon("round_45acp");
 	m_pBuckshotRound = gHUD.GetIcon("round_buckshot");
 	m_pGrenadeIcon = gHUD.GetIcon("grenade_icon");
+	m_pGrenadeEmptyIcon = gHUD.GetIcon("grenade_empty_icon");
 }
 
 //-----------------------------------------------------------------------------
@@ -352,10 +354,26 @@ void CHudAmmo::Paint()
 	CWeaponSDKBase* pGrenade = pPlayer->FindWeapon(SDK_WEAPON_GRENADE);
 	if (pGrenade)
 	{
-		for (int i = 0; i < pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i++)
+		if (m_pGrenadeIcon)
 		{
-			Vector4D vecGrenade = GetGrenadePosition(i);
-			m_pGrenadeIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
+			for (int i = 0; i < pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i++)
+			{
+				Vector4D vecGrenade = GetGrenadePosition(i);
+				m_pGrenadeIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
+			}
+		}
+
+		if (m_pGrenadeEmptyIcon)
+		{
+			int iTotalGrenades = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("grenades"));
+			if (pPlayer->m_Shared.m_iStyleSkill != SKILL_TROLL)
+				iTotalGrenades = ConVarRef("da_max_grenades").GetInt();
+
+			for (int i = pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i < iTotalGrenades; i++)
+			{
+				Vector4D vecGrenade = GetGrenadePosition(i);
+				m_pGrenadeEmptyIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
+			}
 		}
 	}
 
