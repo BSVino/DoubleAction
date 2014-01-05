@@ -334,6 +334,8 @@ Vector4D CHudAmmo::GetGrenadePosition(int i)
 	return Vector4D(iWidth - flGrenadeMargin - flGrenadeSize - i*flGrenadeSize, vecFirstRound.y - flGrenadeMargin, flGrenadeSize, flGrenadeSize);
 }
 
+extern float Oscillate(float flTime, float flLength);
+
 void CHudAmmo::Paint()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -417,4 +419,27 @@ void CHudAmmo::Paint()
 			oRound.vecPosition.x, oRound.vecPosition.y,
 			GetTextureDrawWidth(oRound.pTexture, flScale), GetTextureDrawHeight(oRound.pTexture, flScale), oRound.flAngle);
 	}
-}
+
+	wchar_t* pszActivate = g_pVGuiLocalize->Find("#DA_HUD_Ammo_Reload");
+
+	if (pszActivate && m_iAmmo == 0)
+	{
+#define WSTRLEN 512
+		// replace any key references with bound keys
+		wchar_t wszHintLabel[WSTRLEN];
+		UTIL_ReplaceKeyBindings( pszActivate, 0, wszHintLabel, sizeof( wszHintLabel ) );
+
+		int iTextWide, iTextTall;
+		surface()->GetTextSize( m_hHintFont, wszHintLabel, iTextWide, iTextTall );
+
+		int iWidth, iHeight;
+		GetSize(iWidth, iHeight);
+
+		float flRightPadding = scheme()->GetProportionalScaledValueEx(GetScheme(), 40);
+		float flBottomPadding = scheme()->GetProportionalScaledValueEx(GetScheme(), 40);
+
+		surface()->DrawSetTextPos( iWidth - iTextWide - flRightPadding, iHeight - flBottomPadding - iTextTall );
+		surface()->DrawSetTextColor( Color(255, 0, 0, Oscillate(gpGlobals->curtime, 1)*255) );
+		surface()->DrawSetTextFont( m_hHintFont );
+		surface()->DrawUnicodeString( wszHintLabel, vgui::FONT_DRAW_NONADDITIVE );
+	}}

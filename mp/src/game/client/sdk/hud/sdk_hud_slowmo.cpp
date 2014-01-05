@@ -159,9 +159,10 @@ void CHudSlowMo::Paint()
 
 	if (pszActivate && pPlayer->GetSlowMoTime() == 0 && pPlayer->GetSlowMoSeconds() >= 2)
 	{
-#define WSTRLEN 100
+#define WSTRLEN 512
+		// replace any key references with bound keys
 		wchar_t wszHintLabel[WSTRLEN];
-		V_wcsncpy(wszHintLabel, pszActivate, WSTRLEN);
+		UTIL_ReplaceKeyBindings( pszActivate, 0, wszHintLabel, sizeof( wszHintLabel ) );
 
 		int iTextWide, iTextTall;
 		surface()->GetTextSize( m_hHintFont, wszHintLabel, iTextWide, iTextTall );

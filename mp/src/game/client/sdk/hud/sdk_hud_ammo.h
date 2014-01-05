@@ -47,6 +47,8 @@ protected:
 	CHudTexture* GetTexture();
 	Vector2D GetRoundPosition(int i);
 
+	CPanelAnimationVar( vgui::HFont, m_hHintFont, "HintFont", "Default" );
+
 private:
 	CHandle< C_BaseCombatWeapon > m_hCurrentActiveWeapon;
 	CHandle< C_BaseEntity > m_hCurrentVehicle;
