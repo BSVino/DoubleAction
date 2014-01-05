@@ -101,7 +101,7 @@ void CBriefcase::Touch()
 	m_flLastTouched = gpGlobals->curtime;
 }
 
-static ConVar da_ctb_changecap("da_ctb_changecap", "0.5", FCVAR_NOTIFY|FCVAR_DEVELOPMENTONLY, "Probability to change capture point location when the briefcase is dropped.");
+static ConVar da_ctb_changecap("da_ctb_changecap", "0.0", FCVAR_NOTIFY|FCVAR_DEVELOPMENTONLY, "Probability to change capture point location when the briefcase is dropped.");
 
 void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 {
