@@ -524,6 +524,8 @@ public:
 
 	CNetworkHandle(CBriefcase, m_hBriefcase);
 
+	bool m_bGotWorthIt;
+
 	CNetworkVar( bool, m_bCoderHacks );
 	CNetworkVar( int, m_nCoderHacksButtons );
 

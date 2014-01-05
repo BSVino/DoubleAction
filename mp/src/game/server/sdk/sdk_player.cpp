@@ -393,6 +393,7 @@ CSDKPlayer::CSDKPlayer()
 
 	m_bHasPlayerDied = false;
 	m_bThirdPerson = false;
+	m_bGotWorthIt = false;
 
 	m_iKills = m_iDeaths = 0;
 
@@ -1156,6 +1157,10 @@ void CSDKPlayer::Spawn()
 	m_iCurrentStreak = 0;
 	m_flNextSuicideTime = 0;
 
+	if (m_bGotWorthIt)
+		AddStylePoints(9999, STYLE_SOUND_NONE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
+	m_bGotWorthIt = false;
+
 	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 		GiveSlowMo(1);
@@ -1716,7 +1721,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	StopSound( "Player.GoSlide" );
 
-	if (m_Shared.IsSuperFalling() && m_bDamagedEnemyDuringFall)
+	if (m_Shared.IsSuperFalling() && (m_bDamagedEnemyDuringFall || (m_hKiller.Get() && m_hKiller->IsPlayer() && m_hKiller.Get() != this)))
 	{
 		AddStylePoints(10, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
@@ -2094,6 +2099,9 @@ void CSDKPlayer::SendAnnouncement(announcement_t eAnnouncement, style_point_t eP
 
 void CSDKPlayer::SendNotice(notice_t eNotice)
 {
+	if (eNotice == NOTICE_WORTHIT)
+		m_bGotWorthIt = true;
+
 	CSingleUserRecipientFilter user( this );
 	user.MakeReliable();
 
