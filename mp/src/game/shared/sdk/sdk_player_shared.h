@@ -114,6 +114,7 @@ public:
 	void    StartManteling(const Vector& vecWallNormal);
 	void    AccumulateMantelTime();
 	void    ResetManteling();
+	Vector  GetMantelWallNormal() const { return m_vecMantelWallNormal; }
 
 	bool    IsWallFlipping() const { return m_bIsWallFlipping; }
 	void    StartWallFlip();

@@ -364,7 +364,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 
 		return;
 	}
-	if (m_bFlipping)
+	else if (m_bFlipping)
 	{
 		m_angRender[YAW] = m_flEyeYaw;
 #ifndef CLIENT_DLL
@@ -375,6 +375,18 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 #endif
 		return;
 	}
+	else if (m_pSDKPlayer->m_Shared.IsManteling())
+	{
+		m_angRender[YAW] = m_PoseParameterData.m_flEstimateYaw;
+#ifndef CLIENT_DLL
+		QAngle angle = GetBasePlayer()->GetAbsAngles();
+		angle[YAW] = m_PoseParameterData.m_flEstimateYaw;
+
+		GetBasePlayer()->SetAbsAngles( angle );
+#endif
+		return;
+	}
+
 	// Get the movement velocity.
 	Vector vecVelocity;
 	GetOuterAbsVelocity( vecVelocity );
@@ -545,6 +557,11 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 	if (m_pSDKPlayer->m_Shared.IsProne())
 	{
 		// Don't touch it
+	}
+	else if (m_pSDKPlayer->m_Shared.IsManteling())
+	{
+		Vector vecWallNormal = m_pSDKPlayer->m_Shared.GetMantelWallNormal();
+		m_PoseParameterData.m_flEstimateYaw = ( atan2( -vecWallNormal.y, -vecWallNormal.x ) * 180.0f / M_PI );
 	}
 	else if ( vecEstVelocity.x == 0.0f && vecEstVelocity.y == 0.0f )
 	{

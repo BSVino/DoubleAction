@@ -1278,6 +1278,7 @@ void CSDKPlayerShared::StartManteling(const Vector& vecWallNormal)
 	m_pOuter->DoAnimationEvent (PLAYERANIMEVENT_WALLCLIMB);
 
 	m_flMantelTime = 0.5f;
+	m_vecMantelWallNormal = vecWallNormal;
 }
 
 void CSDKPlayerShared::AccumulateMantelTime()
