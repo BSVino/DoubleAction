@@ -153,7 +153,7 @@ public:
 	int GetShotsFired() { return m_iShotsFired; }
 
 	virtual void DoMuzzleFlash();
-	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
+	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment );
 
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();

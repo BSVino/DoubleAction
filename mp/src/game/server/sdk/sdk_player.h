@@ -262,7 +262,7 @@ public:
 		float y );
 
 	virtual void DoMuzzleFlash();
-	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
+	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment );
 
 	CNetworkVarEmbedded( CSDKPlayerShared, m_Shared );
 	virtual void			PlayerDeathThink( void );

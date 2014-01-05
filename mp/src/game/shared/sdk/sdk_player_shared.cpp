@@ -51,6 +51,11 @@
 
 #include "da.h"
 
+#include "da_bulletmanager.h"
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
+
 // Have to override all of ItemPostFrame to s/gpGlobals->curtime/GetCurrentTime()/
 void CSDKPlayer::ItemPostFrame()
 {
@@ -99,10 +104,7 @@ void CSDKPlayer::ItemPostFrame()
 #endif
 }
 
-ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet impact point" );
 ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "75", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
-
-void DispatchEffect( const char *pName, const CEffectData &data );
 
 void CSDKPlayer::FireBullet( 
 						   Vector vecSrc,	// shooting postion
@@ -117,8 +119,6 @@ void CSDKPlayer::FireBullet(
 						   float y	// spread y factor
 						   )
 {
-	float flCurrentDistance = 0.0;  //distance that the bullet has traveled so far
-
 	Vector vecDirShooting, vecRight, vecUp;
 	AngleVectors( shootAngles, &vecDirShooting, &vecRight, &vecUp );
 
@@ -132,235 +132,21 @@ void CSDKPlayer::FireBullet(
 
 	VectorNormalize( vecDir );
 
-	float flMaxRange = 8000;
+	CSDKPlayer* pSDKAttacker = ToSDKPlayer(pevAttacker);
+	Assert(pSDKAttacker);
+	Assert(pSDKAttacker == this);
 
-	Vector vecEnd = vecSrc + vecDir * flMaxRange; // max bullet range is 10000 units
-	CBaseEntity* pIgnore = this;
+	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, iDamage, iBulletType, bDoEffects);
 
-	// initialize these before the penetration loop, we'll need them to make our tracer after
-	Vector vecTracerSrc = vecSrc;
-	trace_t tr; // main enter bullet trace
-
-	for (size_t i = 0; i < 5; i++)
+	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1)
 	{
-		CTraceFilterSimpleList tf(COLLISION_GROUP_NONE);
-		tf.AddEntityToIgnore(this);
-		tf.AddEntityToIgnore(pIgnore);
-
-		UTIL_TraceLine( vecSrc, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, &tf, &tr );
-
-		if ( tr.fraction == 1.0f )
-			break; // we didn't hit anything, stop tracing shoot
-
-		if ( sv_showimpacts.GetBool() )
-		{
-#ifdef CLIENT_DLL
-			// draw red client impact markers
-			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
-
-			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-			{
-				C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawClientHitboxes( 4, true );
-			}
-#else
-			// draw blue server impact markers
-			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
-
-			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-			{
-				CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawServerHitboxes( 4, true );
-			}
-#endif
-		}
-
-		weapontype_t eWeaponType = WT_NONE;
-
-		CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeaponID);
-		Assert(pWeaponInfo);
-		if (pWeaponInfo)
-			eWeaponType = pWeaponInfo->m_eWeaponType;
-
-		float flDamageMultiplier = 1;
-		float flMaxRange = 3000;
-
-		// Power formula works like so:
-		// pow( x, distance/y )
-		// The damage will be at 1 when the distance is 0 units, and at
-		// x% when the distance is y units, with a gradual decay approaching zero
-		switch (eWeaponType)
-		{
-		case WT_RIFLE:
-			flDamageMultiplier = 0.75f;
-			flMaxRange = 3000;
-			break;
-
-		case WT_SHOTGUN:
-			flDamageMultiplier = 0.40f;
-			flMaxRange = 500;
-			break;
-
-		case WT_SMG:
-			flDamageMultiplier = 0.50f;
-			flMaxRange = 1000;
-			break;
-
-		case WT_PISTOL:
-		default:
-			flDamageMultiplier = 0.55f;
-			flMaxRange = 1500;
-			break;
-		}
-
-		flMaxRange *= m_Shared.ModifySkillValue(1, 0.5f, SKILL_MARKSMAN);
-
-		//calculate the damage based on the distance the bullet travelled.
-		flCurrentDistance += tr.fraction * flMaxRange;
-
-		// First 500 units, no decrease in damage.
-		if (eWeaponType == WT_SHOTGUN)
-			flCurrentDistance -= 350;
-		else
-			flCurrentDistance -= 500;
-
-		if (flCurrentDistance < 0)
-			flCurrentDistance = 0;
-
-		if (flCurrentDistance > flMaxRange)
-			flCurrentDistance = flMaxRange;
-
-		float flDistanceMultiplier = pow(flDamageMultiplier, (flCurrentDistance / flMaxRange));
-
-		int iDamageType = DMG_BULLET | DMG_NEVERGIB | GetAmmoDef()->DamageType(iBulletType);
-
-		if (i == 0)
-			iDamageType |= DMG_DIRECT;
-
-		if( bDoEffects )
-		{
-			// See if the bullet ended up underwater + started out of the water
-			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
-			{	
-				trace_t waterTrace;
-				UTIL_TraceLine( vecSrc, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), pIgnore, COLLISION_GROUP_NONE, &waterTrace );
-
-				if( waterTrace.allsolid != 1 )
-				{
-					CEffectData	data;
-					data.m_vOrigin = waterTrace.endpos;
-					data.m_vNormal = waterTrace.plane.normal;
-					data.m_flScale = random->RandomFloat( 8, 12 );
-
-					if ( waterTrace.contents & CONTENTS_SLIME )
-					{
-						data.m_fFlags |= FX_WATER_IN_SLIME;
-					}
-
-					DispatchEffect( "gunshotsplash", data );
-				}
-			}
-			else
-			{
-				//Do Regular hit effects
-
-				// Don't decal nodraw surfaces
-				if ( !( tr.surface.flags & (SURF_SKY|SURF_NODRAW|SURF_HINT|SURF_SKIP) ) )
-				{
-					CBaseEntity *pEntity = tr.m_pEnt;
-					//Tony; only while using teams do we check for friendly fire.
-					if ( pEntity && pEntity->IsPlayer() && (pEntity->GetBaseAnimating() && !pEntity->GetBaseAnimating()->IsRagdoll()) )
-					{
-#if defined ( SDK_USE_TEAMS )
-						if ( pEntity->GetTeamNumber() == GetTeamNumber() )
-						{
-							if ( !friendlyfire.GetBool() )
-								UTIL_ImpactTrace( &tr, iDamageType );
-						}
-#else
-						UTIL_ImpactTrace( &tr, iDamageType );
-#endif
-					}
-					//Tony; non player, just go nuts,
-					else
-					{
-						UTIL_ImpactTrace( &tr, iDamageType );
-					}
-				}
-			}
-		} // bDoEffects
-
-		// add damage to entity that we hit
-
-#ifdef GAME_DLL
-		float flBulletDamage = iDamage * flDistanceMultiplier / (i+1);	// Each iteration the bullet drops in strength
-		if (IsStyleSkillActive(SKILL_MARKSMAN))
-			flBulletDamage = iDamage * flDistanceMultiplier / (i/2+1);	// Each iteration the bullet drops in strength but not nearly as much.
-
-		ClearMultiDamage();
-
-		CTakeDamageInfo info( pevAttacker, pevAttacker, flBulletDamage, iDamageType );
-		CalculateBulletDamageForce( &info, iBulletType, vecDir, tr.endpos );
-		tr.m_pEnt->DispatchTraceAttack( info, vecDir, &tr );
-
-		TraceAttackToTriggers( info, tr.startpos, tr.endpos, vecDir );
-
-		ApplyMultiDamage();
-#else
-		flDistanceMultiplier = flDistanceMultiplier; // Silence warning.
-#endif
-
-		pIgnore = tr.m_pEnt;
-
-		float flPenetrationDistance;
-		switch (eWeaponType)
-		{
-		case WT_RIFLE:
-			flPenetrationDistance = 25;
-			break;
-
-		case WT_SHOTGUN:
-			flPenetrationDistance = 5;
-			break;
-
-		case WT_SMG:
-			flPenetrationDistance = 15;
-			break;
-
-		case WT_PISTOL:
-		default:
-			flPenetrationDistance = 15;
-			break;
-		}
-
-		flPenetrationDistance = m_Shared.ModifySkillValue(flPenetrationDistance, 1, SKILL_MARKSMAN);
-
-		Vector vecBackwards = tr.endpos + vecDir * flPenetrationDistance;
-		if (tr.m_pEnt->IsBSPModel())
-			UTIL_TraceLine( vecBackwards, tr.endpos, CONTENTS_SOLID|CONTENTS_MOVEABLE, NULL, COLLISION_GROUP_NONE, &tr );
-		else
-			UTIL_TraceLine( vecBackwards, tr.endpos, CONTENTS_HITBOX, NULL, COLLISION_GROUP_NONE, &tr );
-
-		if (tr.startsolid)
-			break;
-		
-		if (tr.m_pEnt)
-		{
-			// let's have a bullet exit effect if we penetrated a solid surface
-			if (tr.m_pEnt->IsBSPModel())
-				UTIL_ImpactTrace( &tr, iDamageType );
-
-			// ignore the entity we just hit for the next trace to avoid weird impact behaviors
-			pIgnore = tr.m_pEnt;
-		}
-
-		// Set up the next trace.
-		vecSrc = tr.endpos + vecDir;	// One unit in the direction of fire so that we firmly embed ourselves in whatever solid was hit.
+		BulletManager().AddBullet(oBullet);
+		return;
 	}
-	
-	// the bullet's done penetrating, let's spawn our particle system
-	if (bDoEffects && (pevAttacker == this))
-		MakeTracer( vecTracerSrc, tr, TRACER_TYPE_DEFAULT );
+
+	BulletManager().SimulateBullet(oBullet, -1);
+
+	Assert(oBullet.m_bAvailable);
 }
 
 void CSDKPlayer::DoMuzzleFlash()
@@ -414,12 +200,12 @@ void CSDKPlayer::DoMuzzleFlash()
 #endif
 }
 
-void CSDKPlayer::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+void CSDKPlayer::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment )
 {
 #ifdef CLIENT_DLL
 	CWeaponSDKBase *pWeapon = GetActiveSDKWeapon();
 	if (pWeapon)
-		pWeapon->MakeTracer( vecTracerSrc, tr, iTracerType );
+		pWeapon->MakeTracer( vecTracerSrc, tr, iTracerType, bUseTracerAttachment );
 #endif
 }
 
@@ -1747,15 +1533,17 @@ void CSDKPlayer::ActivateSlowMo()
 	if (!m_flSlowMoSeconds)
 		return;
 
+#ifdef GAME_DLL
+	if (m_bHasSuperSlowMo || m_flSlowMoSeconds >= 3)
+		CDove::SpawnDoves(this);
+#endif
+
 	m_flSlowMoTime = gpGlobals->curtime + m_flSlowMoSeconds + 0.5f;    // 1 second becomes 1.5 seconds, 2 becomes 2.5, etc
 	m_flSlowMoSeconds = 0;
 	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
 
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
-
-	if (m_bHasSuperSlowMo || m_flSlowMoTime > 3)
-		CDove::SpawnDoves(this);
 #endif
 
 	ReadyWeapon();

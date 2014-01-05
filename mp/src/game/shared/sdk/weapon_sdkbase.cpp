@@ -1440,7 +1440,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 }
 
 extern void FX_TracerSound( const Vector &start, const Vector &end, int iTracerType );
-void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )
+void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment )
 {
 #ifdef CLIENT_DLL
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
@@ -1454,24 +1454,32 @@ void CWeaponSDKBase::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, 
 		int iObsMode = pLocalPlayer->GetObserverMode();
 		bool bPovObs = iObsMode == OBS_MODE_IN_EYE && pLocalPlayer->GetObserverTarget() == GetOwner();
 
-		if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
+		if (bUseTracerAttachment)
 		{
-			for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+			if( pLocalPlayer == GetOwner() && !pLocalPlayer->IsInThirdPerson() || bPovObs )
 			{
-				CBaseViewModel *vm = pLocalPlayer->GetViewModel( i );
-				if ( !vm )
-					continue;
+				for ( int i = 0; i < MAX_VIEWMODELS; i++ )
+				{
+					CBaseViewModel *vm = pLocalPlayer->GetViewModel( i );
+					if ( !vm )
+						continue;
 
-				pTracer = vm->ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+					pTracer = vm->ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+				}
 			}
+			else
+				pTracer = ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
 		}
 		else
-			pTracer = ParticleProp()->Create( "tracer_bullet", PATTACH_POINT, GetTracerAttachment());
+		{
+			pTracer = ParticleProp()->Create( "tracer_bullet", PATTACH_CUSTOMORIGIN );
+			pTracer->SetControlPoint(0, vecTracerSrc);
+		}
 
 		// just in case we couldn't get a view model
 		if( pTracer == NULL )
 			return;
-		
+
 		// Set the particle effect's destination to our bullet's termination point
 		pTracer->SetControlPoint( 1, tr.endpos );
 		pTracer->SetSortOrigin( vecTracerSrc );
