@@ -98,7 +98,7 @@ Color CHudChat::GetClientColor( int clientIndex )
 {
 	if ( clientIndex == 0 ) // console msg
 	{
-		return g_ColorYellow;
+		return Color(255, 255, 255, 255);
 	}
 	else if( g_PR )
 	{
@@ -106,9 +106,14 @@ Color CHudChat::GetClientColor( int clientIndex )
 		{
 		case SDK_TEAM_BLUE	: return g_ColorBlue;
 		case SDK_TEAM_RED	: return g_ColorRed;
-		default	: return g_ColorYellow;
+		default	: return Color(255, 255, 255, 255);
 		}
 	}
 
-	return g_ColorYellow;
+	return g_ColorGrey;
+}
+
+Color CHudChat::GetDefaultTextColor( void )
+{
+	return g_ColorGrey;
 }

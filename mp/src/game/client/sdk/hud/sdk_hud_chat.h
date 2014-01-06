@@ -60,6 +60,7 @@ public:
 	int				GetChatInputOffset( void );
 
 	virtual Color	GetClientColor( int clientIndex );
+	virtual Color	GetDefaultTextColor();
 };
 
 #endif	//SDK_HUD_CHAT_H
