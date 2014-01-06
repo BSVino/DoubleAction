@@ -1161,7 +1161,6 @@ void CSDKPlayer::Spawn()
 		AddStylePoints(9999, STYLE_SOUND_NONE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
 	m_bGotWorthIt = false;
 
-	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 		GiveSlowMo(1);
 
@@ -3204,13 +3203,7 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 	SetStylePoints(0);
 	m_flStyleSkillCharge = 0;
 
-	m_bHasSuperSlowMo = (m_Shared.m_iStyleSkill == SKILL_REFLEXES);
-
-	if (iOldSkill == SKILL_REFLEXES)
-		GiveSlowMo(-1);
-
-	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
-		GiveSlowMo(1);
+	m_bHasSuperSlowMo = false;
 
 	if (m_Shared.m_iStyleSkill != SKILL_TROLL)
 	{
@@ -4003,7 +3996,9 @@ void CSDKPlayer::ActivateMeter()
 	}
 	else if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
 	{
-		GiveSlowMo(2); // You get one from the kill so it's three total.
+		GiveSlowMo(3); // You get one from the kill so it's three total.
+
+		m_bHasSuperSlowMo = true;
 
 		SendNotice(NOTICE_SUPERSLO);
 

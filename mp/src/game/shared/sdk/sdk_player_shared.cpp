@@ -1542,6 +1542,9 @@ void CSDKPlayer::ActivateSlowMo()
 	m_flSlowMoSeconds = 0;
 	m_iSlowMoType = m_bHasSuperSlowMo?SLOWMO_STYLESKILL:SLOWMO_ACTIVATED;
 
+	if (m_Shared.m_bSuperSkill)
+		m_iSlowMoType = SLOWMO_STYLESKILL;
+
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
