@@ -187,6 +187,9 @@ bool PlayerDeadConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	if (!pPlayer->HasPlayerDied())
 		return false;
 
+	if (pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM)
+		return false;
+
 	return true;
 }
 
