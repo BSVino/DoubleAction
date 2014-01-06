@@ -45,7 +45,7 @@ C_SDK_PlayerResource::C_SDK_PlayerResource()
 	m_Colors[SDK_TEAM_RED] = COLOR_RED;
 #endif
 
-	m_Colors[TEAM_UNASSIGNED] = COLOR_YELLOW;
+	m_Colors[TEAM_UNASSIGNED] = COLOR_WHITE;
 	m_Colors[TEAM_SPECTATOR] = COLOR_GREY;
 }
 
