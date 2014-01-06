@@ -422,7 +422,7 @@ void CHudAmmo::Paint()
 
 	wchar_t* pszActivate = g_pVGuiLocalize->Find("#DA_HUD_Ammo_Reload");
 
-	if (pszActivate && m_iAmmo == 0)
+	if (pszActivate && m_iAmmo == 0 && !pPlayer->GetActiveSDKWeapon()->m_bInReload)
 	{
 #define WSTRLEN 512
 		// replace any key references with bound keys
