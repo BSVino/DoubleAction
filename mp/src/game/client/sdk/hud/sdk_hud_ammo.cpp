@@ -313,12 +313,12 @@ Vector2D CHudAmmo::GetRoundPosition(int i)
 
 float CHudAmmo::GetTextureDrawWidth(CHudTexture* pTexture, float flScale)
 {
-	return scheme()->GetProportionalScaledValueEx(GetScheme(), pTexture->EffectiveWidth(1))*flScale * 0.8f;
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), pTexture->EffectiveWidth(1))*flScale * 0.6f;
 }
 
 float CHudAmmo::GetTextureDrawHeight(CHudTexture* pTexture, float flScale)
 {
-	return scheme()->GetProportionalScaledValueEx(GetScheme(), pTexture->EffectiveHeight(1))*flScale * 0.8f;
+	return scheme()->GetProportionalScaledValueEx(GetScheme(), pTexture->EffectiveHeight(1))*flScale * 0.6f;
 }
 
 Vector4D CHudAmmo::GetGrenadePosition(int i)
