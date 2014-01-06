@@ -78,19 +78,116 @@ public:
 	}
 };
 
+const char* g_aszBotNames[] =
+{
+	"Slab Bulkhead",
+	"Bridge Largemeats",
+	"Hunt Speedchunk",
+	"Butch Deadlift",
+	"Bold Bigblank",
+	"Splint Chesthair",
+	"Flint Ironstag",
+	"Bolt van der Huge",
+	"Thick McRunfast",
+	"Blast Hardcheeze",
+	"Buff Drinklots",
+	"Slab o' Hunk",
+	"Trunk Slamchest",
+	"Fist Rockbone",
+	"Stump Beefknob",
+	"Smash Lampjaw",
+	"Punch Rockgroin",
+	"Buck Plankchest",
+	"Stump Junkmann",
+	"Dirk Hardpec",
+	"Ripp Steakface",
+	"Blake Slabrock",
+	"Rod Bonemeal",
+	"Whip Slabcheek",
+	"Punch Sideiron",
+	"Gristle McThornbody",
+	"Slake Fistcrunch",
+	"Buff Hardback",
+	"Bob Johnson",
+	"Blast Thickneck",
+	"Crunch Buttsteak",
+	"Slam Squatthrust",
+	"Lump Beefbroth",
+	"Touch Rustrod",
+	"Reef Blastboddy",
+	"Big McLargehuge",
+	"Smoke Manmuscle",
+	"Meat Punchbeef",
+	"Hack Blowfist",
+	"Roll Fizzlebeef",
+	"Brohan",
+	"Brochill",
+	"Broseph von Brohammer",
+	"Brotastic Broski",
+	"Brosicle",
+	"Brofessor Brobody",
+	"Han Brolo",
+	"Brosideon, Lord of the Brocean",
+	"Broba Fett",
+	"Brohatma Ghandi",
+	"Brohan Solo",
+	"Brohemian",
+	"Bromosapien",
+	"Broseph Stalin",
+	"Abroham Lincoln",
+	"Brorack Brobama",
+	"Broranosaurus rex",
+	"Brohemoth",
+	"Broseph Gordon Levitt",
+	"Brobi-wan Kenobi",
+	"Marco Brolo",
+	"Edgar Allan Bro",
+	"Brozo the Clown",
+	"C-3P Bro",
+	"Frosty the Broman",
+	"Arnold",
+	"Bruce",
+	"Jackie",
+	"Chow",
+	"Chuck",
+	"Clint",
+	"Clive",
+	"Denzel",
+	"Harrison",
+	"Ip",
+	"Jean-Claude",
+	"Jet",
+	"Statham",
+	"Keanu",
+	"Kurt",
+	"Laurence",
+	"Nicolas",
+	"Pierce",
+	"Sammy J",
+	"Seagal",
+	"Sylvester",
+	"Diesel",
+	"Wesley",
+	"Quentin",
+	"Sergio",
+	"Woo",
+	"Filippo",
+	"Lorenzo",
+};
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
 //-----------------------------------------------------------------------------
 CBasePlayer *BotPutInServer( bool  bFrozen )
 {
-	char botname[ 64 ];
-	Q_snprintf( botname, sizeof( botname ), "Bot%02i", g_CurBotNumber );
-	
+	int iNumBotNames = ARRAYSIZE(g_aszBotNames);
+
 	// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
 	// that we would normally get when ClientPutInServer is called.
 	ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
-	edict_t *pEdict = engine->CreateFakeClient( botname );
+	edict_t *pEdict = engine->CreateFakeClient( g_aszBotNames[random->RandomInt(0, iNumBotNames-1)] );
 	ClientPutInServerOverride( NULL );
 
 	if (!pEdict)
