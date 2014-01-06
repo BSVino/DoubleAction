@@ -184,6 +184,9 @@ bool CSDKBot::BotOnLadder()
 
 bool CSDKBot::ArrivedToWaypoint()
 {
+	if (!m_Waypoints.Count())
+		return false;
+
 	if( m_bIsOnLadder )
 	{
 		float dist = fabs(m_Waypoints[0].Center.z - GetLocalOrigin().z);
