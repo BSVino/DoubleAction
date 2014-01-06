@@ -253,3 +253,20 @@ CON_COMMAND_F( bot_teleport, "Give weapon to player.\n\tArguments: <weapon_name>
 
 	pBot->SetAbsOrigin(tr.endpos);
 }
+
+CON_COMMAND_F( bot_giveslowmo, "Give all bots one second of slow motion", FCVAR_CHEAT )
+{
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+
+		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsAlive())
+			continue;
+
+		if (pPlayer->IsBot())
+			pPlayer->GiveSlowMo(1);
+	}
+}

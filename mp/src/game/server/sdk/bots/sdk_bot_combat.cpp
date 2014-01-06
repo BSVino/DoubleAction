@@ -79,4 +79,7 @@ void CSDKBot::Attack( CUserCmd &cmd )
 	// Try to throw a grenade.
 	if (random->RandomInt(0, 1))
 		cmd.buttons |= IN_ALT2;
+
+	// Use slow motion
+	ActivateSlowMo();
 }
