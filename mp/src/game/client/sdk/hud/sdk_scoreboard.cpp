@@ -45,7 +45,7 @@ enum EScoreboardSections
 //-----------------------------------------------------------------------------
 CSDKScoreboard::CSDKScoreboard(IViewPort *pViewPort):CClientScoreBoardDialog(pViewPort)
 {
-	SetScheme("FolderScheme");
+	SetScheme("ClientScheme");
 	LoadControlSettings("Resource/UI/ScoreBoard.res");
 }
 
@@ -61,6 +61,8 @@ CSDKScoreboard::~CSDKScoreboard()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::PaintBackground()
 {
+	BaseClass::PaintBackground();
+
 	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
 	m_pPlayerList->SetBorder(NULL);
 }
@@ -70,6 +72,7 @@ void CSDKScoreboard::PaintBackground()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::PaintBorder()
 {
+	BaseClass::PaintBorder();
 }
 
 //-----------------------------------------------------------------------------
@@ -78,6 +81,12 @@ void CSDKScoreboard::PaintBorder()
 void CSDKScoreboard::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
+
+	m_bgColor = GetSchemeColor("SectionedListPanel.BgColor", GetBgColor(), pScheme);
+	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
+
+	SetBgColor( Color(0, 0, 0, 0) );
+	SetBorder( pScheme->GetBorder( "BaseBorder" ) );
 }
 
 void CSDKScoreboard::Update( void )
@@ -93,6 +102,8 @@ void CSDKScoreboard::Update( void )
 
 	// update every second
 	m_fNextUpdateTime = gpGlobals->curtime + 1.0f; 
+
+	MoveToCenterOfScreen();
 }
 
 //-----------------------------------------------------------------------------
@@ -213,7 +224,6 @@ void CSDKScoreboard::UpdateTeamInfo()
 			}
 		
 			m_pPlayerList->ModifyColumn(sectionID, "name", string1);
-			m_pPlayerList->SetSectionFgColor(sectionID, Color(0, 0, 0, 255));
 		}
 	}
 }
@@ -226,11 +236,10 @@ void CSDKScoreboard::AddHeader()
 	// add the top header
 	m_pPlayerList->AddSection(0, "");
 	m_pPlayerList->SetSectionAlwaysVisible(0);
-	m_pPlayerList->SetSectionFgColor(0, Color(0, 0, 0, 255));
 
-	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
+	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardSmall", false );
 
-	m_pPlayerList->SetFontSection(0, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
+	m_pPlayerList->SetFontSection(0, scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardTiny", false ));
 
 	int iScoreWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth );
 	int iPingWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth );
@@ -247,15 +256,14 @@ void CSDKScoreboard::AddHeader()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 {
-	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
+	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardSmall", false );
 
 	int sectionID = GetSectionFromTeamNumber( teamNumber );
 	if ( teamType == TYPE_TEAM )
 	{
  		m_pPlayerList->AddSection(sectionID, "", StaticPlayerSortFunc);
-		m_pPlayerList->SetSectionFgColor(sectionID, Color(0, 0, 0, 255));
 
-		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
+		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardTiny", false ));
 
 		int iScoreWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iScoreWidth );
 		int iPingWidth = scheme()->GetProportionalScaledValueEx( GetScheme(), m_iPingWidth );
@@ -278,10 +286,9 @@ void CSDKScoreboard::AddSection(int teamType, int teamNumber)
 	else if ( teamType == TYPE_SPECTATORS )
 	{
 		m_pPlayerList->AddSection(sectionID, "");
-		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "FolderTiny", false ));
+		m_pPlayerList->SetFontSection(sectionID, scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardTiny", false ));
 		m_pPlayerList->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE, m_iAvatarWidth );
 		m_pPlayerList->AddColumnToSection(sectionID, "name", "#SDK_Team_Spectators", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), m_iNameWidth ), hFallbackFont );
-		m_pPlayerList->SetSectionFgColor(sectionID, Color(0, 0, 0, 255));
 	}
 }
 
@@ -385,7 +392,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 				// add a new row
 				itemID = m_pPlayerList->AddItem( sectionID, kv );
 
-				HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "FolderSmall", false );
+				HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardSmall", false );
 				m_pPlayerList->SetItemFont(itemID, hItemFont);
 			}
 			else
@@ -400,7 +407,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 			}
 
 			// set the row color based on the players team
-			m_pPlayerList->SetItemFgColor( itemID, Color(0, 0, 0, 255) );
+			m_pPlayerList->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
 
 			kv->deleteThis();
 		}
@@ -433,6 +440,8 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStylePlayer()));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		else
+			pMostLabelPlayer->SetText("");
 	}
 
 	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStunts"));
@@ -455,6 +464,8 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStuntKillPlayer()));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		else
+			pMostLabelPlayer->SetText("");
 	}
 
 	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostBrawl"));
@@ -477,6 +488,8 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestBrawlKillPlayer()));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		else
+			pMostLabelPlayer->SetText("");
 	}
 
 	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStreak"));
@@ -499,6 +512,8 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestKillStreakPlayer()));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		else
+			pMostLabelPlayer->SetText("");
 	}
 
 	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostGrenade"));
@@ -521,17 +536,13 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestGrenadeKillPlayer()));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		else
+			pMostLabelPlayer->SetText("");
 	}
 }
 
 Panel *CSDKScoreboard::CreateControlByName( const char *controlName )
 {
-	if (FStrEq(controlName, "FolderLabel"))
-		return new CFolderLabel( this, NULL );
-
-	if (FStrEq(controlName, "PanelTexture"))
-		return new CPanelTexture( this, NULL );
-
 	return BaseClass::CreateControlByName(controlName);
 }
 

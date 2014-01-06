@@ -111,31 +111,31 @@ void CSDKPlayerResource::UpdatePlayerData( void )
 
 	// Only overwrite the current high scorer if the new guy has passed him.
 	// The first to get there should always keep it.
-	if (iHighestStyle > m_iHighestStyle)
+	if (iHighestStyle > m_iHighestStyle || (m_iHighestStylePlayer && !UTIL_PlayerByIndex( m_iHighestStylePlayer )))
 	{
 		m_iHighestStyle = iHighestStyle;
 		m_iHighestStylePlayer = iHighestStylePlayer;
 	}
 
-	if (iHighestStuntKills > m_iHighestStuntKills)
+	if (iHighestStuntKills > m_iHighestStuntKills || (m_iHighestStuntKillPlayer && !UTIL_PlayerByIndex( m_iHighestStuntKillPlayer )))
 	{
 		m_iHighestStuntKills = iHighestStuntKills;
 		m_iHighestStuntKillPlayer = iHighestStuntKillPlayer;
 	}
 
-	if (iHighestGrenadeKills > m_iHighestGrenadeKills)
+	if (iHighestGrenadeKills > m_iHighestGrenadeKills || (m_iHighestGrenadeKillPlayer && !UTIL_PlayerByIndex( m_iHighestGrenadeKillPlayer )))
 	{
 		m_iHighestGrenadeKills = iHighestGrenadeKills;
 		m_iHighestGrenadeKillPlayer = iHighestGrenadeKillPlayer;
 	}
 
-	if (iHighestBrawlKills > m_iHighestBrawlKills)
+	if (iHighestBrawlKills > m_iHighestBrawlKills || (m_iHighestBrawlKillPlayer && !UTIL_PlayerByIndex( m_iHighestBrawlKillPlayer )))
 	{
 		m_iHighestBrawlKills = iHighestBrawlKills;
 		m_iHighestBrawlKillPlayer = iHighestBrawlKillPlayer;
 	}
 
-	if (iHighestKillStreak > m_iHighestKillStreak)
+	if (iHighestKillStreak > m_iHighestKillStreak || (m_iHighestKillStreakPlayer && !UTIL_PlayerByIndex( m_iHighestKillStreakPlayer )))
 	{
 		m_iHighestKillStreak = iHighestKillStreak;
 		m_iHighestKillStreakPlayer = iHighestKillStreakPlayer;
