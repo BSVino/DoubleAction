@@ -309,6 +309,8 @@ void RegisterVoteIssues();
 
 void CSDKGameRules::LevelInitPostEntity()
 {
+	ConVarRef("sk_player_head").SetValue("1.3");
+
 	BaseClass::LevelInitPostEntity();
 
 	//Tony; initialize the level
