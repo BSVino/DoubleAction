@@ -146,7 +146,7 @@ void CSDKPlayer::FireBullet(
 
 	BulletManager().SimulateBullet(oBullet, -1);
 
-	Assert(oBullet.m_bAvailable);
+	Assert(!oBullet.m_bActive);
 }
 
 void CSDKPlayer::DoMuzzleFlash()

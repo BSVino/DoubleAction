@@ -6,6 +6,10 @@
 #include "effect_dispatch_data.h"
 #include "ammodef.h"
 
+#ifdef CLIENT_DLL
+#include "view.h"
+#endif
+
 #include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -28,14 +32,14 @@ void CBulletManager::LevelInitPostEntity()
 	m_aBullets.SetSize(200);
 
 	for (int i = 0; i < m_aBullets.Count(); i++)
-		m_aBullets[i].m_bAvailable = true;
+		m_aBullets[i].Deactivate();
 }
 
 CBulletManager::CBullet CBulletManager::MakeBullet(CSDKPlayer* pShooter, const Vector& vecSrc, const Vector& vecDirection, SDKWeaponID eWeapon, int iDamage, int iBulletType, bool bDoEffects)
 {
 	CBullet oBullet;
 
-	oBullet.m_bAvailable = false;
+	oBullet.m_bActive = true;
 
 	oBullet.m_hShooter = pShooter;
 	oBullet.m_flShotTime = gpGlobals->curtime;
@@ -65,7 +69,7 @@ void CBulletManager::AddBullet(const CBullet& oBullet)
 	int iEmpty = -1;
 	for (int i = 0; i < m_aBullets.Count(); i++)
 	{
-		if (m_aBullets[i].m_bAvailable)
+		if (!m_aBullets[i].m_bActive)
 		{
 			iEmpty = i;
 			break;
@@ -77,7 +81,7 @@ void CBulletManager::AddBullet(const CBullet& oBullet)
 		return;
 
 	m_aBullets[iEmpty] = oBullet;
-	m_aBullets[iEmpty].m_bAvailable = false;
+	m_aBullets[iEmpty].Activate();
 }
 
 void CBulletManager::Update(float frametime)
@@ -91,24 +95,40 @@ void CBulletManager::FrameUpdatePreEntityThink()
 }
 
 ConVar da_bullet_speed("da_bullet_speed", "2000", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
+ConVar da_bullet_debug("da_bullet_debug", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet path" );
 
 void CBulletManager::BulletsThink(float flFrameTime)
 {
 	for (int i = 0; i < m_aBullets.Count(); i++)
 	{
 		CBullet& oBullet = m_aBullets[i];
-		if (oBullet.m_bAvailable)
+		if (!oBullet.m_bActive)
 			continue;
+
+		float flLerpTime = da_bullet_speed.GetFloat() / 400 * flFrameTime;
+		if (oBullet.m_hShooter)
+			flLerpTime *= oBullet.m_hShooter->GetSlowMoMultiplier();
+
+		oBullet.m_flCurrAlpha = Approach(oBullet.m_flGoalAlpha, oBullet.m_flCurrAlpha, flLerpTime);
+
+		if (oBullet.m_bActive && oBullet.m_flGoalAlpha == 0 && oBullet.m_flCurrAlpha == 0)
+		{
+			oBullet.m_bActive = false;
+#ifdef CLIENT_DLL
+			ClientLeafSystem()->RemoveRenderable( oBullet.m_hRenderHandle );
+#endif
+			continue;
+		}
 
 		if (!oBullet.m_hShooter)
 		{
-			oBullet.m_bAvailable = true;
+			oBullet.Deactivate();
 			continue;
 		}
 
 		if (gpGlobals->curtime > oBullet.m_flShotTime + 10)
 		{
-			oBullet.m_bAvailable = true;
+			oBullet.Deactivate();
 			continue;
 		}
 
@@ -127,11 +147,14 @@ void CBulletManager::BulletsThink(float flFrameTime)
 
 		SimulateBullet(oBullet, dt);
 
+		if (da_bullet_debug.GetBool())
+		{
 #ifdef CLIENT_DLL
-		DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 0, 0, 255, false, 0.1);
+			DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 0, 0, 255, false, 0.1);
 #else
-		DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 255, 0, 0, false, 0.1);
+			DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 255, 0, 0, false, 0.1);
 #endif
+		}
 	}
 }
 
@@ -296,7 +319,7 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 		{
 			// See if the bullet ended up underwater + started out of the water
 			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
-			{	
+			{
 				trace_t waterTrace;
 				UTIL_TraceLine( oBullet.m_vecOrigin, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), oBullet.m_ahObjectsHit.Tail(), COLLISION_GROUP_NONE, &waterTrace );
 
@@ -308,9 +331,7 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 					data.m_flScale = random->RandomFloat( 8, 12 );
 
 					if ( waterTrace.contents & CONTENTS_SLIME )
-					{
 						data.m_fFlags |= FX_WATER_IN_SLIME;
-					}
 
 					DispatchEffect( "gunshotsplash", data );
 				}
@@ -327,15 +348,11 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 					if ( SDKGameRules()->IsTeamplay() && pEntity && pEntity->IsPlayer() && (pEntity->GetBaseAnimating() && !pEntity->GetBaseAnimating()->IsRagdoll()) )
 					{
 						if ( pEntity->GetTeamNumber() != oBullet.m_hShooter->GetTeamNumber() )
-						{
 							UTIL_ImpactTrace( &tr, iDamageType );
-						}
 					}
 					//Tony; non player, just go nuts,
 					else
-					{
 						UTIL_ImpactTrace( &tr, iDamageType );
-					}
 				}
 			}
 		} // bDoEffects
@@ -408,9 +425,135 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 	if (oBullet.m_bDoEffects && dt < 0)
 		oBullet.m_hShooter->MakeTracer( oBullet.m_vecOrigin, tr, TRACER_TYPE_DEFAULT, !bHasTraveledBefore );
 
+#ifdef CLIENT_DLL
+	if (oBullet.m_hRenderHandle != INVALID_CLIENT_RENDER_HANDLE)
+		ClientLeafSystem()->RenderableChanged( oBullet.m_hRenderHandle );
+#endif
+
 	if (bFullPenetrationDistance || oBullet.m_iPenetrations >= da_bullet_penetrations.GetInt())
-		oBullet.m_bAvailable = true;
+		oBullet.Deactivate();
 
 	if (dt < 0)
-		oBullet.m_bAvailable = true;
+		oBullet.Deactivate();
+
+	if (!bHasTraveledBefore && oBullet.m_flCurrAlpha == 0 && oBullet.m_flGoalAlpha == 0)
+		oBullet.m_bActive = false;
+}
+
+#ifdef CLIENT_DLL
+const Vector& CBulletManager::CBullet::GetRenderOrigin()
+{
+	return m_vecOrigin;
+}
+
+const QAngle& CBulletManager::CBullet::GetRenderAngles()
+{
+	return vec3_angle;
+}
+
+const matrix3x4_t& CBulletManager::CBullet::RenderableToWorldTransform()
+{
+	static matrix3x4_t mat;
+	SetIdentityMatrix( mat );
+	PositionMatrix( GetRenderOrigin(), mat );
+	return mat;
+}
+
+bool CBulletManager::CBullet::ShouldDraw( void )
+{
+	return true;
+}
+
+bool CBulletManager::CBullet::IsTransparent( void )
+{
+	return true;
+}
+
+void CBulletManager::CBullet::GetRenderBounds( Vector& mins, Vector& maxs )
+{
+	mins = Vector(-10, -10, -10);
+	maxs = Vector(10, 10, 10);
+}
+
+void DrawCross(CMeshBuilder& meshBuilder, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecDirection, float flAlpha)
+{
+	float flWidth = 2.5f;
+	float flLength = 250;
+
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.TexCoord2f( 0,0, 0 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flWidth) - (vecDirection * flLength)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.TexCoord2f( 0,1, 0 );
+	meshBuilder.Position3fv( (vecOrigin - (vecRight * flWidth) - (vecDirection * flLength)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.TexCoord2f( 0,1, 1 );
+	meshBuilder.Position3fv( (vecOrigin - (vecRight * flWidth)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.TexCoord2f( 0,0, 1 );
+	meshBuilder.Position3fv( (vecOrigin + (vecRight * flWidth)).Base() );
+	meshBuilder.AdvanceVertex();
+}
+
+CMaterialReference g_hBulletStreak;
+int CBulletManager::CBullet::DrawModel( int flags )
+{
+	if (m_flCurrAlpha < 0)
+		return 0;
+
+	if (!g_hBulletStreak.IsValid())
+		g_hBulletStreak.Init( "effects/tracer1.vmt", TEXTURE_GROUP_OTHER );
+
+	float flAlpha = 150.5f/255.0f * m_flCurrAlpha;
+
+	Vector vecRight = Vector(0, 0, 1).Cross(m_vecDirection).Normalized();
+	Vector vecCross1 = (Vector(0, 0, 1) + vecRight).Normalized();
+	Vector vecCross2 = (Vector(0, 0, 1) - vecRight).Normalized();
+
+	CMeshBuilder meshBuilder;
+
+	CMatRenderContextPtr pRenderContext( materials );
+	pRenderContext->Bind( g_hBulletStreak );
+	IMesh* pMesh = pRenderContext->GetDynamicMesh();
+
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	DrawCross(meshBuilder, GetRenderOrigin(), vecCross1, m_vecDirection, flAlpha);
+	DrawCross(meshBuilder, GetRenderOrigin(), vecCross2, m_vecDirection, flAlpha);
+
+	meshBuilder.End(false, true);
+
+	return 1;
+}
+#endif
+
+void CBulletManager::CBullet::Activate()
+{
+	m_bActive = true;
+
+	m_flGoalAlpha = 1;
+
+#ifdef CLIENT_DLL
+	if (m_hShooter == C_SDKPlayer::GetLocalSDKPlayer())
+		m_flCurrAlpha = -0.3f; // Don't appear until it's a little ways from the player.
+	else
+		m_flCurrAlpha = 0.0f;
+#else
+	m_flCurrAlpha = 0;
+#endif
+
+#ifdef CLIENT_DLL
+	ClientLeafSystem()->AddRenderable( this, RENDER_GROUP_TRANSLUCENT_ENTITY );
+#endif
+}
+
+void CBulletManager::CBullet::Deactivate()
+{
+	m_flGoalAlpha = 0;
 }
