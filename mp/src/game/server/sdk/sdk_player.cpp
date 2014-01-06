@@ -784,7 +784,7 @@ void CSDKPlayer::PreThink(void)
 		}
 	}
 
-	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && GetAbsVelocity().z < -280.0f) ))
+	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && GetAbsVelocity().z < -220.0f) ))
 	{
 		Vector vecNormalizedVelocity = GetAbsVelocity();
 		vecNormalizedVelocity.NormalizeInPlace();
