@@ -133,7 +133,7 @@ void CDAHudCrosshair::CalculateCrosshair( void )
 		return;
 	}
 
-	Color clrHUD = gHUD.m_clrNormal;
+	Color clrHUD = Color( 200, 200, 200, 255 );
 	clrHUD[3] = 255;
 	Color white( 255, 255, 255, 255 );
 
