@@ -3194,8 +3194,6 @@ void CSDKPlayer::ShowSkillMenu()
 
 void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 {
-	int iOldSkill = m_Shared.m_iStyleSkill;
-
 	if (eSkill <= SKILL_NONE || eSkill >= SKILL_MAX)
 		eSkill = SKILL_MARKSMAN;
 
