@@ -321,7 +321,7 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
 			{
 				trace_t waterTrace;
-				UTIL_TraceLine( oBullet.m_vecOrigin, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), oBullet.m_ahObjectsHit.Tail(), COLLISION_GROUP_NONE, &waterTrace );
+				UTIL_TraceLine( oBullet.m_vecOrigin, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), oBullet.m_ahObjectsHit.Count()?oBullet.m_ahObjectsHit.Tail():oBullet.m_hShooter, COLLISION_GROUP_NONE, &waterTrace );
 
 				if( waterTrace.allsolid != 1 )
 				{
