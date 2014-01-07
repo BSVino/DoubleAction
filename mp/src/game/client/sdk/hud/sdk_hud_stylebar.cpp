@@ -356,6 +356,43 @@ void CHudStyleBar::Paint()
 	Color clrActivated = Color(255, 190, 20, 255);
 	Color clrNormal = Color(170, 140, 33, 255);
 
+	Color clrZeroStyle = Color(100, 100, 100, 255);
+
+	wchar_t* pwszStyle = L"Style!";
+	if (pPlayer->IsStyleSkillActive())
+		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Active");
+	else if (m_flCurrentStyle/da_stylemeteractivationcost.GetFloat() > 0.6)
+		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_High");
+	else if (m_flCurrentStyle/da_stylemeteractivationcost.GetFloat() > 0.3)
+		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Med");
+	else
+		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Low");
+
+	if (!pwszStyle)
+		pwszStyle = L"Style!";
+
+	int iStyleTextWide, iStyleTextTall;
+	surface()->GetTextSize(m_hStyleFont, pwszStyle, iStyleTextWide, iStyleTextTall);
+
+	Color clrStyleText;
+	if (pPlayer->IsStyleSkillActive())
+		clrStyleText = Color(
+			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.r(), clrNormal.r()),
+			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.g(), clrNormal.g()),
+			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.b(), clrNormal.b()),
+			255);
+	else
+		clrStyleText = Color(
+			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.r(), clrNormal.r()),
+			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.g(), clrNormal.g()),
+			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.b(), clrNormal.b()),
+			255);
+
+	vgui::surface()->DrawSetTextFont( m_hStyleFont );
+	vgui::surface()->DrawSetTextPos( flBarLeft + m_flBarWidth/2 - iStyleTextWide/2, m_flElementYPos - iStyleTextTall );
+	vgui::surface()->DrawSetTextColor( clrStyleText );
+	vgui::surface()->DrawPrintText( pwszStyle, wcslen(pwszStyle) );
+
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
 	{

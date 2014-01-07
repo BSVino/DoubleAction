@@ -46,6 +46,8 @@ private:
 	CPanelAnimationVarAliasType( float, m_flGap, "Gap", "2", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
 
+	CPanelAnimationVar( vgui::HFont, m_hStyleFont, "StyleFont", "Default" );
+
 	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
 	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];
 	CHudTexture* m_pGoldStar;
