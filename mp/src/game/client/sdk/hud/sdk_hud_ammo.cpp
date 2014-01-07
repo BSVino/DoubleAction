@@ -34,7 +34,7 @@ DECLARE_HUDELEMENT( CHudAmmo );
 //-----------------------------------------------------------------------------
 CHudAmmo::CHudAmmo( const char *pElementName ) : BaseClass(NULL, "HudAmmo"), CHudElement( pElementName )
 {
-	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
+	SetHiddenBits( 0 );
 
 	hudlcd->SetGlobalStat( "(ammo_primary)", "0" );
 	hudlcd->SetGlobalStat( "(ammo_secondary)", "0" );
@@ -102,6 +102,12 @@ void CHudAmmo::Reset()
 //-----------------------------------------------------------------------------
 void CHudAmmo::UpdatePlayerAmmo( C_BasePlayer *player )
 {
+	if (player && !player->IsAlive())
+	{
+		for (int i = 0; i < m_aRounds.Count(); i++)
+			m_aRounds[i].bActive = false;
+	}
+
 	// Clear out the vehicle entity
 	m_hCurrentVehicle = NULL;
 
