@@ -276,8 +276,10 @@ public:
 
 	CSDKPlayer*     GetKiller() const { return m_hKiller; }
 	CBaseEntity*    GetInflictor() const { return m_hInflictor; }
-	bool            WasKilledByGrenade() const { return m_bWasKilledByExplosion; }
-	Vector          GetKillingGrenadePosition() const { return m_vecKillingExplosionPosition; }
+	bool            WasKilledByExplosion() const { return m_bWasKilledByExplosion; }
+	Vector          GetKillingExplosionPosition() const { return m_vecKillingExplosionPosition; }
+	bool            WasKilledByGrenade() const { return m_bWasKilledByGrenade; }
+	bool            WasKilledByBrawl() const { return m_bWasKilledByBrawl; }
 
 	int             GetCoderHacksButtons() const { return m_nCoderHacksButtons; }
 
@@ -379,6 +381,8 @@ private:
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	bool m_bWasKilledByExplosion;
 	Vector m_vecKillingExplosionPosition;
+	bool m_bWasKilledByGrenade;
+	bool m_bWasKilledByBrawl;
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;

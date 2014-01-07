@@ -521,6 +521,8 @@ public:
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	CNetworkVar(bool, m_bWasKilledByExplosion);
 	CNetworkVar(Vector, m_vecKillingExplosionPosition);
+	CNetworkVar(bool, m_bWasKilledByGrenade);
+	CNetworkVar(bool, m_bWasKilledByBrawl);
 
 	CNetworkHandle(CBriefcase, m_hBriefcase);
 

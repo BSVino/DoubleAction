@@ -238,6 +238,13 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 	if (pKiller && pszWeaponOfChoice && pKiller->GetActiveSDKWeapon())
 	{
 		wchar_t* pszWeaponName = g_pVGuiLocalize->Find(pKiller->GetActiveSDKWeapon()->GetPrintName());
+
+		if (pPlayer->WasKilledByGrenade())
+			pszWeaponName = g_pVGuiLocalize->Find("#DA_Weapon_Grenade");
+
+		if (pPlayer->WasKilledByBrawl())
+			pszWeaponName = g_pVGuiLocalize->Find("#DA_Weapon_Brawl");
+
 		if (pszWeaponName)
 		{
 			std::wstring sMessage = std::wstring(pszWeaponOfChoice) + pszWeaponName;

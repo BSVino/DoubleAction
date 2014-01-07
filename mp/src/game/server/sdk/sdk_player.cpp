@@ -264,6 +264,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropEHandle( SENDINFO( m_hInflictor ) ),
 	SendPropBool( SENDINFO( m_bWasKilledByExplosion ) ),
 	SendPropVector (SENDINFO (m_vecKillingExplosionPosition)),
+	SendPropBool( SENDINFO( m_bWasKilledByGrenade ) ),
+	SendPropBool( SENDINFO( m_bWasKilledByBrawl ) ),
 
 	SendPropEHandle( SENDINFO( m_hSwitchFrom ) ),
 END_SEND_TABLE()
@@ -1181,6 +1183,8 @@ void CSDKPlayer::Spawn()
 	m_hKiller = NULL;
 	m_hInflictor = NULL;
 	m_bWasKilledByExplosion = false;
+	m_bWasKilledByGrenade = false;
+	m_bWasKilledByBrawl = false;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1717,6 +1721,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_bWasKilledByExplosion = true;
 		m_vecKillingExplosionPosition = m_hInflictor->GetAbsOrigin();
 	}
+
+	if (dynamic_cast<CBaseGrenadeProjectile*>(m_hInflictor.Get()))
+		m_bWasKilledByGrenade = true;
+
+	if (info.GetDamageType() == DMG_CLUB)
+		m_bWasKilledByBrawl = true;
 
 	StopSound( "Player.GoSlide" );
 

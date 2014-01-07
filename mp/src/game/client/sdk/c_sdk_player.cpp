@@ -241,6 +241,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropEHandle( RECVINFO( m_hInflictor ) ),
 	RecvPropBool( RECVINFO( m_bWasKilledByExplosion ) ),
 	RecvPropVector( RECVINFO( m_vecKillingExplosionPosition ) ),
+	RecvPropBool( RECVINFO( m_bWasKilledByGrenade ) ),
+	RecvPropBool( RECVINFO( m_bWasKilledByBrawl ) ),
 
 	RecvPropEHandle( RECVINFO( m_hSwitchFrom ) ),
 END_RECV_TABLE()
