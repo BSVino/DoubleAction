@@ -1818,6 +1818,8 @@ void CSDKGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &in
 //		event->SetInt( "assister", pAssister ? pAssister->GetUserID() : -1 );
 		event->SetString( "weapon", killer_weapon_name );
 		event->SetInt( "weaponid", iWeaponID );
+		event->SetInt( "brawl", !!(info.GetDamageType() & DMG_CLUB) );
+		event->SetInt( "grenade", !!dynamic_cast<CBaseGrenadeProjectile*>(info.GetInflictor()) );
 		event->SetInt( "damagebits", info.GetDamageType() );
 		event->SetInt( "customkill", info.GetDamageCustom() );
 		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted

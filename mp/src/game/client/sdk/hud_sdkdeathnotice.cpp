@@ -181,6 +181,11 @@ void SDKHudDeathNotice::OnGameEvent( IGameEvent *event, DeathNoticeItem &msg )
 
 	if ( FStrEq( pszEventName, "player_death" ))
 	{
+		if (event->GetBool("grenade"))
+			V_strcpy_safe( msg.szIcon, "d_grenade" );
+		else if (event->GetBool("brawl"))
+			V_strcpy_safe( msg.szIcon, "d_brawl" );
+
 		int iCustomDamage = event->GetInt( "customkill" );
 		int iLocalPlayerIndex = GetLocalPlayerIndex();
 
