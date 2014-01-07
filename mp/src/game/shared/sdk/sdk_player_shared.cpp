@@ -1585,6 +1585,8 @@ void CSDKPlayer::UpdateCurrentTime()
 #ifdef GAME_DLL
 		SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
+
+		m_bHasSuperSlowMo = false;
 	}
 
 	UpdateViewBobRamp();

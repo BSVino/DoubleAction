@@ -55,6 +55,7 @@ protected:
 
 private:
 	CHudTexture* m_pBackground;
+	CHudTexture* m_pBackgroundSuper;
 };
 
 DECLARE_HUDELEMENT( CHudSlowMo );
@@ -67,6 +68,7 @@ CHudSlowMo::CHudSlowMo( const char *pElementName ) : BaseClass(NULL, "HudSlowMo"
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
 
 	m_pBackground = NULL;
+	m_pBackgroundSuper = NULL;
 
 	SetIsTime(true);
 }
@@ -76,6 +78,7 @@ void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	m_pBackground = gHUD.GetIcon("slowmo_background");
+	m_pBackgroundSuper = gHUD.GetIcon("slowmo_super_background");
 }
 
 //-----------------------------------------------------------------------------
@@ -150,8 +153,20 @@ void CHudSlowMo::Paint()
 	if (!pPlayer->IsAlive())
 		return;
 
-	if (m_pBackground)
-		m_pBackground->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
+	if (pPlayer->HasSuperSlowMo() || pPlayer->m_Shared.m_bSuperSkill)
+	{
+		SetFgColor(Color(255, 190, 20, 255));
+
+		if (m_pBackgroundSuper)
+			m_pBackgroundSuper->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
+	}
+	else
+	{
+		SetFgColor(Color(40, 200, 14, 255));
+
+		if (m_pBackground)
+			m_pBackground->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
+	}
 
 	BaseClass::Paint();
 
