@@ -86,7 +86,7 @@ CGrenadeProjectile* CGrenadeProjectile::Create(
 	pGrenade->SetFriction( BaseClass::GetGrenadeFriction() );
 	pGrenade->SetElasticity( BaseClass::GetGrenadeElasticity() );
 
-	pGrenade->m_DmgRadius = pGrenade->m_flDamage * 2.5f;
+	pGrenade->m_DmgRadius = pGrenade->m_flDamage * 3.0f;
 	pGrenade->ApplyLocalAngularVelocityImpulse( angVelocity );	
 
 	// make NPCs afaid of it while in the air
