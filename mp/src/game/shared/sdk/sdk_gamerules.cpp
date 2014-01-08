@@ -2313,6 +2313,9 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 		if (!pPlayer->IsAlive())
 			continue;
 
+		if (pPlayer->m_iDeaths + pPlayer->m_iKills < 5)
+			continue;
+
 		apPlayers.AddToTail(pPlayer);
 	}
 
