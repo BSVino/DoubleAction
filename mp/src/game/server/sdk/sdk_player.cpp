@@ -2493,8 +2493,9 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 			pThrow->VPhysicsDestroyObject(); 
 			pThrow->VPhysicsInitShadow(true, true);
 
-			// Throw the left one.
-			pThrow->m_iClip1 = pAkimbo->leftclip;
+			// Whatever's in our mag right now, consider that to be the left one and toss it.
+			pThrow->m_iClip1 = pWeapon->m_iClip1;
+			pWeapon->m_iClip1 = pAkimbo->rightclip;
 
 			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
 
