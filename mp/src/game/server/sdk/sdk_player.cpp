@@ -1153,7 +1153,6 @@ void CSDKPlayer::Spawn()
 
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
-	m_flSlowMoSeconds = 0;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
 	m_flDisarmRedraw = -1;
@@ -1857,7 +1856,14 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	SetStylePoints(m_flStylePoints - flLostPoints);
 
 	// Turn off slow motion.
-	m_flSlowMoSeconds = 0;
+	if (m_flSlowMoTime)
+		m_flSlowMoSeconds += (int)(m_flSlowMoTime - gpGlobals->curtime);
+
+	m_flSlowMoSeconds -= 2;
+
+	if (m_flSlowMoSeconds < 0)
+		m_flSlowMoSeconds = 0;
+
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
 
