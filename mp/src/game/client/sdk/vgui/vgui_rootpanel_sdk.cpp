@@ -195,33 +195,52 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 			surface()->DrawPrintText(pszKilledBy, wcslen(pszKilledBy));
 		}
 
+		wchar_t* pszDefaultKiller = g_pVGuiLocalize->Find("#DA_Trigger_Kill_Default");
+		if (!pszDefaultKiller)
+			pszDefaultKiller = L"Having A Great Big Brain";
+
+		const char* pszKillerString = pPlayer->GetKillerString();
+
 		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		if (pKiller)
+
+		if (pszKillerString)
+		{
+			wchar_t* pszLocalized = g_pVGuiLocalize->Find(pszKillerString);
+			if (pszLocalized)
+			{
+				V_wcsncpy(wszPlayerName, pszLocalized, sizeof(wszPlayerName));
+
+				CUtlVector<wchar_t*> apwszLocalizations;
+				apwszLocalizations.AddToTail(pszLocalized);
+
+				if (pszKillerString[strlen(pszKillerString)-1] == '1')
+				{
+					char szKillerString[512];
+					V_strcpy_safe(szKillerString, pszKillerString);
+					char cNumber = '2';
+					do
+					{
+						szKillerString[strlen(szKillerString)-1] = cNumber;
+						pszLocalized = g_pVGuiLocalize->Find(szKillerString);
+						if (pszLocalized)
+							apwszLocalizations.AddToTail(pszLocalized);
+
+						cNumber++;
+					}
+					while (pszLocalized);
+				}
+
+				wchar_t* pszKiller = apwszLocalizations[((int)m_flKilledByStartTime)%apwszLocalizations.Size()]; // Effectively a random number.
+
+				V_wcsncpy(wszPlayerName, pszKiller, sizeof(wszPlayerName));
+			}
+			else
+				V_wcsncpy(wszPlayerName, pszDefaultKiller, sizeof(wszPlayerName));
+		}
+		else if (pKiller)
 			g_pVGuiLocalize->ConvertANSIToUnicode( pKiller->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
 		else
-		{
-			wchar_t* pszTheGround;
-			switch (((int)m_flKilledByStartTime)%3) // Effectively a random number.
-			{
-			case 0:
-			default:
-				pszTheGround = g_pVGuiLocalize->Find("#DA_DeathFrame_TheGround");
-				break;
-
-			case 1:
-				pszTheGround = g_pVGuiLocalize->Find("#DA_DeathFrame_SuddenStop");
-				break;
-
-			case 2:
-				pszTheGround = g_pVGuiLocalize->Find("#DA_DeathFrame_Gravity");
-				break;
-			}
-
-			if (pszTheGround)
-				wcscpy(wszPlayerName, pszTheGround);
-			else
-				wcscpy(wszPlayerName, L"The Ground");
-		}
+			V_wcsncpy(wszPlayerName, pszDefaultKiller, sizeof(wszPlayerName));
 
 		int iWide, iTall;
 		surface()->GetTextSize(m_hDeathFrameLarge, wszPlayerName, iWide, iTall);

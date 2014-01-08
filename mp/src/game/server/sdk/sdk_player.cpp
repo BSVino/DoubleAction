@@ -266,6 +266,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropVector (SENDINFO (m_vecKillingExplosionPosition)),
 	SendPropBool( SENDINFO( m_bWasKilledByGrenade ) ),
 	SendPropBool( SENDINFO( m_bWasKilledByBrawl ) ),
+	SendPropBool( SENDINFO( m_bWasKilledByString ) ),
+	SendPropStringT( SENDINFO( m_szKillerString ) ),
 
 	SendPropEHandle( SENDINFO( m_hSwitchFrom ) ),
 END_SEND_TABLE()
@@ -1185,6 +1187,7 @@ void CSDKPlayer::Spawn()
 	m_bWasKilledByExplosion = false;
 	m_bWasKilledByGrenade = false;
 	m_bWasKilledByBrawl = false;
+	m_bWasKilledByString = false;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1866,6 +1869,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 void CSDKPlayer::OnDamagedByExplosion( const CTakeDamageInfo &info )
 {
 	UTIL_ScreenShake( info.GetInflictor()->GetAbsOrigin(), 10.0, 1.0, 0.5, 2000, SHAKE_START, false );
+}
+
+void CSDKPlayer::SetKilledByString( string_t sKilledBy )
+{
+	m_bWasKilledByString = true;
+	m_szKillerString = sKilledBy;
 }
 
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)

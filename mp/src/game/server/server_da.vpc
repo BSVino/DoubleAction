@@ -112,6 +112,7 @@ $Project "Server (DA)"
 		$File "$SRCDIR/game/shared/sdk/sdk_usermessages.cpp"
 		$File "sdk/sdk_vehicle_jeep.cpp"
 		$File "sdk/te_firebullets.cpp"
+		$File "sdk/trigger_kill.cpp"
 	}
 
 	$Folder	"Source Files"

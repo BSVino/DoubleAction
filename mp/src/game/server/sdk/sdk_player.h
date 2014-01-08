@@ -108,6 +108,7 @@ public:
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
 	virtual void        OnDamagedByExplosion( const CTakeDamageInfo &info );
+	virtual void SetKilledByString( string_t sKilledBy );
 
 	virtual bool        FVisible(CBaseEntity* pEntity, int iTraceMask = MASK_OPAQUE, CBaseEntity** ppBlocker = NULL);
 	virtual bool        IsVisible(const Vector &pos, bool testFOV = false, const CBaseEntity *ignore = NULL) const;	///< return true if we can see the point
@@ -523,6 +524,8 @@ public:
 	CNetworkVar(Vector, m_vecKillingExplosionPosition);
 	CNetworkVar(bool, m_bWasKilledByGrenade);
 	CNetworkVar(bool, m_bWasKilledByBrawl);
+	CNetworkVar(bool, m_bWasKilledByString);
+	CNetworkVar(string_t, m_szKillerString);
 
 	CNetworkHandle(CBriefcase, m_hBriefcase);
 

@@ -280,6 +280,7 @@ public:
 	Vector          GetKillingExplosionPosition() const { return m_vecKillingExplosionPosition; }
 	bool            WasKilledByGrenade() const { return m_bWasKilledByGrenade; }
 	bool            WasKilledByBrawl() const { return m_bWasKilledByBrawl; }
+	const char*     GetKillerString() const { return m_bWasKilledByString?m_szKillerString:NULL; }
 
 	int             GetCoderHacksButtons() const { return m_nCoderHacksButtons; }
 
@@ -383,6 +384,8 @@ private:
 	Vector m_vecKillingExplosionPosition;
 	bool m_bWasKilledByGrenade;
 	bool m_bWasKilledByBrawl;
+	bool m_bWasKilledByString;
+	char m_szKillerString[256];
 
 	CProjectedLightEffect *m_pProjectedFlashlight;
 	bool			m_bFlashlightEnabled;
