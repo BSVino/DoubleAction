@@ -201,7 +201,7 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 
 		const char* pszKillerString = pPlayer->GetKillerString();
 
-		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH*2];
 
 		if (pszKillerString)
 		{
