@@ -1552,6 +1552,23 @@ void CSDKPlayer::ActivateSlowMo()
 	ReadyWeapon();
 }
 
+void CSDKPlayer::DeactivateSlowMo()
+{
+	if (m_flSlowMoTime == 0)
+		return;
+
+	m_flSlowMoSeconds = (int)(m_flSlowMoTime - gpGlobals->curtime - 0.5f);
+	if (m_flSlowMoSeconds < 0)
+		m_flSlowMoSeconds = 0;
+
+	m_flSlowMoTime = 0;
+	m_iSlowMoType = SLOWMO_NONE;
+
+#ifdef GAME_DLL
+	SDKGameRules()->PlayerSlowMoUpdate(this);
+#endif
+}
+
 float CSDKPlayer::GetSlowMoMultiplier() const
 {
 	return m_flSlowMoMultiplier * da_globalslow.GetFloat();

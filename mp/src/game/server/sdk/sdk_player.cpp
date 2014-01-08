@@ -1857,7 +1857,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	// Turn off slow motion.
 	if (m_flSlowMoTime)
-		m_flSlowMoSeconds += (int)(m_flSlowMoTime - gpGlobals->curtime);
+		DeactivateSlowMo();
 
 	m_flSlowMoSeconds -= 2;
 
@@ -4453,10 +4453,15 @@ void CC_ActivateSlowmo_f (void)
 	if ( !pPlayer )
 		return;
 
-	pPlayer->Instructor_LessonLearned("slowmo");
-
 	if (pPlayer->m_flSlowMoSeconds > 0)
+	{
+		pPlayer->Instructor_LessonLearned("slowmo");
 		pPlayer->ActivateSlowMo();
+	}
+	else if (pPlayer->m_flSlowMoTime > 0)
+	{
+		pPlayer->DeactivateSlowMo();
+	}
 }
 
 static ConCommand activateslowmo("activateslowmo", CC_ActivateSlowmo_f, "Activate slow motion." );

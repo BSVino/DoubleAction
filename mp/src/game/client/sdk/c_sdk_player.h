@@ -193,6 +193,7 @@ public:
 #endif
 
 	void ActivateSlowMo();
+	void DeactivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }

@@ -319,6 +319,7 @@ public:
 	bool SetCharacter(const char* pszCharacter);
 
 	void ActivateSlowMo();
+	void DeactivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	int GetSlowMoType() const { return m_iSlowMoType; }
