@@ -143,18 +143,7 @@ void CBulletManager::BulletsThink(float flFrameTime)
 		else
 			dt = flSpeed * oBullet.m_hShooter->GetSlowMoMultiplier() * flFrameTime;
 
-		Vector vecOriginal = oBullet.m_vecOrigin;
-
 		SimulateBullet(oBullet, dt);
-
-		if (da_bullet_debug.GetBool())
-		{
-#ifdef CLIENT_DLL
-			DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 0, 0, 255, false, 0.1);
-#else
-			DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 255, 0, 0, false, 0.1);
-#endif
-		}
 	}
 }
 
@@ -165,6 +154,8 @@ void DispatchEffect( const char *pName, const CEffectData &data );
 
 void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 {
+	Vector vecOriginal = oBullet.m_vecOrigin;
+
 	Assert(oBullet.m_hShooter.Get());
 	if (!oBullet.m_hShooter)
 		return;
@@ -197,13 +188,47 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 
 		UTIL_TraceLine( oBullet.m_vecOrigin, vecEnd, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, &tf, &tr );
 
+		if (da_bullet_debug.GetBool())
+		{
+#ifdef CLIENT_DLL
+			DebugDrawLine(oBullet.m_vecOrigin + Vector(0, 0, 1), tr.endpos + Vector(0, 0, 1), 0, 255, 255, true, dt<0?10:0.1);
+#else
+			DebugDrawLine(oBullet.m_vecOrigin + Vector(0, 0, 1), tr.endpos + Vector(0, 0, 1), 255, 255, 0, true, dt<0?10:0.1);
+#endif
+		}
+
 		Vector vecTraceEnd = tr.endpos;
+
+		bool bBSPModel = tr.DidHitWorld();
 
 		if (tr.allsolid)
 		{
 			oBullet.m_flDistanceTraveled += (oBullet.m_vecOrigin - vecEnd).Length();
 			oBullet.m_vecOrigin = vecEnd;
 			break; // We're inside something. Do nothing.
+		}
+
+		if ( sv_showimpacts.GetBool() && tr.fraction < 1.0f )
+		{
+#ifdef CLIENT_DLL
+			// draw red client impact markers
+			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
+
+			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
+			{
+				C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
+				player->DrawClientHitboxes( 4, true );
+			}
+#else
+			// draw blue server impact markers
+			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
+
+			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
+			{
+				CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
+				player->DrawServerHitboxes( 4, true );
+			}
+#endif
 		}
 
 		Assert(oBullet.m_iBulletType > 0);
@@ -231,29 +256,6 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 			oBullet.m_flDistanceTraveled += (oBullet.m_vecOrigin - vecEnd).Length();
 			oBullet.m_vecOrigin = vecEnd;
 			break; // we didn't hit anything, stop tracing shoot
-		}
-
-		if ( sv_showimpacts.GetBool() )
-		{
-#ifdef CLIENT_DLL
-			// draw red client impact markers
-			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
-
-			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-			{
-				C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawClientHitboxes( 4, true );
-			}
-#else
-			// draw blue server impact markers
-			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
-
-			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
-			{
-				CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawServerHitboxes( 4, true );
-			}
-#endif
 		}
 
 		weapontype_t eWeaponType = WT_NONE;
@@ -377,7 +379,8 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 		flDistanceMultiplier = flDistanceMultiplier; // Silence warning.
 #endif
 
-		oBullet.m_ahObjectsHit.AddToTail(tr.m_pEnt);
+		if (tr.m_pEnt && !FStrEq(tr.m_pEnt->GetClassname(), "worldspawn"))
+			oBullet.m_ahObjectsHit.AddToTail(tr.m_pEnt);
 
 		float flPenetrationDistance;
 		switch (eWeaponType)
@@ -416,7 +419,17 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 
 		// Set up the next trace. One unit in the direction of fire so that we firmly embed
 		// ourselves in whatever solid was hit, to make sure we don't hit it again on next trace.
-		oBullet.m_vecOrigin = vecTraceEnd + oBullet.m_vecDirection;
+		if (dt < 0 && bBSPModel)
+		{
+			UTIL_TraceLine( vecTraceEnd + oBullet.m_vecDirection, vecTraceEnd + oBullet.m_vecDirection * flPenetrationDistance, CONTENTS_SOLID|CONTENTS_MOVEABLE, NULL, COLLISION_GROUP_NONE, &tr );
+
+			if (tr.startsolid)
+				oBullet.m_vecOrigin = tr.startpos + oBullet.m_vecDirection;
+			else
+				oBullet.m_vecOrigin = vecTraceEnd + oBullet.m_vecDirection;
+		}
+		else
+			oBullet.m_vecOrigin = vecTraceEnd + oBullet.m_vecDirection;
 	}
 
 	oBullet.m_iPenetrations = i;
@@ -438,6 +451,15 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 
 	if (!bHasTraveledBefore && oBullet.m_flCurrAlpha == 0 && oBullet.m_flGoalAlpha == 0)
 		oBullet.m_bActive = false;
+
+	if (da_bullet_debug.GetBool())
+	{
+#ifdef CLIENT_DLL
+		DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 0, 0, 255, true, dt<0?10:0.1);
+#else
+		DebugDrawLine(vecOriginal, oBullet.m_vecOrigin, 255, 0, 0, true, dt<0?10:0.1);
+#endif
+	}
 }
 
 #ifdef CLIENT_DLL
