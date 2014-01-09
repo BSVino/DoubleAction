@@ -288,6 +288,10 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		trace_t tr;
 		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_MONSTER|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
 
+		// If the player backs up against something, this will prevent their bullets from hitting the object behind.
+		if (tr.fraction == 0.0)
+			UTIL_TraceLine( vecCamera + vecShoot * 10, vecCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_MONSTER|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+
 		Vector vecBulletDirection = tr.endpos - pPlayer->Weapon_ShootPosition();
 		vecBulletDirection.NormalizeInPlace();
 
