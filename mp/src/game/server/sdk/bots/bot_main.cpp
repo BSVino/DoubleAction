@@ -89,7 +89,7 @@ const char* g_aszBotNames[] =
 	"Flint Ironstag",
 	"Bolt van der Huge",
 	"Thick McRunfast",
-	"Blast Hardcheeze",
+	"Blast Hardcheese",
 	"Buff Drinklots",
 	"Slab o' Hunk",
 	"Trunk Slamchest",
