@@ -1489,7 +1489,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				}
 			}
 
-			if ( m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling() )
+			CBaseGrenadeProjectile* pGrenade = dynamic_cast<CBaseGrenadeProjectile*>(pInflictor);
+			bool bGrenadeNotMine = true;
+			if (pGrenade && pGrenade->GetOwnerEntity() == this)
+				bGrenadeNotMine = false;
+
+			if ( (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling()) && bGrenadeNotMine )
 			{
 				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
 				VectorNormalize( vecToPlayer );
@@ -1675,7 +1680,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->Instructor_LessonLearned("be_stylish");
 
 		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
-		if ( !(gpGlobals->teamplay && (GetTeamNumber() == pAttackerSDK->GetTeamNumber())) )
+		if ( SDKGameRules()->PlayerRelationship(this, pAttackerSDK) != GR_TEAMMATE )
 			pAttackerSDK->m_bDamagedEnemyDuringFall = true;
 	}
 

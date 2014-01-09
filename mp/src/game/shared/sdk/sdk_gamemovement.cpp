@@ -2336,6 +2336,9 @@ bool CSDKGameMovement::CheckMantel()
 	if (tr.endpos.z - mv->GetAbsOrigin().z < da_acro_mantel_min_height.GetFloat())
 		return false;
 
+	if (tr.m_pEnt && tr.m_pEnt->IsPlayer())
+		return false;
+
 	pr1 = mv->GetAbsOrigin();
 	pr2 = pr1 + dir*4;
 	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
