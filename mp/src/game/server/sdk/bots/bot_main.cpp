@@ -130,7 +130,6 @@ const char* g_aszBotNames[] =
 	"Brosideon, Lord of the Brocean",
 	"Broba Fett",
 	"Brohatma Ghandi",
-	"Brohan Solo",
 	"Brohemian",
 	"Bromosapien",
 	"Broseph Stalin",
