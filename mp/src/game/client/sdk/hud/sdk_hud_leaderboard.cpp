@@ -251,7 +251,7 @@ void CHudLeaderboard::ListPlayer(C_SDKPlayer *pPlayer, int iPosition)
 	g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
 
 	surface()->DrawSetTextPos( m_flBorder + iTextTall * iPosition + iTextTall*3.5f, m_flBorder + iPosition*(iTextTall+5) );
-	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+	surface()->DrawSetTextColor( g_PR->GetTeamColor( pPlayer->GetTeamNumber() ) );
 	surface()->DrawSetTextFont( m_hTextFont );
 	surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
 }
@@ -321,7 +321,7 @@ void CHudLeaderboard::Paint()
 		g_pVGuiLocalize->ConvertANSIToUnicode( pBountyPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
 
 		surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
-		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+		surface()->DrawSetTextColor( g_PR->GetTeamColor( pBountyPlayer->GetTeamNumber() ) );
 		surface()->DrawSetTextFont( m_hTextFont );
 		surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
 
@@ -343,7 +343,7 @@ void CHudLeaderboard::Paint()
 			g_pVGuiLocalize->ConvertANSIToUnicode( pBriefcasePlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
 
 			surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
-			surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+			surface()->DrawSetTextColor( g_PR->GetTeamColor( pBriefcasePlayer->GetTeamNumber() ) );
 			surface()->DrawSetTextFont( m_hTextFont );
 			surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
 			return;
