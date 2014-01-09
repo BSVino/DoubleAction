@@ -4626,6 +4626,24 @@ void CC_Respawn(const CCommand& args)
 	if (!pPlayer)
 		return;
 
+	if (SDKGameRules()->IsTeamplay())
+	{
+		if (pPlayer->GetTeamNumber() != SDK_TEAM_BLUE && pPlayer->GetTeamNumber() != SDK_TEAM_RED)
+		{
+			// Not on a team? Automatically assign me to the team with the fewest players.
+			int iBlueMembers = GetGlobalTeam(SDK_TEAM_BLUE)->GetNumPlayers();
+			int iRedMembers = GetGlobalTeam(SDK_TEAM_RED)->GetNumPlayers();
+
+			if (iBlueMembers < iRedMembers)
+				pPlayer->JoinTeam(SDK_TEAM_BLUE);
+			else
+				pPlayer->JoinTeam(SDK_TEAM_RED);
+		}
+
+		if (pPlayer->GetTeamNumber() != SDK_TEAM_BLUE && pPlayer->GetTeamNumber() != SDK_TEAM_RED)
+			return;
+	}
+
 	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && pPlayer->State_Get() != STATE_ACTIVE && pPlayer->IsDead() )
 		pPlayer->State_Transition( STATE_ACTIVE );
 }
