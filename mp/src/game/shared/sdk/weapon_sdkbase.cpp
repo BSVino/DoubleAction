@@ -1706,8 +1706,8 @@ bool CWeaponSDKBase::ReloadOrSwitchWeapons( void )
 		if ( UsesClipsForAmmo1() && 
 			 (m_iClip1 == 0) && 
 			 (GetWeaponFlags() & ITEM_FLAG_NOAUTORELOAD) == false && 
-			 GetCurrentTime() > m_flNextPrimaryAttack + 1.5f &&
-			 GetCurrentTime() > m_flNextSecondaryAttack + 1.5f )
+			 GetCurrentTime() > m_flNextPrimaryAttack + 1.0f &&
+			 GetCurrentTime() > m_flNextSecondaryAttack + 1.0f )
 		{
 			// if we're successfully reloading, we're done
 			if ( Reload() )
