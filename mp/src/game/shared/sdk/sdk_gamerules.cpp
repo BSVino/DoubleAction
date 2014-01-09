@@ -2568,7 +2568,43 @@ public:
 	{
 		CDAIssue::ExecuteCommand();
 
+		int iUserID = atoi(GetDetailsString());
+		CBasePlayer* pPlayer = UTIL_PlayerByUserId(iUserID);
+		if (pPlayer && pPlayer->IsBot())
+		{
+			ConVarRef bot_quota("bot_quota");
+			bot_quota.SetValue(bot_quota.GetInt()-1);
+		}
+
 		engine->ServerCommand(UTIL_VarArgs( "kickid %s\n", GetDetailsString() ));
+	}
+
+	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
+class CAddBotVoteIssue : public CDAIssue
+{
+public:
+	CAddBotVoteIssue()
+		: CDAIssue("addbot")
+	{
+	}
+
+public:
+	virtual bool		IsEnabled( void ) { return true; }
+	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_AddBot_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_AddBot_Passed"; }
+
+	virtual void		ExecuteCommand( void )
+	{
+		CDAIssue::ExecuteCommand();
+
+		ConVarRef bot_quota("bot_quota");
+		bot_quota.SetValue(bot_quota.GetInt()+1);
 	}
 
 	virtual void		ListIssueDetails( CBasePlayer *pForWhom )
@@ -2587,5 +2623,6 @@ void RegisterVoteIssues()
 	new CNextMapVoteIssue();
 	new CChangelevelVoteIssue();
 	new CKickPlayerVoteIssue();
+	new CAddBotVoteIssue();
 }
 #endif
