@@ -57,7 +57,7 @@ void CDAHudCrosshair::ApplySchemeSettings( IScheme *scheme )
     SetSize( ScreenWidth(), ScreenHeight() );
 
 	// Not sure why but it won't grab it from the script.
-	m_hWatchFont = vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme( "ClientScheme" ))->GetFont( "SlowMoTimer" );
+	m_hWatchFont = vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme( "ClientScheme" ))->GetFont( "SlowMoTimerCrosshair" );
 }
 
 //-----------------------------------------------------------------------------
@@ -237,7 +237,7 @@ void CDAHudCrosshair::Paint( void )
 			V_snwprintf( wcsUnicode, ARRAYSIZE(wcsUnicode), L"%d:%d", iMinutes, iSeconds );
 
 		surface()->DrawSetTextPos( x  + m_pCrosshair->Width(), y - surface()->GetFontTall(m_hWatchFont)/2 );
-		surface()->DrawSetTextColor( Color(m_clrCrosshair.r(), m_clrCrosshair.g(), m_clrCrosshair.b(), m_clrCrosshair.a()*m_flWatchAlpha*0.5) );
+		surface()->DrawSetTextColor( Color(m_clrCrosshair.r(), m_clrCrosshair.g(), m_clrCrosshair.b(), m_clrCrosshair.a()*m_flWatchAlpha*0.3) );
 		surface()->DrawSetTextFont( m_hWatchFont );
 		surface()->DrawUnicodeString( wcsUnicode, vgui::FONT_DRAW_NONADDITIVE );
 	}
