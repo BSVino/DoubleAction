@@ -704,6 +704,11 @@ C_SDKPlayer::C_SDKPlayer() :
 
 	m_flLastSlowMoMultiplier = 1;
 	m_currentAlphaVal = 255.0f;
+
+	m_hLeftArmGlow = NULL;
+	m_hRightArmGlow = NULL;
+	m_hLeftFootGlow = NULL;
+	m_hRightFootGlow = NULL;
 }
 
 
@@ -1452,6 +1457,62 @@ ConVar da_slowmo_motion_blur( "da_slowmo_motion_blur", "7.0" );
 
 void C_SDKPlayer::ClientThink()
 {
+	bool bBrawlEffectOn = false;
+
+	if (IsStyleSkillActive(SKILL_BOUNCER))
+	{
+		Assert(GetActiveSDKWeapon());
+		if (GetActiveSDKWeapon())
+		{
+			if (GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL)
+				bBrawlEffectOn = true;
+			else if (GetActiveSDKWeapon()->GetSwingTime() > 0)
+				bBrawlEffectOn = true;
+		}
+	}
+
+	if (bBrawlEffectOn)
+	{
+		if (!m_hLeftArmGlow)
+			m_hLeftArmGlow = ParticleProp()->Create("style_active_bouncer", PATTACH_POINT_FOLLOW, "lefthand");
+		if (!m_hRightArmGlow)
+			m_hRightArmGlow = ParticleProp()->Create("style_active_bouncer", PATTACH_POINT_FOLLOW, "righthand");
+	}
+	else
+	{
+		if (m_hLeftArmGlow)
+		{
+			ParticleProp()->StopEmission(m_hLeftArmGlow);
+			m_hLeftArmGlow = NULL;
+		}
+		if (m_hRightArmGlow)
+		{
+			ParticleProp()->StopEmission(m_hRightArmGlow);
+			m_hRightArmGlow = NULL;
+		}
+	}
+
+	if (IsStyleSkillActive(SKILL_ATHLETIC))
+	{
+		if (!m_hLeftFootGlow)
+			m_hLeftFootGlow = ParticleProp()->Create("style_active_athletic", PATTACH_POINT_FOLLOW, "leftfoot");
+		if (!m_hRightFootGlow)
+			m_hRightFootGlow = ParticleProp()->Create("style_active_athletic", PATTACH_POINT_FOLLOW, "rightfoot");
+	}
+	else
+	{
+		if (m_hLeftFootGlow)
+		{
+			ParticleProp()->StopEmission(m_hLeftFootGlow);
+			m_hLeftFootGlow = NULL;
+		}
+		if (m_hRightFootGlow)
+		{
+			ParticleProp()->StopEmission(m_hRightFootGlow);
+			m_hRightFootGlow = NULL;
+		}
+	}
+
 	bool bWasInSlow = false;
 
 	bool bLocalPlayer = (C_SDKPlayer::GetLocalOrSpectatedPlayer() == this);

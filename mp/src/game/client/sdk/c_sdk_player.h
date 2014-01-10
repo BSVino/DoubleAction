@@ -395,6 +395,11 @@ private:
 	Vector	m_vecFlashlightUp;
 	Vector	m_vecFlashlightRight;
 
+	CNewParticleEffect* m_hLeftArmGlow;
+	CNewParticleEffect* m_hRightArmGlow;
+	CNewParticleEffect* m_hLeftFootGlow;
+	CNewParticleEffect* m_hRightFootGlow;
+
 	class CInstructor*                     m_pInstructor;
 	CUtlMap<CUtlString, CLessonProgress>   m_apLessonProgress;
 	CUtlSortVector<CLessonProgress*, LessonPriorityLess> m_apLessonPriorities;

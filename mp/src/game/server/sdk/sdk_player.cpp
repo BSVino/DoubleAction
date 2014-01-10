@@ -954,6 +954,8 @@ void CSDKPlayer::Precache()
 	PrecacheParticleSystem( "muzzleflash_rifle" );
 	PrecacheParticleSystem( "muzzleflash_shotgun" );
 	PrecacheParticleSystem( "tracer_bullet" );
+	PrecacheParticleSystem( "style_active_bouncer" );
+	PrecacheParticleSystem( "style_active_athletic" );
 
 	BaseClass::Precache();
 }
