@@ -234,7 +234,7 @@ PRECACHE_REGISTER(da_ratrace_waypoint);
 
 CRatRaceWaypoint::CRatRaceWaypoint()
 {
-	m_flRadius = 100;
+	m_flRadius = 40;
 }
 
 void CRatRaceWaypoint::Precache( void )

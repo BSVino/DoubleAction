@@ -2567,7 +2567,7 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 			if (!m_ahWaypoint2RaceLeaders[0])
 			{
 				CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
-				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_LEAD, pPlayer);
+				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_POINT_2, pPlayer);
 			}
 
 			WaypointLeadersPush(m_ahWaypoint2RaceLeaders, pPlayer);

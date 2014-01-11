@@ -65,6 +65,7 @@ public:
 	virtual bool ShouldDraw( void );
 
 	void         ListPlayer(C_SDKPlayer *pPlayer, int iPosition);
+	void         ListSpecialPlayer(C_SDKPlayer* pPlayer, CHudTexture* pTexture, int iPosition);
 	void         PaintPlayerAvatar(C_SDKPlayer *pPlayer, float flX, float flY, float flW, float flH);
 	virtual void Paint();
 	virtual void PaintBackground() {};
@@ -292,6 +293,27 @@ void CHudLeaderboard::PaintPlayerAvatar(C_SDKPlayer *pPlayer, float flX, float f
 	}
 }
 
+void CHudLeaderboard::ListSpecialPlayer(C_SDKPlayer* pPlayer, CHudTexture* pTexture, int iPosition)
+{
+	if (!pPlayer)
+		return;
+
+	int iTextTall = surface()->GetFontTall( m_hTextFont );
+
+	if (pTexture)
+		pTexture->DrawSelf(m_flBorder + iTextTall * iPosition, m_flBorder + iTextTall * iPosition, iTextTall, iTextTall, Color(255, 255, 255, 255));
+
+	PaintPlayerAvatar(pPlayer, m_flBorder + iTextTall * (iPosition + 1), m_flBorder + iTextTall * iPosition, iTextTall, iTextTall);
+
+	wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
+	g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
+
+	surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2 + iTextTall * iPosition, m_flBorder + iTextTall * iPosition );
+	surface()->DrawSetTextColor( g_PR->GetTeamColor( pPlayer->GetTeamNumber() ) );
+	surface()->DrawSetTextFont( m_hTextFont );
+	surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
+}
+
 void CHudLeaderboard::Paint()
 {
 	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -313,46 +335,20 @@ void CHudLeaderboard::Paint()
 
 	if (SDKGameRules()->GetBountyPlayer())
 	{
-		CSDKPlayer* pBountyPlayer = SDKGameRules()->GetBountyPlayer();
-
-		int iTextTall = surface()->GetFontTall( m_hTextFont );
-
-		if (m_pBounty)
-			m_pBounty->DrawSelf(m_flBorder, m_flBorder, iTextTall, iTextTall, Color(255, 255, 255, 255));
-
-		PaintPlayerAvatar(pBountyPlayer, m_flBorder + iTextTall, m_flBorder, iTextTall, iTextTall);
-
-		wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-		g_pVGuiLocalize->ConvertANSIToUnicode( pBountyPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
-
-		surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
-		surface()->DrawSetTextColor( g_PR->GetTeamColor( pBountyPlayer->GetTeamNumber() ) );
-		surface()->DrawSetTextFont( m_hTextFont );
-		surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
-
+		ListSpecialPlayer(SDKGameRules()->GetBountyPlayer(), m_pBounty, 0);
 		return;
 	}
 	else if (SDKGameRules()->GetBriefcase())
 	{
-		CSDKPlayer* pBriefcasePlayer = ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity());
-		if (pBriefcasePlayer)
-		{
-			int iTextTall = surface()->GetFontTall( m_hTextFont );
-
-			if (m_pBriefcase)
-				m_pBriefcase->DrawSelf(m_flBorder, m_flBorder, iTextTall, iTextTall, Color(255, 255, 255, 255));
-
-			PaintPlayerAvatar(pBriefcasePlayer, m_flBorder + iTextTall, m_flBorder, iTextTall, iTextTall);
-
-			wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-			g_pVGuiLocalize->ConvertANSIToUnicode( pBriefcasePlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
-
-			surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
-			surface()->DrawSetTextColor( g_PR->GetTeamColor( pBriefcasePlayer->GetTeamNumber() ) );
-			surface()->DrawSetTextFont( m_hTextFont );
-			surface()->DrawUnicodeString( wszPlayerName, vgui::FONT_DRAW_NONADDITIVE );
-			return;
-		}
+		ListSpecialPlayer(ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()), m_pBounty, 0);
+		return;
+	}
+	else if (SDKGameRules()->GetLeader())
+	{
+		ListSpecialPlayer(SDKGameRules()->GetLeader(), m_pBounty, 0);
+		ListSpecialPlayer(SDKGameRules()->GetFrontRunner1(), m_pBounty, 1);
+		ListSpecialPlayer(SDKGameRules()->GetFrontRunner2(), m_pBounty, 2);
+		return;
 	}
 
 	bool bLocalPlayerShown = false;

@@ -300,7 +300,8 @@ void CHudNotices::ShowTopNotice()
 
 	if (m_eTopNotice == NOTICE_BOUNTY_ON_PLAYER || m_eTopNotice == NOTICE_BOUNTY_COLLECTED ||
 		m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE ||
-		m_eTopNotice == NOTICE_RATRACE_PLAYER_LEAD || m_eTopNotice == NOTICE_RATRACE_OVER)
+		m_eTopNotice == NOTICE_RATRACE_PLAYER_LEAD || m_eTopNotice == NOTICE_RATRACE_OVER ||
+		m_eTopNotice == NOTICE_RATRACE_PLAYER_POINT_2)
 	{
 		g_pVGuiLocalize->ConstructString( sNoticeString, sizeof(sNoticeString), pszObjectiveGoal, 1, m_wszPlayerSubject );
 		pszObjectiveGoal = sNoticeString;

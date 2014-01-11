@@ -176,6 +176,7 @@ const char* NoticeToString( notice_t id )
 
 		"ratrace_start",
 		"ratrace_lead",
+		"ratrace_point_2",
 		"ratrace_over",
 	};
 
