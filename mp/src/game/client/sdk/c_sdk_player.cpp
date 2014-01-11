@@ -1,4 +1,4 @@
-//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,7 +32,7 @@
 #include "toolframework_client.h"
 #include "in_buttons.h"
 #include "cam_thirdperson.h"
-#include "headtrack/isourcevirtualreality.h"
+#include "sourcevr/isourcevirtualreality.h"
 #include "engine/ivdebugoverlay.h"
 #include "proxyentity.h"
 #include "materialsystem/imaterial.h"

@@ -2405,11 +2405,11 @@ public:
 	CDAIssue(const char* pszName) : CBaseIssue(pszName) {}
 
 public:
-	virtual void OnVoteFailed( void )
+	virtual void OnVoteFailed( int iEntityHoldingVote )
 	{
 		DataManager().VoteFailed(m_szTypeString);
 
-		CBaseIssue::OnVoteFailed();
+		CBaseIssue::OnVoteFailed(iEntityHoldingVote);
 	}
 
 	virtual void ExecuteCommand( void )

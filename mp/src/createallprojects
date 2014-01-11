@@ -1,4 +1,5 @@
 #!/bin/bash
 
-devtools/bin/vpc /da +everything /mksln Everything
-
+pushd `dirname $0`
+devtools/bin/vpc /da +everything /mksln everything
+popd

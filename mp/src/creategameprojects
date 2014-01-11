@@ -1,4 +1,5 @@
 #!/bin/bash
 
+pushd `dirname $0`
 devtools/bin/vpc /da +game /mksln DoubleAction
-
+popd
