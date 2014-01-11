@@ -56,11 +56,23 @@ private:
 		TARGET_BRIEFCASE = 0,
 		TARGET_CAPTURE,
 		TARGET_BOUNTY,
+		TARGET_WAYPOINT1,
+		TARGET_WAYPOINT2,
+		TARGET_WAYPOINT3,
+		TARGET_LEADER,
+		TARGET_FRONTRUNNER1,
+		TARGET_FRONTRUNNER2,
 		TARGET_TOTAL,
 	} target_type_t;
 
 	class CTarget
 	{
+	public:
+		CTarget()
+		{
+			m_bHideIfVisible = true;
+		}
+
 	public:
 		CHudTexture*    m_pTargetTexture;
 		wchar_t*        m_pwszHint;
@@ -70,6 +82,7 @@ private:
 		Vector          m_vecLastKnownTarget;
 		bool            m_bTargetOn;
 		EHANDLE         m_hEntity;
+		bool            m_bHideIfVisible;
 	} m_Targets[TARGET_TOTAL];
 
 	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
@@ -207,6 +220,126 @@ void CSDKTargetId::Paint()
 	else
 		m_Targets[TARGET_BOUNTY].m_bTargetOn = false;
 
+	if (SDKGameRules()->GetWaypoint(0))
+	{
+		if (C_SDKPlayer::GetLocalSDKPlayer()->GetRaceWaypoint() == 0)
+		{
+			m_Targets[TARGET_WAYPOINT1].m_vecLastKnownTarget = SDKGameRules()->GetWaypoint(0)->WorldSpaceCenter();
+			m_Targets[TARGET_WAYPOINT1].m_hEntity = SDKGameRules()->GetWaypoint(0);
+
+			m_Targets[TARGET_WAYPOINT1].m_pTargetTexture = m_pCapturePoint;
+
+			m_Targets[TARGET_WAYPOINT1].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint1");
+
+			m_Targets[TARGET_WAYPOINT1].m_flScale = 0.5f;
+			m_Targets[TARGET_WAYPOINT1].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_WAYPOINT1].m_bTargetOn = true;
+			m_Targets[TARGET_WAYPOINT1].m_bHideIfVisible = false;
+		}
+		else
+			m_Targets[TARGET_WAYPOINT1].m_bTargetOn = false;
+
+		if (C_SDKPlayer::GetLocalSDKPlayer()->GetRaceWaypoint() == 1 || SDKGameRules()->GetLeader() && SDKGameRules()->GetLeader()->GetRaceWaypoint() == 1)
+		{
+			m_Targets[TARGET_WAYPOINT2].m_vecLastKnownTarget = SDKGameRules()->GetWaypoint(1)->WorldSpaceCenter();
+			m_Targets[TARGET_WAYPOINT2].m_hEntity = SDKGameRules()->GetWaypoint(1);
+
+			m_Targets[TARGET_WAYPOINT2].m_pTargetTexture = m_pCapturePoint;
+
+			m_Targets[TARGET_WAYPOINT2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint2");
+
+			m_Targets[TARGET_WAYPOINT2].m_flScale = 0.5f;
+			m_Targets[TARGET_WAYPOINT2].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_WAYPOINT2].m_bTargetOn = true;
+			m_Targets[TARGET_WAYPOINT2].m_bHideIfVisible = false;
+		}
+		else
+			m_Targets[TARGET_WAYPOINT2].m_bTargetOn = false;
+
+		if (C_SDKPlayer::GetLocalSDKPlayer()->GetRaceWaypoint() == 2 || SDKGameRules()->GetLeader() && SDKGameRules()->GetLeader()->GetRaceWaypoint() == 2)
+		{
+			m_Targets[TARGET_WAYPOINT3].m_vecLastKnownTarget = SDKGameRules()->GetWaypoint(2)->WorldSpaceCenter();
+			m_Targets[TARGET_WAYPOINT3].m_hEntity = SDKGameRules()->GetWaypoint(1);
+
+			m_Targets[TARGET_WAYPOINT3].m_pTargetTexture = m_pCapturePoint;
+
+			m_Targets[TARGET_WAYPOINT3].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint3");
+
+			m_Targets[TARGET_WAYPOINT3].m_flScale = 0.5f;
+			m_Targets[TARGET_WAYPOINT3].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_WAYPOINT3].m_bTargetOn = true;
+			m_Targets[TARGET_WAYPOINT3].m_bHideIfVisible = false;
+		}
+		else
+			m_Targets[TARGET_WAYPOINT3].m_bTargetOn = false;
+
+		if (SDKGameRules()->GetLeader() && SDKGameRules()->GetLeader() != C_SDKPlayer::GetLocalSDKPlayer())
+		{
+			C_SDKPlayer* pLeader = SDKGameRules()->GetLeader();
+			m_Targets[TARGET_LEADER].m_vecLastKnownTarget = pLeader->WorldSpaceCenter();
+			m_Targets[TARGET_LEADER].m_hEntity = pLeader;
+
+			m_Targets[TARGET_LEADER].m_pTargetTexture = m_pBounty;
+
+			m_Targets[TARGET_LEADER].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Leader");
+
+			m_Targets[TARGET_LEADER].m_flScale = 0.7f;
+			m_Targets[TARGET_LEADER].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_LEADER].m_bTargetOn = true;
+		}
+		else
+			m_Targets[TARGET_LEADER].m_bTargetOn = false;
+
+		if (SDKGameRules()->GetFrontRunner1() && SDKGameRules()->GetFrontRunner1() != C_SDKPlayer::GetLocalSDKPlayer())
+		{
+			C_SDKPlayer* pLeader = SDKGameRules()->GetFrontRunner1();
+			m_Targets[TARGET_FRONTRUNNER1].m_vecLastKnownTarget = pLeader->WorldSpaceCenter();
+			m_Targets[TARGET_FRONTRUNNER1].m_hEntity = pLeader;
+
+			m_Targets[TARGET_FRONTRUNNER1].m_pTargetTexture = m_pBounty;
+
+			m_Targets[TARGET_FRONTRUNNER1].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Frontrunner1");
+
+			m_Targets[TARGET_FRONTRUNNER1].m_flScale = 0.7f;
+			m_Targets[TARGET_FRONTRUNNER1].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_FRONTRUNNER1].m_bTargetOn = true;
+		}
+		else
+			m_Targets[TARGET_FRONTRUNNER1].m_bTargetOn = false;
+
+		if (SDKGameRules()->GetFrontRunner2() && SDKGameRules()->GetFrontRunner2() != C_SDKPlayer::GetLocalSDKPlayer())
+		{
+			C_SDKPlayer* pLeader = SDKGameRules()->GetFrontRunner2();
+			m_Targets[TARGET_FRONTRUNNER2].m_vecLastKnownTarget = pLeader->WorldSpaceCenter();
+			m_Targets[TARGET_FRONTRUNNER2].m_hEntity = pLeader;
+
+			m_Targets[TARGET_FRONTRUNNER2].m_pTargetTexture = m_pBounty;
+
+			m_Targets[TARGET_FRONTRUNNER2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Frontrunner2");
+
+			m_Targets[TARGET_FRONTRUNNER2].m_flScale = 0.7f;
+			m_Targets[TARGET_FRONTRUNNER2].m_flMaxAlpha = 0.5f;
+
+			m_Targets[TARGET_FRONTRUNNER2].m_bTargetOn = true;
+		}
+		else
+			m_Targets[TARGET_FRONTRUNNER2].m_bTargetOn = false;
+	}
+	else
+	{
+		m_Targets[TARGET_WAYPOINT1].m_bTargetOn = false;
+		m_Targets[TARGET_WAYPOINT2].m_bTargetOn = false;
+		m_Targets[TARGET_WAYPOINT3].m_bTargetOn = false;
+		m_Targets[TARGET_LEADER].m_bTargetOn = false;
+		m_Targets[TARGET_FRONTRUNNER1].m_bTargetOn = false;
+		m_Targets[TARGET_FRONTRUNNER2].m_bTargetOn = false;
+	}
+
 	int iX, iY;
 
 	for (int i = 0; i < TARGET_TOTAL; i++)
@@ -225,11 +358,16 @@ void CSDKTargetId::Paint()
 				bHide = true;
 			else if (pTarget)
 			{
-				trace_t tr;
-				UTIL_TraceLine(CurrentViewOrigin(), m_Targets[i].m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
+				if (m_Targets[i].m_bHideIfVisible)
+				{
+					trace_t tr;
+					UTIL_TraceLine(CurrentViewOrigin(), m_Targets[i].m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
 
-				bHide = tr.fraction >= 0.99f || tr.m_pEnt == pTarget;
-				if ((CurrentViewOrigin() - pTarget->WorldSpaceCenter()).LengthSqr() > 1000*1000)
+					bHide = tr.fraction >= 0.99f || tr.m_pEnt == pTarget;
+					if ((CurrentViewOrigin() - pTarget->WorldSpaceCenter()).LengthSqr() > 1000*1000)
+						bHide = false;
+				}
+				else
 					bHide = false;
 			}
 			else

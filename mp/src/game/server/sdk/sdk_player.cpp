@@ -257,6 +257,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 
 	SendPropEHandle( SENDINFO( m_hBriefcase ) ),
+	SendPropInt( SENDINFO( m_iRaceWaypoint ) ),
 
 	SendPropBool( SENDINFO( m_bCoderHacks ) ),
 	SendPropInt( SENDINFO( m_nCoderHacksButtons ), 32, SPROP_UNSIGNED ),
@@ -426,6 +427,15 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 int CSDKPlayer::UpdateTransmitState()
 {
 	if (SDKGameRules()->GetBountyPlayer() == this)
+		return SetTransmitState( FL_EDICT_ALWAYS );
+
+	if (SDKGameRules()->GetLeader() == this)
+		return SetTransmitState( FL_EDICT_ALWAYS );
+
+	if (SDKGameRules()->GetFrontRunner1() == this)
+		return SetTransmitState( FL_EDICT_ALWAYS );
+
+	if (SDKGameRules()->GetFrontRunner2() == this)
 		return SetTransmitState( FL_EDICT_ALWAYS );
 
 	return BaseClass::UpdateTransmitState();
@@ -1163,6 +1173,7 @@ void CSDKPlayer::Spawn()
 	m_iStyleKillStreak = 0;
 	m_iCurrentStreak = 0;
 	m_flNextSuicideTime = 0;
+	m_iRaceWaypoint = 0;
 
 	if (m_bGotWorthIt)
 		AddStylePoints(9999, STYLE_SOUND_NONE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
@@ -4078,6 +4089,8 @@ void CSDKPlayer::PickUpBriefcase(CBriefcase* pBriefcase)
 	SendBroadcastNotice(NOTICE_PLAYER_HAS_BRIEFCASE, this);
 
 	SendBroadcastSound("MiniObjective.BriefcasePickup");
+
+	AddStylePoints(ConVarRef("da_stylemeteractivationcost").GetFloat()/3, STYLE_SOUND_LARGE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
 }
 
 void CSDKPlayer::SendBroadcastSound(const char* pszName)

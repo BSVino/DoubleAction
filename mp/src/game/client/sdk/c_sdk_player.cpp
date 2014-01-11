@@ -235,6 +235,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 
 	RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
+	RecvPropInt( RECVINFO( m_iRaceWaypoint ) ),
 
 	RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 	RecvPropInt( RECVINFO( m_nCoderHacksButtons ) ),
@@ -1469,7 +1470,6 @@ void C_SDKPlayer::ClientThink()
 
 	if (IsStyleSkillActive(SKILL_BOUNCER))
 	{
-		Assert(GetActiveSDKWeapon());
 		if (GetActiveSDKWeapon())
 		{
 			if (GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL)

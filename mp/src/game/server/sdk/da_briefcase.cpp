@@ -219,3 +219,58 @@ void CBriefcaseCaptureZone::CaptureThink()
 		}
 	}
 }
+
+BEGIN_DATADESC( CRatRaceWaypoint )
+END_DATADESC()
+
+LINK_ENTITY_TO_CLASS( da_ratrace_waypoint, CRatRaceWaypoint );
+
+IMPLEMENT_SERVERCLASS_ST(CRatRaceWaypoint, DT_RatRaceWaypoint)
+	SendPropFloat( SENDINFO(m_flRadius) ),
+	SendPropInt( SENDINFO(m_iWaypoint) ),
+END_SEND_TABLE()
+
+PRECACHE_REGISTER(da_ratrace_waypoint);
+
+CRatRaceWaypoint::CRatRaceWaypoint()
+{
+	m_flRadius = 100;
+}
+
+void CRatRaceWaypoint::Precache( void )
+{
+	CBaseEntity::PrecacheModel( "da/capturezone.vmt" );
+}
+
+void CRatRaceWaypoint::Spawn( void )
+{
+	BaseClass::Spawn( );
+
+	SetThink(&CRatRaceWaypoint::WaypointThink);
+	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
+	UTIL_DropToFloor(this, MASK_SOLID, this);
+}
+
+int CRatRaceWaypoint::UpdateTransmitState()
+{
+	return SetTransmitState( FL_EDICT_ALWAYS );
+}
+
+void CRatRaceWaypoint::WaypointThink()
+{
+	SetNextThink( gpGlobals->curtime + 0.1f );
+
+	float flRadiusSqr = m_flRadius * m_flRadius;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		if ((pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flRadiusSqr)
+			SDKGameRules()->PlayerReachedWaypoint(pPlayer, this);
+	}
+}

@@ -430,7 +430,36 @@ void CSDKBot::SelectSchedule( bool forcePath )
 {
 	Vector HideSpot;
 
-	if (SDKGameRules()->GetBountyPlayer() && CreatePath(NULL, SDKGameRules()->GetBountyPlayer()->GetAbsOrigin()))
+	if (SDKGameRules()->GetWaypoint(0))
+	{
+		if (m_iRaceWaypoint == 0 && CreatePath(NULL, SDKGameRules()->GetWaypoint(0)->GetAbsOrigin()))
+		{
+			m_nBotState = BOT_NAVIG_PATH;
+			m_nBotSchedule = BOT_SCHED_COMBAT;
+		}
+		else if (m_iRaceWaypoint == 1 && CreatePath(NULL, SDKGameRules()->GetWaypoint(1)->GetAbsOrigin()))
+		{
+			m_nBotState = BOT_NAVIG_PATH;
+			m_nBotSchedule = BOT_SCHED_COMBAT;
+		}
+		else if (m_iRaceWaypoint == 2 && CreatePath(NULL, SDKGameRules()->GetWaypoint(2)->GetAbsOrigin()))
+		{
+			m_nBotState = BOT_NAVIG_PATH;
+			m_nBotSchedule = BOT_SCHED_COMBAT;
+		}
+		else if( CreatePath( GetEnemy() ) ) // try to reach enemy
+		{
+			m_nBotState = forcePath ? BOT_NAVIG_PATH_ENFORCED : BOT_NAVIG_PATH; // the waypoint based route can be forced, it means that bot won't get distracted by any other thing
+			m_nBotSchedule = BOT_SCHED_COMBAT;
+		}
+		else // if everything else fails, just move randomly
+		{
+			AddRandomPath();
+			m_nBotState = BOT_NAVIG_PATH;
+			m_nBotSchedule = BOT_SCHED_COMBAT;
+		}
+	}
+	else if (SDKGameRules()->GetBountyPlayer() && CreatePath(NULL, SDKGameRules()->GetBountyPlayer()->GetAbsOrigin()))
 	{
 		m_nBotState = BOT_NAVIG_PATH;
 		m_nBotSchedule = BOT_SCHED_COMBAT;

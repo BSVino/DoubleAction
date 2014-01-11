@@ -39,6 +39,7 @@
 #endif
 
 class CBriefcaseCaptureZone;
+class CRatRaceWaypoint;
 
 class CSDKGameRulesProxy : public CGameRulesProxy
 {
@@ -236,7 +237,7 @@ private:
 	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
 
 public:
-	void StartMiniObjective();
+	void StartMiniObjective(const char* pszObjective = NULL);
 	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
 	void MaintainMiniObjective();
 	void CleanupMiniObjective();
@@ -257,6 +258,24 @@ public:
 
 	CSDKPlayer* GetBountyPlayer() const;
 
+	bool SetupMiniObjective_RatRace();
+	void MaintainMiniObjective_RatRace();
+	void CleanupMiniObjective_RatRace();
+
+	void PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint* pWaypoint);
+
+	// These helper template functions allow me to use the two race leader lists
+	// as if they were the same type since C++ template functions use duck typing.
+	template<typename T> void WaypointLeadersPush(T& ahWaypointLeaders, CSDKPlayer* pPlayer);
+	template<typename T> void RemovePlayerFromLeaders(T& ahWaypointLeaders, CSDKPlayer* pPlayer);
+	template<typename T> void CompressLeaders(T& ahWaypointLeaders);
+	template<typename T> void DebugCheckLeaders(T& ahWaypointLeaders);
+
+	CRatRaceWaypoint* GetWaypoint(int i) const;
+	CSDKPlayer* GetLeader() const;
+	CSDKPlayer* GetFrontRunner1() const;
+	CSDKPlayer* GetFrontRunner2() const;
+
 private:
 	CNetworkVar( float, m_flGameStartTime );
 	CNetworkVar( bool, m_bIsTeamplay );
@@ -266,6 +285,12 @@ private:
 	CNetworkHandle( CBriefcaseCaptureZone, m_hCaptureZone );
 
 	CNetworkHandle( CSDKPlayer, m_hBountyPlayer );
+
+	CNetworkArray( CHandle<CSDKPlayer>, m_ahWaypoint1RaceLeaders, 16 );
+	CNetworkArray( CHandle<CSDKPlayer>, m_ahWaypoint2RaceLeaders, 16 );
+	CNetworkHandle( CRatRaceWaypoint, m_hRaceWaypoint1 );
+	CNetworkHandle( CRatRaceWaypoint, m_hRaceWaypoint2 );
+	CNetworkHandle( CRatRaceWaypoint, m_hRaceWaypoint3 );
 
 	float	m_flNextSlowMoUpdate;
 

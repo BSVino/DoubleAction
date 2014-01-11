@@ -209,6 +209,8 @@ public:
 
 	bool HasBriefcase() const;
 
+	int GetRaceWaypoint() const { return m_iRaceWaypoint; }
+
 	const char* GetCharacter() const { return m_iszCharacter; }
 	bool HasCharacterBeenChosen() const { return m_bCharacterChosen; }
 	void CharacterChosen() { m_bCharacterChosen = true; }
@@ -408,6 +410,7 @@ private:
 	float                                  m_flLastLesson;
 
 	CNetworkHandle(class C_Briefcase, m_hBriefcase);
+	int     m_iRaceWaypoint;
 
 	bool    m_bCoderHacks;
 	int     m_nCoderHacksButtons;

@@ -173,6 +173,10 @@ const char* NoticeToString( notice_t id )
 		"bounty_on_player",
 		"bounty_collected",
 		"bounty_lost",
+
+		"ratrace_start",
+		"ratrace_lead",
+		"ratrace_over",
 	};
 
 	return aszNotices[id];

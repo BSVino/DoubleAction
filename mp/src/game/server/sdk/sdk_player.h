@@ -531,6 +531,7 @@ public:
 	CNetworkVar(string_t, m_szKillerString);
 
 	CNetworkHandle(CBriefcase, m_hBriefcase);
+	CNetworkVar( int, m_iRaceWaypoint ); // What's the highest waypoint I've gotten to?
 
 	bool m_bGotWorthIt;
 

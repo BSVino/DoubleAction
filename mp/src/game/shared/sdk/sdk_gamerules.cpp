@@ -88,6 +88,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		RecvPropEHandle( RECVINFO( m_hCaptureZone ) ),
 		RecvPropEHandle( RECVINFO( m_hBountyPlayer ) ),
 		RecvPropVector( RECVINFO( m_vecLowestSpawnPoint ) ),
+		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint1RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint1RaceLeaders[0]))),
+		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint2RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint2RaceLeaders[0]))),
+		RecvPropEHandle( RECVINFO( m_hRaceWaypoint1 ) ),
+		RecvPropEHandle( RECVINFO( m_hRaceWaypoint2 ) ),
+		RecvPropEHandle( RECVINFO( m_hRaceWaypoint3 ) ),
 #else
 		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
@@ -97,6 +102,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		SendPropEHandle( SENDINFO( m_hCaptureZone ) ),
 		SendPropEHandle( SENDINFO( m_hBountyPlayer ) ),
 		SendPropVector( SENDINFO( m_vecLowestSpawnPoint ) ),
+		SendPropArray3( SENDINFO_ARRAY3( m_ahWaypoint1RaceLeaders ), SendPropEHandle(SENDINFO_ARRAY(m_ahWaypoint1RaceLeaders)) ),
+		SendPropArray3( SENDINFO_ARRAY3( m_ahWaypoint2RaceLeaders ), SendPropEHandle(SENDINFO_ARRAY(m_ahWaypoint2RaceLeaders)) ),
+		SendPropEHandle( SENDINFO( m_hRaceWaypoint1 ) ),
+		SendPropEHandle( SENDINFO( m_hRaceWaypoint2 ) ),
+		SendPropEHandle( SENDINFO( m_hRaceWaypoint3 ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -1780,6 +1790,19 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 		GetBountyPlayer()->TakeHealth(25, 0);
 	}
 
+	CSDKPlayer* pLeader = GetLeader();
+
+	RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, ToSDKPlayer(pVictim));
+	RemovePlayerFromLeaders(m_ahWaypoint2RaceLeaders, ToSDKPlayer(pVictim));
+
+	CSDKPlayer* pNewLeader = GetLeader();
+
+	if (pNewLeader && pLeader && pNewLeader != pLeader)
+	{
+		CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_LEAD, pNewLeader);
+		CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
+	}
+
 	BaseClass::PlayerKilled(pVictim, info);
 }
 
@@ -2047,18 +2070,36 @@ Vector CSDKGameRules::GetLowestSpawnPoint()
 }
 
 #ifndef CLIENT_DLL
-void CSDKGameRules::StartMiniObjective()
+void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 {
 	CleanupMiniObjective();
 
 	random->SetSeed((int)(gpGlobals->curtime*1000));
 	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
 
+	if (pszObjective)
+	{
+		if (FStrEq(pszObjective, "ctb"))
+			eObjective = MINIOBJECTIVE_BRIEFCASE;
+		else if (FStrEq(pszObjective, "briefcase"))
+			eObjective = MINIOBJECTIVE_BRIEFCASE;
+		else if (FStrEq(pszObjective, "bounty"))
+			eObjective = MINIOBJECTIVE_BOUNTY;
+		else if (FStrEq(pszObjective, "wanted"))
+			eObjective = MINIOBJECTIVE_BOUNTY;
+		else if (FStrEq(pszObjective, "race"))
+			eObjective = MINIOBJECTIVE_RATRACE;
+		else if (FStrEq(pszObjective, "ratrace"))
+			eObjective = MINIOBJECTIVE_RATRACE;
+	}
+
 	bool bResult = false;
 	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
 		bResult = SetupMiniObjective_Briefcase();
 	else if (eObjective == MINIOBJECTIVE_BOUNTY)
 		bResult = SetupMiniObjective_Bounty();
+	else if (eObjective == MINIOBJECTIVE_RATRACE)
+		bResult = SetupMiniObjective_RatRace();
 	else
 		AssertMsg(false, "Unknown mini objective to set up.");
 
@@ -2084,6 +2125,9 @@ notice_t CSDKGameRules::GetNoticeForMiniObjective(miniobjective_t eObjective)
 	if (eObjective == MINIOBJECTIVE_BOUNTY)
 		return NOTICE_BOUNTY_ON_PLAYER;
 
+	if (eObjective == MINIOBJECTIVE_RATRACE)
+		return NOTICE_RATRACE_START;
+
 	AssertMsg(false, "Unknown notice for objective.");
 	return NOTICE_CAPTURE_BRIEFCASE;
 }
@@ -2097,6 +2141,8 @@ void CSDKGameRules::MaintainMiniObjective()
 		MaintainMiniObjective_Briefcase();
 	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_BOUNTY)
 		MaintainMiniObjective_Bounty();
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_RATRACE)
+		MaintainMiniObjective_RatRace();
 	else
 		AssertMsg(false, "Unknown mini objective to maintain.");
 }
@@ -2110,6 +2156,8 @@ void CSDKGameRules::CleanupMiniObjective()
 		CleanupMiniObjective_Briefcase();
 	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_BOUNTY)
 		CleanupMiniObjective_Bounty();
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_RATRACE)
+		CleanupMiniObjective_RatRace();
 	else
 		AssertMsg(false, "Unknown mini objective to maintain.");
 
@@ -2373,11 +2421,258 @@ void CSDKGameRules::CleanupMiniObjective_Bounty()
 	m_hBountyPlayer = NULL;
 }
 
+static Vector g_vecSortPoint;
+
+int DistanceToPoint(CBaseEntity*const* l, CBaseEntity*const* r)
+{
+	float flLDistanceSqr = ((*l)->GetAbsOrigin() - g_vecSortPoint).LengthSqr();
+	float flRDistanceSqr = ((*r)->GetAbsOrigin() - g_vecSortPoint).LengthSqr();
+
+	return flLDistanceSqr < flRDistanceSqr;
+}
+
+bool CSDKGameRules::SetupMiniObjective_RatRace()
+{
+	// Find a spawn point to place the briefcase in.
+
+	CUtlVector<CBaseEntity*> apWaypoints;
+
+	CBaseEntity* pSpot = NULL;
+	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+	{
+		bool bUse = true;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPlayer)
+				continue;
+
+			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
+
+			if (flDistance < 200)
+			{
+				bUse = false;
+				break;
+			}
+
+			if (flDistance < 500 && pPlayer->IsVisible(pSpot->GetAbsOrigin(), true))
+			{
+				bUse = false;
+				break;
+			}
+		}
+
+		if (!bUse)
+			continue;
+
+		apWaypoints.AddToTail(pSpot);
+	}
+
+	if (apWaypoints.Count() < 3)
+		return false;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		pPlayer->m_iRaceWaypoint = 0;
+	}
+
+	random->SetSeed((int)(gpGlobals->curtime*1000));
+	int iSpot1 = random->RandomInt(0, apWaypoints.Count()-1);
+
+	m_hRaceWaypoint1 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
+	m_hRaceWaypoint1->SetAbsOrigin(apWaypoints[iSpot1]->GetAbsOrigin());
+	m_hRaceWaypoint1->SetWaypoint(0);
+	m_hRaceWaypoint1->Spawn();
+
+	apWaypoints.Remove(iSpot1);
+
+	g_vecSortPoint = m_hRaceWaypoint1->GetAbsOrigin();
+	apWaypoints.Sort(&DistanceToPoint);
+
+	int iSpot2;
+	if (apWaypoints.Count() < 6)
+		iSpot2 = 0;
+	else
+		iSpot2 = random->RandomInt(0, 2);
+
+	m_hRaceWaypoint2 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
+	m_hRaceWaypoint2->SetAbsOrigin(apWaypoints[iSpot2]->GetAbsOrigin());
+	m_hRaceWaypoint2->SetWaypoint(1);
+	m_hRaceWaypoint2->Spawn();
+
+	apWaypoints.Remove(iSpot2);
+
+	g_vecSortPoint = m_hRaceWaypoint2->GetAbsOrigin();
+	apWaypoints.Sort(&DistanceToPoint);
+
+	int iSpot3;
+	if (apWaypoints.Count() < 6)
+		iSpot3 = 0;
+	else
+		iSpot3 = random->RandomInt(0, 2);
+
+	m_hRaceWaypoint3 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
+	m_hRaceWaypoint3->SetAbsOrigin(apWaypoints[iSpot3]->GetAbsOrigin());
+	m_hRaceWaypoint3->SetWaypoint(2);
+	m_hRaceWaypoint3->Spawn();
+
+	return true;
+}
+
+void CSDKGameRules::MaintainMiniObjective_RatRace()
+{
+}
+
+void CSDKGameRules::CleanupMiniObjective_RatRace()
+{
+	Assert(m_ahWaypoint1RaceLeaders.Count() == m_ahWaypoint2RaceLeaders.Count());
+	for (int i = 0; i < m_ahWaypoint1RaceLeaders.Count(); i++)
+	{
+		m_ahWaypoint1RaceLeaders.GetForModify(i).Set(NULL);
+		m_ahWaypoint2RaceLeaders.GetForModify(i).Set(NULL);
+	}
+
+	UTIL_Remove(m_hRaceWaypoint1);
+	UTIL_Remove(m_hRaceWaypoint2);
+	UTIL_Remove(m_hRaceWaypoint3);
+}
+
+void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint* pWaypoint)
+{
+	if (!pPlayer || !pWaypoint)
+		return;
+
+	if (pPlayer->m_iRaceWaypoint == pWaypoint->GetWaypoint())
+	{
+		pPlayer->m_iRaceWaypoint++;
+
+		pPlayer->AddStylePoints(ConVarRef("da_stylemeteractivationcost").GetFloat()/5, STYLE_SOUND_LARGE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
+
+		if (pPlayer->m_iRaceWaypoint == 1)
+		{
+			if (!m_ahWaypoint2RaceLeaders[0] && !m_ahWaypoint1RaceLeaders[0])
+			{
+				CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
+				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_LEAD, pPlayer);
+			}
+
+			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pPlayer);
+		}
+		else if (pPlayer->m_iRaceWaypoint == 2)
+		{
+			if (!m_ahWaypoint2RaceLeaders[0])
+			{
+				CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
+				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_LEAD, pPlayer);
+			}
+
+			WaypointLeadersPush(m_ahWaypoint2RaceLeaders, pPlayer);
+			RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, pPlayer);
+		}
+		else if (pPlayer->m_iRaceWaypoint == 3)
+		{
+			CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_OVER, pPlayer);
+			GiveMiniObjectiveReward(pPlayer);
+			CleanupMiniObjective();
+		}
+	}
+}
+
+template <typename T>
+void CSDKGameRules::WaypointLeadersPush(T& ahWaypointLeaders, CSDKPlayer* pPlayer)
+{
+	for (int i = 0; i < ahWaypointLeaders.Count(); i++)
+	{
+		if (ahWaypointLeaders.Get(i) == NULL)
+		{
+			ahWaypointLeaders.GetForModify(i) = pPlayer;
+			DebugCheckLeaders(ahWaypointLeaders);
+			return;
+		}
+	}
+
+	// If there's no room in the list for the player that's okay,
+	// the list is only for displaying leaders on the HUD.
+	// CSDKPlayer::m_iRaceWaypoint is what determines the winner.
+	DebugCheckLeaders(ahWaypointLeaders);
+}
+
+template <typename T>
+void CSDKGameRules::RemovePlayerFromLeaders(T& ahWaypointLeaders, CSDKPlayer* pPlayer)
+{
+	for (int i = 0; i < ahWaypointLeaders.Count(); i++)
+	{
+		if (ahWaypointLeaders.Get(i) == pPlayer)
+			ahWaypointLeaders.GetForModify(i) = NULL;
+	}
+
+	CompressLeaders(ahWaypointLeaders);
+}
+
+template <typename T>
+void CSDKGameRules::CompressLeaders(T& ahWaypointLeaders)
+{
+	for (int i = 0; i < ahWaypointLeaders.Count(); i++)
+	{
+		if (ahWaypointLeaders.Get(i) == NULL)
+		{
+			// Find the next occupied space.
+			bool bFound = false;
+			for (int j = i+1; j < ahWaypointLeaders.Count(); j++)
+			{
+				if (ahWaypointLeaders.Get(j) != NULL)
+				{
+					ahWaypointLeaders.GetForModify(i) = ahWaypointLeaders[j];
+					ahWaypointLeaders.GetForModify(j) = NULL;
+					bFound = true;
+					break;
+				}
+			}
+
+			if (!bFound)
+			{
+				// The list is compressed. Return.
+				DebugCheckLeaders(ahWaypointLeaders);
+				return;
+			}
+		}
+	}
+
+	DebugCheckLeaders(ahWaypointLeaders);
+}
+
+template <typename T>
+void CSDKGameRules::DebugCheckLeaders(T& ahWaypointLeaders)
+{
+#ifndef _DEBUG
+	return;
+#endif
+
+	// Check leaders list invariants
+	bool bInFront = true;
+
+	for (int i = 0; i < ahWaypointLeaders.Count(); i++)
+	{
+		if (bInFront && !ahWaypointLeaders.Get(i))
+			bInFront = false;
+
+		if (!bInFront && ahWaypointLeaders.Get(i))
+			AssertMsg(false, "Leaders list is not compact.");
+	}
+}
+
 extern ConVar *sv_cheats;
 
 void CC_MiniObjective(const CCommand &args)
 {
-	SDKGameRules()->StartMiniObjective();
+	if (args.ArgC() > 1)
+		SDKGameRules()->StartMiniObjective(args[1]);
+	else
+		SDKGameRules()->StartMiniObjective();
 }
 
 static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
@@ -2396,6 +2691,70 @@ CBriefcaseCaptureZone* CSDKGameRules::GetCaptureZone() const
 CSDKPlayer* CSDKGameRules::GetBountyPlayer() const
 {
 	return m_hBountyPlayer;
+}
+
+CRatRaceWaypoint* CSDKGameRules::GetWaypoint(int i) const
+{
+	if (i == 1)
+		return m_hRaceWaypoint2;
+
+	if (i == 2)
+		return m_hRaceWaypoint3;
+
+	return m_hRaceWaypoint1;
+}
+
+CSDKPlayer* CSDKGameRules::GetLeader() const
+{
+	// If anyone has reached the second point, the first person to do so is the leader.
+	if (m_ahWaypoint2RaceLeaders[0])
+		return m_ahWaypoint2RaceLeaders[0];
+
+	// Otherwise whoever the first person is to reach the second point is the leader.
+	return m_ahWaypoint1RaceLeaders[0];
+}
+
+CSDKPlayer* CSDKGameRules::GetFrontRunner1() const
+{
+	if (m_ahWaypoint2RaceLeaders[0])
+	{
+		// If someone has reached the second point, then they are the leader.
+		if (m_ahWaypoint2RaceLeaders[1])
+			// Second place position is whoever the next person was to reach the second point.
+			return m_ahWaypoint2RaceLeaders[1];
+		else
+			// If nobody has reached the second point, second place is whoever reached the first point first.
+			return m_ahWaypoint1RaceLeaders[0];
+	}
+
+	// If nobody has reached the second point...
+	return m_ahWaypoint1RaceLeaders[1];
+}
+
+CSDKPlayer* CSDKGameRules::GetFrontRunner2() const
+{
+	if (m_ahWaypoint2RaceLeaders[0])
+	{
+		// If someone has reached the second point, then they are the leader.
+		if (m_ahWaypoint2RaceLeaders[1])
+		{
+			// The second place person has reached the second point.
+			if (m_ahWaypoint2RaceLeaders[2])
+				// If there is a third person to reach the second point, they are in third place.
+				return m_ahWaypoint2RaceLeaders[2];
+			else
+				// Otherwise third place is the first person to reach the first point.
+				return m_ahWaypoint1RaceLeaders[0];
+		}
+		else
+			// Only one person has reached the second point.
+			// Second place is the first person at the first point.
+			// Third place is the second person at the first point.
+			return m_ahWaypoint2RaceLeaders[2];
+	}
+
+	// If nobody has reached the second point...
+	return m_ahWaypoint1RaceLeaders[2];
 }
 
 #ifndef CLIENT_DLL
