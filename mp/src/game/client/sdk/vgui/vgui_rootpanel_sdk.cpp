@@ -12,6 +12,7 @@
 #include <vgui/ISurface.h>
 #include "c_sdk_player.h"
 #include <vgui/ILocalize.h>
+#include "sourcevr/isourcevirtualreality.h"
 
 #undef min
 #undef max
@@ -113,7 +114,7 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 			flLetterbox = std::max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
 	}
 
-	if (flLetterbox > 0)
+	if (!UseVR() && flLetterbox > 0)
 	{
 		int iWidth = ScreenWidth();
 		int iHeight = ScreenHeight();
@@ -139,9 +140,12 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 	int iTopBarHeight = 150;
 	int iBottomBarHeight = 75;
 
-	surface()->DrawSetColor(Color(0, 0, 0, 255));
-	surface()->DrawFilledRect( 0, 0, iWidth, iTopBarHeight );
-	surface()->DrawFilledRect( 0, iHeight-iBottomBarHeight, iWidth, iHeight );
+	if (!UseVR())
+	{
+		surface()->DrawSetColor(Color(0, 0, 0, 255));
+		surface()->DrawFilledRect( 0, 0, iWidth, iTopBarHeight );
+		surface()->DrawFilledRect( 0, iHeight-iBottomBarHeight, iWidth, iHeight );
+	}
 
 	if (m_hDeathFrameLarge == vgui::INVALID_FONT)
 	{

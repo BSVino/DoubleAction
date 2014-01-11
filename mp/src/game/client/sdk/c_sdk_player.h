@@ -366,6 +366,8 @@ private:
 	CNetworkVar( bool, m_bThirdPerson );
 	CNetworkVar( bool, m_bThirdPersonCamSide );
 
+	CNetworkVar( bool, m_bUsingVR );
+
 	float m_flCurrentAlphaVal;
 
 	Vector m_vecThirdCamera; // Where is the third person camera?

@@ -9,6 +9,7 @@
 #include "vgui_controls/Label.h"
 #include "vgui/ISurface.h"
 #include "text_message.h"
+#include "sourcevr/isourcevirtualreality.h"
 
 #include "da_instructor.h"
 #include "c_sdk_player.h"
@@ -381,6 +382,10 @@ void CInstructor::DisplayLesson(const CUtlString& sLesson)
 			return;
 
 		if (!m_bActive)
+			return;
+
+		// Hints are tough to read in VR, assume player already knows.
+		if (UseVR())
 			return;
 	}
 

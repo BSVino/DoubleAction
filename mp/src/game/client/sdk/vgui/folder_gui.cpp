@@ -42,6 +42,8 @@ ConVar hud_buyautokill("hud_buyautokill", "0");
 
 CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 {
+	m_pPage = NULL;
+
 	m_bNeedsUpdate = false;
 
 	m_szCharacter[0] = '\0';
@@ -69,8 +71,6 @@ CFolderMenu::CFolderMenu(IViewPort *pViewPort) : Frame( null, "folder" )
 
 	ReloadControlSettings(false);
 	InvalidateLayout();
-
-	m_pPage = NULL;
 }
 
 //Destructor

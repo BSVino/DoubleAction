@@ -230,6 +230,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
 	RecvPropBool( RECVINFO( m_bThirdPersonCamSide ) ),	
 
+	RecvPropBool( RECVINFO( m_bUsingVR ) ),
+
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 
 	RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
@@ -326,6 +328,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_bThirdPersonCamSide, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_vecThirdCamera, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_vecThirdTarget, FIELD_VECTOR, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_FIELD( m_bUsingVR, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flMuzzleFlashYaw, FIELD_FLOAT, FTYPEDESC_PRIVATE ),   
 
 	DEFINE_PRED_FIELD( m_bCoderHacks, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -892,6 +895,11 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 	// clear attack inputs on spawn
 	::input->ClearInputButton( IN_ATTACK | IN_ATTACK2 );
 	::input->GetButtonBits( 0 ); 
+
+	if (UseVR())
+		engine->ServerCmd("vr on");
+	else
+		engine->ServerCmd("vr off");
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

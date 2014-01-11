@@ -13,6 +13,7 @@
 #include "vgui_controls/Controls.h"
 #include "vgui/ISurface.h"
 #include "ivrenderview.h"
+#include "sourcevr/isourcevirtualreality.h"
 
 #include "c_sdk_player.h"
 #include "weapon_sdkbase.h"
@@ -175,7 +176,7 @@ void CDAHudCrosshair::Paint( void )
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
-	if (pPlayer && pPlayer->IsInThirdPerson() && m_pObstructionCrosshair)
+	if (!UseVR() && pPlayer && pPlayer->IsInThirdPerson() && m_pObstructionCrosshair)
 	{
 		Vector vecCamera = pPlayer->GetThirdPersonCameraPosition();
 
@@ -212,10 +213,13 @@ void CDAHudCrosshair::Paint( void )
 		}
 	}
 
-	m_pCrosshair->DrawSelf( 
-			x - 0.5f * m_pCrosshair->Width(), 
-			y - 0.5f * m_pCrosshair->Height(),
-			bObstruction?Color(128, 128, 128, m_clrCrosshair.a()/2):m_clrCrosshair );
+	if (!UseVR())
+	{
+		m_pCrosshair->DrawSelf( 
+				x - 0.5f * m_pCrosshair->Width(), 
+				y - 0.5f * m_pCrosshair->Height(),
+				bObstruction?Color(128, 128, 128, m_clrCrosshair.a()/2):m_clrCrosshair );
+	}
 
 	float flWatchAlphaGoal = (pPlayer->GetSlowMoTime() > 0)?1:0;
 	m_flWatchAlpha = Approach(flWatchAlphaGoal, m_flWatchAlpha, gpGlobals->frametime * 3);

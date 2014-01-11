@@ -1839,13 +1839,6 @@ ConVar da_cam_lag_max( "da_cam_lag_max", "17", FCVAR_REPLICATED|FCVAR_CHEAT|FCVA
 
 const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye, const QAngle& angCamera)
 {
-	m_vecCameraLag -= GetAbsVelocity() * (GetSlowMoMultiplier() * gpGlobals->frametime * da_cam_lag_velocity.GetFloat());
-
-	m_vecCameraLag *= (1 - GetSlowMoMultiplier() * gpGlobals->frametime * da_cam_lag_drag.GetFloat());
-
-	if (m_vecCameraLag.Length() > da_cam_lag_max.GetFloat())
-		m_vecCameraLag = m_vecCameraLag.Normalized() * da_cam_lag_max.GetFloat();
-
 	float flCamBackIdle = GetUserInfoFloat("da_cam_back");
 	float flCamUpIdle = GetUserInfoFloat("da_cam_up");
 	float flCamRightIdle = GetUserInfoFloat("da_cam_right");
@@ -1860,11 +1853,36 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	float flCamUp = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamUpIdle, flCamUpAim);
 	float flCamRight = RemapValClamped(Gain(m_Shared.GetAimIn(), 0.8f), 0, 1, flCamRightIdle, flCamRightAim);
 
+	float flCamLagVelocity = da_cam_lag_velocity.GetFloat();
+	float flCamLagDrag = da_cam_lag_drag.GetFloat();
+	float flCamLagMax = da_cam_lag_max.GetFloat();
+
+	if (m_bUsingVR)
+	{
+		flCamStandingScale = 1;
+		flCamLagVelocity = 0;
+		flCamLagDrag = 0;
+		flCamLagMax = 0;
+	}
+
+	m_vecCameraLag -= GetAbsVelocity() * (GetSlowMoMultiplier() * gpGlobals->frametime * flCamLagVelocity);
+
+	m_vecCameraLag *= (1 - GetSlowMoMultiplier() * gpGlobals->frametime * flCamLagDrag);
+
+	if (m_vecCameraLag.Length() > flCamLagMax)
+		m_vecCameraLag = m_vecCameraLag.Normalized() * flCamLagMax;
+
 	m_flSideLerp = Approach(m_bThirdPersonCamSide?1:-1, m_flSideLerp, gpGlobals->frametime*15);
 	flCamRight *= m_flSideLerp;
 
+	QAngle angFixedCamera = angCamera;
+
+	if (m_bUsingVR)
+		// Slam pitch to 0.
+		angFixedCamera.x = 0;
+
 	Vector camForward, camRight, camUp;
-	AngleVectors( angCamera, &camForward, &camRight, &camUp );
+	AngleVectors( angFixedCamera, &camForward, &camRight, &camUp );
 
 	Vector vecCameraOffset = -camForward*flCamBack + camRight*flCamRight + camUp*flCamUp;
 

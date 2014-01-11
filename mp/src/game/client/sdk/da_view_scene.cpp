@@ -36,6 +36,7 @@
 #include "shake.h"
 #include "clienteffectprecachesystem.h"
 #include <vgui/ISurface.h>
+#include "sourcevr/isourcevirtualreality.h"
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheDAViewScene )
 CLIENTEFFECT_MATERIAL( "shaders/slowmo" )
@@ -94,7 +95,7 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	else if (da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt())
 		bShowPostProcess = true;
 
-	if ( bShowPostProcess )
+	if ( bShowPostProcess && !UseVR() )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
@@ -108,9 +109,9 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 			da_postprocess_skill.SetValue(m_flStyleLerp);
 
 			if (da_postprocess_compare.GetInt() == 1)
-				DrawScreenEffectMaterial( pMaterial, 0, 0, XRES(320), ScreenHeight() );
+				DrawScreenEffectMaterial( pMaterial, 0, 0, view.width/2, view.height );
 			else
-				DrawScreenEffectMaterial( pMaterial, 0, 0, ScreenWidth(), ScreenHeight() );
+				DrawScreenEffectMaterial( pMaterial, 0, 0, view.width, view.height );
 		}
 	}
 }

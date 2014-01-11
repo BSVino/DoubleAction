@@ -253,6 +253,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),
 	SendPropBool( SENDINFO( m_bThirdPersonCamSide ) ),
+	SendPropBool( SENDINFO( m_bUsingVR ) ),
 	SendPropStringT( SENDINFO( m_iszCharacter ) ),
 
 	SendPropEHandle( SENDINFO( m_hBriefcase ) ),
@@ -398,6 +399,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bHasPlayerDied = false;
 	m_bThirdPerson = false;
 	m_bGotWorthIt = false;
+	m_bUsingVR = false;
 
 	m_iKills = m_iDeaths = 0;
 
@@ -4823,4 +4825,13 @@ CON_COMMAND( give_weapon, "Give weapon to player.\n\tArguments: <weapon_name>" )
 			pDrop->SetDieThink( true );
 		}
 	}
+}
+
+CON_COMMAND( vr, "Turn VR mode on/off" )
+{
+	if (args.ArgC() < 2)
+		return;
+
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() );
+	pPlayer->m_bUsingVR = V_strcmp(args[1], "on") == 0;
 }

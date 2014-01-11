@@ -17,6 +17,7 @@
 #include "convar.h"
 
 #include "iclientmode.h"
+#include "sourcevr/isourcevirtualreality.h"
 
 #include <KeyValues.h>
 #include <vgui/ISurface.h>
@@ -295,6 +296,10 @@ void CHudLeaderboard::Paint()
 {
 	C_SDKPlayer *pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if ( !pLocalPlayer )
+		return;
+
+	// Text is small and in a far corner, too much eye strain to read.
+	if (UseVR())
 		return;
 
 	if (!m_pGoldStar)

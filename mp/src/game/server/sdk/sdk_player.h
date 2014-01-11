@@ -502,6 +502,8 @@ public:
 	float  m_flStuntLerp;
 	float  m_flSideLerp;
 
+	CNetworkVar( bool, m_bUsingVR );
+
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );
