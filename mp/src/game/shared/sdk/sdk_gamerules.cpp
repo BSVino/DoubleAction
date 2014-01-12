@@ -2075,33 +2075,43 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	CleanupMiniObjective();
 
 	random->SetSeed((int)(gpGlobals->curtime*1000));
-	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
-
-	if (pszObjective)
-	{
-		if (FStrEq(pszObjective, "ctb"))
-			eObjective = MINIOBJECTIVE_BRIEFCASE;
-		else if (FStrEq(pszObjective, "briefcase"))
-			eObjective = MINIOBJECTIVE_BRIEFCASE;
-		else if (FStrEq(pszObjective, "bounty"))
-			eObjective = MINIOBJECTIVE_BOUNTY;
-		else if (FStrEq(pszObjective, "wanted"))
-			eObjective = MINIOBJECTIVE_BOUNTY;
-		else if (FStrEq(pszObjective, "race"))
-			eObjective = MINIOBJECTIVE_RATRACE;
-		else if (FStrEq(pszObjective, "ratrace"))
-			eObjective = MINIOBJECTIVE_RATRACE;
-	}
 
 	bool bResult = false;
-	if (eObjective == MINIOBJECTIVE_BRIEFCASE)
-		bResult = SetupMiniObjective_Briefcase();
-	else if (eObjective == MINIOBJECTIVE_BOUNTY)
-		bResult = SetupMiniObjective_Bounty();
-	else if (eObjective == MINIOBJECTIVE_RATRACE)
-		bResult = SetupMiniObjective_RatRace();
-	else
-		AssertMsg(false, "Unknown mini objective to set up.");
+
+	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+	for (int i = 0; i < 3; i++)
+	{
+		eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+
+		if (pszObjective)
+		{
+			if (FStrEq(pszObjective, "ctb"))
+				eObjective = MINIOBJECTIVE_BRIEFCASE;
+			else if (FStrEq(pszObjective, "briefcase"))
+				eObjective = MINIOBJECTIVE_BRIEFCASE;
+			else if (FStrEq(pszObjective, "bounty"))
+				eObjective = MINIOBJECTIVE_BOUNTY;
+			else if (FStrEq(pszObjective, "wanted"))
+				eObjective = MINIOBJECTIVE_BOUNTY;
+			else if (FStrEq(pszObjective, "race"))
+				eObjective = MINIOBJECTIVE_RATRACE;
+			else if (FStrEq(pszObjective, "ratrace"))
+				eObjective = MINIOBJECTIVE_RATRACE;
+		}
+
+		bResult = false;
+		if (eObjective == MINIOBJECTIVE_BRIEFCASE)
+			bResult = SetupMiniObjective_Briefcase();
+		else if (eObjective == MINIOBJECTIVE_BOUNTY)
+			bResult = SetupMiniObjective_Bounty();
+		else if (eObjective == MINIOBJECTIVE_RATRACE)
+			bResult = SetupMiniObjective_RatRace();
+		else
+			AssertMsg(false, "Unknown mini objective to set up.");
+
+		if (bResult)
+			break;
+	}
 
 	if (!bResult)
 	{
@@ -2433,6 +2443,9 @@ int DistanceToPoint(CBaseEntity*const* l, CBaseEntity*const* r)
 
 bool CSDKGameRules::SetupMiniObjective_RatRace()
 {
+	if (IsTeamplay())
+		return false;
+
 	// Find a spawn point to place the briefcase in.
 
 	CUtlVector<CBaseEntity*> apWaypoints;
