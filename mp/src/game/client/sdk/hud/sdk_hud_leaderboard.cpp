@@ -340,7 +340,7 @@ void CHudLeaderboard::Paint()
 	}
 	else if (SDKGameRules()->GetBriefcase())
 	{
-		ListSpecialPlayer(ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()), m_pBounty, 0);
+		ListSpecialPlayer(ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()), m_pBriefcase, 0);
 		return;
 	}
 	else if (SDKGameRules()->GetLeader())
