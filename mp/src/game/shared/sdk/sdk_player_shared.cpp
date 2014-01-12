@@ -254,7 +254,7 @@ void CSDKPlayer::SharedSpawn()
 	m_Shared.m_iWallFlipCount = 0;
 	m_Shared.m_bIsWallFlipping = false;
 	m_Shared.m_flWallFlipEndTime = 0;
-	m_Shared.m_flMantelTime = 0;
+	m_Shared.m_bIsManteling = false;
 	m_Shared.m_flSuperFallOthersNextCheck = 0;
 	m_Shared.m_bSuperFalling = false;
 	m_Shared.m_bSuperSkill = false;
@@ -1063,18 +1063,13 @@ void CSDKPlayerShared::StartManteling(const Vector& vecWallNormal)
 
 	m_pOuter->DoAnimationEvent (PLAYERANIMEVENT_WALLCLIMB);
 
-	m_flMantelTime = 0.5f;
+	m_bIsManteling = true;
 	m_vecMantelWallNormal = vecWallNormal;
-}
-
-void CSDKPlayerShared::AccumulateMantelTime()
-{
-	m_flMantelTime -= gpGlobals->frametime;
 }
 
 void CSDKPlayerShared::ResetManteling()
 {
-	m_flMantelTime = 0;
+	m_bIsManteling = false;
 }
 
 #if defined ( SDK_USE_SPRINTING )

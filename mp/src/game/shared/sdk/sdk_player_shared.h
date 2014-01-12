@@ -110,9 +110,8 @@ public:
 	float   GetDiveToProneLandTime() const { return m_flDiveToProneLandTime; }
 	void    DiveLandedProne();
 
-	bool    IsManteling() const { return m_flMantelTime > 0; }
+	bool    IsManteling() const { return m_bIsManteling; }
 	void    StartManteling(const Vector& vecWallNormal);
-	void    AccumulateMantelTime();
 	void    ResetManteling();
 	Vector  GetMantelWallNormal() const { return m_vecMantelWallNormal; }
 
@@ -216,7 +215,7 @@ private:
 	CNetworkVar(int,    m_iWallFlipCount);
 	CNetworkVar(bool,   m_bIsWallFlipping);
 	CNetworkVar(float,  m_flWallFlipEndTime);
-	CNetworkVar(float,  m_flMantelTime);
+	CNetworkVar(bool,   m_bIsManteling);
 	CNetworkVar(Vector, m_vecMantelWallNormal);
 
 public:

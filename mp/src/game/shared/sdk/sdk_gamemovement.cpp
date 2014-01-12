@@ -2630,19 +2630,22 @@ void CSDKGameMovement::FullWalkMove ()
 		if (tr.fraction == 1 && !tr.startsolid && !tr.allsolid)
 		{
 			mv->SetAbsOrigin (tr.endpos);
-			m_pSDKPlayer->m_Shared.AccumulateMantelTime();
-			if (!m_pSDKPlayer->m_Shared.IsManteling())
-			{/*Now at the end of the animation, push player onto ledge*/
-				VectorCopy (mv->GetAbsOrigin (), pr1);
-				VectorCopy (pr1, pr2);
-				pr2[0] += 16*m_vecForward[0];
-				pr2[1] += 16*m_vecForward[1];
-				TraceBBox (pr1, pr2, mins, maxs, tr);
+			if (m_pSDKPlayer->m_Shared.IsManteling())
+			{
+				// Try to push the player onto the ledge.
+				Vector vecOrigin = mv->GetAbsOrigin();
+				Vector vecTarget = vecOrigin + Vector(m_vecForward.x, m_vecForward.y, 0).Normalized();
+
+				TraceBBox(vecOrigin, vecTarget, mins, maxs, tr);
+
 				if (!tr.DidHit ())
 				{
 					mv->SetAbsOrigin (tr.endpos);
+					m_pSDKPlayer->m_Shared.ResetManteling();
 					m_pSDKPlayer->Instructor_LessonLearned("mantel");
 				}
+				else
+					SetGroundEntity(&tr);
 			}
 		}
 		else
