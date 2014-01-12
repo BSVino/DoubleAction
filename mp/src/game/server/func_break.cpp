@@ -843,6 +843,12 @@ int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 	int iPrevHealth = m_iHealth;
 	BaseClass::OnTakeDamage( subInfo );
 
+	if (info.GetInflictor())
+	{
+		m_Explosion = expDirected;
+		g_vecAttackDir = info.GetInflictor()->GetAbsVelocity() * 0.7f;
+	}
+
 	// HACK: slam health back to what it was so UpdateHealth can do its thing
 	int iNewHealth = m_iHealth;
 	m_iHealth = iPrevHealth;
@@ -1019,7 +1025,7 @@ void CBreakable::Die( void )
 	switch( m_Explosion )
 	{
 	case expDirected:
-		vecVelocity = g_vecAttackDir * -200;
+		vecVelocity = g_vecAttackDir;
 		break;
 
 	case expUsePrecise:
@@ -1096,7 +1102,8 @@ void CBreakable::Die( void )
 
 			te->BreakModel( filter2, 0.0, 
 				vecSpot, pCollisionProp->GetCollisionAngles(), vSize, 
-				vecVelocity, iModelIndex, 100, 1, 2.5, cFlag | slaveFlag );
+				vecVelocity + Vector(random->RandomFloat(-50, 50), random->RandomFloat(-50, 50), random->RandomFloat(-50, 50)),
+				iModelIndex, 100, 1, 2.5, cFlag | slaveFlag );
 		}
 	}
 
