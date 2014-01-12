@@ -834,6 +834,8 @@ void CSDKPlayer::PreThink(void)
 				pHit = tr.m_pEnt;
 		}
 
+		CDisablePredictionFiltering c;
+
 		if (pHit)
 			pHit->TakeDamage(CTakeDamageInfo(this, this, 50, DMG_CRUSH));
 	}
