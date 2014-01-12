@@ -72,6 +72,7 @@ public:
 
 	void ShowPage(const char* pszPage);
 
+	bool ShouldShowTeams();
 	bool ShouldShowCharacterOnly();
 	bool ShouldShowCharacterAndWeapons();
 	bool ShouldShowEverything();

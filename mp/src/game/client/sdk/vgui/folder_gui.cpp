@@ -21,6 +21,7 @@
 #include "da_buymenu.h"
 #include "da_charactermenu.h"
 #include "da_skillmenu.h"
+#include "sdk_teammenu.h"
 
 // Using std version
 #undef min
@@ -175,7 +176,7 @@ void CFolderMenu::Update()
 	else
 		m_szCharacter[0] = '\0';
 
-	if (ShouldShowCharacterOnly())
+	if (ShouldShowCharacterOnly() && !ShouldShowTeams())
 	{
 		m_pProfileInfo->SetVisible(true);
 		if (m_szPreviewCharacter[0])
@@ -189,7 +190,7 @@ void CFolderMenu::Update()
 		m_pProfileInfo->SetVisible(false);
 
 	CFolderLabel *pCharacterName = dynamic_cast<CFolderLabel *>(FindChildByName("AgentName"));
-	if (pCharacterName)
+	if (pCharacterName && !ShouldShowTeams())
 	{
 		std::string sCharacter;
 		if (m_szPreviewCharacter[0])
@@ -215,6 +216,8 @@ void CFolderMenu::Update()
 
 		pCharacterName->SetText(sLocalized.c_str());
 	}
+	else
+		pCharacterName->SetText("");
 
 	CFolderLabel* pLabels[2];
 	pLabels[0] = dynamic_cast<CFolderLabel *>(FindChildByName("RequestedArmament1"));
@@ -325,7 +328,7 @@ void CFolderMenu::Update()
 	if (eFirst)
 		pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eFirst);
 
-	if ((m_szCharacter[0] || m_szPreviewCharacter[0]) && pPlayerPreview)
+	if ((m_szCharacter[0] || m_szPreviewCharacter[0]) && pPlayerPreview && !ShouldShowTeams())
 	{
 		KeyValues* pValues = new KeyValues("preview");
 		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
@@ -566,19 +569,22 @@ void CFolderMenu::Update()
 		CFolderLabel *pSkillInfo = dynamic_cast<CFolderLabel *>(FindChildByName("SkillInfo"));
 		CPanelTexture *pSkillIcon = dynamic_cast<CPanelTexture *>(FindChildByName("SkillIcon"));
 
-		if (pPlayer->m_Shared.m_iStyleSkill)
+		if (pSkillInfo && pSkillIcon)
 		{
-			pSkillInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
-			pSkillIcon->SetImage(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()));
-		}
-		else
-		{
-			pSkillInfo->SetText("");
-			pSkillIcon->SetImage("");
+			if (pPlayer->m_Shared.m_iStyleSkill)
+			{
+				pSkillInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
+				pSkillIcon->SetImage(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()));
+			}
+			else
+			{
+				pSkillInfo->SetText("");
+				pSkillIcon->SetImage("");
+			}
 		}
 	}
 
-	m_pSuicideOption->SetVisible(pPlayer->IsAlive());
+	m_pSuicideOption->SetVisible(pPlayer->IsAlive() && !ShouldShowTeams());
 
 	Button *pProceedButton = dynamic_cast<Button *>(FindChildByName("ProceedButton"));
 	if (pProceedButton)
@@ -599,6 +605,10 @@ void CFolderMenu::Update()
 	Button *pSkillsTab = dynamic_cast<Button *>(FindChildByName("SkillsTab"));
 	if (pSkillsTab)
 		pSkillsTab->SetVisible(pPlayer->HasSkillsTabBeenSeen());
+
+	Button *pChangeTeams = dynamic_cast<Button *>(FindChildByName("ChangeTeamsButton"));
+	if (pChangeTeams)
+		pChangeTeams->SetVisible(SDKGameRules()->IsTeamplay());
 }
 
 void CFolderMenu::OnSuicideOptionChanged( Panel *Panel )
@@ -637,6 +647,8 @@ void CFolderMenu::OnCommand( const char *command )
 			ShowPage(PANEL_BUY);
 		else if (FStrEq(command+4, "skills"))
 			ShowPage(PANEL_BUY_EQUIP_CT);
+		else if (FStrEq(command+4, "team"))
+			ShowPage(PANEL_TEAM);
 	}
 	else if ( Q_stricmp( command, "close" ) == 0 )
 	{
@@ -715,8 +727,15 @@ void CFolderMenu::ShowPage(const char* pszPage)
 		m_pPage = new CDABuyMenu(this);
 	else if (FStrEq(pszPage, PANEL_BUY_EQUIP_CT))
 		m_pPage = new CDASkillMenu(this);
+	else if (FStrEq(pszPage, PANEL_TEAM))
+		m_pPage = new CSDKTeamMenu(this);
 
 	Update();
+}
+
+bool CFolderMenu::ShouldShowTeams()
+{
+	return m_pPage && FStrEq(m_pPage->GetName(), "team");
 }
 
 bool CFolderMenu::ShouldShowCharacterOnly()
@@ -797,7 +816,9 @@ void CFolderMenu::ReloadControlSettings(bool bUpdate, bool bReloadPage)
 	if (!pPlayer)
 		return;
 
-	if (ShouldShowCharacterOnly())
+	if (ShouldShowTeams())
+		LoadControlSettings( "Resource/UI/Folder_Team.res" );
+	else if (ShouldShowCharacterOnly())
 		LoadControlSettings( "Resource/UI/Folder_NoWeapons.res" );
 	else if (ShouldShowCharacterAndWeapons())
 		LoadControlSettings( "Resource/UI/Folder_Weapons.res" );
@@ -1207,7 +1228,9 @@ void __MsgFunc_FolderPanel( bf_read &msg )
 
 	gViewPortInterface->ShowPanel( (IViewPortPanel*)pFolder, true );
 
-	if (pPlayer && !pPlayer->HasCharacterBeenChosen())
+	if (pPlayer && SDKGameRules()->IsTeamplay() && (pPlayer->GetTeamNumber() != SDK_TEAM_RED && pPlayer->GetTeamNumber() != SDK_TEAM_BLUE))
+		pFolder->ShowPage(PANEL_TEAM);
+	else if (pPlayer && !pPlayer->HasCharacterBeenChosen())
 		pFolder->ShowPage(PANEL_CLASS);
 	else
 		pFolder->ShowPage(panelname);

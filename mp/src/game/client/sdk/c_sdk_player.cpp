@@ -2021,9 +2021,7 @@ void C_SDKPlayer::UpdateTeamMenu()
 	if (!SDKGameRules()->IsTeamplay())
 		return;
 
-	CSDKTeamMenu *teamMenu = static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM));
-	if (teamMenu->IsVisible())
-		teamMenu->MarkForUpdate();
+	static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 }
 
 void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
@@ -2032,7 +2030,6 @@ void RecvProxy_Loadout( const CRecvProxyData *pData, void *pStruct, void *pOut )
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
-		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }
@@ -2043,7 +2040,6 @@ void RecvProxy_Character( const CRecvProxyData *pData, void *pStruct, void *pOut
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
-		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }
@@ -2054,7 +2050,6 @@ void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut )
 
 	if (pData && C_SDKPlayer::GetLocalSDKPlayer() && pData->m_ObjectID == C_SDKPlayer::GetLocalSDKPlayer()->entindex())
 	{
-		static_cast<CSDKTeamMenu*>(gViewPortInterface->FindPanelByName(PANEL_TEAM))->MarkForUpdate();
 		static_cast<CFolderMenu*>(gViewPortInterface->FindPanelByName(PANEL_FOLDER))->MarkForUpdate();
 	}
 }

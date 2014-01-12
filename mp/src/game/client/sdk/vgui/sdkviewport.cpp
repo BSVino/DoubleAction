@@ -237,12 +237,6 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 		}
 	#endif
 #endif
-#if defined ( SDK_USE_TEAMS )
-	else if ( Q_strcmp( PANEL_TEAM, szPanelName) == 0 )
-	{
-		newpanel = new CSDKTeamMenu( this );
-	}
-#endif
 	else if ( Q_strcmp( PANEL_FOLDER, szPanelName) == 0 )
 	{
 		newpanel = new CFolderMenu( this );

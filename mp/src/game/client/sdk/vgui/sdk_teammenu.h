@@ -39,15 +39,15 @@ private:
 	int m_iSkin;
 };
 
-class CSDKTeamMenu : public CFolderMenu
+class CSDKTeamMenu : public CFolderMenuPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE( CSDKTeamMenu, CFolderMenu );
+	DECLARE_CLASS_SIMPLE( CSDKTeamMenu, CFolderMenuPanel );
 	// helper functions
 	//void SetVisibleButton(const char *textEntryName, bool state);
 
 public:
-	CSDKTeamMenu(IViewPort *pViewPort);
+	CSDKTeamMenu(Panel *parent);
 	virtual ~CSDKTeamMenu();
 
 	virtual void ApplySettings( KeyValues *resourceData );
@@ -56,7 +56,7 @@ public:
 	
 	virtual void Reset();
 	virtual void Update();
-	virtual void UpdateCharacter();
+	virtual void UpdateCharacter(CModelPanel* pPanel);
 	virtual Panel *CreateControlByName( const char *controlName );
 	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void SetVisible(bool state);
@@ -70,30 +70,13 @@ public:
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 
-	void SetCharacterPreview( const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch );
-	void SetCharacterSkin( int iSkin );
-
-	vgui::Label*       GetCharacterInfo();
-	class CModelPanel* GetCharacterImage();
-
 private:
 	IViewPort	*m_pViewPort;
 
-	class CFolderLabel* m_pCharacterInfo;
-	class CModelPanel*  m_pCharacterImage;
+	class CModelPanel*  m_pCharacterImageRed;
+	class CModelPanel*  m_pCharacterImageBlue;
 
 	ButtonCode_t m_iCharacterMenuKey;
-
-	std::string m_sCharacterModel;
-	std::string m_sCharacterSequence;
-	std::string m_sCharacterWeaponModel;
-	float       m_flBodyYaw;
-	float       m_flBodyPitch;
-	int         m_iCharacterSkin;
-
-	// rounded corners
-	//Color					 m_bgColor;
-	//Color					 m_borderColor;
 
 protected:
 	// vgui overrides for rounded corner background

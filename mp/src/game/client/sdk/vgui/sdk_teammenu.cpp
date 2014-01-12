@@ -72,27 +72,20 @@ void CTeamButton::OnCursorEntered()
 {
 	BaseClass::OnCursorEntered();
 
-	CSDKTeamMenu* pParent = dynamic_cast<CSDKTeamMenu*>(GetParent());
-	if (!pParent)
-		return;
-
-	pParent->SetCharacterSkin(m_iSkin);
 }
 
-CSDKTeamMenu::CSDKTeamMenu(IViewPort *pViewPort) : CFolderMenu( pViewPort )
+CSDKTeamMenu::CSDKTeamMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_TEAM )
 {
-	m_pViewPort = pViewPort;
+	m_pCharacterImageRed = new CModelPanel(this, "CharacterImageRed");
+	m_pCharacterImageBlue = new CModelPanel(this, "CharacterImageBlue");
 
-	m_sCharacterModel = "";
-	m_iCharacterSkin = 0;
+	m_pszControlSettingsFile = "Resource/UI/TeamMenu.res";
 
-	m_pCharacterInfo = new CFolderLabel(this, "CharacterInfo");
-	m_pCharacterImage = new CModelPanel(this, "CharacterImage");
+	SetVisible(true);
 
-	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
-
-	LoadControlSettings( "Resource/UI/TeamMenu.res" );
+	LoadControlSettings( m_pszControlSettingsFile );
 	InvalidateLayout();
+	Update();
 }
 
 //Destructor
@@ -103,21 +96,6 @@ CSDKTeamMenu::~CSDKTeamMenu()
 void CSDKTeamMenu::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
-
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if (!pPlayer)
-		return;
-
-	const char* pszCharacter = pPlayer->GetCharacter();
-	if (!pszCharacter[0])
-		return;
-
-	KeyValues* pPose = resourceData->FindKey(VarArgs("%s_pose", pszCharacter));
-	Assert(pPose);
-	if (!pPose)
-		return;
-
-	SetCharacterPreview(pszCharacter, pPose->GetString("sequence"), pPose->GetString("weaponmodel"), pPose->GetFloat("body_yaw"), pPose->GetFloat("body_pitch"));
 }
 
 void CSDKTeamMenu::Reset()
@@ -129,13 +107,8 @@ void CSDKTeamMenu::ShowPanel( bool bShow )
 	if ( bShow )
 		m_iCharacterMenuKey = gameuifuncs->GetButtonCodeForBind( "character" );
 
-	m_pCharacterInfo->SetText("");
-	m_pCharacterImage->SwapModel("");
-
 	if ( bShow )
 	{
-		LoadControlSettings( "Resource/UI/TeamMenu.res" );
-		Activate();
 		SetMouseInputEnabled( true );
 	}
 	else
@@ -155,10 +128,6 @@ void CSDKTeamMenu::OnKeyCodePressed( KeyCode code )
 	else if ( m_iCharacterMenuKey != BUTTON_CODE_INVALID && m_iCharacterMenuKey == code )
 	{
 		ShowPanel( false );
-	}
-	else
-	{
-		BaseClass::OnKeyCodePressed( code );
 	}
 }
 
@@ -187,12 +156,10 @@ void CSDKTeamMenu::Update( void )
 		{
 			wchar_t szText[512]=L"";
 			wchar_t szNumPlayersOnTeam[ 10 ];
-			wchar_t szTeamScore[ 10 ];
 			
 			Q_wcsncpy( szFmt, pchFmt, sizeof( szFmt ) );
 			_snwprintf( szNumPlayersOnTeam, ARRAYSIZE(szNumPlayersOnTeam) - 1, L"%d",  team->Get_Number_Players() );
-			_snwprintf( szTeamScore, ARRAYSIZE(szTeamScore) - 1, L"%d",  team->Get_Score() );
-			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 2, szNumPlayersOnTeam, szTeamScore );
+			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 1, szNumPlayersOnTeam );
 
 			pStatusLabel->SetText(szText);
 		}
@@ -208,21 +175,20 @@ void CSDKTeamMenu::Update( void )
 		{
 			wchar_t szText[512]=L"";
 			wchar_t szNumPlayersOnTeam[ 10 ];
-			wchar_t szTeamScore[ 10 ];
 			
 			Q_wcsncpy( szFmt, pchFmt, sizeof( szFmt ) );
 			_snwprintf( szNumPlayersOnTeam, ARRAYSIZE(szNumPlayersOnTeam) - 1, L"%d",  team->Get_Number_Players() );
-			_snwprintf( szTeamScore, ARRAYSIZE(szTeamScore) - 1, L"%d",  team->Get_Score() );
-			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 2, szNumPlayersOnTeam, szTeamScore );
+			g_pVGuiLocalize->ConstructString( szText, sizeof( szText ), szFmt, 1, szNumPlayersOnTeam );
 
 			pStatusLabel->SetText(szText);
 		}
 	}
 
-	UpdateCharacter();
+	UpdateCharacter(m_pCharacterImageRed);
+	UpdateCharacter(m_pCharacterImageBlue);
 }
 
-void CSDKTeamMenu::UpdateCharacter()
+void CSDKTeamMenu::UpdateCharacter(CModelPanel* pPanel)
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	
@@ -255,47 +221,37 @@ void CSDKTeamMenu::UpdateCharacter()
 		"		}\n"
 		"	}";
 
-	if (m_sCharacterModel == "random")
-		m_pCharacterImage->SwapModel("");
-	else if (m_sCharacterModel.length())
+	KeyValues* pValues = new KeyValues("preview");
+	pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
+
+	pValues->SetString("modelname", "models/player/wish.mdl");
+
+	pValues->SetFloat("origin_x", 200);
+	pValues->SetFloat("origin_y", 0);
+	pValues->SetFloat("origin_z", -35);
+
+	KeyValues* pAnimation = pValues->FindKey("animation");
+	if (pAnimation)
 	{
-		KeyValues* pValues = new KeyValues("preview");
-		pValues->LoadFromBuffer("model", szPlayerPreviewTemplate);
+		pAnimation->SetString("sequence", "wish_pose");
 
-		std::string sCharacter = std::string("models/player/") + m_sCharacterModel + ".mdl";
-		pValues->SetString("modelname", sCharacter.c_str());
-
-		ConVarRef hud_characterpreview_x( "hud_characterpreview_x" );
-		ConVarRef hud_characterpreview_y( "hud_characterpreview_y" );
-		ConVarRef hud_characterpreview_z( "hud_characterpreview_z" );
-
-		pValues->SetFloat("origin_x", hud_characterpreview_x.GetFloat());
-		pValues->SetFloat("origin_y", hud_characterpreview_y.GetFloat());
-		pValues->SetFloat("origin_z", hud_characterpreview_z.GetFloat());
-
-		KeyValues* pAnimation = pValues->FindKey("animation");
-		if (pAnimation)
+		KeyValues* pPoseParameters = pAnimation->FindKey("pose_parameters");
+		if (pPoseParameters)
 		{
-			pAnimation->SetString("sequence", m_sCharacterSequence.c_str());
-
-			KeyValues* pPoseParameters = pAnimation->FindKey("pose_parameters");
-			if (pPoseParameters)
-			{
-				pPoseParameters->SetFloat("body_pitch", m_flBodyPitch);
-				pPoseParameters->SetFloat("body_yaw", m_flBodyYaw);
-			}
+			pPoseParameters->SetFloat("body_pitch", 15);
+			pPoseParameters->SetFloat("body_yaw", -40);
 		}
-
-		KeyValues* pWeapon = pValues->FindKey("attached_model");
-		if (pWeapon)
-			pWeapon->SetString("modelname", m_sCharacterWeaponModel.c_str());
-
-		pValues->SetInt("skin", m_iCharacterSkin);
-
-		m_pCharacterImage->ParseModelInfo(pValues);
-
-		pValues->deleteThis();
 	}
+
+	KeyValues* pWeapon = pValues->FindKey("attached_model");
+	if (pWeapon)
+		pWeapon->SetString("modelname", "models/weapons/m1911.mdl");
+
+	pValues->SetInt("skin", (pPanel==m_pCharacterImageRed)?2:1);
+
+	pPanel->ParseModelInfo(pValues);
+
+	pValues->deleteThis();
 }
 
 Panel *CSDKTeamMenu::CreateControlByName( const char *controlName )
@@ -344,57 +300,22 @@ void CSDKTeamMenu::OnCommand( const char *command )
 {
 	if ( Q_strncmp( command, "jointeam ", 9 ) == 0 )
 	{
-		Close();
-
 		gViewPortInterface->ShowBackGround( false );
 
 		BaseClass::OnCommand( command );
 
-		//engine->ClientCmd( command );
+		engine->ServerCmd( command );
+
+		// Until the message goes to the server and comes back we stuff teamnum
+		// so that it has the proper value and we don't get circular menus.
+		// A hack, but I want to ship.
+		if (C_SDKPlayer::GetLocalSDKPlayer())
+			C_SDKPlayer::GetLocalSDKPlayer()->m_iTeamNum = atoi(command+9);
+
+		GetFolderMenu()->ShowPage( PANEL_CLASS );
 	}
 	else
 		BaseClass::OnCommand(command);
-
-	/*if ( Q_stricmp( command, "vguicancel" ) )
-	{
-		engine->ClientCmd( command );
-	}
-	
-	
-	BaseClass::OnCommand(command);
-
-	gViewPortInterface->ShowBackGround( false );
-	OnClose();*/
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the visibility of a button by name
-//-----------------------------------------------------------------------------
-/*void CSDKTeamMenu::SetVisibleButton(const char *textEntryName, bool state)
-{
-	Button *entry = dynamic_cast<Button *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetVisible(state);
-	}
-}*/
-
-void CSDKTeamMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
-{
-	m_sCharacterModel = pszPreview;
-	m_sCharacterSequence = pszSequence;
-	m_sCharacterWeaponModel = pszWeaponModel;
-	m_flBodyPitch = flPitch;
-	m_flBodyYaw = flYaw;
-
-	UpdateCharacter();
-}
-
-void CSDKTeamMenu::SetCharacterSkin(int iSkin)
-{
-	m_iCharacterSkin = iSkin;
-
-	UpdateCharacter();
 }
 
 //-----------------------------------------------------------------------------
@@ -402,10 +323,6 @@ void CSDKTeamMenu::SetCharacterSkin(int iSkin)
 //-----------------------------------------------------------------------------
 void CSDKTeamMenu::PaintBackground()
 {
-	/*int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBackground( m_bgColor, wide, tall );*/
 }
 
 //-----------------------------------------------------------------------------
@@ -413,10 +330,6 @@ void CSDKTeamMenu::PaintBackground()
 //-----------------------------------------------------------------------------
 void CSDKTeamMenu::PaintBorder()
 {
-	/*int wide, tall;
-	GetSize( wide, tall );
-
-	DrawRoundedBorder( m_borderColor, wide, tall );*/
 }
 
 //-----------------------------------------------------------------------------
@@ -425,31 +338,6 @@ void CSDKTeamMenu::PaintBorder()
 void CSDKTeamMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	/*m_bgColor = GetSchemeColor("BgColor", GetBgColor(), pScheme);
-	m_borderColor = pScheme->GetColor( "FgColor", Color( 0, 0, 0, 0 ) );
-
-	SetBgColor( Color(0, 0, 0, 0) );
-	SetBorder( pScheme->GetBorder( "BaseBorder" ) );*/
-
-	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
-
 }
 
-Label* CSDKTeamMenu::GetCharacterInfo()
-{
-	return m_pCharacterInfo;
-}
 #endif // SDK_USE_TEAMS
-
-CON_COMMAND(hud_reload_team, "Reload resource for team menu.")
-{
-	IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName( PANEL_TEAM );
-	CSDKTeamMenu *pTeam = dynamic_cast<CSDKTeamMenu*>(pPanel);
-	if (!pTeam)
-		return;
-	
-	pTeam->LoadControlSettings( "Resource/UI/TeamMenu.res" );
-	pTeam->InvalidateLayout();
-	pTeam->Update();
-}

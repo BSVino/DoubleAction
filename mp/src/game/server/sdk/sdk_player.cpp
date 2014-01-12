@@ -1341,16 +1341,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
-//Tony; pop up the class menu if we're using classes, otherwise just spawn.
-#if defined ( SDK_USE_PLAYERCLASSES )
-		// Put up the class selection menu.
-		State_Transition( STATE_PICKINGCLASS );
-#else
-		if (gpGlobals->teamplay)
-			State_Transition( STATE_BUYINGWEAPONS );
-		else
-			State_Transition( STATE_PICKINGCHARACTER );
-#endif
+
+		State_Transition( STATE_PICKINGCHARACTER );
 	}
 }
 
@@ -2800,7 +2792,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_WELCOME )
 		{
-			State_Transition( STATE_PICKINGCHARACTER );
+			if (gpGlobals->teamplay)
+				State_Transition( STATE_PICKINGTEAM );
+			else
+				State_Transition( STATE_PICKINGCHARACTER );
 		}
 		
 		return true;
@@ -2810,7 +2805,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// player just closed MOTD dialog
 		if ( m_iPlayerState == STATE_MAPINFO )
 		{
-			State_Transition( STATE_PICKINGCHARACTER );
+			if (gpGlobals->teamplay)
+				State_Transition( STATE_PICKINGTEAM );
+			else
+				State_Transition( STATE_PICKINGCHARACTER );
 		}
 
 		return true;
@@ -2919,7 +2917,7 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 		{
 			ClientPrint( this, HUD_PRINTTALK, "#RedTeam_Full" );
 		}
-		ShowViewPortPanel( PANEL_TEAM );
+		ShowFolderPanel( PANEL_TEAM );
 		return false;
 	}
 #endif
@@ -2930,7 +2928,7 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 		if ( !mp_allowspectators.GetInt() && !IsHLTV() )
 		{
 			ClientPrint( this, HUD_PRINTTALK, "#Cannot_Be_Spectator" );
-			ShowViewPortPanel( PANEL_TEAM );
+			ShowFolderPanel( PANEL_TEAM );
 			return false;
 		}
 
@@ -2952,7 +2950,7 @@ bool CSDKPlayer::HandleCommand_JoinTeam( int team )
 			HUD_PRINTCENTER,
 			( team == SDK_TEAM_BLUE ) ?	"#BlueTeam_full" : "#RedTeam_full" );
 
-		ShowViewPortPanel( PANEL_TEAM );
+		ShowFolderPanel( PANEL_TEAM );
 		return false;
 	}
 #endif
@@ -3101,7 +3099,7 @@ bool CSDKPlayer::IsTeamMenuOpen( void )
 
 void CSDKPlayer::ShowTeamMenu()
 {
-	ShowViewPortPanel( PANEL_TEAM );
+	ShowFolderPanel( PANEL_TEAM );
 }
 #endif
 
@@ -3706,9 +3704,6 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 
 void CSDKPlayer::State_Enter_PICKINGCHARACTER()
 {
-	if (GetTeamNumber() == TEAM_SPECTATOR)
-		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
-
 	StopObserverMode();
 	ShowCharacterMenu();
 	PhysObjectSleep();
@@ -3716,9 +3711,6 @@ void CSDKPlayer::State_Enter_PICKINGCHARACTER()
 
 void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 {
-	if (GetTeamNumber() == TEAM_SPECTATOR)
-		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
-
 	StopObserverMode();
 	ShowBuyMenu();
 	PhysObjectSleep();
@@ -3726,9 +3718,6 @@ void CSDKPlayer::State_Enter_BUYINGWEAPONS()
 
 void CSDKPlayer::State_Enter_PICKINGSKILL()
 {
-	if (GetTeamNumber() == TEAM_SPECTATOR)
-		HandleCommand_JoinTeam(TEAM_UNASSIGNED);
-
 	StopObserverMode();
 	ShowSkillMenu();
 	PhysObjectSleep();
@@ -4515,12 +4504,8 @@ void CC_Character(const CCommand& args)
 				DataManager().AddCharacterChosen(args[1]);
 
 			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-			{
-				if (gpGlobals->teamplay)
-					pPlayer->State_Transition( STATE_PICKINGTEAM );
-				else
-					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
-			}
+				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 			return;
 		}
 
@@ -4529,12 +4514,8 @@ void CC_Character(const CCommand& args)
 			if (pPlayer->PickRandomCharacter())
 			{
 				if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-				{
-					if (gpGlobals->teamplay)
-						pPlayer->State_Transition( STATE_PICKINGTEAM );
-					else
-						pPlayer->State_Transition( STATE_BUYINGWEAPONS );
-				}
+					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+
 				return;
 			}
 		}
@@ -4661,7 +4642,7 @@ void CC_Respawn(const CCommand& args)
 			return;
 	}
 
-	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && pPlayer->State_Get() != STATE_ACTIVE && pPlayer->IsDead() )
+	if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && pPlayer->State_Get() != STATE_ACTIVE && !pPlayer->IsAlive() )
 		pPlayer->State_Transition( STATE_ACTIVE );
 }
 
