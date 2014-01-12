@@ -209,6 +209,9 @@ void CBriefcaseCaptureZone::CaptureThink()
 		if (!pPlayer)
 			continue;
 
+		if (!pPlayer->IsAlive())
+			continue;
+
 		if (pPlayer->HasBriefcase() && (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flCaptureRadiusSqr)
 		{
 			StopParticleEffects( SDKGameRules()->GetBriefcase() );
@@ -268,6 +271,9 @@ void CRatRaceWaypoint::WaypointThink()
 	{
 		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsAlive())
 			continue;
 
 		if ((pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flRadiusSqr)
