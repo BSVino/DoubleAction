@@ -69,11 +69,11 @@ int C_Briefcase::DrawModel(int flags)
 
 	int iReturn = BaseClass::DrawModel(flags);
 
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (!pLocalPlayer)
 		return iReturn;
 
-	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+	float flTime = pLocalPlayer->GetCurrentTime() + m_flArrowSpinOffset;
 
 	Vector vecOrigin = GetAbsOrigin() + Vector(0, 0, 40);
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
@@ -126,7 +126,10 @@ int C_BriefcaseCaptureZone::DrawModel(int flags)
 	int iCylinderEdges = 40;
 	Vector vecCenter = WorldSpaceCenter();
 
-	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime();
+	if (!C_SDKPlayer::GetLocalOrSpectatedPlayer())
+		return 0;
+
+	float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime();
 
 	Vector vecOrigin = vecCenter + Vector(0, 0, 20);
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
@@ -212,7 +215,10 @@ int C_RatRaceWaypoint::DrawModel(int flags)
 	int iCylinderEdges = 40;
 	Vector vecCenter = WorldSpaceCenter();
 
-	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime();
+	if (!C_SDKPlayer::GetLocalOrSpectatedPlayer())
+		return 0;
+
+	float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime();
 
 	Vector vecOrigin = vecCenter + Vector(0, 0, 20);
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);

@@ -1928,7 +1928,7 @@ void CSDKGameRules::OverrideSoundParams( const EmitSound_t& ep, CSoundParameters
 	if (FStrEq(ep.m_pSoundName, "SlowMo.Loop"))
 		return;
 
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	oParams.pitch *= pLocalPlayer->GetSlowMoMultiplier();
 #endif

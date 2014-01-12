@@ -1536,13 +1536,13 @@ void C_SDKPlayer::ClientThink()
 
 		if (!bWasInSlow && bNowInSlow)
 		{
-			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Start" );
-			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.Loop" );
+			C_SDKPlayer::GetLocalOrSpectatedPlayer()->EmitSound( "SlowMo.Start" );
+			C_SDKPlayer::GetLocalOrSpectatedPlayer()->EmitSound( "SlowMo.Loop" );
 		}
 		else if (bWasInSlow && !bNowInSlow)
 		{
-			C_SDKPlayer::GetLocalSDKPlayer()->StopSound( "SlowMo.Loop" );
-			C_SDKPlayer::GetLocalSDKPlayer()->EmitSound( "SlowMo.End" );
+			C_SDKPlayer::GetLocalOrSpectatedPlayer()->StopSound( "SlowMo.Loop" );
+			C_SDKPlayer::GetLocalOrSpectatedPlayer()->EmitSound( "SlowMo.End" );
 		}
 	}
 
@@ -2239,15 +2239,7 @@ void CSlowIntensityProxy::OnBind( void *pC_BaseEntity )
 
 	float flValue = 0;
 
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if (pPlayer && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-	{
-		CBaseEntity *target = pPlayer->GetObserverTarget();
-		if (target && target->IsPlayer())
-		{
-			pPlayer = (C_SDKPlayer *)target;
-		}
-	}
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	if ( pPlayer )
 	{
@@ -2295,15 +2287,7 @@ void CSlowMoMultiplierProxy::OnBind( void *pC_BaseEntity )
 
 	float flValue = 1;
 
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if (pPlayer && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-	{
-		CBaseEntity *target = pPlayer->GetObserverTarget();
-		if (target && target->IsPlayer())
-		{
-			pPlayer = (C_SDKPlayer *)target;
-		}
-	}
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	if ( pPlayer )
 		flValue = m_Input.GetFloat() * pPlayer->GetSlowMoMultiplier();

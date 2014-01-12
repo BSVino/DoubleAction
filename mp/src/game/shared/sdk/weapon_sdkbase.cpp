@@ -1061,7 +1061,7 @@ int CWeaponSDKBase::DrawModel(int flags)
 		return iReturn;
 	}
 
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (!pLocalPlayer)
 		return iReturn;
 
@@ -1073,8 +1073,8 @@ int CWeaponSDKBase::DrawModel(int flags)
 	else
 		m_flArrowGoalSize = 0;
 
-	float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
-	float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+	float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+	float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetSlowMoMultiplier();
 
 	m_flArrowCurSize = Approach(m_flArrowGoalSize, m_flArrowCurSize, flFrameTime*20);
 
@@ -1102,7 +1102,7 @@ void CWeaponSDKBase::ClientThink()
 	BaseClass::ClientThink();
 
 	float flFrameTime = gpGlobals->frametime;
-	if (C_SDKPlayer::GetLocalSDKPlayer())
+	if (C_SDKPlayer::GetLocalOrSpectatedPlayer())
 		flFrameTime *= C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
 
 	float flMarksmanGoldGoal = 0;

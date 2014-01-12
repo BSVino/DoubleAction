@@ -562,7 +562,7 @@ void CBulletManager::CBullet::Activate()
 	m_flGoalAlpha = 1;
 
 #ifdef CLIENT_DLL
-	if (m_hShooter == C_SDKPlayer::GetLocalSDKPlayer())
+	if (m_hShooter == C_SDKPlayer::GetLocalOrSpectatedPlayer())
 		m_flCurrAlpha = -0.3f; // Don't appear until it's a little ways from the player.
 	else
 		m_flCurrAlpha = 0.0f;

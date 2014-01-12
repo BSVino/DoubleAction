@@ -121,7 +121,7 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 
 		int iReturn = BaseClass::DrawModel(flags);
 
-		C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+		C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 		if (!pLocalPlayer)
 			return iReturn;
 
@@ -136,8 +136,8 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 		else
 			m_flArrowGoalSize = 0;
 
-		float flTime = C_SDKPlayer::GetLocalSDKPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
-		float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalSDKPlayer()->GetSlowMoMultiplier();
+		float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
+		float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetSlowMoMultiplier();
 
 		m_flArrowCurSize = Approach(m_flArrowGoalSize, m_flArrowCurSize, flFrameTime*100);
 

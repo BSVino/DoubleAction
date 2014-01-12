@@ -58,20 +58,13 @@ ConVar da_postprocess_shaders( "da_postprocess_shaders", "1", FCVAR_USERINFO, "U
 
 void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 {
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 
 	if ( !pPlayer )
 		return;
 
 	if (!da_postprocess_shaders.GetBool())
 		return;
-
-	if (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-	{
-		CBaseEntity *target = pPlayer->GetObserverTarget();
-		if (target && target->IsPlayer())
-			pPlayer = (C_SDKPlayer *)target;
-	}
 
 	if (!pPlayer->IsAlive())
 		m_flStyleLerp = 0;
