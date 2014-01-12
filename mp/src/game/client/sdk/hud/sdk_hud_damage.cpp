@@ -21,6 +21,7 @@
 #include "hudelement.h"
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
+#include "sdkviewport.h"
 
 using namespace vgui;
 
@@ -40,6 +41,7 @@ public:
 	void	Init( void );
 	void	Reset( void );
 	bool	ShouldDraw( void );
+	virtual void OnThink();
 
 	// Handler for our message
 	void	MsgFunc_Damage( bf_read &msg );
@@ -49,26 +51,31 @@ private:
 	void	ApplySchemeSettings(vgui::IScheme *pScheme);
 
 private:
-	void	CalcDamageDirection( const Vector &vecFrom );
-	void	DrawDamageIndicatorFront( float flFade );
-	void	DrawDamageIndicatorRear( float flFade );
-	void	DrawDamageIndicatorLeft( float flFade );
-	void	DrawDamageIndicatorRight( float flFade );
+	int     FindInactiveEvent();
 
 private:
-	float	m_flAttackFront;
-	float	m_flAttackRear;
-	float	m_flAttackLeft;
-	float	m_flAttackRight;
-
 	Color	m_clrIndicator;
 
-	CHudTexture	*icon_up;
-	CHudTexture	*icon_down;
-	CHudTexture	*icon_left;
-	CHudTexture	*icon_right;
+	CPanelAnimationVarAliasType( float, m_flDamageSize, "DamageSize", "20", "proportional_float" );
 
-	float m_flFadeCompleteTime;	//don't draw past this time
+	CHudTexture	*icon_up;
+
+	class CDamageEvent
+	{
+	public:
+		CDamageEvent()
+		{
+			bActive = false;
+		}
+
+	public:
+		bool   bActive;
+		float  flDamage;
+		float  flTimeDamaged;
+		Vector vecSource;
+	};
+
+	CUtlVector<CDamageEvent> m_aDamageEvents;
 };
 
 DECLARE_HUDELEMENT( CHudDamageIndicator );
@@ -91,14 +98,8 @@ CHudDamageIndicator::CHudDamageIndicator( const char *pElementName ) : CHudEleme
 //-----------------------------------------------------------------------------
 void CHudDamageIndicator::Reset( void )
 {
-	m_flAttackFront	= 0.0;
-	m_flAttackRear	= 0.0;
-	m_flAttackRight	= 0.0;
-	m_flAttackLeft	= 0.0;
-
-	m_flFadeCompleteTime = 0.0;
-
 	m_clrIndicator.SetColor( 250, 0, 0, 255 );
+	m_aDamageEvents.RemoveAll();
 }
 
 void CHudDamageIndicator::Init( void )
@@ -115,138 +116,80 @@ bool CHudDamageIndicator::ShouldDraw( void )
 	if ( !CHudElement::ShouldDraw() )
 		return false;
 
-	if ( ( m_flAttackFront <= 0.0 ) && ( m_flAttackRear <= 0.0 ) && ( m_flAttackLeft <= 0.0 ) && ( m_flAttackRight <= 0.0 ) )
-		return false;
-
 	return true;
 }
 
-void CHudDamageIndicator::DrawDamageIndicatorFront( float flFade )
+ConVar hud_damage_time("hud_damage_time", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long hud damage sticks around, in seconds.");
+
+void CHudDamageIndicator::OnThink()
 {
-	if ( m_flAttackFront > 0.4 )
+	BaseClass::OnThink();
+
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return;
+
+	for (int i = 0; i < m_aDamageEvents.Count(); i++)
 	{
-		if ( !icon_up )
-		{
-			icon_up = gHUD.GetIcon( "pain_up" );
-		}
+		if (!m_aDamageEvents[i].bActive)
+			continue;
 
-		if ( !icon_up )
-		{
-			return;
-		}
-
-		int	x = ( ScreenWidth() / 2 ) - icon_up->Width() / 2;
-		int	y = ( ScreenHeight() / 2 ) - icon_up->Height() * 3;
-		icon_up->DrawSelf( x, y, m_clrIndicator );
-
-		m_flAttackFront = max( 0.0, m_flAttackFront - flFade );
-	}
-	else
-	{
-		m_flAttackFront = 0.0;
+		if (pPlayer->GetCurrentTime() > m_aDamageEvents[i].flTimeDamaged + hud_damage_time.GetFloat())
+			m_aDamageEvents[i].bActive = false;
 	}
 }
 
-void CHudDamageIndicator::DrawDamageIndicatorRear( float flFade )
-{
-	if ( m_flAttackRear > 0.4 )
-	{
-		if ( !icon_down )
-		{
-			icon_down = gHUD.GetIcon( "pain_down" );
-		}
-
-		if ( !icon_down )
-		{
-			return;
-		}
-
-		int	x = ( ScreenWidth() / 2 ) - icon_down->Width() / 2;
-		int	y = ( ScreenHeight() / 2 ) + icon_down->Height() * 2;
-		icon_down->DrawSelf( x, y, m_clrIndicator );
-
-		m_flAttackRear = max( 0.0, m_flAttackRear - flFade );
-	}
-	else
-	{
-		m_flAttackRear = 0.0;
-	}
-}
-
-
-void CHudDamageIndicator::DrawDamageIndicatorLeft( float flFade )
-{
-	if ( m_flAttackLeft > 0.4 )
-	{
-		if ( !icon_left )
-		{
-			icon_left = gHUD.GetIcon( "pain_left" );
-		}
-
-		if ( !icon_left )
-		{
-			return;
-		}
-
-		int	x = ( ScreenWidth() / 2 ) - icon_left->Width() * 3;
-		int	y = ( ScreenHeight() / 2 ) - icon_left->Height() / 2;
-		icon_left->DrawSelf( x, y, m_clrIndicator );
-
-		m_flAttackLeft = max( 0.0, m_flAttackLeft - flFade );
-	}
-	else
-	{
-		m_flAttackLeft = 0.0;
-	}
-}
-
-
-void CHudDamageIndicator::DrawDamageIndicatorRight( float flFade )
-{
-	if ( m_flAttackRight > 0.4 )
-	{
-		if ( !icon_right )
-		{
-			icon_right = gHUD.GetIcon( "pain_right" );
-		}
-
-		if ( !icon_right )
-		{
-			return;
-		}
-
-		int	x = ( ScreenWidth() / 2 ) + icon_right->Width() * 2;
-		int	y = ( ScreenHeight() / 2 ) - icon_right->Height() / 2;
-		icon_right->DrawSelf( x, y, m_clrIndicator );
-
-		m_flAttackRight = max( 0.0, m_flAttackRight - flFade );
-	}
-	else
-	{
-		m_flAttackRight = 0.0;
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Paints the damage display
-//-----------------------------------------------------------------------------
 void CHudDamageIndicator::Paint()
 {
-	if( m_flFadeCompleteTime > gpGlobals->curtime )
+	if ( !icon_up )
+		icon_up = gHUD.GetIcon( "pain_up" );
+
+	if ( !icon_up )
+		return;
+
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
+	matrix3x4_t mPlayer;
+	AngleMatrix(MainViewAngles(), Vector(0, 0, 0), mPlayer);
+
+	VMatrix mPlayerInvert;
+	MatrixInverseTR(mPlayer, mPlayerInvert);
+
+	VMatrix mToScreen(Vector(0, -1, 0), Vector(-1, 0, 0), Vector(0, 0, 1));
+
+	VMatrix mPlayerToScreen = mToScreen * mPlayerInvert;
+
+	int iWide = GetWide();
+	int iTall = GetTall();
+
+	float flRadius = (float)iTall/2 * 3/4;
+
+	for (int i = 0; i < m_aDamageEvents.Count(); i++)
 	{
-		float flFade = gpGlobals->frametime * 2;
+		if (!m_aDamageEvents[i].bActive)
+			continue;
 
-		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalSDKPlayer();
-		if (pLocal)
-			flFade *= pLocal->GetSlowMoMultiplier();
+		Vector vecDamageDirection = m_aDamageEvents[i].vecSource - pPlayer->GetAbsOrigin();
 
-		// draw damage indicators	
-		DrawDamageIndicatorFront( flFade );
-		DrawDamageIndicatorRear( flFade );
-		DrawDamageIndicatorLeft( flFade );
-		DrawDamageIndicatorRight( flFade );
-	}	
+		Vector vecPlayerScreenDamageDirection = mPlayerToScreen.ApplyRotation(vecDamageDirection);
+		Vector vecPlayerLocalDamageDirection = mPlayerInvert.ApplyRotation(vecDamageDirection);
+		vecPlayerLocalDamageDirection.z = vecPlayerScreenDamageDirection.z = 0;
+		vecPlayerScreenDamageDirection.NormalizeInPlace();
+		vecPlayerLocalDamageDirection.NormalizeInPlace();
+
+		Color clrIndicator = m_clrIndicator;
+		clrIndicator.SetColor(clrIndicator.r(), clrIndicator.g(), clrIndicator.b(),
+			RemapVal(pPlayer->GetCurrentTime(), m_aDamageEvents[i].flTimeDamaged, m_aDamageEvents[i].flTimeDamaged + hud_damage_time.GetFloat(), 255, 0));
+
+		float flSize = RemapVal(m_aDamageEvents[i].flDamage, 10, 60, m_flDamageSize, m_flDamageSize*3);
+
+		SDKViewport::DrawPolygon(icon_up,
+			iWide/2 + vecPlayerScreenDamageDirection.x * flRadius - flSize/2, iTall/2 + vecPlayerScreenDamageDirection.y * flRadius - flSize/2,
+			flSize, flSize, RAD2DEG(atan2(-vecPlayerLocalDamageDirection.y, vecPlayerLocalDamageDirection.x)), clrIndicator);
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -259,77 +202,20 @@ void CHudDamageIndicator::MsgFunc_Damage( bf_read &msg )
 	Vector vecFrom;
 	msg.ReadBitVec3Coord( vecFrom );
 
-	if ( damageTaken > 0 )
-	{
-		m_flFadeCompleteTime = gpGlobals->curtime + 1.0;
-		CalcDamageDirection( vecFrom );
-	}
+	if ( damageTaken <= 0 )
+		return;
+
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer)
+		return;
+
+	int iEvent = FindInactiveEvent();
+	m_aDamageEvents[iEvent].bActive = true;
+	m_aDamageEvents[iEvent].flTimeDamaged = pPlayer->GetCurrentTime();
+	m_aDamageEvents[iEvent].vecSource = vecFrom;
+	m_aDamageEvents[iEvent].flDamage = damageTaken;
 }
-
-void CHudDamageIndicator::CalcDamageDirection( const Vector &vecFrom )
-{
-	if ( vecFrom == vec3_origin )
-	{
-		m_flAttackFront	= 0.0;
-		m_flAttackRear	= 0.0;
-		m_flAttackRight	= 0.0;
-		m_flAttackLeft	= 0.0;
-
-		return;
-	}
-
-	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pLocalPlayer )
-	{
-		return;
-	}
-
-	Vector vecDelta = ( vecFrom - pLocalPlayer->GetRenderOrigin() );
-
-	if ( vecDelta.Length() <= 50 )
-	{
-		m_flAttackFront	= 1.0;
-		m_flAttackRear	= 1.0;
-		m_flAttackRight	= 1.0;
-		m_flAttackLeft	= 1.0;
-
-		return;
-	}
-
-	VectorNormalize( vecDelta );
-
-	Vector forward;
-	Vector right;
-	AngleVectors( MainViewAngles(), &forward, &right, NULL );
-
-	float flFront	= DotProduct( vecDelta, forward );
-	float flSide	= DotProduct( vecDelta, right );
-
-	if ( flFront > 0 )
-	{
-		if ( flFront > 0.3 )
-			m_flAttackFront = max( m_flAttackFront, flFront );
-	}
-	else
-	{
-		float f = fabs( flFront );
-		if ( f > 0.3 )
-			m_flAttackRear = max( m_flAttackRear, f );
-	}
-
-	if ( flSide > 0 )
-	{
-		if ( flSide > 0.3 )
-			m_flAttackRight = max( m_flAttackRight, flSide );
-	}
-	else
-	{
-		float f = fabs( flSide );
-		if ( f > 0.3 )
-			m_flAttackLeft = max( m_flAttackLeft, f );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: hud scheme settings
@@ -342,4 +228,16 @@ void CHudDamageIndicator::ApplySchemeSettings(vgui::IScheme *pScheme)
 	int wide, tall;
 	GetHudSize(wide, tall);
 	SetSize(wide, tall);
+}
+
+
+int CHudDamageIndicator::FindInactiveEvent()
+{
+	for (int i = 0; i < m_aDamageEvents.Count(); i++)
+	{
+		if (!m_aDamageEvents[i].bActive)
+			return i;
+	}
+
+	return m_aDamageEvents.AddToTail();
 }
