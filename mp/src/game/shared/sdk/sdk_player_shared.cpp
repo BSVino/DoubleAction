@@ -1842,6 +1842,17 @@ const Vector CSDKPlayer::CalculateThirdPersonCameraPosition(const Vector& vecEye
 	float flCamUpAim = GetUserInfoFloat("da_cam_up_aim");
 	float flCamRightAim = GetUserInfoFloat("da_cam_right_aim");
 
+	if (m_bUsingVR)
+	{
+		flCamBackIdle = GetUserInfoFloat("da_cam_back_vr");
+		flCamUpIdle = GetUserInfoFloat("da_cam_up_vr");
+		flCamRightIdle = GetUserInfoFloat("da_cam_right_vr");
+
+		flCamBackAim = GetUserInfoFloat("da_cam_back_aim_vr");
+		flCamUpAim = GetUserInfoFloat("da_cam_up_aim_vr");
+		flCamRightAim = GetUserInfoFloat("da_cam_right_aim_vr");
+	}
+
 	float flCamStandingScale = GetUserInfoFloat("da_cam_standing_back_mult");
 
 	float flCamBack = flCamBackIdle;

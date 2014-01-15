@@ -38,6 +38,7 @@
 #include "hud/da_hud_vote.h"
 #include "da_credits.h"
 #include "hud_macros.h"
+#include "sourcevr/isourcevirtualreality.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -106,6 +107,17 @@ void CSDKModeManager::LevelInit( const char *newmap )
 		cl_detail_avoid_radius.SetValue( "64" );
 		cl_detail_avoid_force.SetValue( "0.4" );
 		cl_detail_avoid_recover_speed.SetValue( "0.25" );
+	}
+
+	if (UseVR())
+	{
+#ifdef _DEBUG
+		ConVarRef("vr_force_windowed").SetValue(true);
+#endif
+		ConVarRef("vr_first_person_uses_world_model").SetValue(false);
+		ConVarRef("vr_moveaim_reticle_yaw_limit").SetValue(15);
+		ConVarRef("vr_moveaim_reticle_yaw_limit_zoom").SetValue(15);
+		ConVarRef("vr_viewmodel_offset_forward").SetValue(5);
 	}
 
 	AB_Input_LevelInit();
