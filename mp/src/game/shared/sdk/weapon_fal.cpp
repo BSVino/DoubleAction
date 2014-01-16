@@ -107,6 +107,7 @@ acttable_t CWeaponFAL::m_acttable[] =
 	{ ACT_DA_SLIDE,					ACT_DA_SLIDE_FAL,						false },
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_FAL,                  false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_FAL,             false },
+	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_FAL,              false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponFAL );

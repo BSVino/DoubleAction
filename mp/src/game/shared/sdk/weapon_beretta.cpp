@@ -99,6 +99,7 @@ acttable_t CWeaponBeretta::m_acttable[] =
 	{ ACT_DA_SLIDE,					ACT_DA_SLIDE_BERETTA,					false },
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_BERETTA,              false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_BERETTA,         false },
+	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_BERETTA,          false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponBeretta );

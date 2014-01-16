@@ -821,6 +821,8 @@ void CWeaponSDKBase::StartGrenadeToss()
 	m_flNextSecondaryAttack	= GetCurrentTime() + da_grenade_throw_time.GetFloat();
 
 	m_bGrenadeThrown = false;
+
+	pOwner->DoAnimationEvent( PLAYERANIMEVENT_GRENADE1_THROW );
 }
 
 ConVar da_grenade_weaponlerp_time( "da_grenade_weaponlerp_time", "0.25", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?" );

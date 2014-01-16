@@ -885,6 +885,13 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 			break;
 		}
 
+	case PLAYERANIMEVENT_GRENADE1_THROW:
+		{
+			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_DA_THROW_GRENADE );
+			iGestureActivity = ACT_VM_IDLE;
+			break;
+		}
+
 	case PLAYERANIMEVENT_CANCEL:
 		{
 			ResetGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD );

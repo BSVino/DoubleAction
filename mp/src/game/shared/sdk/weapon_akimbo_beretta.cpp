@@ -92,5 +92,6 @@ acttable_t CAkimboBeretta::m_acttable[] =
 	{ ACT_DA_SLIDE,					ACT_DA_SLIDE_AKIMBO_BERETTA,						false },
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_AKIMBO_BERETTA,                false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_AKIMBO_BERETTA,           false },
+	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_AKIMBO_BERETTA,            false },
 };
 IMPLEMENT_ACTTABLE(CAkimboBeretta);

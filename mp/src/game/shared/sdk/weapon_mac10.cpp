@@ -98,6 +98,7 @@ acttable_t CWeaponMAC10::m_acttable[] =
 	{ ACT_DA_SLIDE,                    ACT_DA_SLIDE_MAC10,                   false },
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_MAC10,               false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_MAC10,          false },
+	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_MAC10,           false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponMAC10 );
