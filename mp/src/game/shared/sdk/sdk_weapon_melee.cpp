@@ -74,6 +74,24 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 	if ( pPlayer == NULL )
 		return;
 
+	if (IsThrowingGrenade())
+	{
+		if (MaintainGrenadeToss())
+			return;
+	}
+	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	{
+		bool bAllow = (m_flNextPrimaryAttack < GetCurrentTime());
+		if (m_bInReload)
+			bAllow = true;
+
+		if (bAllow)
+		{
+			StartGrenadeToss();
+			return;
+		}
+	}
+
 	if (GetSwingTime() > 0 && GetSwingTime() <= GetCurrentTime())
 	{
 		Swing();

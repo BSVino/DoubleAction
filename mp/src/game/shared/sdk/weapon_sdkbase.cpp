@@ -808,6 +808,8 @@ ConVar da_grenade_throw_time( "da_grenade_throw_time", "1.0", FCVAR_REPLICATED|F
 
 void CWeaponSDKBase::StartGrenadeToss()
 {
+	m_flGrenadeThrowStart = GetCurrentTime();
+
 	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
 
 	if (m_bInReload && pOwner)
@@ -1218,8 +1220,6 @@ void CWeaponSDKBase::ItemPostFrame( void )
 
 		if (bAllow)
 		{
-			m_flGrenadeThrowStart = GetCurrentTime();
-
 			StartGrenadeToss();
 			return;
 		}
