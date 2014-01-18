@@ -48,6 +48,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
   	RecvPropFloat( RECVINFO( m_flAccuracyDecay ) ),
   	RecvPropFloat( RECVINFO( m_flSwingTime ) ),
   	RecvPropFloat( RECVINFO( m_flUnpauseFromSwingTime ) ),
+  	RecvPropFloat( RECVINFO( m_flNextBrawlTime ) ),
 	RecvPropFloat( RECVINFO( m_flCycleTime ) ),
 	RecvPropFloat( RECVINFO( m_flViewPunchMultiplier ) ),
 	RecvPropFloat( RECVINFO( m_flRecoil ) ),
@@ -71,6 +72,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	SendPropFloat( SENDINFO( m_flSpread ) ),
 	SendPropFloat( SENDINFO( m_flSwingTime ) ),
 	SendPropFloat( SENDINFO( m_flUnpauseFromSwingTime ) ),
+	SendPropFloat( SENDINFO( m_flNextBrawlTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 
 	SendPropInt(SENDINFO(leftclip)),
@@ -89,6 +91,7 @@ BEGIN_PREDICTION_DATA( CWeaponSDKBase )
 	DEFINE_PRED_FIELD( m_flAccuracyDecay, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flUnpauseFromSwingTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flNextBrawlTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bSwingSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD(leftclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),			
@@ -132,6 +135,7 @@ CWeaponSDKBase::CWeaponSDKBase()
 
 	m_flAccuracyDecay = 0;
 	m_flSwingTime = 0;
+	m_flNextBrawlTime = 0;
 	m_flUnpauseFromSwingTime = 0;
 
 #ifdef CLIENT_DLL
@@ -426,6 +430,9 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
+	if (pOwner->GetCurrentTime() < m_flNextBrawlTime)
+		return;
+
 	bool bNeedsUnpause = false;
 	if (m_bInReload)
 	{
@@ -445,6 +452,8 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	int iAnim = ACT_DA_VM_BRAWL;
 	if (m_iClip1 == 0)
 		iAnim = ACT_DA_VM_BRAWL_EMPTY;
+	if (!bIsSecondary)
+		iAnim = ACT_VM_PRIMARYATTACK;
 	if (!SendWeaponAnim( iAnim ))
 		SendWeaponAnim( ACT_VM_DRAW ); // If the animation is missing, play the draw animation instead as a placeholder.
 
@@ -480,6 +489,7 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	m_flNextSecondaryAttack = GetCurrentTime() + flFireRate;
 
 	m_flSwingTime = GetCurrentTime() + flTimeToSwing;
+	m_flNextBrawlTime = GetCurrentTime() + flFireRate;
 	m_bSwingSecondary = bIsSecondary;
 
 	pOwner->FreezePlayer(0.6f, flFireRate*3/2);
@@ -1749,6 +1759,7 @@ bool CWeaponSDKBase::Deploy( )
 
 	m_flNextPrimaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 	m_flNextSecondaryAttack	= GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
+	m_flNextBrawlTime = GetCurrentTime() + SequenceDuration() * flSpeedMultiplier;
 
 	if (pOwner)
 	{
