@@ -1210,7 +1210,7 @@ float CClientVirtualReality::GetZoomedModeMagnification()
 bool CClientVirtualReality::ProcessCurrentTrackingState( float fGameFOV )
 {
 	m_WorldZoomScale = 1.0f;
-	if ( fGameFOV != 0.0f )
+//	if ( fGameFOV != 0.0f )
 	{
 		// To compensate for the lack of pixels on most HUDs, let's grow this a bit.
 		// Remember that MORE zoom equals LESS fov!

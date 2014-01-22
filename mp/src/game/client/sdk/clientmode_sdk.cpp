@@ -118,6 +118,7 @@ void CSDKModeManager::LevelInit( const char *newmap )
 		ConVarRef("vr_moveaim_reticle_yaw_limit").SetValue(15);
 		ConVarRef("vr_moveaim_reticle_yaw_limit_zoom").SetValue(15);
 		ConVarRef("vr_viewmodel_offset_forward").SetValue(5);
+		ConVarRef("vr_zoom_multiplier").SetValue(1.4f);
 	}
 
 	AB_Input_LevelInit();

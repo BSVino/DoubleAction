@@ -742,7 +742,7 @@ void CViewRender::SetUpViews()
 	{
 		// Let the headtracking read the status of the HMD, etc.
 		// This call can go almost anywhere, but it needs to know the player FOV for sniper weapon zoom, etc
-		if ( flFOVOffset == 0.0f )
+		if ( false )//flFOVOffset == 0.0f )
 		{
 			g_ClientVirtualReality.ProcessCurrentTrackingState ( 0.0f );
 		}
