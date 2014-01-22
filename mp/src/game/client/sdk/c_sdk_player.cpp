@@ -1953,7 +1953,7 @@ static ConVar da_cam_right_vr("da_cam_right_vr", "0", FCVAR_USERINFO|FCVAR_ARCHI
 static ConVar da_cam_up_vr("da_cam_up_vr", "25", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits when using VR", true, -20, true, 30);
 
 static ConVar da_cam_back_aim_vr("da_cam_back_aim_vr", "20", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far back from the eye position the third person camera sits while aiming in when using VR", true, 5, true, 150);
-static ConVar da_cam_right_aim_vr("da_cam_right_aim_vr", "10", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in when using VR", true, -35, true, 35);
+static ConVar da_cam_right_aim_vr("da_cam_right_aim_vr", "15", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far right from the eye position the third person camera sits while aiming in when using VR", true, -35, true, 35);
 static ConVar da_cam_up_aim_vr("da_cam_up_aim_vr", "5", FCVAR_USERINFO|FCVAR_ARCHIVE, "How far up from the eye position the third person camera sits while aiming in when using VR", true, -20, true, 30);
 
 static ConVar da_cam_standing_back_mult( "da_cam_standing_back_mult", "0.7", FCVAR_USERINFO|FCVAR_ARCHIVE, "Scale the back distance by this much while standing." );
