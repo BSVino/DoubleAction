@@ -123,6 +123,45 @@ void CDAViewModel::DoMuzzleFlash()
 #endif
 }
 
+#ifdef CLIENT_DLL
+int CDAViewModel::DrawModel(int flags)
+{
+	int iReturn = BaseClass::DrawModel(flags);
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+	if (pLocalPlayer && pLocalPlayer->UseVRHUD())
+	{
+		Vector vecAmmo1, vecAmmo2;
+
+		int iAmmo1 = LookupAttachment("ammo_1");
+		int iAmmo2 = LookupAttachment("ammo_2");
+		int iAmmoL1 = LookupAttachment("ammo_1_l");
+		int iAmmoL2 = LookupAttachment("ammo_2_l");
+		int iAmmoR1 = LookupAttachment("ammo_1_r");
+		int iAmmoR2 = LookupAttachment("ammo_2_r");
+
+		if (GetAttachment(iAmmo1, vecAmmo1) && GetAttachment(iAmmo2, vecAmmo2))
+			CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, GetActiveWeapon()->Clip1(), GetActiveWeapon()->GetMaxClip1(), true);
+
+		if (GetAttachment(iAmmoR1, vecAmmo1) && GetAttachment(iAmmoR2, vecAmmo2))
+		{
+			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon());
+			if (pWeapon)
+				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->rightclip, pWeapon->GetMaxClip1()/2, true);
+		}
+
+		if (GetAttachment(iAmmoL1, vecAmmo1) && GetAttachment(iAmmoL2, vecAmmo2))
+		{
+			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon());
+			if (pWeapon)
+				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->leftclip, pWeapon->GetMaxClip1()/2, false);
+		}
+	}
+
+	return iReturn;
+}
+#endif
+
 ConVar da_weaponlag( "da_weaponlag", "0.005", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
 ConVar da_weaponbob( "da_weaponbob", "0.7", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon bob magnitude." );
 ConVar da_weapondrop( "da_weapondrop", "1", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Weapon drop while running." );

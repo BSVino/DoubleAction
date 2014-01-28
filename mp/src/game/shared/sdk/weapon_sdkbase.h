@@ -119,9 +119,29 @@ public:
 #ifdef CLIENT_DLL
 	virtual int     DrawModel( int flags );
 
+	static void    DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo2, int iClip, int iMaxClip, bool bRight);
+	static void    VRBulletFired(int iRound, bool bRight);
+	static Vector  GetVRRoundPosition(int i, bool bRight);
+
+	class CFlyingRound
+	{
+	public:
+		bool         bActive;
+		Vector       vecPosition;
+		Vector       vecVelocity;
+		float        flAngle;
+		float        flAngularVelocity;
+		float        flAlpha;
+	};
+
+	static Vector s_vecAmmo1L, s_vecAmmo2L, s_vecAmmo1R, s_vecAmmo2R;
+	static int s_iMaxClip;
+	static CUtlVector<CFlyingRound> s_aRounds;
+
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 	virtual void ClientThink();
 	float GetMarksmanGold();
+
 #endif
 
 	virtual float GetWeaponSpread();

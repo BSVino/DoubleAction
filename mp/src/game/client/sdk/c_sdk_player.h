@@ -287,6 +287,8 @@ public:
 
 	int             GetCoderHacksButtons() const { return m_nCoderHacksButtons; }
 
+	bool UseVRHUD() const;
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )

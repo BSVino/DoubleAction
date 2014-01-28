@@ -28,6 +28,10 @@ public:
 
 	virtual void DoMuzzleFlash();
 
+#if defined( CLIENT_DLL )
+	virtual int     DrawModel( int flags );
+#endif
+
 	virtual void CalcViewModelLag( Vector& origin, QAngle& angles, QAngle& original_angles ) {};
 	virtual void AddViewModelBob( CBasePlayer *owner, Vector& eyePosition, QAngle& eyeAngles );
 

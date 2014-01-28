@@ -34,7 +34,7 @@ bool C_Briefcase::ShouldDraw()
 	return true;
 }
 
-void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize);
+void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, float flAlpha = 1);
 
 CMaterialReference g_hBriefcaseArrow;
 int C_Briefcase::DrawModel(int flags)

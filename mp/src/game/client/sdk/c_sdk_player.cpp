@@ -2224,6 +2224,13 @@ int C_SDKPlayer::GetUserInfoInt(const char* pszCVar, int iBotDefault)
 	return UserInfoVar.GetInt();
 }
 
+ConVar da_vr_hud( "da_vr_hud", "0", FCVAR_DEVELOPMENTONLY );
+
+bool C_SDKPlayer::UseVRHUD() const
+{
+	return UseVR() || da_vr_hud.GetBool();
+}
+
 class CSlowIntensityProxy : public CResultProxy
 {
 public:

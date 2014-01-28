@@ -27,7 +27,7 @@ public:
 	void SetAmmo(int ammo, bool playAnimation);
 	void SetAmmo2(int ammo2, bool playAnimation);
 
-	void ShotFired(class C_WeaponSDKBase* pWeapon);
+	void ShotFired(class C_WeaponSDKBase* pWeapon, bool bAkimbo, bool bRight);
 	void Reload(class C_WeaponSDKBase* pWeapon);
 
 	virtual void Paint();

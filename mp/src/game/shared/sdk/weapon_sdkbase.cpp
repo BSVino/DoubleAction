@@ -22,6 +22,7 @@
 	#include "c_sdk_player.h"
 	#include "prediction.h"
 	#include "hud/sdk_hud_ammo.h"
+	#include "view.h"
 
 #else
 
@@ -352,7 +353,12 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		{
 			CHudAmmo* pHudAmmo = dynamic_cast<CHudAmmo*>(pElement);
 			if (pHudAmmo)
-				pHudAmmo->ShotFired(this);
+			{
+				if (dynamic_cast<CAkimboBase*>(this))
+					pHudAmmo->ShotFired(this, true, shootright);
+				else
+					pHudAmmo->ShotFired(this, false, true);
+			}
 		}
 	}
 #endif
@@ -1024,7 +1030,7 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 	pCmd->viewangles[YAW] += vecRecoil.x;
 }
 
-void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize)
+void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, float flAlpha = 1)
 {
 	CMeshBuilder meshBuilder;
 
@@ -1034,22 +1040,22 @@ void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Ve
 
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
-	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
 	meshBuilder.TexCoord2f( 0,0, 0 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
 	meshBuilder.TexCoord2f( 0,1, 0 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
 	meshBuilder.TexCoord2f( 0,1, 1 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, 1 );
+	meshBuilder.Color4f( 1, 1, 1, flAlpha );
 	meshBuilder.TexCoord2f( 0,0, 1 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
 	meshBuilder.AdvanceVertex();
@@ -1061,6 +1067,21 @@ CMaterialReference g_hWeaponArrow;
 CMaterialReference g_hGrenadeIcon;
 int CWeaponSDKBase::DrawModel(int flags)
 {
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+	if (pLocalPlayer && pLocalPlayer->UseVRHUD() && pLocalPlayer == GetOwnerEntity())
+	{
+		Vector vecAmmo1, vecAmmo2;
+
+		if (GetAttachment("ammo_1", vecAmmo1) && GetAttachment("ammo_2", vecAmmo2))
+			DrawVRBullets(vecAmmo1, vecAmmo2, m_iClip1, GetMaxClip1(), true);
+
+		if (GetAttachment("ammo_1_r", vecAmmo1) && GetAttachment("ammo_2_r", vecAmmo2))
+			DrawVRBullets(vecAmmo1, vecAmmo2, rightclip, GetMaxClip1()/2, true);
+
+		if (GetAttachment("ammo_1_l", vecAmmo1) && GetAttachment("ammo_2_l", vecAmmo2))
+			DrawVRBullets(vecAmmo1, vecAmmo2, leftclip, GetMaxClip1()/2, false);
+	}
+
 	if (!g_hWeaponArrow.IsValid())
 		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
 	if (!g_hGrenadeIcon.IsValid())
@@ -1075,7 +1096,6 @@ int CWeaponSDKBase::DrawModel(int flags)
 		return iReturn;
 	}
 
-	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (!pLocalPlayer)
 		return iReturn;
 
@@ -1107,6 +1127,123 @@ int CWeaponSDKBase::DrawModel(int flags)
 		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize);
 
 	return iReturn;
+}
+
+static void RotateVertex( const Vector& x, const Vector& y, float flAngle, Vector& x_r, Vector& y_r )
+{
+	float flRadians = DEG2RAD( flAngle );
+
+	x_r = x * cos(flRadians) - y * sin(flRadians);
+	y_r = x * sin(flRadians) + y * cos(flRadians);
+}
+
+int C_WeaponSDKBase::s_iMaxClip = 0;
+Vector C_WeaponSDKBase::s_vecAmmo1L;
+Vector C_WeaponSDKBase::s_vecAmmo2L;
+Vector C_WeaponSDKBase::s_vecAmmo1R;
+Vector C_WeaponSDKBase::s_vecAmmo2R;
+CUtlVector<C_WeaponSDKBase::CFlyingRound> C_WeaponSDKBase::s_aRounds;
+
+CMaterialReference g_hBulletIcon;
+void CWeaponSDKBase::DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo2, int iClip, int iMaxClip, bool bRight)
+{
+	if (!g_hBulletIcon.IsValid())
+		g_hBulletIcon.Init( "da/bullet.vmt", TEXTURE_GROUP_OTHER );
+
+	// This will get out of date since the processing is done before the drawing,
+	// but not enough to notice.
+	if (bRight)
+	{
+		s_vecAmmo1R = vecAmmo1;
+		s_vecAmmo2R = vecAmmo2;
+	}
+	else
+	{
+		s_vecAmmo1L = vecAmmo1;
+		s_vecAmmo2L = vecAmmo2;
+	}
+	s_iMaxClip = iMaxClip;
+
+	for (int i = 0; i < iClip; i++)
+		DrawIconQuad(g_hBulletIcon, GetVRRoundPosition(i, bRight), CurrentViewRight(), CurrentViewUp(), 0.7f);
+
+	float flFrameTime = gpGlobals->frametime;
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+	if (pLocalPlayer)
+		flFrameTime *= pLocalPlayer->GetSlowMoMultiplier();
+
+	for (int i = 0; i < s_aRounds.Count(); i++)
+	{
+		CFlyingRound& oRound = s_aRounds[i];
+
+		if (!oRound.bActive)
+			continue;
+
+		oRound.flAlpha -= flFrameTime * 0.7f;
+
+		if (oRound.flAlpha < 0)
+		{
+			oRound.bActive = false;
+			continue;
+		}
+
+		oRound.vecPosition += flFrameTime * oRound.vecVelocity;
+		oRound.vecVelocity.z -= flFrameTime * 130;
+		oRound.flAngle += flFrameTime * oRound.flAngularVelocity;
+
+		Vector vecRight;
+		Vector vecUp;
+
+		RotateVertex(CurrentViewRight(), CurrentViewUp(), oRound.flAngle, vecRight, vecUp);
+
+		DrawIconQuad(g_hBulletIcon, oRound.vecPosition, vecRight, vecUp, 0.7f, oRound.flAlpha);
+	}
+}
+
+Vector CWeaponSDKBase::GetVRRoundPosition(int iRound, bool bRight)
+{
+	float f = (float)iRound/(float)s_iMaxClip;
+
+	if (bRight)
+		return Lerp(1-f, s_vecAmmo1R, s_vecAmmo2R);
+	else
+		return Lerp(1-f, s_vecAmmo1L, s_vecAmmo2L);
+}
+
+void CWeaponSDKBase::VRBulletFired(int iRound, bool bRight)
+{
+	int iSpot = -1;
+
+	// Find a spot to put it.
+	for (int j = 0; j < s_aRounds.Count(); j++)
+	{
+		if (!s_aRounds[j].bActive)
+		{
+			iSpot = j;
+			break;
+		}
+	}
+
+	if (iSpot == -1)
+		iSpot = s_aRounds.AddToTail();
+
+	Vector vecRight(0, 0, 0);
+	Vector vecForward(0, 0, 0);
+	Vector vecVelocity(0, 0, 0);
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+	if (pLocalPlayer)
+	{
+		AngleVectors(pLocalPlayer->EyeAngles(), NULL, &vecRight, NULL);
+		vecVelocity = pLocalPlayer->GetAbsVelocity();
+	}
+
+	s_aRounds[iSpot].bActive = true;
+	s_aRounds[iSpot].flAngle = 0;
+	s_aRounds[iSpot].flAngularVelocity = RandomFloat(10, 1000);
+	s_aRounds[iSpot].vecVelocity = vecVelocity + vecRight * RandomFloat(10, 20) + vecForward * RandomFloat(30, 50) + Vector(0, 0, 1) * RandomFloat(30, 50);
+	s_aRounds[iSpot].vecPosition = GetVRRoundPosition(iRound, bRight);
+	s_aRounds[iSpot].flAlpha = 1;
 }
 
 void CWeaponSDKBase::ClientThink()

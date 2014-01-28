@@ -218,11 +218,16 @@ void CHudAmmo::SetAmmo2(int ammo2, bool playAnimation)
 	SetSecondaryValue(ammo2);
 }
 
-void CHudAmmo::ShotFired(C_WeaponSDKBase* pWeapon)
+void CHudAmmo::ShotFired(C_WeaponSDKBase* pWeapon, bool bAkimbo, bool bRight)
 {
 	UpdateAmmoDisplays();
 
 	m_iAmmo = pWeapon->Clip1();
+
+	if (bAkimbo)
+		CWeaponSDKBase::VRBulletFired(bRight?pWeapon->rightclip.Get():pWeapon->leftclip.Get(), bRight);
+	else
+		CWeaponSDKBase::VRBulletFired(m_iAmmo, true);
 
 	int iSpot = -1;
 
@@ -352,6 +357,9 @@ void CHudAmmo::Paint()
 		return;
 
 	if (!pPlayer->GetActiveSDKWeapon())
+		return;
+
+	if (pPlayer->UseVRHUD())
 		return;
 
 	int iWidth, iHeight;

@@ -96,7 +96,7 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 
 	CMaterialReference g_hGrenadeArrow;
 
-	void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize);
+	void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, float flAlpha = 1);
 
 	int CBaseGrenadeProjectile::DrawModel( int flags )
 	{
