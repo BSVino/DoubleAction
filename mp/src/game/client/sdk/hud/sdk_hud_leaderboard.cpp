@@ -320,10 +320,6 @@ void CHudLeaderboard::Paint()
 	if ( !pLocalPlayer )
 		return;
 
-	// Text is small and in a far corner, too much eye strain to read.
-	if (UseVR())
-		return;
-
 	if (!m_pGoldStar)
 	{
 		m_pGoldStar = gHUD.GetIcon("star_gold");
@@ -350,6 +346,10 @@ void CHudLeaderboard::Paint()
 		ListSpecialPlayer(SDKGameRules()->GetFrontRunner2(), m_pBounty, 2);
 		return;
 	}
+
+	// Text is small and in a far corner, too much eye strain to read.
+	if (UseVR())
+		return;
 
 	bool bLocalPlayerShown = false;
 
