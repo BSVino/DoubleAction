@@ -586,6 +586,13 @@ bool CSDKPlayer::IsWeaponReady()
 	if (m_Shared.IsAimedIn())
 		return true;
 
+#ifdef CLIENT_DLL
+	// If using the VR hud, always use the weapon ready animation,
+	// since the bullets are more clear
+	if (UseVRHUD())
+		return true;
+#endif
+
 	return GetCurrentTime() < m_flReadyWeaponUntil;
 }
 

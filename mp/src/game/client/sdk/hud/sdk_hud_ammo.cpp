@@ -359,9 +359,6 @@ void CHudAmmo::Paint()
 	if (!pPlayer->GetActiveSDKWeapon())
 		return;
 
-	if (pPlayer->UseVRHUD())
-		return;
-
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
@@ -392,6 +389,9 @@ void CHudAmmo::Paint()
 			}
 		}
 	}
+
+	if (pPlayer->UseVRHUD())
+		return;
 
 	CHudTexture* pTexture = GetTexture();
 
