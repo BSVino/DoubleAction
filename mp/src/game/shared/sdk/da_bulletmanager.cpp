@@ -503,7 +503,7 @@ void CBulletManager::CBullet::GetRenderBounds( Vector& mins, Vector& maxs )
 	maxs = Vector(10, 10, 10);
 }
 
-void DrawCross(CMeshBuilder& meshBuilder, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecDirection, float flAlpha)
+void DrawCross(CMeshBuilder& meshBuilder, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecDirection, const float& flAlpha)
 {
 	float flWidth = 2.5f;
 	float flLength = 250;

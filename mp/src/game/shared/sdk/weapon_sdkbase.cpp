@@ -1030,7 +1030,7 @@ void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const Q
 	pCmd->viewangles[YAW] += vecRecoil.x;
 }
 
-void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, float flAlpha = 1)
+void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, const float& flAlpha)
 {
 	CMeshBuilder meshBuilder;
 
@@ -1121,10 +1121,10 @@ int CWeaponSDKBase::DrawModel(int flags)
 
 	float flSize = m_flArrowCurSize;
 
-	DrawIconQuad(g_hWeaponArrow, vecOrigin, vecRight, vecUp, flSize);
+	DrawIconQuad(g_hWeaponArrow, vecOrigin, vecRight, vecUp, flSize, 1);
 
 	if (GetWeaponID() == SDK_WEAPON_GRENADE)
-		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize);
+		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, 1);
 
 	return iReturn;
 }
@@ -1165,7 +1165,7 @@ void CWeaponSDKBase::DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo
 	s_iMaxClip = iMaxClip;
 
 	for (int i = 0; i < iClip; i++)
-		DrawIconQuad(g_hBulletIcon, GetVRRoundPosition(i, bRight), CurrentViewRight(), CurrentViewUp(), 0.7f);
+		DrawIconQuad(g_hBulletIcon, GetVRRoundPosition(i, bRight), CurrentViewRight(), CurrentViewUp(), 0.7f, 1);
 
 	float flFrameTime = gpGlobals->frametime;
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
