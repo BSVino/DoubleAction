@@ -60,7 +60,7 @@ public:
 		int         m_iBulletDamage;
 		float       m_flGoalAlpha;
 		float       m_flCurrAlpha;
-		CCopyableUtlVector<CHandle<CBaseEntity>> m_ahObjectsHit;
+		CCopyableUtlVector<CHandle<CBaseEntity> > m_ahObjectsHit;
 	};
 
 public:

@@ -322,8 +322,14 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 			// See if the bullet ended up underwater + started out of the water
 			if ( enginetrace->GetPointContents( tr.endpos ) & (CONTENTS_WATER|CONTENTS_SLIME) )
 			{
+				CBaseEntity* pIgnore;
+				if (oBullet.m_ahObjectsHit.Count())
+					pIgnore = oBullet.m_ahObjectsHit.Tail();
+				else
+					pIgnore = oBullet.m_hShooter;
+
 				trace_t waterTrace;
-				UTIL_TraceLine( oBullet.m_vecOrigin, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), oBullet.m_ahObjectsHit.Count()?oBullet.m_ahObjectsHit.Tail():oBullet.m_hShooter, COLLISION_GROUP_NONE, &waterTrace );
+				UTIL_TraceLine( oBullet.m_vecOrigin, tr.endpos, (MASK_SHOT|CONTENTS_WATER|CONTENTS_SLIME), pIgnore, COLLISION_GROUP_NONE, &waterTrace );
 
 				if( waterTrace.allsolid != 1 )
 				{
