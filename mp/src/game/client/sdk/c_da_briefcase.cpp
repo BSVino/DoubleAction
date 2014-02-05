@@ -34,7 +34,7 @@ bool C_Briefcase::ShouldDraw()
 	return true;
 }
 
-void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, float flAlpha = 1);
+void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Vector& vecRight, const Vector& vecUp, float flSize, const float& flAlpha);
 
 CMaterialReference g_hBriefcaseArrow;
 int C_Briefcase::DrawModel(int flags)
@@ -87,7 +87,7 @@ int C_Briefcase::DrawModel(int flags)
 		flSize = 15;
 	}
 
-	DrawIconQuad(g_hBriefcaseArrow, vecOrigin, vecRight, vecUp, flSize);
+	DrawIconQuad(g_hBriefcaseArrow, vecOrigin, vecRight, vecUp, flSize, 1);
 
 	return iReturn;
 }
@@ -135,7 +135,7 @@ int C_BriefcaseCaptureZone::DrawModel(int flags)
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
 	Vector vecUp = Vector(0, 0, 1);
 
-	DrawIconQuad(g_hBriefcaseArrow, vecOrigin, vecRight, vecUp, 25);
+	DrawIconQuad(g_hBriefcaseArrow, vecOrigin, vecRight, vecUp, 25, 1);
 
 	CMeshBuilder meshBuilder;
 
