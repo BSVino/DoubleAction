@@ -72,6 +72,9 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	ConVarRef da_postprocess_slowmo("da_postprocess_slowmo");
 	ConVarRef da_postprocess_deathcam("da_postprocess_deathcam");
 	ConVarRef da_postprocess_skill("da_postprocess_skill");
+	ConVarRef da_postprocess_vr("da_postprocess_vr");
+
+	da_postprocess_vr.SetValue(UseVR());
 
 	if (pPlayer->IsStyleSkillActive())
 		m_flStyleLerp = Approach(1, m_flStyleLerp, gpGlobals->frametime*2);
@@ -88,7 +91,7 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	else if (da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt())
 		bShowPostProcess = true;
 
-	if ( bShowPostProcess && !UseVR() )
+	if ( bShowPostProcess )
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
@@ -102,9 +105,9 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 			da_postprocess_skill.SetValue(m_flStyleLerp);
 
 			if (da_postprocess_compare.GetInt() == 1)
-				DrawScreenEffectMaterial( pMaterial, 0, 0, view.width/2, view.height );
+				DrawScreenEffectMaterial( pMaterial, view.x, view.y, view.width/2, view.height );
 			else
-				DrawScreenEffectMaterial( pMaterial, 0, 0, view.width, view.height );
+				DrawScreenEffectMaterial( pMaterial, view.x, view.y, view.width, view.height );
 		}
 	}
 }
@@ -114,5 +117,19 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 //-----------------------------------------------------------------------------
 void CDAViewRender::Render2DEffectsPreHUD( const CViewSetup &view )
 {
-	PerformSlowMoEffect( view );	// this needs to come before the HUD is drawn, or it will wash the HUD out
+	if (!UseVR())
+		PerformSlowMoEffect( view );	// this needs to come before the HUD is drawn, or it will wash the HUD out
+}
+
+void CDAViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatToDraw )
+{
+	BaseClass::RenderView(view, nClearFlags, whatToDraw);
+
+	if (UseVR())
+		PerformSlowMoEffect(view);
+}
+
+CDAViewRender* DAViewRender()
+{
+	return &g_ViewRender;
 }

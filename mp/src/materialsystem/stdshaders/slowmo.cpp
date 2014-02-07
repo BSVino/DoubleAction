@@ -18,6 +18,8 @@ ConVar da_postprocess_skill_alpha( "da_postprocess_skill_alpha", "0.2", FCVAR_CH
 ConVar da_postprocess_deathcam( "da_postprocess_deathcam", "0", FCVAR_CHEAT, "Control for death cam mode. Set by code." );
 ConVar da_postprocess_skill( "da_postprocess_skill", "0", FCVAR_CHEAT, "Control for style skill mode. Set by code." );
 
+ConVar da_postprocess_vr( "da_postprocess_vr", "0", FCVAR_CHEAT, "Set by code." );
+
 BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
 		SHADER_PARAM( BASETEXTURE,      SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "Framebuffer" )
@@ -67,6 +69,10 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 
 		DYNAMIC_STATE
 		{
+			DECLARE_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
+			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
+			SET_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
+
 			pShaderAPI->BindStandardTexture( SHADER_SAMPLER0, TEXTURE_FRAME_BUFFER_FULL_TEXTURE_0 );
 
 			float aflSlowMo[1] = { 0.0f };

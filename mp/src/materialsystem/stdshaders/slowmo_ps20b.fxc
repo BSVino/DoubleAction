@@ -1,6 +1,7 @@
 #define HDRTYPE HDR_TYPE_NONE
 
 // STATIC: "WITH_BLUR" "0..1" [= 0]
+// DYNAMIC: "WITH_VR" "0..1" [= 0]
 
 #include "common_ps_fxc.h"
 
@@ -26,15 +27,21 @@ HALF4 main( PS_INPUT i ) : COLOR
 	const float flNoiseScale = 0.05;
 	const float flBias = 0.4;
 
+	float2 aflCombinedTexCoord = i.texCoord;
+
+#if WITH_VR
+	aflCombinedTexCoord.x = aflCombinedTexCoord.x * 2;
+#endif
+
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
-	float4 aflCombined = tex2D( CombinedSampler, i.texCoord );
+	float4 aflCombined = tex2D( CombinedSampler, aflCombinedTexCoord );
 
 	float flGrain;
 
 	if (flDeathCam > 0)
 		flGrain = aflCombined.g; // Death cam should be like a photo, so the grain should be static. (As in, not moving.)
 	else
-		flGrain = tex2D( CombinedSampler, i.texCoord + float2(flGrainOffset, flGrainOffset) ).g;
+		flGrain = tex2D( CombinedSampler, aflCombinedTexCoord + float2(flGrainOffset, flGrainOffset) ).g;
 
 	float flVignetteAlpha = aflCombined.b;
 	float flOverlay = aflCombined.r;
@@ -62,7 +69,7 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float4 aflOutput = aflFB;
 
 #if WITH_BLUR
-	float4 aflBlur = tex2D( BlurSampler, i.texCoord );
+	float4 aflBlur = tex2D( BlurSampler, aflCombinedTexCoord );
 
 	aflOutput.rgb = lerp(aflOutput.rgb, aflBlur.rgb, flBlurAlpha);
 #endif
@@ -99,12 +106,16 @@ HALF4 main( PS_INPUT i ) : COLOR
 	// Scale it by the noise scale.
 	aflOutput.rgb = lerp(aflOutput.rgb, aflGrain, flNoiseScale);
 
+#if !WITH_VR
+	// Don't do the overlay in VR, it won't match up from eye to eye.
+
 	float3 aflOverlay = float3(flOverlay, flOverlay, flOverlay);
 	float3 aflConditional = step(0.5, aflOutput.rgb);
 	float3 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
 
 	// Scale it by the overlay scale.
 	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15 * flSlowMoScale);
+#endif
 
 	if (flDeathCam > 0)
 		return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
