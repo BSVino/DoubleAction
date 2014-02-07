@@ -311,7 +311,7 @@ void VideoPlayerPanel::Paint( void )
 		meshBuilder.TexCoord2f( 0, (bLeft) ? flLeftU : flRightU, (corner & 2) ? flBottomV : flTopV );
 		meshBuilder.TangentS3f( 0.0f, 1.0f, 0.0f );
 		meshBuilder.TangentT3f( 1.0f, 0.0f, 0.0f );
-		meshBuilder.Color4f( 1.0f, 1.0f, 1.0f, 1.0f );
+		meshBuilder.Color4f( 1.0f, 1.0f, 1.0f, alpha );
 		meshBuilder.AdvanceVertex();
 	}
 	
