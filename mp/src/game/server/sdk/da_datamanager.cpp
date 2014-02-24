@@ -200,7 +200,12 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 void CDataManager::ClientDisconnected(AccountID_t eAccountID)
 {
 	// This is called only once for each client, never just for changelevels.
-	m_aiConnectedClients[eAccountID] = 0;
+	CUtlMap<AccountID_t, char>::IndexType_t it = m_aiConnectedClients.Find(eAccountID);
+
+	if (it == m_aiConnectedClients.InvalidIndex())
+		m_aiConnectedClients.Insert(eAccountID, 0);
+	else
+		m_aiConnectedClients[eAccountID] = 0;
 
 	d->m_iDisconnections++;
 }
