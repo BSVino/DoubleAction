@@ -17,6 +17,7 @@
 
 #ifdef SDK_DLL
 #include "sdk/sdk_player.h"
+#include "sdk/sdk_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -969,6 +970,11 @@ bool CBaseIssue::CanCallVote( int iEntIndex, const char *pszDetails, vote_create
 		nFailCode = VOTE_FAILED_TEAM_CANT_CALL;
 		return false;
 	}
+
+#ifdef SDK_DLL
+	if (ToSDKPlayer(pVoteCaller) && ToSDKPlayer(pVoteCaller)->CanDoCoderHacks())
+		return true;
+#endif
 
 	// Did this fail recently?
 	for( int iIndex = 0; iIndex < m_FailedVotes.Count(); iIndex++ )
