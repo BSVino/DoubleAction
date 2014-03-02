@@ -104,7 +104,7 @@ void CSDKPlayer::ItemPostFrame()
 #endif
 }
 
-ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "75", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
+ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 
 void CSDKPlayer::FireBullet( 
 						   Vector vecSrc,	// shooting postion
