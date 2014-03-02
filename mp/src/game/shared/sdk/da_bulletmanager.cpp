@@ -583,5 +583,7 @@ void CBulletManager::CBullet::Activate()
 
 void CBulletManager::CBullet::Deactivate()
 {
+	m_bDoEffects = false;
+	m_iBulletDamage = 0;
 	m_flGoalAlpha = 0;
 }
