@@ -199,6 +199,7 @@ public:
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }
 	float GetSlowMoTime() const { return m_flSlowMoTime; }
 	bool HasSuperSlowMo() const { return m_bHasSuperSlowMo; }
+	int GetSlowMoType() const { return m_iSlowMoType; }
 
 	bool HasPlayerDied() const { return m_bHasPlayerDied; }
 

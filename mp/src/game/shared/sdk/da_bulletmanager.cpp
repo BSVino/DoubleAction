@@ -94,7 +94,8 @@ void CBulletManager::FrameUpdatePreEntityThink()
 	BulletsThink(gpGlobals->frametime);
 }
 
-ConVar da_bullet_speed("da_bullet_speed", "2000", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
+ConVar da_bullet_speed("da_bullet_speed", "1500", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
+ConVar da_bullet_speed_active("da_bullet_speed_active", "4000", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
 ConVar da_bullet_debug("da_bullet_debug", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet path" );
 
 void CBulletManager::BulletsThink(float flFrameTime)
@@ -105,7 +106,13 @@ void CBulletManager::BulletsThink(float flFrameTime)
 		if (!oBullet.m_bActive)
 			continue;
 
-		float flLerpTime = da_bullet_speed.GetFloat() / 400 * flFrameTime;
+		float flSpeed = da_bullet_speed.GetFloat();
+
+		if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill ||
+			oBullet.m_hShooter->GetSlowMoType() == SLOWMO_ACTIVATED || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_STYLESKILL)
+			flSpeed = da_bullet_speed_active.GetFloat();
+
+		float flLerpTime = flSpeed / 400 * flFrameTime;
 		if (oBullet.m_hShooter)
 			flLerpTime *= oBullet.m_hShooter->GetSlowMoMultiplier();
 
@@ -131,11 +138,6 @@ void CBulletManager::BulletsThink(float flFrameTime)
 			oBullet.Deactivate();
 			continue;
 		}
-
-		float flSpeed = da_bullet_speed.GetFloat();
-
-		if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill)
-			flSpeed *= 2;
 
 		float dt;
 		if (oBullet.m_hShooter->GetSlowMoMultiplier() == 1)
