@@ -943,13 +943,8 @@ void CWeaponSDKBase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QA
 	vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
 }
 
-static ConVar scoutmode("scoutmode", "0", FCVAR_DEVELOPMENTONLY|FCVAR_USERINFO);
-
 void CWeaponSDKBase::AddViewKick()
 {
-	if (scoutmode.GetBool())
-		return;
-
 #ifdef CLIENT_DLL
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
 		return;
@@ -961,7 +956,7 @@ void CWeaponSDKBase::AddViewKick()
 		// Update punch angles.
 		QAngle angle = pPlayer->GetPunchAngle();
 
-		angle.x -= SharedRandomInt( "PunchAngle", 4, 6 );
+		angle.x -= SharedRandomInt( "PunchAngle", 2, 3 );
 
 		float flPunchBonus = 1;
 		float flRecoilBonus = 1;
