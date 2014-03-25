@@ -106,6 +106,12 @@ void CBulletManager::BulletsThink(float flFrameTime)
 		if (!oBullet.m_bActive)
 			continue;
 
+		if (!oBullet.m_hShooter)
+		{
+			oBullet.Deactivate();
+			continue;
+		}
+
 		float flSpeed = da_bullet_speed.GetFloat();
 
 		if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill ||
@@ -124,12 +130,6 @@ void CBulletManager::BulletsThink(float flFrameTime)
 #ifdef CLIENT_DLL
 			ClientLeafSystem()->RemoveRenderable( oBullet.m_hRenderHandle );
 #endif
-			continue;
-		}
-
-		if (!oBullet.m_hShooter)
-		{
-			oBullet.Deactivate();
 			continue;
 		}
 
