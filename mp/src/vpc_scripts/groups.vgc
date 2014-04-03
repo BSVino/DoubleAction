@@ -13,6 +13,7 @@ $Group "gamedlls"
 	"client"
 	"datanetworking"
 	"server"
+	"viewback"
 }
 
 $Group "game"
@@ -26,6 +27,7 @@ $Group "game"
 	"server"
 	"tier1"
 	"vgui_controls"
+	"viewback"
 }
 
 $Group "shaders"
@@ -55,6 +57,7 @@ $Group "everything"
 	"vbsp"
 	"vgui_controls"
 	"vice"
+	"viewback"
 	"vrad_dll"
 	"vrad_launcher"
 	"vtf2tga"

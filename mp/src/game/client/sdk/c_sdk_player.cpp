@@ -44,6 +44,7 @@
 #include "da_charactermenu.h"
 #include "da_skillmenu.h"
 #include "da_viewmodel.h"
+#include "da_viewback.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -742,6 +743,31 @@ void C_SDKPlayer::PreThink()
 
 	if (C_SDKPlayer::GetLocalSDKPlayer() == this && GetClientVoiceMgr()->IsLocalPlayerSpeaking())
 		Instructor_LessonLearned("voicechat");
+
+	bool bSend = (C_SDKPlayer::GetLocalOrSpectatedPlayer() == this);
+
+	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
+		bSend = false;
+
+	if (bSend)
+	{
+		if (IsStyleSkillActive())
+			vb_data_send_float(ViewbackSystem().m_ePlayerStyle, m_flStyleSkillCharge);
+		else
+			vb_data_send_float(ViewbackSystem().m_ePlayerStyle, m_flStylePoints);
+
+		vb_data_send_float(ViewbackSystem().m_ePlayerOriginX, GetAbsOrigin().x);
+		vb_data_send_float(ViewbackSystem().m_ePlayerOriginY, GetAbsOrigin().y);
+		vb_data_send_float(ViewbackSystem().m_ePlayerOriginZ, GetAbsOrigin().z);
+
+		Vector vecRecoil = m_Shared.m_vecRecoilDirection * m_Shared.m_flRecoilAccumulator;
+		vb_data_send_vector(ViewbackSystem().m_ePlayerRecoil, vecRecoil.x, -vecRecoil.y, vecRecoil.z);
+		vb_data_send_float(ViewbackSystem().m_ePlayerRecoilFloat, m_Shared.m_flRecoilAccumulator);
+		vb_data_send_float(ViewbackSystem().m_ePlayerViewPunch, -m_Local.m_vecPunchAngle.GetX());
+
+		vb_data_send_float(ViewbackSystem().m_eAimIn, m_Shared.GetAimIn());
+		vb_data_send_float(ViewbackSystem().m_eSlowMo, GetSlowMoMultiplier());
+	}
 }
 
 

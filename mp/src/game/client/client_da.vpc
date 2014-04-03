@@ -19,7 +19,7 @@ $Configuration
 	$Compiler
 	{
 		$AdditionalIncludeDirectories		"$BASE;sdk\vgui,.\sdk,$SRCDIR\game\shared\sdk,.\hl2,.\hl2\elements,$SRCDIR\game\shared\hl2"
-		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS"
+		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE"
 	}
 }
 
@@ -110,6 +110,7 @@ $Project "Client (DA)"
 		$File "sdk/sdk_prediction.cpp"
 		$File "$SRCDIR/game/shared/sdk/sdk_shareddefs.cpp"
 		$File "$SRCDIR/game/shared/sdk/sdk_usermessages.cpp"
+		$File "sdk/da_viewback.cpp"
 	}
 
 	$Folder	"Source Files"
@@ -120,5 +121,20 @@ $Project "Client (DA)"
 		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
 		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
 		$File	"hud_basedeathnotice.cpp"
+	}
+
+	$Folder "Link Libraries" [$WIN32]
+	{
+		$DynamicFile "$SRCDIR\lib\public\viewback.lib"
+	}
+
+	$Folder "Link Libraries" [$POSIX && !$LINUX]
+	{
+		$DynamicFile "$SRCDIR\lib\$PLATFORM\viewback$_STATICLIB_EXT"
+	}
+
+	$Folder "Link Libraries" [$LINUX]
+	{
+		$Lib viewback
 	}
 }

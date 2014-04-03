@@ -20,9 +20,13 @@
 
 #ifdef CLIENT_DLL
 #include "c_sdk_player.h"
+#include "da_viewback.h"
 #else
 #include "sdk_player.h"
 #endif
+
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 #define SDK_RUN_SPEED				320.0f
 #define SDK_WALK_SPEED				120.0f
@@ -229,6 +233,15 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacte
 	if ( C_BasePlayer::ShouldDrawLocalPlayer() )
 	{
 		m_pSDKPlayer->SetPlaybackRate( 1.0f );
+	}
+
+	if (pSDKPlayer == C_SDKPlayer::GetLocalOrSpectatedPlayer())
+	{
+		vb_data_send_vector(ViewbackSystem().m_eAnimMoveYaw, m_DebugAnimData.m_vecMoveYaw.x, m_DebugAnimData.m_vecMoveYaw.y, 0);
+
+		Vector vecAim;
+		AngleVectors(QAngle(0, m_DebugAnimData.m_flAimYaw, 0), &vecAim);
+		vb_data_send_vector(ViewbackSystem().m_eAnimAim, vecAim.x, vecAim.y, 0);
 	}
 #endif
 }

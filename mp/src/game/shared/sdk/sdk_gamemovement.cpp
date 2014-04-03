@@ -20,6 +20,7 @@
 
 #ifdef CLIENT_DLL
 	#include "c_sdk_player.h"
+	#include "da_viewback.h"
 #else
 	#include "sdk_player.h"
 #endif
@@ -308,6 +309,11 @@ void CSDKGameMovement::CheckParameters( void )
 	{
 		mv->m_vecAngles[YAW] -= 360.0f;
 	}
+
+#ifdef CLIENT_DLL
+	vb_data_send_float(ViewbackSystem().m_ePlayerSpeed, m_pSDKPlayer->GetAbsVelocity().Length2D());
+	vb_data_send_float(ViewbackSystem().m_ePlayerMaxSpeed, mv->m_flClientMaxSpeed);
+#endif
 
 	if ( cl_show_speed.GetBool() )
 	{

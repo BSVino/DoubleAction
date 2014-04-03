@@ -18,6 +18,11 @@ $Project "datatool"
 	"datatool\datatool.vpc" [$DA && $WIN32]
 }
 
+$Project "viewback"
+{
+	"viewback\viewback.vpc" [$DA]
+}
+
 $Project "captioncompiler"
 {
 	"utils\captioncompiler\captioncompiler.vpc" [$WIN32]
