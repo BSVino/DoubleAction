@@ -49,6 +49,8 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_bAimInRecoilBonus		= !!pKeyValuesData->GetInt( "AimInRecoilBonus", 0 );
 	m_bAimInSpreadBonus		= !!pKeyValuesData->GetInt( "AimInSpreadBonus", 0 );
 
+	m_flStyleMultiplier = pKeyValuesData->GetFloat( "StyleMultiplier", 1 );
+
 	const char* pszWeaponType = pKeyValuesData->GetString("WeaponType", "none");
 	if (FStrEq(pszWeaponType, "rifle"))
 		m_eWeaponType = WT_RIFLE;

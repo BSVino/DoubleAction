@@ -211,6 +211,10 @@ void CDABuyMenu::Update()
 	if (entry)
 		entry->SetVisible(true);
 
+	CFolderLabel* pWeaponStyle = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponStyle"));
+	int iWeaponStyleX, iWeaponStyleY;
+	pWeaponStyle->GetPos(iWeaponStyleX, iWeaponStyleY);
+
 	CFolderLabel* pWeaponWeight = dynamic_cast<CFolderLabel*>(FindChildByName("WeaponWeight"));
 	int iWeaponWeightX, iWeaponWeightY;
 	pWeaponWeight->GetPos(iWeaponWeightX, iWeaponWeightY);
@@ -219,6 +223,12 @@ void CDABuyMenu::Update()
 
 	if (!pPlayer)
 		return;
+
+	for ( int i = 0; i < m_apStyles.Count(); i++)
+	{
+		m_apStyles[i]->DeletePanel();
+		m_apStyles[i] = NULL;
+	}
 
 	for ( int i = 0; i < m_apWeights.Count(); i++)
 	{
@@ -232,6 +242,7 @@ void CDABuyMenu::Update()
 		m_apCheckMarks[i] = NULL;
 	}
 
+	m_apStyles.RemoveAll();
 	m_apWeights.RemoveAll();
 	m_apCheckMarks.RemoveAll();
 
@@ -273,6 +284,29 @@ void CDABuyMenu::Update()
 		pPanel->GetPos(iWeaponX, iWeaponY);
 
 		CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(pPanel->GetWeaponID());
+
+		m_apStyles.AddToTail(new CFolderLabel(this, NULL));
+
+		std::ostringstream sStyle;
+		if (pPlayer->GetLoadoutWeaponCount(pPanel->GetWeaponID()) == 2)
+		{
+			if (*pInfo->m_szAkimbo)
+			{
+				CSDKWeaponInfo* pAkimboInfo = CSDKWeaponInfo::GetWeaponInfo(AliasToWeaponID(pInfo->m_szAkimbo));
+				if (pAkimboInfo && pAkimboInfo->m_flStyleMultiplier > 1)
+					sStyle << pAkimboInfo->m_flStyleMultiplier << "x";
+			}
+			else if (pInfo->m_flStyleMultiplier > 1)
+				sStyle << pInfo->m_flStyleMultiplier << "x";
+		}
+		else if (pInfo->m_flStyleMultiplier > 1)
+			sStyle << pInfo->m_flStyleMultiplier << "x";
+
+		m_apStyles.Tail()->SetText(sStyle.str().c_str());
+		m_apStyles.Tail()->SetPos(iWeaponStyleX, iWeaponY);
+		m_apStyles.Tail()->SetZPos(-5);
+		m_apStyles.Tail()->SetFont(vgui::scheme()->GetIScheme(GetScheme())->GetFont("FolderMedium"));
+		m_apStyles.Tail()->SetScheme("FolderScheme");
 
 		m_apWeights.AddToTail(new CFolderLabel(this, NULL));
 

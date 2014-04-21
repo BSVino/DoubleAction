@@ -47,6 +47,8 @@ public:
 	bool	m_bAimInRecoilBonus;
 	bool	m_bAimInSpreadBonus;
 
+	float   m_flStyleMultiplier;
+
 	char    m_szAkimbo[32];
 	char    m_szSingle[32];
 

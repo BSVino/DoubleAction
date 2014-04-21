@@ -78,6 +78,7 @@ private:
 	class CFolderLabel* m_pWeaponInfo;
 	class CModelPanel*  m_pWeaponImage;
 
+	CUtlVector<CFolderLabel*> m_apStyles;
 	CUtlVector<CFolderLabel*> m_apWeights;
 	CUtlVector<CImageButton*> m_apCheckMarks;
 

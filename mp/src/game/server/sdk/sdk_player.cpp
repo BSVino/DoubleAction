@@ -1943,7 +1943,11 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
 	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
 
-	CSDKWeaponInfo *pWeaponInfo = GetActiveSDKWeapon()?CSDKWeaponInfo::GetWeaponInfo(GetActiveSDKWeapon()->GetWeaponID()):NULL;
+	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
+	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
+
+	if (pWeaponInfo)
+		flPoints *= pWeaponInfo->m_flStyleMultiplier;
 
 	Vector vecVictimForward;
 	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
@@ -1966,7 +1970,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendNotice(NOTICE_WORTHIT);
 		}
 	}
-	else if (bKilledVictim && GetActiveSDKWeapon() && pWeaponInfo->m_eWeaponType > WT_MELEE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
+	else if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_eWeaponType != WT_MELEE && pWeaponInfo->m_eWeaponType != WT_GRENADE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
 		// Killing a player with your last bullet.
 		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
