@@ -1471,6 +1471,25 @@ void CDetailObjectSystem::LevelInitPreEntity()
 		}
 	}
 
+	if ( m_DetailObjects.Count() || m_DetailSpriteDict.Count() )
+	{
+		// There are detail objects in the level, so precache the material
+		PrecacheMaterial( DETAIL_SPRITE_MATERIAL );
+		IMaterial *pMat = m_DetailSpriteMaterial;
+		// adjust for non-square textures (cropped)
+		float flRatio = (float)( pMat->GetMappingWidth() ) / pMat->GetMappingHeight();
+		if ( flRatio > 1.0 )
+		{
+			for( int i = 0; i<m_DetailSpriteDict.Count(); i++ )
+			{
+				m_DetailSpriteDict[i].m_TexUL.y *= flRatio;
+				m_DetailSpriteDict[i].m_TexLR.y *= flRatio;
+				m_DetailSpriteDictFlipped[i].m_TexUL.y *= flRatio;
+				m_DetailSpriteDictFlipped[i].m_TexLR.y *= flRatio;
+			}
+		}
+	}
+
 	int detailPropLightingLump;
 	if( g_pMaterialSystemHardwareConfig->GetHDRType() != HDR_TYPE_NONE )
 	{
