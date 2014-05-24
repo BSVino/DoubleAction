@@ -12,7 +12,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$PreprocessorDefinitions		"$BASE;TIER1_STATIC_LIB;ALLOW_DEVELOPMENT_CVARS"
+		$PreprocessorDefinitions		"$BASE;TIER1_STATIC_LIB"
 	}
 
 	$Librarian [$WINDOWS]
