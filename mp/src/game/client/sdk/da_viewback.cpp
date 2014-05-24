@@ -45,6 +45,9 @@ static void viewback_console_command(const char* text)
 
 void CViewbackSystem::LevelInitPostEntity( void )
 {
+	if (vb_server_is_active())
+		vb_server_shutdown();
+
 	vb_util_initialize();
 
 	vb_util_add_channel("Style", VB_DATATYPE_FLOAT, &m_ePlayerStyle);
