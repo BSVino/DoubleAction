@@ -193,7 +193,7 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 			m_aiConnectedClients.Insert(eAccountID, 1);
 		}
 		else
-			m_aiConnectedClients[eAccountID] = 1;
+			m_aiConnectedClients[it] = 1;
 	}
 }
 
@@ -205,7 +205,7 @@ void CDataManager::ClientDisconnected(AccountID_t eAccountID)
 	if (it == m_aiConnectedClients.InvalidIndex())
 		m_aiConnectedClients.Insert(eAccountID, 0);
 	else
-		m_aiConnectedClients[eAccountID] = 0;
+		m_aiConnectedClients[it] = 0;
 
 	d->m_iDisconnections++;
 }
