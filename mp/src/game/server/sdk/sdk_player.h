@@ -505,6 +505,8 @@ public:
 
 	CNetworkVar( bool, m_bUsingVR );
 
+	int m_iPlatform;
+
 	int    m_iStyleKillStreak;
 
 	CNetworkVar( string_t, m_iszCharacter );

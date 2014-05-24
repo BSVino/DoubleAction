@@ -82,8 +82,8 @@ void CDataManager::LevelInitPostEntity( void )
 	}
 
 	m_bLevelStarted = true;
-	d->m_flStartTime = gpGlobals->curtime;
-	d->m_flNextPositionsUpdate = gpGlobals->curtime;
+	d->z.m_flStartTime = gpGlobals->curtime;
+	d->z.m_flNextPositionsUpdate = gpGlobals->curtime;
 
 	CUtlMap<AccountID_t, char>::IndexType_t it = m_aiConnectedClients.FirstInorder();
 	while (it != m_aiConnectedClients.InvalidIndex())
@@ -99,7 +99,7 @@ void CDataManager::LevelInitPostEntity( void )
 		}
 
 		// This player will be a unique player for the next map.
-		d->m_iUniquePlayers++;
+		d->z.m_iUniquePlayers++;
 
 		it = m_aiConnectedClients.NextInorder(it);
 	}
@@ -107,7 +107,7 @@ void CDataManager::LevelInitPostEntity( void )
 
 void CDataManager::FrameUpdatePostEntityThink( void )
 {
-	if (gpGlobals->curtime > d->m_flNextPositionsUpdate)
+	if (gpGlobals->curtime > d->z.m_flNextPositionsUpdate)
 		SavePositions();
 }
 
@@ -118,7 +118,7 @@ void CDataManager::SavePositions()
 	if (IsSendingData())
 		return;
 
-	d->m_flNextPositionsUpdate = gpGlobals->curtime + da_data_positions_interval.GetFloat();
+	d->z.m_flNextPositionsUpdate = gpGlobals->curtime + da_data_positions_interval.GetFloat();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -135,13 +135,25 @@ void CDataManager::SavePositions()
 		d->m_avecPlayerPositions.AddToTail(pPlayer->GetAbsOrigin());
 
 		if (pPlayer->IsInThirdPerson())
-			d->m_iThirdPersonActive++;
+			d->z.m_iThirdPersonActive += da_data_positions_interval.GetFloat();
 		else
-			d->m_iThirdPersonInactive++;
+			d->z.m_iThirdPersonInactive += da_data_positions_interval.GetFloat();
+
+		if (pPlayer->m_bUsingVR)
+			d->z.m_iVRActive += da_data_positions_interval.GetFloat();
+		else
+			d->z.m_iVRInactive += da_data_positions_interval.GetFloat();
+
+		if (pPlayer->m_iPlatform == 1)
+			d->z.m_iWindows += da_data_positions_interval.GetFloat();
+		else if (pPlayer->m_iPlatform == 2)
+			d->z.m_iLinux += da_data_positions_interval.GetFloat();
+		else if (pPlayer->m_iPlatform == 3)
+			d->z.m_iMac += da_data_positions_interval.GetFloat();
 	}
 
 	ConVarRef sv_cheats("sv_cheats");
-	d->m_bCheated |= sv_cheats.GetBool();
+	d->z.m_bCheated |= sv_cheats.GetBool();
 }
 
 void CDataManager::AddPlayerKill(const Vector& vecPosition)
@@ -187,8 +199,8 @@ void CDataManager::ClientConnected(AccountID_t eAccountID)
 		{
 			// This client has not disconnected and reconnected.
 			// We want to eliminate repeated connections as extra information.
-			d->m_iConnections++;
-			d->m_iUniquePlayers++;
+			d->z.m_iConnections++;
+			d->z.m_iUniquePlayers++;
 
 			m_aiConnectedClients.Insert(eAccountID, 1);
 		}
@@ -207,12 +219,12 @@ void CDataManager::ClientDisconnected(AccountID_t eAccountID)
 	else
 		m_aiConnectedClients[it] = 0;
 
-	d->m_iDisconnections++;
+	d->z.m_iDisconnections++;
 }
 
 void CDataManager::SetTeamplay(bool bOn)
 {
-	d->m_bTeamplay = bOn;
+	d->z.m_bTeamplay = bOn;
 }
 
 void CDataManager::VotePassed(const char* pszIssue, const char* pszDetails)
@@ -265,7 +277,7 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_da_version(atoi(DA_VERSION));
 
 	pbGameData->set_map_name(STRING(gpGlobals->mapname));
-	pbGameData->set_map_time(gpGlobals->curtime - d->m_flStartTime);
+	pbGameData->set_map_time(gpGlobals->curtime - d->z.m_flStartTime);
 
 #ifdef _DEBUG
 	pbGameData->set_debug(true);
@@ -273,21 +285,28 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	pbGameData->set_debug(false);
 #endif
 
-	pbGameData->set_cheats(d->m_bCheated);
+	pbGameData->set_cheats(d->z.m_bCheated);
 
 	const ConVar* pHostname = cvar->FindVar( "hostname" );
 	pbGameData->set_server_name(pHostname->GetString());
 
 	pbGameData->set_timestamp((unsigned)time(NULL));
 
-	pbGameData->set_connections(d->m_iConnections);
-	pbGameData->set_disconnections(d->m_iDisconnections);
-	pbGameData->set_unique_players_this_map(d->m_iUniquePlayers);
+	pbGameData->set_connections(d->z.m_iConnections);
+	pbGameData->set_disconnections(d->z.m_iDisconnections);
+	pbGameData->set_unique_players_this_map(d->z.m_iUniquePlayers);
 
-	pbGameData->set_teamplay(d->m_bTeamplay);
+	pbGameData->set_teamplay(d->z.m_bTeamplay);
 
-	pbGameData->set_thirdperson_active(d->m_iThirdPersonActive);
-	pbGameData->set_thirdperson_inactive(d->m_iThirdPersonInactive);
+	pbGameData->set_thirdperson_active(d->z.m_iThirdPersonActive);
+	pbGameData->set_thirdperson_inactive(d->z.m_iThirdPersonInactive);
+
+	pbGameData->set_vr_active(d->z.m_iVRActive);
+	pbGameData->set_vr_inactive(d->z.m_iVRInactive);
+
+	pbGameData->set_platform_windows(d->z.m_iWindows);
+	pbGameData->set_platform_linux(d->z.m_iLinux);
+	pbGameData->set_platform_osx(d->z.m_iMac);
 
 	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pPositions = pbGameData->mutable_positions()->mutable_position();
 	size_t iDataSize = d->m_avecPlayerPositions.Count();

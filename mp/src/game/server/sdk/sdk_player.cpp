@@ -4847,3 +4847,20 @@ CON_COMMAND( vr, "Turn VR mode on/off" )
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() );
 	pPlayer->m_bUsingVR = V_strcmp(args[1], "on") == 0;
 }
+
+CON_COMMAND( platform, "Indicate client platform" )
+{
+	if (args.ArgC() < 2)
+		return;
+
+	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() );
+
+	pPlayer->m_iPlatform = 0;
+
+	if (V_strcmp(args[1], "windows") == 0)
+		pPlayer->m_iPlatform = 1;
+	else if (V_strcmp(args[1], "linux") == 0)
+		pPlayer->m_iPlatform = 2;
+	else if (V_strcmp(args[1], "mac") == 0)
+		pPlayer->m_iPlatform = 3;
+}

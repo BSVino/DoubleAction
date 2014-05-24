@@ -59,37 +59,35 @@ private:
 	public:
 		CDataContainer()
 		{
-			m_flStartTime = 0;
-
-			m_flNextPositionsUpdate = 0;
-
-			m_iConnections = 0;
-			m_iDisconnections = 0;
-			m_iUniquePlayers = 0;
-
-			m_iThirdPersonActive = 0;
-			m_iThirdPersonInactive = 0;
-
-			m_bCheated = false;
+			memset(&z, 0, sizeof(z));
 
 			m_asCharactersChosen.SetLessFunc(Str_LessFunc);
 		}
 
-		float              m_flStartTime;
-		bool               m_bTeamplay;
-		float              m_flNextPositionsUpdate;
+		struct
+		{
+			float m_flStartTime;
+			bool  m_bTeamplay;
+			float m_flNextPositionsUpdate;
+			int   m_iConnections;
+			int   m_iDisconnections;
+			int   m_iUniquePlayers;
+			int   m_iThirdPersonActive;
+			int   m_iThirdPersonInactive;
+			int   m_iVRActive;
+			int   m_iVRInactive;
+			int   m_iWindows;
+			int   m_iLinux;
+			int   m_iMac;
+			bool  m_bCheated;
+		} z; // Stuff that needs to be initialized to 0
+
 		CUtlVector<Vector> m_avecPlayerPositions;
 		CUtlVector<Vector> m_avecPlayerKills;
 		CUtlVector<Vector> m_avecPlayerDeaths;
 		CUtlMap<CUtlString, int> m_asCharactersChosen;
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
-		int                m_iConnections;
-		int                m_iDisconnections;
-		int                m_iUniquePlayers;
-		int                m_iThirdPersonActive;
-		int                m_iThirdPersonInactive;
-
 		struct VoteResult
 		{
 			CUtlString  m_sIssue;
@@ -97,8 +95,6 @@ private:
 			bool        m_bResult;
 		};
 		CUtlVector<VoteResult> m_aVoteResults;
-
-		bool               m_bCheated;
 	}* d;
 
 	// We use this to figure out if a client has really connected

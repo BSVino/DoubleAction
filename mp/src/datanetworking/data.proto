@@ -14,8 +14,12 @@ message GameData
 	optional PlayerPositions deaths = 8;
 	optional int32 connections = 9;
 	optional bool teamplay = 10;
+
+	// For da_version before 3, you'll have thirdperson_active * 10 total player seconds
+	// For da_version 3 and later, you'll have thirdperson_active total player seconds
 	optional int32 thirdperson_active = 11;
 	optional int32 thirdperson_inactive = 12;
+
 	optional int32 disconnections = 13;
 	optional int32 unique_players_this_map = 14;
 	optional int32 da_version = 15;
@@ -29,6 +33,16 @@ message GameData
 	repeated string skills_chosen_s = 21;
 
 	optional float map_time = 22;
+
+	// Total player seconds people playing with VR on
+	optional int32 vr_active = 23;
+	// Total player seconds people playing with VR off
+	optional int32 vr_inactive = 24;
+
+	// Total player seconds people playing on each platform
+	optional int32 platform_windows = 25;
+	optional int32 platform_linux = 26;
+	optional int32 platform_osx = 27;
 }
 
 message PlayerPositions

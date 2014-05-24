@@ -927,6 +927,16 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 		engine->ServerCmd("vr on");
 	else
 		engine->ServerCmd("vr off");
+
+#ifdef _WIN32
+	engine->ServerCmd("platform windows");
+#elif defined(__linux__)
+	engine->ServerCmd("platform linux");
+#elif defined(__APPLE__)
+	engine->ServerCmd("platform mac");
+#else
+#error !
+#endif
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )
