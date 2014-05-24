@@ -395,6 +395,16 @@ void CSDKGameMovement::AirAccelerate( Vector& wishdir, float wishspeed, float ac
 	float addspeed, accelspeed, currentspeed;
 	float wishspd;
 
+	if (m_pSDKPlayer->m_Shared.IsSuperFalling())
+	{
+		Vector vecNewVelocity = mv->m_vecVelocity.Normalized() * mv->m_vecVelocity.Length() * (1 - gpGlobals->frametime);
+		vecNewVelocity.z = mv->m_vecVelocity.z;
+		vecNewVelocity.x += wishdir.x * wishspeed * gpGlobals->frametime;
+		vecNewVelocity.y += wishdir.y * wishspeed * gpGlobals->frametime;
+		mv->m_vecVelocity = vecNewVelocity;
+		return;
+	}
+
 	if (m_pSDKPlayer->m_Shared.IsDiving())
 		return;
 	
