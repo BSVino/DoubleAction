@@ -1468,6 +1468,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
+	if (m_Shared.IsSuperFalling() && pSDKAttacker && pSDKAttacker->m_Shared.IsSuperFalling())
+	{
+		ActivateSuperfallSlowMo();
+		pSDKAttacker->ActivateSuperfallSlowMo();
+	}
+
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
 		UseStyleCharge(flDamage * 0.2f);

@@ -222,6 +222,10 @@ void CDAHudCrosshair::Paint( void )
 	}
 
 	float flWatchAlphaGoal = (pPlayer->GetSlowMoTime() > 0)?1:0;
+
+	if (pPlayer->GetSlowMoType() == SLOWMO_SUPERFALL)
+		flWatchAlphaGoal = 0;
+
 	m_flWatchAlpha = Approach(flWatchAlphaGoal, m_flWatchAlpha, gpGlobals->frametime * 3);
 
 	if (m_flWatchAlpha > 0)

@@ -632,6 +632,19 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 		if (pOtherPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
 			continue;
 
+		if (pOtherPlayer->GetSlowMoType() == SLOWMO_SUPERFALL)
+		{
+			// He has superfall. Superfall is special and we only give it to him under certain conditions.
+
+			// Do I have a passive? Then don't pass it on, sucks to be me.
+			if (pPlayer->GetSlowMoType() == SLOWMO_PASSIVE || pPlayer->GetSlowMoType() == SLOWMO_PASSIVE_SUPER)
+				continue;
+
+			// Are we both in superfall? Good that's the way we want to stay.
+			if (pPlayer->GetSlowMoType() == SLOWMO_SUPERFALL)
+				continue;
+		}
+
 		if (pOtherPlayer->GetSlowMoType() == eGiveType)
 			continue;
 

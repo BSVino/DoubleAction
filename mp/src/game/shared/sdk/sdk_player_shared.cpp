@@ -138,7 +138,7 @@ void CSDKPlayer::FireBullet(
 
 	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, iDamage, iBulletType, bDoEffects);
 
-	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1)
+	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL)
 	{
 		BulletManager().AddBullet(oBullet);
 		return;
@@ -1554,14 +1554,28 @@ void CSDKPlayer::ActivateSlowMo()
 	ReadyWeapon();
 }
 
+void CSDKPlayer::ActivateSuperfallSlowMo()
+{
+	if (!m_Shared.IsSuperFalling())
+		return;
+
+	m_flSlowMoTime = gpGlobals->curtime + 15;
+	m_iSlowMoType = SLOWMO_SUPERFALL;
+
+	ReadyWeapon();
+}
+
 void CSDKPlayer::DeactivateSlowMo()
 {
 	if (m_flSlowMoTime == 0)
 		return;
 
-	m_flSlowMoSeconds = (int)(m_flSlowMoTime - gpGlobals->curtime - 0.5f);
-	if (m_flSlowMoSeconds < 0)
-		m_flSlowMoSeconds = 0;
+	if (m_iSlowMoType != SLOWMO_SUPERFALL)
+	{
+		m_flSlowMoSeconds = (int)(m_flSlowMoTime - gpGlobals->curtime - 0.5f);
+		if (m_flSlowMoSeconds < 0)
+			m_flSlowMoSeconds = 0;
+	}
 
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
@@ -1582,10 +1596,12 @@ float CSDKPlayer::GetSlowMoGoal() const
 		return 0.7f;
 	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
 		return 0.65f;
+	else if (m_iSlowMoType == SLOWMO_SUPERFALL)
+		return 0.6f;
 	else if (m_iSlowMoType == SLOWMO_PASSIVE)
-		return 0.4f;
+		return 0.45f;
 	else if (m_iSlowMoType == SLOWMO_PASSIVE_SUPER)
-		return 0.25f;
+		return 0.35f;
 	else //if (m_iSlowMoType == SLOWMO_NONE)
 		return 1;
 }

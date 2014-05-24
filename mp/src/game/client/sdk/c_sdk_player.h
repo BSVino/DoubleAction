@@ -193,6 +193,7 @@ public:
 #endif
 
 	void ActivateSlowMo();
+	void ActivateSuperfallSlowMo();
 	void DeactivateSlowMo();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
