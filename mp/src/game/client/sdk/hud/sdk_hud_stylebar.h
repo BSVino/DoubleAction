@@ -47,6 +47,7 @@ private:
 	CPanelAnimationVarAliasType( float, m_flBarWidth, "BarWidth", "10", "proportional_float" );
 
 	CPanelAnimationVar( vgui::HFont, m_hStyleFont, "StyleFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
 
 	CHudTexture* m_apAnnouncements[TOTAL_ANNOUNCEMENTS];
 	CHudTexture* m_apActiveSkillIcons[SKILL_MAX];

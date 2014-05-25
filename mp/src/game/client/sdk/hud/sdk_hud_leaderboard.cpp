@@ -210,23 +210,9 @@ void CHudLeaderboard::ListPlayer(C_SDKPlayer *pPlayer, int iPosition)
 {
 	int iTextTall = surface()->GetFontTall( m_hTextFont );
 
-	int iGold, iSilver, iBronze;
-	pPlayer->GetStyleStars(iGold, iSilver, iBronze);
+	int iStars = pPlayer->GetStyleStars();
 
-	int iStars = iGold;
 	CHudTexture* pStarTexture = m_pGoldStar;
-
-	if (iStars == 0)
-	{
-		iStars = iSilver;
-		pStarTexture = m_pSilverStar;
-
-		if (iStars == 0)
-		{
-			iStars = iBronze;
-			pStarTexture = m_pBronzeStar;
-		}
-	}
 
 	if (iStars == 0)
 		iStars = 1;

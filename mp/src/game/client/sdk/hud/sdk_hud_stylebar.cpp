@@ -555,7 +555,7 @@ void CHudStyleBar::Paint()
 		else if (pAnnouncement->m_ePointStyle == STYLE_POINT_SMALL)
 			flScale = 0.6f;
 
-		float flStarWidth = pTexture->EffectiveHeight(flScale);
+		float flStarWidth = pTexture->EffectiveHeight(flScale) * 3;
 
 		float flSlideInLerp = RemapValClamped(gpGlobals->curtime, pAnnouncement->m_flStartTime, pAnnouncement->m_flStartTime + 0.3f, 0, 1);
 		float flSlideIn = RemapVal(Bias(flSlideInLerp, 0.75), 0, 1, -1000, 0);
@@ -574,34 +574,27 @@ void CHudStyleBar::Paint()
 			Color(255, 255, 255, 255 * flAlpha)
 		);
 
-		int iGold, iSilver, iBronze;
-		C_SDKPlayer::GetStyleStars(pAnnouncement->m_flStylePoints, iGold, iSilver, iBronze);
+		int iStars = C_SDKPlayer::GetStyleStars(pAnnouncement->m_flStylePoints);
 
-		CHudTexture* pStarTexture;
-		int iStars;
-		if (iGold)
-		{
-			pStarTexture = m_pGoldStar;
-			iStars = iGold;
-		}
-		else if (iSilver)
-		{
-			pStarTexture = m_pSilverStar;
-			iStars = iSilver;
-		}
-		else
-		{
-			pStarTexture = m_pBronzeStar;
-			iStars = iBronze;
-		}
+		CHudTexture* pStarTexture = m_pGoldStar;
 
 		if (pStarTexture)
 		{
+			float x = flBarLeft - flStarWidth + flSlideIn;
+			float y = m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap);
 			pStarTexture->DrawSelf(
-				flBarLeft - flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
-				flStarWidth, flStarWidth,
+				x, y,
+				pTexture->EffectiveHeight(flScale), pTexture->EffectiveHeight(flScale),
 				Color(255, 255, 255, 255 * flAlpha)
 			);
+
+			wchar_t wszXLabel[100];
+			V_swprintf_safe(wszXLabel, L"x%i", iStars);
+
+			surface()->DrawSetTextPos( x + pTexture->EffectiveHeight(flScale), y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+			surface()->DrawSetTextFont( m_hTextFont );
+			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
 		}
 	}
 }
