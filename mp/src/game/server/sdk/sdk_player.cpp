@@ -1091,6 +1091,8 @@ void CSDKPlayer::SDKPushawayThink(void)
 	SetNextThink( gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 }
 
+extern ConVar da_stylemeteractivationcost;
+
 void CSDKPlayer::Spawn()
 {
 	if ( gpGlobals->teamplay )
@@ -1178,7 +1180,12 @@ void CSDKPlayer::Spawn()
 	m_iRaceWaypoint = 0;
 
 	if (m_bGotWorthIt)
-		AddStylePoints(9999, STYLE_SOUND_NONE, ANNOUNCEMENT_NONE, STYLE_POINT_LARGE);
+	{
+		m_flTotalStyle += da_stylemeteractivationcost.GetFloat() - m_flStylePoints;
+		SetStylePoints(da_stylemeteractivationcost.GetFloat());
+		ActivateMeter();
+	}
+
 	m_bGotWorthIt = false;
 
 	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES)
@@ -1727,7 +1734,6 @@ CWeaponSDKBase* CSDKPlayer::FindAnyWeaponButBrawl()
 }
 
 ConVar da_stylemetertotalcharge( "da_stylemetertotalcharge", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "What is the total charge given when the style meter is activated?" );
-extern ConVar da_stylemeteractivationcost;
 
 void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
