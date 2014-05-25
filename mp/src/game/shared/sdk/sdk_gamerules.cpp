@@ -2112,7 +2112,7 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	{
 		do {
 			eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
-		} while (m_ePreviousMiniObjective != eObjective);
+		} while (m_ePreviousMiniObjective == eObjective);
 
 		if (pszObjective)
 		{
