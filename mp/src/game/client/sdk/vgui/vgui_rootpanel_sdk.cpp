@@ -260,7 +260,11 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 
 	if (pKiller && pszWeaponOfChoice && pKiller->GetActiveSDKWeapon())
 	{
-		wchar_t* pszWeaponName = g_pVGuiLocalize->Find(pKiller->GetActiveSDKWeapon()->GetPrintName());
+		wchar_t* pszWeaponName;
+		if (pKiller->IsStyleSkillActive(SKILL_MARKSMAN))
+			pszWeaponName = g_pVGuiLocalize->Find((std::string(pKiller->GetActiveSDKWeapon()->GetPrintName()) + "_Golden").c_str());
+		else
+			pszWeaponName = g_pVGuiLocalize->Find(pKiller->GetActiveSDKWeapon()->GetPrintName());
 
 		if (pPlayer->WasKilledByGrenade())
 			pszWeaponName = g_pVGuiLocalize->Find("#DA_Weapon_Grenade");
