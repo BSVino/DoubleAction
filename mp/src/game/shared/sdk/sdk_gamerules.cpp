@@ -2615,6 +2615,16 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 				CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
 				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_LEAD, pPlayer);
 			}
+			else
+			{
+				CSingleUserRecipientFilter filter(pPlayer);
+				filter.MakeReliable();
+
+				UserMessageBegin( filter, "Notice" );
+					WRITE_LONG( NOTICE_RATRACE_PLAYER_WAYPOINT_1_REACHED );
+					WRITE_BYTE( 0 );
+				MessageEnd();
+			}
 
 			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pPlayer);
 		}
@@ -2624,6 +2634,16 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 			{
 				CSDKPlayer::SendBroadcastSound("MiniObjective.Begin");
 				CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_PLAYER_POINT_2, pPlayer);
+			}
+			else
+			{
+				CSingleUserRecipientFilter filter(pPlayer);
+				filter.MakeReliable();
+
+				UserMessageBegin( filter, "Notice" );
+					WRITE_LONG( NOTICE_RATRACE_PLAYER_WAYPOINT_2_REACHED );
+					WRITE_BYTE( 0 );
+				MessageEnd();
 			}
 
 			WaypointLeadersPush(m_ahWaypoint2RaceLeaders, pPlayer);
