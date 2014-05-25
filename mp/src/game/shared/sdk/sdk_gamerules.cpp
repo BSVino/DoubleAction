@@ -2087,9 +2087,24 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 {
 	CleanupMiniObjective();
 
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+
 	random->SetSeed((int)(gpGlobals->curtime*1000));
 
 	bool bResult = false;
+
+	int iPlayers = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		iPlayers++;
+	}
+
+	if (iPlayers < 2)
+		return;
 
 	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
 	for (int i = 0; i < 3; i++)
@@ -2127,11 +2142,7 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	}
 
 	if (!bResult)
-	{
-		m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
-
 		return;
-	}
 
 	m_eCurrentMiniObjective = eObjective;
 
