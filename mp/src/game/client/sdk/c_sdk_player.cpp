@@ -1515,6 +1515,12 @@ void C_SDKPlayer::ClientThink()
 		}
 	}
 
+	if (IsLocalPlayer() && LocalPlayerInFirstPersonView())
+		bBrawlEffectOn = false;
+
+	if (!IsAlive())
+		bBrawlEffectOn = false;
+
 	if (bBrawlEffectOn)
 	{
 		if (!m_hLeftArmGlow)
@@ -1536,7 +1542,18 @@ void C_SDKPlayer::ClientThink()
 		}
 	}
 
+	bool bAthleticEffectOn = false;
+
 	if (IsStyleSkillActive(SKILL_ATHLETIC))
+		bAthleticEffectOn = true;
+
+	if (IsLocalPlayer() && LocalPlayerInFirstPersonView())
+		bAthleticEffectOn = false;
+
+	if (!IsAlive())
+		bAthleticEffectOn = false;
+
+	if (bAthleticEffectOn)
 	{
 		if (!m_hLeftFootGlow)
 			m_hLeftFootGlow = ParticleProp()->Create("style_active_athletic", PATTACH_POINT_FOLLOW, "leftfoot");
