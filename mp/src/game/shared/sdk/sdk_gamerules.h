@@ -235,6 +235,7 @@ public:
 private:
 	float m_flNextMiniObjectiveStartTime;
 	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
+	miniobjective_t m_ePreviousMiniObjective;
 
 public:
 	void StartMiniObjective(const char* pszObjective = NULL);

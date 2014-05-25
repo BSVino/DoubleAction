@@ -340,6 +340,7 @@ void CSDKGameRules::LevelInitPostEntity()
 	//TheBots->ServerActivate();
 
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
+	m_ePreviousMiniObjective = MINIOBJECTIVE_NONE;
 
 	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
 
@@ -2109,7 +2110,9 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
 	for (int i = 0; i < 3; i++)
 	{
-		eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+		do {
+			eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+		} while (m_ePreviousMiniObjective != eObjective);
 
 		if (pszObjective)
 		{
@@ -2144,7 +2147,7 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	if (!bResult)
 		return;
 
-	m_eCurrentMiniObjective = eObjective;
+	m_eCurrentMiniObjective = m_ePreviousMiniObjective = eObjective;
 
 	CSDKPlayer::SendBroadcastNotice(GetNoticeForMiniObjective(m_eCurrentMiniObjective));
 
@@ -2170,6 +2173,22 @@ void CSDKGameRules::MaintainMiniObjective()
 {
 	if (!m_eCurrentMiniObjective)
 		return;
+
+	int iPlayers = 0;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		iPlayers++;
+	}
+
+	if (iPlayers == 0)
+	{
+		CleanupMiniObjective();
+		return;
+	}
 
 	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
 		MaintainMiniObjective_Briefcase();
