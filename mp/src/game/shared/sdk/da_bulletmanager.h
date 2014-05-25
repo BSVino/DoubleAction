@@ -54,6 +54,7 @@ public:
 		Vector      m_vecDirection;
 		int         m_iPenetrations;
 		SDKWeaponID m_eWeaponID;
+		CHandle<CWeaponSDKBase> m_hWeapon;
 		float       m_flDistanceTraveled;
 		bool        m_bDoEffects;
 		int         m_iBulletType;
@@ -66,7 +67,7 @@ public:
 public:
 	virtual void LevelInitPostEntity();
 
-	CBullet MakeBullet(CSDKPlayer* pShooter, const Vector& vecSrc, const Vector& vecDirection, SDKWeaponID eWeapon, int iDamage, int iBulletType, bool bDoEffects);
+	CBullet MakeBullet(CSDKPlayer* pShooter, const Vector& vecSrc, const Vector& vecDirection, SDKWeaponID eWeapon, CWeaponSDKBase* pWeapon, int iDamage, int iBulletType, bool bDoEffects);
 	void AddBullet(const CBullet& oBullet);
 
 	virtual void Update( float frametime );

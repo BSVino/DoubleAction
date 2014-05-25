@@ -35,13 +35,14 @@ void CBulletManager::LevelInitPostEntity()
 		m_aBullets[i].Deactivate();
 }
 
-CBulletManager::CBullet CBulletManager::MakeBullet(CSDKPlayer* pShooter, const Vector& vecSrc, const Vector& vecDirection, SDKWeaponID eWeapon, int iDamage, int iBulletType, bool bDoEffects)
+CBulletManager::CBullet CBulletManager::MakeBullet(CSDKPlayer* pShooter, const Vector& vecSrc, const Vector& vecDirection, SDKWeaponID eWeapon, CWeaponSDKBase* pWeapon, int iDamage, int iBulletType, bool bDoEffects)
 {
 	CBullet oBullet;
 
 	oBullet.m_bActive = true;
 
 	oBullet.m_hShooter = pShooter;
+	oBullet.m_hWeapon = pWeapon;
 	oBullet.m_flShotTime = gpGlobals->curtime;
 	oBullet.m_vecOrigin = vecSrc;
 	oBullet.m_vecDirection = vecDirection;
@@ -376,7 +377,7 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 
 		ClearMultiDamage();
 
-		CTakeDamageInfo info( oBullet.m_hShooter, oBullet.m_hShooter, flBulletDamage, iDamageType );
+		CTakeDamageInfo info( oBullet.m_hShooter, oBullet.m_hShooter, oBullet.m_hWeapon, flBulletDamage, iDamageType );
 		CalculateBulletDamageForce( &info, oBullet.m_iBulletType, oBullet.m_vecDirection, tr.endpos );
 		tr.m_pEnt->DispatchTraceAttack( info, oBullet.m_vecDirection, &tr );
 

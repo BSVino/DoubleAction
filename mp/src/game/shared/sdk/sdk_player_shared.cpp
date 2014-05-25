@@ -136,7 +136,7 @@ void CSDKPlayer::FireBullet(
 	Assert(pSDKAttacker);
 	Assert(pSDKAttacker == this);
 
-	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, iDamage, iBulletType, bDoEffects);
+	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, GetActiveSDKWeapon(), iDamage, iBulletType, bDoEffects);
 
 	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL)
 	{
