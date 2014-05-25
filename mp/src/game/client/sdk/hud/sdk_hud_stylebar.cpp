@@ -569,7 +569,7 @@ void CHudStyleBar::Paint()
 			flAlpha = RemapValClamped(gpGlobals->curtime, flEndTime-0.5f, flEndTime, 1, 0);
 
 		pTexture->DrawSelf(
-			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth - 10 + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
 			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
 			Color(255, 255, 255, 255 * flAlpha)
 		);
@@ -582,19 +582,20 @@ void CHudStyleBar::Paint()
 		{
 			float x = flBarLeft - flStarWidth + flSlideIn;
 			float y = m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap);
+
+			wchar_t wszXLabel[100];
+			V_swprintf_safe(wszXLabel, L"+%i", iStars);
+
+			surface()->DrawSetTextPos( x, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawSetTextColor( Color(255, 255, 255, 255 * flAlpha) );
+			surface()->DrawSetTextFont( m_hTextFont );
+			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
+
 			pStarTexture->DrawSelf(
-				x, y,
+				x + pTexture->EffectiveHeight(flScale), y,
 				pTexture->EffectiveHeight(flScale), pTexture->EffectiveHeight(flScale),
 				Color(255, 255, 255, 255 * flAlpha)
 			);
-
-			wchar_t wszXLabel[100];
-			V_swprintf_safe(wszXLabel, L"x%i", iStars);
-
-			surface()->DrawSetTextPos( x + pTexture->EffectiveHeight(flScale), y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
-			surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
-			surface()->DrawSetTextFont( m_hTextFont );
-			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
 		}
 	}
 }
