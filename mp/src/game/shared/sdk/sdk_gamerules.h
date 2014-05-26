@@ -242,7 +242,8 @@ public:
 	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
 	void MaintainMiniObjective();
 	void CleanupMiniObjective();
-	void GiveMiniObjectiveReward(CSDKPlayer* pPlayer);
+	void GiveMiniObjectiveRewardTeam(CSDKPlayer* pPlayer); // Award the entire team this player is on
+	void GiveMiniObjectiveRewardPlayer(CSDKPlayer* pPlayer);
 
 	bool SetupMiniObjective_Briefcase();
 	void MaintainMiniObjective_Briefcase();

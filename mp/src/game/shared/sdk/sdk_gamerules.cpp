@@ -1790,7 +1790,7 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 		CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
 		if (pPlayerKiller)
 		{
-			GiveMiniObjectiveReward(pPlayerKiller);
+			GiveMiniObjectiveRewardPlayer(pPlayerKiller);
 
 			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
 		}
@@ -2219,7 +2219,20 @@ void CSDKGameRules::CleanupMiniObjective()
 	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
 }
 
-void CSDKGameRules::GiveMiniObjectiveReward(CSDKPlayer* pPlayer)
+void CSDKGameRules::GiveMiniObjectiveRewardTeam(CSDKPlayer* pTeam)
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPlayer)
+			continue;
+
+		if (PlayerRelationship(pPlayer, pTeam) == GR_TEAMMATE)
+			GiveMiniObjectiveRewardPlayer(pPlayer);
+	}
+}
+
+void CSDKGameRules::GiveMiniObjectiveRewardPlayer(CSDKPlayer* pPlayer)
 {
 	pPlayer->m_Shared.m_bSuperSkill = true;
 
@@ -2369,7 +2382,7 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 {
 	if (pPlayer)
 	{
-		GiveMiniObjectiveReward(pPlayer);
+		GiveMiniObjectiveRewardTeam(pPlayer);
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");
@@ -2447,7 +2460,7 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 
 	m_hBountyPlayer = pChosen;
 
-	GiveMiniObjectiveReward(pChosen);
+	GiveMiniObjectiveRewardPlayer(pChosen);
 
 	if (IsTeamplay())
 	{
@@ -2683,7 +2696,7 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 		else if (pPlayer->m_iRaceWaypoint == 3)
 		{
 			CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_OVER, pPlayer);
-			GiveMiniObjectiveReward(pPlayer);
+			GiveMiniObjectiveRewardPlayer(pPlayer);
 			CleanupMiniObjective();
 		}
 	}
