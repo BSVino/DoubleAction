@@ -33,7 +33,7 @@ void CBriefcase::Precache( void )
 {
 	CBaseEntity::PrecacheModel( "particle/briefcase.vmt" );
 	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01.mdl" );
-	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01_player.mdl" );
+	CBaseEntity::PrecacheModel( "models/briefcase/briefcase_01_on_player.mdl" );
 	PrecacheParticleSystem( "dinero_trail" );
 	PrecacheParticleSystem( "dinero_splode" );
 }
@@ -88,7 +88,7 @@ bool CBriefcase::MyTouch( CBasePlayer *pPlayer )
 	VPhysicsDestroyObject();
 	pSDKPlayer->PickUpBriefcase(this);
 
-	SetModel("models/briefcase/briefcase_01_player.mdl");
+	SetModel("models/briefcase/briefcase_01_on_player.mdl");
 	SetSequence(LookupSequence("idle"));
 
 	DispatchParticleEffect( "dinero_trail", PATTACH_ABSORIGIN_FOLLOW, this );
