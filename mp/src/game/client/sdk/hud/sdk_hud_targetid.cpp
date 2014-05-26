@@ -192,7 +192,11 @@ void CSDKTargetId::Paint()
 
 		m_Targets[TARGET_BRIEFCASE].m_pTargetTexture = m_pBriefcase;
 
-		m_Targets[TARGET_BRIEFCASE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Retrieve");
+		if (SDKGameRules()->IsTeamplay() && pBriefcase->GetOwnerEntity() && ToSDKPlayer(pBriefcase->GetOwnerEntity())
+			&& ToSDKPlayer(pBriefcase->GetOwnerEntity())->GetTeamNumber() == C_SDKPlayer::GetLocalSDKPlayer()->GetTeamNumber())
+			m_Targets[TARGET_BRIEFCASE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Protect");
+		else
+			m_Targets[TARGET_BRIEFCASE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Retrieve");
 
 		m_Targets[TARGET_BRIEFCASE].m_flScale = 0.7f;
 		m_Targets[TARGET_BRIEFCASE].m_flMaxAlpha = 0.7f;
@@ -210,7 +214,10 @@ void CSDKTargetId::Paint()
 
 		m_Targets[TARGET_BOUNTY].m_pTargetTexture = m_pBounty;
 
-		m_Targets[TARGET_BOUNTY].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Bounty");
+		if (SDKGameRules()->IsTeamplay() && pBounty->GetTeamNumber() == C_SDKPlayer::GetLocalSDKPlayer()->GetTeamNumber())
+			m_Targets[TARGET_BOUNTY].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Protect");
+		else
+			m_Targets[TARGET_BOUNTY].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Bounty");
 
 		m_Targets[TARGET_BOUNTY].m_flScale = 0.7f;
 		m_Targets[TARGET_BOUNTY].m_flMaxAlpha = 0.5f;
