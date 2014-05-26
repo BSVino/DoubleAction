@@ -190,34 +190,37 @@ void CFolderMenu::Update()
 		m_pProfileInfo->SetVisible(false);
 
 	CFolderLabel *pCharacterName = dynamic_cast<CFolderLabel *>(FindChildByName("AgentName"));
-	if (pCharacterName && !ShouldShowTeams())
+	if (pCharacterName)
 	{
-		std::string sCharacter;
-		if (m_szPreviewCharacter[0])
-			sCharacter = std::string("#DA_Character_") + m_szPreviewCharacter;
-		else if (m_szCharacter[0])
-			sCharacter = std::string("#DA_Character_") + m_szCharacter;
-
-		std::wstring sLocalized;
-		wchar_t* pszLocalized = g_pVGuiLocalize->Find( sCharacter.c_str() );
-
-		if (pszLocalized)
-			sLocalized += pszLocalized;
-
-		if (pPlayer->m_Shared.m_iStyleSkill)
+		if (!ShouldShowTeams())
 		{
-			std::string sSkill = std::string("#DA_Skill_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()) + "_Adjective";
+			std::string sCharacter;
+			if (m_szPreviewCharacter[0])
+				sCharacter = std::string("#DA_Character_") + m_szPreviewCharacter;
+			else if (m_szCharacter[0])
+				sCharacter = std::string("#DA_Character_") + m_szCharacter;
 
-			pszLocalized = g_pVGuiLocalize->Find( sSkill.c_str() );
+			std::wstring sLocalized;
+			wchar_t* pszLocalized = g_pVGuiLocalize->Find( sCharacter.c_str() );
 
 			if (pszLocalized)
 				sLocalized += pszLocalized;
-		}
 
-		pCharacterName->SetText(sLocalized.c_str());
+			if (pPlayer->m_Shared.m_iStyleSkill)
+			{
+				std::string sSkill = std::string("#DA_Skill_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()) + "_Adjective";
+
+				pszLocalized = g_pVGuiLocalize->Find( sSkill.c_str() );
+
+				if (pszLocalized)
+					sLocalized += pszLocalized;
+			}
+
+			pCharacterName->SetText(sLocalized.c_str());
+		}
+		else
+			pCharacterName->SetText("");
 	}
-	else
-		pCharacterName->SetText("");
 
 	CFolderLabel* pLabels[2];
 	pLabels[0] = dynamic_cast<CFolderLabel *>(FindChildByName("RequestedArmament1"));
