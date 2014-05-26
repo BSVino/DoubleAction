@@ -171,6 +171,7 @@ const char* NoticeToString( notice_t id )
 		"player_captured_briefcase",
 
 		"bounty_on_player",
+		"bounty_protect_player",
 		"bounty_collected",
 		"bounty_lost",
 

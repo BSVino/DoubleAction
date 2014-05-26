@@ -2449,7 +2449,38 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 
 	GiveMiniObjectiveReward(pChosen);
 
-	CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_ON_PLAYER, pChosen);
+	if (IsTeamplay())
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPlayer)
+				continue;
+
+			if (PlayerRelationship(pPlayer, pChosen) == GR_TEAMMATE)
+			{
+				CSingleUserRecipientFilter filter(pPlayer);
+				filter.MakeReliable();
+
+				UserMessageBegin( filter, "Notice" );
+					WRITE_LONG( NOTICE_BOUNTY_PROTECT_PLAYER );
+					WRITE_BYTE( pChosen->entindex() );
+				MessageEnd();
+			}
+			else
+			{
+				CSingleUserRecipientFilter filter(pPlayer);
+				filter.MakeReliable();
+
+				UserMessageBegin( filter, "Notice" );
+					WRITE_LONG( NOTICE_BOUNTY_ON_PLAYER );
+					WRITE_BYTE( pChosen->entindex() );
+				MessageEnd();
+			}
+		}
+	}
+	else
+		CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_ON_PLAYER, pChosen);
 
 	return true;
 }

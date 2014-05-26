@@ -298,7 +298,7 @@ void CHudNotices::ShowTopNotice()
 
 	pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
 
-	if (m_eTopNotice == NOTICE_BOUNTY_ON_PLAYER || m_eTopNotice == NOTICE_BOUNTY_COLLECTED ||
+	if (m_eTopNotice == NOTICE_BOUNTY_ON_PLAYER || m_eTopNotice == NOTICE_BOUNTY_PROTECT_PLAYER || m_eTopNotice == NOTICE_BOUNTY_COLLECTED ||
 		m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE ||
 		m_eTopNotice == NOTICE_RATRACE_PLAYER_LEAD || m_eTopNotice == NOTICE_RATRACE_OVER ||
 		m_eTopNotice == NOTICE_RATRACE_PLAYER_POINT_2)
