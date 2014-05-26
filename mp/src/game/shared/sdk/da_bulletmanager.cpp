@@ -108,20 +108,19 @@ void CBulletManager::BulletsThink(float flFrameTime)
 			continue;
 
 		if (!oBullet.m_hShooter)
-		{
 			oBullet.Deactivate();
-			continue;
-		}
 
 		float flSpeed = da_bullet_speed.GetFloat();
-
-		if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill ||
-			oBullet.m_hShooter->GetSlowMoType() == SLOWMO_ACTIVATED || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_STYLESKILL)
-			flSpeed = da_bullet_speed_active.GetFloat();
-
 		float flLerpTime = flSpeed / 400 * flFrameTime;
+
 		if (oBullet.m_hShooter)
-			flLerpTime *= oBullet.m_hShooter->GetSlowMoMultiplier();
+		{
+			if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill ||
+				oBullet.m_hShooter->GetSlowMoType() == SLOWMO_ACTIVATED || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_STYLESKILL)
+				flSpeed = da_bullet_speed_active.GetFloat();
+
+				flLerpTime *= oBullet.m_hShooter->GetSlowMoMultiplier();
+		}
 
 		oBullet.m_flCurrAlpha = Approach(oBullet.m_flGoalAlpha, oBullet.m_flCurrAlpha, flLerpTime);
 
@@ -139,6 +138,9 @@ void CBulletManager::BulletsThink(float flFrameTime)
 			oBullet.Deactivate();
 			continue;
 		}
+
+		if (!oBullet.m_hShooter)
+			continue;
 
 		float dt;
 		if (oBullet.m_hShooter->GetSlowMoMultiplier() == 1)
