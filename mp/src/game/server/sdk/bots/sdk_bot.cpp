@@ -10,6 +10,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar bot_mimic( "bot_mimic", "0", FCVAR_CHEAT );
+ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
+ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
+ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
+ConVar bot_attack( "bot_attack", "0", FCVAR_CHEAT );
+
 LINK_ENTITY_TO_CLASS( bot, CSDKBot );
 
 void CSDKBot::Initialize()
@@ -137,6 +143,33 @@ void CSDKBot::InfoGathering()
 	m_flHeightDifToEnemy = GetLocalOrigin().z - GetEnemy()->GetLocalOrigin().z;
 }
 
+bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
+{
+	if ( !IsBot() )
+		return false;
+
+	if ( bot_freeze.GetBool() )
+		return true;
+
+	int iMimic = abs( bot_mimic.GetInt() );
+	if ( iMimic > gpGlobals->maxClients )
+		return false;
+
+	CBasePlayer *pPlayer = UTIL_PlayerByIndex( iMimic );
+	if ( !pPlayer )
+		return false;
+
+	if ( !pPlayer->GetLastUserCommand() )
+		return false;
+
+	cmd = *pPlayer->GetLastUserCommand();
+	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+	pl.fixangle = FIXANGLE_NONE;
+
+	return true;
+}
+
 //-----------------------------------------------------------------------------
 // Run this Bot's AI for one tick.
 //-----------------------------------------------------------------------------
@@ -150,8 +183,6 @@ void CSDKBot::BotThink()
 
 	CUserCmd cmd;
 	Q_memset( &cmd, 0, sizeof( cmd ) );
-
-	ConVarRef bot_freeze("bot_freeze");
 
 	if ( !IsAlive() )
 	{
@@ -167,12 +198,19 @@ void CSDKBot::BotThink()
 			ConVarRef bot_mimic_yaw_offset("bot_mimic_yaw_offset");
 			cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
 
-			ConVarRef bot_crouch("bot_crouch");
 			if( bot_crouch.GetInt() )
 				cmd.buttons |= IN_DUCK;
 		}
 	}
-	else if (!bot_freeze.GetBool())
+	else if (bot_freeze.GetBool())
+	{
+		if (bot_attack.GetBool())
+		{
+			if (RandomFloat(0.0,1.0) > 0.5)
+				cmd.buttons |= IN_ATTACK;
+		}
+	}
+	else
 	{
 		trace_t tr_front;
 		Vector Forward;

@@ -39,11 +39,6 @@
 
 extern int gEvilImpulse101;
 
-ConVar bot_mimic( "bot_mimic", "0", FCVAR_CHEAT );
-ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
-ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
-ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
-
 ConVar SDK_ShowStateTransitions( "sdk_ShowStateTransitions", "-2", FCVAR_CHEAT, "sdk_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 
 
@@ -708,33 +703,6 @@ CSDKPlayer* CSDKPlayer::FindClosestFriend(float flMaxDistance, bool bFOV)
 	}
 
 	return pClosest;
-}
-
-bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
-{
-	if ( !IsBot() )
-		return false;
-
-	if ( bot_freeze.GetBool() )
-		return true;
-
-	int iMimic = abs( bot_mimic.GetInt() );
-	if ( iMimic > gpGlobals->maxClients )
-		return false;
-
-	CBasePlayer *pPlayer = UTIL_PlayerByIndex( iMimic );
-	if ( !pPlayer )
-		return false;
-
-	if ( !pPlayer->GetLastUserCommand() )
-		return false;
-
-	cmd = *pPlayer->GetLastUserCommand();
-	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
-
-	pl.fixangle = FIXANGLE_NONE;
-
-	return true;
 }
 
 inline bool CSDKPlayer::IsReloading( void ) const
