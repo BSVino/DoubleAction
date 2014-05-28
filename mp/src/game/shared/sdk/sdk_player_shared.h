@@ -81,6 +81,7 @@ public:
 	void	EndSlide();
 	void	StandUpFromSlide(bool bJumpUp = false);
 	float	GetSlideTime() const { return m_flSlideTime; };
+	void    AddSlideTime(float flAdd) { m_flSlideTime += flAdd; }
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 	float	GetSlideFriction() const;
 

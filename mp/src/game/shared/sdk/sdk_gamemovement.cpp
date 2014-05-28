@@ -1698,6 +1698,25 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsSliding() )
 	{
+		if (!m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() && !m_pSDKPlayer->m_Shared.IsAirSliding())
+		{
+			trace_t tr;
+			Ray_t vecRay;
+			vecRay.Init(mv->GetAbsOrigin(), mv->GetAbsOrigin() - Vector(0, 0, 10), Vector(0, 0, 0), Vector(0, 0, 0));
+			UTIL_TraceRay(vecRay, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+
+			if (tr.DidHitWorld())
+			{
+				Vector vecVelocityFlat = mv->m_vecVelocity;
+				vecVelocityFlat.z = 0;
+				vecVelocityFlat.NormalizeInPlace();
+
+				// If we're sliding down a slope, add this slide time back in to pretend it never happened so we don't stop the slide as soon.
+				if (tr.plane.normal.Dot(Vector(0, 0, 1)) < 0.99f && tr.plane.normal.Dot(vecVelocityFlat) > 0)
+					m_pSDKPlayer->m_Shared.AddSlideTime(gpGlobals->frametime);
+			}
+		}
+
 		/*if (!m_pSDKPlayer->GetGroundEntity())
 		{
 			// if we just left the ground
