@@ -290,15 +290,20 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		Vector vecShoot;
 		AngleVectors(angShoot, &vecShoot);
 
+		int iMask = MASK_VISIBLE|CONTENTS_MONSTER|CONTENTS_DEBRIS|CONTENTS_HITBOX;
+
+		// There's nothing complicated like glass if you're superfalling, so use a more reliable mask.
+		if (pPlayer->m_Shared.IsSuperFalling())
+			iMask = MASK_SOLID;
+
 		trace_t tr;
-		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_MONSTER|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceLine( vecCamera, vecCamera + vecShoot * 99999, iMask, pPlayer, COLLISION_GROUP_NONE, &tr );
 
 		// If the player backs up against something, this will prevent their bullets from hitting the object behind.
 		if (tr.fraction == 0.0)
-			UTIL_TraceLine( vecCamera + vecShoot * 10, vecCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_MONSTER|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr );
+			UTIL_TraceLine( vecCamera + vecShoot * 10, vecCamera + vecShoot * 99999, iMask, pPlayer, COLLISION_GROUP_NONE, &tr );
 
-		Vector vecBulletDirection = tr.endpos - pPlayer->Weapon_ShootPosition();
-		vecBulletDirection.NormalizeInPlace();
+		Vector vecBulletDirection = (tr.endpos - pPlayer->Weapon_ShootPosition()).Normalized();
 
 		VectorAngles(vecBulletDirection, angShoot);
 	}

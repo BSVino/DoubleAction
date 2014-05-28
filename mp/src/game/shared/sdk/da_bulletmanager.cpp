@@ -217,21 +217,21 @@ void CBulletManager::SimulateBullet(CBullet& oBullet, float dt)
 		{
 #ifdef CLIENT_DLL
 			// draw red client impact markers
-			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, 4 );
+			debugoverlay->AddBoxOverlay( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), QAngle( 0, 0, 0), 255,0,0,127, sv_showimpacts.GetFloat() );
 
 			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
 			{
 				C_BasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawClientHitboxes( 4, true );
+				player->DrawClientHitboxes( sv_showimpacts.GetFloat(), true );
 			}
 #else
 			// draw blue server impact markers
-			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, 4 );
+			NDebugOverlay::Box( tr.endpos, Vector(-2,-2,-2), Vector(2,2,2), 0,0,255,127, sv_showimpacts.GetFloat() );
 
 			if ( tr.m_pEnt && tr.m_pEnt->IsPlayer() )
 			{
 				CBasePlayer *player = ToBasePlayer( tr.m_pEnt );
-				player->DrawServerHitboxes( 4, true );
+				player->DrawServerHitboxes( sv_showimpacts.GetFloat(), true );
 			}
 #endif
 		}
