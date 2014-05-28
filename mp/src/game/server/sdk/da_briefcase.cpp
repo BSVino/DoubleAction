@@ -173,7 +173,7 @@ PRECACHE_REGISTER(da_briefcase_capture);
 
 CBriefcaseCaptureZone::CBriefcaseCaptureZone()
 {
-	m_flCaptureRadius = 100;
+	m_flCaptureRadius = 80;
 }
 
 void CBriefcaseCaptureZone::Precache( void )
