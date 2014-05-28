@@ -342,7 +342,7 @@ void CSDKGameRules::LevelInitPostEntity()
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
 	m_ePreviousMiniObjective = MINIOBJECTIVE_NONE;
 
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + RandomFloat(-1, 1)) * 60;
 
 #ifndef CLIENT_DLL
 	RegisterVoteIssues();
@@ -2092,9 +2092,9 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 {
 	CleanupMiniObjective();
 
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+	RandomSeed((int)(gpGlobals->curtime*1000));
 
-	random->SetSeed((int)(gpGlobals->curtime*1000));
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + RandomFloat(-1, 1)) * 60;
 
 	bool bResult = false;
 
@@ -2111,11 +2111,11 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 	if (iPlayers < 2)
 		return;
 
-	miniobjective_t eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+	miniobjective_t eObjective = (miniobjective_t)RandomInt(1, MINIOBJECTIVE_MAX-1);
 	for (int i = 0; i < 3; i++)
 	{
 		do {
-			eObjective = (miniobjective_t)random->RandomInt(1, MINIOBJECTIVE_MAX-1);
+			eObjective = (miniobjective_t)RandomInt(1, MINIOBJECTIVE_MAX-1);
 		} while (m_ePreviousMiniObjective == eObjective);
 
 		if (pszObjective)
@@ -2220,7 +2220,7 @@ void CSDKGameRules::CleanupMiniObjective()
 
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
 
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + random->RandomFloat(-1, 1)) * 60;
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + RandomFloat(-1, 1)) * 60;
 }
 
 void CSDKGameRules::GiveMiniObjectiveRewardTeam(CSDKPlayer* pTeam)
@@ -2301,8 +2301,8 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 	if (apBriefcaseSpawnPoints.Count() == 0)
 		return false;
 
-	random->SetSeed((int)(gpGlobals->curtime*1000));
-	int iSpot = random->RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
+	RandomSeed((int)(gpGlobals->curtime*1000));
+	int iSpot = RandomInt(0, apBriefcaseSpawnPoints.Count()-1);
 
 	if (!ChooseRandomCapturePoint(apBriefcaseSpawnPoints[iSpot]->GetAbsOrigin()))
 		return false;
@@ -2371,7 +2371,7 @@ bool CSDKGameRules::ChooseRandomCapturePoint(Vector vecBriefcaseLocation)
 	if (!!m_hCaptureZone)
 		UTIL_Remove(m_hCaptureZone);
 
-	int iCapture = random->RandomInt(0, apValidCapturePoints.Count()-1);
+	int iCapture = RandomInt(0, apValidCapturePoints.Count()-1);
 
 	CBriefcaseCaptureZone* pCaptureZone = (CBriefcaseCaptureZone*)CreateEntityByName("da_briefcase_capture");
 	pCaptureZone->SetAbsOrigin(apValidCapturePoints[iCapture]->GetAbsOrigin());
@@ -2459,8 +2459,8 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 			apPlayers.RemoveMultipleFromTail(apPlayers.Count()-3);
 	}
 
-	random->SetSeed((int)(gpGlobals->curtime*1000));
-	CSDKPlayer* pChosen = apPlayers[random->RandomInt(0, apPlayers.Count()-1)];
+	RandomSeed((int)(gpGlobals->curtime*1000));
+	CSDKPlayer* pChosen = apPlayers[RandomInt(0, apPlayers.Count()-1)];
 
 	m_hBountyPlayer = pChosen;
 
@@ -2584,8 +2584,8 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 		pPlayer->m_iRaceWaypoint = 0;
 	}
 
-	random->SetSeed((int)(gpGlobals->curtime*1000));
-	int iSpot1 = random->RandomInt(0, apWaypoints.Count()-1);
+	RandomSeed((int)(gpGlobals->curtime*1000));
+	int iSpot1 = RandomInt(0, apWaypoints.Count()-1);
 
 	m_hRaceWaypoint1 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
 	m_hRaceWaypoint1->SetAbsOrigin(apWaypoints[iSpot1]->GetAbsOrigin());
@@ -2601,7 +2601,7 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	if (apWaypoints.Count() < 6)
 		iSpot2 = 0;
 	else
-		iSpot2 = random->RandomInt(0, 2);
+		iSpot2 = RandomInt(0, 2);
 
 	m_hRaceWaypoint2 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
 	m_hRaceWaypoint2->SetAbsOrigin(apWaypoints[iSpot2]->GetAbsOrigin());
@@ -2617,7 +2617,7 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	if (apWaypoints.Count() < 6)
 		iSpot3 = 0;
 	else
-		iSpot3 = random->RandomInt(0, 2);
+		iSpot3 = RandomInt(0, 2);
 
 	m_hRaceWaypoint3 = (CRatRaceWaypoint*)CreateEntityByName("da_ratrace_waypoint");
 	m_hRaceWaypoint3->SetAbsOrigin(apWaypoints[iSpot3]->GetAbsOrigin());
@@ -2975,7 +2975,7 @@ public:
 			if (!apszMapList.Count())
 				break;
 
-			int iRandom = random->RandomInt(0, apszMapList.Count()-1);
+			int iRandom = RandomInt(0, apszMapList.Count()-1);
 
 			if (FStrEq(apszMapList[iRandom], szNextMap))
 			{
