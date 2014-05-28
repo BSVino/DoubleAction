@@ -1970,7 +1970,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
-	else if (m_Shared.IsDiving() || m_Shared.IsSliding())
+	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping() || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
 		if (m_Shared.IsDiving())
@@ -1990,7 +1990,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
 			}
 		}
-		else
+		else if (m_Shared.IsSliding())
 		{
 			if (info.GetDamageType() == DMG_CLUB)
 			{
@@ -2006,6 +2006,13 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				else
 					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
 			}
+		}
+		else
+		{
+			if (bKilledVictim)
+				AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
+			else
+				AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_COOL, STYLE_POINT_LARGE);
 		}
 	}
 	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
