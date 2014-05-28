@@ -649,7 +649,11 @@ void CSDKGameRules::GiveSlowMoToNearbyPlayers(CSDKPlayer* pPlayer)
 		if (pOtherPlayer->GetSlowMoType() == eGiveType)
 			continue;
 
-		pOtherPlayer->SetSlowMoType(eGiveType);
+		// This guy is superfalling and we want to give him some slowmo? Give him superfall-slowmo instead.
+		if ((eGiveType == SLOWMO_PASSIVE || eGiveType == SLOWMO_PASSIVE_SUPER) && pOtherPlayer->m_Shared.IsSuperFalling())
+			pOtherPlayer->SetSlowMoType(SLOWMO_SUPERFALL);
+		else
+			pOtherPlayer->SetSlowMoType(eGiveType);
 
 		GiveSlowMoToNearbyPlayers(pOtherPlayer);
 	}
