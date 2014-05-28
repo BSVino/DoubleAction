@@ -138,7 +138,7 @@ void CSDKPlayer::FireBullet(
 
 	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, GetActiveSDKWeapon(), iDamage, iBulletType, bDoEffects);
 
-	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL)
+	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling())
 	{
 		BulletManager().AddBullet(oBullet);
 		return;
