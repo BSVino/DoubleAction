@@ -2537,7 +2537,7 @@ void CSDKGameMovement::FullWalkMove ()
 					m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
 
 					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
-					m_pSDKPlayer->m_Shared.StartWallFlip();
+					m_pSDKPlayer->m_Shared.StartWallFlip(tr.plane.normal);
 				}
 			}
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&

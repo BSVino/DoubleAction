@@ -380,13 +380,18 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	}
 	else if (m_bFlipping)
 	{
-		m_angRender[YAW] = m_flEyeYaw;
+		m_flGoalFeetYaw = m_angRender[YAW] = m_flEyeYaw;
+
 #ifndef CLIENT_DLL
 		QAngle angle = GetBasePlayer()->GetAbsAngles();
 		angle[YAW] = m_flCurrentFeetYaw;
 
 		GetBasePlayer()->SetAbsAngles( angle );
 #endif
+
+		GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iAimYaw, 0 );
+		m_DebugAnimData.m_flAimYaw = 0;
+
 		return;
 	}
 	else if (m_pSDKPlayer->m_Shared.IsManteling())
@@ -524,7 +529,8 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 	Vector2D vecCurrentMoveYaw( 0.0f, 0.0f );
 	if ( bIsMoving )
 	{
-		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling() || m_pSDKPlayer->m_Shared.IsSliding())
+		if (m_pSDKPlayer->m_Shared.IsAimedIn() || m_pSDKPlayer->m_Shared.IsDiving() || m_pSDKPlayer->m_Shared.IsRolling()
+			|| m_pSDKPlayer->m_Shared.IsSliding() || m_bFlipping)
 		{
 			vecCurrentMoveYaw.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
 			vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
@@ -572,7 +578,7 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 	{
 		// Don't touch it
 	}
-	else if (m_pSDKPlayer->m_Shared.IsManteling())
+	else if (m_pSDKPlayer->m_Shared.IsManteling() || m_bFlipping)
 	{
 		Vector vecWallNormal = m_pSDKPlayer->m_Shared.GetMantelWallNormal();
 		m_PoseParameterData.m_flEstimateYaw = ( atan2( -vecWallNormal.y, -vecWallNormal.x ) * 180.0f / M_PI );

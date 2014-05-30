@@ -104,6 +104,7 @@ acttable_t CWeaponBrawl::m_acttable[] =
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE,              false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND,         false },
 	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE,          false },
+	{ ACT_DA_WALLFLIP,                 ACT_DA_WALLFLIP,               false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponBrawl );

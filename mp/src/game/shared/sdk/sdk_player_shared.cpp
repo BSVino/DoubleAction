@@ -1118,11 +1118,12 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 ConVar da_acro_wallflip_delay ("da_acro_wallflip_delay", ".3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
-void CSDKPlayerShared::StartWallFlip()
+void CSDKPlayerShared::StartWallFlip(const Vector& vecWallNormal)
 {
 	m_bIsWallFlipping = true;
 	m_flWallFlipEndTime = m_pOuter->GetCurrentTime() + da_acro_wallflip_delay.GetFloat();
 	m_iWallFlipCount++;
+	m_vecMantelWallNormal = vecWallNormal;
 
 	m_pOuter->SetGravity(0.8f);
 

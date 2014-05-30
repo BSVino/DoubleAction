@@ -116,6 +116,7 @@ acttable_t CWeaponMossberg::m_acttable[] =
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_MOSSBERG,                 false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_MOSSBERG,            false },
 	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_MOSSBERG,             false },
+	{ ACT_DA_WALLFLIP,                 ACT_DA_WALLFLIP_MOSSBERG,                  false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponMossberg );

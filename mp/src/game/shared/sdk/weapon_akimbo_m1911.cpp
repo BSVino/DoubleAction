@@ -93,5 +93,6 @@ acttable_t CAkimboM1911::m_acttable[] =
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_AKIMBO_M1911,                false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_AKIMBO_M1911,           false },
 	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_AKIMBO_M1911,            false },
+	{ ACT_DA_WALLFLIP,                 ACT_DA_WALLFLIP_AKIMBO_M1911,                 false },
 };
 IMPLEMENT_ACTTABLE(CAkimboM1911);

@@ -110,6 +110,7 @@ acttable_t CWeaponM16::m_acttable[] =
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_M16,                  false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_M16,             false },
 	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_M16,              false },
+	{ ACT_DA_WALLFLIP,                 ACT_DA_WALLFLIP_M16,                   false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponM16 );

@@ -99,6 +99,7 @@ acttable_t CWeaponMP5K::m_acttable[] =
 	{ ACT_DA_DIVESLIDE,                ACT_DA_DIVESLIDE_MP5K,                 false },
 	{ ACT_DA_PRONE_TO_STAND,           ACT_DA_PRONE_TO_STAND_MP5K,            false },
 	{ ACT_DA_THROW_GRENADE,            ACT_DA_THROW_GRENADE_MP5K,             false },
+	{ ACT_DA_WALLFLIP,                 ACT_DA_WALLFLIP_MP5K,                  false },
 };
 
 IMPLEMENT_ACTTABLE( CWeaponMP5K );
