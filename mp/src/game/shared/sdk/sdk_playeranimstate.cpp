@@ -316,6 +316,11 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 		return;
 	}
 
+	if (m_pSDKPlayer->m_Shared.IsSuperFalling())
+		m_angRender[PITCH] = Approach(m_flEyePitch, m_angRender[PITCH], gpGlobals->frametime * 200);
+	else
+		m_angRender[PITCH] = 0;
+
 	if (m_pSDKPlayer->IsInThirdPerson())
 	{
 		// Use the character's eye direction instead of the actual.

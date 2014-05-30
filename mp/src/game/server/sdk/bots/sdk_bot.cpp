@@ -15,6 +15,7 @@ ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
 ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
 ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
 ConVar bot_attack( "bot_attack", "0", FCVAR_CHEAT );
+ConVar bot_mimic_flip_pitch( "bot_mimic_flip_pitch", "0", FCVAR_CHEAT );
 
 LINK_ENTITY_TO_CLASS( bot, CSDKBot );
 
@@ -165,6 +166,9 @@ bool CSDKPlayer::RunMimicCommand( CUserCmd& cmd )
 	cmd = *pPlayer->GetLastUserCommand();
 	cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
 
+	if (bot_mimic_flip_pitch.GetBool())
+		cmd.viewangles[PITCH] = -cmd.viewangles[PITCH];
+
 	pl.fixangle = FIXANGLE_NONE;
 
 	return true;
@@ -197,6 +201,9 @@ void CSDKBot::BotThink()
 
 			ConVarRef bot_mimic_yaw_offset("bot_mimic_yaw_offset");
 			cmd.viewangles[YAW] += bot_mimic_yaw_offset.GetFloat();
+
+			if (bot_mimic_flip_pitch.GetBool())
+				cmd.viewangles[PITCH] = -cmd.viewangles[PITCH];
 
 			if( bot_crouch.GetInt() )
 				cmd.buttons |= IN_DUCK;
