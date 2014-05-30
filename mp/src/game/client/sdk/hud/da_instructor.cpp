@@ -771,8 +771,8 @@ int C_SDKPlayer::Instructor_GetLessonTrainings(const CUtlString& sLesson)
 		m_pInstructor->Initialize();
 
 	int iLesson = m_apLessonProgress.Find(sLesson);
-	Assert(iLesson != -1);
-	if (iLesson == -1)
+	Assert(iLesson != m_apLessonProgress.InvalidIndex());
+	if (iLesson == m_apLessonProgress.InvalidIndex())
 		return 0;
 
 	CLessonProgress* pLessonProgress = &m_apLessonProgress[iLesson];
