@@ -2254,7 +2254,7 @@ Vector CSDKGameMovement::GetPlayerMins( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
 			return VEC_DIVE_HULL_MIN;
 		else if (m_pSDKPlayer->m_Shared.IsWallFlipping())
-			return VEC_DIVE_HULL_MIN;
+			return VEC_HULL_MIN;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
 			return VEC_PRONE_HULL_MIN;
@@ -2295,7 +2295,7 @@ Vector CSDKGameMovement::GetPlayerMaxs( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
 			return VEC_DIVE_HULL_MAX;
 		else if (m_pSDKPlayer->m_Shared.IsWallFlipping())
-			return VEC_DIVE_HULL_MAX;
+			return VEC_HULL_MAX;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
             return VEC_PRONE_HULL_MAX;
