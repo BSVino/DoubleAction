@@ -19,6 +19,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern float Oscillate(float flTime, float flLength);
+
 #define PLAYER_HINT_DISTANCE	150
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
@@ -83,9 +85,11 @@ private:
 		bool            m_bTargetOn;
 		EHANDLE         m_hEntity;
 		bool            m_bHideIfVisible;
+		vgui::HFont     m_hFont;
 	} m_Targets[TARGET_TOTAL];
 
 	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFontSmall, "MiniObjectiveFontSmall", "Default" );
 };
 
 DECLARE_HUDELEMENT( CSDKTargetId );
@@ -173,6 +177,7 @@ void CSDKTargetId::Paint()
 		m_Targets[TARGET_CAPTURE].m_hEntity = pBriefcase;
 
 		m_Targets[TARGET_CAPTURE].m_pTargetTexture = m_pCapturePoint;
+		m_Targets[TARGET_CAPTURE].m_hFont = m_hMiniObjectiveFont;
 
 		m_Targets[TARGET_CAPTURE].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Capture");
 
@@ -191,6 +196,7 @@ void CSDKTargetId::Paint()
 		m_Targets[TARGET_BRIEFCASE].m_hEntity = pBriefcase;
 
 		m_Targets[TARGET_BRIEFCASE].m_pTargetTexture = m_pBriefcase;
+		m_Targets[TARGET_BRIEFCASE].m_hFont = m_hMiniObjectiveFont;
 
 		if (SDKGameRules()->IsTeamplay() && pBriefcase->GetOwnerEntity() && ToSDKPlayer(pBriefcase->GetOwnerEntity())
 			&& ToSDKPlayer(pBriefcase->GetOwnerEntity())->GetTeamNumber() == C_SDKPlayer::GetLocalSDKPlayer()->GetTeamNumber())
@@ -213,6 +219,7 @@ void CSDKTargetId::Paint()
 		m_Targets[TARGET_BOUNTY].m_hEntity = pBounty;
 
 		m_Targets[TARGET_BOUNTY].m_pTargetTexture = m_pBounty;
+		m_Targets[TARGET_BOUNTY].m_hFont = m_hMiniObjectiveFont;
 
 		if (SDKGameRules()->IsTeamplay() && pBounty->GetTeamNumber() == C_SDKPlayer::GetLocalSDKPlayer()->GetTeamNumber())
 			m_Targets[TARGET_BOUNTY].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_Protect");
@@ -235,11 +242,12 @@ void CSDKTargetId::Paint()
 			m_Targets[TARGET_WAYPOINT1].m_hEntity = SDKGameRules()->GetWaypoint(0);
 
 			m_Targets[TARGET_WAYPOINT1].m_pTargetTexture = m_pCapturePoint;
+			m_Targets[TARGET_WAYPOINT1].m_hFont = m_hMiniObjectiveFont;
 
-			m_Targets[TARGET_WAYPOINT1].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint1");
+			m_Targets[TARGET_WAYPOINT1].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Checkpoint");
 
 			m_Targets[TARGET_WAYPOINT1].m_flScale = 0.5f;
-			m_Targets[TARGET_WAYPOINT1].m_flMaxAlpha = 0.5f;
+			m_Targets[TARGET_WAYPOINT1].m_flMaxAlpha = 0.5f * Oscillate(gpGlobals->curtime, 1);
 
 			m_Targets[TARGET_WAYPOINT1].m_bTargetOn = true;
 			m_Targets[TARGET_WAYPOINT1].m_bHideIfVisible = false;
@@ -254,10 +262,20 @@ void CSDKTargetId::Paint()
 
 			m_Targets[TARGET_WAYPOINT2].m_pTargetTexture = m_pCapturePoint;
 
-			m_Targets[TARGET_WAYPOINT2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint2");
-
-			m_Targets[TARGET_WAYPOINT2].m_flScale = 0.5f;
-			m_Targets[TARGET_WAYPOINT2].m_flMaxAlpha = 0.5f;
+			if (C_SDKPlayer::GetLocalSDKPlayer()->GetRaceWaypoint() == 1)
+			{
+				m_Targets[TARGET_WAYPOINT2].m_flMaxAlpha = 0.5f * Oscillate(gpGlobals->curtime, 1);
+				m_Targets[TARGET_WAYPOINT2].m_flScale = 0.5f;
+				m_Targets[TARGET_WAYPOINT2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Checkpoint");
+				m_Targets[TARGET_WAYPOINT2].m_hFont = m_hMiniObjectiveFont;
+			}
+			else
+			{
+				m_Targets[TARGET_WAYPOINT2].m_flMaxAlpha = 0.3f;
+				m_Targets[TARGET_WAYPOINT2].m_flScale = 0.3f;
+				m_Targets[TARGET_WAYPOINT2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint2");
+				m_Targets[TARGET_WAYPOINT2].m_hFont = m_hMiniObjectiveFontSmall;
+			}
 
 			m_Targets[TARGET_WAYPOINT2].m_bTargetOn = true;
 			m_Targets[TARGET_WAYPOINT2].m_bHideIfVisible = false;
@@ -272,10 +290,20 @@ void CSDKTargetId::Paint()
 
 			m_Targets[TARGET_WAYPOINT3].m_pTargetTexture = m_pCapturePoint;
 
-			m_Targets[TARGET_WAYPOINT3].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint3");
-
-			m_Targets[TARGET_WAYPOINT3].m_flScale = 0.5f;
-			m_Targets[TARGET_WAYPOINT3].m_flMaxAlpha = 0.5f;
+			if (C_SDKPlayer::GetLocalSDKPlayer()->GetRaceWaypoint() == 2)
+			{
+				m_Targets[TARGET_WAYPOINT3].m_flMaxAlpha = 0.5f * Oscillate(gpGlobals->curtime, 1);
+				m_Targets[TARGET_WAYPOINT3].m_flScale = 0.5f;
+				m_Targets[TARGET_WAYPOINT3].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Checkpoint");
+				m_Targets[TARGET_WAYPOINT3].m_hFont = m_hMiniObjectiveFont;
+			}
+			else
+			{
+				m_Targets[TARGET_WAYPOINT3].m_flMaxAlpha = 0.3f;
+				m_Targets[TARGET_WAYPOINT3].m_flScale = 0.3f;
+				m_Targets[TARGET_WAYPOINT3].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Waypoint3");
+				m_Targets[TARGET_WAYPOINT3].m_hFont = m_hMiniObjectiveFontSmall;
+			}
 
 			m_Targets[TARGET_WAYPOINT3].m_bTargetOn = true;
 			m_Targets[TARGET_WAYPOINT3].m_bHideIfVisible = false;
@@ -290,6 +318,7 @@ void CSDKTargetId::Paint()
 			m_Targets[TARGET_LEADER].m_hEntity = pLeader;
 
 			m_Targets[TARGET_LEADER].m_pTargetTexture = m_pBounty;
+			m_Targets[TARGET_LEADER].m_hFont = m_hMiniObjectiveFont;
 
 			m_Targets[TARGET_LEADER].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Leader");
 
@@ -308,6 +337,7 @@ void CSDKTargetId::Paint()
 			m_Targets[TARGET_FRONTRUNNER1].m_hEntity = pLeader;
 
 			m_Targets[TARGET_FRONTRUNNER1].m_pTargetTexture = m_pBounty;
+			m_Targets[TARGET_FRONTRUNNER1].m_hFont = m_hMiniObjectiveFont;
 
 			m_Targets[TARGET_FRONTRUNNER1].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Frontrunner1");
 
@@ -326,6 +356,7 @@ void CSDKTargetId::Paint()
 			m_Targets[TARGET_FRONTRUNNER2].m_hEntity = pLeader;
 
 			m_Targets[TARGET_FRONTRUNNER2].m_pTargetTexture = m_pBounty;
+			m_Targets[TARGET_FRONTRUNNER2].m_hFont = m_hMiniObjectiveFont;
 
 			m_Targets[TARGET_FRONTRUNNER2].m_pwszHint = g_pVGuiLocalize->Find("#DA_MiniObjective_RatRace_Frontrunner2");
 
@@ -402,9 +433,9 @@ void CSDKTargetId::Paint()
 			if (m_Targets[i].m_pwszHint)
 			{
 				int iHintWide, iHintTall;
-				surface()->GetTextSize(m_hMiniObjectiveFont, m_Targets[i].m_pwszHint, iHintWide, iHintTall);
+				surface()->GetTextSize(m_Targets[i].m_hFont, m_Targets[i].m_pwszHint, iHintWide, iHintTall);
 
-				vgui::surface()->DrawSetTextFont( m_hMiniObjectiveFont );
+				vgui::surface()->DrawSetTextFont( m_Targets[i].m_hFont );
 				vgui::surface()->DrawSetTextPos( iX - iHintWide/2, iY + iHeight/2 );
 				vgui::surface()->DrawSetTextColor( Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha) );
 				vgui::surface()->DrawPrintText( m_Targets[i].m_pwszHint, wcslen(m_Targets[i].m_pwszHint) );
