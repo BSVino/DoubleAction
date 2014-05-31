@@ -179,6 +179,7 @@ public:
 
 	virtual void SetFOV( int nFOV ){ m_nFOV = nFOV; }
 	virtual void SetPanelDirty( void ){ m_bPanelDirty = true; }
+	virtual bool IsPanelDirty( void ){ return m_bPanelDirty; }
 	virtual bool SetSequence( const char *pszSequence );
 
 	MESSAGE_FUNC_PARAMS( OnAddAnimation, "AddAnimation", data );

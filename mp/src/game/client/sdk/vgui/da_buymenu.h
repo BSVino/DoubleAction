@@ -57,6 +57,7 @@ public:
 	virtual void OnKeyCodePressed(KeyCode code);
 	virtual void ShowPanel(bool bShow);
 	virtual void OnCommand( const char *command );
+	virtual void OnThink();
 
 	virtual void SetData(KeyValues *data) {};
 	virtual bool NeedsUpdate( void ) { return false; }
