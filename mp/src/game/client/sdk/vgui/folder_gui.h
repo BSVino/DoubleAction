@@ -120,6 +120,7 @@ private:
 		CFolderLabel* m_pSlots;
 		CModelPanel*  m_pImage;
 		CImageButton* m_pDelete;
+		float         m_flDistance;
 	};
 	CUtlVector<CWeaponIcon> m_apWeaponIcons;
 };
@@ -193,3 +194,6 @@ private:
 	int          m_iWidth;
 	int          m_iHeight;
 };
+
+void PositionWeaponInModelPanel(CModelPanel* pModelPanel, float flYaw, float flDistance);
+

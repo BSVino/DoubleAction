@@ -183,60 +183,7 @@ void CDABuyMenu::OnCommand( const char *command )
 
 void CDABuyMenu::OnThink( void )
 {
-	if (!m_pWeaponImage)
-		return;
-
-	if (!m_pWeaponImage->m_pModelInfo || !m_pWeaponImage->m_hModel)
-		return;
-
-	if (m_pWeaponImage->IsPanelDirty())
-	{
-		// Kind of a hack. Move it out of the way so it doesn't show until the loading is done.
-		m_pWeaponImage->m_pModelInfo->m_vecOriginOffset = Vector(0, 0, 10000);
-		return;
-	}
-
-	VMatrix mCenterToWorld;
-
-	m_pWeaponImage->m_hModel->SetAbsOrigin(Vector(0, 0, 0));
-	m_pWeaponImage->m_hModel->SetAbsAngles(QAngle(0, 0, 0));
-
-	int iCenter = m_pWeaponImage->m_hModel->LookupAttachment("center");
-	if (iCenter > 0)
-	{
-		// Use the center attachment if it's available.
-		matrix3x4_t mAttachmentToWorld;
-		m_pWeaponImage->m_hModel->GetAttachment(iCenter, mAttachmentToWorld);
-		mCenterToWorld.CopyFrom3x4(mAttachmentToWorld);
-	}
-	else
-	{
-		// Otherwise use the right hand weapon bone. Akimbos will never be shown in this panel so that's not an issue.
-		int iBone = m_pWeaponImage->m_hModel->LookupBone("DABBiped.RHandWeapon");
-		if (iBone >= 0)
-		{
-			matrix3x4_t mBoneToWorld;
-			m_pWeaponImage->m_hModel->GetBoneTransform(iBone, mBoneToWorld);
-			mCenterToWorld.CopyFrom3x4(mBoneToWorld);
-		}
-	}
-
-	VMatrix mCenterToWorldInverse;
-	MatrixInverseTR(mCenterToWorld, mCenterToWorldInverse);
-
-	VMatrix mCamera;
-	MatrixFromAngles( QAngle(0, gpGlobals->curtime * 20, 90), mCamera );
-	mCamera.SetTranslation( Vector(70, 0, 0) );
-
-	// First moving the model so that it's upright in the world and looking at the center bone,
-	// then moving it so the camera can see it.
-	VMatrix mResult = mCamera * mCenterToWorldInverse;
-
-	QAngle angModel;
-	MatrixAngles( mResult.As3x4(), angModel, m_pWeaponImage->m_pModelInfo->m_vecOriginOffset );
-	m_pWeaponImage->m_pModelInfo->m_vecAbsAngles.x = angModel.x;
-	m_pWeaponImage->m_pModelInfo->m_vecAbsAngles.y = angModel.y;
-	m_pWeaponImage->m_pModelInfo->m_vecAbsAngles.z = angModel.z;
+	PositionWeaponInModelPanel(m_pWeaponImage, gpGlobals->curtime * 20, 70);
 }
 
 void CDABuyMenu::OnKeyCodePressed( KeyCode code )

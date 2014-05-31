@@ -499,27 +499,15 @@ void CFolderMenu::Update()
 				pValues->SetString("modelname", pWeaponInfo->szWorldModel);
 
 				if (pWeaponInfo->m_eWeaponType == WT_PISTOL)
-				{
-					pValues->SetInt("origin_x", 20);
-				}
+					pIcon->m_flDistance = 20;
 				else if (pWeaponInfo->m_eWeaponType == WT_RIFLE)
-				{
-					pValues->SetInt("origin_x", 50);
-					pValues->SetInt("angles_y", 210);
-				}
+					pIcon->m_flDistance = 50;
 				else if (pWeaponInfo->m_eWeaponType == WT_SHOTGUN)
-				{
-					pValues->SetInt("origin_x", 50);
-					pValues->SetInt("origin_y", 10);
-					pValues->SetInt("angles_y", 150);
-				}
+					pIcon->m_flDistance = 50;
 				else if (pWeaponInfo->m_eWeaponType == WT_SMG)
-				{
-				}
+					pIcon->m_flDistance = 30;
 				else if (pWeaponInfo->m_eWeaponType == WT_GRENADE)
-				{
-					pValues->SetInt("origin_x", 20);
-				}
+					pIcon->m_flDistance = 20;
 
 				pIcon->m_pImage = new CModelPanel(this, NULL);
 				pIcon->m_pImage->SetPos(iWeaponAreaX + flMoveRight, iWeaponAreaY + (iWeapon/2) * (iBoxSize+iMargin));
@@ -696,6 +684,9 @@ void CFolderMenu::OnTick()
 
 		m_bNeedsUpdate = false;
 	}
+
+	for (int i = 0; i < m_apWeaponIcons.Count(); i++)
+		PositionWeaponInModelPanel(m_apWeaponIcons[i].m_pImage, 90, m_apWeaponIcons[i].m_flDistance);
 
 	BaseClass::OnTick();
 }
@@ -1247,4 +1238,62 @@ CON_COMMAND(hud_reload_folder, "Reload resource for folder menu.")
 		return;
 
 	pPanel->ReloadControlSettings();
+}
+
+void PositionWeaponInModelPanel(CModelPanel* pModelPanel, float flYaw, float flDistance)
+{
+	if (!pModelPanel)
+		return;
+
+	if (!pModelPanel->m_pModelInfo || !pModelPanel->m_hModel)
+		return;
+
+	if (pModelPanel->IsPanelDirty())
+	{
+		// Kind of a hack. Move it out of the way so it doesn't show until the loading is done.
+		pModelPanel->m_pModelInfo->m_vecOriginOffset = Vector(0, 0, 10000);
+		return;
+	}
+
+	VMatrix mCenterToWorld;
+
+	pModelPanel->m_hModel->SetAbsOrigin(Vector(0, 0, 0));
+	pModelPanel->m_hModel->SetAbsAngles(QAngle(0, 0, 0));
+
+	int iCenter = pModelPanel->m_hModel->LookupAttachment("center");
+	if (iCenter > 0)
+	{
+		// Use the center attachment if it's available.
+		matrix3x4_t mAttachmentToWorld;
+		pModelPanel->m_hModel->GetAttachment(iCenter, mAttachmentToWorld);
+		mCenterToWorld.CopyFrom3x4(mAttachmentToWorld);
+	}
+	else
+	{
+		// Otherwise use the right hand weapon bone. Akimbos will never be shown in this panel so that's not an issue.
+		int iBone = pModelPanel->m_hModel->LookupBone("DABBiped.RHandWeapon");
+		if (iBone >= 0)
+		{
+			matrix3x4_t mBoneToWorld;
+			pModelPanel->m_hModel->GetBoneTransform(iBone, mBoneToWorld);
+			mCenterToWorld.CopyFrom3x4(mBoneToWorld);
+		}
+	}
+
+	VMatrix mCenterToWorldInverse;
+	MatrixInverseTR(mCenterToWorld, mCenterToWorldInverse);
+
+	VMatrix mCamera;
+	MatrixFromAngles( QAngle(0, flYaw, 90), mCamera );
+	mCamera.SetTranslation( Vector(flDistance, 0, 0) );
+
+	// First moving the model so that it's upright in the world and looking at the center bone,
+	// then moving it so the camera can see it.
+	VMatrix mResult = mCamera * mCenterToWorldInverse;
+
+	QAngle angModel;
+	MatrixAngles( mResult.As3x4(), angModel, pModelPanel->m_pModelInfo->m_vecOriginOffset );
+	pModelPanel->m_pModelInfo->m_vecAbsAngles.x = angModel.x;
+	pModelPanel->m_pModelInfo->m_vecAbsAngles.y = angModel.y;
+	pModelPanel->m_pModelInfo->m_vecAbsAngles.z = angModel.z;
 }
