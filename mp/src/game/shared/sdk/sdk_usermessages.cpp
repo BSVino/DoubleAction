@@ -60,6 +60,8 @@ void RegisterUserMessages()
 	usermessages->Register( "VotePass", -1 );
 	usermessages->Register( "VoteSetup", -1 );
 
+	usermessages->Register( "BlinkTimer", 0 );
+
 #ifndef _X360
 	// NVNT register haptic user messages
 	RegisterHapticMessages();

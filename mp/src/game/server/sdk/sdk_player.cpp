@@ -4475,6 +4475,24 @@ void CC_ActivateSlowmo_f (void)
 	{
 		pPlayer->DeactivateSlowMo();
 	}
+	else
+	{
+		CSingleUserRecipientFilter filter( pPlayer );
+		filter.MakeReliable();
+
+		UserMessageBegin( filter, "BlinkTimer" );
+		MessageEnd();
+
+		EmitSound_t params;
+		params.m_pOrigin = NULL;
+		params.m_pflSoundDuration = NULL;
+		params.m_bWarnOnDirectWaveReference = true;
+
+		params.m_nFlags = 0;
+		params.m_pSoundName = "Player.DenyWeaponSelection";
+
+		pPlayer->EmitSound(filter, pPlayer->entindex(), params);
+	}
 }
 
 static ConCommand activateslowmo("activateslowmo", CC_ActivateSlowmo_f, "Activate slow motion." );

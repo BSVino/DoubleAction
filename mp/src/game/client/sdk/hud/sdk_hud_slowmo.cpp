@@ -35,6 +35,7 @@ public:
 	void Init( void );
 	void VidInit( void );
 	void Reset();
+	void Blink();
 
 	void SetSlowMo(float flSlowMo);
 
@@ -56,9 +57,18 @@ protected:
 private:
 	CHudTexture* m_pBackground;
 	CHudTexture* m_pBackgroundSuper;
+
+	float m_flBlink;
 };
 
 DECLARE_HUDELEMENT( CHudSlowMo );
+
+void __MsgFunc_BlinkTimer( bf_read &msg )
+{
+	CHudSlowMo* pSlowMo = (CHudSlowMo*)gHUD.FindElement("CHudSlowMo");
+
+	pSlowMo->Blink();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -71,6 +81,8 @@ CHudSlowMo::CHudSlowMo( const char *pElementName ) : BaseClass(NULL, "HudSlowMo"
 	m_pBackgroundSuper = NULL;
 
 	SetIsTime(true);
+
+	m_flBlink = -1;
 }
 
 void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
@@ -86,6 +98,7 @@ void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
 //-----------------------------------------------------------------------------
 void CHudSlowMo::Init( void )
 {
+	HOOK_MESSAGE( BlinkTimer );
 }
 
 //-----------------------------------------------------------------------------
@@ -105,6 +118,11 @@ void CHudSlowMo::Reset()
 //	SetLabelText(g_pVGuiLocalize->Find("#DA_HUD_Slowmo"));
 
 	UpdatePlayerSlowMo( C_BasePlayer::GetLocalPlayer() );
+}
+
+void CHudSlowMo::Blink()
+{
+	m_flBlink = gpGlobals->curtime;
 }
 
 void CHudSlowMo::UpdatePlayerSlowMo( C_BasePlayer *player )
@@ -127,6 +145,16 @@ ConVar hud_slowmo_needle_lerp("hud_slowmo_needle_lerp", "10", FCVAR_CHEAT|FCVAR_
 
 void CHudSlowMo::OnThink()
 {
+	if (m_flBlink > 0 && gpGlobals->curtime - m_flBlink < 2)
+	{
+		if (fmod(gpGlobals->curtime - m_flBlink, 0.5f) < 0.25f)
+			m_bDisplayValue = false;
+		else
+			m_bDisplayValue = true;
+	}
+	else
+		m_bDisplayValue = true;
+
 	UpdatePlayerSlowMo( C_BasePlayer::GetLocalPlayer() );
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
