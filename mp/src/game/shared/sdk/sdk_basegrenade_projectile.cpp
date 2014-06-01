@@ -125,9 +125,6 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 		if (!pLocalPlayer)
 			return iReturn;
 
-		if (pLocalPlayer == GetThrower())
-			return iReturn;
-
 		float flAppearDistance = 500;
 		float flAppearDistanceSqr = flAppearDistance*flAppearDistance;
 
