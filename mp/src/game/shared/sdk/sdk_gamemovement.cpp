@@ -34,8 +34,7 @@ ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT 
 ConVar sdk_slidetime("sdk_slidetime", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 #ifdef CLIENT_DLL
-ConVar da_dive_land_behavior( "da_dive_land_behavior", "0", FCVAR_ARCHIVE | FCVAR_USERINFO );
-ConVar da_user_taptime ("da_user_taptime", "0", FCVAR_ARCHIVE|FCVAR_USERINFO);
+ConVar da_slide_unclick_time("da_slide_unclick_time", "0.25", FCVAR_ARCHIVE|FCVAR_USERINFO);
 #endif
 
 ConVar	da_d2p_stunt_forgiveness( "da_d2p_stunt_forgiveness", "0.4", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
@@ -1912,6 +1911,9 @@ void CSDKGameMovement::Duck( void )
 		bool bGoProne = false;
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
 		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
+
+		if (m_pSDKPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime() > m_pSDKPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
+			bGetUp = true;
 
 		bool bSlide = false;
 		bool bRoll = false;
