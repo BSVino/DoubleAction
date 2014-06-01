@@ -1811,7 +1811,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 			if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsWallFlipping()
 				|| pAttackerSDK->m_Shared.IsSuperFalling() || pAttackerSDK->m_Shared.IsRolling() || m_bWasKilledByGrenade || m_bWasKilledByBrawl)
+			{
 				pAttackerSDK->GiveSlowMo(1);
+				pAttackerSDK->Instructor_LessonLearned("earn_slowmo");
+			}
 
 			if (gpGlobals->teamplay && pAttackerSDK->GetTeam())
 				pAttackerSDK->GetTeam()->AddScore(1);
