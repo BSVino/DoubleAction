@@ -1912,7 +1912,7 @@ void CSDKGameMovement::Duck( void )
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
 		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
 
-		if (m_pSDKPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && gpGlobals->curtime - m_pSDKPlayer->m_Shared.GetSlideTime() > m_pSDKPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
+		if (m_pSDKPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime() > m_pSDKPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
 			bGetUp = true;
 
 		bool bSlide = false;
