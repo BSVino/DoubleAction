@@ -146,6 +146,7 @@ const char* g_aszBotNames[] =
 	"C-3P Bro",
 	"Frosty the Broman",
 	"G.I. Bro",
+	"Brose Marti",
 	"Arnold",
 	"Bruce",
 	"Jackie",
