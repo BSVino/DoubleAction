@@ -5,7 +5,8 @@
 //-----------------------------------------------------------------------------
 
 $macro SRCDIR		".."
-$Macro OUTBINDIR    "D:\srcds\sdk2013\bin"
+$Macro GAMENAME "dab"
+$Macro OUTBINDIR    "$SRCDIR\..\game\$GAMENAME\bin"
 $Macro GENERATED_PROTO_DIR	"."
 $macro PROTOBUF_LITE 0
 
