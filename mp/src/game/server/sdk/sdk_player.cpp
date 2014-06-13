@@ -1973,7 +1973,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
-	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping() || m_Shared.IsSliding())
+	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping() || GetCurrentTime() < m_Shared.GetWallFlipEndTime() + 0.5f || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
 		if (m_Shared.IsDiving())
