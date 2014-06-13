@@ -2525,7 +2525,7 @@ void CSDKGameMovement::FullWalkMove ()
 				// Don't flip if the surface isn't a wall.
 				// Don't flip if the player isn't at least sorta facing the wall.
 				// Don't flip if the player is sliding or getting up from sliding.
-				if (tr.fraction < 1 && !(tr.surface.flags&SURF_SKY) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f
+				if (tr.fraction < 1 && !(tr.surface.flags&(SURF_SKY|SURF_NODRAW)) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f
 					&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
 				{
 					m_pSDKPlayer->m_Shared.EndDive();
