@@ -106,6 +106,7 @@ void CHudSlowMo::Init( void )
 //-----------------------------------------------------------------------------
 void CHudSlowMo::VidInit( void )
 {
+	Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -118,6 +119,8 @@ void CHudSlowMo::Reset()
 //	SetLabelText(g_pVGuiLocalize->Find("#DA_HUD_Slowmo"));
 
 	UpdatePlayerSlowMo( C_BasePlayer::GetLocalPlayer() );
+
+	m_flBlink = -1;
 }
 
 void CHudSlowMo::Blink()
