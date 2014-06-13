@@ -101,6 +101,7 @@ public:
 	bool	IsDiving() const;
 	bool	CanDive() const;
 	Vector	StartDiving();
+	void    StartSuperfallDiving();
 	void	EndDive();
 	Vector	GetDiveDirection() const { return m_vecDiveDirection; };
 	bool    ShouldRollAfterDiving() const { return m_bRollAfterDive; }

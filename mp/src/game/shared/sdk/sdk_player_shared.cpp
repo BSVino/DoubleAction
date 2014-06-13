@@ -1038,6 +1038,30 @@ Vector CSDKPlayerShared::StartDiving()
 	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
 }
 
+void CSDKPlayerShared::StartSuperfallDiving()
+{
+	m_flDiveTime = m_pOuter->GetCurrentTime();
+	m_flDiveLerped = 0;
+	m_flDiveToProneLandTime = -1;
+
+	m_bDiving = true;
+	m_bRollAfterDive = true;
+
+#ifdef GAME_DLL
+	m_pOuter->OnDive();
+#endif
+
+	ForceUnzoom();
+
+	m_vecDiveDirection = m_pOuter->GetAbsVelocity();
+	m_vecDiveDirection.GetForModify().z = 0;
+	m_vecDiveDirection.GetForModify().NormalizeInPlace();
+
+	m_pOuter->DoAnimationEvent(PLAYERANIMEVENT_DIVE);
+
+	m_pOuter->SetGroundEntity(NULL);
+}
+
 void CSDKPlayerShared::EndDive()
 {
 	m_flDiveTime = 0;

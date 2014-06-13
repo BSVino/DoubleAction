@@ -766,6 +766,9 @@ void CSDKPlayer::PreThink(void)
 
 			UseStyleCharge(SKILL_RESILIENT, iHealthTaken/2);
 		}
+
+		if (m_Shared.IsSuperFalling() && !m_Shared.IsDiving())
+			m_Shared.StartSuperfallDiving();
 	}
 
 	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && (GetAbsVelocity().z < -220.0f || GetAbsVelocity().Length2D() > 200)) ))

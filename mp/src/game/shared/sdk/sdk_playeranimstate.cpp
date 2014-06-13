@@ -316,7 +316,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimPitch( CStudioHdr *pStudioHdr )
 		return;
 	}
 
-	if (m_pSDKPlayer->m_Shared.IsSuperFalling() && !m_pSDKPlayer->GetGroundEntity())
+	if (m_pSDKPlayer->m_Shared.IsSuperFalling() && !m_pSDKPlayer->GetGroundEntity() && m_pSDKPlayer->m_Shared.IsDiving())
 		m_angRender[PITCH] = Approach(m_flEyePitch, m_angRender[PITCH], gpGlobals->frametime * 200);
 	else
 		m_angRender[PITCH] = 0;
