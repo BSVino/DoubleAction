@@ -1701,7 +1701,7 @@ void CSDKGameMovement::Duck( void )
 		{
 			trace_t tr;
 			Ray_t vecRay;
-			vecRay.Init(mv->GetAbsOrigin(), mv->GetAbsOrigin() - Vector(0, 0, 10), Vector(0, 0, 0), Vector(0, 0, 0));
+			vecRay.Init(mv->GetAbsOrigin(), mv->GetAbsOrigin() - Vector(0, 0, 20), Vector(0, 0, 0), Vector(0, 0, 0));
 			UTIL_TraceRay(vecRay, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
 
 			if (tr.DidHitWorld())
