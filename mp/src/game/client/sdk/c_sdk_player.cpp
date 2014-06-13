@@ -2314,7 +2314,7 @@ void CSlowIntensityProxy::OnBind( void *pC_BaseEntity )
 		if (da_postprocess_slowmo.GetBool())
 			flValue = 1;
 		else
-			flValue = RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, pPlayer->GetSlowMoGoal()-0.01f, 0, 1);
+			flValue = RemapVal(pPlayer->GetSlowMoMultiplier(), 1, 0.5f, 0, 1);
 
 		if (!pPlayer->IsAlive() && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM)
 			flValue = 1;
