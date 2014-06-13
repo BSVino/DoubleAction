@@ -435,6 +435,28 @@ void CHudStyleBar::Paint()
 
 	surface()->DrawFilledRect( iBarLeft + 2, m_flElementYPos + m_flGap + flBarHeight*(1-flTop), iBarRight - 2, m_flElementYPos + flBarHeight*(1-flBottom) );
 
+	wchar_t wszStarsLabel[100];
+	V_swprintf_safe(wszStarsLabel, L"[%i/100]", (int)(flPercent*100));
+
+	int iStarsTextWide, iStarsTextTall;
+	surface()->GetTextSize(m_hTextFont, wszStarsLabel, iStarsTextWide, iStarsTextTall);
+	float flStarsX = iBarLeft + m_flBarWidth/2 - iStarsTextWide/2;
+	float flStarsY = m_flElementYPos + m_flElementTall - flStyleTextureHeight;
+
+	surface()->DrawSetTextPos( flStarsX, flStarsY );
+	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+	surface()->DrawSetTextFont( m_hTextFont );
+	surface()->DrawUnicodeString( wszStarsLabel, vgui::FONT_DRAW_NONADDITIVE );
+
+	if (m_pGoldStar)
+	{
+		m_pGoldStar->DrawSelf(
+			flStarsX - iStarsTextTall, flStarsY,
+			iStarsTextTall, iStarsTextTall,
+			Color(255, 255, 255, 255)
+		);
+	}
+
 	if (pStyleTexture)
 	{
 		float flAlpha = 1;
@@ -448,8 +470,9 @@ void CHudStyleBar::Paint()
 			flRed = 1;
 		}
 
-		float flBarIconX = m_flElementXPos + iWidth - flStyleTextureWidth;
-		float flBarIconY = m_flElementYPos + iHeight - flStyleTextureHeight;
+		float flBarIconX = m_flElementXPos + m_flElementWide - flStyleTextureWidth;
+		float flBarIconY = m_flElementYPos + m_flElementTall - flStyleTextureHeight + iStarsTextTall;
+
 		pStyleTexture->DrawSelf(
 				flBarIconX, flBarIconY,
 				flStyleTextureWidth, flStyleTextureHeight,
@@ -568,34 +591,46 @@ void CHudStyleBar::Paint()
 		else if (gpGlobals->curtime > flEndTime-0.5f)
 			flAlpha = RemapValClamped(gpGlobals->curtime, flEndTime-0.5f, flEndTime, 1, 0);
 
-		pTexture->DrawSelf(
-			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth - 10 + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
-			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
-			Color(255, 255, 255, 255 * flAlpha)
-		);
-
 		int iStars = C_SDKPlayer::GetStyleStars(pAnnouncement->m_flStylePoints);
 
 		CHudTexture* pStarTexture = m_pGoldStar;
 
 		if (pStarTexture)
 		{
+			int iPlusTextWide, iPlusTextTall;
+			surface()->GetTextSize(m_hTextFont, L"+", iPlusTextWide, iPlusTextTall);
+
+			wchar_t wszXLabel[100];
+			V_swprintf_safe(wszXLabel, L"x%i", iStars);
+
+			int iStarsTextWide, iStarsTextTall;
+			surface()->GetTextSize(m_hTextFont, L"+", iStarsTextWide, iStarsTextTall);
+
+			flStarWidth = iPlusTextWide + iStarsTextWide + iStarsTextTall + 20;
+
 			float x = flBarLeft - flStarWidth + flSlideIn;
 			float y = m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap);
 
-			wchar_t wszXLabel[100];
-			V_swprintf_safe(wszXLabel, L"+%i", iStars);
-
-			surface()->DrawSetTextPos( x, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
 			surface()->DrawSetTextColor( Color(255, 255, 255, 255 * flAlpha) );
 			surface()->DrawSetTextFont( m_hTextFont );
-			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
+
+			surface()->DrawSetTextPos( x, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawUnicodeString( L"+", vgui::FONT_DRAW_NONADDITIVE );
 
 			pStarTexture->DrawSelf(
-				x + pTexture->EffectiveHeight(flScale), y,
-				pTexture->EffectiveHeight(flScale), pTexture->EffectiveHeight(flScale),
+				x + iPlusTextWide, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2,
+				iStarsTextTall, iStarsTextTall,
 				Color(255, 255, 255, 255 * flAlpha)
 			);
+
+			surface()->DrawSetTextPos( x + iPlusTextWide + iStarsTextTall, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
 		}
+
+		pTexture->DrawSelf(
+			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth - 10 + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
+			Color(255, 255, 255, 255 * flAlpha)
+		);
 	}
 }
