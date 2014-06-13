@@ -23,6 +23,7 @@
 	#include "prediction.h"
 	#include "hud/sdk_hud_ammo.h"
 	#include "view.h"
+	#include "sourcevr/isourcevirtualreality.h"
 
 #else
 
@@ -1015,6 +1016,11 @@ float CWeaponSDKBase::GetWeaponSpread()
 }
 
 #ifdef CLIENT_DLL
+bool CWeaponSDKBase::ShouldDrawCrosshair()
+{
+	return UseVR();
+}
+
 void CWeaponSDKBase::CreateMove(float flInputSampleTime, CUserCmd *pCmd, const QAngle &vecOldViewAngles)
 {	
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())

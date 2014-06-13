@@ -80,10 +80,6 @@ bool CDAHudCrosshair::ShouldDraw( void )
 	if ( !pPlayer )
 		return false;
 
-	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	if ( pWeapon && !pWeapon->ShouldDrawCrosshair() )
-		return false;
-
 	ConVarRef cl_observercrosshair("cl_observercrosshair");
 
 	// draw a crosshair only if alive or spectating in eye
@@ -123,12 +119,6 @@ void CDAHudCrosshair::CalculateCrosshair( void )
 	CWeaponSDKBase *pWeapon = pPlayer->GetActiveSDKWeapon();
 
 	if (!pWeapon)
-	{
-		ResetCrosshair();
-		return;
-	}
-
-	if ( !pWeapon->ShouldDrawCrosshair() )
 	{
 		ResetCrosshair();
 		return;
@@ -209,7 +199,7 @@ void CDAHudCrosshair::Paint( void )
 			m_pObstructionCrosshair->DrawSelf( 
 					x2 - 0.5f * m_pObstructionCrosshair->Width(), 
 					y2 - 0.5f * m_pObstructionCrosshair->Height(),
-					m_clrCrosshair );
+					Color(255, 255, 255, 255) );
 		}
 	}
 
@@ -218,7 +208,7 @@ void CDAHudCrosshair::Paint( void )
 		m_pCrosshair->DrawSelf( 
 				x - 0.5f * m_pCrosshair->Width(), 
 				y - 0.5f * m_pCrosshair->Height(),
-				bObstruction?Color(128, 128, 128, m_clrCrosshair.a()/2):m_clrCrosshair );
+				bObstruction?Color(128, 64, 64, m_clrCrosshair.a()/2):m_clrCrosshair );
 	}
 
 	float flWatchAlphaGoal = (pPlayer->GetSlowMoTime() > 0)?1:0;

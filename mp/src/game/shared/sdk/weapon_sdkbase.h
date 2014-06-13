@@ -118,6 +118,7 @@ public:
 
 #ifdef CLIENT_DLL
 	virtual int     DrawModel( int flags );
+	virtual bool    ShouldDrawCrosshair( void );
 
 	static void    DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo2, int iClip, int iMaxClip, bool bRight);
 	static void    VRBulletFired(int iRound, bool bRight);
