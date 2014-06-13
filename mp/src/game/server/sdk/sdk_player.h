@@ -232,6 +232,8 @@ public:
 
 	virtual void Disarm();
 
+	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
+
 	virtual void ThirdPersonToggle();
 	virtual void ThirdPersonSwitchSide();
 	virtual bool IsInThirdPerson() const;

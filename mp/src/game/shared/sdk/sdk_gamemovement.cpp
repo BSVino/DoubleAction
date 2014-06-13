@@ -865,7 +865,7 @@ void CSDKGameMovement::ReduceTimers( void )
 		flAimGoal = 0;
 
 	if (mv->m_vecVelocity.Length2DSqr() > 10*10)
-		m_pSDKPlayer->UseStyleCharge(SKILL_ATHLETIC, 2 * gpGlobals->frametime * m_pSDKPlayer->GetSlowMoMultiplier());
+		m_pSDKPlayer->UseStyleCharge(SKILL_ATHLETIC, 2 * gpGlobals->frametime);
 
 	m_pSDKPlayer->m_Shared.SetAimIn(Approach(flAimGoal, m_pSDKPlayer->m_Shared.GetAimIn(), flAimInSpeed));
 
@@ -2256,7 +2256,7 @@ Vector CSDKGameMovement::GetPlayerMins( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
 			return VEC_DIVE_HULL_MIN;
 		else if (m_pSDKPlayer->m_Shared.IsWallFlipping())
-			return VEC_HULL_MIN;
+			return VEC_DIVE_HULL_MIN;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
 			return VEC_PRONE_HULL_MIN;
@@ -2297,7 +2297,7 @@ Vector CSDKGameMovement::GetPlayerMaxs( void ) const
 		else if ( m_pSDKPlayer->m_Shared.IsDiving() )
 			return VEC_DIVE_HULL_MAX;
 		else if (m_pSDKPlayer->m_Shared.IsWallFlipping())
-			return VEC_HULL_MAX;
+			return VEC_DIVE_HULL_MAX;
 #if defined ( SDK_USE_PRONE )
 		else if ( m_pSDKPlayer->m_Shared.IsProne() )
             return VEC_PRONE_HULL_MAX;
@@ -2398,6 +2398,9 @@ void CSDKGameMovement::AccumulateWallFlipTime()
 	if (!m_pSDKPlayer->m_Shared.IsWallFlipping())
 		return;
 
+	float flRaiseAmount = (GetPlayerViewOffset( false ).z - GetPlayerViewOffset( true ).z)/ConVarRef("da_acro_wallflip_delay").GetFloat();
+	m_pSDKPlayer->SetViewOffset( Vector(0, 0, Approach(GetPlayerViewOffset( false ).z, m_pSDKPlayer->GetViewOffset().z, gpGlobals->frametime*flRaiseAmount)) );
+
 	if (m_pSDKPlayer->GetCurrentTime() < m_pSDKPlayer->m_Shared.GetWallFlipEndTime())
 		return;
 
@@ -2410,6 +2413,7 @@ void CSDKGameMovement::AccumulateWallFlipTime()
 	if ( bBlocked )
 		return;
 
+	m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 	m_pSDKPlayer->m_Shared.EndWallFlip();
 }
 
@@ -2525,7 +2529,6 @@ void CSDKGameMovement::FullWalkMove ()
 					&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
 				{
 					m_pSDKPlayer->m_Shared.EndDive();
-					m_pSDKPlayer->SetViewOffset( GetPlayerViewOffset( false ) );
 
 					float speed = da_acro_wallflip_speed.GetFloat ();
 					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];

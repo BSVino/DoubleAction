@@ -1828,6 +1828,24 @@ CBaseCombatWeapon* CSDKPlayer::GetLastWeapon()
 
 #define CAM_HULL_OFFSET 9.0    // the size of the bounding hull used for collision checking
 
+void CSDKPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
+{
+	BaseClass::CalcView(eyeOrigin, eyeAngles, zNear, zFar, fov);
+
+	if (m_Shared.IsWallFlipping())
+	{
+		// If the player is wall flipping fix up their eye origin to make sure it never clips into the ceiling.
+		trace_t trace;
+
+		CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
+		UTIL_TraceHull( GetAbsOrigin(), EyePosition(),
+			Vector(-CAM_HULL_OFFSET, -CAM_HULL_OFFSET, -CAM_HULL_OFFSET), Vector(CAM_HULL_OFFSET, CAM_HULL_OFFSET, CAM_HULL_OFFSET),
+			CONTENTS_SOLID, &traceFilter, &trace );
+
+		eyeOrigin = trace.endpos;
+	}
+}
+
 bool CSDKPlayer::IsInThirdPerson() const
 {
 	if (!IsAlive())
