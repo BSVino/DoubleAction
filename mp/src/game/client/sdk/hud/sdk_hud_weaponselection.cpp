@@ -39,7 +39,8 @@ class CHudWeaponSelection : public CBaseHudWeaponSelection, public vgui::Panel
 public:
 	CHudWeaponSelection(const char *pElementName );
 
-	virtual bool ShouldDraw();
+	virtual bool ShouldDraw() { return true; }
+	virtual bool RealShouldDraw();
 
 	virtual void CycleToNextWeapon( void );
 	virtual void CycleToPrevWeapon( void );
@@ -54,6 +55,8 @@ public:
 
 	virtual void OpenSelection( void );
 	virtual void HideSelection( void );
+
+	virtual void OnWeaponPickup( C_BaseCombatWeapon *pWeapon );
 
 	virtual void LevelInit();
 
@@ -134,6 +137,8 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 	m_bFadingOut = false;
 
 	m_flDeployGoal = m_flDeployCurr = 0;
+
+	SetHiddenBits( 0 );
 }
 
 #define SELECTION_TIMEOUT_THRESHOLD		5.0f	// Seconds
@@ -144,6 +149,23 @@ CHudWeaponSelection::CHudWeaponSelection( const char *pElementName ) : CBaseHudW
 //-----------------------------------------------------------------------------
 void CHudWeaponSelection::OnThink( void )
 {
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return;
+
+	if (!pPlayer->IsAlive())
+		m_flDeployGoal = m_flDeployCurr = 0;
+
+	if (pPlayer && gpGlobals->curtime - pPlayer->GetLastSpawnTime() < 0.2f)
+	{
+		// Force it to recalculate weapons
+		OpenSelection();
+		HideSelection();
+		m_flDeployGoal = 1;
+		m_flDeployCurr = 0;
+		m_flSelectionTime = gpGlobals->curtime;
+	}
+
 	// Time out after awhile of inactivity
 	if ( ( gpGlobals->curtime - m_flSelectionTime ) > SELECTION_TIMEOUT_THRESHOLD )
 	{
@@ -163,8 +185,11 @@ void CHudWeaponSelection::OnThink( void )
 		m_bFadingOut = false;
 	}
 
-	for (int i = 0; i < DA_MAX_WEAPON_SLOTS; i++)
-		m_aflSelectedCurr[i] = Approach(m_aflSelectedGoal[i], m_aflSelectedCurr[i], gpGlobals->frametime * 10);
+	if (m_flDeployCurr >= m_flDeployGoal)
+	{
+		for (int i = 0; i < DA_MAX_WEAPON_SLOTS; i++)
+			m_aflSelectedCurr[i] = Approach(m_aflSelectedGoal[i], m_aflSelectedCurr[i], gpGlobals->frametime * 10);
+	}
 
 	m_flDeployCurr = Approach(m_flDeployGoal, m_flDeployCurr, gpGlobals->frametime * 7);
 }
@@ -172,12 +197,16 @@ void CHudWeaponSelection::OnThink( void )
 //-----------------------------------------------------------------------------
 // Purpose: returns true if the panel should draw
 //-----------------------------------------------------------------------------
-bool CHudWeaponSelection::ShouldDraw()
+bool CHudWeaponSelection::RealShouldDraw()
 {
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (!pPlayer || !pPlayer->IsAlive())
+		return false;
+
 	if (m_flDeployCurr > 0 || m_flDeployGoal > 0)
 		return true;
 
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 	if ( !pPlayer )
 	{
 		if ( IsInSelectionMode() )
@@ -194,12 +223,20 @@ bool CHudWeaponSelection::ShouldDraw()
 	return ( m_bSelectionVisible ) ? true : false;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
+void CHudWeaponSelection::OnWeaponPickup( C_BaseCombatWeapon *pWeapon )
+{
+	// Force it to recalculate weapons
+	OpenSelection();
+	HideSelection();
+	m_flDeployGoal = 1;
+	m_flSelectionTime = gpGlobals->curtime;
+}
+
 void CHudWeaponSelection::LevelInit()
 {
 	CHudElement::LevelInit();
+
+	m_flDeployCurr = m_flDeployGoal = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -207,7 +244,7 @@ void CHudWeaponSelection::LevelInit()
 //-------------------------------------------------------------------------
 void CHudWeaponSelection::Paint()
 {
-	if (!ShouldDraw())
+	if (!RealShouldDraw())
 		return;
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -572,6 +609,8 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 		m_aflSelectedGoal[i] = 0;
 
 	m_aflSelectedGoal[iSlot] = 1;
+
+	m_flDeployGoal = 1;
 
 	pPlayer->EmitSound( "Player.WeaponSelectionMoveSlot" );
 }

@@ -24,6 +24,7 @@
 	#include "hud/sdk_hud_ammo.h"
 	#include "view.h"
 	#include "sourcevr/isourcevirtualreality.h"
+	#include "weapon_selection.h"
 
 #else
 
@@ -1274,10 +1275,46 @@ void CWeaponSDKBase::ClientThink()
 
 void C_WeaponSDKBase::OnDataChanged( DataUpdateType_t type )
 {
-	BaseClass::OnDataChanged( type );
+	// Skip C_BaseCombatWeapon, that code is replaced here.
+	C_BaseAnimating::OnDataChanged( type );
 
 	if ( type == DATA_UPDATE_CREATED )
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+
+	CHandle< C_BaseCombatWeapon > handle = this;
+
+	// If it's being carried by the *local* player, on the first update,
+	// find the registered weapon for this ID
+
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseCombatCharacter *pOwner = GetOwner();
+
+	if (m_hLastOwner != pOwner)
+	{
+		if ( m_hLastOwner == pPlayer || pOwner == pPlayer )
+		{
+			if ( ShouldDrawPickup() )
+			{
+				CBaseHudWeaponSelection *pHudSelection = GetHudWeaponSelection();
+				if ( pHudSelection )
+					pHudSelection->OnWeaponPickup( this );
+
+				pPlayer->EmitSound( "Player.PickupWeapon" );
+			}
+		}
+	}
+
+	bool bIsLocalPlayer = pPlayer && pPlayer == pOwner;
+	if ( !bIsLocalPlayer )
+	{
+		int overrideModelIndex = CalcOverrideModelIndex();
+		if( overrideModelIndex != -1 && overrideModelIndex != GetModelIndex() )
+			SetModelIndex( overrideModelIndex );
+	}
+
+	UpdateVisibility();
+
+	m_hLastOwner = pOwner;
 }
 
 float C_WeaponSDKBase::GetMarksmanGold()

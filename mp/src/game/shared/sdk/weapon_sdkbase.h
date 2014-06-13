@@ -143,6 +143,8 @@ public:
 	virtual void ClientThink();
 	float GetMarksmanGold();
 
+	EHANDLE m_hLastOwner;
+
 #endif
 
 	virtual float GetWeaponSpread();
