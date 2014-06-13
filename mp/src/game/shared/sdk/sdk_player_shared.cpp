@@ -525,6 +525,9 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 	{
 		m_Shared.m_bSuperSkill = false;
 		m_flStylePoints = 0;
+
+		if (m_flSlowMoSeconds == 0)
+			m_bHasSuperSlowMo = m_Shared.m_bSuperSkill;
 	}
 }
 
@@ -1567,6 +1570,9 @@ void CSDKPlayer::DeactivateSlowMo()
 		if (m_flSlowMoSeconds < 0)
 			m_flSlowMoSeconds = 0;
 	}
+
+	if (m_flSlowMoSeconds == 0)
+		m_bHasSuperSlowMo = m_Shared.m_bSuperSkill;
 
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
