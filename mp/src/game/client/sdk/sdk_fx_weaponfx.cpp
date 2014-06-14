@@ -33,30 +33,12 @@ void SDK_FX_EjectBrass_12Gauge_Callback( const CEffectData &data )
 	SDK_EjectBrass( CS_SHELL_12GAUGE, data );
 }
 
-void SDK_FX_EjectBrass_57_Callback( const CEffectData &data )
-{
-	SDK_EjectBrass( CS_SHELL_57, data );
-}
-
-void SDK_FX_EjectBrass_556_Callback( const CEffectData &data )
-{
-	SDK_EjectBrass( CS_SHELL_556, data );
-}
-
 void SDK_FX_EjectBrass_762Nato_Callback( const CEffectData &data )
 {
 	SDK_EjectBrass( CS_SHELL_762NATO, data );
 }
 
-void SDK_FX_EjectBrass_338Mag_Callback( const CEffectData &data )
-{
-	SDK_EjectBrass( CS_SHELL_338MAG, data );
-}
-
 
 DECLARE_CLIENT_EFFECT( "EjectBrass_9mm",		SDK_FX_EjectBrass_9mm_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_12Gauge",	SDK_FX_EjectBrass_12Gauge_Callback );
-DECLARE_CLIENT_EFFECT( "EjectBrass_57",			SDK_FX_EjectBrass_57_Callback );
-DECLARE_CLIENT_EFFECT( "EjectBrass_556",		SDK_FX_EjectBrass_556_Callback );
 DECLARE_CLIENT_EFFECT( "EjectBrass_762Nato",	SDK_FX_EjectBrass_762Nato_Callback );
-DECLARE_CLIENT_EFFECT( "EjectBrass_338Mag",		SDK_FX_EjectBrass_338Mag_Callback );
