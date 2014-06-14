@@ -30,6 +30,7 @@ public:
 
 #if defined( CLIENT_DLL )
 	virtual int     DrawModel( int flags );
+	virtual void FireObsoleteEvent( const Vector& origin, const QAngle& angles, int event, const char *options ) {};
 #endif
 
 	virtual void CalcViewModelLag( Vector& origin, QAngle& angles, QAngle& original_angles ) {};
