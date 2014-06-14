@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "sdk_fx_shared.h"
 #include "weapon_sdkbase.h"
+#include "weapon_akimbobase.h"
 
 #ifdef CLIENT_DLL
 #include "prediction.h"
@@ -181,8 +182,21 @@ void FX_FireBullets(
 
 	if ( !pPlayer )
 		return;
-	
-	pPlayer->DoMuzzleFlash();
+
+	if (*pWeaponInfo->m_szSingle)
+	{
+		CWeaponSDKBase* pWeapon = pPlayer->GetActiveSDKWeapon();
+		if (pWeapon)
+		{
+			Assert(pWeapon->IsAkimbo());
+			CAkimboBase* pAkimbo = dynamic_cast<CAkimboBase*>(pWeapon);
+			Assert(pAkimbo);
+			if (pAkimbo)
+				pPlayer->DoMuzzleFlash(pAkimbo->shootright?2:1);
+		}
+	}
+	else
+		pPlayer->DoMuzzleFlash();
 
 	pPlayer->ReadyWeapon();
 

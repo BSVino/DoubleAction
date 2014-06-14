@@ -264,7 +264,7 @@ public:
 		float x,
 		float y );
 
-	virtual void DoMuzzleFlash();
+	virtual void DoMuzzleFlash(int iAkimbo = 0);
 	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment );
 
 	CNetworkVarEmbedded( CSDKPlayerShared, m_Shared );

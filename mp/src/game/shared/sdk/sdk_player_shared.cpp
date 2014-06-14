@@ -149,7 +149,7 @@ void CSDKPlayer::FireBullet(
 	Assert(!oBullet.m_bActive);
 }
 
-void CSDKPlayer::DoMuzzleFlash()
+void CSDKPlayer::DoMuzzleFlash(int iAkimbo)
 {
 #ifdef CLIENT_DLL
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
@@ -173,6 +173,12 @@ void CSDKPlayer::DoMuzzleFlash()
 		}
 		else if (pActiveWeapon)
 		{
+			const char* pszMuzzleAttachment = "muzzle";
+			if (iAkimbo == 1)
+				pszMuzzleAttachment = "muzzle1";
+			else if (iAkimbo == 2)
+				pszMuzzleAttachment = "muzzle2";
+
 			// Force world model so the attachments work.
 			pActiveWeapon->SetModelIndex( pActiveWeapon->GetWorldModelIndex() );
 
@@ -180,19 +186,19 @@ void CSDKPlayer::DoMuzzleFlash()
 			{
 			case WT_PISTOL:
 			default:
-				pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, "muzzle" );
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_pistol", PATTACH_POINT_FOLLOW, pszMuzzleAttachment );
 				break;
 
 			case WT_SMG:
-				pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, "muzzle" );
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_smg", PATTACH_POINT_FOLLOW, pszMuzzleAttachment );
 				break;
 
 			case WT_RIFLE:
-				pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, "muzzle" );
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_rifle", PATTACH_POINT_FOLLOW, pszMuzzleAttachment );
 				break;
 
 			case WT_SHOTGUN:
-				pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, "muzzle" );
+				pActiveWeapon->ParticleProp()->Create( "muzzleflash_shotgun", PATTACH_POINT_FOLLOW, pszMuzzleAttachment );
 				break;
 			}
 		}
