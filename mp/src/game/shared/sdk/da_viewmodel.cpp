@@ -6,6 +6,8 @@
 
 #ifdef CLIENT_DLL
 #include "c_sdk_player.h"
+#include "eventlist.h"
+#include "effect_dispatch_data.h"
 #else
 #include "sdk_player.h"
 #endif
@@ -159,6 +161,65 @@ int CDAViewModel::DrawModel(int flags)
 	}
 
 	return iReturn;
+}
+
+void DispatchEffect( const char *pName, const CEffectData &data );
+
+void CDAViewModel::FireObsoleteEvent( const Vector& origin, const QAngle& angles, int event, const char *options )
+{
+	Vector attachOrigin;
+	QAngle attachAngles; 
+
+	switch( event )
+	{
+	// Obsolete. Use the AE_CL_CREATE_PARTICLE_EFFECT event instead, which uses the artist driven particle system & editor.
+	case AE_CLIENT_EFFECT_ATTACH:
+		{
+			int iAttachment = -1;
+			int iParam = 0;
+			char token[128];
+			char effectFunc[128];
+
+			const char *p = options;
+
+			p = nexttoken(token, p, ' ');
+
+			if( token ) 
+			{
+				Q_strncpy( effectFunc, token, sizeof(effectFunc) );
+			}
+
+			p = nexttoken(token, p, ' ');
+
+			if( token )
+			{
+				iAttachment = atoi(token);
+			}
+
+			p = nexttoken(token, p, ' ');
+
+			if( token )
+			{
+				iParam = atoi(token);
+			}
+
+			matrix3x4_t m;
+			if ( GetAttachment( iAttachment, attachOrigin, attachAngles ) )
+			{
+				// Fill out the generic data
+				CEffectData data;
+				data.m_vOrigin = attachOrigin;
+				data.m_vAngles = attachAngles;
+				AngleVectors( attachAngles, &data.m_vNormal );
+				data.m_hEntity = GetRefEHandle();
+				data.m_nAttachmentIndex = iAttachment + 1;
+				data.m_fFlags = iParam;
+
+				DispatchEffect( effectFunc, data );
+			}
+		}
+		break;
+	}
 }
 #endif
 
