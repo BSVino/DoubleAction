@@ -36,6 +36,10 @@
 #include "c_props.h"
 #include "c_basedoor.h"
 
+#ifdef SDK_DLL
+#include "c_sdk_player.h"
+#endif
+
 // NOTE: Always include this last!
 #include "tier0/memdbgon.h"
 
@@ -2336,6 +2340,12 @@ void CTempEnts::Update(void)
 	gTempEntFrame = (gTempEntFrame+1) & 31;
 
 	frametime = gpGlobals->frametime;
+
+#ifdef SDK_DLL
+	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pPlayer)
+		frametime *= pPlayer->GetSlowMoMultiplier();
+#endif
 
 	// in order to have tents collide with players, we have to run the player prediction code so
 	// that the client has the player list. We run this code once when we detect any COLLIDEALL 
