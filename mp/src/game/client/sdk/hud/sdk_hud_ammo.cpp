@@ -21,6 +21,7 @@
 #include "sdkviewport.h"
 #include "weapon_sdkbase.h"
 #include "ammodef.h"
+#include "sourcevr/isourcevirtualreality.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -224,10 +225,13 @@ void CHudAmmo::ShotFired(C_WeaponSDKBase* pWeapon, bool bAkimbo, bool bRight)
 
 	m_iAmmo = pWeapon->Clip1();
 
-	if (bAkimbo)
-		CWeaponSDKBase::VRBulletFired(bRight?pWeapon->rightclip.Get():pWeapon->leftclip.Get(), bRight);
-	else
-		CWeaponSDKBase::VRBulletFired(m_iAmmo, true);
+	if (ConVarRef("da_vr_hud").GetBool() || UseVR())
+	{
+		if (bAkimbo)
+			CWeaponSDKBase::VRBulletFired(bRight?pWeapon->rightclip.Get():pWeapon->leftclip.Get(), bRight);
+		else
+			CWeaponSDKBase::VRBulletFired(m_iAmmo, true);
+	}
 
 	int iSpot = -1;
 

@@ -1088,6 +1088,8 @@ int CWeaponSDKBase::DrawModel(int flags)
 		if (GetAttachment("ammo_1_l", vecAmmo1) && GetAttachment("ammo_2_l", vecAmmo2))
 			DrawVRBullets(vecAmmo1, vecAmmo2, leftclip, GetMaxClip1()/2, false);
 	}
+	else
+		s_iMaxClip = GetMaxClip1();
 
 	if (!g_hWeaponArrow.IsValid())
 		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
@@ -1209,6 +1211,9 @@ void CWeaponSDKBase::DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo
 
 Vector CWeaponSDKBase::GetVRRoundPosition(int iRound, bool bRight)
 {
+	if (!s_iMaxClip)
+		s_iMaxClip = 10;
+
 	float f = (float)iRound/(float)s_iMaxClip;
 
 	if (bRight)
