@@ -167,6 +167,10 @@ void DispatchEffect( const char *pName, const CEffectData &data );
 
 void CDAViewModel::FireObsoleteEvent( const Vector& origin, const QAngle& angles, int event, const char *options )
 {
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+	if (!pOwner)
+		return;
+
 	Vector attachOrigin;
 	QAngle attachAngles; 
 
@@ -185,26 +189,32 @@ void CDAViewModel::FireObsoleteEvent( const Vector& origin, const QAngle& angles
 			p = nexttoken(token, p, ' ');
 
 			if( token ) 
-			{
 				Q_strncpy( effectFunc, token, sizeof(effectFunc) );
+
+			p = nexttoken(token, p, ' ');
+
+			bool bResult = false;
+
+			if( token )
+			{
+				if (pOwner->IsInThirdPerson() && pOwner->GetActiveSDKWeapon())
+				{
+					iAttachment = pOwner->GetActiveSDKWeapon()->LookupAttachment(token);
+					bResult = pOwner->GetActiveSDKWeapon()->GetAttachment( iAttachment, attachOrigin, attachAngles );
+				}
+				else
+				{
+					iAttachment = LookupAttachment(token);
+					bResult = GetAttachment( iAttachment, attachOrigin, attachAngles );
+				}
 			}
 
 			p = nexttoken(token, p, ' ');
 
 			if( token )
-			{
-				iAttachment = atoi(token);
-			}
-
-			p = nexttoken(token, p, ' ');
-
-			if( token )
-			{
 				iParam = atoi(token);
-			}
 
-			matrix3x4_t m;
-			if ( GetAttachment( iAttachment, attachOrigin, attachAngles ) )
+			if (bResult)
 			{
 				// Fill out the generic data
 				CEffectData data;
