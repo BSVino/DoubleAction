@@ -315,21 +315,38 @@ void CHudLeaderboard::Paint()
 		m_pBounty = gHUD.GetIcon("bounty");
 	}
 
+	int iTextTall = surface()->GetFontTall( m_hTextFont );
+	surface()->DrawSetTextPos( m_flBorder + iTextTall + iTextTall*2, m_flBorder );
+	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+	surface()->DrawSetTextFont( m_hTextFont );
+
 	if (SDKGameRules()->GetBountyPlayer())
 	{
-		ListSpecialPlayer(SDKGameRules()->GetBountyPlayer(), m_pBounty, 0);
+		wchar_t* pszGameMode = g_pVGuiLocalize->Find("#DA_LeaderBoard_Wanted");
+		if (pszGameMode)
+			surface()->DrawUnicodeString( pszGameMode, vgui::FONT_DRAW_NONADDITIVE );
+
+		ListSpecialPlayer(SDKGameRules()->GetBountyPlayer(), m_pBounty, 1);
 		return;
 	}
-	else if (SDKGameRules()->GetBriefcase())
+	else if (SDKGameRules()->GetBriefcase() && ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()))
 	{
-		ListSpecialPlayer(ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()), m_pBriefcase, 0);
+		wchar_t* pszGameMode = g_pVGuiLocalize->Find("#DA_LeaderBoard_CTB");
+		if (pszGameMode)
+			surface()->DrawUnicodeString( pszGameMode, vgui::FONT_DRAW_NONADDITIVE );
+
+		ListSpecialPlayer(ToSDKPlayer(SDKGameRules()->GetBriefcase()->GetOwnerEntity()), m_pBriefcase, 1);
 		return;
 	}
 	else if (SDKGameRules()->GetLeader())
 	{
-		ListSpecialPlayer(SDKGameRules()->GetLeader(), m_pBounty, 0);
-		ListSpecialPlayer(SDKGameRules()->GetFrontRunner1(), m_pBounty, 1);
-		ListSpecialPlayer(SDKGameRules()->GetFrontRunner2(), m_pBounty, 2);
+		wchar_t* pszGameMode = g_pVGuiLocalize->Find("#DA_LeaderBoard_RatRace");
+		if (pszGameMode)
+			surface()->DrawUnicodeString( pszGameMode, vgui::FONT_DRAW_NONADDITIVE );
+
+		ListSpecialPlayer(SDKGameRules()->GetLeader(), m_pBounty, 1);
+		ListSpecialPlayer(SDKGameRules()->GetFrontRunner1(), m_pBounty, 2);
+		ListSpecialPlayer(SDKGameRules()->GetFrontRunner2(), m_pBounty, 3);
 		return;
 	}
 
