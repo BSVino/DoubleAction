@@ -2624,11 +2624,15 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	m_hRaceWaypoint3->SetWaypoint(2);
 	m_hRaceWaypoint3->Spawn();
 
+	m_flLastPlayerWaypointTouch = gpGlobals->curtime;
+
 	return true;
 }
 
 void CSDKGameRules::MaintainMiniObjective_RatRace()
 {
+	if (gpGlobals->curtime - m_flLastPlayerWaypointTouch > 60)
+		CleanupMiniObjective();
 }
 
 void CSDKGameRules::CleanupMiniObjective_RatRace()
@@ -2675,6 +2679,9 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 			}
 
 			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pPlayer);
+
+			if (!pPlayer->IsBot())
+				m_flLastPlayerWaypointTouch = gpGlobals->curtime;
 		}
 		else if (pPlayer->m_iRaceWaypoint == 2)
 		{
@@ -2696,6 +2703,9 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 
 			WaypointLeadersPush(m_ahWaypoint2RaceLeaders, pPlayer);
 			RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, pPlayer);
+
+			if (!pPlayer->IsBot())
+				m_flLastPlayerWaypointTouch = gpGlobals->curtime;
 		}
 		else if (pPlayer->m_iRaceWaypoint == 3)
 		{
