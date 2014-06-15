@@ -71,7 +71,8 @@ void CSDKBot::Attack( CUserCmd &cmd )
 		}
 		else
 		{
-			if (random->RandomInt(0, 1))
+			RandomSeed(gpGlobals->curtime*1000); // Without this it stops being very random for some reason.
+			if (RandomInt(0, 1))
 				cmd.buttons |= IN_ATTACK;
 		}
 	}

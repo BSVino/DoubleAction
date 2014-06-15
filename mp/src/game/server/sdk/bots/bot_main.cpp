@@ -295,6 +295,9 @@ void Bot_RunAll( void )
 {	
 	Bot_MaintainQuota();
 
+	random->SetSeed(gpGlobals->curtime*1000);
+	RandomSeed(gpGlobals->curtime*1000);
+
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
