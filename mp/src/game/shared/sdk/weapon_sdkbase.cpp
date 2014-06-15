@@ -1583,6 +1583,8 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 					UTIL_Remove(this);
 
 					pPlayer->Weapon_Switch(pAkimbo);
+
+					pPlayer->Instructor_LessonLearned("pickupweapon");
 					return;
 				}
 			}
@@ -1607,6 +1609,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			UTIL_Remove( this );
 			OnPickedUp( pPlayer );
 
+			pPlayer->Instructor_LessonLearned("pickupweapon");
 			return;
 		}
 		else
@@ -1636,6 +1639,8 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		}
 
 		OnPickedUp( pPlayer );
+
+		pPlayer->Instructor_LessonLearned("pickupweapon");
 	}
 #endif
 }
