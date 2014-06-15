@@ -218,4 +218,16 @@ void CHudSlowMo::Paint()
 		surface()->DrawSetTextFont( m_hHintFont );
 		surface()->DrawUnicodeString( wszHintLabel, vgui::FONT_DRAW_NONADDITIVE );
 	}
+
+	wchar_t* pszSlowmo = g_pVGuiLocalize->Find("#DA_HUD_Slowmo");
+	if (pszSlowmo)
+	{
+		int iTextWide, iTextTall;
+		surface()->GetTextSize( m_hHintFont, pszSlowmo, iTextWide, iTextTall );
+
+		surface()->DrawSetTextPos( GetWide()/2 - iTextWide/2, watch_ypos + watch_tall );
+		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
+		surface()->DrawSetTextFont( m_hHintFont );
+		surface()->DrawUnicodeString( pszSlowmo, vgui::FONT_DRAW_NONADDITIVE );
+	}
 }
