@@ -163,6 +163,9 @@ void CSDKTargetId::Paint()
 	if (!C_SDKPlayer::GetLocalSDKPlayer())
 		return;
 
+	if (C_SDKPlayer::GetLocalSDKPlayer()->GetObserverMode() == OBS_MODE_FREEZECAM)
+		return;
+
 	if (!m_pBriefcase)
 	{
 		m_pBriefcase = gHUD.GetIcon("briefcase");
