@@ -95,7 +95,7 @@ void CBulletManager::FrameUpdatePreEntityThink()
 	BulletsThink(gpGlobals->frametime);
 }
 
-ConVar da_bullet_speed("da_bullet_speed", "1500", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
+ConVar da_bullet_speed("da_bullet_speed", "2500", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
 ConVar da_bullet_speed_active("da_bullet_speed_active", "4000", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How fast do bullets go during slow motion?" );
 ConVar da_bullet_debug("da_bullet_debug", "0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Shows client (red) and server (blue) bullet path" );
 
