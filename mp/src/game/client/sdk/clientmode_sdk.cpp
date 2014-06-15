@@ -221,7 +221,7 @@ void ClientModeSDKNormal::OverrideView( CViewSetup *pSetup )
 }
 
 ConVar m_verticaldamping("m_verticaldamping", "0.85", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen vertical component of mouse movement.", true, 0.1f, true, 1);
-ConVar m_slowmodamping("m_slowmodamping", "0.6", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during slow motion.", true, 0.1f, true, 1);
+ConVar m_slowmodamping("m_slowmodamping", "0.7", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during slow motion.", true, 0.1f, true, 1);
 ConVar m_aimindamping("m_aimindamping", "0.5", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during aim-in.", true, 0.1f, true, 1);
 ConVar m_partialaimindamping("m_partialaimindamping", "0.8", FCVAR_CLIENTDLL|FCVAR_ARCHIVE, "Multiplier to dampen mouse movement during aim-in for non-rifles.", true, 0.1f, true, 1);
 
