@@ -16,6 +16,7 @@
 #include "da_buymenu.h"
 #include "ammodef.h"
 #include "da_hud_vote.h"
+#include "da_viewback.h"
 
 #undef min
 #undef max
@@ -672,6 +673,10 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 	pLessonProgress->m_flLastTimeLearned = gpGlobals->curtime;
 	pLessonProgress->m_iTimesLearned++;
 
+	CLesson* pLesson = m_pInstructor->GetLesson(pLessonProgress->m_sLessonName);
+
+	vb_data_send_int_s(pLessonProgress->m_sLessonName, std::min(pLessonProgress->m_iTimesLearned, pLesson->m_iTimesToLearn));
+
 	CHudElement* pLessonPanel = gHUD.FindElement("CHudSideHintPanel");
 	if (pLessonPanel)
 	{
@@ -686,8 +691,6 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 			pSideHint->Reset();
 		}
 	}
-
-	CLesson* pLesson = m_pInstructor->GetLesson(sLesson);
 
 	if (lesson_debug.GetBool())
 	{
@@ -1388,6 +1391,9 @@ void CC_ResetLessons()
 
 	pPlayer->Instructor_Initialize();
 	pPlayer->Instructor_Reset();
+
+	for (unsigned int i = 0; i < pPlayer->GetInstructor()->GetLessons().Count(); i++)
+		vb_data_send_int_s(pPlayer->GetInstructor()->GetLessons()[i]->m_sLessonName, 0);
 }
 
 static ConCommand lesson_reset("lesson_reset", CC_ResetLessons, "Reset the game instructor lessons.");

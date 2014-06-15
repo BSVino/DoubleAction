@@ -39,6 +39,8 @@ public:
 	vb_channel_handle_t m_ePlayerRecoil;
 	vb_channel_handle_t m_ePlayerRecoilFloat;
 	vb_channel_handle_t m_ePlayerViewPunch;
+
+	CUtlVector<vb_channel_handle_t> m_aeLessons;
 };
 
 CViewbackSystem& ViewbackSystem();

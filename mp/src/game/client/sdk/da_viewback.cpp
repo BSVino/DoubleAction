@@ -10,6 +10,8 @@ using namespace std;
 
 #include "convar.h"
 
+#include "c_sdk_player.h"
+
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -64,6 +66,20 @@ void CViewbackSystem::LevelInitPostEntity( void )
 	vb_util_add_channel("Recoil", VB_DATATYPE_FLOAT, &m_ePlayerRecoilFloat);
 	vb_util_add_channel("ViewPunch", VB_DATATYPE_FLOAT, &m_ePlayerViewPunch);
 
+	vb_group_handle_t eInstructorGroup;
+	vb_util_add_group("Instructor", &eInstructorGroup);
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	CInstructor* pInstructor = pLocalPlayer->GetInstructor();
+	auto& aLessons = pInstructor->GetLessons();
+	m_aeLessons.EnsureCount(aLessons.Count());
+	for (unsigned int i = 0; i < aLessons.Count(); i++)
+	{
+		vb_util_add_channel(aLessons[i]->m_sLessonName.Get(), VB_DATATYPE_INT, &m_aeLessons[i]);
+		vb_util_add_channel_to_group(eInstructorGroup, m_aeLessons[i]);
+		vb_util_add_label(m_aeLessons[i], aLessons[i]->m_iTimesToLearn, "Learned");
+	}
+
 	vb_group_handle_t eDAGroup, eAnimationGroup, eMovementGroup, eRecoilGroup;
 
 	vb_util_add_group("DoubleAction", &eDAGroup);
@@ -101,6 +117,10 @@ void CViewbackSystem::LevelInitPostEntity( void )
 		Msg("Viewback: Couldn't create Viewback server\n");
 		return;
 	}
+
+	// Initialize
+	for (unsigned int i = 0; i < aLessons.Count(); i++)
+		vb_data_send_int_s(aLessons[i]->m_sLessonName, 0);
 
 	g_pCVar->InstallConsoleDisplayFunc( this );
 
