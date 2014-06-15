@@ -257,6 +257,7 @@ public:
 	virtual void	Instructor_LessonShowed(const CUtlString& sLesson);
 	virtual bool	Instructor_IsLessonLearned(const CLessonProgress* pLessonProgress);
 	virtual int     Instructor_GetLessonTrainings(const CUtlString& sLesson);
+	virtual bool	Instructor_IsLessonValid(const CUtlString& sLesson);
 	virtual bool	Instructor_IsLessonValid(const CLessonProgress* pLessonProgress);
 	virtual class CLessonProgress*  Instructor_GetBestLesson();
 	CInstructor*    GetInstructor() { return m_pInstructor; }

@@ -188,6 +188,14 @@ bool PlayerDeadConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
 	if (!pPlayer->HasPlayerDied())
 		return false;
 
+	return true;
+}
+
+bool PlayerDeadNoKillCamConditions( C_SDKPlayer *pPlayer, class CLesson *pLesson )
+{
+	if (!PlayerDeadConditions(pPlayer, pLesson))
+		return false;
+
 	if (pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM)
 		return false;
 
@@ -320,6 +328,8 @@ pfnConditionsMet CInstructor::GetBaseConditions(const CUtlString& sConditions)
 		return PlayerAliveConditions;
 	else if (sConditions == "PlayerDead")
 		return PlayerDeadConditions;
+	else if (sConditions == "PlayerDeadNoKillCam")
+		return PlayerDeadNoKillCamConditions;
 	else if (sConditions == "PlayerCanReload")
 		return PlayerCanReloadConditions;
 	else if (sConditions == "PlayerOutOfAmmoAndMultipleWeapons")
@@ -782,6 +792,16 @@ int C_SDKPlayer::Instructor_GetLessonTrainings(const CUtlString& sLesson)
 		return 0;
 
 	return pLessonProgress->m_iTimesLearned;
+}
+
+bool C_SDKPlayer::Instructor_IsLessonValid(const CUtlString& sLesson)
+{
+	int iLesson = m_apLessonProgress.Find(sLesson);
+	Assert(iLesson != -1);
+	if (iLesson == -1)
+		return false;
+
+	return Instructor_IsLessonValid(&m_apLessonProgress[iLesson]);
 }
 
 // Can this lesson be displayed right now?

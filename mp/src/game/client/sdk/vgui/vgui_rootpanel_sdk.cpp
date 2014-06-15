@@ -284,6 +284,25 @@ void C_SDKRootPanel::RenderDeathFrame( void )
 			surface()->DrawPrintText(sMessage.c_str(), sMessage.length());
 		}
 	}
+
+	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (pLocalPlayer)
+	{
+		wchar_t* pszBuyHint = g_pVGuiLocalize->Find("#DA_DeathFrame_Buy");
+
+		if (pLocalPlayer->Instructor_IsLessonValid("buy") && pszBuyHint)
+		{
+			wchar_t buf[512];
+			UTIL_ReplaceKeyBindings( pszBuyHint, wcslen(pszBuyHint)*2, buf, sizeof( buf ) );
+
+			float flXOffset = RemapValClamped(Bias(RemapValClamped(gpGlobals->curtime, m_flKilledByStartTime + 0.5f, m_flKilledByStartTime + 0.5f + flLerpTime, 0, 1), 0.8f), 0, 1, -iWidth*2/3, 0);
+
+			surface()->DrawSetTextFont(m_hDeathFrameMedium);
+			surface()->DrawSetTextPos(40 + flXOffset + (gpGlobals->curtime - m_flKilledByStartTime) * 10, iHeight/2);
+			surface()->DrawSetTextColor(Color(255, 255, 255, 255));
+			surface()->DrawPrintText(buf, wcslen(buf));
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
