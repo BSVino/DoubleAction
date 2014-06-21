@@ -50,7 +50,7 @@ ConVar sv_vote_failure_timer("sv_vote_failure_timer", "300", 0, "A vote that fai
 ConVar sv_vote_failure_timer_mvm( "sv_vote_failure_timer_mvm", "120", 0, "A vote that fails in MvM cannot be re-submitted for this long" );
 #endif // TF_DLL
 ConVar sv_vote_creation_timer("sv_vote_creation_timer", "120", FCVAR_DEVELOPMENTONLY, "How often someone can individually call a vote.");
-ConVar sv_vote_quorum_ratio( "sv_vote_quorum_ratio", "0.6", 1, "The minimum ratio of players needed to vote on an issue to resolve it.", true, 0.1, true, 1.0 );
+ConVar sv_vote_quorum_ratio( "sv_vote_quorum_ratio", "0.51", 1, "The minimum ratio of players needed to vote on an issue to resolve it.", true, 0.1, true, 1.0 );
 ConVar sv_vote_allow_spectators( "sv_vote_allow_spectators", "0", 0, "Allow spectators to vote?" );
 ConVar sv_vote_ui_hide_disabled_issues( "sv_vote_ui_hide_disabled_issues", "1", 0, "Suppress listing of disabled issues in the vote setup screen." );
 
