@@ -115,8 +115,7 @@ void CBulletManager::BulletsThink(float flFrameTime)
 
 		if (oBullet.m_hShooter)
 		{
-			if (oBullet.m_hShooter->m_Shared.m_iStyleSkill == SKILL_MARKSMAN || oBullet.m_hShooter->m_Shared.m_bSuperSkill ||
-				oBullet.m_hShooter->GetSlowMoType() == SLOWMO_ACTIVATED || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_STYLESKILL)
+			if (oBullet.m_hShooter->m_Shared.m_bSuperSkill || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_ACTIVATED || oBullet.m_hShooter->GetSlowMoType() == SLOWMO_STYLESKILL)
 				flSpeed = da_bullet_speed_active.GetFloat();
 
 				flLerpTime *= oBullet.m_hShooter->GetSlowMoMultiplier();

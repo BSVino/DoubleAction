@@ -133,6 +133,9 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 		else
 			m_flArrowGoalSize = 0;
 
+		// Don't show grenades if we're aimed in.
+		m_flArrowGoalSize *= 1-pLocalPlayer->m_Shared.GetAimIn();
+
 		float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
 		float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetSlowMoMultiplier();
 

@@ -2080,16 +2080,16 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flBrawlPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
 	}
-	else if (m_Shared.GetAimIn() >= 0.99f)
-	{
-		if (bKilledVictim)
-			AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
-		else
-			AddStylePoints(flPoints*0.5f, STYLE_SOUND_SMALL, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
-	}
 	else if (bKilledVictim && m_flSlowMoMultiplier < 1)
 	{
 		AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLOWMO_KILL, STYLE_POINT_LARGE);
+	}
+	else if (m_Shared.GetAimIn() >= 0.99f)
+	{
+		if (bKilledVictim)
+			AddStylePoints(flPoints*0.3f, STYLE_SOUND_LARGE, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_LARGE);
+		else
+			AddStylePoints(flPoints*0.3f, STYLE_SOUND_SMALL, ANNOUNCEMENT_TACTICOOL, STYLE_POINT_SMALL);
 	}
 	else
 	{
