@@ -119,10 +119,10 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 		int iWidth = ScreenWidth();
 		int iHeight = ScreenHeight();
 
-		int i169Height = iWidth*9/16;
-		if (i169Height >= iHeight - 50)
-			i169Height = iHeight - 50;
-		int iBarHeight = ((iHeight - i169Height)/2)*flLetterbox;
+		int i179Height = iWidth*9/17;
+		if (i179Height >= iHeight - 50)
+			i179Height = iHeight - 50;
+		int iBarHeight = ((iHeight - i179Height)/2)*flLetterbox;
 
 		surface()->DrawSetColor(Color(0, 0, 0, 255*flLetterbox));
 		surface()->DrawFilledRect( 0, 0, ScreenWidth(), iBarHeight );
