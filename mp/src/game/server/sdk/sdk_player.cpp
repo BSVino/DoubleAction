@@ -3594,20 +3594,7 @@ void CSDKPlayer::State_PreThink_DEATH_ANIM()
 
 	//Tony; if we're now dead, and not changing classes, spawn
 	if ( m_lifeState == LIFE_DEAD )
-	{
-#if defined ( SDK_USE_PLAYERCLASSES )
-		//Tony; if the class menu is open, don't respawn them, wait till they're done.
-		if (IsClassMenuOpen())
-			return;
-#endif
-		if (IsTeamMenuOpen())
-			return;
-
-		if (IsBuyMenuOpen())
-			return;
-
 		State_Transition( STATE_OBSERVER_MODE );
-	}
 }
 
 void CSDKPlayer::State_Enter_OBSERVER_MODE()
