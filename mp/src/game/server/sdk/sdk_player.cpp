@@ -3796,6 +3796,13 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 // Don't automatically pick weapons up just because the player touched them. You clepto.
 bool CSDKPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 {
+	CWeaponSDKBase* pSDKWeapon = NULL;
+	if (pWeapon)
+		pSDKWeapon = dynamic_cast<CWeaponSDKBase*>(pWeapon);
+
+	if (m_Shared.m_iStyleSkill == SKILL_TROLL && pSDKWeapon && pSDKWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
+		return BaseClass::BumpWeapon(pWeapon);
+
 	return false;
 }
 
