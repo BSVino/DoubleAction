@@ -2676,7 +2676,7 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 
 void CSDKGameRules::MaintainMiniObjective_RatRace()
 {
-	if (gpGlobals->curtime - m_flLastPlayerWaypointTouch > 60)
+	if (gpGlobals->curtime - m_flLastPlayerWaypointTouch > 120)
 		CleanupMiniObjective();
 }
 
