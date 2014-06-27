@@ -929,6 +929,24 @@ void CSDKGameRules::Think()
 	// Skip CMultiplayGameRules since we're doing the intermission logic ourselves.
 	CGameRules::Think();
 
+	for (int i = 0; i < GetNumberOfTeams(); i++)
+	{
+		if (!GetGlobalSDKTeam(i))
+			continue;
+
+		int iStyle = 0;
+
+		for (int j = 0; j < GetGlobalSDKTeam(i)->GetNumPlayers(); j++)
+		{
+			if (!GetGlobalSDKTeam(i)->GetPlayer(j))
+				continue;
+
+			iStyle += ToSDKPlayer(GetGlobalSDKTeam(i)->GetPlayer(j))->GetTotalStyle();
+		}
+
+		GetGlobalSDKTeam(i)->SetScore(iStyle);
+	}
+
 	if ( g_fGameOver )   // someone else quit the game already
 	{
 		// check to see if we should change levels now

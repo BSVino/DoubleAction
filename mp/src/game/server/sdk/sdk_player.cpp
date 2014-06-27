@@ -1818,9 +1818,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pAttackerSDK->GiveSlowMo(1);
 				pAttackerSDK->Instructor_LessonLearned("earn_slowmo");
 			}
-
-			if (gpGlobals->teamplay && pAttackerSDK->GetTeam())
-				pAttackerSDK->GetTeam()->AddScore(1);
 		}
 	}
 	else
