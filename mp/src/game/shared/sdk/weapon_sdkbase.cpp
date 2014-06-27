@@ -796,7 +796,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 	}
 
 	// DIVEPUNCH!
-	if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsRolling() || pPlayer->m_Shared.IsSliding() || pPlayer->m_Shared.IsWallFlipping())
+	if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsRolling() || pPlayer->m_Shared.IsSliding() || pPlayer->m_Shared.IsWallFlipping(true))
 		flDamage *= 1.8f;
 	else if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;

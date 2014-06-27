@@ -1151,6 +1151,18 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 ConVar da_acro_wallflip_delay ("da_acro_wallflip_delay", ".3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
+bool CSDKPlayerShared::IsWallFlipping(bool bExtend) const
+{
+	if (m_bIsWallFlipping)
+		return m_bIsWallFlipping;
+
+	if (!bExtend)
+		return false;
+
+	// The wall flip technically ends very quickly before the animation is done playing, so we have the option of extending it out a bit for some purposes.
+	return m_pOuter->GetCurrentTime() < GetWallFlipEndTime() + 0.5f;
+}
+
 void CSDKPlayerShared::StartWallFlip(const Vector& vecWallNormal)
 {
 	m_bIsWallFlipping = true;
@@ -1868,7 +1880,7 @@ void CSDKPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 {
 	BaseClass::CalcView(eyeOrigin, eyeAngles, zNear, zFar, fov);
 
-	if (m_Shared.IsWallFlipping())
+	if (m_Shared.IsWallFlipping(true))
 	{
 		// If the player is wall flipping fix up their eye origin to make sure it never clips into the ceiling.
 		trace_t trace;

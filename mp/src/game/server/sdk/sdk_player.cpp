@@ -1780,7 +1780,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 			pSDKAttacker->m_iGrenadeKills++;
 		else
 		{
-			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling())
+			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling() || pSDKAttacker->m_Shared.IsWallFlipping(true))
 				pSDKAttacker->m_iStuntKills++;
 			else if (info.GetDamageType() == DMG_CLUB)
 				pSDKAttacker->m_iBrawlKills++;
@@ -1812,7 +1812,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			pAttackerSDK->AwardStylePoints(this, true, info);
 
-			if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsWallFlipping()
+			if (pAttackerSDK->m_Shared.IsDiving() || pAttackerSDK->m_Shared.IsSliding() || pAttackerSDK->m_Shared.IsWallFlipping(true)
 				|| pAttackerSDK->m_Shared.IsSuperFalling() || pAttackerSDK->m_Shared.IsRolling() || m_bWasKilledByGrenade || m_bWasKilledByBrawl)
 			{
 				pAttackerSDK->GiveSlowMo(1);
@@ -1855,7 +1855,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	float flLostPoints = RemapValClamped(m_flStylePoints, flActivationCost/4, flActivationCost, flActivationCost/8, flActivationCost/4);
 
-	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling())
+	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling() || m_Shared.IsWallFlipping(true))
 		// Lose less bar if you die during a stunt. Going out with style is never a bad thing!
 		flLostPoints /= 2;
 
@@ -1973,7 +1973,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		else
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
-	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping() || GetCurrentTime() < m_Shared.GetWallFlipEndTime() + 0.5f || m_Shared.IsSliding())
+	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping(true) || m_Shared.IsSliding())
 	{
 		// Damaging a dude enough to kill him while stunting gives a full bar.
 		if (m_Shared.IsDiving())

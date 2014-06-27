@@ -144,7 +144,7 @@ void CDove::SpawnDoves(CSDKPlayer* pPlayer)
 		Vector vecStart = pPlayer->GetAbsOrigin() + Vector(0, 0, random->RandomFloat(10, 60));
 
 		// If diving or wall flipping, lower the doves so the player falls through them.
-		if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsWallFlipping())
+		if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsWallFlipping(true))
 		{
 			if (pPlayer->GetAbsVelocity().z < 0)
 				vecStart -= Vector(0, 0, 50);
@@ -152,7 +152,7 @@ void CDove::SpawnDoves(CSDKPlayer* pPlayer)
 				vecStart -= Vector(0, 0, 100);
 		}
 
-		if (bStill || pPlayer->m_Shared.IsWallFlipping())
+		if (bStill || pPlayer->m_Shared.IsWallFlipping(true))
 			vecStart -= vecDirection * 100;
 		else
 			vecStart += vecDirection * 50;

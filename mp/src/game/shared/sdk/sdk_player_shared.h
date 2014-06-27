@@ -117,7 +117,7 @@ public:
 	void    ResetManteling();
 	Vector  GetMantelWallNormal() const { return m_vecMantelWallNormal; }
 
-	bool    IsWallFlipping() const { return m_bIsWallFlipping; }
+	bool    IsWallFlipping(bool bExtend = false) const;
 	void    StartWallFlip(const Vector& vecWallNormal);
 	void    EndWallFlip();
 	void    ResetWallFlipCount() { m_iWallFlipCount = 0; }
