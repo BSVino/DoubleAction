@@ -4584,10 +4584,23 @@ void CC_Buy(const CCommand& args)
 	if (eWeapon)
 	{
 		pPlayer->StopObserverMode();
-		pPlayer->AddToLoadout(eWeapon);
 
 		if (!pPlayer->IsBot())
-			DataManager().AddWeaponChosen(eWeapon);
+		{
+			CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
+			if (pPlayer->GetLoadoutWeaponCount(eWeapon) && *pInfo->m_szAkimbo)
+			{
+				SDKWeaponID eAkimboInfo = AliasToWeaponID(pInfo->m_szAkimbo);
+				if (eAkimboInfo != WEAPON_NONE)
+					DataManager().AddWeaponChosen(eAkimboInfo);
+				else
+					DataManager().AddWeaponChosen(eWeapon);
+			}
+			else
+				DataManager().AddWeaponChosen(eWeapon);
+		}
+
+		pPlayer->AddToLoadout(eWeapon);
 
 		return;
 	}
