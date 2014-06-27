@@ -196,6 +196,7 @@ const CSDKViewVectors *CSDKGameRules::GetSDKViewVectors() const
 }
 
 ConVar da_miniobjective_time("da_miniobjective_time", "3", FCVAR_DEVELOPMENTONLY, "Time until the next miniobjective begins, in minutes.");
+ConVar da_miniobjective_teamplay_time("da_miniobjective_teamplay_time", "1.5", FCVAR_DEVELOPMENTONLY, "Time until the next miniobjective begins, in minutes.");
 
 #ifdef CLIENT_DLL
 
@@ -2112,7 +2113,11 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 
 	RandomSeed((int)(gpGlobals->curtime*1000));
 
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + RandomFloat(-1, 1)) * 60;
+	float flNextObjectiveTime = da_miniobjective_time.GetFloat();
+	if (IsTeamplay())
+		flNextObjectiveTime = da_miniobjective_teamplay_time.GetFloat();
+
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (flNextObjectiveTime + RandomFloat(-1, 1)) * 60;
 
 	bool bResult = false;
 
@@ -2238,7 +2243,11 @@ void CSDKGameRules::CleanupMiniObjective()
 
 	m_eCurrentMiniObjective = MINIOBJECTIVE_NONE;
 
-	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (da_miniobjective_time.GetFloat() + RandomFloat(-1, 1)) * 60;
+	float flNextObjectiveTime = da_miniobjective_time.GetFloat();
+	if (IsTeamplay())
+		flNextObjectiveTime = da_miniobjective_teamplay_time.GetFloat();
+
+	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (flNextObjectiveTime + RandomFloat(-1, 1)) * 60;
 }
 
 void CSDKGameRules::GiveMiniObjectiveRewardTeam(CSDKPlayer* pTeam)
