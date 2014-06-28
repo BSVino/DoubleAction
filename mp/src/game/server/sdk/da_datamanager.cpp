@@ -12,6 +12,9 @@ using namespace std;
 #include "da_datamanager.h"
 
 #include "sdk_player.h"
+#include "weapon_grenade.h"
+#include "sdk_gamerules.h"
+#include "da_briefcase.h"
 
 #include "../datanetworking/math.pb.h"
 #include "../datanetworking/data.pb.h"
@@ -156,14 +159,130 @@ void CDataManager::SavePositions()
 	d->z.m_bCheated |= sv_cheats.GetBool();
 }
 
-void CDataManager::AddPlayerKill(const Vector& vecPosition)
+int GetFlags(CSDKPlayer* pPlayer)
 {
-	d->m_avecPlayerKills.AddToTail(vecPosition);
+	unsigned long long flags = 0;
+
+	if (pPlayer->IsInThirdPerson())
+		flags |= 1<<da::protobuf::KILL_THIRDPERSON;
+
+	if (pPlayer->m_Shared.IsAimedIn())
+		flags |= 1<<da::protobuf::KILL_AIMIN;
+
+	if (pPlayer->m_Shared.IsDiving())
+		flags |= 1<<da::protobuf::KILL_DIVING;
+
+	if (pPlayer->m_Shared.IsRolling())
+		flags |= 1<<da::protobuf::KILL_ROLLING;
+
+	if (pPlayer->m_Shared.IsSliding())
+		flags |= 1<<da::protobuf::KILL_SLIDING;
+
+	if (pPlayer->m_Shared.IsWallFlipping(true))
+		flags |= 1<<da::protobuf::KILL_FLIPPING;
+
+	if (pPlayer->m_Shared.IsSuperFalling())
+		flags |= 1<<da::protobuf::KILL_SUPERFALLING;
+
+	if (pPlayer->IsStyleSkillActive())
+		flags |= 1<<da::protobuf::KILL_SKILL_ACTIVE;
+
+	if (pPlayer->m_Shared.m_bSuperSkill)
+		flags |= 1<<da::protobuf::KILL_SUPER_SKILL_ACTIVE;
+
+	if (SDKGameRules()->GetBountyPlayer() == pPlayer)
+		flags |= 1<<da::protobuf::KILL_IS_TARGET;
+
+	if (pPlayer->HasBriefcase())
+		flags |= 1<<da::protobuf::KILL_HAS_BRIEFCASE;
+
+	if (pPlayer->IsBot())
+		flags |= 1<<da::protobuf::KILL_IS_BOT;
+
+	return flags;
 }
 
-void CDataManager::AddPlayerDeath(const Vector& vecPosition)
+void FillPlayerInfo(da::protobuf::PlayerInfo* pbPlayerInfo, CSDKPlayer* pPlayer)
 {
-	d->m_avecPlayerDeaths.AddToTail(vecPosition);
+	FillProtoBufVector(pbPlayerInfo->mutable_position(), pPlayer->GetAbsOrigin());
+	pbPlayerInfo->set_health(pPlayer->GetHealth());
+	pbPlayerInfo->set_flags(GetFlags(pPlayer));
+	pbPlayerInfo->set_skill(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()));
+	pbPlayerInfo->set_style(pPlayer->GetStylePoints());
+	pbPlayerInfo->set_total_style(pPlayer->GetTotalStyle());
+	pbPlayerInfo->set_kills(pPlayer->m_iKills);
+	pbPlayerInfo->set_deaths(pPlayer->m_iDeaths);
+
+	if (pPlayer->GetActiveSDKWeapon())
+		pbPlayerInfo->set_weapon(WeaponIDToAlias(pPlayer->GetActiveSDKWeapon()->GetWeaponID()));
+
+	if (!pPlayer->IsBot())
+	{
+		CSteamID ID;
+		pPlayer->GetSteamID(&ID);
+		pbPlayerInfo->set_accountid(ID.GetAccountID());
+	}
+
+	if (SDKGameRules()->GetWaypoint(0))
+	{
+		pbPlayerInfo->set_waypoint(pPlayer->m_iRaceWaypoint);
+		FillProtoBufVector(pbPlayerInfo->mutable_objective_position(), SDKGameRules()->GetWaypoint(pPlayer->m_iRaceWaypoint)->GetAbsOrigin());
+	}
+
+	if (pPlayer->HasBriefcase())
+		FillProtoBufVector(pbPlayerInfo->mutable_objective_position(), SDKGameRules()->GetCaptureZone()->GetAbsOrigin());
+
+	if (pPlayer->m_iSlowMoType == SLOWMO_STYLESKILL)
+		pbPlayerInfo->set_slowmo_type("super");
+	else if (pPlayer->m_iSlowMoType == SLOWMO_ACTIVATED)
+		pbPlayerInfo->set_slowmo_type("active");
+	else if (pPlayer->m_iSlowMoType == SLOWMO_SUPERFALL)
+		pbPlayerInfo->set_slowmo_type("superfall");
+	else if (pPlayer->m_iSlowMoType == SLOWMO_PASSIVE)
+		pbPlayerInfo->set_slowmo_type("passive");
+	else if (pPlayer->m_iSlowMoType == SLOWMO_PASSIVE_SUPER)
+		pbPlayerInfo->set_slowmo_type("passivesuper");
+	else if (pPlayer->m_iSlowMoType == SLOWMO_NONE)
+		pbPlayerInfo->set_slowmo_type("none");
+	else
+		pbPlayerInfo->set_slowmo_type("unknown");
+
+	if (pPlayer->m_flSlowMoTime)
+		pbPlayerInfo->set_slowmo_seconds(pPlayer->m_flSlowMoTime - gpGlobals->curtime);
+	else
+		pbPlayerInfo->set_slowmo_seconds(pPlayer->m_flSlowMoSeconds);
+}
+
+void CDataManager::AddKillInfo(const CTakeDamageInfo& info, CSDKPlayer* pVictim)
+{
+	d->m_apKillInfos.AddToTail(new da::protobuf::KillInfo());
+	da::protobuf::KillInfo* pbKillInfo = d->m_apKillInfos.Tail();
+
+	CBaseEntity* pAttacker = info.GetAttacker();
+
+	da::protobuf::PlayerInfo* pbVictimInfo = pbKillInfo->mutable_victim();
+
+	FillPlayerInfo(pbVictimInfo, pVictim);
+
+	unsigned long long flags = pbVictimInfo->flags();
+
+	if (dynamic_cast<CBaseGrenadeProjectile*>(info.GetInflictor()))
+	{
+		flags |= 1<<da::protobuf::KILL_BY_GRENADE;
+		FillProtoBufVector(pbKillInfo->mutable_grenade_position(), info.GetInflictor()->GetAbsOrigin());
+	}
+
+	if (info.GetDamageType() == DMG_CLUB)
+		flags |= 1<<da::protobuf::KILL_BY_BRAWL;
+
+	if (pAttacker == pVictim)
+		flags |= 1<<da::protobuf::KILL_IS_SUICIDE;
+
+	pbVictimInfo->set_flags(flags);
+
+	CSDKPlayer* pPlayerAttacker = ToSDKPlayer(pAttacker);
+	if (pPlayerAttacker && pPlayerAttacker != pVictim)
+		FillPlayerInfo(pbKillInfo->mutable_killer(), pPlayerAttacker);
 }
 
 void CDataManager::AddCharacterChosen(const char* pszCharacter)
@@ -315,20 +434,6 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	for (size_t i = 0; i < iDataSize; i++)
 		FillProtoBufVector(pPositions->Add(), d->m_avecPlayerPositions[i]);
 
-	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pKills = pbGameData->mutable_kills()->mutable_position();
-	iDataSize = d->m_avecPlayerKills.Count();
-	pKills->Reserve(iDataSize);
-
-	for (size_t i = 0; i < iDataSize; i++)
-		FillProtoBufVector(pKills->Add(), d->m_avecPlayerKills[i]);
-
-	google::protobuf::RepeatedPtrField<da::protobuf::Vector>* pDeaths = pbGameData->mutable_deaths()->mutable_position();
-	iDataSize = d->m_avecPlayerDeaths.Count();
-	pDeaths->Reserve(iDataSize);
-
-	for (size_t i = 0; i < iDataSize; i++)
-		FillProtoBufVector(pDeaths->Add(), d->m_avecPlayerDeaths[i]);
-
 	google::protobuf::RepeatedPtrField<std::string>* pCharacters = pbGameData->mutable_characters_chosen();
 	iDataSize = d->m_asCharactersChosen.Count();
 	pCharacters->Reserve(iDataSize);
@@ -365,6 +470,13 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 		pVR->set_details(d->m_aVoteResults[i].m_sDetails);
 	}
 
+	google::protobuf::RepeatedPtrField<da::protobuf::KillInfo>* pKillInfos = pbGameData->mutable_kill_details();
+	iDataSize = d->m_apKillInfos.Count();
+	pKillInfos->Reserve(iDataSize);
+
+	for (size_t i = 0; i < iDataSize; i++)
+		pKillInfos->Add()->CopyFrom(*d->m_apKillInfos[i]);
+
 	ClearData();
 }
 
@@ -374,6 +486,11 @@ void CDataManager::ClearData()
 	// to remove the possibility of old data remaining.
 	delete d;
 	d = new CDataContainer();
+}
+
+CDataManager::CDataContainer::~CDataContainer()
+{
+	m_apKillInfos.PurgeAndDeleteElements();
 }
 
 #endif

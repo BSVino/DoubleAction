@@ -5,12 +5,14 @@
 #include "vstdlib/jobthread.h"
 
 #include "sdk_shareddefs.h"
+#include "sdk_player.h"
 
 namespace da
 {
 	namespace protobuf
 	{
 		class GameData;
+		class KillInfo;
 	}
 }
 
@@ -27,8 +29,7 @@ public:
 
 	virtual void SavePositions();
 
-	void AddPlayerKill(const Vector& vecPosition);
-	void AddPlayerDeath(const Vector& vecPosition);
+	void AddKillInfo(const CTakeDamageInfo& info, CSDKPlayer* pKilled);
 
 	void AddCharacterChosen(const char* pszCharacter);
 	void AddWeaponChosen(SDKWeaponID eWeapon);
@@ -64,6 +65,8 @@ private:
 			m_asCharactersChosen.SetLessFunc(Str_LessFunc);
 		}
 
+		~CDataContainer();
+
 		struct
 		{
 			float m_flStartTime;
@@ -83,8 +86,6 @@ private:
 		} z; // Stuff that needs to be initialized to 0
 
 		CUtlVector<Vector> m_avecPlayerPositions;
-		CUtlVector<Vector> m_avecPlayerKills;
-		CUtlVector<Vector> m_avecPlayerDeaths;
 		CUtlMap<CUtlString, int> m_asCharactersChosen;
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
@@ -95,6 +96,7 @@ private:
 			bool        m_bResult;
 		};
 		CUtlVector<VoteResult> m_aVoteResults;
+		CUtlVector<class da::protobuf::KillInfo*> m_apKillInfos;
 	}* d;
 
 	// We use this to figure out if a client has really connected

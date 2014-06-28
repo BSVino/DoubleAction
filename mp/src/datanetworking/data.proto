@@ -43,6 +43,8 @@ message GameData
 	optional int32 platform_windows = 25;
 	optional int32 platform_linux = 26;
 	optional int32 platform_osx = 27;
+
+	repeated KillInfo kill_details = 28;
 }
 
 message PlayerPositions
@@ -55,4 +57,50 @@ message VoteResult
 	optional string issue = 1;
 	optional string details = 2;
 	optional bool result = 3;
+}
+
+// 1 << KILL_WHATEVER to get a mask into killer_flags and victim_flags
+// Can have up to 64 flags here, any more and make a new one.
+enum KillFlags {
+	KILL_THIRDPERSON = 0;
+	KILL_AIMIN = 1;
+	KILL_DIVING = 2;
+	KILL_ROLLING = 3;
+	KILL_SLIDING = 4;
+	KILL_FLIPPING = 5;
+	KILL_SUPERFALLING = 6;
+	KILL_BY_GRENADE = 7;
+	KILL_BY_BRAWL = 8;
+	KILL_SKILL_ACTIVE = 9;
+	KILL_SUPER_SKILL_ACTIVE = 10;
+	KILL_IS_TARGET = 11;
+	KILL_HAS_BRIEFCASE = 12;
+	KILL_IS_BOT = 13;
+	KILL_IS_SUICIDE = 14;
+}
+
+message PlayerInfo
+{
+	optional Vector position = 1;
+	optional int32 health = 2;
+	optional uint64 flags = 3; // KillFlags
+	optional string weapon = 4;
+	optional string skill = 5;
+	optional uint32 accountid = 6;
+	optional float style = 7;
+	optional float total_style = 8;
+	optional uint32 kills = 9;
+	optional uint32 deaths = 10;
+	optional uint32 waypoint = 11;
+	optional Vector objective_position = 12;
+	optional string slowmo_type = 13;
+	optional float slowmo_seconds = 14;
+}
+
+message KillInfo
+{
+	optional PlayerInfo victim = 1;
+	optional PlayerInfo killer = 2;
+
+	optional Vector grenade_position = 3;
 }

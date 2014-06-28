@@ -1764,10 +1764,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	while ((pWeapon = FindAnyWeaponButBrawl()) != NULL)
 		ThrowWeapon(pWeapon);
 
-	CBaseEntity* pAttacker = info.GetAttacker();
+	DataManager().AddKillInfo(info, this);
 
-	if (!IsBot() && pAttacker != this)
-		DataManager().AddPlayerDeath(GetAbsOrigin());
+	CBaseEntity* pAttacker = info.GetAttacker();
 
 	if( pAttacker && pAttacker->IsPlayer() && pAttacker != this )
 	{
@@ -1791,9 +1790,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		// kill, ie one player shooting another, and not eg a suicide.
 		m_iDeaths += 1;
 		pSDKAttacker->m_iKills += 1;
-
-		if (!pSDKAttacker->IsBot())
-			DataManager().AddPlayerKill(pSDKAttacker->GetAbsOrigin());
 	}
 
 	// show killer in death cam mode
