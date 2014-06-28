@@ -4124,7 +4124,7 @@ bool CSDKPlayer::CanDoCoderHacks()
 
 	for (int i = 0; i < iSize; i++)
 	{
-		if (aiCoders[0] == ID.GetAccountID())
+		if (aiCoders[i] == ID.GetAccountID())
 			return true;
 	}
 
