@@ -65,6 +65,7 @@ const char *pszPossiblePlayerModels[] =
 {
 	"models/player/frank.mdl",
 	"models/player/wish.mdl",
+	"models/player/eightball.mdl",
 	"models/player/bomber.mdl",
 	NULL
 };
