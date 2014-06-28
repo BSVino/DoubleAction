@@ -4,37 +4,7 @@ DOUBLE ACTION SOURCE CODE
 Follow development of this project here: http://forums.doubleactiongame.com/viewforum.php?f=16
 
 
-How to build it:
-
-1. You need a compiler. On Windows this is Visual Studio 2010 Express. On Linux you need g++, and you may also need multilib if you're running x64. On Mac you need XCode and clang. You also need Git. TortoiseGit will do on Windows. You then need to download the Source SDK Base 2013 from Steam.
-2. Use Git (or TortoiseGit) to download the source to your hard drive.
-3. Make sure that you have the latest testing build installed in \Dropbox\ActionBoogaloo\dab for Windows or ~\Dropbox\ActionBoogaloo\dab on Mac and Linux
-4. Navigate to the directory mp/src inside the source code tree. If you're on Windows, double click creategameprojects.bat. If you're on Linux or Mac, run ./creategameprojects. This creates a project file/makefiles for Double Action. Open that project file.
-
-Visual Studio instructions:
-5. Right click on "Client SDK" and tell it "Set startup project". This specifies which project in your solution that Visual Studio will try to run when you hit F5.
-6. Right click "Client SDK" and go to properties. Then go to "Debugging" Set "Configuration" (at the top) to "Debug" Set the following variables:
-
-Command: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer\hl2.exe
-Command arguments: -allowdebug -dev -sw -game "D:\Dropbox\ActionBoogaloo\dab"
-Working directory: C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer
-
-You may need to modify these to point to the proper directories.
-
-7. Verify that the "Build Events" > "Post-Build Event" also points to your correct Steam directory.
-8. In the top of the screen there's a dropdown next to the green "run" arrow that lets you choose the build configuration. Make sure it's set to "Debug"
-9. Press F7 to build it. This takes a while.
-10. Press F5 to run it.
-
-Hopefully everything will work and you will be in the debugger running the game. Load up a map and have at it.
-
-Linux instructions:
-5. Type "make -f DoubleAction.mak"
-6. Run: "~/.steam/steam/steamapps/common/Source\ SDK\ Base\ 2013\ Multiplayer/hl2.sh -game ~/Dropbox/ActionBoogaloo/dab"
-
-Mac instructions:
-5. I don't have a Mac but they should be pretty similar to the above.
-
+Instructions on how to build the source code here: http://www.doubleactiongame.com/coding
 
 
 
@@ -47,7 +17,7 @@ THIS DOCUMENT DESCRIBES A CONTRACT BETWEEN YOU AND VALVE
 CORPORATION ("Valve").  PLEASE READ IT BEFORE DOWNLOADING OR USING 
 THE SOURCE ENGINE SDK ("SDK"). BY DOWNLOADING AND/OR USING THE 
 SOURCE ENGINE SDK YOU ACCEPT THIS LICENSE. IF YOU DO NOT AGREE TO 
-THE TERMS OF THIS LICENSE PLEASE DON’T DOWNLOAD OR USE THE SDK.  
+THE TERMS OF THIS LICENSE PLEASE DONï¿½T DOWNLOAD OR USE THE SDK.  
 
   You may, free of charge, download and use the SDK to develop a modified Valve game 
 running on the Source engine.  You may distribute your modified Valve game in source and 
