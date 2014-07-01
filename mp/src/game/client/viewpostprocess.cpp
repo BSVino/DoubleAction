@@ -313,16 +313,16 @@ void ApplyPostProcessingPasses(PostProcessingPass *pass_list, // table of effect
 
 PostProcessingPass HDRFinal_Float[] =
 {
-	PPP_PROCESS_SRCTEXTURE( "dev/downsample", "_rt_FullFrameFB", "_rt_SmallFB0" ),
+	PPP_PROCESS_SRCTEXTURE( "dev/downsample", "_rt_FullFrameFB_DA", "_rt_SmallFB0" ),
 	PPP_PROCESS_SRCTEXTURE( "dev/blurfilterx", "_rt_SmallFB0", "_rt_SmallFB1" ),
  	PPP_PROCESS_SRCTEXTURE( "dev/blurfiltery", "_rt_SmallFB1", "_rt_SmallFB0" ),
- 	PPP_PROCESS_SRCTEXTURE("dev/floattoscreen_combine","_rt_FullFrameFB",NULL),
+ 	PPP_PROCESS_SRCTEXTURE("dev/floattoscreen_combine","_rt_FullFrameFB_DA",NULL),
 	PPP_END
 };
 
 PostProcessingPass HDRFinal_Float_NoBloom[] =
 {
-	PPP_PROCESS_SRCTEXTURE("dev/copyfullframefb", "_rt_FullFrameFB",NULL),
+	PPP_PROCESS_SRCTEXTURE("dev/copyfullframefb", "_rt_FullFrameFB_DA",NULL),
 	PPP_END
 };
 
@@ -1526,7 +1526,7 @@ static void Generate8BitBloomTexture( IMatRenderContext *pRenderContext, float f
 	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
 
 	pRenderContext->PushRenderTargetAndViewport();
-	ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
+	ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB_DA", TEXTURE_GROUP_RENDER_TARGET );
 	int nSrcWidth = pSrc->GetActualWidth();
 	int nSrcHeight = pSrc->GetActualHeight(); //,dest_height;
 
@@ -2337,7 +2337,7 @@ void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, b
 			{
 				tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "ColorCorrection" );
 
-				ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
+				ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB_DA", TEXTURE_GROUP_RENDER_TARGET );
 				int nSrcWidth = pSrc->GetActualWidth();
 				int nSrcHeight = pSrc->GetActualHeight();
 
@@ -2965,7 +2965,7 @@ void DoImageSpaceMotionBlur( const CViewSetup &view, int x, int y, int w, int h 
 	{
 		CMatRenderContextPtr pRenderContext( materials );
 		//pRenderContext->PushRenderTargetAndViewport();
-		ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
+		ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB_DA", TEXTURE_GROUP_RENDER_TARGET );
 		int nSrcWidth = pSrc->GetActualWidth();
 		int nSrcHeight = pSrc->GetActualHeight();
 		int dest_width, dest_height, nDummy;
