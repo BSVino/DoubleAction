@@ -19,7 +19,7 @@ $Configuration
 	$Compiler
 	{
 		$AdditionalIncludeDirectories		"$BASE;sdk\vgui,.\sdk,$SRCDIR\game\shared\sdk,.\hl2,.\hl2\elements,$SRCDIR\game\shared\hl2"
-		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE"
+		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE;SOURCE_2013"
 	}
 }
 
@@ -121,6 +121,25 @@ $Project "Client (DA)"
 		$File	"$SRCDIR\game\shared\predicted_viewmodel.cpp"
 		$File	"$SRCDIR\game\shared\predicted_viewmodel.h"
 		$File	"hud_basedeathnotice.cpp"
+	}
+
+	$Folder "Shader Editor" [$WIN32]
+	{
+		$Folder	"Header Files"
+		{
+			$File	"$SRCDIR\game\client\ShaderEditor\ISEdit_ModelRender.h"
+			$File	"$SRCDIR\game\client\ShaderEditor\IVShaderEditor.h"
+			$File	"$SRCDIR\game\client\ShaderEditor\ShaderEditorSystem.h"
+			$File	"$SRCDIR\game\client\ShaderEditor\SEdit_ModelRender.h"
+			$File	"$SRCDIR\game\client\ShaderEditor\Grass\CGrassCluster.h"
+		}
+ 
+		$Folder	"Implementation Files"
+		{
+			$File	"$SRCDIR\game\client\ShaderEditor\ShaderEditorSystem.cpp"
+			$File	"$SRCDIR\game\client\ShaderEditor\SEdit_ModelRender.cpp"
+			$File	"$SRCDIR\game\client\ShaderEditor\Grass\CGrassCluster.cpp"
+		}
 	}
 
 	$Folder "Link Libraries" [$WIN32]

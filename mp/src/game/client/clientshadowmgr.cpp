@@ -852,8 +852,14 @@ private:
 	// Remove a shadow from the dirty list
 	void RemoveShadowFromDirtyList( ClientShadowHandle_t handle );
 
+public:
+	ShadowHandle_t GetShadowHandle( ClientShadowHandle_t clienthandle ){ return m_Shadows[ clienthandle ].m_ShadowHandle; };
+	int GetNumShadowDepthtextures(){ return m_DepthTextureCache.Count(); };
+	CTextureReference GetShadowDepthTex( int num ){ return m_DepthTextureCache[num]; };
+
 	// NOTE: this will ONLY return SHADOWS_NONE, SHADOWS_SIMPLE, or SHADOW_RENDER_TO_TEXTURE.
 	ShadowType_t GetActualShadowCastType( ClientShadowHandle_t handle ) const;
+private:
 	ShadowType_t GetActualShadowCastType( IClientRenderable *pRenderable ) const;
 
 	// Builds a simple blobby shadow
