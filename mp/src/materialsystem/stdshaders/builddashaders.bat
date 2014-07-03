@@ -5,7 +5,7 @@ rem ================================
 rem ==== MOD PATH CONFIGURATIONS ===
 
 rem == Set the absolute path to your mod's game directory here ==
-set GAMEDIR=D:\DoubleAction\Sync\dab
+set GAMEDIR=\DoubleAction\Sync\dab
 
 rem == Set the relative or absolute path to Source SDK Base 2013 Singleplayer\bin ==
 set SDKBINDIR=C:\Steam\steamapps\common\Source SDK Base 2013 Multiplayer\bin

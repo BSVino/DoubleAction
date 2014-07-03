@@ -9,6 +9,8 @@ class CDAViewRender : public CViewRender
 public:
 	CDAViewRender();
 
+	virtual void Init();
+
 	virtual void Render2DEffectsPreHUD( const CViewSetup &view );
 	virtual void RenderView( const CViewSetup &view, int nClearFlags, int whatToDraw );
 
