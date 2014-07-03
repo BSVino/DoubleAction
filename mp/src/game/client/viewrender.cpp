@@ -5056,7 +5056,7 @@ void CFreezeFrameView::Setup( const CViewSetup &shadowViewIn )
 	BaseClass::Setup( shadowViewIn );
 
 	KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
-	pVMTKeyValues->SetString( "$basetexture", IsX360() ? "_rt_FullFrameFB1" : "_rt_FullScreen" );
+	pVMTKeyValues->SetString( "$basetexture", IsX360() ? "_rt_FullFrameFB1" : "_rt_FullFrameFB_DA" );
 	pVMTKeyValues->SetInt( "$nocull", 1 );
 	pVMTKeyValues->SetInt( "$nofog", 1 );
 	pVMTKeyValues->SetInt( "$ignorez", 1 );

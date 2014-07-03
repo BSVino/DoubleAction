@@ -88,7 +88,7 @@ ITexture *GetFullFrameDepthTexture( void )
 {
 	if ( !s_pFullFrameDepthTexture )
 	{
-		s_pFullFrameDepthTexture.Init( materials->FindTexture( "_rt_FullFrameDepth", TEXTURE_GROUP_RENDER_TARGET ) );
+		s_pFullFrameDepthTexture.Init( materials->FindTexture( "_rt_FullFrameDepth_DA", TEXTURE_GROUP_RENDER_TARGET ) );
 		Assert( !IsErrorTexture( s_pFullFrameDepthTexture ) );
 		AddReleaseFunc();
 	}
@@ -111,7 +111,7 @@ ITexture *GetFullFrameFrameBufferTexture( int textureIndex )
 		}
 		else
 		{
-			Q_strcpy( name, "_rt_FullFrameFB" );
+			Q_strcpy( name, "_rt_FullFrameFB_DA" );
 		}
 		s_pFullFrameFrameBufferTexture[textureIndex].Init( materials->FindTexture( name, TEXTURE_GROUP_RENDER_TARGET ) );
 		Assert( !IsErrorTexture( s_pFullFrameFrameBufferTexture[textureIndex] ) );

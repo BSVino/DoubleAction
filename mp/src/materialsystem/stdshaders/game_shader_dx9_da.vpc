@@ -14,5 +14,6 @@ $Project "Shaders (DA)"
 	$Folder	"Source Files"
 	{
 		$File	"slowmo.cpp"
+		$File	"prettypixels.cpp"
 	}
 }
