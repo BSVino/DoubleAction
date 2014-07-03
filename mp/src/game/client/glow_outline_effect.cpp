@@ -13,7 +13,7 @@
 #include "view_shared.h"
 #include "viewpostprocess.h"
 
-#define FULL_FRAME_TEXTURE "_rt_FullFrameFB_DA"
+#define FULL_FRAME_TEXTURE "_rt_FullFrameFB"
 
 #ifdef GLOWS_ENABLE
 

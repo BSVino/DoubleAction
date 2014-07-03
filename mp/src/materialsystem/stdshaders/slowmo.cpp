@@ -22,7 +22,7 @@ ConVar da_postprocess_vr( "da_postprocess_vr", "0", FCVAR_CHEAT, "Set by code." 
 
 BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
-		SHADER_PARAM( BASETEXTURE,      SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB_DA", "Framebuffer" )
+		SHADER_PARAM( BASETEXTURE,      SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "Framebuffer" )
 		SHADER_PARAM( SLOWMOAMOUNT,     SHADER_PARAM_TYPE_FLOAT, "", "Strength of slow motion effect" )
 		SHADER_PARAM( COMBINED,         SHADER_PARAM_TYPE_TEXTURE, "0", "Combined texture input. Red: overlay. Green: grain. Blue: Vignette alpha. Alpha: blur alpha." )
 		SHADER_PARAM( GRAINOFFSET,      SHADER_PARAM_TYPE_FLOAT, "0", "Film grain texture offset" )

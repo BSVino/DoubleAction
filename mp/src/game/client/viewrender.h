@@ -451,11 +451,9 @@ private:
 
 	void DrawUnderwaterOverlay( void );
 
-protected:
 	// Water-related methods
-	virtual void			DrawWorldAndEntities( bool drawSkybox, const CViewSetup &view, int nClearFlags, ViewCustomVisibility_t *pCustomVisibility = NULL );
+	void			DrawWorldAndEntities( bool drawSkybox, const CViewSetup &view, int nClearFlags, ViewCustomVisibility_t *pCustomVisibility = NULL );
 
-private:
 	virtual void			ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, const IntroData_t &introData );
 
 #ifdef PORTAL 
