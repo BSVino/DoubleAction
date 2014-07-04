@@ -1411,14 +1411,20 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 	}
 }
 
+ConVar da_speed_run("da_speed_run", "230", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_prone("da_speed_prone", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_slide("da_speed_slide", "320", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_roll("da_speed_roll", "200", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_aimin("da_speed_aimin", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CSDKPlayer::InitSpeeds()
 {
-	m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
-	m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
-	m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
-	m_Shared.m_flSlideSpeed = SDK_DEFAULT_PLAYER_SLIDESPEED;
-	m_Shared.m_flRollSpeed = SDK_DEFAULT_PLAYER_ROLLSPEED;
-	m_Shared.m_flAimInSpeed = 100;
+	m_Shared.m_flRunSpeed = da_speed_run.GetFloat();
+	m_Shared.m_flSprintSpeed = 330; // Unused
+	m_Shared.m_flProneSpeed = da_speed_prone.GetFloat();
+	m_Shared.m_flSlideSpeed = da_speed_slide.GetFloat();
+	m_Shared.m_flRollSpeed = da_speed_roll.GetFloat();
+	m_Shared.m_flAimInSpeed = da_speed_aimin.GetFloat();
 
 	// Set the absolute max to sprint speed (but we don't use sprint so now it's runspeed)
 	SetMaxSpeed( GetPlayerMaxSpeed(false) );

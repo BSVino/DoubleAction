@@ -1393,6 +1393,7 @@ void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &ve
 }
 
 ConVar bot_easy( "bot_easy", "1", 0, "Make bots easier" );
+ConVar da_damage_multiplier("da_damage_multiplier", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
@@ -1445,6 +1446,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				flDamage *= 0.65f;
 		}
 	}
+
+	flDamage *= da_damage_multiplier.GetFloat();
 
 	if (m_Shared.IsSuperFalling() && pSDKAttacker && pSDKAttacker->m_Shared.IsSuperFalling())
 	{

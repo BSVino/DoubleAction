@@ -362,6 +362,8 @@ void CSDKGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMo
 	m_pSDKPlayer = ToSDKPlayer( pBasePlayer );
 	Assert( m_pSDKPlayer );
 
+	m_pSDKPlayer->InitSpeeds();
+
 	float flFrameTime = gpGlobals->frametime;
 
 	gpGlobals->frametime *= m_pSDKPlayer->GetSlowMoMultiplier();

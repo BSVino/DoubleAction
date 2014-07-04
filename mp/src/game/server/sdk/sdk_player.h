@@ -413,8 +413,6 @@ private:
 	bool CanSprint( void );
 #endif // SDK_USE_SPRINTING
 
-	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
-
 	// from CBasePlayer
 	void			SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
@@ -424,6 +422,8 @@ private:
 	virtual void	SharedSpawn();
 
 public:
+	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
+
 	virtual float GetPlayerMaxSpeed(bool bDucking);
 	virtual float GetPlayerMaxSpeed() { return GetPlayerMaxSpeed(false); }
 	float GetMaxSlideSpeed();

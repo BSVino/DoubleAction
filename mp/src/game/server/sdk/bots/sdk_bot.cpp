@@ -23,7 +23,7 @@ void CSDKBot::Initialize()
 {
 	// set bot skills
 	m_flSkill[BOT_SKILL_YAW_RATE] = 10;
-	m_flSkill[BOT_SKILL_SPEED] = SDK_DEFAULT_PLAYER_SPRINTSPEED;
+	m_flSkill[BOT_SKILL_SPEED] = 400; 
 	m_flSkill[BOT_SKILL_STRAFE] = 5;
 
 	JoinTeam(0);
