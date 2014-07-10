@@ -8,6 +8,8 @@
 
 #include "cbase.h"
 
+#include "model_types.h"
+
 #include "c_da_briefcase.h"
 
 #include "c_sdk_player.h"
@@ -69,6 +71,9 @@ int C_Briefcase::DrawModel(int flags)
 
 	int iReturn = BaseClass::DrawModel(flags);
 
+	if (flags & STUDIO_SSAODEPTHTEXTURE)
+		return iReturn;
+
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (!pLocalPlayer)
 		return iReturn;
@@ -118,6 +123,9 @@ void C_BriefcaseCaptureZone::GetRenderBounds( Vector& mins, Vector& maxs )
 CMaterialReference g_hCaptureZone;
 int C_BriefcaseCaptureZone::DrawModel(int flags)
 {
+	if (flags & STUDIO_SSAODEPTHTEXTURE)
+		return 0;
+
 	if (!g_hCaptureZone.IsValid())
 		g_hCaptureZone.Init( "da/capturezone.vmt", TEXTURE_GROUP_OTHER );
 	if (!g_hBriefcaseArrow.IsValid())
@@ -209,6 +217,9 @@ void C_RatRaceWaypoint::GetRenderBounds( Vector& mins, Vector& maxs )
 
 int C_RatRaceWaypoint::DrawModel(int flags)
 {
+	if (flags & STUDIO_SSAODEPTHTEXTURE)
+		return 0;
+
 	if (!g_hCaptureZone.IsValid())
 		g_hCaptureZone.Init( "da/capturezone.vmt", TEXTURE_GROUP_OTHER );
 
