@@ -37,6 +37,7 @@
 #include "clienteffectprecachesystem.h"
 #include <vgui/ISurface.h>
 #include "sourcevr/isourcevirtualreality.h"
+#include "ShaderEditor/IVShaderEditor.h"
 
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheDAViewScene )
 CLIENTEFFECT_MATERIAL( "shaders/slowmo" )
@@ -92,7 +93,7 @@ void CDAViewRender::Init()
 ConVar da_postprocess_compare( "da_postprocess_compare", "0", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Only render to half of the screen for debug purposes" );
 ConVar da_postprocess_deathcam_override( "da_postprocess_deathcam_override", "-1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "Override the control for death came mode" );
 
-ConVar da_postprocess_shaders( "da_postprocess_shaders", "1", FCVAR_USERINFO, "Use screen-space post-process shaders?" );
+ConVar da_postprocess_shaders( "da_postprocess_shaders", "1", FCVAR_ARCHIVE, "Use screen-space post-process shaders?" );
 
 void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 {
@@ -150,13 +151,33 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	}
 }
 
+ConVar da_pretty_pixels( "da_pretty_pixels", "1", FCVAR_ARCHIVE, "Use screen-space post-process shaders?" );
+void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
+{
+	if (!da_postprocess_shaders.GetBool())
+		return;
+
+	if (!da_pretty_pixels.GetBool())
+		return;
+
+	static const int iPrettyPixelsIndex = shaderEdit->GetPPEIndex( "pretty_pixels" );
+
+	if ( iPrettyPixelsIndex < 0 )
+		return;
+
+	shaderEdit->DrawPPEOnDemand( iPrettyPixelsIndex );
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Renders extra 2D effects in derived classes while the 2D view is on the stack
 //-----------------------------------------------------------------------------
 void CDAViewRender::Render2DEffectsPreHUD( const CViewSetup &view )
 {
 	if (!UseVR())
+	{
+		DoPrettyPixels(view);
 		PerformSlowMoEffect( view );	// this needs to come before the HUD is drawn, or it will wash the HUD out
+	}
 }
 
 void CDAViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatToDraw )
@@ -164,7 +185,10 @@ void CDAViewRender::RenderView( const CViewSetup &view, int nClearFlags, int wha
 	BaseClass::RenderView(view, nClearFlags, whatToDraw);
 
 	if (UseVR())
+	{
+		DoPrettyPixels(view);
 		PerformSlowMoEffect(view);
+	}
 }
 
 CDAViewRender* DAViewRender()
