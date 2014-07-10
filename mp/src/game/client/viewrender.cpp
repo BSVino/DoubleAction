@@ -78,6 +78,7 @@
 #include "C_Env_Projected_Texture.h"
 
 #include "ShaderEditor/ShaderEditorSystem.h"
+#include "ShaderEditor/IVShaderEditor.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -482,6 +483,10 @@ protected:
 
 	void			SSAO_DepthPass();
 	void			DrawDepthOfField();
+
+#ifdef SDK_DLL
+	void DrawSSAO();
+#endif
 };
 
 
@@ -5398,6 +5403,11 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 		DrawWorld( waterZAdjust );
 		DrawOpaqueRenderables( DepthMode );
 
+#ifdef SDK_DLL
+		if ( g_CurrentViewID == VIEW_MAIN )
+			DrawSSAO();
+#endif
+
 #ifdef TF_CLIENT_DLL
 		bool bVisionOverride = ( localplayer_visionflags.GetInt() & ( 0x01 ) ); // Pyro-vision Goggles
 
@@ -5533,6 +5543,22 @@ void CBaseWorldView::SSAO_DepthPass()
 #endif
 }
 
+#ifdef SDK_DLL
+static ConVar da_ssao( "da_ssao", "1", FCVAR_ARCHIVE );
+
+void CBaseWorldView::DrawSSAO( )
+{
+	static const int iSSAOIndex = shaderEdit->GetPPEIndex( "da_ssao" );
+
+	if ( iSSAOIndex < 0 )
+		return;
+
+	if (!da_ssao.GetBool())
+		return;
+
+	shaderEdit->DrawPPEOnDemand( iSSAOIndex );
+}
+#endif
 
 void CBaseWorldView::DrawDepthOfField( )
 {
