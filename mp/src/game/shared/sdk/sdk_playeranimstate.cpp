@@ -416,7 +416,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	GetOuterAbsVelocity( vecVelocity );
 
 	// Check to see if we are moving.
-	bool bMoving = ( vecVelocity.Length() > 1.0f ) ? true : false;
+	bool bMoving = ( vecVelocity.Length2DSqr() > 1.0f ) ? true : false;
 
 	if ( m_pSDKPlayer->m_Shared.IsProne() )
 	{
