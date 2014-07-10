@@ -12,6 +12,8 @@ extern ConVar sv_gravity;
 
 #ifdef CLIENT_DLL
 
+	#include "model_types.h"
+
 	#include "c_sdk_player.h"
 
 #else
@@ -120,6 +122,9 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 			g_hGrenadeArrow.Init( "particle/grenadearrow.vmt", TEXTURE_GROUP_OTHER );
 
 		int iReturn = BaseClass::DrawModel(flags);
+
+		if (flags & STUDIO_SSAODEPTHTEXTURE)
+			return iReturn;
 
 		C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 		if (!pLocalPlayer)
