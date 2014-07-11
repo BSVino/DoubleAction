@@ -19,7 +19,8 @@ $Configuration
 	$Compiler
 	{
 		$AdditionalIncludeDirectories		"$BASE;sdk\vgui,.\sdk,$SRCDIR\game\shared\sdk,.\hl2,.\hl2\elements,$SRCDIR\game\shared\hl2"
-		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE;SOURCE_2013"
+		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;SOURCE_2013"
+		$PreprocessorDefinitions            "$BASE;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE" [$VIEWBACK]
 	}
 }
 
@@ -110,7 +111,7 @@ $Project "Client (DA)"
 		$File "sdk/sdk_prediction.cpp"
 		$File "$SRCDIR/game/shared/sdk/sdk_shareddefs.cpp"
 		$File "$SRCDIR/game/shared/sdk/sdk_usermessages.cpp"
-		$File "sdk/da_viewback.cpp"
+		$File "sdk/da_viewback.cpp" [$VIEWBACK]
 	}
 
 	$Folder	"Source Files"
@@ -142,7 +143,7 @@ $Project "Client (DA)"
 		}
 	}
 
-	$Folder "Link Libraries" [$WIN32]
+	$Folder "Link Libraries" [$WIN32 && $VIEWBACK]
 	{
 		$DynamicFile "$SRCDIR\lib\public\viewback.lib"
 	}
