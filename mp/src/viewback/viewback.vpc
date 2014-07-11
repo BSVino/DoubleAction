@@ -22,7 +22,7 @@ $Project "Viewback"
 {
 	$Folder	"Source Files"
 	{
-		$File "../../../../viewback/server/viewback.cpp"
-		$File "../../../../viewback/server/viewback_util.cpp"
+		$File "../../../../viewback/server/viewback.cpp"      [$VIEWBACK]
+		$File "../../../../viewback/server/viewback_util.cpp" [$VIEWBACK]
 	}
 }

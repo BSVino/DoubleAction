@@ -675,7 +675,9 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 
 	CLesson* pLesson = m_pInstructor->GetLesson(pLessonProgress->m_sLessonName);
 
+#if defined(WITH_VIEWBACK)
 	vb_data_send_int_s(pLessonProgress->m_sLessonName, std::min(pLessonProgress->m_iTimesLearned, pLesson->m_iTimesToLearn));
+#endif
 
 	CHudElement* pLessonPanel = gHUD.FindElement("CHudSideHintPanel");
 	if (pLessonPanel)
@@ -1392,8 +1394,10 @@ void CC_ResetLessons()
 	pPlayer->Instructor_Initialize();
 	pPlayer->Instructor_Reset();
 
+#if defined(WITH_VIEWBACK)
 	for (unsigned int i = 0; i < pPlayer->GetInstructor()->GetLessons().Count(); i++)
 		vb_data_send_int_s(pPlayer->GetInstructor()->GetLessons()[i]->m_sLessonName, 0);
+#endif
 }
 
 static ConCommand lesson_reset("lesson_reset", CC_ResetLessons, "Reset the game instructor lessons.");

@@ -744,6 +744,7 @@ void C_SDKPlayer::PreThink()
 	if (C_SDKPlayer::GetLocalSDKPlayer() == this && GetClientVoiceMgr()->IsLocalPlayerSpeaking())
 		Instructor_LessonLearned("voicechat");
 
+#if defined(CLIENT_DLL) && defined(WITH_VIEWBACK)
 	bool bSend = (C_SDKPlayer::GetLocalOrSpectatedPlayer() == this);
 
 	if (prediction->InPrediction() && !prediction->IsFirstTimePredicted())
@@ -768,6 +769,7 @@ void C_SDKPlayer::PreThink()
 		vb_data_send_float(ViewbackSystem().m_eAimIn, m_Shared.GetAimIn());
 		vb_data_send_float(ViewbackSystem().m_eSlowMo, GetSlowMoMultiplier());
 	}
+#endif
 }
 
 

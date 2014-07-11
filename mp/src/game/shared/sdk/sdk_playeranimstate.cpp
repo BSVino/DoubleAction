@@ -235,6 +235,7 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacte
 		m_pSDKPlayer->SetPlaybackRate( 1.0f );
 	}
 
+#if defined(WITH_VIEWBACK)
 	if (pSDKPlayer == C_SDKPlayer::GetLocalOrSpectatedPlayer())
 	{
 		vb_data_send_vector(ViewbackSystem().m_eAnimMoveYaw, m_DebugAnimData.m_vecMoveYaw.x, m_DebugAnimData.m_vecMoveYaw.y, 0);
@@ -243,6 +244,7 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch, float flCharacte
 		AngleVectors(QAngle(0, m_DebugAnimData.m_flAimYaw, 0), &vecAim);
 		vb_data_send_vector(ViewbackSystem().m_eAnimAim, vecAim.x, vecAim.y, 0);
 	}
+#endif
 #endif
 }
 

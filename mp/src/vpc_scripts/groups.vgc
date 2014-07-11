@@ -27,6 +27,10 @@ $Group "game"
 	"server"
 	"tier1"
 	"vgui_controls"
+}
+
+$Group "viewback"
+{
 	"viewback"
 }
 
@@ -57,7 +61,6 @@ $Group "everything"
 	"vbsp"
 	"vgui_controls"
 	"vice"
-	"viewback"
 	"vrad_dll"
 	"vrad_launcher"
 	"vtf2tga"
