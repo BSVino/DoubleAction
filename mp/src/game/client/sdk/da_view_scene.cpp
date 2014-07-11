@@ -160,6 +160,9 @@ void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
 	if (!da_pretty_pixels.GetBool())
 		return;
 
+	if (!shaderEdit)
+		return;
+
 	static const int iPrettyPixelsIndex = shaderEdit->GetPPEIndex( "pretty_pixels" );
 
 	if ( iPrettyPixelsIndex < 0 )

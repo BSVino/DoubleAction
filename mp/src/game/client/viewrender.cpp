@@ -5548,6 +5548,9 @@ static ConVar da_ssao( "da_ssao", "1", FCVAR_ARCHIVE );
 
 void CBaseWorldView::DrawSSAO( )
 {
+	if (!shaderEdit)
+		return;
+
 	static const int iSSAOIndex = shaderEdit->GetPPEIndex( "da_ssao" );
 
 	if ( iSSAOIndex < 0 )
