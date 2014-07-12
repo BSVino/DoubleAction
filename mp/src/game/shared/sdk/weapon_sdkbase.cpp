@@ -681,8 +681,9 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer() && GetParametersForSound( "Weapon_Brawl.PunchHit", params, NULL ) )
 		{
 			CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
-			if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
-				filter.UsePredictionRules();
+			filter.MakeReliable();
+
+			CDisablePredictionFiltering disabler;
 
 			EmitSound( filter, traceHit.m_pEnt->entindex(), params );
 		}
