@@ -285,6 +285,8 @@ void CSDKPlayer::StartTouch(CBaseEntity *pOther)
 		m_Shared.m_bRollAfterDive = false;
 }
 
+#define GRENADE_PICKUP_RADIUS 100.f
+
 bool CSDKPlayer::PlayerUse()
 {
 #ifdef GAME_DLL
@@ -303,7 +305,7 @@ bool CSDKPlayer::PlayerUse()
 		float flNearest = FLT_MAX;
 
 		// Look for grenades so we can prioritize picking them up first.
-		for ( CEntitySphereQuery sphere( vecSearchCenter, PLAYER_USE_RADIUS ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
+		for ( CEntitySphereQuery sphere( vecSearchCenter, GRENADE_PICKUP_RADIUS ); ( pObject = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
 			if ( !pObject )
 				continue;
