@@ -593,6 +593,8 @@ void CHudStyleBar::Paint()
 
 		int iStars = C_SDKPlayer::GetStyleStars(pAnnouncement->m_flStylePoints);
 
+		iStars = max(iStars, 1); // Never show "x0" stars
+
 		CHudTexture* pStarTexture = m_pGoldStar;
 
 		if (pStarTexture)
