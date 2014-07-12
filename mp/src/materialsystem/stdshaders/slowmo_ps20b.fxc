@@ -25,7 +25,6 @@ HALF4 main( PS_INPUT i ) : COLOR
 	const float flSlowMoFilter = 0.09;
 	const float flVignetteScale = 1;
 	const float flNoiseScale = 0.05;
-	const float flBias = 0.4;
 
 	float2 aflCombinedTexCoord = i.texCoord;
 
@@ -91,10 +90,11 @@ HALF4 main( PS_INPUT i ) : COLOR
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 
 	// Adjust levels. Crush the blacks and blow out the whites.
-	float flExponent = log( flBias ) * -1.4427f;
-	aflOutput.r = pow(RemapValClamped(aflOutput.r, 0, .56, 0, 1), flExponent);
-	aflOutput.g = pow(RemapValClamped(aflOutput.g, 0, .56, 0, 1), flExponent);
-	aflOutput.b = pow(RemapValClamped(aflOutput.b, 0, .56, 0, 1), flExponent);
+	const float flBias = 0.4;
+	const float flExponent = 1.73697f;// log( flBias ) * -1.4427f;
+	aflOutput.r = pow(RemapValClamped(aflOutput.r, 0, .69, 0, 1), flExponent);
+	aflOutput.g = pow(RemapValClamped(aflOutput.g, 0, .69, 0, 1), flExponent);
+	aflOutput.b = pow(RemapValClamped(aflOutput.b, 0, .69, 0, 1), flExponent);
 
 	float flFBGrey = ( aflOutput.r + aflOutput.g + aflOutput.b ) / 3;
 
