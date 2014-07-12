@@ -25,6 +25,8 @@ extern ConVar sv_gravity;
 
 #endif
 
+#include "weapon_sdkbase.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -138,8 +140,9 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 		else
 			m_flArrowGoalSize = 0;
 
-		// Don't show grenades if we're aimed in.
-		m_flArrowGoalSize *= 1-pLocalPlayer->m_Shared.GetAimIn();
+		if (pLocalPlayer->GetActiveSDKWeapon() && pLocalPlayer->GetActiveSDKWeapon()->HasAimInSpeedPenalty())
+			// Don't show grenades if we're aimed in.
+			m_flArrowGoalSize *= 1-pLocalPlayer->m_Shared.GetAimIn();
 
 		float flTime = C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetCurrentTime() + m_flArrowSpinOffset;
 		float flFrameTime = gpGlobals->frametime * C_SDKPlayer::GetLocalOrSpectatedPlayer()->GetSlowMoMultiplier();
