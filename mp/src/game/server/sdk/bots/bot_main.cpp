@@ -34,18 +34,8 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 	if( !TheNavMesh->IsLoaded() )
 		Warning( "No navigation mesh loaded! Can't create bot" );
 
-	// Look at -count.
-	int count = args.FindArgInt( "-count", 1 );
-	count = clamp( count, 1, 16 );
-
-	// Look at -frozen.
-	bool bFrozen = !!args.FindArg( "-frozen" );
-		
-	// Ok, spawn all the bots.
-	while ( --count >= 0 )
-	{
-		BotPutInServer( bFrozen );
-	}
+	ConVarRef bot_quota("bot_quota");
+	bot_quota.SetValue(bot_quota.GetInt() + 1);
 }
 
 CON_COMMAND_F( bot_kick, "Kick all bots.", FCVAR_GAMEDLL )
@@ -203,6 +193,9 @@ void Bot_MaintainQuota()
 
 	if (iCurrentHumans + iIdealNumberOfBots >= gpGlobals->maxClients - 1)
 		iIdealNumberOfBots = gpGlobals->maxClients - iCurrentHumans - 1;
+
+	if (engine->IsDedicatedServer())
+		iIdealNumberOfBots = min(iIdealNumberOfBots, 4);
 
 	if (iCurrentBots == iIdealNumberOfBots)
 		return;
