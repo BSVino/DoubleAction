@@ -199,7 +199,9 @@ bool CWeaponSDKBase::IsGrenade() const
 
 const char* CWeaponSDKBase::GetViewModel( int viewmodelindex ) const
 {
-	if (IsThrowingGrenade() && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime())
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+
+	if (IsThrowingGrenade() && GetCurrentTime() > GetGrenadeThrowWeaponHolsterTime() && GetCurrentTime() < GetGrenadeThrowWeaponDeployTime() && pPlayer && !pPlayer->IsInThirdPerson())
 		return CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_GRENADE)->szViewModel;
 
 	return BaseClass::GetViewModel(viewmodelindex);
@@ -870,8 +872,11 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 	if (!pPlayer)
 		return false;
 
-	SetViewModel();
-	SetModel(GetViewModel());
+	if (!pPlayer->IsInThirdPerson())
+	{
+		SetViewModel();
+		SetModel(GetViewModel());
+	}
 
 	if (pPlayer && GetCurrentTime() > GetGrenadeThrowWeaponDeployTime())
 	{
