@@ -35,7 +35,7 @@ public:
 
 	virtual bool FullAimIn() { return true; }
 
-	virtual int GetFireMode() const { return FM_BURST; }
+	virtual int GetFireMode() const { return FM_SEMIAUTOMATIC; }
 
 private:
 
