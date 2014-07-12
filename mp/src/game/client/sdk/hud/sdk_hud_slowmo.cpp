@@ -55,8 +55,7 @@ protected:
 	CPanelAnimationVar( vgui::HFont, m_hHintFont, "HintFont", "Default" );
 
 private:
-	CHudTexture* m_pBackground;
-	CHudTexture* m_pBackgroundSuper;
+	CHudTexture* m_pClock;
 
 	float m_flBlink;
 };
@@ -77,8 +76,7 @@ CHudSlowMo::CHudSlowMo( const char *pElementName ) : BaseClass(NULL, "HudSlowMo"
 {
 	SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT | HIDEHUD_WEAPONSELECTION );
 
-	m_pBackground = NULL;
-	m_pBackgroundSuper = NULL;
+	m_pClock = NULL;
 
 	SetIsTime(true);
 
@@ -89,8 +87,7 @@ void CHudSlowMo::ApplySchemeSettings( IScheme* pScheme )
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	m_pBackground = gHUD.GetIcon("slowmo_background");
-	m_pBackgroundSuper = gHUD.GetIcon("slowmo_super_background");
+	m_pClock = gHUD.GetIcon("hud_clock");
 }
 
 //-----------------------------------------------------------------------------
@@ -144,8 +141,6 @@ void CHudSlowMo::UpdatePlayerSlowMo( C_BasePlayer *player )
 	SetSlowMo(pSDKPlayer->GetSlowMoSeconds());
 }
 
-ConVar hud_slowmo_needle_lerp("hud_slowmo_needle_lerp", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-
 void CHudSlowMo::OnThink()
 {
 	if (m_flBlink > 0 && gpGlobals->curtime - m_flBlink < 2)
@@ -184,20 +179,31 @@ void CHudSlowMo::Paint()
 	if (!pPlayer->IsAlive())
 		return;
 
+	surface()->DrawSetColor( Color(0, 0, 0, 180) );
+	surface()->DrawFilledRect( 0, 0, watch_xpos, watch_ypos );
+
+	Color clrClock;
 	if (pPlayer->HasSuperSlowMo() || pPlayer->m_Shared.m_bSuperSkill)
-	{
-		SetFgColor(Color(255, 190, 20, 255));
-
-		if (m_pBackgroundSuper)
-			m_pBackgroundSuper->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
-	}
+		clrClock = Color(255, 190, 20, 255);
+	else if (pPlayer->GetSlowMoTime() > 0)
+		clrClock = Color(107, 157, 244, 255);
 	else
-	{
-		SetFgColor(Color(40, 200, 14, 255));
+		clrClock = Color(255, 255, 255, 255);
 
-		if (m_pBackground)
-			m_pBackground->DrawSelf( watch_xpos, watch_ypos, watch_wide, watch_tall, Color(255, 255, 255, 255) );
-	}
+	if (m_flBlink > 0 && gpGlobals->curtime - m_flBlink < 2)
+		clrClock = Color(255, 0, 0, 255);
+
+	SetFgColor(clrClock);
+
+	float flMargin = 5;
+
+	if (!m_pClock)
+		return;
+
+	float flClockHeight = watch_ypos - flMargin*2;
+	float flClockWidth = flClockHeight * m_pClock->Width() / m_pClock->Height();
+
+	m_pClock->DrawSelf(flMargin, flMargin, flClockWidth, flClockHeight, clrClock);
 
 	BaseClass::Paint();
 
@@ -213,21 +219,21 @@ void CHudSlowMo::Paint()
 		int iTextWide, iTextTall;
 		surface()->GetTextSize( m_hHintFont, wszHintLabel, iTextWide, iTextTall );
 
-		surface()->DrawSetTextPos( GetWide()/2 - iTextWide/2, RemapVal(fabs(sin(gpGlobals->curtime*3)), 0, 1, watch_ypos - surface()->GetFontTall(m_hHintFont), 0) );
+		surface()->DrawSetTextPos( RemapVal(fabs(sin(gpGlobals->curtime*3)), 0, 1, watch_xpos, watch_xpos + 10), watch_ypos/2 - surface()->GetFontTall(m_hHintFont)/2 );
 		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
 		surface()->DrawSetTextFont( m_hHintFont );
 		surface()->DrawUnicodeString( wszHintLabel, vgui::FONT_DRAW_NONADDITIVE );
 	}
 
-	wchar_t* pszSlowmo = g_pVGuiLocalize->Find("#DA_HUD_Slowmo");
+	/*wchar_t* pszSlowmo = g_pVGuiLocalize->Find("#DA_HUD_Slowmo");
 	if (pszSlowmo)
 	{
 		int iTextWide, iTextTall;
 		surface()->GetTextSize( m_hHintFont, pszSlowmo, iTextWide, iTextTall );
 
-		surface()->DrawSetTextPos( GetWide()/2 - iTextWide/2, watch_ypos + watch_tall );
+		surface()->DrawSetTextPos( watch_xpos/2 - iTextWide/2, watch_ypos );
 		surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
 		surface()->DrawSetTextFont( m_hHintFont );
 		surface()->DrawUnicodeString( pszSlowmo, vgui::FONT_DRAW_NONADDITIVE );
-	}
+	}*/
 }

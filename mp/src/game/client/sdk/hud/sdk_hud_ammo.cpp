@@ -288,7 +288,7 @@ CHudTexture* CHudAmmo::GetTexture()
 	return NULL;
 }
 
-ConVar hud_ammoscale("hud_ammoscale", "1.4", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the ammo display.");
+ConVar hud_ammoscale("hud_ammoscale", "0.8", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much to scale the ammo display.");
 
 Vector2D CHudAmmo::GetRoundPosition(int i)
 {
@@ -338,7 +338,7 @@ float CHudAmmo::GetTextureDrawHeight(CHudTexture* pTexture, float flScale)
 
 Vector4D CHudAmmo::GetGrenadePosition(int i)
 {
-	float flGrenadeSize = scheme()->GetProportionalScaledValueEx(GetScheme(), 32);
+	float flGrenadeSize = scheme()->GetProportionalScaledValueEx(GetScheme(), 32) * hud_ammoscale.GetFloat();
 	float flGrenadeMargin = scheme()->GetProportionalScaledValueEx(GetScheme(), 40);
 
 	Vector2D vecFirstRound = GetRoundPosition(0);
@@ -346,7 +346,7 @@ Vector4D CHudAmmo::GetGrenadePosition(int i)
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
 
-	return Vector4D(iWidth - flGrenadeMargin - flGrenadeSize - i*flGrenadeSize, vecFirstRound.y - flGrenadeMargin, flGrenadeSize, flGrenadeSize);
+	return Vector4D(iWidth - flGrenadeMargin - i*flGrenadeSize, vecFirstRound.y - flGrenadeMargin, flGrenadeSize, flGrenadeSize);
 }
 
 extern float Oscillate(float flTime, float flLength);

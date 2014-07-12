@@ -58,7 +58,7 @@ public:
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
-	int GetLerpedHealth();
+	float GetLerpedHealth();
 
 	CPanelAnimationVarAliasType( float, m_flHealthLerpTime, "HealthLerpTime", "0.25", "float" );
 
@@ -69,13 +69,7 @@ private:
 
 	int		m_bitsDamage;
 
-	CHudTexture* m_pBackground;
-	CHudTexture* m_pFill;
-	CHudTexture* m_pSplat1;
-	CHudTexture* m_pSplat2;
-	CHudTexture* m_pCap;
-	CHudTexture* m_pArmor;
-	CHudTexture* m_pArmorGlow;
+	CHudTexture* m_pHeart;
 };
 
 DECLARE_HUDELEMENT( CHudHealth );
@@ -93,13 +87,7 @@ void CHudHealth::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
-	m_pBackground = gHUD.GetIcon("health_background");
-	m_pFill = gHUD.GetIcon("health_fill");
-	m_pSplat1 = gHUD.GetIcon("health_splat1");
-	m_pSplat2 = gHUD.GetIcon("health_splat2");
-	m_pCap = gHUD.GetIcon("health_cap");
-	m_pArmor = gHUD.GetIcon("health_armor");
-	m_pArmorGlow = gHUD.GetIcon("health_armor_glow");
+	m_pHeart = gHUD.GetIcon("hud_heart");
 }
 
 //-----------------------------------------------------------------------------
@@ -214,6 +202,9 @@ void CHudHealth::Paint()
 	if (!pPlayer->IsAlive())
 		return;
 
+	surface()->DrawSetColor( Color(0, 0, 0, 180) );
+	surface()->DrawFilledRect( 0, 0, 1000, 1000 );
+
 //	if (pPlayer->IsStyleSkillActive())
 //		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
 
@@ -223,96 +214,40 @@ void CHudHealth::Paint()
 	iWidth -= iElementBuffer*2;
 	iHeight -= iElementBuffer*2;
 
-	int	iFillWidth = m_pFill->Width();
-	int	iFillHeight = m_pFill->Height();
+	float flMargin = 5;
 
-	C_SDK_PlayerResource *pSDKPR = SDKGameResources();
-	int iMaxHealth = pSDKPR->GetMaxHealth(pPlayer->entindex());
+	float flHeartHeight = GetTall() - flMargin*2;
 
-	int iSectionsPerRow = 4;
-	float flBars = (float)m_iHealth*iSectionsPerRow/100;
-	int iSections = max(flBars + (fmod(flBars, 1) == 0?0:1), iSectionsPerRow);
+	if (m_pHeart)
+		m_pHeart->DrawSelf(flMargin, flMargin, flHeartHeight, flHeartHeight, Color(255, 255, 255, 255));
 
-	int iBuffer = 5;
-	int iSectionWidth = (iWidth - iBuffer*(iSectionsPerRow-1))/iSectionsPerRow;
+	float flBarWidth = GetWide() - flMargin*3 - flHeartHeight;
+	float flBarHeight = 4;
 
-	for (int i = 0; i < iSections; i++)
+	float flHurtLerpTime = RemapValClamped(m_iOldHealth - m_iHealth, 10, 50, m_flHealthLerpTime, m_flHealthLerpTime*3);
+	float flHurtAlpha = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, 1, 0);
+	float flHurtPercent = Clamp((float)m_iOldHealth/100, 0.0f, 1.0f);
+
+	float flHealthPercent = Clamp((float)GetLerpedHealth()/100, 0.0f, 1.0f);
+
+	if (flHurtAlpha && flHealthPercent < flHurtPercent)
 	{
-		int iXOffset = 0;
-		int iYOffset = 0;
+		surface()->DrawSetColor( Color(255, 0, 0, flHurtAlpha*255) );
+		surface()->DrawFilledRect( flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2-flBarHeight/2, flMargin*2 + flHeartHeight + flHurtPercent * flBarWidth, GetTall()/2+flBarHeight/2 );
+	}
 
-		if (i < iSectionsPerRow)
-		{
-			iXOffset = iElementBuffer;
-			iYOffset = iHeight/2 + iElementBuffer;
-		}
-		else
-		{
-			iXOffset = -iSectionsPerRow*(iSectionWidth+iBuffer) + iElementBuffer;
-			iYOffset = iElementBuffer;
-		}
+	surface()->DrawSetColor( Color(255, 255, 255, 255) );
+	surface()->DrawFilledRect( flMargin*2 + flHeartHeight, GetTall()/2-flBarHeight/2, flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2+flBarHeight/2 );
 
-		int iLerpedHealth = GetLerpedHealth();
-
-		if (iLerpedHealth > i*100/iSectionsPerRow)
-		{
-			float flFillWidth = RemapValClamped(iLerpedHealth, i*100/iSectionsPerRow, (i+1)*100/iSectionsPerRow, 0, 1);
-
-			if (i < iSectionsPerRow)
-			{
-				if (m_pBackground)
-					m_pBackground->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, iSectionWidth, iHeight/2, Color(255, 255, 255, 255) );
-
-				if (m_pFill)
-				{
-					m_pFill->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
-
-					if (flFillWidth < 0.95f)
-						m_pCap->DrawSelf(iXOffset + i*(iSectionWidth+iBuffer) + iSectionWidth*flFillWidth - m_pCap->Width()/2, iYOffset, m_pCap->Width(), iHeight/2, Color(255, 255, 255, 255) );
-				}
-			}
-			else
-			{
-				if (m_pArmor)
-					m_pArmor->DrawSelfCropped( iXOffset + i*(iSectionWidth+iBuffer), iYOffset, 0, 0, iFillWidth*flFillWidth, iFillHeight, iSectionWidth*flFillWidth, iHeight/2, Color(255, 255, 255, 255) );
-			}
-
-			if (m_iOldHealth > m_iHealth + 5 && flFillWidth < 1 && gpGlobals->curtime < m_flLastHealthChange + m_flHealthLerpTime && m_pArmorGlow)
-			{
-				float flAlpha = Gain(RemapValClamped(gpGlobals->curtime, m_flLastHealthChange + m_flHealthLerpTime/2, m_flLastHealthChange + m_flHealthLerpTime, 1, 0), 0.7f);
-				m_pArmorGlow->DrawSelf( iXOffset + i*(iSectionWidth+iBuffer) + iSectionWidth*flFillWidth - m_pArmorGlow->Width()/2, iYOffset, m_pArmorGlow->Width(), iHeight/2, Color(255, 255, 255, 255*flAlpha) );
-			}
-		}
-		else if (m_pSplat1 && m_pSplat2)
-		{
-			if (m_iHealth < iMaxHealth)
-			{
-				CHudTexture* pSplat;
-				switch (i)
-				{
-				default:
-				case 0:
-				case 2:
-					pSplat = m_pSplat1;
-					break;
-
-				case 1:
-				case 3:
-					pSplat = m_pSplat2;
-					break;
-				}
-
-				int iSplatWidth = iSectionWidth + iElementBuffer*2;
-				int iSplatHeight = iHeight/2 + iElementBuffer*2;
-				int iSplatSize = min(iSplatWidth, iSplatHeight);
-
-				pSplat->DrawSelf( 0 + i*(iSectionWidth+iBuffer) + iSplatWidth/2 - iSplatSize/2, iHeight/2 + iSplatHeight/2 - iSplatSize/2, iSplatSize, iSplatSize, Color(255, 255, 255, 255) );
-			}
-		}
+	float flOverhealPercent = RemapValClamped((float)GetLerpedHealth(), 100, 150, 0.0f, 1.0f);
+	if (flOverhealPercent)
+	{
+		surface()->DrawSetColor( Color(255, 190, 20, 128) );
+		surface()->DrawFilledRect( flMargin*2 + flHeartHeight, flMargin, flMargin*2 + flHeartHeight + flOverhealPercent * flBarWidth, GetTall() - flMargin );
 	}
 }
 
-int CHudHealth::GetLerpedHealth()
+float CHudHealth::GetLerpedHealth()
 {
 	float flHealthLerp = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + m_flHealthLerpTime, 0, 1);
 	flHealthLerp = Bias(flHealthLerp, 0.8f);
