@@ -13,6 +13,7 @@ namespace da
 	{
 		class GameData;
 		class KillInfo;
+		class PlayerList;
 	}
 }
 
@@ -34,6 +35,9 @@ public:
 	void AddCharacterChosen(const char* pszCharacter);
 	void AddWeaponChosen(SDKWeaponID eWeapon);
 	void AddSkillChosen(SkillID eSkill);
+
+	da::protobuf::PlayerList* GetPlayerInList(CSDKPlayer* pPlayer);
+	void AddStyle(CSDKPlayer* pPlayer, float flStyle);
 
 	void ClientConnected(AccountID_t eAccountID);
 	void ClientDisconnected(AccountID_t eAccountID);
@@ -63,6 +67,7 @@ private:
 			memset(&z, 0, sizeof(z));
 
 			m_asCharactersChosen.SetLessFunc(Str_LessFunc);
+			m_apPlayerList.SetLessFunc( DefLessFunc(AccountID_t) );
 		}
 
 		~CDataContainer();
@@ -89,6 +94,7 @@ private:
 		CUtlMap<CUtlString, int> m_asCharactersChosen;
 		CUtlVector<SDKWeaponID> m_aeWeaponsChosen;
 		CUtlVector<SkillID>     m_aeSkillsChosen;
+
 		struct VoteResult
 		{
 			CUtlString  m_sIssue;
@@ -96,7 +102,9 @@ private:
 			bool        m_bResult;
 		};
 		CUtlVector<VoteResult> m_aVoteResults;
+
 		CUtlVector<class da::protobuf::KillInfo*> m_apKillInfos;
+		CUtlMap<AccountID_t, class da::protobuf::PlayerList*> m_apPlayerList;
 	}* d;
 
 	// We use this to figure out if a client has really connected

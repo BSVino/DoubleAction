@@ -3881,6 +3881,8 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement
 
 	m_flTotalStyle += points;
 
+	DataManager().AddStyle(this, points);
+
 	if (IsStyleSkillActive())
 	{
 		float flDampenedPoints = RemapValClamped(points, 0, da_stylemeteractivationcost.GetFloat(), 0, da_stylemetertotalcharge.GetFloat());

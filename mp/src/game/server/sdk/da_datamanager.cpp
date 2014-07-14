@@ -304,6 +304,47 @@ void CDataManager::AddSkillChosen(SkillID eSkill)
 	d->m_aeSkillsChosen.AddToTail(eSkill);
 }
 
+da::protobuf::PlayerList* CDataManager::GetPlayerInList(CSDKPlayer* pPlayer)
+{
+	if (pPlayer->IsBot())
+		return NULL;
+
+	CSteamID ID;
+	pPlayer->GetSteamID(&ID);
+
+	if (!ID.IsValid())
+		return NULL;
+
+	if (ID.GetEUniverse() != k_EUniversePublic)
+		return NULL;
+
+	if (ID.GetEAccountType() != k_EAccountTypeIndividual)
+		return NULL;
+
+	CUtlMap<AccountID_t, class da::protobuf::PlayerList*>::IndexType_t it = d->m_apPlayerList.Find(ID.GetAccountID());
+	if (it == d->m_apPlayerList.InvalidIndex())
+	{
+		it = d->m_apPlayerList.Insert(ID.GetAccountID(), new da::protobuf::PlayerList());
+
+		da::protobuf::PlayerList* pbPlayerInfo = d->m_apPlayerList[it];
+
+		pbPlayerInfo->set_accountid(ID.GetAccountID());
+		pbPlayerInfo->set_name(pPlayer->GetPlayerName());
+	}
+
+	return d->m_apPlayerList[it];
+}
+
+void CDataManager::AddStyle(CSDKPlayer* pPlayer, float flStyle)
+{
+	da::protobuf::PlayerList* pbPlayerInfo = GetPlayerInList(pPlayer);
+
+	if (!pbPlayerInfo)
+		return;
+
+	pbPlayerInfo->set_style(pbPlayerInfo->style() + flStyle);
+}
+
 void CDataManager::ClientConnected(AccountID_t eAccountID)
 {
 	// ClientConnected is called for every non-bot client every time a map loads, even with changelevel.
@@ -477,6 +518,13 @@ void CDataManager::FillProtoBuffer(da::protobuf::GameData* pbGameData)
 	for (size_t i = 0; i < iDataSize; i++)
 		pKillInfos->Add()->CopyFrom(*d->m_apKillInfos[i]);
 
+	google::protobuf::RepeatedPtrField<da::protobuf::PlayerList>* pPlayerList = pbGameData->mutable_player_list();
+	iDataSize = d->m_apPlayerList.Count();
+	pPlayerList->Reserve(iDataSize);
+
+	for (CUtlMap<AccountID_t, class da::protobuf::PlayerList*>::IndexType_t it = d->m_apPlayerList.FirstInorder(); it != d->m_apPlayerList.InvalidIndex(); it = d->m_apPlayerList.NextInorder(it))
+		pPlayerList->Add()->CopyFrom(*d->m_apPlayerList[it]);
+
 	ClearData();
 }
 
@@ -491,6 +539,7 @@ void CDataManager::ClearData()
 CDataManager::CDataContainer::~CDataContainer()
 {
 	m_apKillInfos.PurgeAndDeleteElements();
+	m_apPlayerList.PurgeAndDeleteElements();
 }
 
 #endif
