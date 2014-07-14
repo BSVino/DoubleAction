@@ -45,6 +45,8 @@ message GameData
 	optional int32 platform_osx = 27;
 
 	repeated KillInfo kill_details = 28;
+
+	repeated PlayerList player_list = 29;
 }
 
 message PlayerPositions
@@ -103,4 +105,21 @@ message KillInfo
 	optional PlayerInfo killer = 2;
 
 	optional Vector grenade_position = 3;
+}
+
+message PlayerList
+{
+	optional int32 accountid = 1;
+	optional string name = 2;
+	optional float style = 3;
+}
+
+message ServerReply
+{
+	optional string daily_leader = 1;
+	optional float daily_leader_style = 2;
+	optional string weekly_leader = 3;
+	optional float weekly_leader_style = 4;
+	optional string monthly_leader = 5;
+	optional float monthly_leader_style = 6;
 }
