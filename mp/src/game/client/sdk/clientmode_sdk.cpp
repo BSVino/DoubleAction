@@ -145,6 +145,7 @@ ClientModeSDKNormal::~ClientModeSDKNormal()
 
 void ClientModeSDKNormal::InitViewport()
 {
+	new CButtonPanel();
 	new CNewsFrame();
 	new CDACredits();
 

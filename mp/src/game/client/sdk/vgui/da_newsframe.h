@@ -9,6 +9,40 @@
 
 #include <vguitextwindow.h>
 
+#include "vgui_imagebutton.h"
+
+class CButtonPanel : public vgui::EditablePanel, public IViewPortPanel
+{
+private:
+	DECLARE_CLASS_SIMPLE(CButtonPanel, vgui::EditablePanel);
+	
+public:
+	CButtonPanel();
+	~CButtonPanel();
+
+	virtual const char *GetName( void ) { return "button_panel"; }
+
+	virtual void SetData(KeyValues *data) {};
+	virtual void Reset() {};
+
+	virtual bool NeedsUpdate( void ) { return false; }
+	virtual bool HasInputElements( void ) { return true; }
+
+	virtual void ShowPanel( bool bShow );
+
+	virtual void Update();
+
+	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
+  	virtual bool IsVisible() { return BaseClass::IsVisible(); }
+	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
+
+protected:
+	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void OnCommand( const char *command);
+
+	vgui::ImageButton* m_pNews;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
 //-----------------------------------------------------------------------------

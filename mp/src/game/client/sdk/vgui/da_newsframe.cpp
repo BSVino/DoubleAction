@@ -28,6 +28,72 @@
 static CNewsFrame* g_pNewsFrame = NULL;
 
 using namespace vgui;
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CButtonPanel::CButtonPanel() : EditablePanel(NULL, "button_panel")
+{
+	SetParent(enginevgui->GetPanel( PANEL_GAMEUIDLL ));
+
+	SetProportional(true);
+
+	LoadControlSettings( "Resource/UI/buttonpanel.res" );
+	InvalidateLayout();
+
+	const char* button_image = "news";
+	m_pNews = new ImageButton(this, "NewsButton", button_image, NULL, NULL, "opennews");
+
+	MakeReadyForUse();
+
+	Update();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CButtonPanel::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	LoadControlSettings("Resource/UI/buttonpanel.res");
+
+	Reset();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CButtonPanel::~CButtonPanel()
+{
+}
+
+void CButtonPanel::Update( void )
+{
+	m_pNews->SetVisible(true);
+}
+
+void CButtonPanel::ShowPanel(bool bShow)
+{
+	if ( BaseClass::IsVisible() == bShow )
+		return;
+
+	SetVisible( bShow );
+}
+
+void CButtonPanel::OnCommand( const char *command)
+{
+	if (!Q_strcmp(command, "opennews"))
+	{
+		g_pNewsFrame->SetVisible(true);
+		return;
+	}
+
+	BaseClass::OnCommand(command);
+}
+
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -50,7 +116,6 @@ CNewsFrame::CNewsFrame() : Frame(NULL, "news")
 	m_pForumsButton = new Button(this, "ForumsButton", "#DA_Visit_Forums");
 
 	MakeReadyForUse();
-	Activate();
 
 	Update();
 
