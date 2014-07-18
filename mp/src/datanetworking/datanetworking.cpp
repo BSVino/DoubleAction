@@ -136,7 +136,7 @@ void DAFetchMostRecentNews()
 
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-	curl_easy_setopt(curl, CURLOPT_URL, "http://forums.doubleactiongame.com/lastnewstime.php");
+	curl_easy_setopt(curl, CURLOPT_URL, "http://forums.doubleactiongame.com/latest.php");
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteDate);
 
 #ifdef _DEBUG
@@ -149,12 +149,38 @@ void DAFetchMostRecentNews()
 	curl_multi_perform(curlm, &still_running);
 }
 
-bool DAMostRecentNewsReady(int& most_recent)
+static void explode(const string& str, std::vector<string>& tokens, const string& delimiter = " ")
+{
+	string::size_type lastPos = str.find_first_of(delimiter, 0);
+	string::size_type pos = 0;
+
+	while (true)
+	{
+		tokens.push_back(str.substr(pos, lastPos - pos));
+
+		if (lastPos == string::npos)
+			break;
+
+		pos = lastPos+1;
+		lastPos = str.find_first_of(delimiter, pos);
+	}
+}
+
+bool DAMostRecentNewsReady(int& most_recent_news, int& most_recent_version)
 {
 	if (have_data)
 	{
-		most_recent = atoi(date.c_str());
-		return true;
+		std::vector<string> values;
+		explode(date, values);
+
+		if (values.size() >= 2)
+		{
+			most_recent_news = atoi(values[0].c_str());
+			most_recent_version = atoi(values[1].c_str());
+			return true;
+		}
+		else
+			return false;
 	}
 
 	if (still_running == 0)

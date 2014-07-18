@@ -77,17 +77,21 @@ CButtonPanel::~CButtonPanel()
 {
 }
 
-extern bool DAMostRecentNewsReady(int& most_recent);
+extern bool DAMostRecentNewsReady(int& most_recent_news, int& most_recent_version);
 
 void CButtonPanel::OnThink()
 {
 	BaseClass::OnThink();
 
-	int most_recent;
-	if (DAMostRecentNewsReady(most_recent))
+	int most_recent_news, most_recent_version;
+	if (DAMostRecentNewsReady(most_recent_news, most_recent_version))
 	{
-		if (most_recent > m_iLatestNews && FStrEq(m_pNews->GetNormalImage(), "news"))
+		if (most_recent_news > m_iLatestNews && FStrEq(m_pNews->GetNormalImage(), "news"))
 			m_pNews->SetNormalImage("news_new");
+
+		// If there's a new version force it to open so players see the message.
+		if (!g_pNewsFrame->IsVisible() && most_recent_version > atoi(DA_VERSION))
+			OnCommand("opennews");
 	}
 }
 
