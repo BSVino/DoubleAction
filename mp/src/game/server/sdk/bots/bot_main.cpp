@@ -100,8 +100,8 @@ const char* g_aszBotNames[] =
 	"Higgs Broson",
 	"Brodo Baggins",
 	"Bilbro Baggins",
-	"Teddy Brosevelt",
-	"Franklin Brosevelt",
+	"Teddy Broosevelt",
+	"Franklin Broosevelt",
 	"Broam Chomsky",
 	"Brozilla",
 	"Napoleon Bronaparte",
@@ -118,6 +118,7 @@ const char* g_aszBotNames[] =
 	"Pierce Brosnan",
 	"Samuel Bro Jackson",
 	"Quentin Broantino",
+	"Clive Browen",
 };
 
 
