@@ -21,6 +21,10 @@
 
 #include "da.h"
 
+// Don't care me none about VCR mode.
+#undef time
+#include <time.h>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -28,6 +32,99 @@
 static CNewsFrame* g_pNewsFrame = NULL;
 
 using namespace vgui;
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
+CButtonPanel::CButtonPanel() : EditablePanel(NULL, "button_panel")
+{
+	SetParent(enginevgui->GetPanel( PANEL_GAMEUIDLL ));
+
+	SetProportional(true);
+
+	LoadControlSettings( "Resource/UI/buttonpanel.res" );
+	InvalidateLayout();
+
+	m_pNews = new ImageButton(this, "NewsButton", "news", NULL, NULL, "opennews");
+
+	MakeReadyForUse();
+
+	Update();
+
+	KeyValues *manifest = new KeyValues( "latest_news" );
+	if ( manifest->LoadFromFile( filesystem, "latest_news.txt" ) )
+		m_iLatestNews = atol(manifest->GetFirstValue()->GetString());
+	else
+		m_iLatestNews = 0;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CButtonPanel::ApplySchemeSettings( IScheme *pScheme )
+{
+	BaseClass::ApplySchemeSettings( pScheme );
+
+	LoadControlSettings("Resource/UI/buttonpanel.res");
+
+	Reset();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Destructor
+//-----------------------------------------------------------------------------
+CButtonPanel::~CButtonPanel()
+{
+}
+
+extern bool DAMostRecentNewsReady(int& most_recent);
+
+void CButtonPanel::OnThink()
+{
+	BaseClass::OnThink();
+
+	int most_recent;
+	if (DAMostRecentNewsReady(most_recent))
+	{
+		if (most_recent > m_iLatestNews && FStrEq(m_pNews->GetNormalImage(), "news"))
+			m_pNews->SetNormalImage("news_new");
+	}
+}
+
+void CButtonPanel::Update( void )
+{
+	m_pNews->SetVisible(true);
+}
+
+void CButtonPanel::ShowPanel(bool bShow)
+{
+	if ( BaseClass::IsVisible() == bShow )
+		return;
+
+	SetVisible( bShow );
+}
+
+void CButtonPanel::OnCommand( const char *command)
+{
+	if (!Q_strcmp(command, "opennews"))
+	{
+		m_pNews->SetNormalImage("news");
+
+		m_iLatestNews = time(NULL);
+
+		KeyValues *manifest = new KeyValues( "latest_news" );
+		manifest->SetInt("time", (long)m_iLatestNews);
+		manifest->SaveToFile( filesystem, "latest_news.txt", "MOD" );
+
+		g_pNewsFrame->SetVisible(true);
+		return;
+	}
+
+	BaseClass::OnCommand(command);
+}
+
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -50,7 +147,6 @@ CNewsFrame::CNewsFrame() : Frame(NULL, "news")
 	m_pForumsButton = new Button(this, "ForumsButton", "#DA_Visit_Forums");
 
 	MakeReadyForUse();
-	Activate();
 
 	Update();
 

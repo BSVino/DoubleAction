@@ -143,8 +143,13 @@ ClientModeSDKNormal::~ClientModeSDKNormal()
 {
 }
 
+extern void DAFetchMostRecentNews();
+
 void ClientModeSDKNormal::InitViewport()
 {
+	DAFetchMostRecentNews();
+
+	new CButtonPanel();
 	new CNewsFrame();
 	new CDACredits();
 

@@ -24,6 +24,30 @@ $Configuration
 	}
 }
 
+$Configuration "Debug"
+{
+	$Linker
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\Debug\libcurl.lib ws2_32.lib" [$WIN32]
+	}
+}
+
+$Configuration "Release"
+{
+	$Linker
+	{
+		$AdditionalDependencies			"$BASE $SRCDIR\thirdparty\curl-7.31.0\lib\RelWithDebInfo\libcurl.lib ws2_32.lib" [$WIN32]
+	}
+}
+
+$Configuration
+{
+	$Linker
+	{
+		$AdditionalDependencies "$BASE $SRCDIR/thirdparty/curl-7.31.0/lib/libcurl.a" [$LINUX]
+	}
+}
+
 $Project "Client (DA)"
 {
 	$Folder "DA"
@@ -65,6 +89,7 @@ $Project "Client (DA)"
 			$File "sdk/vgui/sdk_teammenu.cpp"
 			$File "sdk/vgui/sdk_textwindow.cpp"
 			$File "sdk/vgui/sdkviewport.cpp"
+			$File "sdk/vgui/vgui_imagebutton.cpp"
 			$File "sdk/vgui/vgui_rootpanel_sdk.cpp"
 			$File "sdk/vgui/da_newsframe.cpp"
 			$File "sdk/vgui/da_menu_background.cpp"
@@ -156,5 +181,21 @@ $Project "Client (DA)"
 	$Folder "Link Libraries" [$LINUX]
 	{
 		$Lib viewback
+	}
+
+	$Folder "Link Libraries" [$WIN32]
+	{
+		$DynamicFile "$SRCDIR\lib\public\datanetworking.lib"
+	}
+
+	$Folder "Link Libraries" [$POSIX && !$LINUX]
+	{
+		$DynamicFile "$SRCDIR\lib\$PLATFORM\datanetworking$_STATICLIB_EXT"
+	}
+
+	$Folder "Link Libraries" [$LINUX]
+	{
+		$Lib datanetworking
+        $DynamicFile "$SRCDIR/thirdparty/curl-7.31.0/lib/libcurl.a"
 	}
 }
