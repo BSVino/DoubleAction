@@ -30,6 +30,7 @@ public:
 
 	virtual void ShowPanel( bool bShow );
 
+	virtual void OnThink();
 	virtual void Update();
 
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -41,6 +42,8 @@ protected:
 	virtual void OnCommand( const char *command);
 
 	vgui::ImageButton* m_pNews;
+
+	time_t m_iLatestNews;
 };
 
 //-----------------------------------------------------------------------------

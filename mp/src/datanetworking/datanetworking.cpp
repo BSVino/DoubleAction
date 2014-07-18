@@ -31,7 +31,7 @@ size_t CurlReadFunction(void *ptr, size_t size, size_t nmemb, void *userdata)
 	return iBytesToRead;
 }
 
-void DebugString(const char* pszString)
+static void DebugString(const char* pszString)
 {
 #ifdef __linux__
     printf("%s", pszString);
@@ -105,4 +105,70 @@ bool DASendData(const da::protobuf::GameData& pbGameData, string& sError)
 	curl_global_cleanup();
 
 	return bSuccess;
+}
+
+static int still_running = 0;
+static CURL* curl;
+static CURLM* curlm;
+
+static string date;
+static bool have_data = false;
+
+size_t CurlWriteDate(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	date.append(ptr, size*nmemb);
+	have_data = true;
+	return size*nmemb;
+}
+
+void DAFetchMostRecentNews()
+{
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	curl = curl_easy_init();
+	curlm = curl_multi_init();
+
+	if (!curl || !curlm)
+	{
+		curl_global_cleanup();
+		return;
+	}
+
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+	curl_easy_setopt(curl, CURLOPT_URL, "http://forums.doubleactiongame.com/lastnewstime.php");
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteDate);
+
+#ifdef _DEBUG
+	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	//curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, CurlDebugCallback);
+#endif
+
+	curl_multi_add_handle(curlm, curl);
+
+	curl_multi_perform(curlm, &still_running);
+}
+
+bool DAMostRecentNewsReady(int& most_recent)
+{
+	if (have_data)
+	{
+		most_recent = atoi(date.c_str());
+		return true;
+	}
+
+	if (still_running == 0)
+		return false;
+
+	curl_multi_perform(curlm, &still_running);
+
+	if (still_running == 0)
+	{
+		curl_multi_cleanup(curlm);
+		curl_easy_cleanup(curl);
+
+		curl_global_cleanup();
+	}
+
+	return false;
 }

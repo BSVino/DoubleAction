@@ -8,7 +8,7 @@ ImageButton::ImageButton( Panel *parent, const char *panelName, const char *norm
 {
 	m_pParent = parent;
 	SetParent(parent);
- 
+
 	if ( pCmd != NULL )
 	{
 		Q_strcpy( command, pCmd );
@@ -16,10 +16,10 @@ ImageButton::ImageButton( Panel *parent, const char *panelName, const char *norm
 	}
 	else
 		hasCommand = false;
- 
+
 	Q_strcpy( m_normalImage, normalImage );
 	i_normalImage = vgui::scheme()->GetImage( m_normalImage, false );
- 
+
 	if ( mouseOverImage != NULL )
 	{
 		Q_strcpy( m_mouseOverImage, mouseOverImage );
@@ -28,7 +28,7 @@ ImageButton::ImageButton( Panel *parent, const char *panelName, const char *norm
 	}
 	else
 		hasMouseOverImage = false;
- 
+
 	if ( mouseClickImage != NULL )
 	{
 		Q_strcpy( m_mouseClickImage, mouseClickImage );
@@ -37,7 +37,7 @@ ImageButton::ImageButton( Panel *parent, const char *panelName, const char *norm
 	}
 	else
 		hasMouseClickImage = false;
- 
+
 	SetNormalImage();
 }
  
@@ -83,6 +83,14 @@ void ImageButton::SetMouseClickImage( void )
 {
 	SetImage(i_mouseClickImage);
 	Repaint();
+}
+ 
+void ImageButton::SetNormalImage(const char* normalImage)
+{
+	Q_strcpy( m_normalImage, normalImage );
+	i_normalImage = vgui::scheme()->GetImage( m_normalImage, false );
+
+	SetNormalImage();
 }
  
 void ImageButton::SetImage( vgui::IImage *image )

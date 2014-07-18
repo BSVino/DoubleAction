@@ -27,6 +27,9 @@ public:
 	void SetNormalImage( void );
 	void SetMouseOverImage( void );
 	void SetMouseClickImage( void );
+
+	const char* GetNormalImage() { return m_normalImage; }
+	void SetNormalImage(const char* normalImage);
  
 private:
  
