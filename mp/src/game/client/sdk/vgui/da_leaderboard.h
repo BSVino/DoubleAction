@@ -9,16 +9,19 @@
 
 #include <vguitextwindow.h>
 
-class CNewsFrame : public vgui::Frame, public IViewPortPanel
+//-----------------------------------------------------------------------------
+// Purpose: Game ScoreBoard
+//-----------------------------------------------------------------------------
+class CLeaderboard : public vgui::Frame, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE(CNewsFrame, vgui::Frame);
+	DECLARE_CLASS_SIMPLE(CLeaderboard, vgui::Frame);
 	
 public:
-	CNewsFrame();
-	~CNewsFrame();
+	CLeaderboard();
+	~CLeaderboard();
 
-	virtual const char *GetName( void ) { return "news"; }
+	virtual const char *GetName( void ) { return "leaderboard"; }
 
 	virtual void SetData(KeyValues *data) {};
 	virtual void Reset() {};
@@ -39,11 +42,9 @@ protected:
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	virtual void OnCommand( const char *command);
 
-	vgui::HTML* m_pNewsMessage;
+	vgui::HTML* m_pLeaderboard;
 
-	vgui::Button* m_pWebsiteButton;
-	vgui::Button* m_pForumsButton;
+	vgui::Button* m_pMore;
 };
 
-extern CNewsFrame* NewsFrame();
-
+extern CLeaderboard* Leaderboard();

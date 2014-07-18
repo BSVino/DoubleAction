@@ -34,6 +34,8 @@
 #include "c_weapon__stubs.h"		//Tony; add stubs
 #include "cam_thirdperson.h"
 #include "sdk_in_main.h"
+#include "da_menubuttonpanel.h"
+#include "da_leaderboard.h"
 #include "da_newsframe.h"
 #include "hud/da_hud_vote.h"
 #include "da_credits.h"
@@ -149,8 +151,9 @@ void ClientModeSDKNormal::InitViewport()
 {
 	DAFetchMostRecentNews();
 
-	new CButtonPanel();
 	new CNewsFrame();
+	new CLeaderboard();
+	new CButtonPanel();
 	new CDACredits();
 
 	m_pViewport = new SDKViewport();

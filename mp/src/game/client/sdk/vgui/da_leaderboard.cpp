@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 
-#include "da_newsframe.h"
+#include "da_leaderboard.h"
 
 #include "steam/isteamfriends.h"
 #include "steam/steam_api.h"
@@ -26,23 +26,27 @@
 
 #include "da.h"
 
+// Don't care me none about VCR mode.
+#undef time
+#include <time.h>
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 // Don't judge me.
-static CNewsFrame* g_pNewsFrame = NULL;
+static CLeaderboard* g_pLeaderboard = NULL;
 
 using namespace vgui;
 
-CNewsFrame* NewsFrame()
+CLeaderboard* Leaderboard()
 {
-	return g_pNewsFrame;
+	return g_pLeaderboard;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CNewsFrame::CNewsFrame() : Frame(NULL, "news")
+CLeaderboard::CLeaderboard() : Frame(NULL, "leaderboard")
 {
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/MenuScheme.res", "MenuScheme"));
 
@@ -50,33 +54,32 @@ CNewsFrame::CNewsFrame() : Frame(NULL, "news")
 
 	SetProportional(true);
 
-	LoadControlSettings( "Resource/UI/news.res" );
+	LoadControlSettings( "Resource/UI/leaderboard.res" );
 	InvalidateLayout();
 
 	SetSizeable(false);
 
-	SetTitle("#DA_News_Title", true);
+	SetTitle("#DA_Leaderboard_Title", true);
 
-	m_pNewsMessage = new HTML(this, "NewsMessage");
+	m_pLeaderboard = new HTML(this, "LeaderboardHTML");
 
-	m_pWebsiteButton = new Button(this, "WebsiteButton", "#DA_Visit_Website");
-	m_pForumsButton = new Button(this, "ForumsButton", "#DA_Visit_Forums");
+	m_pMore = new Button(this, "MoreButton", "#DA_View_Leaderboards");
 
 	MakeReadyForUse();
 
 	Update();
 
-	g_pNewsFrame = this;
+	g_pLeaderboard = this;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CNewsFrame::ApplySchemeSettings( IScheme *pScheme )
+void CLeaderboard::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	LoadControlSettings("Resource/UI/news.res");
+	LoadControlSettings("Resource/UI/leaderboard.res");
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 
@@ -86,32 +89,34 @@ void CNewsFrame::ApplySchemeSettings( IScheme *pScheme )
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
 //-----------------------------------------------------------------------------
-CNewsFrame::~CNewsFrame()
+CLeaderboard::~CLeaderboard()
 {
 }
 
-void CNewsFrame::Update( void )
+void CLeaderboard::Update( void )
 {
-	m_pNewsMessage->SetVisible( true );
+	m_pLeaderboard->SetVisible( true );
 
-	m_pNewsMessage->OpenURL( "http://forums.doubleactiongame.com/news.php?version=" DA_VERSION, NULL );
+	m_pLeaderboard->OpenURL( "http://data.doubleactiongame.com/leaderboard/?ingame", NULL );
 
-	m_pWebsiteButton->SetVisible(true);
-	m_pForumsButton->SetVisible(true);
+	m_pMore->SetVisible(true);
 }
 
-void CNewsFrame::ShowPanel(bool bShow)
+void CLeaderboard::ShowPanel(bool bShow)
 {
 	if ( BaseClass::IsVisible() == bShow )
 		return;
 
 	if ( bShow )
+	{
 		Activate();
+		m_pLeaderboard->OpenURL( "http://data.doubleactiongame.com/leaderboard/?ingame", NULL );
+	}
 	else
 		SetVisible( false );
 }
 
-void CNewsFrame::OnKeyCodePressed( KeyCode code )
+void CLeaderboard::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 		OnCommand("okay");
@@ -119,48 +124,42 @@ void CNewsFrame::OnKeyCodePressed( KeyCode code )
 		BaseClass::OnKeyCodePressed( code );
 }
 
-void CNewsFrame::OnCommand( const char *command)
+void CLeaderboard::OnCommand( const char *command)
 {
 	if (!Q_strcmp(command, "okay"))
 	{
 		SetVisible(false);
 		return;
 	}
-	else if (!Q_strcmp(command, "website"))
+	else if (!Q_strcmp(command, "leaderboards"))
 	{
 		if ( steamapicontext && steamapicontext->SteamFriends() )
-			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage( "http://doubleactiongame.com" );
-		return;
-	}
-	else if (!Q_strcmp(command, "forums"))
-	{
-		if ( steamapicontext && steamapicontext->SteamFriends() )
-			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage( "http://forums.doubleactiongame.com" );
+			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage( "http://data.doubleactiongame.com/leaderboard" );
 		return;
 	}
 
 	BaseClass::OnCommand(command);
 }
 
-CON_COMMAND(gui_reload_news, "Reload resource for news frame.")
+CON_COMMAND(gui_reload_leaderboard, "Reload resource for leaderboard frame.")
 {
-	CNewsFrame *pNews = NewsFrame();
-	if (!pNews)
+	CLeaderboard *pFrame = g_pLeaderboard;
+	if (!pFrame)
 		return;
 
-	pNews->LoadControlSettings( "Resource/UI/news.res" );
-	pNews->InvalidateLayout();
-	pNews->Update();
+	pFrame->LoadControlSettings( "Resource/UI/leaderboard.res" );
+	pFrame->InvalidateLayout();
+	pFrame->Update();
 }
 
-CON_COMMAND(da_news, "Show news frame.")
+CON_COMMAND(da_leaderboard, "Show leaderboard frame.")
 {
-	CNewsFrame *pNews = NewsFrame();
-	if (!pNews)
+	CLeaderboard *pFrame = g_pLeaderboard;
+	if (!pFrame)
 		return;
 
-	pNews->LoadControlSettings( "Resource/UI/news.res" );
-	pNews->InvalidateLayout();
-	pNews->Activate();
-	pNews->Update();
+	pFrame->LoadControlSettings( "Resource/UI/leaderboard.res" );
+	pFrame->InvalidateLayout();
+	pFrame->Activate();
+	pFrame->Update();
 }

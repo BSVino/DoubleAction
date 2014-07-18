@@ -9,16 +9,18 @@
 
 #include <vguitextwindow.h>
 
-class CNewsFrame : public vgui::Frame, public IViewPortPanel
+#include "vgui_imagebutton.h"
+
+class CButtonPanel : public vgui::EditablePanel, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE(CNewsFrame, vgui::Frame);
+	DECLARE_CLASS_SIMPLE(CButtonPanel, vgui::EditablePanel);
 	
 public:
-	CNewsFrame();
-	~CNewsFrame();
+	CButtonPanel();
+	~CButtonPanel();
 
-	virtual const char *GetName( void ) { return "news"; }
+	virtual const char *GetName( void ) { return "button_panel"; }
 
 	virtual void SetData(KeyValues *data) {};
 	virtual void Reset() {};
@@ -28,6 +30,7 @@ public:
 
 	virtual void ShowPanel( bool bShow );
 
+	virtual void OnThink();
 	virtual void Update();
 
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -36,14 +39,12 @@ public:
 
 protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	virtual void OnCommand( const char *command);
 
-	vgui::HTML* m_pNewsMessage;
+	void CloseAll();
 
-	vgui::Button* m_pWebsiteButton;
-	vgui::Button* m_pForumsButton;
+	vgui::ImageButton* m_pNews;
+	vgui::ImageButton* m_pLeaderboard;
+
+	time_t m_iLatestNews;
 };
-
-extern CNewsFrame* NewsFrame();
-
