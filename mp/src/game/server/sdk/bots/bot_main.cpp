@@ -77,7 +77,7 @@ const char* g_aszBotNames[] =
 	"Brosicle",
 	"Brofessor Brobody",
 	"Han Brolo",
-	"Brosideon, Lord of the Brocean",
+	"Broseidon, Lord of the Brocean",
 	"Broba Fett",
 	"Brohatma Ghandi",
 	"Brohemian",
