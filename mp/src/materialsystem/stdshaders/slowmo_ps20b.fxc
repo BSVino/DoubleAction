@@ -92,9 +92,9 @@ HALF4 main( PS_INPUT i ) : COLOR
 	// Adjust levels. Crush the blacks and blow out the whites.
 	const float flBias = 0.4;
 	const float flExponent = 1.73697f;// log( flBias ) * -1.4427f;
-	aflOutput.r = pow(RemapValClamped(aflOutput.r, 0, .69, 0, 1), flExponent);
-	aflOutput.g = pow(RemapValClamped(aflOutput.g, 0, .69, 0, 1), flExponent);
-	aflOutput.b = pow(RemapValClamped(aflOutput.b, 0, .69, 0, 1), flExponent);
+	aflOutput.r = pow(RemapValClamped(aflOutput.r, 0, .63, 0, 1), flExponent);
+	aflOutput.g = pow(RemapValClamped(aflOutput.g, 0, .63, 0, 1), flExponent);
+	aflOutput.b = pow(RemapValClamped(aflOutput.b, 0, .63, 0, 1), flExponent);
 
 	float flFBGrey = ( aflOutput.r + aflOutput.g + aflOutput.b ) / 3;
 
