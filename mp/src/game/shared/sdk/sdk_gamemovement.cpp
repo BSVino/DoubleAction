@@ -23,6 +23,7 @@
 	#include "da_viewback.h"
 #else
 	#include "sdk_player.h"
+	#include "bots/sdk_bot.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -72,6 +73,7 @@ public:
 	virtual void ReduceTimers( void );
 	virtual void WalkMove( void );
 	virtual void PlayerMove( void );
+	virtual void RealPlayerMove( void );
 	virtual void CheckParameters( void );
 	virtual void CheckFalling( void );
 	virtual void CategorizePosition( void );
@@ -117,11 +119,19 @@ public:
 
 	bool CheckMantel();
 
+	bool PlayerIsStuck();
+
 protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
 public:
 	CSDKPlayer *m_pSDKPlayer;
+
+#ifdef STUCK_DEBUG
+	float m_flStuckCheck;
+
+	void AddBotTag(const char* tag);
+#endif
 };
 
 #define ROLL_TIME 0.65f
@@ -143,6 +153,9 @@ EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CGameMovement, IGameMovement,INTERFACENAME_GAM
 // ---------------------------------------------------------------------------------------- //
 CSDKGameMovement::CSDKGameMovement()
 {
+#ifdef STUCK_DEBUG
+	m_flStuckCheck = 0;
+#endif
 }
 
 CSDKGameMovement::~CSDKGameMovement()
@@ -583,6 +596,106 @@ void CSDKGameMovement::WalkMove( void )
 }
 
 void CSDKGameMovement::PlayerMove (void)
+{
+#ifdef STUCK_DEBUG
+	bool player_stuck_before = PlayerIsStuck();
+#endif
+
+	RealPlayerMove();
+
+#ifdef STUCK_DEBUG
+	if (!player_stuck_before)
+	{
+#ifndef CLIENT_DLL
+		if (PlayerIsStuck())
+		{
+			for (int i = 0; i < 54; i++)
+			{
+				m_flStuckCheckTime[ m_pSDKPlayer->entindex() ][ 0 ] = 0;
+				CheckStuck();
+			}
+
+			if (PlayerIsStuck())
+			{
+				for (int i = 1; i < gpGlobals->maxClients; i++)
+				{
+					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
+					if (!pPlayer)
+						continue;
+
+					if (!pPlayer->IsBot())
+						continue;
+
+					if (pPlayer == m_pSDKPlayer)
+						continue;
+
+					engine->ServerCommand(UTIL_VarArgs( "kick \"%s\"\n", pPlayer->GetPlayerName() ));
+				}
+
+				ConVarRef("bot_quota").SetValue(1);
+
+				m_flStuckCheck = gpGlobals->curtime + 1;
+			}
+		}
+#endif
+	}
+
+#ifndef CLIENT_DLL
+	if (m_flStuckCheck)
+	{
+		if (m_pSDKPlayer->IsBot())
+		{
+			CSDKBot* pBot = dynamic_cast<CSDKBot*>(m_pSDKPlayer);
+
+			if (!PlayerIsStuck())
+			{
+				m_flStuckCheck = 0;
+				ConVarRef("bot_quota").SetValue(8);
+			}
+			else if (gpGlobals->curtime > m_flStuckCheck)
+			{
+				if (pBot->m_collecting)
+				{
+					for (auto it = pBot->m_button_history.begin(); it != pBot->m_button_history.end(); it++)
+					{
+						auto next_it = it + 1;
+						if (next_it == pBot->m_button_history.end())
+							break;
+
+						if (it->m_time < pBot->m_button_history.back().m_time - 2)
+							continue;
+
+						if (it->m_tag.length())
+							DevMsg("%.3f - %s tag: %s\n", it->m_time, it->m_stuck?"stuck":"", it->m_tag.c_str());
+						else
+							DevMsg("%.3f - %.3f %.3f %.3f - %d %s %s %s %s %s\n", it->m_time, it->m_position.x, it->m_position.y, it->m_position.z, it->m_buttons,
+								it->m_stuck?"stuck":"", it->m_rolling?"rolling":"", it->m_sliding?"sliding":"", it->m_diving?"diving":"", it->m_flipping?"flipping":"");
+					}
+				}
+
+				pBot->m_collecting = false;
+
+				int color = 0;
+				for (auto it = pBot->m_button_history.begin(); it != pBot->m_button_history.end(); it++)
+				{
+					auto next_it = it + 1;
+					if (next_it == pBot->m_button_history.end())
+						break;
+
+					if (it->m_time < pBot->m_button_history.back().m_time - 2)
+						continue;
+
+					DebugDrawLine(it->m_position, next_it->m_position, color, color, color, true, 0.1);
+					color = (color+1)%255;
+				}
+			}
+		}
+	}
+#endif
+#endif
+}
+
+void CSDKGameMovement::RealPlayerMove (void)
 {
 	VPROF( "CSDKGameMovement::PlayerMove" );
 	if (m_pSDKPlayer->PlayerFrozen())
@@ -1334,9 +1447,19 @@ void CSDKGameMovement::FinishUnSlide( void )
 	if ( m_pSDKPlayer->m_Shared.MustDuckFromSlide() )
 	{
 		if( CanUnprone() )
+		{
 			FinishDuck();
+		}
 		else
-		{			
+		{
+			m_pSDKPlayer->m_Shared.SetProne(true, true);
+			SetProneEyeOffset( 1.0 );
+		}
+	}
+	else
+	{
+		if (!CanUnprone())
+		{
 			m_pSDKPlayer->m_Shared.SetProne(true, true);
 			SetProneEyeOffset( 1.0 );
 		}
@@ -1490,6 +1613,12 @@ bool CSDKGameMovement::LadderMove()
 
 void CSDKGameMovement::SetSlideEyeOffset( float flFraction )
 {
+	if (flFraction < 0)
+		flFraction = 0;
+
+	if (flFraction > 1)
+		flFraction = 1;
+
 	Vector vecStandViewOffset = GetPlayerViewOffset( false );
 	Vector vecSlideViewOffset = VEC_SLIDE_VIEW;
 
@@ -1686,7 +1815,9 @@ void CSDKGameMovement::Duck( void )
 		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( slidetime < 0 )
+		{
 			FinishUnSlide();
+		}
 		else
 		{
 			// Calc parametric time
@@ -2493,6 +2624,7 @@ void CSDKGameMovement::FullWalkMove ()
 	}
 
 	UpdateDuckJumpEyeOffset();
+
 	Duck();
 
 	if (m_pSDKPlayer->m_Shared.CanChangePosition ())
@@ -2898,3 +3030,30 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		mv->m_outStepHeight += flStepDist;
 	}
 }
+
+bool CSDKGameMovement::PlayerIsStuck()
+{
+	trace_t traceresult;
+	EntityHandle_t hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, traceresult );
+	if ( hitent == INVALID_ENTITY_HANDLE )
+		return false;
+
+	return true;
+}
+
+#ifdef STUCK_DEBUG
+void CSDKGameMovement::AddBotTag(const char* tag)
+{
+#ifndef CLIENT_DLL
+	CSDKBot* pBot = dynamic_cast<CSDKBot*>(m_pSDKPlayer);
+
+	if (!pBot)
+		return;
+
+	pBot->m_button_history.push_back(CSDKBot::ButtonHistory());
+	pBot->m_button_history.back().m_time = gpGlobals->curtime;
+	pBot->m_button_history.back().m_tag = tag;
+	pBot->m_button_history.back().m_stuck = PlayerIsStuck();
+#endif
+}
+#endif

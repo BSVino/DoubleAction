@@ -3,6 +3,10 @@
 #include "sdk_player.h"
 #include "bot_main.h"
 
+#ifdef STUCK_DEBUG
+#include <deque>
+#endif
+
 // This is our bot class.
 class CSDKBot : public CSDKPlayer
 {
@@ -88,4 +92,23 @@ protected:
 	bool m_bInRangeToAttack;
 	float m_flNextBotMeleeAttack;
 	float m_flMinRangeAttack;
+
+#ifdef STUCK_DEBUG
+public:
+	class ButtonHistory
+	{
+	public:
+		float  m_time;
+		bool   m_stuck;
+		int    m_buttons;
+		bool   m_sliding;
+		bool   m_diving;
+		bool   m_flipping;
+		bool   m_rolling;
+		Vector m_position;
+		std::string m_tag;
+	};
+	std::deque<ButtonHistory> m_button_history;
+	bool m_collecting;
+#endif
 };

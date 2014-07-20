@@ -119,6 +119,8 @@ void FX_FireBullets(
 	float flSpread
 	)
 {
+	Assert(vOrigin.IsValid());
+
 	bool bDoEffects = true;
 
 #ifdef CLIENT_DLL

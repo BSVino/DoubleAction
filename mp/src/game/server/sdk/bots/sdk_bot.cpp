@@ -35,6 +35,10 @@ void CSDKBot::Initialize()
 	PickRandomSkill();
 
 	State_Transition( STATE_ACTIVE );
+
+#ifdef STUCK_DEBUG
+	m_collecting = true;
+#endif
 }
 
 void CSDKBot::Spawn()
@@ -98,6 +102,31 @@ void CSDKBot::RunPlayerMove( CUserCmd &cmd, float frametime )
 	// Restore the globals..
 	gpGlobals->frametime = flOldFrametime;
 	gpGlobals->curtime = flOldCurtime;
+
+#ifdef STUCK_DEBUG
+	if (m_collecting)
+	{
+		while (m_button_history.size() && m_button_history.front().m_time < gpGlobals->curtime - 4)
+			m_button_history.pop_front();
+
+		m_button_history.push_back(ButtonHistory());
+		m_button_history.back().m_buttons = cmd.buttons;
+		m_button_history.back().m_position = GetAbsOrigin();
+		m_button_history.back().m_time = gpGlobals->curtime;
+		m_button_history.back().m_sliding = m_Shared.IsSliding();
+		m_button_history.back().m_flipping = m_Shared.IsWallFlipping();
+		m_button_history.back().m_rolling = m_Shared.IsRolling();
+		m_button_history.back().m_diving = m_Shared.IsDiving();
+
+		trace_t traceresult;
+
+		Ray_t ray;
+		ray.Init( GetAbsOrigin(), GetAbsOrigin(), GetPlayerMins(), GetPlayerMaxs() );
+		UTIL_TraceRay( ray, PlayerSolidMask(), this, COLLISION_GROUP_PLAYER_MOVEMENT, &traceresult );
+
+		m_button_history.back().m_stuck = !!traceresult.m_pEnt;
+	}
+#endif
 }
 
 void CSDKBot::HandleRespawn( CUserCmd &cmd )
