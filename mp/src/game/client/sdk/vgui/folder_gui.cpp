@@ -656,6 +656,8 @@ void CFolderMenu::OnCommand( const char *command )
 
 		BaseClass::OnCommand( command );
 
+		engine->ServerCmd("jointeam 0");
+
 		if ( hud_buyautokill.GetBool() )
 			engine->ClientCmd( "kill" );
 
