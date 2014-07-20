@@ -1370,7 +1370,10 @@ void CViewRender::ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxV
 	render->GetVisibleFogVolume( view.origin, &fogVolumeInfo );
 	WaterRenderInfo_t info;
 	DetermineWaterRenderInfo( fogVolumeInfo, info );
+
+#ifdef WITH_SHADEREDITOR
 	g_ShaderEditorSystem->CustomViewRender( &g_CurrentViewID, fogVolumeInfo, info );
+#endif
 
 	// Disable fog for the rest of the stuff
 	DisableFog();
@@ -1998,7 +2001,10 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		if ( ( bDrew3dSkybox = pSkyView->Setup( view, &nClearFlags, &nSkyboxVisible ) ) != false )
 		{
 			AddViewToScene( pSkyView );
+
+#ifdef WITH_SHADEREDITOR
 			g_ShaderEditorSystem->UpdateSkymask();
+#endif
 		}
 		SafeRelease( pSkyView );
 
@@ -2056,7 +2062,9 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		// Now actually draw the viewmodel
 		DrawViewModels( view, whatToDraw & RENDERVIEW_DRAWVIEWMODEL );
 
+#ifdef WITH_SHADEREDITOR
 		g_ShaderEditorSystem->UpdateSkymask( bDrew3dSkybox );
+#endif
 
 		DrawUnderwaterOverlay();
 
@@ -2095,7 +2103,9 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			pRenderContext.SafeRelease();
 		}
 
+#ifdef WITH_SHADEREDITOR
 		g_ShaderEditorSystem->CustomPostRender();
+#endif
 
 		// And here are the screen-space effects
 
@@ -5548,6 +5558,7 @@ static ConVar da_ssao( "da_ssao", "1", FCVAR_ARCHIVE );
 
 void CBaseWorldView::DrawSSAO( )
 {
+#ifdef WITH_SHADEREDITOR
 	if (!shaderEdit)
 		return;
 
@@ -5560,6 +5571,7 @@ void CBaseWorldView::DrawSSAO( )
 		return;
 
 	shaderEdit->DrawPPEOnDemand( iSSAOIndex );
+#endif
 }
 #endif
 

@@ -21,6 +21,7 @@ $Configuration
 		$AdditionalIncludeDirectories		"$BASE;sdk\vgui,.\sdk,$SRCDIR\game\shared\sdk,.\hl2,.\hl2\elements,$SRCDIR\game\shared\hl2"
 		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;SOURCE_2013"
 		$PreprocessorDefinitions            "$BASE;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE" [$VIEWBACK]
+		$PreprocessorDefinitions            "$BASE;WITH_SHADEREDITOR" [$WIN32]
 	}
 }
 
