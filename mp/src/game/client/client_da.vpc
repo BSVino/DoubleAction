@@ -94,7 +94,6 @@ $Project "Client (DA)"
 			$File "sdk/vgui/da_newsframe.cpp"
 			$File "sdk/vgui/da_leaderboard.cpp"
 			$File "sdk/vgui/da_menubuttonpanel.cpp"
-			$File "sdk/vgui/da_menu_background.cpp"
 			$File "sdk/vgui/da_credits.cpp"
 		}
 
