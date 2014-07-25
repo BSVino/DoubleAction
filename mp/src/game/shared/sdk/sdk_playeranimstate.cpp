@@ -157,7 +157,7 @@ Activity CSDKPlayerAnimState::TranslateActivity( Activity actDesired )
 
 	if ( GetSDKPlayer()->GetActiveWeapon() )
 	{
-		translateActivity = GetSDKPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, false );
+		translateActivity = GetSDKPlayer()->GetActiveWeapon()->ActivityOverride( translateActivity, NULL );
 	}
 
 	return translateActivity;
