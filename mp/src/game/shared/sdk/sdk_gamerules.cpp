@@ -362,7 +362,9 @@ void CSDKGameRules::LevelInitPostEntity()
 		}
 	}
 
+#ifdef WITH_DATA_COLLECTION
 	DataManager().SetTeamplay(m_bIsTeamplay);
+#endif
 #endif
 }
 
@@ -370,8 +372,10 @@ bool CSDKGameRules::ClientConnected( edict_t *pEntity, const char *pszName, cons
 {
 	bool bConnected = BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
 
+#ifdef WITH_DATA_COLLECTION
 	if (bConnected)
 		DataManager().ClientConnected(engine->GetClientSteamID(pEntity)->GetAccountID());
+#endif
 
 	return bConnected;
 }
@@ -388,8 +392,10 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	if (pSDKPlayer == GetBountyPlayer())
 		CleanupMiniObjective();
 
+#ifdef WITH_DATA_COLLECTION
 	if (!pSDKPlayer->IsBot())
 		DataManager().ClientDisconnected(engine->GetClientSteamID(pSDKPlayer->edict())->GetAccountID());
+#endif
 }
 
 bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
@@ -2945,7 +2951,9 @@ public:
 public:
 	virtual void OnVoteFailed( int iEntityHoldingVote )
 	{
+#ifdef WITH_DATA_COLLECTION
 		DataManager().VoteFailed(m_szTypeString);
+#endif
 
 		CBaseIssue::OnVoteFailed(iEntityHoldingVote);
 	}
@@ -2965,7 +2973,9 @@ public:
 				pszDetails = UTIL_VarArgs("%s (Account id: %d)", pPlayer->GetPlayerName(), (int)id.GetAccountID());
 		}
 
+#ifdef WITH_DATA_COLLECTION
 		DataManager().VotePassed(m_szTypeString, pszDetails);
+#endif
 	}
 };
 
