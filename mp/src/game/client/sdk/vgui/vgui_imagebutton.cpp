@@ -1,6 +1,6 @@
 #include "cbase.h"
 #include "vgui_imagebutton.h"
-#include "vgui/mousecode.h"
+#include "vgui/MouseCode.h"
  
 using namespace vgui;
  

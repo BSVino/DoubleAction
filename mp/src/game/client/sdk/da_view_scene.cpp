@@ -160,6 +160,7 @@ void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
 	if (!da_pretty_pixels.GetBool())
 		return;
 
+#ifdef WITH_SHADEREDITOR
 	if (!shaderEdit)
 		return;
 
@@ -169,6 +170,7 @@ void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
 		return;
 
 	shaderEdit->DrawPPEOnDemand( iPrettyPixelsIndex );
+#endif
 }
 
 //-----------------------------------------------------------------------------
