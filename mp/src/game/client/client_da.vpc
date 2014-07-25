@@ -174,7 +174,7 @@ $Project "Client (DA)"
 		$DynamicFile "$SRCDIR\lib\public\viewback.lib"
 	}
 
-	$Folder "Link Libraries" [$POSIX && !$LINUX]
+	$Folder "Link Libraries" [$POSIX && !$LINUX && !VIEWBACK]
 	{
 		$DynamicFile "$SRCDIR\lib\$PLATFORM\viewback$_STATICLIB_EXT"
 	}
