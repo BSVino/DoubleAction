@@ -1413,10 +1413,10 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 	}
 }
 
-ConVar da_speed_run("da_speed_run", "230", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_run("da_speed_run", "210", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar da_speed_prone("da_speed_prone", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar da_speed_slide("da_speed_slide", "320", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-ConVar da_speed_roll("da_speed_roll", "200", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+ConVar da_speed_roll("da_speed_roll", "250", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 ConVar da_speed_aimin("da_speed_aimin", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
 void CSDKPlayer::InitSpeeds()
