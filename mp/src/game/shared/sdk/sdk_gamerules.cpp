@@ -1834,17 +1834,30 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 	{
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BountyKilled");
 
-		CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
-		if (pPlayerKiller)
+		if (pVictim == info.GetAttacker())
 		{
-			GiveMiniObjectiveRewardPlayer(pPlayerKiller);
+			CleanupMiniObjective();
 
-			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
+			for (int i = 0; i < 3; i++)
+			{
+				if (SetupMiniObjective_Bounty())
+					break;
+			}
 		}
 		else
-			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_LOST);
+		{
+			CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
+			if (pPlayerKiller)
+			{
+				GiveMiniObjectiveRewardPlayer(pPlayerKiller);
 
-		CleanupMiniObjective();
+				CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
+			}
+			else
+				CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_LOST);
+
+			CleanupMiniObjective();
+		}
 	}
 	else if (GetBountyPlayer() && GetBountyPlayer() == ToSDKPlayer(info.GetAttacker()))
 	{
