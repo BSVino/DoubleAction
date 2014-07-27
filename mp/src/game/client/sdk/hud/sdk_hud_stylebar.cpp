@@ -345,7 +345,7 @@ void CHudStyleBar::Paint()
 	surface()->GetScreenSize(flScreenWide, flScreenTall);
 
 	float flBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2;
-	surface()->DrawSetColor( Color(0, 0, 0, 100) );
+	surface()->DrawSetColor( Color(0, 0, 0, 180) );
 	surface()->DrawFilledRect(
 		flBarLeft,
 		m_flElementYPos,
@@ -354,44 +354,9 @@ void CHudStyleBar::Paint()
 		);
 
 	Color clrActivated = Color(255, 190, 20, 255);
-	Color clrNormal = Color(170, 140, 33, 255);
+	Color clrNormal = Color(210, 150, 33, 255);
 
 	Color clrZeroStyle = Color(100, 100, 100, 255);
-
-	wchar_t* pwszStyle = L"Style!";
-	if (pPlayer->IsStyleSkillActive())
-		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Active");
-	else if (m_flCurrentStyle/da_stylemeteractivationcost.GetFloat() > 0.6)
-		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_High");
-	else if (m_flCurrentStyle/da_stylemeteractivationcost.GetFloat() > 0.3)
-		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Med");
-	else
-		pwszStyle = g_pVGuiLocalize->Find("#DA_Style_Low");
-
-	if (!pwszStyle)
-		pwszStyle = L"Style!";
-
-	int iStyleTextWide, iStyleTextTall;
-	surface()->GetTextSize(m_hStyleFont, pwszStyle, iStyleTextWide, iStyleTextTall);
-
-	Color clrStyleText;
-	if (pPlayer->IsStyleSkillActive())
-		clrStyleText = Color(
-			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.r(), clrNormal.r()),
-			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.g(), clrNormal.g()),
-			RemapValClamped(Oscillate(gpGlobals->curtime, 1), 0, 1, clrActivated.b(), clrNormal.b()),
-			255);
-	else
-		clrStyleText = Color(
-			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.r(), clrNormal.r()),
-			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.g(), clrNormal.g()),
-			RemapValClamped(m_flCurrentStyle, 0, da_stylemeteractivationcost.GetFloat(), clrZeroStyle.b(), clrNormal.b()),
-			255);
-
-	vgui::surface()->DrawSetTextFont( m_hStyleFont );
-	vgui::surface()->DrawSetTextPos( flBarLeft + m_flBarWidth/2 - iStyleTextWide/2, m_flElementYPos - iStyleTextTall );
-	vgui::surface()->DrawSetTextColor( clrStyleText );
-	vgui::surface()->DrawPrintText( pwszStyle, wcslen(pwszStyle) );
 
 	Color clrBar;
 	if (pPlayer->IsStyleSkillActive())
@@ -417,45 +382,28 @@ void CHudStyleBar::Paint()
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 
-	int iBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
-	int iBarRight = m_flElementXPos + iWidth - flStyleTextureWidth/2 + m_flBarWidth/2 - m_flGap;
+	float flBarWidth = 6;
+	if (pPlayer->IsStyleSkillActive())
+		flBarWidth = m_flBarWidth - m_flGap*2;
+
+	int iBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - flBarWidth/2;
+	int iBarRight = m_flElementXPos + iWidth - flStyleTextureWidth/2 + flBarWidth/2;
 	surface()->DrawFilledRect( iBarLeft, m_flElementYPos + m_flGap + flBarHeight*(1-flPercent), iBarRight, m_flElementYPos + flBarHeight );
 
-	float flPulseTime = 0.6f;
-	float flAlphaRamp = RemapValClamped(fmod(gpGlobals->curtime, flPulseTime), 0, flPulseTime, 0, 1);
-	int iPulseAlpha = RemapValClamped(Bias(flAlphaRamp, 0.1f), 0, flPulseTime, 50, 10);
-	surface()->DrawSetColor( Color(255, 255, 255, iPulseAlpha) );
-
-	float flWidth = 0.1f;
-	float flBottom = RemapValClamped(fmod(gpGlobals->curtime, flPulseTime), 0, flPulseTime, -flWidth, 1);
-	float flTop = flBottom + flWidth;
-
-	flBottom = clamp(flBottom, 0, flPercent);
-	flTop = clamp(flTop, 0, flPercent);
-
-	surface()->DrawFilledRect( iBarLeft + 2, m_flElementYPos + m_flGap + flBarHeight*(1-flTop), iBarRight - 2, m_flElementYPos + flBarHeight*(1-flBottom) );
+	//int iFullBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
 
 	wchar_t wszStarsLabel[100];
-	V_swprintf_safe(wszStarsLabel, L"[%i/100]", (int)(flPercent*100));
+	V_swprintf_safe(wszStarsLabel, L"%i/100", (int)(flPercent*100));
 
 	int iStarsTextWide, iStarsTextTall;
 	surface()->GetTextSize(m_hTextFont, wszStarsLabel, iStarsTextWide, iStarsTextTall);
-	float flStarsX = iBarLeft + m_flBarWidth/2 - iStarsTextWide/2;
-	float flStarsY = m_flElementYPos + m_flElementTall - flStyleTextureHeight;
+	float flStarsX = flBarLeft - iStarsTextWide - m_flGap;
+	float flStarsY = m_flElementYPos + m_flGap + flBarHeight*(1-flPercent) - iStarsTextTall/2;
 
 	surface()->DrawSetTextPos( flStarsX, flStarsY );
 	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
 	surface()->DrawSetTextFont( m_hTextFont );
 	surface()->DrawUnicodeString( wszStarsLabel, vgui::FONT_DRAW_NONADDITIVE );
-
-	if (m_pGoldStar)
-	{
-		m_pGoldStar->DrawSelf(
-			flStarsX - iStarsTextTall, flStarsY,
-			iStarsTextTall, iStarsTextTall,
-			Color(255, 255, 255, 255)
-		);
-	}
 
 	if (pStyleTexture)
 	{
@@ -471,7 +419,7 @@ void CHudStyleBar::Paint()
 		}
 
 		float flBarIconX = m_flElementXPos + m_flElementWide - flStyleTextureWidth;
-		float flBarIconY = m_flElementYPos + m_flElementTall - flStyleTextureHeight + iStarsTextTall;
+		float flBarIconY = m_flElementYPos + m_flElementTall - flStyleTextureHeight;
 
 		pStyleTexture->DrawSelf(
 				flBarIconX, flBarIconY,
@@ -551,6 +499,10 @@ void CHudStyleBar::Paint()
 		}
 	}
 
+	// Use a text width that will never change.
+	int iStars100TextWide, iStars100TextTall;
+	surface()->GetTextSize(m_hTextFont, L"100/100", iStars100TextWide, iStars100TextTall);
+
 	int iNext;
 	for (int i = m_aAnnouncements.Head(); i != m_aAnnouncements.InvalidIndex(); i = iNext)
 	{
@@ -606,7 +558,7 @@ void CHudStyleBar::Paint()
 			V_swprintf_safe(wszXLabel, L"x%i", iStars);
 
 			int iStarsTextWide, iStarsTextTall;
-			surface()->GetTextSize(m_hTextFont, L"+", iStarsTextWide, iStarsTextTall);
+			surface()->GetTextSize(m_hTextFont, wszXLabel, iStarsTextWide, iStarsTextTall);
 
 			flStarWidth = iPlusTextWide + iStarsTextWide + iStarsTextTall + 20;
 
@@ -616,21 +568,21 @@ void CHudStyleBar::Paint()
 			surface()->DrawSetTextColor( Color(255, 255, 255, 255 * flAlpha) );
 			surface()->DrawSetTextFont( m_hTextFont );
 
-			surface()->DrawSetTextPos( x, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawSetTextPos( x - iStars100TextWide, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
 			surface()->DrawUnicodeString( L"+", vgui::FONT_DRAW_NONADDITIVE );
 
 			pStarTexture->DrawSelf(
-				x + iPlusTextWide, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2,
+				x - iStars100TextWide + iPlusTextWide, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2,
 				iStarsTextTall, iStarsTextTall,
 				Color(255, 255, 255, 255 * flAlpha)
 			);
 
-			surface()->DrawSetTextPos( x + iPlusTextWide + iStarsTextTall, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
+			surface()->DrawSetTextPos( x - iStars100TextWide + iPlusTextWide + iStarsTextTall, y + pTexture->EffectiveHeight(flScale)/2 - surface()->GetFontTall( m_hTextFont )/2 );
 			surface()->DrawUnicodeString( wszXLabel, vgui::FONT_DRAW_NONADDITIVE );
 		}
 
 		pTexture->DrawSelf(
-			flBarLeft - pTexture->EffectiveWidth(flScale) - flStarWidth - 10 + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
+			flBarLeft - iStars100TextWide - pTexture->EffectiveWidth(flScale) - flStarWidth - 10 + flSlideIn, m_flElementYPos + RemapValClamped(pAnnouncement->m_flBarPosition, 0, 1, m_flGap + flBarHeight - pTexture->EffectiveHeight(flScale), m_flGap),
 			pTexture->EffectiveWidth(flScale), pTexture->EffectiveHeight(flScale),
 			Color(255, 255, 255, 255 * flAlpha)
 		);
