@@ -97,7 +97,7 @@ const char* g_aszBotNames[] =
 	"Frosty the Broman",
 	"G.I. Bro",
 	"Brose Marti",
-	"Higgs Broson",
+	"The Higgs Broson",
 	"Brodo Baggins",
 	"Bilbro Baggins",
 	"Teddy Broosevelt",
@@ -119,6 +119,10 @@ const char* g_aszBotNames[] =
 	"Samuel Bro Jackson",
 	"Quentin Broantino",
 	"Clive Browen",
+	"Elvis Brosely",
+	"Demi Brovato",
+	"Selena Bromez",
+	"Michael Broson",
 };
 
 
