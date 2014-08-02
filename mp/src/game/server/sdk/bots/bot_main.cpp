@@ -109,7 +109,7 @@ const char* g_aszBotNames[] =
 	"Quasibrodo",
 	"Jon Bon Brovi",
 	"Brobe Bryant",
-	"Mr. Brobato",
+	"Mr. Broboto",
 	"Brolin Powell",
 	"Brofi Annan",
 	"Conan Bro'Brien",
@@ -123,6 +123,7 @@ const char* g_aszBotNames[] =
 	"Demi Brovato",
 	"Selena Bromez",
 	"Michael Broson",
+	"Ton Broosendaal",
 };
 
 
