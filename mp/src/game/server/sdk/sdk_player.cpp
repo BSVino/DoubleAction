@@ -4536,18 +4536,13 @@ void CC_Character(const CCommand& args)
 			return;
 		}
 
-		if (FStrEq(args[1], "random"))
+		if (pPlayer->PickRandomCharacter())
 		{
-			if (pPlayer->PickRandomCharacter())
-			{
-				if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
+				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
 
-				return;
-			}
+			return;
 		}
-
-		Error("Couldn't find that player model.\n");
 	}
 }
 
