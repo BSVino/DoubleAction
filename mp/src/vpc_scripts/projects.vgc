@@ -13,11 +13,6 @@ $Project "datanetworking"
 	"datanetworking\datanetworking.vpc" [$DA]
 }
 
-$Project "datatool"
-{
-	"datatool\datatool.vpc" [$DA && $WIN32]
-}
-
 $Project "viewback"
 {
 	"viewback\viewback.vpc" [$DA]
