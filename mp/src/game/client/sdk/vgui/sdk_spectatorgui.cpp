@@ -22,10 +22,9 @@
 #include "c_sdk_player.h"
 #include "in_buttons.h"
 
-#undef min
-#undef max
-
+#include "tier0/valve_minmax_off.h"
 #include <string>
+#include "tier0/valve_minmax_on.h"
 
 using namespace vgui;
 DECLARE_HUDELEMENT( CSDKMapOverview )
@@ -302,8 +301,8 @@ void CSDKSpectatorGUI::ResizeControls( void )
 	m_pRedScore->GetContentSize( wTer, hTer );
 	
 	int desiredScoreWidth = m_scoreWidth;
-	desiredScoreWidth = std::max( desiredScoreWidth, wCT );
-	desiredScoreWidth = std::max( desiredScoreWidth, wTer );
+	desiredScoreWidth = max( desiredScoreWidth, wCT );
+	desiredScoreWidth = max( desiredScoreWidth, wTer );
 
 	int diff = desiredScoreWidth - w1;
 	if ( diff != 0 )
@@ -329,7 +328,7 @@ void CSDKSpectatorGUI::ResizeControls( void )
 	m_pExtraInfo->GetContentSize( wExtra, hExtra );
 
 	int desiredExtraWidth = m_extraInfoWidth;
-	desiredExtraWidth = std::max( desiredExtraWidth, wExtra );
+	desiredExtraWidth = max( desiredExtraWidth, wExtra );
 
 	diff = desiredExtraWidth - w1;
 	if ( diff != 0 )

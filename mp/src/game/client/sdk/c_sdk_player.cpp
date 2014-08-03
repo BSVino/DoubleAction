@@ -46,6 +46,8 @@
 #include "da_viewmodel.h"
 #include "da_viewback.h"
 
+#include "tier0/valve_minmax_on.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 #include "tier0/memdbgon.h"
@@ -605,7 +607,7 @@ void C_SDKRagdoll::ClientThink( void )
 		int iAlpha = GetRenderColor().a;
 		int iFadeSpeed = 600.0f;
 
-		iAlpha = std::max( iAlpha - ( iFadeSpeed * gpGlobals->frametime ), 0.0f );
+		iAlpha = max( iAlpha - ( iFadeSpeed * gpGlobals->frametime ), 0.0f );
 
 		SetRenderMode( kRenderTransAlpha );
 		SetRenderColorA( iAlpha );
@@ -1956,7 +1958,7 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 		flSideScale = fabs( cl_sidespeed.GetFloat() ) / fabs( pCmd->sidemove );
 	}
 
-	float flScale = std::min( flForwardScale, flSideScale );
+	float flScale = min( flForwardScale, flSideScale );
 	pCmd->forwardmove *= flScale;
 	pCmd->sidemove *= flScale;
 

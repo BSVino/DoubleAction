@@ -14,10 +14,9 @@
 #include <vgui/ILocalize.h>
 #include "sourcevr/isourcevirtualreality.h"
 
-#undef min
-#undef max
-
+#include "tier0/valve_minmax_off.h"
 #include <string>
+#include "tier0/valve_minmax_on.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -111,7 +110,7 @@ void C_SDKRootPanel::RenderLetterboxing( void )
 		}
 
 		if (pPlayer->GetSlowMoMultiplier() < 1)
-			flLetterbox = std::max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
+			flLetterbox = max(flLetterbox, RemapValClamped(pPlayer->GetSlowMoMultiplier(), 1, 0.8f, 0, 1));
 	}
 
 	if (!UseVR() && flLetterbox > 0)

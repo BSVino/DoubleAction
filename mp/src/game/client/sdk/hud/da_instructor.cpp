@@ -18,12 +18,11 @@
 #include "da_hud_vote.h"
 #include "da_viewback.h"
 
-#undef min
-#undef max
-
+#include "tier0/valve_minmax_off.h"
 #include <string>
 #include <vector>
 #include <sstream>
+#include "tier0/valve_minmax_on.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -987,7 +986,7 @@ void CHudLessonPanel::PerformLayout()
 	int iDesiredLabelWide = 0;
 	for ( i=0; i < m_Labels.Count(); ++i )
 	{
-		iDesiredLabelWide = std::max( iDesiredLabelWide, m_Labels[i]->GetWide() );
+		iDesiredLabelWide = max( iDesiredLabelWide, m_Labels[i]->GetWide() );
 	}
 
 	// find the total height
@@ -1027,10 +1026,10 @@ void CHudLessonPanel::PerformLayout()
 		y = (tall - labelTall) / 2;
 	}
 
-	x = std::max(x,0);
-	y = std::max(y,0);
+	x = max(x,0);
+	y = max(y,0);
 
-	iDesiredLabelWide = std::min(iDesiredLabelWide,wide);
+	iDesiredLabelWide = min(iDesiredLabelWide,wide);
 	m_pLabel->SetBounds( x, y, iDesiredLabelWide, labelTall );
 
 	// now lay out the sub-labels
@@ -1239,7 +1238,7 @@ void CHudSideHintPanel::PerformLayout()
 	int iDesiredLabelWide = 0;
 	for ( i=0; i < m_Labels.Count(); ++i )
 	{
-		iDesiredLabelWide = std::max( iDesiredLabelWide, m_Labels[i]->GetWide() );
+		iDesiredLabelWide = max( iDesiredLabelWide, m_Labels[i]->GetWide() );
 	}
 
 	// find the total height
@@ -1279,10 +1278,10 @@ void CHudSideHintPanel::PerformLayout()
 		y = (tall - labelTall) / 2;
 	}
 
-	x = std::max(x,0);
-	y = std::max(y,0);
+	x = max(x,0);
+	y = max(y,0);
 
-	iDesiredLabelWide = std::min(iDesiredLabelWide,wide);
+	iDesiredLabelWide = min(iDesiredLabelWide,wide);
 	m_pLabel->SetBounds( x, y, iDesiredLabelWide, labelTall );
 
 	// now lay out the sub-labels
