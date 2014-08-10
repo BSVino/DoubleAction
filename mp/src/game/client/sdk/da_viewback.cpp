@@ -112,7 +112,13 @@ void CViewbackSystem::LevelInitPostEntity( void )
 	vb_util_set_range(m_ePlayerSpeed, 0, 500);
 	vb_util_set_range(m_ePlayerMaxSpeed, 0, 500);
 
-	if (!vb_util_server_create(2, &viewback_debug_output, &viewback_console_command, NULL, 0))
+	vb_util_set_max_connections(2);
+	vb_util_set_output_callback(viewback_debug_output);
+	vb_util_set_command_callback(viewback_console_command);
+
+	m_sServerName = std::string("Double Action: ") + C_BasePlayer::GetLocalPlayer()->GetPlayerName();
+
+	if (!vb_util_server_create(m_sServerName.c_str()))
 	{
 		Msg("Viewback: Couldn't create Viewback server\n");
 		return;

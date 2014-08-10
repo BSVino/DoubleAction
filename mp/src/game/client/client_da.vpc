@@ -14,6 +14,8 @@ $Include "$SRCDIR\game\client\client_base.vpc"
 $macro VSLIBDIR  "." [!$VS2010]
 $macro VSLIBDIR  "VS2010" [$VS2010]
 
+$Conditional "VIEWBACK" "0"
+
 $Configuration
 {
 	$Compiler

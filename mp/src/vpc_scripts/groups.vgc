@@ -28,7 +28,7 @@ $Group "game"
 	"vgui_controls"
 }
 
-$Group "viewback"
+$Group "viewback" [$VIEWBACK]
 {
 	"viewback"
 }

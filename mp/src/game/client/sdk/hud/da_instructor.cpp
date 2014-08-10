@@ -675,7 +675,7 @@ void C_SDKPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 	CLesson* pLesson = m_pInstructor->GetLesson(pLessonProgress->m_sLessonName);
 
 #if defined(WITH_VIEWBACK)
-	vb_data_send_int_s(pLessonProgress->m_sLessonName, std::min(pLessonProgress->m_iTimesLearned, pLesson->m_iTimesToLearn));
+	vb_data_send_int_s(pLessonProgress->m_sLessonName, min(pLessonProgress->m_iTimesLearned, pLesson->m_iTimesToLearn));
 #endif
 
 	CHudElement* pLessonPanel = gHUD.FindElement("CHudSideHintPanel");

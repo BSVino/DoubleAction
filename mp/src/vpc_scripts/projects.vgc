@@ -15,7 +15,7 @@ $Project "datanetworking"
 
 $Project "viewback"
 {
-	"viewback\viewback.vpc" [$DA]
+	"viewback\viewback.vpc" [$DA && $VIEWBACK]
 }
 
 $Project "captioncompiler"
