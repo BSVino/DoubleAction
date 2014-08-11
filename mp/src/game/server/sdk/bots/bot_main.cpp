@@ -124,6 +124,9 @@ const char* g_aszBotNames[] =
 	"Selena Bromez",
 	"Michael Broson",
 	"Ton Broosendaal",
+	"Broctor Death",
+	"Spiderbro",
+	"Doctor Broctopus",
 };
 
 
