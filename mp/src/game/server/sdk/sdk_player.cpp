@@ -1767,7 +1767,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	while ((pWeapon = FindAnyWeaponButBrawl()) != NULL)
 		ThrowWeapon(pWeapon);
 
+#ifdef WITH_DATA_COLLECTION
 	DataManager().AddKillInfo(info, this);
+#endif
 
 	CBaseEntity* pAttacker = info.GetAttacker();
 
@@ -3880,11 +3882,16 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement_t eAnnouncement, style_point_t ePointStyle)
 {
+	if (SDKGameRules()->GetBountyPlayer() == this)
+		TakeHealth(points, 0);
+
 	points *= GetDKRatio(0.7, 2, true);
 
 	m_flTotalStyle += points;
 
+#ifdef WITH_DATA_COLLECTION
 	DataManager().AddStyle(this, points);
+#endif
 
 	if (IsStyleSkillActive())
 	{
@@ -4518,8 +4525,10 @@ void CC_Character(const CCommand& args)
 
 		if (pPlayer->SetCharacter(args[1]))
 		{
+#ifdef WITH_DATA_COLLECTION
 			if (!pPlayer->IsBot())
 				DataManager().AddCharacterChosen(args[1]);
+#endif
 
 			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
 				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
@@ -4527,18 +4536,13 @@ void CC_Character(const CCommand& args)
 			return;
 		}
 
-		if (FStrEq(args[1], "random"))
+		if (pPlayer->PickRandomCharacter())
 		{
-			if (pPlayer->PickRandomCharacter())
-			{
-				if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
-					pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+			if ( pPlayer->State_Get() != STATE_OBSERVER_MODE && (pPlayer->State_Get() == STATE_PICKINGCHARACTER || pPlayer->IsDead()) )
+				pPlayer->State_Transition( STATE_BUYINGWEAPONS );
 
-				return;
-			}
+			return;
 		}
-
-		Error("Couldn't find that player model.\n");
 	}
 }
 
@@ -4593,6 +4597,7 @@ void CC_Buy(const CCommand& args)
 	{
 		pPlayer->StopObserverMode();
 
+#ifdef WITH_DATA_COLLECTION
 		if (!pPlayer->IsBot())
 		{
 			CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
@@ -4607,6 +4612,7 @@ void CC_Buy(const CCommand& args)
 			else
 				DataManager().AddWeaponChosen(eWeapon);
 		}
+#endif
 
 		pPlayer->AddToLoadout(eWeapon);
 
@@ -4642,8 +4648,10 @@ void CC_Skill(const CCommand& args)
 
 	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
 
+#ifdef WITH_DATA_COLLECTION
 	if (!pPlayer->IsBot())
 		DataManager().AddSkillChosen(AliasToSkillID(args[1]));
+#endif
 }
 
 static ConCommand skill("setskill", CC_Skill, "Open the skill menu.", FCVAR_GAMEDLL);

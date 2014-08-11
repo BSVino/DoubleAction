@@ -362,7 +362,9 @@ void CSDKGameRules::LevelInitPostEntity()
 		}
 	}
 
+#ifdef WITH_DATA_COLLECTION
 	DataManager().SetTeamplay(m_bIsTeamplay);
+#endif
 #endif
 }
 
@@ -370,8 +372,10 @@ bool CSDKGameRules::ClientConnected( edict_t *pEntity, const char *pszName, cons
 {
 	bool bConnected = BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
 
+#ifdef WITH_DATA_COLLECTION
 	if (bConnected)
 		DataManager().ClientConnected(engine->GetClientSteamID(pEntity)->GetAccountID());
+#endif
 
 	return bConnected;
 }
@@ -388,8 +392,10 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	if (pSDKPlayer == GetBountyPlayer())
 		CleanupMiniObjective();
 
+#ifdef WITH_DATA_COLLECTION
 	if (!pSDKPlayer->IsBot())
 		DataManager().ClientDisconnected(engine->GetClientSteamID(pSDKPlayer->edict())->GetAccountID());
+#endif
 }
 
 bool CSDKGameRules::IsConnectedUserInfoChangeAllowed( CBasePlayer *pPlayer )
@@ -1828,17 +1834,30 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 	{
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BountyKilled");
 
-		CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
-		if (pPlayerKiller)
+		if (pVictim == info.GetAttacker())
 		{
-			GiveMiniObjectiveRewardPlayer(pPlayerKiller);
+			CleanupMiniObjective();
 
-			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
+			for (int i = 0; i < 3; i++)
+			{
+				if (SetupMiniObjective_Bounty())
+					break;
+			}
 		}
 		else
-			CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_LOST);
+		{
+			CSDKPlayer* pPlayerKiller = ToSDKPlayer(info.GetAttacker());
+			if (pPlayerKiller)
+			{
+				GiveMiniObjectiveRewardPlayer(pPlayerKiller);
 
-		CleanupMiniObjective();
+				CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_COLLECTED, pPlayerKiller);
+			}
+			else
+				CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_LOST);
+
+			CleanupMiniObjective();
+		}
 	}
 	else if (GetBountyPlayer() && GetBountyPlayer() == ToSDKPlayer(info.GetAttacker()))
 	{
@@ -2945,7 +2964,9 @@ public:
 public:
 	virtual void OnVoteFailed( int iEntityHoldingVote )
 	{
+#ifdef WITH_DATA_COLLECTION
 		DataManager().VoteFailed(m_szTypeString);
+#endif
 
 		CBaseIssue::OnVoteFailed(iEntityHoldingVote);
 	}
@@ -2965,7 +2986,9 @@ public:
 				pszDetails = UTIL_VarArgs("%s (Account id: %d)", pPlayer->GetPlayerName(), (int)id.GetAccountID());
 		}
 
+#ifdef WITH_DATA_COLLECTION
 		DataManager().VotePassed(m_szTypeString, pszDetails);
+#endif
 	}
 };
 

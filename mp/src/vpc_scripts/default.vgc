@@ -15,6 +15,7 @@ $Games
 
 // Makes the VPC scripts work in the SDK's context
 $Conditional "SOURCESDK" "1"
+$Conditional "VIEWBACK" "0"
 
 $Include "vpc_scripts\projects.vgc"
 $Include "vpc_scripts\groups.vgc"

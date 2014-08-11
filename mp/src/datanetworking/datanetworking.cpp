@@ -33,10 +33,10 @@ size_t CurlReadFunction(void *ptr, size_t size, size_t nmemb, void *userdata)
 
 static void DebugString(const char* pszString)
 {
-#ifdef __linux__
-    printf("%s", pszString);
-#else
+#ifdef _WIN32
     OutputDebugString(pszString); // Sends it to the VS debug window
+#else
+    printf("%s", pszString);
 #endif
 }
 

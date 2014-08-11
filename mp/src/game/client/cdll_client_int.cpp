@@ -1160,7 +1160,7 @@ void CHLClient::PostInit()
 #endif
 
 #ifdef SDK_DLL
-	SwapDisconnectCommand();
+	//SwapDisconnectCommand();
 #endif
 }
 

@@ -6,6 +6,8 @@
 
 #include "../../../../viewback/server/viewback.h"
 
+#include <string>
+
 class CViewbackSystem : public CAutoGameSystemPerFrame, public IConsoleDisplayFunc
 {
 public:
@@ -23,6 +25,8 @@ public:
 	virtual void DPrint( const char *pMessage );
 
 public:
+	std::string m_sServerName;
+
 	vb_channel_handle_t m_ePlayerStyle;
 	vb_channel_handle_t m_eAimIn;
 	vb_channel_handle_t m_eSlowMo;

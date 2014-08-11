@@ -49,7 +49,6 @@
 #include "da_skillmenu.h"
 #include "da_charactermenu.h"
 #include "sdk_mapinfo.h"
-#include "da_menu_background.h"
 #include "folder_gui.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -142,25 +141,14 @@ CON_COMMAND_F( togglescores, "Toggles score panel", FCVAR_CLIENTCMD_CAN_EXECUTE)
 
 SDKViewport::SDKViewport()
 {
-	m_pMainMenuPanel = NULL;
 }
 
 SDKViewport::~SDKViewport()
 {
-	if ( !m_bHasParent && m_pMainMenuPanel )
-	{
-		m_pMainMenuPanel->MarkForDeletion();
-	}
-	m_pMainMenuPanel = NULL;
 }
 
 void SDKViewport::Start(IGameUIFuncs *pGameUIFuncs, IGameEventManager2 *pGameEventManager)
 {
-/*	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
-	m_pMainMenuPanel->SetZPos( 500 );
-	m_pMainMenuPanel->SetVisible( false );
-	m_pMainMenuPanel->StartVideo();*/
-
 	BaseClass::Start(pGameUIFuncs, pGameEventManager);
 }
 
@@ -175,27 +163,11 @@ void SDKViewport::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 void SDKViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 {
-	bool bRestartMainMenuVideo = false;
-	if (m_pMainMenuPanel)
-		bRestartMainMenuVideo = m_pMainMenuPanel->IsVideoPlaying();
-
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
-
-/*	m_pMainMenuPanel = new CDAMainMenu( NULL, NULL );
-	m_pMainMenuPanel->SetZPos( 500 );
-	m_pMainMenuPanel->SetVisible( false );
-	if (bRestartMainMenuVideo)
-		m_pMainMenuPanel->StartVideo();*/
 }
 
 void SDKViewport::RemoveAllPanels( void)
 {
-	if (m_pMainMenuPanel)
-	{
-		m_pMainMenuPanel->MarkForDeletion();
-		m_pMainMenuPanel = NULL;
-	}
-
 	BaseClass::RemoveAllPanels();
 }
 
@@ -287,14 +259,10 @@ int SDKViewport::GetDeathMessageStartHeight( void )
 
 void SDKViewport::StopMainMenuVideo()
 {
-	if (m_pMainMenuPanel)
-		m_pMainMenuPanel->StopVideo();
 }
 
 void SDKViewport::StartMainMenuVideo()
 {
-	if (m_pMainMenuPanel)
-		m_pMainMenuPanel->StartVideo();
 }
 
 #define XPROJECT(x)	( (1.0f+(x))*ScreenWidth()*0.5f )

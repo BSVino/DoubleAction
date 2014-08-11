@@ -2,7 +2,11 @@
 
 *.pb.cc
 *.pb.h
-/mp/src/lib/public/*.lib
+/mp/src/lib/public/*
+/mp/src/lib/public/osx/*
+/mp/src/public/togl/osx/glmgrbasics.h
+/mp/src/thirdparty/curl-7.31.0/src/macos/MACINSTALL.txt
+
 
 # Visual Studio 
 *.suo

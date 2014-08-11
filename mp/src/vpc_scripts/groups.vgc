@@ -20,7 +20,6 @@ $Group "game"
 {
 	"client"
 	"datanetworking"
-	"datatool"
 	"game_shader_dx9"
 	"mathlib"
 	"raytrace"
@@ -29,7 +28,7 @@ $Group "game"
 	"vgui_controls"
 }
 
-$Group "viewback"
+$Group "viewback" [$VIEWBACK]
 {
 	"viewback"
 }
@@ -44,7 +43,6 @@ $Group "everything"
 	"captioncompiler"
 	"client"
 	"datanetworking"
-	"datatool"
 	"fgdlib"
 	"game_shader_dx9"
 	"glview"
