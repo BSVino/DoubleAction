@@ -127,6 +127,7 @@ const char* g_aszBotNames[] =
 	"Broctor Death",
 	"Spiderbro",
 	"Doctor Broctopus",
+	"Bro Nye the Science Guy",
 };
 
 
