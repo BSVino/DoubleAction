@@ -128,6 +128,19 @@ const char* g_aszBotNames[] =
 	"Spiderbro",
 	"Doctor Broctopus",
 	"Bro Nye the Science Guy",
+	"Bromethius",
+	"Bromance",
+	"Broland of Gilead",
+	"Bro Jackson",
+	"Indiana Brones",
+	"Big Lebroski",
+	"Angelina Broli",
+	"Vincent van Bro",
+	"Bromer Simpson",
+	"Bromeo",
+	"Kurt Brobain",
+	"Broald Dahl",
+	"Scarlett Brohansen",
 };
 
 
