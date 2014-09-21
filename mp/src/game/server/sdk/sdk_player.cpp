@@ -1957,7 +1957,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendNotice(NOTICE_WORTHIT);
 		}
 	}
-	else if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_eWeaponType != WT_MELEE && pWeaponInfo->m_eWeaponType != WT_GRENADE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
+	else if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_eWeaponType != WT_MELEE && pWeaponInfo->m_eWeaponType != WT_GRENADE && pWeapon->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
 		// Killing a player with your last bullet.
 		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
