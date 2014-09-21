@@ -39,6 +39,7 @@ ImageButton::ImageButton( Panel *parent, const char *panelName, const char *norm
 		hasMouseClickImage = false;
 
 	SetNormalImage();
+	SetShouldScaleImage(true);
 }
  
 void ImageButton::OnCursorEntered()
