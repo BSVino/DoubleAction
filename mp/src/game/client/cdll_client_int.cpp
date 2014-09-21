@@ -171,6 +171,7 @@ extern vgui::IInputInternal *g_InputInternal;
 
 #ifdef SDK_DLL
 #include "c_sdk_player.h"
+#include "da_view_scene.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1247,6 +1248,10 @@ int CHLClient::HudVidInit( void )
 	gHUD.VidInit();
 
 	GetClientVoiceMgr()->VidInit();
+
+#ifdef SDK_DLL
+	((CDAViewRender*)view)->SetupRenderTargets();
+#endif
 
 	return 1;
 }

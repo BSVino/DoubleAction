@@ -56,7 +56,12 @@ void CDAViewRender::Init()
 {
 	BaseClass::Init();
 
-	ITexture *depthOld = materials->FindTexture( "_rt_ResolvedFullFrameDepth", TEXTURE_GROUP_RENDER_TARGET );
+	SetupRenderTargets();
+}
+
+void CDAViewRender::SetupRenderTargets()
+{
+	ITexture *depthOld = materials->FindTexture("_rt_ResolvedFullFrameDepth", TEXTURE_GROUP_RENDER_TARGET);
 	static int flags = TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD | TEXTUREFLAGS_RENDERTARGET;
 	if ( depthOld )
 		flags = depthOld->GetFlags();
