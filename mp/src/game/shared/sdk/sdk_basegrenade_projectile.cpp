@@ -22,6 +22,7 @@ extern ConVar sv_gravity;
 	#include "particle_parse.h"
 
 	#include "sdk_player.h"
+	#include "sdk_gamerules.h"
 
 #endif
 
@@ -227,7 +228,17 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 	
 		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), vecAbsOrigin, m_flDamage, bitsDamageType, 0, &vecReported );
 
-		RadiusDamage( info, vecAbsOrigin, m_DmgRadius, CLASS_NONE, NULL );
+		int connected_players = 0;
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			if (ToSDKPlayer(UTIL_PlayerByIndex(i)))
+				connected_players++;
+		}
+
+		float radius = m_DmgRadius;
+		radius = RemapValClamped(connected_players, 8, 16, radius, radius / 2);
+
+		RadiusDamage(info, vecAbsOrigin, radius, CLASS_NONE, NULL);
 
 		UTIL_DecalTrace( pTrace, "Scorch" );
 
