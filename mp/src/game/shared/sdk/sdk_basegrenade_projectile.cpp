@@ -236,7 +236,7 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 		}
 
 		float radius = m_DmgRadius;
-		radius = RemapValClamped(connected_players, 8, 16, radius, radius / 2);
+		radius = RemapValClamped(connected_players, 8, 16, radius, radius * 0.8f);
 
 		RadiusDamage(info, vecAbsOrigin, radius, CLASS_NONE, NULL);
 
