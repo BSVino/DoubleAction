@@ -155,7 +155,6 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 	// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
 	// that we would normally get when ClientPutInServer is called.
 	ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
-	RandomSeed(gpGlobals->framecount);
 	edict_t *pEdict = engine->CreateFakeClient(g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)]);
 	ClientPutInServerOverride( NULL );
 
@@ -254,6 +253,7 @@ void Bot_MaintainQuota()
 	if (iCurrentBots == iIdealNumberOfBots)
 		return;
 
+	RandomSeed(gpGlobals->framecount);
 	while (iCurrentBots < iIdealNumberOfBots)
 	{
 		BotPutInServer( false );
