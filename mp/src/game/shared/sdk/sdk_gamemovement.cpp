@@ -850,7 +850,7 @@ void CSDKGameMovement::CategorizePosition( void )
 	TracePlayerBBox( vecStartPos, vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
 
 	// Steep plane, not on ground.
-	if ( trace.plane.normal.z < 0.7f )
+	if (trace.plane.normal.LengthSqr() > 0 && trace.plane.normal.z < 0.7f)
 	{
 		// Test four sub-boxes, to see if any of them would have found shallower slope we could actually stand on.
 		TracePlayerBBoxForGround( vecStartPos, vecEndPos, GetPlayerMins(), GetPlayerMaxs(), mv->m_nPlayerHandle.Get(), PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
