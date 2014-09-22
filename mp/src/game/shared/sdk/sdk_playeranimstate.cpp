@@ -120,6 +120,8 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bRollTransitionFirstFrame = false;
 
 	m_bFlipping = false;
+
+	m_vecLastPlayerVelocity = Vector(0, 0, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -579,6 +581,11 @@ void CSDKPlayerAnimState::EstimateYaw( void )
 	Vector vecEstVelocity;
 	GetOuterAbsVelocity( vecEstVelocity );
 	QAngle angles = GetBasePlayer()->GetLocalAngles();
+
+	/*if (vecEstVelocity.LengthSqr() < 0.01f && m_vecLastPlayerVelocity.LengthSqr() > 100)
+		vecEstVelocity = m_vecLastPlayerVelocity;
+	else
+		m_vecLastPlayerVelocity = vecEstVelocity;*/
 
 	// If we are not moving, sync up the feet and eyes slowly.
 	if (m_pSDKPlayer->m_Shared.IsProne())

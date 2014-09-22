@@ -113,6 +113,8 @@ private:
 	float		m_flHoldDeployedPoseUntilTime;
 
 	int			m_iStuntYawPose;
+
+	Vector m_vecLastPlayerVelocity;
 };
 
 CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
