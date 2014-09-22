@@ -37,6 +37,7 @@
 #include "da_menubuttonpanel.h"
 #include "da_leaderboard.h"
 #include "da_newsframe.h"
+#include "da_options.h"
 #include "hud/da_hud_vote.h"
 #include "da_credits.h"
 #include "hud_macros.h"
@@ -153,6 +154,7 @@ void ClientModeSDKNormal::InitViewport()
 
 	new CNewsFrame();
 	new CLeaderboard();
+	new COptions();
 	new CButtonPanel();
 	new CDACredits();
 
