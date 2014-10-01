@@ -1250,7 +1250,7 @@ int CHLClient::HudVidInit( void )
 	GetClientVoiceMgr()->VidInit();
 
 #ifdef SDK_DLL
-	((CDAViewRender*)view)->SetupRenderTargets();
+	//((CDAViewRender*)view)->SetupRenderTargets();
 #endif
 
 	return 1;
