@@ -2518,6 +2518,9 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 		if (pPlayer->m_iDeaths + pPlayer->m_iKills < 5)
 			continue;
 
+		if (pPlayer->m_Shared.m_bSuperFalling)
+			continue;
+
 		apPlayers.AddToTail(pPlayer);
 	}
 
