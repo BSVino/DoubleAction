@@ -1840,7 +1840,8 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 
 			for (int i = 0; i < 3; i++)
 			{
-				if (SetupMiniObjective_Bounty())
+				StartMiniObjective("bounty");
+				if (m_eCurrentMiniObjective)
 					break;
 			}
 		}
