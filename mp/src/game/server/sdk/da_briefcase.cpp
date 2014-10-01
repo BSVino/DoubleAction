@@ -158,6 +158,9 @@ void CBriefcase::Dropped( CSDKPlayer* pPlayer )
 
 	if (random->RandomFloat(0, 1) < da_ctb_changecap.GetFloat())
 		SDKGameRules()->ChooseRandomCapturePoint(GetAbsOrigin());
+
+	if (GetAbsOrigin().z < SDKGameRules()->GetLowestSpawnPoint().z - 400)
+		SDKGameRules()->RestartMiniObjective();
 }
 
 BEGIN_DATADESC( CBriefcaseCaptureZone )
