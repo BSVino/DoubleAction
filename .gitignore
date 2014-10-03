@@ -101,3 +101,5 @@ mp/src/thirdparty/curl-7.31.0/*
 /mp/src/datatool/Release
 /mp/src/materialsystem/stdshaders/Release_dx9_dab
 /mp/game
+mp/src/public/togl/osx/glmgrbasics.h
+mp/src/thirdparty/curl-7.31.0/src/macos/MACINSTALL.TXT
