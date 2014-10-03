@@ -45,6 +45,11 @@ static void viewback_console_command(const char* text)
 	engine->ClientCmd_Unrestricted(text);
 }
 
+static void viewback_bot_quota(int value)
+{
+	ConVarRef("bot_quota").SetValue(value);
+}
+
 void CViewbackSystem::LevelInitPostEntity( void )
 {
 	if (vb_server_is_active())
@@ -111,6 +116,8 @@ void CViewbackSystem::LevelInitPostEntity( void )
 	vb_util_set_range(m_eAimIn, 0, 1);
 	vb_util_set_range(m_ePlayerSpeed, 0, 500);
 	vb_util_set_range(m_ePlayerMaxSpeed, 0, 500);
+
+	vb_util_add_control_slider_int("Bot Quota", 0, 14, 1, &viewback_bot_quota);
 
 	vb_util_set_max_connections(2);
 	vb_util_set_output_callback(viewback_debug_output);
