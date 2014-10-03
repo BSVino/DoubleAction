@@ -35,12 +35,8 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
 	float4 aflCombined = tex2D( CombinedSampler, aflCombinedTexCoord );
 
-	float flGrain;
-
-	if (flDeathCam > 0)
-		flGrain = aflCombined.g; // Death cam should be like a photo, so the grain should be static. (As in, not moving.)
-	else
-		flGrain = tex2D( CombinedSampler, aflCombinedTexCoord + float2(flGrainOffset, flGrainOffset) ).g;
+	// Death cam should be like a photo, so the grain should be static. (As in, not moving.)
+	float flGrain = lerp(tex2D( CombinedSampler, aflCombinedTexCoord + float2(flGrainOffset, flGrainOffset) ).g, aflCombined.g, flDeathCam);
 
 	float flVignetteAlpha = aflCombined.b;
 	float flOverlay = aflCombined.r;
@@ -51,13 +47,11 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	float flFBLevel = ( flFBMax + flFBMin ) / 2;
 	float flFBSaturation = 0;
-	if (flFBMax != flFBMin)
-	{
-		if (flFBLevel < 0.5)
-			flFBSaturation = (flFBMax - flFBMin)/(flFBMax + flFBMin);
-		else
-			flFBSaturation = (flFBMax - flFBMin)/(2 - flFBMax - flFBMin);
-	}
+
+	// Make sure max != min.
+	flFBMax += 0.0001;
+
+	flFBSaturation = (flFBMax - flFBMin)/lerp(2 - flFBMax - flFBMin, flFBMax + flFBMin, step(0.5, flFBLevel));
 
 	// Only filter the desaturated and dark areas.
 	float flSaturationRamp = RemapValClamped(flFBSaturation, 0, 0.4, 1, 0);
@@ -117,8 +111,10 @@ HALF4 main( PS_INPUT i ) : COLOR
 	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15 * flSlowMoScale);
 #endif
 
+	float flCenterWeight = RemapValClamped(length(aflCombinedTexCoord - float2(0.5, 0.5)), 0.2, 0.8, 0.65, 1.0);
+
 	if (flDeathCam > 0)
 		return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
 	else
-		return FinalOutput( lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+		return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
 }
