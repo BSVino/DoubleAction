@@ -46,12 +46,7 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float flFBMin = min( aflFB.r, min( aflFB.g, aflFB.b ) );
 
 	float flFBLevel = ( flFBMax + flFBMin ) / 2;
-	float flFBSaturation = 0;
-
-	// Make sure max != min.
-	flFBMax += 0.0001;
-
-	flFBSaturation = (flFBMax - flFBMin)/lerp(2 - flFBMax - flFBMin, flFBMax + flFBMin, step(0.5, flFBLevel));
+	float flFBSaturation = (flFBMax - flFBMin)/lerp(2 - flFBMax - flFBMin, flFBMax + flFBMin, step(0.5, flFBLevel));
 
 	// Only filter the desaturated and dark areas.
 	float flSaturationRamp = RemapValClamped(flFBSaturation, 0, 0.4, 1, 0);
