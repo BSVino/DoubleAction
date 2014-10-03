@@ -161,9 +161,13 @@ void SDKViewport::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetPaintBackgroundEnabled( false );
 }
 
+extern int g_kill_shaders;
+
 void SDKViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 {
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
+
+	g_kill_shaders = 1;
 }
 
 void SDKViewport::RemoveAllPanels( void)
