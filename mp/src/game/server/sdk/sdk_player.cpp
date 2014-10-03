@@ -1957,7 +1957,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendNotice(NOTICE_WORTHIT);
 		}
 	}
-	else if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_eWeaponType != WT_MELEE && pWeaponInfo->m_eWeaponType != WT_GRENADE && GetActiveSDKWeapon()->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
+	else if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_eWeaponType != WT_MELEE && pWeaponInfo->m_eWeaponType != WT_GRENADE && pWeapon->m_iClip1 == 0 && info.GetDamageType() != DMG_CLUB)
 	{
 		// Killing a player with your last bullet.
 		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_LAST_BULLET, STYLE_POINT_STYLISH);
@@ -2093,20 +2093,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	{
 		announcement_t eAnnouncement = ANNOUNCEMENT_NONE;
 		if (bKilledVictim)
-		{
-			int iRandom = random->RandomInt(0, 1);
-			switch (iRandom)
-			{
-			case 0:
-			default:
-				eAnnouncement = ANNOUNCEMENT_STYLISH;
-				break;
-
-			case 1:
 				eAnnouncement = ANNOUNCEMENT_COOL;
-				break;
-			}
-		}
 
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
 			// Damaging a stunting dude gives me slightly more bar than usual.

@@ -56,7 +56,12 @@ void CDAViewRender::Init()
 {
 	BaseClass::Init();
 
-	ITexture *depthOld = materials->FindTexture( "_rt_ResolvedFullFrameDepth", TEXTURE_GROUP_RENDER_TARGET );
+	SetupRenderTargets();
+}
+
+void CDAViewRender::SetupRenderTargets()
+{
+	ITexture *depthOld = materials->FindTexture("_rt_ResolvedFullFrameDepth", TEXTURE_GROUP_RENDER_TARGET);
 	static int flags = TEXTUREFLAGS_NOMIP | TEXTUREFLAGS_NOLOD | TEXTUREFLAGS_RENDERTARGET;
 	if ( depthOld )
 		flags = depthOld->GetFlags();
@@ -151,6 +156,8 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	}
 }
 
+int g_kill_shaders = 0;
+
 ConVar da_pretty_pixels( "da_pretty_pixels", "1", FCVAR_ARCHIVE, "Use screen-space post-process shaders?" );
 void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
 {
@@ -158,6 +165,10 @@ void CDAViewRender::DoPrettyPixels( const CViewSetup &view )
 		return;
 
 	if (!da_pretty_pixels.GetBool())
+		return;
+
+	// The screen size has been changed. Don't show this shader anymore.
+	if (g_kill_shaders)
 		return;
 
 #ifdef WITH_SHADEREDITOR

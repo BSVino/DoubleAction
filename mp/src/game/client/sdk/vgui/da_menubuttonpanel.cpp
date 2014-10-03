@@ -24,6 +24,7 @@
 #include "da.h"
 #include "da_leaderboard.h"
 #include "da_newsframe.h"
+#include "da_options.h"
 
 // Don't care me none about VCR mode.
 #undef time
@@ -48,6 +49,7 @@ CButtonPanel::CButtonPanel() : EditablePanel(NULL, "button_panel")
 
 	m_pNews = new ImageButton(this, "NewsButton", "news", NULL, NULL, "opennews");
 	m_pLeaderboard = new ImageButton(this, "LeaderboardButton", "leaderboard", NULL, NULL, "openleaderboard");
+	m_pOptions = new ImageButton(this, "OptionsButton", "options", NULL, NULL, "openoptions");
 
 	MakeReadyForUse();
 
@@ -137,6 +139,14 @@ void CButtonPanel::OnCommand( const char *command)
 		CloseAll();
 
 		Leaderboard()->ShowPanel(true);
+		return;
+	}
+
+	if (!Q_strcmp(command, "openoptions"))
+	{
+		CloseAll();
+
+		Options()->ShowPanel(true);
 		return;
 	}
 

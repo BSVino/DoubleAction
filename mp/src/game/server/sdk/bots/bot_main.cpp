@@ -124,6 +124,23 @@ const char* g_aszBotNames[] =
 	"Selena Bromez",
 	"Michael Broson",
 	"Ton Broosendaal",
+	"Broctor Death",
+	"Spiderbro",
+	"Doctor Broctopus",
+	"Bro Nye the Science Guy",
+	"Bromethius",
+	"Bromance",
+	"Broland of Gilead",
+	"Bro Jackson",
+	"Indiana Brones",
+	"Big Lebroski",
+	"Angelina Broli",
+	"Vincent van Bro",
+	"Bromer Simpson",
+	"Bromeo",
+	"Kurt Brobain",
+	"Broald Dahl",
+	"Scarlett Brohansen",
 };
 
 
@@ -138,7 +155,7 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 	// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
 	// that we would normally get when ClientPutInServer is called.
 	ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
-	edict_t *pEdict = engine->CreateFakeClient( g_aszBotNames[random->RandomInt(0, iNumBotNames-1)] );
+	edict_t *pEdict = engine->CreateFakeClient(g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)]);
 	ClientPutInServerOverride( NULL );
 
 	if (!pEdict)
@@ -167,10 +184,40 @@ CBasePlayer *BotPutInServer( bool  bFrozen )
 }
 
 static ConVar bot_quota("bot_quota", "0", FCVAR_ARCHIVE|FCVAR_GAMEDLL, "Try to keep this many bots in the server");
+static ConVar bot_reconnect("bot_reconnect", "0", FCVAR_CHEAT);
 
 void Bot_MaintainQuota()
 {
 	int iIdealNumberOfBots = bot_quota.GetInt();
+
+	static float last_reconnect = 0;
+	if (bot_reconnect.GetBool())
+	{
+		if (gpGlobals->curtime > last_reconnect + bot_reconnect.GetFloat() || gpGlobals->curtime < last_reconnect)
+		{
+			if (bot_quota.GetInt() > 0)
+			{
+				RandomSeed(gpGlobals->framecount);
+				int initial_player = RandomInt(1, gpGlobals->maxClients);
+				int player = initial_player;
+
+				while ((++player) % (gpGlobals->maxClients + 1) != initial_player)
+				{
+					CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(player % (gpGlobals->maxClients + 1)));
+					if (!pPlayer)
+						continue;
+
+					if (!pPlayer->IsBot())
+						continue;
+
+					engine->ServerCommand(UTIL_VarArgs("kick \"%s\"\n", pPlayer->GetPlayerName()));
+					break;
+				}
+			}
+
+			last_reconnect = gpGlobals->curtime;
+		}
+	}
 
 	int iCurrentHumans = 0;
 	int iCurrentBots = 0;
@@ -206,6 +253,7 @@ void Bot_MaintainQuota()
 	if (iCurrentBots == iIdealNumberOfBots)
 		return;
 
+	RandomSeed(gpGlobals->framecount);
 	while (iCurrentBots < iIdealNumberOfBots)
 	{
 		BotPutInServer( false );

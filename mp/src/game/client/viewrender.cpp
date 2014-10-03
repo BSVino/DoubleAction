@@ -5555,6 +5555,7 @@ void CBaseWorldView::SSAO_DepthPass()
 
 #ifdef SDK_DLL
 static ConVar da_ssao( "da_ssao", "1", FCVAR_ARCHIVE );
+extern int g_kill_shaders;
 
 void CBaseWorldView::DrawSSAO( )
 {
@@ -5570,7 +5571,11 @@ void CBaseWorldView::DrawSSAO( )
 	if (!da_ssao.GetBool())
 		return;
 
-	shaderEdit->DrawPPEOnDemand( iSSAOIndex );
+	// The screen size has been changed. Don't show this shader anymore.
+	if (g_kill_shaders)
+		return;
+
+	shaderEdit->DrawPPEOnDemand(iSSAOIndex);
 #endif
 }
 #endif

@@ -9,18 +9,19 @@
 
 #include <vguitextwindow.h>
 
-#include "vgui_imagebutton.h"
-
-class CButtonPanel : public vgui::EditablePanel, public IViewPortPanel
+//-----------------------------------------------------------------------------
+// Purpose: Game ScoreBoard
+//-----------------------------------------------------------------------------
+class COptions : public vgui::Frame, public IViewPortPanel
 {
 private:
-	DECLARE_CLASS_SIMPLE(CButtonPanel, vgui::EditablePanel);
+	DECLARE_CLASS_SIMPLE(COptions, vgui::Frame);
 	
 public:
-	CButtonPanel();
-	~CButtonPanel();
+	COptions();
+	~COptions();
 
-	virtual const char *GetName( void ) { return "button_panel"; }
+	virtual const char *GetName( void ) { return "options"; }
 
 	virtual void SetData(KeyValues *data) {};
 	virtual void Reset() {};
@@ -30,7 +31,6 @@ public:
 
 	virtual void ShowPanel( bool bShow );
 
-	virtual void OnThink();
 	virtual void Update();
 
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -39,13 +39,8 @@ public:
 
 protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
+	virtual void OnKeyCodePressed(vgui::KeyCode code);
 	virtual void OnCommand( const char *command);
-
-	void CloseAll();
-
-	vgui::ImageButton* m_pNews;
-	vgui::ImageButton* m_pLeaderboard;
-	vgui::ImageButton* m_pOptions;
-
-	time_t m_iLatestNews;
 };
+
+extern COptions* Options();

@@ -154,10 +154,7 @@ void CvarToggleCheckButton<T>::SetSelected( bool state )
 template< class T >
 void CvarToggleCheckButton<T>::OnButtonChecked()
 {
-	if (HasBeenModified())
-	{
-		PostActionSignal(new KeyValues("ControlModified"));
-	}
+	ApplyChanges();
 }
 
 //-----------------------------------------------------------------------------

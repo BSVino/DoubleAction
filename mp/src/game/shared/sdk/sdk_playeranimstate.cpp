@@ -120,6 +120,8 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 	m_bRollTransitionFirstFrame = false;
 
 	m_bFlipping = false;
+
+	m_vecLastPlayerVelocity = Vector(0, 0, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -292,6 +294,11 @@ void CSDKPlayerAnimState::GetOuterAbsVelocity(Vector& vel)
 	// Compensate for slow motion accordingly.
 	if (m_pSDKPlayer != C_SDKPlayer::GetLocalSDKPlayer())
 		vel /= m_pSDKPlayer->GetSlowMoMultiplier();
+
+	if (vel.LengthSqr() < 0.01f && m_vecLastPlayerVelocity.LengthSqr() > 9025)
+		vel = m_vecLastPlayerVelocity;
+	else
+		m_vecLastPlayerVelocity = vel;
 #endif
 }
 

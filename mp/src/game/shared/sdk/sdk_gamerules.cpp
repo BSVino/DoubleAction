@@ -1836,13 +1836,7 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 
 		if (pVictim == info.GetAttacker())
 		{
-			CleanupMiniObjective();
-
-			for (int i = 0; i < 3; i++)
-			{
-				if (SetupMiniObjective_Bounty())
-					break;
-			}
+			RestartMiniObjective();
 		}
 		else
 		{
@@ -2287,6 +2281,29 @@ void CSDKGameRules::CleanupMiniObjective()
 	m_flNextMiniObjectiveStartTime = gpGlobals->curtime + (flNextObjectiveTime + RandomFloat(-1, 1)) * 60;
 }
 
+void CSDKGameRules::RestartMiniObjective()
+{
+	const char* objective_name = NULL;
+	if (m_eCurrentMiniObjective == MINIOBJECTIVE_BRIEFCASE)
+		objective_name = "ctb";
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_BOUNTY)
+		objective_name = "wanted";
+	else if (m_eCurrentMiniObjective == MINIOBJECTIVE_RATRACE)
+		objective_name = "ratrace";
+
+	CleanupMiniObjective();
+
+	if (!objective_name)
+		return;
+
+	for (int i = 0; i < 3; i++)
+	{
+		StartMiniObjective(objective_name);
+		if (m_eCurrentMiniObjective)
+			break;
+	}
+}
+
 void CSDKGameRules::GiveMiniObjectiveRewardTeam(CSDKPlayer* pTeam)
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -2392,7 +2409,10 @@ void CSDKGameRules::MaintainMiniObjective_Briefcase()
 
 	if (!m_hBriefcase->GetOwnerEntity() && gpGlobals->curtime > m_hBriefcase->GetLastTouchedTime() + 60)
 	{
-		CleanupMiniObjective();
+		if (m_hBriefcase->GetAbsOrigin().z < SDKGameRules()->GetLowestSpawnPoint().z - 400)
+			SDKGameRules()->RestartMiniObjective();
+		else
+			CleanupMiniObjective();
 		return;
 	}
 }
@@ -2496,6 +2516,9 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 			continue;
 
 		if (pPlayer->m_iDeaths + pPlayer->m_iKills < 5)
+			continue;
+
+		if (pPlayer->m_Shared.m_bSuperFalling)
 			continue;
 
 		apPlayers.AddToTail(pPlayer);
