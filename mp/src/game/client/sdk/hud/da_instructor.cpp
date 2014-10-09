@@ -27,6 +27,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+using namespace std;
+
 ConVar da_instructor_lessons_learned("da_instructor_lessons_learned", "", FCVAR_ARCHIVE);
 
 CInstructor::CInstructor()

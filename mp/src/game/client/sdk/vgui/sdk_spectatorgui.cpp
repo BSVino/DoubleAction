@@ -26,6 +26,7 @@
 #include <string>
 #include "tier0/valve_minmax_on.h"
 
+using namespace std;
 using namespace vgui;
 DECLARE_HUDELEMENT( CSDKMapOverview )
 

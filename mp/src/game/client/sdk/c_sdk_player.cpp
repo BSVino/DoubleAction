@@ -607,7 +607,9 @@ void C_SDKRagdoll::ClientThink( void )
 		int iAlpha = GetRenderColor().a;
 		int iFadeSpeed = 600.0f;
 
-		iAlpha = max( iAlpha - ( iFadeSpeed * gpGlobals->frametime ), 0.0f );
+		iAlpha = iAlpha - ( iFadeSpeed * gpGlobals->frametime );
+        if (iAlpha < 0)
+            iAlpha = 0;
 
 		SetRenderMode( kRenderTransAlpha );
 		SetRenderColorA( iAlpha );
@@ -1958,7 +1960,10 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 		flSideScale = fabs( cl_sidespeed.GetFloat() ) / fabs( pCmd->sidemove );
 	}
 
-	float flScale = min( flForwardScale, flSideScale );
+	float flScale = flForwardScale;
+    if (flSideScale < flScale)
+        flScale = flSideScale;
+
 	pCmd->forwardmove *= flScale;
 	pCmd->sidemove *= flScale;
 

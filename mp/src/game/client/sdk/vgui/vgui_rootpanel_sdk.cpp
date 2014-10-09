@@ -23,6 +23,7 @@
 
 C_SDKRootPanel *g_pRootPanel = NULL;
 
+using namespace std;
 using namespace vgui;
 
 //-----------------------------------------------------------------------------
