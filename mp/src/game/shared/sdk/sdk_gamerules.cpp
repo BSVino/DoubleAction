@@ -2987,6 +2987,9 @@ public:
 		if (FStrEq(m_szTypeString, "kick"))
 		{
 			CBasePlayer *pPlayer = UTIL_PlayerByUserId( atoi(pszDetails) );
+			if (!pPlayer)
+				return;
+
 			CSteamID id;
 			pPlayer->GetSteamID(&id);
 
