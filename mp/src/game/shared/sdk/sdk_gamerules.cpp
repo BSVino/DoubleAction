@@ -814,8 +814,6 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 	// iterate on all entities in the vicinity.
 	for ( CEntitySphereQuery sphere( vecSrc, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 	{
-		float flBlockedDamage = 0;
-
 		if ( pEntity == pEntityIgnore )
 			continue;
 
@@ -848,17 +846,6 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 		if( tr.fraction == 1.0 || tr.m_pEnt == pEntity )
 			bHit = true;
-		else
-		{
-			trace_t tr2;
-			UTIL_TraceLine( tr.endpos + vecToTarget, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr2 );
-
-			if (tr2.startsolid)
-			{
-				float flSolidArea = ((tr2.startpos - vecSpot) * tr2.fractionleftsolid).Length();
-				flBlockedDamage = info.GetDamage()/2 + flSolidArea*da_grenade_wall_protection.GetFloat();
-			}
-		}
 
 		if (!bHit)
 		{
@@ -885,9 +872,9 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 		float flDamage = info.GetDamage();
 
-		// If we didn't find him, use a lower damage instead. It should cut down the falloff by the same amount.
+		// If we didn't find him, no damage.
 		if (!bHit)
-			flDamage -= flBlockedDamage;
+			flDamage = 0;
 
 		// decrease damage for an ent that's farther from the bomb.
 		flAdjustedDamage = vecToTarget.Length() * falloff;
