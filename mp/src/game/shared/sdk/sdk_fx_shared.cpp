@@ -173,7 +173,7 @@ void FX_FireBullets(
 #ifdef CLIENT_DLL
 		if (pPlayer)
 			pPlayer->m_flMuzzleFlashYaw = random->RandomFloat(0, 360);
-		ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
+		//ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
 #endif
 
 		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
