@@ -496,7 +496,19 @@ CVoteController::TryCastVoteResult CVoteController::TryCastVote( int iEntIndex, 
 	{
 		// This is an abstain vote.
 		if (nCurrentVote == VOTE_OPTION3)
+		{
+			// Tell the client-side UI
+			IGameEvent *event = gameeventmanager->CreateEvent("vote_cast");
+			if (event)
+			{
+				event->SetInt("vote_option", nCurrentVote);
+				event->SetInt("team", m_iOnlyTeamToVote);
+				event->SetInt("entityid", iEntIndex);
+				gameeventmanager->FireEvent(event);
+			}
+
 			return CAST_OK;
+		}
 
 		if ( nCurrentVote > VOTE_OPTION2 )
 			nCurrentVote = VOTE_OPTION2;

@@ -3138,7 +3138,17 @@ public:
 	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_Kick_Display"; }
 	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_Kick_Passed"; }
 
-	virtual void		ExecuteCommand( void )
+	virtual bool		GetVoteOptions(CUtlVector <const char*> &vecNames)
+	{
+		if (!CDAIssue::GetVoteOptions(vecNames))
+			return false;
+
+		vecNames.AddToTail("Abstain");
+
+		return true;
+	}
+
+	virtual void		ExecuteCommand(void)
 	{
 		CDAIssue::ExecuteCommand();
 
