@@ -1266,7 +1266,36 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	m_pVoteActive->SetDialogVariable( "voteissue", pwcIssue );
 
 	// Figure out which UI
-	if ( m_bIsYesNoVote )
+	if (Q_strcmp(szIssue, "#DA_VoteIssue_Kick_Display") == 0)
+	{
+		// YES / NO UI
+		wchar_t wzFinal[512] = L"";
+		wchar_t *pszText = g_pVGuiLocalize->Find("#DA_VoteIssue_Kick_Yes");
+		if (pszText)
+		{
+			UTIL_ReplaceKeyBindings(pszText, 0, wzFinal, sizeof(wzFinal));
+			if (m_pVoteActive)
+				m_pVoteActive->SetControlString("LabelOption1", wzFinal);
+		}
+
+		pszText = g_pVGuiLocalize->Find("#DA_VoteIssue_Kick_No");
+		if (pszText)
+		{
+			UTIL_ReplaceKeyBindings(pszText, 0, wzFinal, sizeof(wzFinal));
+			if (m_pVoteActive)
+				m_pVoteActive->SetControlString("LabelOption2", wzFinal);
+		}
+
+		pszText = g_pVGuiLocalize->Find("#DA_VoteIssue_Kick_Abstain");
+		if (pszText)
+		{
+			UTIL_ReplaceKeyBindings(pszText, 0, wzFinal, sizeof(wzFinal));
+			m_pVoteActive->SetControlVisible("LabelOption3", true);
+			m_pVoteActive->SetControlVisible("Option3Background_Selected", true);
+			m_pVoteActive->SetControlString("LabelOption3", wzFinal);
+		}
+	}
+	else if ( m_bIsYesNoVote )
 	{
 		// YES / NO UI
 		wchar_t wzFinal[512] = L"";

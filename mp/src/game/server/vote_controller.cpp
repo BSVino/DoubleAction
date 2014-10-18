@@ -494,6 +494,10 @@ CVoteController::TryCastVoteResult CVoteController::TryCastVote( int iEntIndex, 
 	// With a Yes/No vote, slam anything past "No" to No
 	if ( m_potentialIssues[m_iActiveIssueIndex]->IsYesNoVote() )
 	{
+		// This is an abstain vote.
+		if (nCurrentVote == VOTE_OPTION3)
+			return CAST_OK;
+
 		if ( nCurrentVote > VOTE_OPTION2 )
 			nCurrentVote = VOTE_OPTION2;
 	}
