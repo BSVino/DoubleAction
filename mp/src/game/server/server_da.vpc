@@ -145,6 +145,7 @@ $Project "Server (DA)"
 	$Folder "Link Libraries" [$POSIX && !$LINUX]
 	{
 		$DynamicFile "$SRCDIR\lib\$PLATFORM\datanetworking$_STATICLIB_EXT"
+		$Lib "$LIBCOMMON/libdatanetworking"
 	}
 
 	$Folder "Link Libraries" [$LINUX]
