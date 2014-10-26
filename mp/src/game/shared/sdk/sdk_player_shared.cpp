@@ -722,11 +722,6 @@ bool CSDKPlayerShared::IsGettingUpFromSlide() const
 	return ( m_flUnSlideTime > 0 );
 }
 
-bool CSDKPlayerShared::MustDuckFromSlide() const
-{
-	return ( m_bMustDuckFromSlide );
-}
-
 bool CSDKPlayerShared::IsSliding() const
 {
 	return m_bSliding && m_pOuter->m_lifeState != LIFE_DEAD;
@@ -799,7 +794,6 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 
 	m_flSlideTime = m_pOuter->GetCurrentTime();
 	m_flUnSlideTime = 0;
-	m_bMustDuckFromSlide = false;
 }
 
 void CSDKPlayerShared::EndSlide()

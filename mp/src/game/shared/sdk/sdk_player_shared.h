@@ -73,7 +73,6 @@ public:
 	bool	IsAirSliding() const { return m_bInAirSlide; }
 	bool	CanSlide() const;
 	bool	IsGettingUpFromSlide() const;	
-	bool	MustDuckFromSlide() const;
 	void	SetAirSliding( bool bInAir) { m_bInAirSlide = bInAir; }
 	void	PlayStartSlideSound();
 	void	PlayEndSlideSound();
@@ -233,7 +232,6 @@ public:
 #endif
 
 	CNetworkVar( float, m_flUnSlideTime );
-	CNetworkVar( bool, m_bMustDuckFromSlide );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );
 
