@@ -2684,6 +2684,8 @@ void CSDKGameMovement::FullWalkMove ()
 					&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
 				{
 					m_pSDKPlayer->m_Shared.EndDive();
+					m_pSDKPlayer->m_Shared.EndRoll();
+					m_pSDKPlayer->m_Shared.EndSlide();
 
 					float speed = da_acro_wallflip_speed.GetFloat ();
 					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
