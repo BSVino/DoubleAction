@@ -331,6 +331,8 @@ public: // Public Variables
 
 	float m_flMuzzleFlashYaw;
 
+	CNetworkHandle(CBaseEntity, m_hUseEntity);
+
 private:
 	void UpdateSoundEvents();
 

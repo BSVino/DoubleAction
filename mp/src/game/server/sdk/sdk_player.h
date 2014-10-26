@@ -514,6 +514,7 @@ public:
 	CNetworkVar( string_t, m_iszCharacter );
 
 	CNetworkHandle(CWeaponSDKBase, m_hSwitchFrom);
+	CNetworkHandle(CBaseEntity, m_hUseEntity);
 
 	float  m_flTotalStyle;
 

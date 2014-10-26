@@ -120,6 +120,9 @@ public:
 	virtual int     DrawModel( int flags );
 	virtual bool    ShouldDrawCrosshair( void );
 
+	float m_flUseHighlight;
+	float m_flUseHighlightGoal;
+
 	static void    DrawVRBullets(const Vector& vecAmmo1, const Vector& vecAmmo2, int iClip, int iMaxClip, bool bRight);
 	static void    VRBulletFired(int iRound, bool bRight);
 	static Vector  GetVRRoundPosition(int i, bool bRight);

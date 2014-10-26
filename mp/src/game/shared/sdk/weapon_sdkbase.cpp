@@ -25,6 +25,7 @@
 	#include "view.h"
 	#include "sourcevr/isourcevirtualreality.h"
 	#include "weapon_selection.h"
+	#include "model_types.h"
 
 #else
 
@@ -150,6 +151,10 @@ CWeaponSDKBase::CWeaponSDKBase()
 #endif
 
 	m_flGrenadeThrowStart = -1;
+
+#ifdef CLIENT_DLL
+	m_flUseHighlight = m_flUseHighlightGoal = 0;
+#endif
 }
 
 void CWeaponSDKBase::Precache()
@@ -1049,22 +1054,22 @@ void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Ve
 
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
-	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.Color4f(flAlpha, flAlpha, flAlpha, flAlpha);
 	meshBuilder.TexCoord2f( 0,0, 0 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.Color4f(flAlpha, flAlpha, flAlpha, flAlpha);
 	meshBuilder.TexCoord2f( 0,1, 0 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.Color4f(flAlpha, flAlpha, flAlpha, flAlpha);
 	meshBuilder.TexCoord2f( 0,1, 1 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * flSize) + (vecUp * -flSize)).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 1, 1, 1, flAlpha );
+	meshBuilder.Color4f(flAlpha, flAlpha, flAlpha, flAlpha);
 	meshBuilder.TexCoord2f( 0,0, 1 );
 	meshBuilder.Position3fv( (vecOrigin + (vecRight * -flSize) + (vecUp * -flSize)).Base() );
 	meshBuilder.AdvanceVertex();
@@ -1076,6 +1081,9 @@ CMaterialReference g_hWeaponArrow;
 CMaterialReference g_hGrenadeIcon;
 int CWeaponSDKBase::DrawModel(int flags)
 {
+	if (flags & STUDIO_SSAODEPTHTEXTURE)
+		return BaseClass::DrawModel(flags);
+
 	C_SDKPlayer* pLocalPlayer = C_SDKPlayer::GetLocalOrSpectatedPlayer();
 	if (pLocalPlayer && pLocalPlayer->UseVRHUD() && pLocalPlayer == GetOwnerEntity())
 	{
@@ -1103,6 +1111,7 @@ int CWeaponSDKBase::DrawModel(int flags)
 	if (GetOwnerEntity())
 	{
 		m_flArrowCurSize = m_flArrowGoalSize = 0;
+		m_flUseHighlight = m_flUseHighlightGoal = 0;
 
 		return iReturn;
 	}
@@ -1110,11 +1119,18 @@ int CWeaponSDKBase::DrawModel(int flags)
 	if (!pLocalPlayer)
 		return iReturn;
 
+	if (pLocalPlayer->m_hUseEntity.Get() == this)
+		m_flUseHighlightGoal = 1;
+	else
+		m_flUseHighlightGoal = 0;
+
+	m_flUseHighlight = Approach(m_flUseHighlightGoal, m_flUseHighlight, gpGlobals->frametime * 10);
+
 	float flAppearDistance = 250;
 	float flAppearDistanceSqr = flAppearDistance*flAppearDistance;
 
 	if ((pLocalPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flAppearDistanceSqr)
-		m_flArrowGoalSize = 5;
+		m_flArrowGoalSize = RemapVal(m_flUseHighlight, 0, 1, 3, 6);
 	else
 		m_flArrowGoalSize = 0;
 
@@ -1130,12 +1146,16 @@ int CWeaponSDKBase::DrawModel(int flags)
 	Vector vecRight = Vector(sin(flTime*4), cos(flTime*4), 0);
 	Vector vecUp = Vector(0, 0, 1);
 
+	vecOrigin.z += RemapVal(m_flUseHighlight, 0, 1, 0, 7);
+
 	float flSize = m_flArrowCurSize;
 
-	DrawIconQuad(g_hWeaponArrow, vecOrigin, vecRight, vecUp, flSize, 1);
+	float flAlpha = RemapVal(m_flUseHighlight, 0, 1, 0.4f, 1);
+
+	DrawIconQuad(g_hWeaponArrow, vecOrigin, vecRight, vecUp, flSize, flAlpha);
 
 	if (GetWeaponID() == SDK_WEAPON_GRENADE)
-		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, 1);
+		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, flAlpha);
 
 	return iReturn;
 }

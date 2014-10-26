@@ -182,7 +182,9 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropFloat		( SENDINFO( m_flDisarmRedraw ) ),
 
-	SendPropArray3( SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable( SENDINFO_DT( m_aLoadout ), &REFERENCE_SEND_TABLE( DT_Loadout ) ) ),
+	SendPropEHandle(SENDINFO(m_hUseEntity)),
+
+	SendPropArray3(SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable(SENDINFO_DT(m_aLoadout), &REFERENCE_SEND_TABLE(DT_Loadout))),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
@@ -839,7 +841,9 @@ void CSDKPlayer::PostThink()
 {
 	BaseClass::PostThink();
 
-	if ( !g_fGameOver && !IsPlayerLockedInPlace() )
+	m_hUseEntity = FindUseEntity();
+
+	if (!g_fGameOver && !IsPlayerLockedInPlace())
 	{
 		if ( IsAlive() )
 		{

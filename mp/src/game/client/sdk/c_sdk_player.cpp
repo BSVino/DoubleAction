@@ -189,6 +189,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	RecvPropFloat		( RECVINFO( m_flDisarmRedraw ) ),
 
+	RecvPropEHandle(RECVINFO(m_hUseEntity)),
+
 	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 END_RECV_TABLE()
