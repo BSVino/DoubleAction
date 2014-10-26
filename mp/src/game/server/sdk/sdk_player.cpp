@@ -1050,6 +1050,8 @@ void CSDKPlayer::GiveDefaultItems()
 				CBasePlayer::GiveAmmo(1, "grenades");
 			else
 				GiveNamedItem( "weapon_grenade" );
+
+			CBasePlayer::GiveAmmo(1, "grenades");
 		}
 	}
 }
@@ -3182,10 +3184,6 @@ void CSDKPlayer::BuyRandom()
 	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
-
-	// Fill the rest up with grenades.
-	while (CanAddToLoadout(SDK_WEAPON_GRENADE))
-		AddToLoadout(SDK_WEAPON_GRENADE);
 }
 
 bool CSDKPlayer::PickRandomCharacter()
@@ -3832,19 +3830,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 
 			// If I already have it just take the ammo
 			if (Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType())) 
-			{
-				if( Weapon_EquipAmmoOnly( pWeapon ) )
-				{
-					// Only remove me if I have no ammo left
-					if ( pWeapon->HasPrimaryAmmo() )
-						return pEnt;
-
-					UTIL_Remove( pWeapon );
-					return NULL;
-				}
-				else
-					return pEnt;
-			}
+				return pEnt;
 			// -------------------------
 			// Otherwise take the weapon
 			// -------------------------

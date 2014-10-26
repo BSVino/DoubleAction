@@ -368,29 +368,30 @@ void CHudAmmo::Paint()
 
 	float flScale = 480.0f/(float)iHeight * hud_ammoscale.GetFloat();
 
+	int iGrenades = 0;
+	int iTotalGrenades = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("grenades"));
+	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_TROLL)
+		iTotalGrenades = ConVarRef("da_max_grenades").GetInt();
+
 	CWeaponSDKBase* pGrenade = pPlayer->FindWeapon(SDK_WEAPON_GRENADE);
 	if (pGrenade)
+		iGrenades = pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType());
+
+	if (m_pGrenadeIcon)
 	{
-		if (m_pGrenadeIcon)
+		for (int i = 0; i < iGrenades; i++)
 		{
-			for (int i = 0; i < pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i++)
-			{
-				Vector4D vecGrenade = GetGrenadePosition(i);
-				m_pGrenadeIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
-			}
+			Vector4D vecGrenade = GetGrenadePosition(i);
+			m_pGrenadeIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
 		}
+	}
 
-		if (m_pGrenadeEmptyIcon)
+	if (m_pGrenadeEmptyIcon)
+	{
+		for (int i = iGrenades; i < iTotalGrenades; i++)
 		{
-			int iTotalGrenades = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("grenades"));
-			if (pPlayer->m_Shared.m_iStyleSkill != SKILL_TROLL)
-				iTotalGrenades = ConVarRef("da_max_grenades").GetInt();
-
-			for (int i = pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType()); i < iTotalGrenades; i++)
-			{
-				Vector4D vecGrenade = GetGrenadePosition(i);
-				m_pGrenadeEmptyIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
-			}
+			Vector4D vecGrenade = GetGrenadePosition(i);
+			m_pGrenadeEmptyIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
 		}
 	}
 

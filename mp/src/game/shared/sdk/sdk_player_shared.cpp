@@ -1529,6 +1529,9 @@ bool CSDKPlayer::CanAddToLoadout(SDKWeaponID eWeapon)
 	if (eWeapon >= WEAPON_MAX)
 		return false;
 
+	if (eWeapon == SDK_WEAPON_GRENADE)
+		return false;
+
 	CSDKWeaponInfo *pWeaponInfo = CSDKWeaponInfo::GetWeaponInfo(eWeapon);
 
 	// Don't allow buying the akimbo version. Must buy the single version twice.
