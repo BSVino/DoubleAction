@@ -298,7 +298,7 @@ CSDKGameRules::CSDKGameRules()
 #if defined ( SDK_USE_TEAMS )
 	m_iSpawnPointCount_Blue = 0;
 	m_iSpawnPointCount_Red = 0;
-	m_bIsTeamplay = teamplay.GetBool();
+	m_bIsTeamplay = false;// teamplay.GetBool();
 #ifdef GAME_DLL
 	gpGlobals->teamplay = m_bIsTeamplay;
 #endif
@@ -3207,7 +3207,7 @@ void RegisterVoteIssues()
 	CVoteController* pController = (CVoteController*)CreateEntityByName( "vote_controller" );
 	pController->Spawn();
 
-	new CTeamplayModeVoteIssue();
+	//new CTeamplayModeVoteIssue();
 	new CNextMapVoteIssue();
 	new CChangelevelVoteIssue();
 	new CKickPlayerVoteIssue();
