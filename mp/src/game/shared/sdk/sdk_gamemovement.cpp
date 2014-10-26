@@ -55,6 +55,8 @@ ConVar  da_acro_roll_friction ("da_acro_roll_friction", "0.3", FCVAR_NOTIFY|FCVA
 
 ConVar  da_physpush_base ("da_physpush_base", "0.2", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
+ConVar  da_auto_unstick("da_auto_unstick", "1", FCVAR_REPLICATED|FCVAR_DEVELOPMENTONLY);
+
 extern bool g_bMovementOptimizations;
 
 class CSDKGameMovement : public CGameMovement
@@ -607,7 +609,7 @@ void CSDKGameMovement::PlayerMove (void)
 	RealPlayerMove();
 
 #ifndef CLIENT_DLL
-	if (m_pSDKPlayer->IsAlive() && PlayerIsStuck())
+	if (da_auto_unstick.GetBool() && m_pSDKPlayer->IsAlive() && PlayerIsStuck() && m_pSDKPlayer->GetMoveType() != MOVETYPE_NOCLIP)
 	{
 		if (m_flStuckTime < 0)
 			m_flStuckTime = gpGlobals->curtime;
