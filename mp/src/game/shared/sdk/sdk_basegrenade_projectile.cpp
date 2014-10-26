@@ -228,17 +228,7 @@ float CBaseGrenadeProjectile::GetCurrentTime()
 	
 		CTakeDamageInfo info( this, GetThrower(), GetBlastForce(), vecAbsOrigin, m_flDamage, bitsDamageType, 0, &vecReported );
 
-		int connected_players = 0;
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			if (ToSDKPlayer(UTIL_PlayerByIndex(i)))
-				connected_players++;
-		}
-
-		float radius = m_DmgRadius;
-		radius = RemapValClamped(connected_players, 8, 16, radius, radius * 0.8f);
-
-		RadiusDamage(info, vecAbsOrigin, radius, CLASS_NONE, NULL);
+		RadiusDamage( info, vecAbsOrigin, m_DmgRadius, CLASS_NONE, NULL );
 
 		UTIL_DecalTrace( pTrace, "Scorch" );
 
