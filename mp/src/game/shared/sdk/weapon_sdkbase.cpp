@@ -774,33 +774,24 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 	// The heavier the damage the more it hurts.
 	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
 
-	bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
+	//bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
 
 	if (pVictim)
 	{
-		// If the victim is low on health then finish them off.
-		if (pVictim->GetHealth() <= 55)
-			return pVictim->GetHealth() * 1.2f;
-
 		if (pPlayer->IsStyleSkillActive(SKILL_BOUNCER))
-		{
-			if (bIsSecondary && !bIsStockAttack)
-				return pVictim->GetHealth() * 1.5f;
-			else
-				flDamage += 20;
-		}
+			flDamage += 20;
 
 		Vector vecForward;
 		AngleVectors(pVictim->EyeAngles(), &vecForward, NULL, NULL);
 
-		// Attacks to the rear do double damage.
+		// Attacks to the rear do more damage.
 		if ((pPlayer->GetAbsOrigin() - pVictim->GetAbsOrigin()).Normalized().Dot(vecForward) < -0.3f)
-			flDamage *= 2;
+			flDamage *= 1.5f;
 	}
 
 	// DIVEPUNCH!
 	if (pPlayer->m_Shared.IsDiving() || pPlayer->m_Shared.IsRolling() || pPlayer->m_Shared.IsSliding() || pPlayer->m_Shared.IsWallFlipping(true))
-		flDamage *= 1.8f;
+		flDamage *= 1.6f;
 	else if (!pPlayer->GetGroundEntity())
 		flDamage *= 1.2f;
 
