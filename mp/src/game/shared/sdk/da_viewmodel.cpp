@@ -94,6 +94,11 @@ void CDAViewModel::UnpauseAnimation(float flRewind)
 void CDAViewModel::DoMuzzleFlash()
 {
 #ifdef CLIENT_DLL
+	CWeaponSDKBase* pWeapon = GetDAWeapon();
+
+	if (!pWeapon)
+		return;
+
 	int id;
 	switch (GetDAWeapon()->GetWeaponType())
 	{
