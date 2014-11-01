@@ -64,14 +64,16 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			//SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, g_pHardwareConfig->GetDXSupportLevel() >= 90 );
 			SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, 0 ); // Blur's not working right now for lack of a blurred buffer to render from.
 			psh_forgot_to_set_static_WITH_BLUR = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
-			SET_STATIC_PIXEL_SHADER( slowmo_ps20b );
+
+			SET_STATIC_PIXEL_SHADER(slowmo_ps20b);
 		}
 
 		DYNAMIC_STATE
 		{
 			DECLARE_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
-			SET_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
+			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_OSX, IsOSX());
+			SET_DYNAMIC_PIXEL_SHADER(slowmo_ps20b);
 
 			pShaderAPI->BindStandardTexture( SHADER_SAMPLER0, TEXTURE_FRAME_BUFFER_FULL_TEXTURE_0 );
 

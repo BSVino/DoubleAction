@@ -1,6 +1,7 @@
 #define HDRTYPE HDR_TYPE_NONE
 
 // STATIC: "WITH_BLUR" "0..1" [= 0]
+// DYNAMIC: "WITH_OSX" "0..1" [= 0]
 // DYNAMIC: "WITH_VR" "0..1" [= 0]
 
 #include "common_ps_fxc.h"
