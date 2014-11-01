@@ -1515,7 +1515,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					SetBaseVelocity( vecPush );
 
 					// award style points
-					float flPoints = 10.0f;
+					float flPoints = 30.0f;
 
 					if (m_iSlowMoType != SLOWMO_NONE)
 						flPoints *= 1.3f;
@@ -1523,6 +1523,23 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
 				}
+			}
+			else if (bGrenadeNotMine && !m_Shared.IsAimedIn())
+			{
+				Vector vecFacing;
+				AngleVectors(EyeAngles(), &vecFacing);
+
+				float flDamageMultiplier = RemapValClamped((GetAbsOrigin() - pGrenade->GetAbsOrigin()).Normalized().Dot(vecFacing), -0.7, 0.7, 1.0, 0.5);
+				flDamage *= flDamageMultiplier;
+
+				// award style points
+				float flPoints = 30.0f;
+
+				if (m_iSlowMoType != SLOWMO_NONE)
+					flPoints *= 1.3f;
+
+				if (flDamageMultiplier < 0.8)
+					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 			}
 		}
 
