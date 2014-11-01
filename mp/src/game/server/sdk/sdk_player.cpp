@@ -1965,15 +1965,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
 	if (info.GetDamageType() == DMG_BLAST)
 	{
-		// Grenades are cool.
 		if (bKilledVictim)
-			AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
+			AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
 		else
-			AddStylePoints(flPoints*0.8f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.5f, bKilledVictim ? STYLE_SOUND_LARGE : STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE, STYLE_POINT_LARGE);
 
 		if (!IsAlive() && bKilledVictim)
 		{
-			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
+			AddStylePoints(flPoints*0.5f, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 			SendNotice(NOTICE_WORTHIT);
 		}
 	}
