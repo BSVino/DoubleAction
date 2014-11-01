@@ -54,18 +54,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#if defined ( SDK_USE_TEAMS )
-CON_COMMAND_F( changeteam, "Choose a new team", FCVAR_SERVER_CAN_EXECUTE|FCVAR_CLIENTCMD_CAN_EXECUTE )
-{
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if ( pPlayer && pPlayer->CanShowTeamMenu() )
-	{
-		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
-	}
-}
-#endif // SDK_USE_TEAMS
-
 #if defined ( SDK_USE_PLAYERCLASSES )
 CON_COMMAND_F( changeclass, "Choose a new class", FCVAR_SERVER_CAN_EXECUTE|FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
