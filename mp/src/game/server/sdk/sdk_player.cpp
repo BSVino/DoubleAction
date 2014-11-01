@@ -1053,8 +1053,6 @@ void CSDKPlayer::GiveDefaultItems()
 				CBasePlayer::GiveAmmo(1, "grenades");
 			else
 				GiveNamedItem( "weapon_grenade" );
-
-			CBasePlayer::GiveAmmo(1, "grenades");
 		}
 	}
 }
@@ -3187,6 +3185,10 @@ void CSDKPlayer::BuyRandom()
 	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
+
+	// Fill the rest up with grenades.
+	while (CanAddToLoadout(SDK_WEAPON_GRENADE))
+		AddToLoadout(SDK_WEAPON_GRENADE);
 }
 
 bool CSDKPlayer::PickRandomCharacter()

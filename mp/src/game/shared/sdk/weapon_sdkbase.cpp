@@ -821,7 +821,7 @@ float CWeaponSDKBase::GetBrawlSecondaryFireRate()
 	return flTime;
 }
 
-ConVar da_grenade_throw_time( "da_grenade_throw_time", "1.0", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take to throw a grenade?" );
+ConVar da_grenade_throw_time( "da_grenade_throw_time", "1.2", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take to throw a grenade?" );
 
 void CWeaponSDKBase::StartGrenadeToss()
 {
@@ -854,7 +854,7 @@ void CWeaponSDKBase::StartGrenadeToss()
 	pOwner->DoAnimationEvent( PLAYERANIMEVENT_GRENADE1_THROW );
 }
 
-ConVar da_grenade_weaponlerp_time( "da_grenade_weaponlerp_time", "0.25", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?" );
+ConVar da_grenade_weaponlerp_time( "da_grenade_weaponlerp_time", "0.3", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?" );
 
 bool CWeaponSDKBase::MaintainGrenadeToss()
 {
@@ -943,7 +943,7 @@ void CWeaponSDKBase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QA
 		angThrow.x = -10 + angThrow.x * -((90 - 10) / 90.0);
 	}
 
-	float flVel = (90 - angThrow.x) * 8;
+	float flVel = (90 - angThrow.x) * 6;
 
 	if (flVel > 850)
 		flVel = 850;
