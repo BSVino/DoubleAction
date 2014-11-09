@@ -3,6 +3,10 @@
 // STATIC: "WITH_BLUR" "0..1" [= 0]
 // DYNAMIC: "WITH_OSX" "0..1" [= 0]
 // DYNAMIC: "WITH_VR" "0..1" [= 0]
+// DYNAMIC: "WITH_DEATHCAM" "0..1" [= 0]
+
+// SKIP: $WITH_BLUR
+// SKIP: $WITH_VR && $WITH_DEATHCAM
 
 #include "common_ps_fxc.h"
 
@@ -23,6 +27,10 @@ struct PS_INPUT
 
 HALF4 main( PS_INPUT i ) : COLOR
 {
+#if WITH_OSX
+	return FinalOutput( tex2D( FBSampler, i.texCoord ), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#else
+
 	const float flSlowMoFilter = 0.09;
 	const float flVignetteScale = 1;
 	const float flNoiseScale = 0.05;
@@ -63,11 +71,12 @@ HALF4 main( PS_INPUT i ) : COLOR
 	aflOutput.rgb = lerp(aflOutput.rgb, aflBlur.rgb, flBlurAlpha);
 #endif
 
-	// Only do the blue tint if we're not in the death cam.
-	if (flDeathCam > 0)
-		aflOutput.gb = aflOutput.gb - 0.1 * flTotalRamp;
-	else
+#if WITH_DEATHCAM
+	aflOutput.gb = aflOutput.gb - 0.1 * flTotalRamp;
+#else
 	{
+#if !WITH_OSX
+		// Only do the blue tint if we're not in the death cam.
 		float3 aflOverlay = float3(1, 0.82, 0);
 		float3 aflConditional = step(0.5, aflOutput.rgb);
 		float3 aflOverlaid = lerp(aflOutput*aflOverlay*2, 1 - (2*(1-aflOutput)*(1-aflOverlay)), aflConditional);
@@ -75,16 +84,17 @@ HALF4 main( PS_INPUT i ) : COLOR
 		aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid, flStyleSkill * flStyleSkillAlpha);
 
 		aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp * flSlowMoScale;
+#endif
 	}
+#endif
 
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 
 	// Adjust levels. Crush the blacks and blow out the whites.
 	const float flBias = 0.4;
 	const float flExponent = 1.73697f;// log( flBias ) * -1.4427f;
-	aflOutput.r = pow(RemapValClamped(aflOutput.r, 0, .63, 0, 1), flExponent);
-	aflOutput.g = pow(RemapValClamped(aflOutput.g, 0, .63, 0, 1), flExponent);
-	aflOutput.b = pow(RemapValClamped(aflOutput.b, 0, .63, 0, 1), flExponent);
+
+	aflOutput = pow(RemapValClamped(aflOutput, 0, .63, 0, 1), flExponent);
 
 	float flFBGrey = ( aflOutput.r + aflOutput.g + aflOutput.b ) / 3;
 
@@ -109,8 +119,10 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	float flCenterWeight = RemapValClamped(length(aflCombinedTexCoord - float2(0.5, 0.5)), 0.2, 0.8, 0.65, 1.0);
 
-	if (flDeathCam > 0)
-		return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
-	else
-		return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#if WITH_DEATHCAM
+	return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#else
+	return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#endif
+#endif
 }

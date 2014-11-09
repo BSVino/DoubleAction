@@ -73,6 +73,7 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			DECLARE_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
 			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
 			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_OSX, IsOSX());
+			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_DEATHCAM, da_postprocess_deathcam.GetBool());
 			SET_DYNAMIC_PIXEL_SHADER(slowmo_ps20b);
 
 			pShaderAPI->BindStandardTexture( SHADER_SAMPLER0, TEXTURE_FRAME_BUFFER_FULL_TEXTURE_0 );
@@ -88,10 +89,6 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			float aflOffset[1] = { 0.0f };
 			aflOffset[0] = params[GRAINOFFSET]->GetFloatValue();
 			pShaderAPI->SetPixelShaderConstant( 5, aflOffset );
-
-			float aflDeathCam[1] = { 0.0f };
-			aflDeathCam[0] = da_postprocess_deathcam.GetBool()?1:0;
-			pShaderAPI->SetPixelShaderConstant( 6, aflDeathCam );
 
 			float aflStyleSkill[1] = { 0.0f };
 			aflStyleSkill[0] = da_postprocess_skill.GetFloat();

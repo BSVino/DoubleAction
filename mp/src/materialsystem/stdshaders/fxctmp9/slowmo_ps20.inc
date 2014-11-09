@@ -1,5 +1,5 @@
 #include "shaderlib/cshader.h"
-class slowmo_ps20b_Static_Index
+class slowmo_ps20_Static_Index
 {
 private:
 	int m_nWITH_BLUR;
@@ -23,7 +23,7 @@ public:
 #endif
 	}
 public:
-	slowmo_ps20b_Static_Index( )
+	slowmo_ps20_Static_Index( )
 	{
 #ifdef _DEBUG
 		m_bWITH_BLUR = true;
@@ -41,8 +41,8 @@ public:
 		return ( 8 * m_nWITH_BLUR ) + 0;
 	}
 };
-#define shaderStaticTest_slowmo_ps20b 0
-class slowmo_ps20b_Dynamic_Index
+#define shaderStaticTest_slowmo_ps20 0
+class slowmo_ps20_Dynamic_Index
 {
 private:
 	int m_nWITH_OSX;
@@ -108,7 +108,7 @@ public:
 #endif
 	}
 public:
-	slowmo_ps20b_Dynamic_Index()
+	slowmo_ps20_Dynamic_Index()
 	{
 #ifdef _DEBUG
 		m_bWITH_OSX = false;
@@ -134,4 +134,4 @@ public:
 		return ( 1 * m_nWITH_OSX ) + ( 2 * m_nWITH_VR ) + ( 4 * m_nWITH_DEATHCAM ) + 0;
 	}
 };
-#define shaderDynamicTest_slowmo_ps20b psh_forgot_to_set_dynamic_WITH_OSX + psh_forgot_to_set_dynamic_WITH_VR + psh_forgot_to_set_dynamic_WITH_DEATHCAM + 0
+#define shaderDynamicTest_slowmo_ps20 psh_forgot_to_set_dynamic_WITH_OSX + psh_forgot_to_set_dynamic_WITH_VR + psh_forgot_to_set_dynamic_WITH_DEATHCAM + 0
