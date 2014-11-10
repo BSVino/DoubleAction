@@ -8,6 +8,7 @@
 
 #ifdef CLIENT_DLL
 #include "view.h"
+#include "model_types.h"
 #endif
 
 #include "sdk_gamerules.h"
@@ -537,6 +538,9 @@ CMaterialReference g_hBulletStreak;
 int CBulletManager::CBullet::DrawModel( int flags )
 {
 	if (m_flCurrAlpha < 0)
+		return 0;
+
+	if (flags & STUDIO_SHADOWDEPTHTEXTURE)
 		return 0;
 
 #ifdef __linux__
