@@ -53,14 +53,16 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float flFBMax = max( aflFB.r, max( aflFB.g, aflFB.b ) );
 	float flFBMin = min( aflFB.r, min( aflFB.g, aflFB.b ) );
 
-	float flFBLevel = ( flFBMax + flFBMin ) / 2;
-	float flFBSaturation = (flFBMax - flFBMin)/lerp(2 - flFBMax - flFBMin, flFBMax + flFBMin, step(0.5, flFBLevel));
+	float flFBSum = flFBMax + flFBMin;
+
+	float2 aflSaturationLevel;
+	aflSaturationLevel[0] = flFBSum/2; // Level
+	aflSaturationLevel[1] = (flFBMax - flFBMin)/lerp(2 - flFBSum, flFBSum, step(0.5, aflSaturationLevel[0])); // Saturation
 
 	// Only filter the desaturated and dark areas.
-	float flSaturationRamp = RemapValClamped(flFBSaturation, 0, 0.4, 1, 0);
-	float flLevelRamp = RemapValClamped(flFBLevel, 0, 0.4, 1, 0);
+	float2 aflRamps = 1-saturate(aflSaturationLevel*2.5);
 
-	float flTotalRamp = max(flSaturationRamp, flLevelRamp);
+	float flTotalRamp = max(aflRamps[0], aflRamps[1]);
 
 	float4 aflOutput = aflFB;
 
@@ -91,9 +93,9 @@ HALF4 main( PS_INPUT i ) : COLOR
 	const float flExponent = 1.73697f;// log( 0.4 ) * -1.4427f;
 	aflOutput.rgb = pow(saturate( aflOutput.rgb * 1.587 ), flExponent); // 1.587 ~= 1/0.63
 
-	float flFBGrey = ( aflOutput.r + aflOutput.g + aflOutput.b ) / 3;
+	float3 aflFBGrey = ( aflOutput.r + aflOutput.g + aflOutput.b ) / 3;
 
-	aflOutput.rgb = lerp(aflOutput.rgb, float3(flFBGrey, flFBGrey, flFBGrey), .36);
+	aflOutput.rgb = lerp(aflOutput.rgb, aflFBGrey, .36);
 
 	// Use a "screen" filter to apply grain to output. This helps bring the general light levels up a bit.
 	float3 aflGrain = 1 - (1 - aflOutput.rgb)*(1 - float3(flGrain, flGrain, flGrain));
@@ -101,8 +103,9 @@ HALF4 main( PS_INPUT i ) : COLOR
 	// Scale it by the noise scale.
 	aflOutput.rgb = lerp(aflOutput.rgb, aflGrain, flNoiseScale);
 
-#if !WITH_VR
+#if !WITH_VR && !SHADER_MODEL_PS_2_0
 	// Don't do the overlay in VR, it won't match up from eye to eye.
+	// Don't do it in PS2.0 because we don't have enough instructions.
 
 	float3 aflOverlay = float3(flOverlay, flOverlay, flOverlay);
 	float3 aflConditional = step(0.5, aflOutput.rgb);
@@ -112,11 +115,18 @@ HALF4 main( PS_INPUT i ) : COLOR
 	aflOutput.rgb = lerp(aflOutput.rgb, aflOverlaid.rgb, 0.15 * flSlowMoScale);
 #endif
 
-	float flCenterWeight = RemapValClamped(length(aflCombinedTexCoord - float2(0.5, 0.5)), 0.2, 0.8, 0.65, 1.0);
+#if WITH_VR
+	return FinalOutput( lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#else
 
 #if WITH_DEATHCAM
 	return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
 #else
+	float flDistanceToCenter = length(aflCombinedTexCoord - float2(0.5, 0.5));
+
+	float flCenterWeight = RemapValClamped(length(aflCombinedTexCoord - float2(0.5, 0.5)), 0.2, 0.8, 0.65, 1.0);
+
 	return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#endif
 #endif
 }

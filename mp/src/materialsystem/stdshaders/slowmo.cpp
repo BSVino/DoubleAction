@@ -9,6 +9,7 @@
 
 #include "slowmo_vs20.inc"
 #include "slowmo_ps20b.inc"
+#include "slowmo_ps20.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -60,22 +61,46 @@ BEGIN_VS_SHADER_FLAGS( slowmo, "Help for slowmo", SHADER_NOT_EDITABLE )
 			DECLARE_STATIC_VERTEX_SHADER( slowmo_vs20 );
 			SET_STATIC_VERTEX_SHADER( slowmo_vs20 );
 
-			DECLARE_STATIC_PIXEL_SHADER( slowmo_ps20b );
-			//SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, g_pHardwareConfig->GetDXSupportLevel() >= 90 );
-			SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, 0 ); // Blur's not working right now for lack of a blurred buffer to render from.
-			psh_forgot_to_set_static_WITH_BLUR = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
-			SET_STATIC_PIXEL_SHADER_COMBO(WITH_OSX, IsOSX());
-			psh_forgot_to_set_static_WITH_OSX = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
+			if (g_pHardwareConfig->SupportsPixelShaders_2_b())
+			{
+				DECLARE_STATIC_PIXEL_SHADER(slowmo_ps20b);
+				//SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, g_pHardwareConfig->GetDXSupportLevel() >= 90 );
+				SET_STATIC_PIXEL_SHADER_COMBO(WITH_BLUR, 0); // Blur's not working right now for lack of a blurred buffer to render from.
+				psh_forgot_to_set_static_WITH_BLUR = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
+				SET_STATIC_PIXEL_SHADER_COMBO(WITH_OSX, IsOSX());
+				psh_forgot_to_set_static_WITH_OSX = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
 
-			SET_STATIC_PIXEL_SHADER(slowmo_ps20b);
+				SET_STATIC_PIXEL_SHADER(slowmo_ps20b);
+			}
+			else
+			{
+				DECLARE_STATIC_PIXEL_SHADER(slowmo_ps20);
+				//SET_STATIC_PIXEL_SHADER_COMBO( WITH_BLUR, g_pHardwareConfig->GetDXSupportLevel() >= 90 );
+				SET_STATIC_PIXEL_SHADER_COMBO(WITH_BLUR, 0); // Blur's not working right now for lack of a blurred buffer to render from.
+				psh_forgot_to_set_static_WITH_BLUR = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
+				SET_STATIC_PIXEL_SHADER_COMBO(WITH_OSX, IsOSX());
+				psh_forgot_to_set_static_WITH_OSX = 0; // This is a dirty workaround to the shortcut [= 0] in the fxc
+
+				SET_STATIC_PIXEL_SHADER(slowmo_ps20);
+			}
 		}
 
 		DYNAMIC_STATE
 		{
-			DECLARE_DYNAMIC_PIXEL_SHADER( slowmo_ps20b );
-			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
-			SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_DEATHCAM, da_postprocess_deathcam.GetBool());
-			SET_DYNAMIC_PIXEL_SHADER(slowmo_ps20b);
+			if (g_pHardwareConfig->SupportsPixelShaders_2_b())
+			{
+				DECLARE_DYNAMIC_PIXEL_SHADER(slowmo_ps20b);
+				SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
+				SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_DEATHCAM, da_postprocess_deathcam.GetBool());
+				SET_DYNAMIC_PIXEL_SHADER(slowmo_ps20b);
+			}
+			else
+			{
+				DECLARE_DYNAMIC_PIXEL_SHADER(slowmo_ps20);
+				SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_VR, da_postprocess_vr.GetBool());
+				SET_DYNAMIC_PIXEL_SHADER_COMBO(WITH_DEATHCAM, da_postprocess_deathcam.GetBool());
+				SET_DYNAMIC_PIXEL_SHADER(slowmo_ps20);
+			}
 
 			pShaderAPI->BindStandardTexture( SHADER_SAMPLER0, TEXTURE_FRAME_BUFFER_FULL_TEXTURE_0 );
 
