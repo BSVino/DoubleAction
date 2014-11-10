@@ -3,8 +3,10 @@
 // STATIC: "WITH_BLUR" "0..1" [= 0]
 // STATIC: "WITH_OSX" "0..1" [= 0]
 // DYNAMIC: "WITH_VR" "0..1" [= 0]
+// DYNAMIC: "WITH_DEATHCAM" "0..1" [= 0]
 
 // SKIP: $WITH_BLUR
+// SKIP: $WITH_DEATHCAM && $WITH_VR
 
 #include "common_ps_fxc.h"
 
@@ -15,7 +17,6 @@ sampler BlurSampler      : register( s2 );
 const float flSlowMoScale   : register( c0 );
 const float flStyleSkillAlpha : register( c1 );
 const float flGrainOffset   : register( c5 );
-const float flDeathCam      : register( c6 );
 const float flStyleSkill    : register( c7 );
 
 struct PS_INPUT
@@ -38,8 +39,12 @@ HALF4 main( PS_INPUT i ) : COLOR
 	float4 aflFB = tex2D( FBSampler, i.texCoord );
 	float4 aflCombined = tex2D( CombinedSampler, aflCombinedTexCoord );
 
+#if WITH_DEATHCAM
 	// Death cam should be like a photo, so the grain should be static. (As in, not moving.)
-	float flGrain = lerp(tex2D( CombinedSampler, aflCombinedTexCoord + float2(flGrainOffset, flGrainOffset) ).g, aflCombined.g, flDeathCam);
+	float flGrain = aflCombined.g;
+#else
+	float flGrain = tex2D( CombinedSampler, aflCombinedTexCoord + float2(flGrainOffset, flGrainOffset) ).g;
+#endif
 
 	float flVignetteAlpha = aflCombined.b;
 	float flOverlay = aflCombined.r;
@@ -66,9 +71,9 @@ HALF4 main( PS_INPUT i ) : COLOR
 #endif
 
 	// Only do the blue tint if we're not in the death cam.
-	if (flDeathCam > 0)
-		aflOutput.gb = aflOutput.gb - 0.1 * flTotalRamp;
-	else
+#if WITH_DEATHCAM
+	aflOutput.gb = aflOutput.gb - 0.1 * flTotalRamp;
+#else
 	{
 		float3 aflOverlay = float3(1, 0.82, 0);
 		float3 aflConditional = step(0.5, aflOutput.rgb);
@@ -78,6 +83,7 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 		aflOutput.rg = aflOutput.rg - flSlowMoFilter * flTotalRamp * flSlowMoScale;
 	}
+#endif
 
 	aflOutput.rgb = lerp(aflOutput.rgb, float3(0, 0, 0), flVignetteAlpha * flVignetteScale);
 
@@ -111,8 +117,9 @@ HALF4 main( PS_INPUT i ) : COLOR
 
 	float flCenterWeight = RemapValClamped(length(aflCombinedTexCoord - float2(0.5, 0.5)), 0.2, 0.8, 0.65, 1.0);
 
-	if (flDeathCam > 0)
-		return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
-	else
-		return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#if WITH_DEATHCAM
+	return FinalOutput( aflOutput, 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#else
+	return FinalOutput( lerp(aflFB, lerp(aflFB, aflOutput, max(flSlowMoScale, flStyleSkill)), flCenterWeight), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_NONE );
+#endif
 }

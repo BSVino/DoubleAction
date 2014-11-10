@@ -63,7 +63,7 @@ public:
 		bool bAllStaticVarsDefined = m_bWITH_BLUR && m_bWITH_OSX;
 		Assert( bAllStaticVarsDefined );
 #endif // _DEBUG
-		return ( 2 * m_nWITH_BLUR ) + ( 4 * m_nWITH_OSX ) + 0;
+		return ( 4 * m_nWITH_BLUR ) + ( 8 * m_nWITH_OSX ) + 0;
 	}
 };
 #define shaderStaticTest_slowmo_ps20b 0
@@ -90,6 +90,27 @@ public:
 		m_bWITH_VR = true;
 #endif
 	}
+private:
+	int m_nWITH_DEATHCAM;
+#ifdef _DEBUG
+	bool m_bWITH_DEATHCAM;
+#endif
+public:
+	void SetWITH_DEATHCAM( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nWITH_DEATHCAM = i;
+#ifdef _DEBUG
+		m_bWITH_DEATHCAM = true;
+#endif
+	}
+	void SetWITH_DEATHCAM( bool i )
+	{
+		m_nWITH_DEATHCAM = i ? 1 : 0;
+#ifdef _DEBUG
+		m_bWITH_DEATHCAM = true;
+#endif
+	}
 public:
 	slowmo_ps20b_Dynamic_Index()
 	{
@@ -97,16 +118,20 @@ public:
 		m_bWITH_VR = false;
 #endif // _DEBUG
 		m_nWITH_VR = 0;
+#ifdef _DEBUG
+		m_bWITH_DEATHCAM = false;
+#endif // _DEBUG
+		m_nWITH_DEATHCAM = 0;
 	}
 	int GetIndex()
 	{
 		// Asserts to make sure that we aren't using any skipped combinations.
 		// Asserts to make sure that we are setting all of the combination vars.
 #ifdef _DEBUG
-		bool bAllDynamicVarsDefined = m_bWITH_VR;
+		bool bAllDynamicVarsDefined = m_bWITH_VR && m_bWITH_DEATHCAM;
 		Assert( bAllDynamicVarsDefined );
 #endif // _DEBUG
-		return ( 1 * m_nWITH_VR ) + 0;
+		return ( 1 * m_nWITH_VR ) + ( 2 * m_nWITH_DEATHCAM ) + 0;
 	}
 };
-#define shaderDynamicTest_slowmo_ps20b psh_forgot_to_set_dynamic_WITH_VR + 0
+#define shaderDynamicTest_slowmo_ps20b psh_forgot_to_set_dynamic_WITH_VR + psh_forgot_to_set_dynamic_WITH_DEATHCAM + 0

@@ -135,19 +135,19 @@ void CDAViewRender::PerformSlowMoEffect( const CViewSetup &view )
 	else if (da_postprocess_compare.GetInt() || da_postprocess_slowmo.GetInt())
 		bShowPostProcess = true;
 
-	if ( bShowPostProcess )
+	if (pPlayer->IsAlive())
+		da_postprocess_deathcam.SetValue(false);
+	else
+		da_postprocess_deathcam.SetValue(true);
+
+	da_postprocess_skill.SetValue(m_flStyleLerp);
+
+	if (bShowPostProcess)
 	{
 		IMaterial *pMaterial = materials->FindMaterial( "shaders/slowmo", TEXTURE_GROUP_CLIENT_EFFECTS, true );
 
 		if ( !IsErrorMaterial(pMaterial) )
 		{
-			if (pPlayer->IsAlive())
-				da_postprocess_deathcam.SetValue(false);
-			else
-				da_postprocess_deathcam.SetValue(true);
-
-			da_postprocess_skill.SetValue(m_flStyleLerp);
-
 			if (da_postprocess_compare.GetInt() == 1)
 				DrawScreenEffectMaterial( pMaterial, view.x, view.y, view.width/2, view.height );
 			else
