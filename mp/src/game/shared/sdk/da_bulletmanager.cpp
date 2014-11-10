@@ -539,6 +539,10 @@ int CBulletManager::CBullet::DrawModel( int flags )
 	if (m_flCurrAlpha < 0)
 		return 0;
 
+#ifdef __linux__
+	return 0;
+#endif
+
 	if (!g_hBulletStreak.IsValid())
 		g_hBulletStreak.Init( "effects/tracer1.vmt", TEXTURE_GROUP_OTHER );
 
