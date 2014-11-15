@@ -301,3 +301,68 @@ int ClientModeSDKNormal::HudElementKeyInput( int down, ButtonCode_t keynum, cons
 	else
 		return BaseClass::HandleSpectatorKeyInput(down, keynum, pszCurrentBinding);
 }
+
+ConVar da_target_fps("da_target_fps", "30", FCVAR_ARCHIVE, "Automatically turn off expensive shaders if the framerate is below this.");
+
+class CFramerateMonitor : public CAutoGameSystemPerFrame
+{
+public:
+	CFramerateMonitor(char const *name)
+		: CAutoGameSystemPerFrame(name)
+	{
+		framecount_start = 0;
+	}
+
+public:
+	public:
+		void        Activate();
+		void        Deactivate();
+
+public:
+	virtual void LevelInitPostEntity()
+	{
+		framecount_start = 0;
+	}
+
+	virtual void Update(float frametime)
+	{
+		if (!gpGlobals->maxClients)
+			return;
+
+		if (framecount_start < 0)
+			return;
+
+		if (!C_SDKPlayer::GetLocalSDKPlayer())
+			return;
+
+		// Don't start testing until the player is spawned so that we get actual ingame data.
+		if (!C_SDKPlayer::GetLocalSDKPlayer()->IsAlive())
+			return;
+
+		float minimum_start_time = 10;
+		float tracking_duration = 10;
+
+		if (!framecount_start && gpGlobals->curtime > minimum_start_time)
+		{
+			start_time = gpGlobals->curtime;
+			framecount_start = gpGlobals->framecount;
+		}
+
+		if (framecount_start && gpGlobals->curtime > tracking_duration + start_time)
+		{
+			if (gpGlobals->framecount - framecount_start < tracking_duration * da_target_fps.GetFloat())
+			{
+				ConVarRef("da_pretty_pixels").SetValue(false);
+				ConVarRef("da_ssao").SetValue(false);
+			}
+
+			framecount_start = -1;
+		}
+	}
+
+	int framecount_start;
+	float start_time;
+};
+
+CFramerateMonitor g_FramerateMonitor("CFramerateMonitor");
+
