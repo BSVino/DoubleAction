@@ -1995,6 +1995,9 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	}
 	else if (m_Shared.IsDiving() || m_Shared.IsWallFlipping(true) || m_Shared.IsSliding())
 	{
+		if (m_Shared.IsSuperFalling())
+			flPoints *= 2;
+
 		// Damaging a dude enough to kill him while stunting gives a full bar.
 		if (m_Shared.IsDiving())
 		{
@@ -2010,7 +2013,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				if (bKilledVictim)
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVE_KILL, STYLE_POINT_STYLISH);
 				else
-					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_DIVE, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints, m_Shared.IsSuperFalling() ? STYLE_SOUND_LARGE : STYLE_SOUND_SMALL, ANNOUNCEMENT_DIVE, m_Shared.IsSuperFalling()?STYLE_POINT_STYLISH:STYLE_POINT_LARGE);
 			}
 		}
 		else if (m_Shared.IsSliding())
@@ -2096,6 +2099,10 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		}
 		else
 			AddStylePoints(flBrawlPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_BRAWL, STYLE_POINT_LARGE);
+	}
+	else if (m_Shared.IsProne() && !GetAbsVelocity().Length())
+	{
+		AddStylePoints(flPoints*0.5f, STYLE_SOUND_SMALL, RandomInt(0, 1) == 0 ? ANNOUNCEMENT_STYLISH : ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 	}
 	else if (bKilledVictim && m_flSlowMoMultiplier < 1)
 	{
