@@ -3125,6 +3125,8 @@ public:
 	}
 };
 
+ConVar da_vote_kick_plurality("da_vote_kick_plurality", "0.7", FCVAR_GAMEDLL, "What percentage of players is required to vote yes for a kick vote to pass?");
+
 class CKickPlayerVoteIssue : public CDAIssue
 {
 public:
@@ -3137,6 +3139,7 @@ public:
 	virtual bool		IsEnabled( void ) { return true; }
 	virtual const char *GetDisplayString( void ) { return "#DA_VoteIssue_Kick_Display"; }
 	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_Kick_Passed"; }
+	virtual float       GetRequiredPlurality() { return da_vote_kick_plurality.GetFloat(); }
 
 	virtual bool		GetVoteOptions(CUtlVector <const char*> &vecNames)
 	{
