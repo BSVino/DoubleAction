@@ -60,7 +60,7 @@ END_DATADESC()
 
 
 // These are the new entry points to entities. 
-#ifndef SDK_DLL
+#ifndef DA_DLL
 LINK_ENTITY_TO_CLASS(info_player_deathmatch,CBaseDMStart);
 #endif
 LINK_ENTITY_TO_CLASS(info_player_start,CPointEntity);

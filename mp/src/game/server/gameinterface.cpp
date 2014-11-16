@@ -569,7 +569,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		CreateInterfaceFn physicsFactory, CreateInterfaceFn fileSystemFactory, 
 		CGlobalVars *pGlobals)
 {
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	CommandLine()->AppendParm("-insecure", NULL);
 #endif
 

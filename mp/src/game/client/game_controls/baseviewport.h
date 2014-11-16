@@ -62,7 +62,7 @@ public:
 	virtual void ShowBackGround(bool bShow) 
 	{ 
 #ifndef _XBOX
-#ifdef SDK_DLL
+#ifdef DA_DLL
 		m_pBackGround->SetVisible(false); // Unused in DA, caused some problems, remove it.
 #else
 		m_pBackGround->SetVisible(bShow);

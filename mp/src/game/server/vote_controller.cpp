@@ -15,9 +15,9 @@
 #include "tf/tf_gamerules.h"
 #endif
 
-#ifdef SDK_DLL
-#include "sdk/sdk_player.h"
-#include "sdk/sdk_gamerules.h"
+#ifdef DA_DLL
+#include "da/da_player.h"
+#include "da/da_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -121,9 +121,9 @@ CON_COMMAND( callvote, "Start a vote on an issue." )
 	}
 #endif
 
-#ifdef SDK_DLL
-	if (ToSDKPlayer(pVoteCaller))
-		ToSDKPlayer(pVoteCaller)->Instructor_LessonLearned("callavote");
+#ifdef DA_DLL
+	if (ToDAPlayer(pVoteCaller))
+		ToDAPlayer(pVoteCaller)->Instructor_LessonLearned("callavote");
 #endif
 
 	// Parameters
@@ -988,8 +988,8 @@ bool CBaseIssue::CanCallVote( int iEntIndex, const char *pszDetails, vote_create
 		return false;
 	}
 
-#ifdef SDK_DLL
-	if (ToSDKPlayer(pVoteCaller) && ToSDKPlayer(pVoteCaller)->CanDoCoderHacks())
+#ifdef DA_DLL
+	if (ToDAPlayer(pVoteCaller) && ToDAPlayer(pVoteCaller)->CanDoCoderHacks())
 		return true;
 #endif
 
