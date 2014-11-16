@@ -101,7 +101,7 @@ PRECACHE_REGISTER(player);
 //=============================
 
 // specific to the local player
-BEGIN_SEND_TABLE_NOBASE( CDAPlayerShared, DT_SDKSharedLocalPlayerExclusive )
+BEGIN_SEND_TABLE_NOBASE( CDAPlayerShared, DT_DASharedLocalPlayerExclusive )
 #if defined ( SDK_USE_PLAYERCLASSES )
 	SendPropInt( SENDINFO( m_iPlayerClass), 4 ),
 	SendPropInt( SENDINFO( m_iDesiredPlayerClass ), 4 ),
@@ -158,7 +158,7 @@ BEGIN_SEND_TABLE_NOBASE( CDAPlayerShared, DT_DAPlayerShared )
 	SendPropBool( SENDINFO( m_bSuperFallOthersVisible ) ),
 	SendPropTime( SENDINFO( m_flSuperFallOthersNextCheck ) ),
 
-	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+	SendPropDataTable( "dasharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_DASharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
@@ -166,7 +166,7 @@ BEGIN_SEND_TABLE_NOBASE( CArmament, DT_Loadout )
 	SendPropInt(SENDINFO(m_iCount)),
 END_SEND_TABLE()
 
-BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_SDKLocalPlayerExclusive )
+BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_DALocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 	// send a hi-res origin to the local player for use in prediction
 	SendPropVector	(SENDINFO(m_vecOrigin), -1,  SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
@@ -187,7 +187,7 @@ BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
 
-BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_SDKNonLocalPlayerExclusive )
+BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_DANonLocalPlayerExclusive )
 	// send a lo-res origin to other players
 	SendPropVector	(SENDINFO(m_vecOrigin), -1,  SPROP_COORD_MP_LOWPRECISION|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 
@@ -224,9 +224,9 @@ IMPLEMENT_SERVERCLASS_ST( CDAPlayer, DT_DAPlayer )
 	SendPropDataTable( SENDINFO_DT( m_Shared ), &REFERENCE_SEND_TABLE( DT_DAPlayerShared ) ),
 
 	// Data that only gets sent to the local player.
-	SendPropDataTable( "sdklocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
+	SendPropDataTable( "dalocaldata", 0, &REFERENCE_SEND_TABLE(DT_DALocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 	// Data that gets sent to all other players
-	SendPropDataTable( "sdknonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKNonLocalPlayerExclusive), SendProxy_SendNonLocalDataTable ),
+	SendPropDataTable( "danonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_DANonLocalPlayerExclusive), SendProxy_SendNonLocalDataTable ),
 
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 
