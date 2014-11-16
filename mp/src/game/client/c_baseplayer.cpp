@@ -1879,7 +1879,7 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	return false;
 }
 
-#ifndef SDK_DLL
+#ifndef DA_DLL
 //-----------------------------------------------------------------------------
 // Purpose: single place to decide whether the local player should draw
 //-----------------------------------------------------------------------------

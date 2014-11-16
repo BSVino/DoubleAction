@@ -484,7 +484,7 @@ protected:
 	void			SSAO_DepthPass();
 	void			DrawDepthOfField();
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	void DrawSSAO();
 #endif
 };
@@ -5413,7 +5413,7 @@ void CBaseWorldView::DrawExecute( float waterHeight, view_id_t viewID, float wat
 		DrawWorld( waterZAdjust );
 		DrawOpaqueRenderables( DepthMode );
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 		if ( g_CurrentViewID == VIEW_MAIN )
 			DrawSSAO();
 #endif
@@ -5553,7 +5553,7 @@ void CBaseWorldView::SSAO_DepthPass()
 #endif
 }
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 static ConVar da_ssao( "da_ssao", "1", FCVAR_ARCHIVE );
 extern int g_kill_shaders;
 
