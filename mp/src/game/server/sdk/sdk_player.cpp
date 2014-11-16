@@ -1982,7 +1982,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
 
-	if (bKilledVictim && pWeaponInfo->m_flKillBonus)
+	if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_flKillBonus)
 	{
 		AddStylePoints(pWeaponInfo->m_flKillBonus, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
 	}
