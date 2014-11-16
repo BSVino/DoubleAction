@@ -5,9 +5,9 @@
 //-----------------------------------------------------------------------------
 
 $Macro SRCDIR		"..\.."
-$Macro GAMENAME 	"dab" [$SOURCESDK]
+$Macro GAMENAME 	"dadof" [$SOURCESDK]
 
-$Macro OUTBINDIR	"\Dropbox\ActionBoogaloo\dab_debug\dab\debug_bin"
+$Macro OUTBINDIR	"\Dropbox\ActionBoogaloo\dab_debug\dadof\debug_bin"
 
 $Include "$SRCDIR\game\client\client_base.vpc"
 
