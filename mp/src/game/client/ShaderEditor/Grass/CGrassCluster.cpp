@@ -17,7 +17,7 @@
 
 static ConVar gcluster_objectsPerHint( "grasscluster_objects_per_hint", "8" );
 static ConVar gcluster_debug( "grasscluster_debug", "0" );
-static ConVar gcluster_enable( "grasscluster_enable", "1" );
+static ConVar gcluster_enable( "grasscluster_enable", "0" );
 static ConVar gcluster_enable_flashlight( "grasscluster_enable_flashlightSupport", "1" );
 static ConVar gcluster_enable_morph( "grasscluster_enable_morph", "1" );
 static ConVar gcluster_cullDist( "grasscluster_cullDist", "4096" );
