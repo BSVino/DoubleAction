@@ -86,6 +86,7 @@ static const char * s_WeaponAliasInfo[] =
 	"akimbo_beretta",
 	"m1911",	// SDK_WEAPON_M1911
 	"beretta",  // SDK_WEAPON_BERETTA
+	"plan_d",   // SDK_WEAPON_PLAN_D
 	"grenade",	// SDK_WEAPON_GRENADE
 	"brawl",	// SDK_WEAPON_BRAWL
 	NULL,		// WEAPON_NONE

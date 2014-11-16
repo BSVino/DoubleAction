@@ -123,6 +123,7 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_sdkbase.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_plan_d.cpp"
 		}
 
 		$File "$SRCDIR/game/shared/sdk/da_bulletmanager.cpp"

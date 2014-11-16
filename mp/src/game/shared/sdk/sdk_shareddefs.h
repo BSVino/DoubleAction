@@ -165,10 +165,12 @@ typedef enum
 	// Single pistols
 	SDK_WEAPON_M1911,
 	SDK_WEAPON_BERETTA,
+	SDK_WEAPON_PLAN_D,
 
 	// Other
 	SDK_WEAPON_GRENADE,
 	SDK_WEAPON_BRAWL,
+
 	WEAPON_MAX,		// number of weapons weapon index
 
 } SDKWeaponID;
