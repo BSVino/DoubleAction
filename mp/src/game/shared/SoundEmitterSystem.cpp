@@ -34,8 +34,8 @@
 #define CRecipientFilter C_RecipientFilter
 #endif
 
-#ifdef SDK_DLL
-#include "sdk_gamerules.h"
+#ifdef DA_DLL
+#include "da_gamerules.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -492,8 +492,8 @@ public:
 			params.volume = ep.m_flVolume;
 		}
 
-#ifdef SDK_DLL
-		SDKGameRules()->OverrideSoundParams(ep, params);
+#ifdef DA_DLL
+		DAGameRules()->OverrideSoundParams(ep, params);
 #endif
 
 #if !defined( CLIENT_DLL )

@@ -1298,7 +1298,7 @@ bool CClientShadowMgr::Init()
 
 	SetShadowBlobbyCutoffArea( 0.005 );
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	m_nMaxDepthTextureShadows = 4;
 #else
 	bool bTools = CommandLine()->CheckParm( "-tools" ) != NULL;
