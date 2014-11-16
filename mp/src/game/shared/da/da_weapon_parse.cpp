@@ -50,6 +50,7 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_bAimInSpreadBonus		= !!pKeyValuesData->GetInt( "AimInSpreadBonus", 0 );
 
 	m_flStyleMultiplier = pKeyValuesData->GetFloat( "StyleMultiplier", 1 );
+	m_flKillBonus = pKeyValuesData->GetFloat( "KillStyleBonus", 0 );
 
 	const char* pszWeaponType = pKeyValuesData->GetString("WeaponType", "none");
 	if (FStrEq(pszWeaponType, "rifle"))

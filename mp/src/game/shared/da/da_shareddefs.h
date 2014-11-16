@@ -165,10 +165,12 @@ typedef enum
 	// Single pistols
 	DA_WEAPON_M1911,
 	DA_WEAPON_BERETTA,
+	DA_WEAPON_PLAN_D,
 
 	// Other
 	DA_WEAPON_GRENADE,
 	DA_WEAPON_BRAWL,
+
 	WEAPON_MAX,		// number of weapons weapon index
 
 } DAWeaponID;

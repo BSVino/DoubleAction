@@ -1962,8 +1962,12 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
 
+	if (bKilledVictim && pWeaponInfo->m_flKillBonus)
+	{
+		AddStylePoints(pWeaponInfo->m_flKillBonus, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
+	}
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
-	if (info.GetDamageType() == DMG_BLAST)
+	else if (info.GetDamageType() == DMG_BLAST)
 	{
 		if (bKilledVictim)
 			AddStylePoints(flPoints*0.5f, bKilledVictim?STYLE_SOUND_LARGE:STYLE_SOUND_NONE, ANNOUNCEMENT_GRENADE_KILL, STYLE_POINT_STYLISH);
