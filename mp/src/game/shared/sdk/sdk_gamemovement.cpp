@@ -30,8 +30,8 @@
 #include "tier0/memdbgon.h"
 
 ConVar	sdk_clamp_back_speed( "sdk_clamp_back_speed", "0.9", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_clamp_back_speed_min( "sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_speed( "sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_clamp_back_speed_min("sdk_clamp_back_speed_min", "100", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar  sdk_dive_speed("sdk_dive_speed", "330", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 ConVar sdk_slidetime("sdk_slidetime", "1.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 #ifdef CLIENT_DLL
@@ -524,7 +524,7 @@ void CSDKGameMovement::WalkMove( void )
 
 	
 	// Now reduce their backwards speed to some percent of max, if they are travelling backwards unless they are under some minimum
-	if ( sdk_clamp_back_speed.GetFloat() < 1.0 && VectorLength( mv->m_vecVelocity ) > sdk_clamp_back_speed_min.GetFloat() )
+	if (sdk_clamp_back_speed.GetFloat() < 1.0 && VectorLength(mv->m_vecVelocity) > sdk_clamp_back_speed_min.GetFloat())
 	{
 		float flDot = DotProduct( vecForward, mv->m_vecVelocity );
 
@@ -536,7 +536,7 @@ void CSDKGameMovement::WalkMove( void )
 
 			// clamp the back move vector if it is faster than max
 			float flBackSpeed = VectorLength( vecBackMove );
-			float flMaxBackSpeed = ( mv->m_flMaxSpeed * sdk_clamp_back_speed.GetFloat() );
+			float flMaxBackSpeed = (mv->m_flMaxSpeed * sdk_clamp_back_speed.GetFloat());
 
 			if ( flBackSpeed > flMaxBackSpeed )
 			{

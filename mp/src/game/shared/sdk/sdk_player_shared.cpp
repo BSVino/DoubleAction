@@ -965,13 +965,13 @@ bool CSDKPlayerShared::CanDive() const
 }
 
 ConVar  sdk_dive_height( "sdk_dive_height", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_gravity( "sdk_dive_gravity", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_gravity("sdk_dive_gravity", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
-ConVar  sdk_dive_height_high( "sdk_dive_height_high", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_height_high("sdk_dive_height_high", "200", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
-ConVar  sdk_dive_speed_adrenaline( "sdk_dive_speed_adrenaline", "500", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_height_adrenaline( "sdk_dive_height_adrenaline", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-ConVar  sdk_dive_gravity_adrenaline( "sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
+ConVar  sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline", "500", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar  sdk_dive_height_adrenaline("sdk_dive_height_adrenaline", "150", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar  sdk_dive_gravity_adrenaline("sdk_dive_gravity_adrenaline", "0.6", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
 
@@ -1023,18 +1023,18 @@ Vector CSDKPlayerShared::StartDiving()
 	if (!bWasOnGround)
 		flDiveHeight = sdk_dive_height_high.GetFloat();
 
-	float flRatio = sdk_dive_height_adrenaline.GetFloat()/flDiveHeight;
+	float flRatio = sdk_dive_height_adrenaline.GetFloat() / flDiveHeight;
 	float flModifier = (flRatio - 1)/2;
 
 	flDiveHeight = ModifySkillValue (flDiveHeight, flModifier, SKILL_ATHLETIC);
 
-	flRatio = sdk_dive_gravity_adrenaline.GetFloat()/sdk_dive_gravity.GetFloat();
+	flRatio = sdk_dive_gravity_adrenaline.GetFloat() / sdk_dive_gravity.GetFloat();
 	flModifier = (flRatio - 1)/2;
 
 	m_pOuter->SetGravity(ModifySkillValue(sdk_dive_gravity.GetFloat(), flModifier, SKILL_ATHLETIC));
 
 	ConVarRef sdk_dive_speed("sdk_dive_speed");
-	flRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+	flRatio = sdk_dive_speed_adrenaline.GetFloat() / sdk_dive_speed.GetFloat();
 	flModifier = (flRatio - 1)/2;
 
 	return m_vecDiveDirection.Get() * (ModifySkillValue(sdk_dive_speed.GetFloat(), flModifier, SKILL_ATHLETIC) * flSpeedFraction) + Vector(0, 0, flDiveHeight);
@@ -1448,7 +1448,7 @@ float CSDKPlayer::GetPlayerMaxSpeed(bool bDucking)
 		ConVarRef sdk_dive_speed_adrenaline("sdk_dive_speed_adrenaline");
 		ConVarRef sdk_dive_speed("sdk_dive_speed");
 
-		float flSpeedRatio = sdk_dive_speed_adrenaline.GetFloat()/sdk_dive_speed.GetFloat();
+		float flSpeedRatio = sdk_dive_speed_adrenaline.GetFloat() / sdk_dive_speed.GetFloat();
 		flSpeedRatio -= 1; // 0 means unchanged.
 		flSpeedRatio /= 2; // It gets doubled when the skill is on.
 

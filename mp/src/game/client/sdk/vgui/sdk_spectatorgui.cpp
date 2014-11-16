@@ -520,15 +520,15 @@ bool CSDKMapOverview::CanPlayerBeSeen( MapPlayer_t *player )
 	if (localPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 		return BaseClass::CanPlayerBeSeen(player);
 
-	SDKMapPlayer_t *sdkPlayer = GetSDKInfoForPlayer(player);
+	SDKMapPlayer_t *SDKPlayer = GetSDKInfoForPlayer(player);
 		
-	if ( !sdkPlayer )
+	if ( !SDKPlayer )
 		return false;
 
 	if( player->health <= 0 )
 	{
 		// Have to be under the overriden icon time to draw when dead.
-		if ( sdkPlayer->overrideExpirationTime == -1  ||  sdkPlayer->overrideExpirationTime <= gpGlobals->curtime )
+		if ( SDKPlayer->overrideExpirationTime == -1  ||  SDKPlayer->overrideExpirationTime <= gpGlobals->curtime )
 			return false;
 	}
 	

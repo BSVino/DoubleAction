@@ -445,7 +445,7 @@ bool C_SDKRagdoll::TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, t
 void FX_BloodSpray( const Vector &origin, const Vector &normal, float scale, unsigned char r, unsigned char g, unsigned char b, int flags );
 void C_SDKRagdoll::ImpactTrace( trace_t *pTrace, int iDamageType, char *pCustomImpactName )
 {
-//	DevMsg("C_SDKRagDoll::ImpactTrace: %i\n", iDamageType);
+//	DevMsg("C_SDKRagdoll::ImpactTrace: %i\n", iDamageType);
 	IPhysicsObject *pPhysicsObject = VPhysicsGetObject();
 
 	if( !pPhysicsObject )
