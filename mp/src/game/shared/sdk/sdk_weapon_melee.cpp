@@ -74,7 +74,12 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 	if ( pPlayer == NULL )
 		return;
 
-	if (IsThrowingGrenade())
+	if (IsDoingDrugs())
+	{
+		if (MaintainDoDrugs())
+			return;
+	}
+	else if (IsThrowingGrenade())
 	{
 		if (MaintainGrenadeToss())
 			return;

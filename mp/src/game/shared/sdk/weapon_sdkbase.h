@@ -108,7 +108,15 @@ public:
 	virtual float     GetGrenadeThrowEnd() const;               // What time does the weapon finish re-deploying
 	virtual void      GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QAngle& angThrow);
 
-	virtual void			AddViewKick( void );	// Add in the view kick for the weapon
+	virtual bool      IsDoingDrugs() const { return m_flDoDrugsStart > 0; }
+	virtual void      StartDoDrugs();
+	virtual bool      MaintainDoDrugs();
+	virtual float     GetDoDrugsStart() const { return m_flDoDrugsStart; }
+	virtual float     GetDrugsHolsterTime() const; // What time does the weapon finish holstering
+	virtual float     GetDrugsDeployTime() const;  // What time does the weapon start re-deploying
+	virtual float     GetDoDrugsEnd() const;       // What time does the weapon finish re-deploying
+
+	virtual void			AddViewKick(void);	// Add in the view kick for the weapon
 	virtual void			AddMeleeViewKick();
 
 	virtual bool			CanBeSelected( void );
@@ -226,6 +234,9 @@ private:
 
 	CNetworkVar(float, m_flGrenadeThrowStart);
 	bool m_bGrenadeThrown;
+
+	CNetworkVar(float, m_flDoDrugsStart);
+	bool m_bDrugsDone;
 
 	CSDKPlayer *m_pPrevOwner;
 

@@ -185,6 +185,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 
 	SendPropEHandle(SENDINFO(m_hUseEntity)),
 
+	SendPropFloat(SENDINFO(m_flDrugsLeft)),
+
 	SendPropArray3(SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable(SENDINFO_DT(m_aLoadout), &REFERENCE_SEND_TABLE(DT_Loadout))),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
@@ -239,7 +241,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 
-	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_iSlowMoType), 4, SPROP_UNSIGNED),
 	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
 	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
@@ -995,13 +997,17 @@ void CSDKPlayer::GiveDefaultItems()
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 				if (pInfo)
 				{
-					if (!FStrEq(pInfo->szAmmo1, "grenades"))
-						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
-					else
+					if (FStrEq(pInfo->szAmmo1, "grenades"))
 					{
 						bHasGrenade = true;
-						CBasePlayer::GiveAmmo( m_aLoadout[i].m_iCount-1, "grenades");
+						CBasePlayer::GiveAmmo(m_aLoadout[i].m_iCount - 1, "grenades");
 					}
+					else if (FStrEq(pInfo->szAmmo1, "drugs"))
+					{
+						CBasePlayer::GiveAmmo(m_aLoadout[i].m_iCount - 1, "drugs");
+					}
+					else
+						CBasePlayer::GiveAmmo(pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 				}
 			}
 		}
@@ -1153,6 +1159,7 @@ void CSDKPlayer::Spawn()
 	pl.deadflag = false;
 
 	m_flStyleSkillCharge = 0;
+	m_flDrugsLeft = 0;
 
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
@@ -1420,6 +1427,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
+
+	m_flDrugsLeft = 0;
 
 	// disallow suicide for 10 seconds
 	m_flNextSuicideTime = GetCurrentTime() + 10.0f;
@@ -2200,34 +2209,6 @@ void CSDKPlayer::SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject)
 	MessageEnd();
 }
 
-int CSDKPlayer::TakeHealth( float flHealth, int bitsDamageType )
-{
-	if ( !edict() || m_takedamage < DAMAGE_YES )
-		return 0;
-
-	int iMax = GetMaxHealth();
-
-	float flMultiplier = 1.5f;
-
-	if (IsStyleSkillActive(SKILL_RESILIENT))
-		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
-
-// heal
-	if ( m_iHealth >= iMax*flMultiplier )
-		return 0;
-
-	const int oldHealth = m_iHealth;
-
-	m_iHealth += flHealth;
-
-	if (m_iHealth > iMax*flMultiplier)
-		m_iHealth = iMax*flMultiplier;
-
-	return m_iHealth - oldHealth;
-
-	// Don't call parent class, we override with special behavior
-}
-
 ConVar da_resilient_health_bonus( "da_resilient_health_bonus", "50", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 
 int CSDKPlayer::GetMaxHealth() const
@@ -2581,7 +2562,19 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 		return;
 	}
 
-	pWeapon->SetWeaponVisible( false );
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_DRUGS && GetAmmoCount(GetAmmoDef()->Index("drugs")) > 1)
+	{
+		CWeaponSDKBase *pGrenade = (CWeaponSDKBase*)Weapon_Create(pWeapon->GetName());
+		pGrenade->VPhysicsDestroyObject();
+		pGrenade->VPhysicsInitShadow(true, true);
+
+		SDKThrowWeaponInternal(pGrenade, vecForward, vecAngles, flDiameter);
+
+		RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
+		return;
+	}
+
+	pWeapon->SetWeaponVisible(false);
 	pWeapon->Holster(NULL);
 	pWeapon->SetPrevOwner(this);
 	Weapon_Detach( pWeapon );
@@ -2591,6 +2584,9 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	// Throwing the last grenade doesn't remove the ammo. Must remove it manually.
 	if (pWeapon->GetWeaponID() == SDK_WEAPON_GRENADE)
 		RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+
+	if (pWeapon->GetWeaponID() == SDK_WEAPON_DRUGS)
+		RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
 }
 
 void CSDKPlayer::SDKThrowWeaponInternal( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  )
@@ -3179,6 +3175,11 @@ void CSDKPlayer::AddToLoadout(SDKWeaponID eWeapon)
 
 	m_aLoadout.GetForModify(eWeapon).m_iCount++;
 
+	if (eWeapon == SDK_WEAPON_DRUGS)
+		m_aLoadout.GetForModify(SDK_WEAPON_GRENADE).m_iCount = 0;
+	else if (eWeapon == SDK_WEAPON_GRENADE)
+		m_aLoadout.GetForModify(SDK_WEAPON_DRUGS).m_iCount = 0;
+
 	CountLoadoutWeight();
 }
 
@@ -3218,7 +3219,7 @@ void CSDKPlayer::BuyRandom()
 	{
 		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
 	}
-	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || eWeapon == SDK_WEAPON_DRUGS || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
 
@@ -3227,13 +3228,22 @@ void CSDKPlayer::BuyRandom()
 	{
 		eWeapon = (SDKWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
 	}
-	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+	while (eWeapon == SDK_WEAPON_BRAWL || eWeapon == SDK_WEAPON_GRENADE || eWeapon == SDK_WEAPON_DRUGS || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
 
-	// Fill the rest up with grenades.
-	while (CanAddToLoadout(SDK_WEAPON_GRENADE))
-		AddToLoadout(SDK_WEAPON_GRENADE);
+	if (random->RandomInt(0, 1) == 0)
+	{
+		// Fill the rest up with grenades.
+		while (CanAddToLoadout(SDK_WEAPON_GRENADE))
+			AddToLoadout(SDK_WEAPON_GRENADE);
+	}
+	else
+	{
+		// Fill the rest up with drugs.
+		while (CanAddToLoadout(SDK_WEAPON_DRUGS))
+			AddToLoadout(SDK_WEAPON_DRUGS);
+	}
 }
 
 bool CSDKPlayer::PickRandomCharacter()
@@ -4077,6 +4087,15 @@ void CSDKPlayer::ActivateMeter()
 		SendNotice(NOTICE_ATHLETIC);
 	else if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
 		SendNotice(NOTICE_BOUNCER);
+}
+
+void CSDKPlayer::BeginDrugs()
+{
+	CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(SDK_WEAPON_DRUGS);
+	if (!pInfo)
+		return;
+
+	m_flDrugsLeft = pInfo->m_iDamage;
 }
 
 void CSDKPlayer::SetSlowMoType(int iType)

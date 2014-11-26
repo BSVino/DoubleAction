@@ -55,6 +55,8 @@ void CHudAmmo::ApplySchemeSettings( IScheme *scheme )
 	m_pBuckshotRound = gHUD.GetIcon("round_buckshot");
 	m_pGrenadeIcon = gHUD.GetIcon("grenade_icon");
 	m_pGrenadeEmptyIcon = gHUD.GetIcon("grenade_empty_icon");
+	m_pDrugsIcon = gHUD.GetIcon("drugs_icon");
+	m_pDrugsEmptyIcon = gHUD.GetIcon("drugs_empty_icon");
 }
 
 //-----------------------------------------------------------------------------
@@ -373,25 +375,58 @@ void CHudAmmo::Paint()
 	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_TROLL)
 		iTotalGrenades = ConVarRef("da_max_grenades").GetInt();
 
+	int iDrugs = 0;
+	int iTotalDrugs = GetAmmoDef()->MaxCarry(GetAmmoDef()->Index("drugs"));
+
 	CWeaponSDKBase* pGrenade = pPlayer->FindWeapon(SDK_WEAPON_GRENADE);
 	if (pGrenade)
 		iGrenades = pPlayer->GetAmmoCount(pGrenade->GetPrimaryAmmoType());
 
-	if (m_pGrenadeIcon)
+	CWeaponSDKBase* pDrugs = pPlayer->FindWeapon(SDK_WEAPON_DRUGS);
+	if (pDrugs)
+		iDrugs = pPlayer->GetAmmoCount(pDrugs->GetPrimaryAmmoType());
+
+	static SDKWeaponID eShowAccessory = SDK_WEAPON_NONE;
+
+	if (iGrenades)
+		eShowAccessory = SDK_WEAPON_GRENADE;
+	else if (iDrugs)
+		eShowAccessory = SDK_WEAPON_DRUGS;
+
+	int iAccessoryNumber;
+	int iAccessoryTotal;
+	CHudTexture* pAccessoryIcon;
+	CHudTexture* pAccessoryEmptyIcon;
+	if (eShowAccessory == SDK_WEAPON_GRENADE)
 	{
-		for (int i = 0; i < iGrenades; i++)
+		iAccessoryNumber = iGrenades;
+		iAccessoryTotal = iTotalGrenades;
+		pAccessoryIcon = m_pGrenadeIcon;
+		pAccessoryEmptyIcon = m_pGrenadeEmptyIcon;
+	}
+	else
+	{
+		iAccessoryNumber = iDrugs;
+		iAccessoryTotal = iTotalDrugs;
+		pAccessoryIcon = m_pDrugsIcon;
+		pAccessoryEmptyIcon = m_pDrugsEmptyIcon;
+	}
+
+	if (pAccessoryIcon)
+	{
+		for (int i = 0; i < iAccessoryNumber; i++)
 		{
 			Vector4D vecGrenade = GetGrenadePosition(i);
-			m_pGrenadeIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
+			pAccessoryIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
 		}
 	}
 
-	if (m_pGrenadeEmptyIcon)
+	if (pAccessoryEmptyIcon)
 	{
-		for (int i = iGrenades; i < iTotalGrenades; i++)
+		for (int i = iAccessoryNumber; i < iAccessoryTotal; i++)
 		{
 			Vector4D vecGrenade = GetGrenadePosition(i);
-			m_pGrenadeEmptyIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
+			pAccessoryEmptyIcon->DrawSelf(vecGrenade.x, vecGrenade.y, vecGrenade.z, vecGrenade.w, Color(255, 255, 255, 255));
 		}
 	}
 

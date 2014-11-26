@@ -64,6 +64,7 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	RecvPropBool(RECVINFO(m_bShootRight)),
 
 	RecvPropFloat( RECVINFO( m_flGrenadeThrowStart ) ),
+	RecvPropFloat(RECVINFO(m_flDoDrugsStart)),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
@@ -83,7 +84,8 @@ BEGIN_NETWORK_TABLE( CWeaponSDKBase, DT_WeaponSDKBase )
 	SendPropInt(SENDINFO(m_iRightClip)),
 	SendPropBool(SENDINFO(m_bShootRight)),
 
-	SendPropFloat( SENDINFO( m_flGrenadeThrowStart ) ),
+	SendPropFloat(SENDINFO(m_flGrenadeThrowStart)),
+	SendPropFloat(SENDINFO(m_flDoDrugsStart)),
 #endif
 END_NETWORK_TABLE()
 
@@ -151,6 +153,7 @@ CWeaponSDKBase::CWeaponSDKBase()
 #endif
 
 	m_flGrenadeThrowStart = -1;
+	m_flDoDrugsStart = -1;
 
 #ifdef CLIENT_DLL
 	m_flUseHighlight = m_flUseHighlightGoal = 0;
@@ -896,10 +899,10 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 		QAngle angThrow;
 		GetGrenadeThrowVectors(vecSrc, vecThrow, angThrow);
 
-		CGrenadeProjectile::Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this, GRENADE_TIMER );
+		CGrenadeProjectile::Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), pPlayer, this, GRENADE_TIMER);
 
-		if( pPlayer )
-			pPlayer->RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+		if (pPlayer)
+			pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("grenades"));
 #endif
 	}
 
@@ -955,6 +958,105 @@ void CWeaponSDKBase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QA
 	vecSrc += vForward * 16;
 
 	vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
+}
+
+ConVar da_do_drugs_time("da_do_drugs_time", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long does it take to do drugs?");
+ConVar da_drugs_lerp_time("da_drugs_lerp_time", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?");
+
+
+void CWeaponSDKBase::StartDoDrugs()
+{
+	m_flDoDrugsStart = GetCurrentTime();
+
+	CSDKPlayer* pOwner = ToSDKPlayer(GetOwner());
+
+	if (m_bInReload && pOwner)
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pOwner->GetViewModel(m_nViewModelIndex));
+		if (vm)
+			vm->PauseAnimation();
+	}
+
+	// Don't let weapon idle interfere in the middle of a throw!
+	SetWeaponIdleTime(GetCurrentTime() + da_do_drugs_time.GetFloat());
+
+	if (m_bInReload)
+	{
+		m_flReloadEndTime += da_do_drugs_time.GetFloat() * 0.7f;
+		m_flNextPrimaryAttack = m_flReloadEndTime;
+	}
+	else
+		m_flNextPrimaryAttack = GetCurrentTime() + da_do_drugs_time.GetFloat();
+
+	m_flNextSecondaryAttack = GetCurrentTime() + da_do_drugs_time.GetFloat();
+
+	m_bDrugsDone = false;
+
+	pOwner->DoAnimationEvent(PLAYERANIMEVENT_GRENADE1_THROW);
+}
+
+bool CWeaponSDKBase::MaintainDoDrugs()
+{
+	if (GetCurrentTime() >= GetDoDrugsEnd())
+	{
+		m_flDoDrugsStart = -1;
+		return false;
+	}
+
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+	if (!pPlayer)
+		return false;
+
+	if (!pPlayer->IsInThirdPerson())
+	{
+		SetViewModel();
+		SetModel(GetViewModel());
+	}
+
+	if (pPlayer && GetCurrentTime() > GetDrugsDeployTime())
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pPlayer->GetViewModel(m_nViewModelIndex));
+		if (vm && vm->IsAnimationPaused())
+			// Technically unpausing it here instead of after the throw means we'll lose a tad of it,
+			// so we rewind it a bit.
+			vm->UnpauseAnimation(da_drugs_lerp_time.GetFloat());
+	}
+
+	if (!m_bDrugsDone && GetCurrentTime() > GetDrugsHolsterTime())
+	{
+		m_bDrugsDone = true;
+
+		pPlayer->Instructor_LessonLearned("drugs");
+
+		SendWeaponAnim(ACT_VM_THROW);
+
+#ifdef GAME_DLL
+		pPlayer->BeginDrugs();
+
+		if (pPlayer)
+			pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
+#endif
+	}
+
+	return true;
+}
+
+float CWeaponSDKBase::GetDrugsHolsterTime() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_drugs_lerp_time.GetFloat();
+}
+
+float CWeaponSDKBase::GetDrugsDeployTime() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_do_drugs_time.GetFloat() - da_drugs_lerp_time.GetFloat();
+}
+
+float CWeaponSDKBase::GetDoDrugsEnd() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_do_drugs_time.GetFloat();
 }
 
 void CWeaponSDKBase::AddViewKick()
@@ -1079,6 +1181,7 @@ void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Ve
 
 CMaterialReference g_hWeaponArrow;
 CMaterialReference g_hGrenadeIcon;
+CMaterialReference g_hDrugsIcon;
 int CWeaponSDKBase::DrawModel(int flags)
 {
 	if (flags & STUDIO_SSAODEPTHTEXTURE)
@@ -1105,6 +1208,8 @@ int CWeaponSDKBase::DrawModel(int flags)
 		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
 	if (!g_hGrenadeIcon.IsValid())
 		g_hGrenadeIcon.Init( "particle/grenadeicon.vmt", TEXTURE_GROUP_OTHER );
+	if (!g_hDrugsIcon.IsValid())
+		g_hDrugsIcon.Init( "particle/drugsicon.vmt", TEXTURE_GROUP_OTHER );
 
 	int iReturn = BaseClass::DrawModel(flags);
 
@@ -1156,6 +1261,9 @@ int CWeaponSDKBase::DrawModel(int flags)
 
 	if (GetWeaponID() == SDK_WEAPON_GRENADE)
 		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, flAlpha);
+
+	if (GetWeaponID() == SDK_WEAPON_DRUGS)
+		DrawIconQuad(g_hDrugsIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, flAlpha);
 
 	return iReturn;
 }
@@ -1414,12 +1522,21 @@ void CWeaponSDKBase::ItemPostFrame( void )
 
 	bool bFired = false;
 
-	if (IsThrowingGrenade())
+	bool bHasGrenadeAmmo = !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades"));
+	bool bGrenadeIsDrugs = !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs"));
+	bHasGrenadeAmmo |= bGrenadeIsDrugs;
+
+	if (IsDoingDrugs())
+	{
+		if (MaintainDoDrugs())
+			return;
+	}
+	else if (IsThrowingGrenade())
 	{
 		if (MaintainGrenadeToss())
 			return;
 	}
-	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && bHasGrenadeAmmo && pPlayer->CanAttack())
 	{
 		bool bAllow = (m_flNextPrimaryAttack < GetCurrentTime());
 		if (m_bInReload)
@@ -1427,7 +1544,10 @@ void CWeaponSDKBase::ItemPostFrame( void )
 
 		if (bAllow)
 		{
-			StartGrenadeToss();
+			if (bGrenadeIsDrugs)
+				StartDoDrugs();
+			else
+				StartGrenadeToss();
 			return;
 		}
 	}
@@ -1621,7 +1741,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			if ( HasPrimaryAmmo() )
 				return;
 
-			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon())
+			if ((GetWeaponID() == SDK_WEAPON_GRENADE || GetWeaponID() == SDK_WEAPON_DRUGS) && pPlayer->GetActiveSDKWeapon())
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 			}
@@ -1652,7 +1772,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			Holster(NULL);
 		else
 		{
-			if (GetWeaponID() == SDK_WEAPON_GRENADE)
+			if (GetWeaponID() == SDK_WEAPON_GRENADE || GetWeaponID() == SDK_WEAPON_DRUGS)
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 				if (!pPlayer->GetActiveSDKWeapon() || pPlayer->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL || pPlayer->GetActiveSDKWeapon() == this)
