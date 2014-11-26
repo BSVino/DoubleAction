@@ -401,7 +401,7 @@ void CInstructor::DisplayLesson(const CUtlString& sLesson)
 			return;
 	}
 
-	if (sLesson.Length() == 0 || m_apLessons.Find(sLesson) == -1)
+	if (sLesson.Length() == 0 || m_apLessons.Find(sLesson) == m_apLessons.InvalidIndex())
 	{
 		int iLesson = m_apLessons.Find(m_sCurrentLesson);
 		if (m_apLessons[iLesson] && m_apLessons[iLesson]->m_bKillOnFinish)
@@ -655,8 +655,8 @@ void C_DAPlayer::Instructor_LessonLearned(const CUtlString& sLesson)
 		m_pInstructor->Initialize();
 
 	int iLesson = m_apLessonProgress.Find(sLesson);
-	Assert(iLesson != -1);
-	if (iLesson == -1)
+	Assert(iLesson != m_apLessonProgress.InvalidIndex());
+	if (iLesson == m_apLessonProgress.InvalidIndex())
 		return;
 
 	CLessonProgress* pLessonProgress = &m_apLessonProgress[iLesson];
@@ -735,8 +735,8 @@ void C_DAPlayer::Instructor_LessonShowed(const CUtlString& sLesson)
 		m_pInstructor->Initialize();
 
 	int iLesson = m_apLessonProgress.Find(sLesson);
-	Assert(iLesson != -1);
-	if (iLesson == -1)
+	Assert(iLesson != m_apLessonProgress.InvalidIndex());
+	if (iLesson == m_apLessonProgress.InvalidIndex())
 		return;
 
 	CLessonProgress* pLessonProgress = &m_apLessonProgress[iLesson];
@@ -803,8 +803,8 @@ int C_DAPlayer::Instructor_GetLessonTrainings(const CUtlString& sLesson)
 bool C_DAPlayer::Instructor_IsLessonValid(const CUtlString& sLesson)
 {
 	int iLesson = m_apLessonProgress.Find(sLesson);
-	Assert(iLesson != -1);
-	if (iLesson == -1)
+	Assert(iLesson != m_apLessonProgress.InvalidIndex());
+	if (iLesson == m_apLessonProgress.InvalidIndex())
 		return false;
 
 	return Instructor_IsLessonValid(&m_apLessonProgress[iLesson]);
