@@ -183,6 +183,8 @@ BEGIN_SEND_TABLE_NOBASE( CDAPlayer, DT_DALocalPlayerExclusive )
 
 	SendPropEHandle(SENDINFO(m_hUseEntity)),
 
+	SendPropFloat(SENDINFO(m_flDrugsLeft)),
+
 	SendPropArray3(SENDINFO_ARRAY3(m_aLoadout), SendPropDataTable(SENDINFO_DT(m_aLoadout), &REFERENCE_SEND_TABLE(DT_Loadout))),
 	SendPropInt( SENDINFO( m_iLoadoutWeight ), 8, SPROP_UNSIGNED ),
 END_SEND_TABLE()
@@ -237,7 +239,7 @@ IMPLEMENT_SERVERCLASS_ST( CDAPlayer, DT_DAPlayer )
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 
-	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_iSlowMoType), 4, SPROP_UNSIGNED),
 	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
 	SendPropFloat		( SENDINFO( m_flSlowMoSeconds ) ),
 	SendPropTime		( SENDINFO( m_flSlowMoTime ) ),
@@ -989,13 +991,17 @@ void CDAPlayer::GiveDefaultItems()
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((DAWeaponID)i);
 				if (pInfo)
 				{
-					if (!FStrEq(pInfo->szAmmo1, "grenades"))
-						CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
-					else
+					if (FStrEq(pInfo->szAmmo1, "grenades"))
 					{
 						bHasGrenade = true;
-						CBasePlayer::GiveAmmo( m_aLoadout[i].m_iCount-1, "grenades");
+						CBasePlayer::GiveAmmo(m_aLoadout[i].m_iCount - 1, "grenades");
 					}
+					else if (FStrEq(pInfo->szAmmo1, "drugs"))
+					{
+						CBasePlayer::GiveAmmo(m_aLoadout[i].m_iCount - 1, "drugs");
+					}
+					else
+						CBasePlayer::GiveAmmo(pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 				}
 			}
 		}
@@ -1142,6 +1148,7 @@ void CDAPlayer::Spawn()
 	pl.deadflag = false;
 
 	m_flStyleSkillCharge = 0;
+	m_flDrugsLeft = 0;
 
 	m_iSlowMoType = SLOWMO_NONE;
 	m_bHasSuperSlowMo = false;
@@ -1962,7 +1969,7 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
 
-	if (bKilledVictim && pWeaponInfo->m_flKillBonus)
+	if (bKilledVictim && pWeaponInfo && pWeaponInfo->m_flKillBonus)
 	{
 		AddStylePoints(pWeaponInfo->m_flKillBonus, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_STYLISH);
 	}
@@ -2182,34 +2189,6 @@ void CDAPlayer::SendBroadcastNotice(notice_t eNotice, CDAPlayer* pSubject)
 		else
 			WRITE_BYTE( 0 );
 	MessageEnd();
-}
-
-int CDAPlayer::TakeHealth( float flHealth, int bitsDamageType )
-{
-	if ( !edict() || m_takedamage < DAMAGE_YES )
-		return 0;
-
-	int iMax = GetMaxHealth();
-
-	float flMultiplier = 1.5f;
-
-	if (IsStyleSkillActive(SKILL_RESILIENT))
-		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
-
-// heal
-	if ( m_iHealth >= iMax*flMultiplier )
-		return 0;
-
-	const int oldHealth = m_iHealth;
-
-	m_iHealth += flHealth;
-
-	if (m_iHealth > iMax*flMultiplier)
-		m_iHealth = iMax*flMultiplier;
-
-	return m_iHealth - oldHealth;
-
-	// Don't call parent class, we override with special behavior
 }
 
 ConVar da_resilient_health_bonus( "da_resilient_health_bonus", "50", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
@@ -2563,7 +2542,19 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 		return;
 	}
 
-	pWeapon->SetWeaponVisible( false );
+	if (pWeapon->GetWeaponID() == DA_WEAPON_DRUGS && GetAmmoCount(GetAmmoDef()->Index("drugs")) > 1)
+	{
+		CWeaponDABase *pGrenade = (CWeaponDABase*)Weapon_Create(pWeapon->GetName());
+		pGrenade->VPhysicsDestroyObject();
+		pGrenade->VPhysicsInitShadow(true, true);
+
+		SDKThrowWeaponInternal(pGrenade, vecForward, vecAngles, flDiameter);
+
+		RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
+		return;
+	}
+
+	pWeapon->SetWeaponVisible(false);
 	pWeapon->Holster(NULL);
 	pWeapon->SetPrevOwner(this);
 	Weapon_Detach( pWeapon );
@@ -2573,6 +2564,9 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 	// Throwing the last grenade doesn't remove the ammo. Must remove it manually.
 	if (pWeapon->GetWeaponID() == DA_WEAPON_GRENADE)
 		RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+
+	if (pWeapon->GetWeaponID() == DA_WEAPON_DRUGS)
+		RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
 }
 
 void CDAPlayer::SDKThrowWeaponInternal( CWeaponDABase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  )
@@ -3161,6 +3155,11 @@ void CDAPlayer::AddToLoadout(DAWeaponID eWeapon)
 
 	m_aLoadout.GetForModify(eWeapon).m_iCount++;
 
+	if (eWeapon == DA_WEAPON_DRUGS)
+		m_aLoadout.GetForModify(DA_WEAPON_GRENADE).m_iCount = 0;
+	else if (eWeapon == DA_WEAPON_GRENADE)
+		m_aLoadout.GetForModify(DA_WEAPON_DRUGS).m_iCount = 0;
+
 	CountLoadoutWeight();
 }
 
@@ -3200,7 +3199,7 @@ void CDAPlayer::BuyRandom()
 	{
 		eWeapon = (DAWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
 	}
-	while (eWeapon == DA_WEAPON_BRAWL || eWeapon == DA_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+	while (eWeapon == DA_WEAPON_BRAWL || eWeapon == DA_WEAPON_GRENADE || eWeapon == DA_WEAPON_DRUGS || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
 
@@ -3209,13 +3208,22 @@ void CDAPlayer::BuyRandom()
 	{
 		eWeapon = (DAWeaponID)random->RandomInt(WEAPON_NONE+1, WEAPON_MAX-1);
 	}
-	while (eWeapon == DA_WEAPON_BRAWL || eWeapon == DA_WEAPON_GRENADE || !CanAddToLoadout(eWeapon));
+	while (eWeapon == DA_WEAPON_BRAWL || eWeapon == DA_WEAPON_GRENADE || eWeapon == DA_WEAPON_DRUGS || !CanAddToLoadout(eWeapon));
 
 	AddToLoadout(eWeapon);
 
-	// Fill the rest up with grenades.
-	while (CanAddToLoadout(DA_WEAPON_GRENADE))
-		AddToLoadout(DA_WEAPON_GRENADE);
+	if (random->RandomInt(0, 1) == 0)
+	{
+		// Fill the rest up with grenades.
+		while (CanAddToLoadout(DA_WEAPON_GRENADE))
+			AddToLoadout(DA_WEAPON_GRENADE);
+	}
+	else
+	{
+		// Fill the rest up with drugs.
+		while (CanAddToLoadout(DA_WEAPON_DRUGS))
+			AddToLoadout(DA_WEAPON_DRUGS);
+	}
 }
 
 bool CDAPlayer::PickRandomCharacter()
@@ -4057,6 +4065,15 @@ void CDAPlayer::ActivateMeter()
 		SendNotice(NOTICE_ATHLETIC);
 	else if (m_Shared.m_iStyleSkill == SKILL_BOUNCER)
 		SendNotice(NOTICE_BOUNCER);
+}
+
+void CDAPlayer::BeginDrugs()
+{
+	CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo(DA_WEAPON_DRUGS);
+	if (!pInfo)
+		return;
+
+	m_flDrugsLeft = pInfo->m_iDamage;
 }
 
 void CDAPlayer::SetSlowMoType(int iType)

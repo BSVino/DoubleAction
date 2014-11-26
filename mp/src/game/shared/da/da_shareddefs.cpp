@@ -88,6 +88,7 @@ static const char * s_WeaponAliasInfo[] =
 	"beretta",  // DA_WEAPON_BERETTA
 	"plan_d",   // DA_WEAPON_PLAN_D
 	"grenade",	// DA_WEAPON_GRENADE
+	"drugs",	// DA_WEAPON_DRUGS
 	"brawl",	// DA_WEAPON_BRAWL
 	NULL,		// WEAPON_NONE
 };

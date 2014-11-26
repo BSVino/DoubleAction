@@ -61,6 +61,8 @@ private:
 	CHudTexture* m_pBuckshotRound;
 	CHudTexture* m_pGrenadeIcon;
 	CHudTexture* m_pGrenadeEmptyIcon;
+	CHudTexture* m_pDrugsIcon;
+	CHudTexture* m_pDrugsEmptyIcon;
 
 	class CFlyingRound
 	{

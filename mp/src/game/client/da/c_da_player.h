@@ -134,6 +134,8 @@ public:
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
 
+	int TakeHealth(float flHealth, int bitsDamageType);
+
 	virtual void ItemPostFrame( void );
 
 	void FireBullet( 
@@ -348,6 +350,8 @@ private:
 	float m_flStylePoints;
 	float m_flStyleSkillCharge;
 	float m_currentAlphaVal;
+
+	float m_flDrugsLeft;
 
 	class CSDKSoundEvent
 	{

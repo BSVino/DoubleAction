@@ -56,6 +56,41 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+int CDAPlayer::TakeHealth(float flHealth, int bitsDamageType)
+{
+#ifndef CLIENT_DLL
+	if (!edict())
+		return 0;
+#endif
+
+	if (m_takedamage < DAMAGE_YES)
+		return 0;
+
+	int iMax = GetMaxHealth();
+
+	float flMultiplier = 1.5f;
+
+	if (IsStyleSkillActive(SKILL_RESILIENT))
+		flMultiplier = 1;	// You already get double health with second wind, let's not make it triple.
+
+	// heal
+	if (m_iHealth >= iMax*flMultiplier)
+		return 0;
+
+	const int oldHealth = m_iHealth;
+
+	m_iHealth += flHealth;
+
+	if (m_iHealth > iMax*flMultiplier)
+		m_iHealth = iMax*flMultiplier;
+
+	return m_iHealth - oldHealth;
+
+	// Don't call parent class, we override with special behavior
+}
+
+ConVar da_drugs_per_second("da_drugs_per_second", "20", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
 // Have to override all of ItemPostFrame to s/gpGlobals->curtime/GetCurrentTime()/
 void CDAPlayer::ItemPostFrame()
 {
@@ -66,6 +101,17 @@ void CDAPlayer::ItemPostFrame()
 
 	Assert(!GetVehicle());
 	// If we ever add vehicles, add the vehicle bits from CBasePlayer::ItemPostFrame()
+
+	if (m_flDrugsLeft)
+	{
+		float flDrugs = m_flDrugsLeft;
+		m_flDrugsLeft = Approach(0, m_flDrugsLeft, da_drugs_per_second.GetFloat()*gpGlobals->frametime);
+		float flDrugsUsed = flDrugs - m_flDrugsLeft;
+		TakeHealth(flDrugsUsed, 0);
+
+		if (m_flDrugsLeft <= 0)
+			m_flDrugsLeft = 0;
+	}
 
 	// check if the player is using something
 	if ( GetUseEntity() != NULL )
@@ -317,7 +363,7 @@ bool CDAPlayer::PlayerUse()
 			if (!pWeapon)
 				continue;
 
-			if (pWeapon->GetWeaponID() != DA_WEAPON_GRENADE)
+			if (pWeapon->GetWeaponID() != DA_WEAPON_GRENADE && pWeapon->GetWeaponID() != DA_WEAPON_DRUGS)
 				continue;
 
 			// If we're full up on grenades, pass over to whatever other weapons are lying around.

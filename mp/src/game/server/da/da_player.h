@@ -318,6 +318,8 @@ public:
 
 	void ActivateMeter();
 
+	void BeginDrugs();
+
 	bool SetCharacter(const char* pszCharacter);
 
 	void ActivateSlowMo();
@@ -384,6 +386,8 @@ private:
 	// Universal Meter
 	CNetworkVar(float, m_flStylePoints);
 	CNetworkVar(float, m_flStyleSkillCharge);
+
+	CNetworkVar(float, m_flDrugsLeft);
 
 	CDAPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );

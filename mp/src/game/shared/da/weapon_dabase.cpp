@@ -896,10 +896,20 @@ bool CWeaponDABase::MaintainGrenadeToss()
 		QAngle angThrow;
 		GetGrenadeThrowVectors(vecSrc, vecThrow, angThrow);
 
-		CGrenadeProjectile::Create( vecSrc, vec3_angle, vecThrow, AngularImpulse(600,random->RandomInt(-1200,1200),0), pPlayer, this, GRENADE_TIMER );
+		if (pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs")))
+		{
+			pPlayer->BeginDrugs();
 
-		if( pPlayer )
-			pPlayer->RemoveAmmo( 1, GetAmmoDef()->Index("grenades") );
+			if (pPlayer)
+				pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
+		}
+		else
+		{
+			CGrenadeProjectile::Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), pPlayer, this, GRENADE_TIMER);
+
+			if (pPlayer)
+				pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("grenades"));
+		}
 #endif
 	}
 
@@ -1079,6 +1089,7 @@ void DrawIconQuad(const CMaterialReference& m, const Vector& vecOrigin, const Ve
 
 CMaterialReference g_hWeaponArrow;
 CMaterialReference g_hGrenadeIcon;
+CMaterialReference g_hDrugsIcon;
 int CWeaponDABase::DrawModel(int flags)
 {
 	if (flags & STUDIO_SSAODEPTHTEXTURE)
@@ -1105,6 +1116,8 @@ int CWeaponDABase::DrawModel(int flags)
 		g_hWeaponArrow.Init( "particle/weaponarrow.vmt", TEXTURE_GROUP_OTHER );
 	if (!g_hGrenadeIcon.IsValid())
 		g_hGrenadeIcon.Init( "particle/grenadeicon.vmt", TEXTURE_GROUP_OTHER );
+	if (!g_hDrugsIcon.IsValid())
+		g_hDrugsIcon.Init( "particle/drugsicon.vmt", TEXTURE_GROUP_OTHER );
 
 	int iReturn = BaseClass::DrawModel(flags);
 
@@ -1156,6 +1169,9 @@ int CWeaponDABase::DrawModel(int flags)
 
 	if (GetWeaponID() == DA_WEAPON_GRENADE)
 		DrawIconQuad(g_hGrenadeIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, flAlpha);
+
+	if (GetWeaponID() == DA_WEAPON_DRUGS)
+		DrawIconQuad(g_hDrugsIcon, vecOrigin + Vector(0, 0, 10), vecRight, vecUp, flSize, flAlpha);
 
 	return iReturn;
 }
@@ -1414,12 +1430,15 @@ void CWeaponDABase::ItemPostFrame( void )
 
 	bool bFired = false;
 
+	bool bHasGrenadeAmmo = !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades"));
+	bHasGrenadeAmmo |= !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs"));
+
 	if (IsThrowingGrenade())
 	{
 		if (MaintainGrenadeToss())
 			return;
 	}
-	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades")) && pPlayer->CanAttack())
+	else if ((pPlayer->m_nButtons & IN_ALT2) && !IsThrowingGrenade() && bHasGrenadeAmmo && pPlayer->CanAttack())
 	{
 		bool bAllow = (m_flNextPrimaryAttack < GetCurrentTime());
 		if (m_bInReload)
@@ -1621,7 +1640,7 @@ void CWeaponDABase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 			if ( HasPrimaryAmmo() )
 				return;
 
-			if (GetWeaponID() == DA_WEAPON_GRENADE && pPlayer->GetActiveDAWeapon() && pPlayer->GetActiveDAWeapon()->GetWeaponID() != DA_WEAPON_BRAWL)
+			if ((GetWeaponID() == DA_WEAPON_GRENADE || GetWeaponID() == DA_WEAPON_DRUGS) && pPlayer->GetActiveDAWeapon() && pPlayer->GetActiveDAWeapon()->GetWeaponID() != DA_WEAPON_BRAWL)
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 			}
@@ -1652,7 +1671,7 @@ void CWeaponDABase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 			Holster(NULL);
 		else
 		{
-			if (GetWeaponID() == DA_WEAPON_GRENADE && pPlayer->GetActiveDAWeapon() && pPlayer->GetActiveDAWeapon()->GetWeaponID() != DA_WEAPON_BRAWL)
+			if ((GetWeaponID() == DA_WEAPON_GRENADE || GetWeaponID() == DA_WEAPON_DRUGS) && pPlayer->GetActiveDAWeapon() && pPlayer->GetActiveDAWeapon()->GetWeaponID() != DA_WEAPON_BRAWL)
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 			}

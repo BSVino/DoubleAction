@@ -190,7 +190,9 @@ BEGIN_RECV_TABLE_NOBASE( C_DAPlayer, DT_DALocalPlayerExclusive )
 
 	RecvPropEHandle(RECVINFO(m_hUseEntity)),
 
-	RecvPropArray3( RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0],m_aLoadout),0, &REFERENCE_RECV_TABLE(DT_Loadout)) ),
+	RecvPropFloat(RECVINFO(m_flDrugsLeft)),
+
+	RecvPropArray3(RECVINFO_ARRAY(m_aLoadout), RecvPropDataTable(RECVINFO_DTNAME(m_aLoadout[0], m_aLoadout), 0, &REFERENCE_RECV_TABLE(DT_Loadout))),
 	RecvPropInt( RECVINFO( m_iLoadoutWeight ), 0, RecvProxy_Loadout ),
 END_RECV_TABLE()
 
@@ -221,7 +223,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_DAPlayer, DT_DAPlayer, CDAPlayer )
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
 	RecvPropFloat( RECVINFO(m_flStyleSkillCharge) ),
 
-	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
+	RecvPropInt(RECVINFO(m_iSlowMoType)),
 	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoSeconds ) ),
 	RecvPropFloat		( RECVINFO( m_flSlowMoTime ) ),

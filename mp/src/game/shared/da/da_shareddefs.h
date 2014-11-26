@@ -169,6 +169,7 @@ typedef enum
 
 	// Other
 	DA_WEAPON_GRENADE,
+	DA_WEAPON_DRUGS,
 	DA_WEAPON_BRAWL,
 
 	WEAPON_MAX,		// number of weapons weapon index
