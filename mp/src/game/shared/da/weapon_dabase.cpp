@@ -64,6 +64,7 @@ BEGIN_NETWORK_TABLE( CWeaponDABase, DT_WeaponDABase )
 	RecvPropBool(RECVINFO(shootright)),
 
 	RecvPropFloat( RECVINFO( m_flGrenadeThrowStart ) ),
+	RecvPropFloat(RECVINFO(m_flDoDrugsStart)),
 #else
 	SendPropExclude( "DT_BaseAnimating", "m_nNewSequenceParity" ),
 	SendPropExclude( "DT_BaseAnimating", "m_nResetEventsParity" ),
@@ -83,7 +84,8 @@ BEGIN_NETWORK_TABLE( CWeaponDABase, DT_WeaponDABase )
 	SendPropInt(SENDINFO(rightclip)),
 	SendPropBool(SENDINFO(shootright)),
 
-	SendPropFloat( SENDINFO( m_flGrenadeThrowStart ) ),
+	SendPropFloat(SENDINFO(m_flGrenadeThrowStart)),
+	SendPropFloat(SENDINFO(m_flDoDrugsStart)),
 #endif
 END_NETWORK_TABLE()
 
@@ -151,6 +153,7 @@ CWeaponDABase::CWeaponDABase()
 #endif
 
 	m_flGrenadeThrowStart = -1;
+	m_flDoDrugsStart = -1;
 
 #ifdef CLIENT_DLL
 	m_flUseHighlight = m_flUseHighlightGoal = 0;
@@ -896,20 +899,10 @@ bool CWeaponDABase::MaintainGrenadeToss()
 		QAngle angThrow;
 		GetGrenadeThrowVectors(vecSrc, vecThrow, angThrow);
 
-		if (pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs")))
-		{
-			pPlayer->BeginDrugs();
+		CGrenadeProjectile::Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), pPlayer, this, GRENADE_TIMER);
 
-			if (pPlayer)
-				pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
-		}
-		else
-		{
-			CGrenadeProjectile::Create(vecSrc, vec3_angle, vecThrow, AngularImpulse(600, random->RandomInt(-1200, 1200), 0), pPlayer, this, GRENADE_TIMER);
-
-			if (pPlayer)
-				pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("grenades"));
-		}
+		if (pPlayer)
+			pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("grenades"));
 #endif
 	}
 
@@ -965,6 +958,105 @@ void CWeaponDABase::GetGrenadeThrowVectors(Vector& vecSrc, Vector& vecThrow, QAn
 	vecSrc += vForward * 16;
 
 	vecThrow = vForward * flVel + pPlayer->GetAbsVelocity();
+}
+
+ConVar da_do_drugs_time("da_do_drugs_time", "2.0", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long does it take to do drugs?");
+ConVar da_drugs_lerp_time("da_drugs_lerp_time", "0.3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long does it take for the weapon to appear and disappear while throwing a grenade?");
+
+
+void CWeaponDABase::StartDoDrugs()
+{
+	m_flDoDrugsStart = GetCurrentTime();
+
+	CDAPlayer* pOwner = ToDAPlayer(GetOwner());
+
+	if (m_bInReload && pOwner)
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pOwner->GetViewModel(m_nViewModelIndex));
+		if (vm)
+			vm->PauseAnimation();
+	}
+
+	// Don't let weapon idle interfere in the middle of a throw!
+	SetWeaponIdleTime(GetCurrentTime() + da_do_drugs_time.GetFloat());
+
+	if (m_bInReload)
+	{
+		m_flReloadEndTime += da_do_drugs_time.GetFloat() * 0.7f;
+		m_flNextPrimaryAttack = m_flReloadEndTime;
+	}
+	else
+		m_flNextPrimaryAttack = GetCurrentTime() + da_do_drugs_time.GetFloat();
+
+	m_flNextSecondaryAttack = GetCurrentTime() + da_do_drugs_time.GetFloat();
+
+	m_bDrugsDone = false;
+
+	pOwner->DoAnimationEvent(PLAYERANIMEVENT_GRENADE1_THROW);
+}
+
+bool CWeaponDABase::MaintainDoDrugs()
+{
+	if (GetCurrentTime() >= GetDoDrugsEnd())
+	{
+		m_flDoDrugsStart = -1;
+		return false;
+	}
+
+	CDAPlayer* pPlayer = ToDAPlayer(GetOwner());
+	if (!pPlayer)
+		return false;
+
+	if (!pPlayer->IsInThirdPerson())
+	{
+		SetViewModel();
+		SetModel(GetViewModel());
+	}
+
+	if (pPlayer && GetCurrentTime() > GetDrugsDeployTime())
+	{
+		CDAViewModel* vm = dynamic_cast<CDAViewModel*>(pPlayer->GetViewModel(m_nViewModelIndex));
+		if (vm && vm->IsAnimationPaused())
+			// Technically unpausing it here instead of after the throw means we'll lose a tad of it,
+			// so we rewind it a bit.
+			vm->UnpauseAnimation(da_drugs_lerp_time.GetFloat());
+	}
+
+	if (!m_bDrugsDone && GetCurrentTime() > GetDrugsHolsterTime())
+	{
+		m_bDrugsDone = true;
+
+		pPlayer->Instructor_LessonLearned("drugs");
+
+		SendWeaponAnim(ACT_VM_THROW);
+
+#ifdef GAME_DLL
+		pPlayer->BeginDrugs();
+
+		if (pPlayer)
+			pPlayer->RemoveAmmo(1, GetAmmoDef()->Index("drugs"));
+#endif
+	}
+
+	return true;
+}
+
+float CWeaponDABase::GetDrugsHolsterTime() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_drugs_lerp_time.GetFloat();
+}
+
+float CWeaponDABase::GetDrugsDeployTime() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_do_drugs_time.GetFloat() - da_drugs_lerp_time.GetFloat();
+}
+
+float CWeaponDABase::GetDoDrugsEnd() const
+{
+	Assert(IsDoingDrugs());
+	return m_flDoDrugsStart + da_do_drugs_time.GetFloat();
 }
 
 void CWeaponDABase::AddViewKick()
@@ -1431,9 +1523,15 @@ void CWeaponDABase::ItemPostFrame( void )
 	bool bFired = false;
 
 	bool bHasGrenadeAmmo = !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("grenades"));
-	bHasGrenadeAmmo |= !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs"));
+	bool bGrenadeIsDrugs = !!pPlayer->GetAmmoCount(GetAmmoDef()->Index("drugs"));
+	bHasGrenadeAmmo |= bGrenadeIsDrugs;
 
-	if (IsThrowingGrenade())
+	if (IsDoingDrugs())
+	{
+		if (MaintainDoDrugs())
+			return;
+	}
+	else if (IsThrowingGrenade())
 	{
 		if (MaintainGrenadeToss())
 			return;
@@ -1446,7 +1544,10 @@ void CWeaponDABase::ItemPostFrame( void )
 
 		if (bAllow)
 		{
-			StartGrenadeToss();
+			if (bGrenadeIsDrugs)
+				StartDoDrugs();
+			else
+				StartGrenadeToss();
 			return;
 		}
 	}

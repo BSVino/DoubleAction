@@ -1417,6 +1417,8 @@ int CDAPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	m_flDrugsLeft = 0;
+
 	// disallow suicide for 10 seconds
 	m_flNextSuicideTime = GetCurrentTime() + 10.0f;
 

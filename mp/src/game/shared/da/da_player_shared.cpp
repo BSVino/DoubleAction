@@ -106,8 +106,10 @@ void CDAPlayer::ItemPostFrame()
 	{
 		float flDrugs = m_flDrugsLeft;
 		m_flDrugsLeft = Approach(0, m_flDrugsLeft, da_drugs_per_second.GetFloat()*gpGlobals->frametime);
-		float flDrugsUsed = flDrugs - m_flDrugsLeft;
-		TakeHealth(flDrugsUsed, 0);
+
+		// We have to do it this way because the health is stored in an int.
+		for (int i = m_flDrugsLeft; i < (int)flDrugs; i++)
+			TakeHealth(1, 0);
 
 		if (m_flDrugsLeft <= 0)
 			m_flDrugsLeft = 0;
