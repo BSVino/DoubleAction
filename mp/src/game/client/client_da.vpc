@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 
 $Macro SRCDIR		"..\.."
-$Macro GAMENAME 	"dadof" [$SOURCESDK]
+$Macro GAMENAME 	"dab" [$SOURCESDK]
 
 $Macro OUTBINDIR	"\Dropbox\ActionBoogaloo\dab_debug\dadof\debug_bin"
 
