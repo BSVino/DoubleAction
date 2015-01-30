@@ -999,6 +999,7 @@ ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATE
 
 Vector CSDKPlayerShared::StartDiving()
 {
+	// STORMY grind achievement - dive like a bajillion times
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
 
@@ -1598,6 +1599,7 @@ void CSDKPlayer::ActivateSlowMo()
 	if (!m_flSlowMoSeconds)
 		return;
 
+	// STORMY grind achievement - slowmo till you get rsi
 #ifdef GAME_DLL
 	if (m_bHasSuperSlowMo || m_flSlowMoSeconds >= 3)
 		CDove::SpawnDoves(this);

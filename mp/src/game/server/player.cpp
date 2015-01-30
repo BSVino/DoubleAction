@@ -21,6 +21,7 @@
 #include "isaverestore.h"
 #include "globalstate.h"
 #include "basecombatweapon.h"
+#include "weapon_sdkbase.h"
 #include "ai_basenpc.h"
 #include "ai_network.h"
 #include "ai_node.h"

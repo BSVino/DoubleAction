@@ -2752,6 +2752,7 @@ void CSDKGameMovement::FullWalkMove ()
 
 					m_pSDKPlayer->DoAnimationEvent(PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.StartWallFlip(tr.plane.normal);
+					// have a variable store the player ID if we flipped off a player - for achievements -stormy
 				}
 			}
 			if (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f &&
