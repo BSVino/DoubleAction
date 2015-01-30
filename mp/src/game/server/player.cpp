@@ -21,6 +21,8 @@
 #include "isaverestore.h"
 #include "globalstate.h"
 #include "basecombatweapon.h"
+#include "weapon_sdkbase.h"
+#include "../../danewage/helperroutines.h"
 #include "ai_basenpc.h"
 #include "ai_network.h"
 #include "ai_node.h"
@@ -9303,6 +9305,12 @@ void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 	if ( pVictim != this )
 	{
 		gamestats->Event_PlayerKilledOther( this, pVictim, info );
+		// STORMY check if we killed them with their own gun - doesn't work
+		/*CWeaponSDKBase* pSDKWeapon = dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon());
+		if ((CBaseEntity*)pSDKWeapon->GetPrevOwner() == pVictim)
+		Achieve("BETRAYED", false);
+		*/
+
 	}
 	else
 	{

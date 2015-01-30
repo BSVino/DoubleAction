@@ -23,6 +23,7 @@
 #include "engine/IEngineSound.h"
 #include "datacache/imdlcache.h"
 
+#include "../../../danewage/helperroutines.h"
 #include "weapon_akimbobase.h"
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -1406,7 +1407,7 @@ void CSDKPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &ve
 
 ConVar bot_easy( "bot_easy", "1", 0, "Make bots easier" );
 ConVar da_damage_multiplier("da_damage_multiplier", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-
+// PLAYER HIT
 int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
@@ -1482,7 +1483,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				flDamage *= 0.35; // bullets hurt teammates less
 			}
 		}
-
+			// PLAYER HIT BY EXPLOSION GRENADE 
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
 			// this timing only accounts for weapon_grenade (with fuse of 1.5s)
@@ -1520,7 +1521,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
 
 					// since we're being cool anyway give us a little push
-					Vector vecPush = ( info.GetDamageForce() / 150.0f );
+					Vector vecPush = ( info.GetDamageForce() / 125.0f );
 					SetBaseVelocity( vecPush );
 
 					// award style points
@@ -1531,7 +1532,17 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
+					Increment_achievement_int("DIVE_AWAY_FROM_EXPLOSIONS", false);
+
+
 				}
+			}
+			// if we're not stunting and the nade wasn't ours
+			else if ((! m_Shared.IsDiving() && ! m_Shared.IsSliding() && ! m_Shared.IsRolling()) && bGrenadeNotMine)
+			{
+				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
+				VectorNormalize(vecToPlayer);
+
 			}
 			else if (bGrenadeNotMine && !m_Shared.IsAimedIn())
 			{
@@ -1919,6 +1930,58 @@ void CSDKPlayer::SetKilledByString( string_t sKilledBy )
 	m_szKillerString = sKilledBy;
 }
 
+/*
+void TestStatIncrement(const CCommand &args)
+{
+	// Make sure the command was given a stat name.
+	if (args.ArgC() < 2)
+	{
+		DevMsg("You failed to supply a stat name.\n");
+		return;
+	}
+
+	// Try to get the current value of the stat.
+	int iCurrentStatValue;
+	if (!steamapicontext->SteamUserStats()->GetStat(args[1], &iCurrentStatValue))
+		DevMsg("Failed to get the current value for stat \"\"\n", args[1]);
+
+	// Try to set the stat to an incremented value.
+	if (!steamapicontext->SteamUserStats()->SetStat(args[1], iCurrentStatValue + 1))
+		DevMsg("Failed to set a new value for the stat \"\"\n", args[1]);
+
+	// Try to upload all of the player's stats to the Steam servers.
+	if (!steamapicontext->SteamUserStats()->StoreStats())
+		DevMsg("Failed to upload the stats to the Steam servers.\n");
+	else
+		DevMsg("Upload of stats to the Steam servers has begun, and will probably work.  You'd need to register a callback to be notified of actual results, but who cares? Stats get updated a lot.\n");
+}
+ConCommand teststatincrement("test_stat_increment", TestStatIncrement, "Usage: Pass it the NAME of the stat you want to increment.");
+*/
+void TestStats(const CCommand &args)
+{
+	DevMsg("It works bra\n");
+
+	// Create a new variable to hold our current DEATHS in
+	int data;
+
+	// Make the SYNCHRONOUS call to the API to get our current value.
+	steamapicontext->SteamUserStats()->GetStat("DIVE_PUNCHES", &data);
+
+	//if (data < 1){
+	//	steamapicontext->SetAchievement("DIVE_PUNCHES_1");
+	//}
+	// Make the SYNCHRONOUS call to the API to tell it our new value.  (It doesn't get uploaded yet.)
+	steamapicontext->SteamUserStats()->SetStat("DIVE_PUNCHES", data + 1);
+
+	// Sometime later, we should save all our stats.  This uploads them to the server.
+	steamapicontext->SteamUserStats()->StoreStats();
+	//steamapicontext->SteamUserStats()->ResetStats();
+
+
+	
+}
+ConCommand teststats("teststats", TestStats, "Usage: None. Really.");
+
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
@@ -2012,8 +2075,10 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		{
 			if (info.GetDamageType() == DMG_CLUB)
 			{
-				if (bKilledVictim)
+				if (bKilledVictim) { // DIVEPUNCH
 					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
+					Increment_achievement_int("DIVE_PUNCHES", false);
+				}
 				else
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
 			}
