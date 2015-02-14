@@ -23,6 +23,7 @@
 #include "engine/IEngineSound.h"
 #include "datacache/imdlcache.h"
 
+
 #include "../../../danewage/helperroutines.h"
 #include "weapon_akimbobase.h"
 #include "vcollide_parse.h"
@@ -1532,7 +1533,30 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
-					Increment_achievement_int("DIVE_AWAY_FROM_EXPLOSIONS", false);
+					
+					// send dive away from explosions achievement event to client -stormy
+					// create our event
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION");
+					if (event_DIVEAWAYFROMEXPLOSION)
+					{
+						// typecast the attacker so we can get a player ID
+						//CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(&m_Shared);
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION->SetInt("userid", this->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION);
+					}
+					// create our event
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION_250 = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION_250");
+					if (event_DIVEAWAYFROMEXPLOSION_250)
+					{
+						// typecast the attacker so we can get a player ID
+						//CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(&m_Shared);
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION_250->SetInt("userid", this->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION_250);
+					}
 
 
 				}
@@ -1959,7 +1983,7 @@ ConCommand teststatincrement("test_stat_increment", TestStatIncrement, "Usage: P
 */
 void TestStats(const CCommand &args)
 {
-	DevMsg("It works bra\n");
+	//DevMsg("It works bra\n");
 
 	// Create a new variable to hold our current DEATHS in
 	int data;
@@ -1998,7 +2022,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			SendNotice(NOTICE_STYLESTREAK);
 		}
 	}
-
+	
 	float flPoints = 1;
 
 	if (bKilledVictim)
@@ -2058,10 +2082,30 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		// Killing a player by shooting in the head from behind.
 		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
 	}
+	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && flDistance < 100)
+	{
+		// killing a player by shooting in the head point blank
+		// achievement "Dodge this" - POINT BLANK HEADSHOT
+
+		IGameEvent * event_DODGETHIS = gameeventmanager->CreateEvent("DODGETHIS");
+		if (event_DODGETHIS)
+		{
+			// typecast the attacker so we can get a player ID
+			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DODGETHIS->SetInt("userid", pPlayer->GetUserID());
+			// send that bitch
+			gameeventmanager->FireEvent(event_DODGETHIS);
+		}
+	}
+
+
 	else if (pVictim->LastHitGroup() == HITGROUP_HEAD)
 	{
 		if (bKilledVictim)
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
+			// check if we flipped off the victim and if so trigger an achievement -stormy
+			// increment the headshot kills stat -stormy
 		else
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
@@ -2075,11 +2119,50 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		{
 			if (info.GetDamageType() == DMG_CLUB)
 			{
-				if (bKilledVictim) { // DIVEPUNCH
+				if (bKilledVictim) // DIVEPUNCHKILL
+				{ 
 					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
-					Increment_achievement_int("DIVE_PUNCHES", false);
+					
+					// send divepunch achievement event to client -stormy
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL = gameeventmanager->CreateEvent("DIVEPUNCHKILL"); 
+					if (event_DIVEPUNCHKILL)
+					{
+						// typecast the attacker so we can get a player ID
+						CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());	
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL);
+					}
+
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL_250 = gameeventmanager->CreateEvent("DIVEPUNCHKILL_250");
+					if (event_DIVEPUNCHKILL_250)
+					{
+						// typecast the attacker so we can get a player ID
+						CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL_250->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL_250);
+					}
+
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL_BAJILLION = gameeventmanager->CreateEvent("DIVEPUNCHKILL_BAJILLION");
+					if (event_DIVEPUNCHKILL_BAJILLION)
+					{
+						// typecast the attacker so we can get a player ID
+						CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL_BAJILLION->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL_BAJILLION);
+					}
+
+
 				}
-				else
+				else // DIVEPUNCH NO KILL
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
 			}
 			else
@@ -2118,7 +2201,9 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
 	{
 		if (bKilledVictim)
+		{
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
+		}
 		else
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
 	}
@@ -2196,7 +2281,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				eAnnouncement = ANNOUNCEMENT_COOL;
 
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
-			// Damaging a stunting dude gives me slightly more bar than usual.
+			// Damaging a stunting dude gives me slightly more bar than usual. Is that innuendo?
 			AddStylePoints(flPoints*0.3f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
 		else
 			AddStylePoints(flPoints*0.2f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);

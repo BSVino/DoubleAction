@@ -22,7 +22,7 @@
 #include "globalstate.h"
 #include "basecombatweapon.h"
 #include "weapon_sdkbase.h"
-#include "../../danewage/helperroutines.h"
+//#include "../../danewage/helperroutines.h"
 #include "ai_basenpc.h"
 #include "ai_network.h"
 #include "ai_node.h"
