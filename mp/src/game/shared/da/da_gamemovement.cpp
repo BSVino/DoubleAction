@@ -2582,7 +2582,7 @@ void CDAGameMovement::FullWalkMove ()
 		StartGravity();
 	}
 
-	if (m_pDAPlayer->GetFlags() & FL_ONGROUND)
+	if (m_pDAPlayer->GetFlags() & FL_ONGROUND) // what does the single & symbol do here? -stormy
 		m_pDAPlayer->m_Shared.PlayerOnGround();
 
 #if 0
@@ -2643,7 +2643,7 @@ void CDAGameMovement::FullWalkMove ()
 
 	UpdateDuckJumpEyeOffset();
 
-	Duck();
+	Duck(); // why? -stormy
 
 	if (m_pDAPlayer->m_Shared.CanChangePosition ())
 	{
@@ -2679,9 +2679,10 @@ void CDAGameMovement::FullWalkMove ()
 				// Don't flip if the surface is skybox.
 				// Don't flip if the surface isn't a wall.
 				// Don't flip if the player isn't at least sorta facing the wall.
-				// Don't flip if the player is sliding or getting up from sliding.
+				// Don't flip if the player is sliding or getting up from sliding. I think you should be able to flip if you are stunting - it's frustrating to slide into a wall while being fired upon and having to wait until the stunt is finished before you can maneuvre out of it. but be wary of stuckbugs -stormy
+				// how do we check if the player is flipping off another player? -stormy
 				if (tr.fraction < 1 && !(tr.surface.flags&(SURF_SKY|SURF_NODRAW)) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f
-					&& !m_pDAPlayer->m_Shared.IsSliding() && !m_pDAPlayer->m_Shared.IsGettingUpFromProne() && !m_pDAPlayer->m_Shared.IsGettingUpFromSlide() )
+					/*&& !m_pDAPlayer->m_Shared.IsSliding() && !m_pDAPlayer->m_Shared.IsGettingUpFromProne() && !m_pDAPlayer->m_Shared.IsGettingUpFromSlide() -stormy*/ )
 				{
 					m_pDAPlayer->m_Shared.EndDive();
 					m_pDAPlayer->m_Shared.EndRoll();
@@ -2694,12 +2695,13 @@ void CDAGameMovement::FullWalkMove ()
 					SetGroundEntity (NULL);
 					FinishGravity ();
 
-					CPASFilter filter (org);
+					CPASFilter filter (org); // what the hell does this mean? -stormy
 					filter.UsePredictionRules ();
 					m_pDAPlayer->EmitSound (filter, m_pDAPlayer->entindex (), "Player.GoDive");
 
 					m_pDAPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
 					m_pDAPlayer->m_Shared.StartWallFlip(tr.plane.normal);
+					// have a variable store the player ID if we flipped off a player - for achievements -stormy
 				}
 			}
 			if (m_pDAPlayer->GetAbsVelocity().Length() > 10.0f &&
@@ -2726,7 +2728,7 @@ void CDAGameMovement::FullWalkMove ()
 		}
 	}
 
-#if 0
+#if 0 // I assume this means that this code will never run? -stormy
 	if (checkrun ())
 	{/*Wallrunning*/
 		trace_t tr;
@@ -2927,7 +2929,7 @@ void CDAGameMovement::FullWalkMove ()
 	/*The great door hack*/
 	{
 		trace_t tr;
-		float dt, slop;
+		float dt, slop; // what is "dt" -stormy
 		int msec, loss;
 		
 		UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);

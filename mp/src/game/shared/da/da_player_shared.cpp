@@ -1025,6 +1025,7 @@ ConVar  da_acro_dive_arc ("da_acro_dive_arc", "90", FCVAR_NOTIFY|FCVAR_REPLICATE
 
 Vector CDAPlayerShared::StartDiving()
 {
+	// STORMY grind achievement - dive like a bajillion times
 	if (!CanDive())
 		return m_pOuter->GetAbsVelocity();
 
@@ -1204,7 +1205,7 @@ bool CDAPlayerShared::IsWallFlipping(bool bExtend) const
 		return false;
 
 	// The wall flip technically ends very quickly before the animation is done playing, so we have the option of extending it out a bit for some purposes.
-	return m_pOuter->GetCurrentTime() < GetWallFlipEndTime() + 0.5f;
+	return m_pOuter->GetCurrentTime() < GetWallFlipEndTime() + 0.5f; // how is there a < inside a return clause? -stormy
 }
 
 void CDAPlayerShared::StartWallFlip(const Vector& vecWallNormal)
@@ -1620,7 +1621,7 @@ void CDAPlayer::ActivateSlowMo()
 {
 	if (!m_flSlowMoSeconds)
 		return;
-
+	// STORMY grind achievement - slowmo till you get rsi
 #ifdef GAME_DLL
 	if (m_bHasSuperSlowMo || m_flSlowMoSeconds >= 3)
 		CDove::SpawnDoves(this);
