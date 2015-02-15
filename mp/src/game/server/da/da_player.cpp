@@ -23,8 +23,6 @@
 #include "engine/IEngineSound.h"
 #include "datacache/imdlcache.h"
 
-
-#include "../../../danewage/helperroutines.h"
 #include "weapon_akimbobase.h"
 #include "vcollide_parse.h"
 #include "vphysics/player_controller.h"
@@ -1955,6 +1953,8 @@ void CDAPlayer::SetKilledByString( string_t sKilledBy )
 }
 
 /*
+
+// this is old achievement code donated by Sith_Lord that I'm going to leave here because I'm paranoid and I don't like deleting anything -stormy
 void TestStatIncrement(const CCommand &args)
 {
 	// Make sure the command was given a stat name.
@@ -1980,7 +1980,7 @@ void TestStatIncrement(const CCommand &args)
 		DevMsg("Upload of stats to the Steam servers has begun, and will probably work.  You'd need to register a callback to be notified of actual results, but who cares? Stats get updated a lot.\n");
 }
 ConCommand teststatincrement("test_stat_increment", TestStatIncrement, "Usage: Pass it the NAME of the stat you want to increment.");
-*/
+
 void TestStats(const CCommand &args)
 {
 	//DevMsg("It works bra\n");
@@ -2005,6 +2005,7 @@ void TestStats(const CCommand &args)
 	
 }
 ConCommand teststats("teststats", TestStats, "Usage: None. Really.");
+*/
 
 void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
@@ -4641,6 +4642,8 @@ float CDAPlayer::GetDKRatio(float flMin, float flMax, bool bDampen) const
 
 void CC_ActivateSlowmo_f (void)
 {
+	// this typecast is getting called in a bunch of different functions here
+	// is it resource-draining? Should we consolidate these calls for performance? -stormy
 	CDAPlayer *pPlayer = ToDAPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
