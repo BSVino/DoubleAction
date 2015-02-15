@@ -21,6 +21,7 @@
 #include "isaverestore.h"
 #include "globalstate.h"
 #include "basecombatweapon.h"
+#include "weapon_dabase.h"
 #include "ai_basenpc.h"
 #include "ai_network.h"
 #include "ai_node.h"
@@ -9303,6 +9304,7 @@ void CBasePlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo
 	if ( pVictim != this )
 	{
 		gamestats->Event_PlayerKilledOther( this, pVictim, info );
+
 	}
 	else
 	{

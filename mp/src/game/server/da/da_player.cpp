@@ -1404,7 +1404,7 @@ void CDAPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 
 ConVar bot_easy( "bot_easy", "1", 0, "Make bots easier" );
 ConVar da_damage_multiplier("da_damage_multiplier", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
-
+// PLAYER HIT
 int CDAPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
@@ -1482,7 +1482,7 @@ int CDAPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				flDamage *= 0.35; // bullets hurt teammates less
 			}
 		}
-
+			// PLAYER HIT BY EXPLOSION GRENADE 
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
 			// this timing only accounts for weapon_grenade (with fuse of 1.5s)
@@ -1520,7 +1520,7 @@ int CDAPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
 
 					// since we're being cool anyway give us a little push
-					Vector vecPush = ( info.GetDamageForce() / 150.0f );
+					Vector vecPush = ( info.GetDamageForce() / 125.0f );
 					SetBaseVelocity( vecPush );
 
 					// award style points
@@ -1531,7 +1531,40 @@ int CDAPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
+					
+					// send dive away from explosions achievement event to client -stormy
+					// create our event
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION");
+					if (event_DIVEAWAYFROMEXPLOSION)
+					{
+						// typecast the attacker so we can get a player ID
+						//CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(&m_Shared);
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION->SetInt("userid", this->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION);
+					}
+					// create our event
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION_250 = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION_250");
+					if (event_DIVEAWAYFROMEXPLOSION_250)
+					{
+						// typecast the attacker so we can get a player ID
+						//CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(&m_Shared);
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION_250->SetInt("userid", this->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION_250);
+					}
+
+
 				}
+			}
+			// if we're not stunting and the nade wasn't ours
+			else if ((! m_Shared.IsDiving() && ! m_Shared.IsSliding() && ! m_Shared.IsRolling()) && bGrenadeNotMine)
+			{
+				Vector vecToPlayer = GetAbsOrigin() - info.GetDamagePosition();
+				VectorNormalize(vecToPlayer);
+
 			}
 			else if (bGrenadeNotMine && !m_Shared.IsAimedIn())
 			{
@@ -1919,6 +1952,61 @@ void CDAPlayer::SetKilledByString( string_t sKilledBy )
 	m_szKillerString = sKilledBy;
 }
 
+/*
+
+// this is old achievement code donated by Sith_Lord that I'm going to leave here because I'm paranoid and I don't like deleting anything -stormy
+void TestStatIncrement(const CCommand &args)
+{
+	// Make sure the command was given a stat name.
+	if (args.ArgC() < 2)
+	{
+		DevMsg("You failed to supply a stat name.\n");
+		return;
+	}
+
+	// Try to get the current value of the stat.
+	int iCurrentStatValue;
+	if (!steamapicontext->SteamUserStats()->GetStat(args[1], &iCurrentStatValue))
+		DevMsg("Failed to get the current value for stat \"\"\n", args[1]);
+
+	// Try to set the stat to an incremented value.
+	if (!steamapicontext->SteamUserStats()->SetStat(args[1], iCurrentStatValue + 1))
+		DevMsg("Failed to set a new value for the stat \"\"\n", args[1]);
+
+	// Try to upload all of the player's stats to the Steam servers.
+	if (!steamapicontext->SteamUserStats()->StoreStats())
+		DevMsg("Failed to upload the stats to the Steam servers.\n");
+	else
+		DevMsg("Upload of stats to the Steam servers has begun, and will probably work.  You'd need to register a callback to be notified of actual results, but who cares? Stats get updated a lot.\n");
+}
+ConCommand teststatincrement("test_stat_increment", TestStatIncrement, "Usage: Pass it the NAME of the stat you want to increment.");
+
+void TestStats(const CCommand &args)
+{
+	//DevMsg("It works bra\n");
+
+	// Create a new variable to hold our current DEATHS in
+	int data;
+
+	// Make the SYNCHRONOUS call to the API to get our current value.
+	steamapicontext->SteamUserStats()->GetStat("DIVE_PUNCHES", &data);
+
+	//if (data < 1){
+	//	steamapicontext->SetAchievement("DIVE_PUNCHES_1");
+	//}
+	// Make the SYNCHRONOUS call to the API to tell it our new value.  (It doesn't get uploaded yet.)
+	steamapicontext->SteamUserStats()->SetStat("DIVE_PUNCHES", data + 1);
+
+	// Sometime later, we should save all our stats.  This uploads them to the server.
+	steamapicontext->SteamUserStats()->StoreStats();
+	//steamapicontext->SteamUserStats()->ResetStats();
+
+
+	
+}
+ConCommand teststats("teststats", TestStats, "Usage: None. Really.");
+*/
+
 void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
@@ -1935,7 +2023,7 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 			SendNotice(NOTICE_STYLESTREAK);
 		}
 	}
-
+	
 	float flPoints = 1;
 
 	if (bKilledVictim)
@@ -1999,10 +2087,30 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 		// Killing a player by shooting in the head from behind.
 		AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_EXECUTION, STYLE_POINT_STYLISH);
 	}
+	else if (bKilledVictim && pVictim->LastHitGroup() == HITGROUP_HEAD && flDistance < 100)
+	{
+		// killing a player by shooting in the head point blank
+		// achievement "Dodge this" - POINT BLANK HEADSHOT
+
+		IGameEvent * event_DODGETHIS = gameeventmanager->CreateEvent("DODGETHIS");
+		if (event_DODGETHIS)
+		{
+			// typecast the attacker so we can get a player ID
+			CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DODGETHIS->SetInt("userid", pPlayer->GetUserID());
+			// send that bitch
+			gameeventmanager->FireEvent(event_DODGETHIS);
+		}
+	}
+
+
 	else if (pVictim->LastHitGroup() == HITGROUP_HEAD)
 	{
 		if (bKilledVictim)
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_STYLISH);
+			// check if we flipped off the victim and if so trigger an achievement -stormy
+			// increment the headshot kills stat -stormy
 		else
 			AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_HEADSHOT, STYLE_POINT_LARGE);
 	}
@@ -2016,9 +2124,50 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 		{
 			if (info.GetDamageType() == DMG_CLUB)
 			{
-				if (bKilledVictim)
+				if (bKilledVictim) // DIVEPUNCHKILL
+				{ 
 					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_STYLISH);
-				else
+					
+					// send divepunch achievement event to client -stormy
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL = gameeventmanager->CreateEvent("DIVEPUNCHKILL"); 
+					if (event_DIVEPUNCHKILL)
+					{
+						// typecast the attacker so we can get a player ID
+						CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(info.GetAttacker());	
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL);
+					}
+
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL_250 = gameeventmanager->CreateEvent("DIVEPUNCHKILL_250");
+					if (event_DIVEPUNCHKILL_250)
+					{
+						// typecast the attacker so we can get a player ID
+						CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(info.GetAttacker());
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL_250->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL_250);
+					}
+
+					// create our divepunch event
+					IGameEvent * event_DIVEPUNCHKILL_BAJILLION = gameeventmanager->CreateEvent("DIVEPUNCHKILL_BAJILLION");
+					if (event_DIVEPUNCHKILL_BAJILLION)
+					{
+						// typecast the attacker so we can get a player ID
+						CDAPlayer* pPlayer = dynamic_cast<CDAPlayer*>(info.GetAttacker());
+						// set our event attacker userID to send to the client
+						event_DIVEPUNCHKILL_BAJILLION->SetInt("userid", pPlayer->GetUserID());
+						// send that bitch
+						gameeventmanager->FireEvent(event_DIVEPUNCHKILL_BAJILLION);
+					}
+
+
+				}
+				else // DIVEPUNCH NO KILL
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_DIVEPUNCH, STYLE_POINT_LARGE);
 			}
 			else
@@ -2057,7 +2206,9 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 	else if (flDistance < 60 && info.GetDamageType() != DMG_CLUB)
 	{
 		if (bKilledVictim)
+		{
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_LARGE);
+		}
 		else
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_POINT_BLANK, STYLE_POINT_SMALL);
 	}
@@ -2135,7 +2286,7 @@ void CDAPlayer::AwardStylePoints(CDAPlayer* pVictim, bool bKilledVictim, const C
 				eAnnouncement = ANNOUNCEMENT_COOL;
 
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
-			// Damaging a stunting dude gives me slightly more bar than usual.
+			// Damaging a stunting dude gives me slightly more bar than usual. Is that innuendo?
 			AddStylePoints(flPoints*0.3f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
 		else
 			AddStylePoints(flPoints*0.2f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
@@ -4491,6 +4642,8 @@ float CDAPlayer::GetDKRatio(float flMin, float flMax, bool bDampen) const
 
 void CC_ActivateSlowmo_f (void)
 {
+	// this typecast is getting called in a bunch of different functions here
+	// is it resource-draining? Should we consolidate these calls for performance? -stormy
 	CDAPlayer *pPlayer = ToDAPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
