@@ -680,6 +680,14 @@ void CSDKGameRules::GoToIntermission( void )
 			pPlayer->AddFlag( FL_FROZEN );
 		}
 	}
+
+	// give a da_intermissionstarted event for achievements that trigger at the end of the round -stormy
+	IGameEvent * event_intermission = gameeventmanager->CreateEvent("da_intermissionstarted");
+	if (event_intermission)
+	{
+		// it's an empty event so just send it
+		gameeventmanager->FireEvent(event_intermission);
+	}
 }
 
 void CSDKGameRules::CheckLevelInitialized()
@@ -2344,6 +2352,9 @@ bool CSDKGameRules::SetupMiniObjective_Briefcase()
 			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 			if (!pPlayer)
 				continue;
+			
+			// clear this variable for achievements
+			pPlayer->m_iKillsWithBriefcase = 0;
 
 			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
 
@@ -2883,7 +2894,7 @@ void CC_MiniObjective(const CCommand &args)
 		SDKGameRules()->StartMiniObjective();
 }
 
-static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
+static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, ""/*, FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT*/);
 #endif
 
 CBriefcase* CSDKGameRules::GetBriefcase() const

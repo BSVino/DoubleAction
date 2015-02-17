@@ -215,10 +215,24 @@ void CBriefcaseCaptureZone::CaptureThink()
 		if (!pPlayer->IsAlive())
 			continue;
 
+		// player is in the cap zone with the briefcase
 		if (pPlayer->HasBriefcase() && (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr() < flCaptureRadiusSqr)
 		{
 			StopParticleEffects( SDKGameRules()->GetBriefcase() );
 			DispatchParticleEffect( "dinero_splode", GetAbsOrigin(), GetAbsAngles() );
+			
+			if (pPlayer->m_iKillsWithBriefcase <= 0)
+			{
+				// capture briefcase without killing anyone event
+				IGameEvent * event_SPECIALDELIVERY = gameeventmanager->CreateEvent("SPECIALDELIVERY");
+				if (event_SPECIALDELIVERY)
+				{
+					// set our event attacker userID to send to the client
+					event_SPECIALDELIVERY->SetInt("userid", pPlayer->GetUserID());
+					// send that bitch
+					gameeventmanager->FireEvent(event_SPECIALDELIVERY);
+				}
+			}
 
 			SDKGameRules()->PlayerCapturedBriefcase(pPlayer);
 			return;

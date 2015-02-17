@@ -391,6 +391,9 @@ private:
 	bool m_bCharacterChosen;
 	bool m_bSkillsSeen;
 
+	// variables a'la -stormy
+	int    m_iKillsDuringCurSlowmo; // kinda self explanatory, for achievements
+
 	CNetworkHandle(CSDKPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	bool m_bWasKilledByExplosion;
