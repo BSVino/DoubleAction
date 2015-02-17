@@ -123,7 +123,7 @@ protected:
 		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL_BAJILLION") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
-			DevMsg("DIVEPUNCHKILL_BAJILLION activate");
+			//DevMsg("DIVEPUNCHKILL_BAJILLION activate");
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
@@ -223,7 +223,7 @@ DECLARE_ACHIEVEMENT(CAchievementDAdiveaweayfromexplosion250, DIVEAWAYFROMEXPLOSI
 
 
 
-// Dive away from an explosion for reduced damage 250 times
+// get a headshot at point blank range
 class CAchievementDAdodgethis : public CBaseAchievement
 {
 protected:
@@ -259,6 +259,215 @@ protected:
 #define DODGETHIS 11
 DECLARE_ACHIEVEMENT(CAchievementDAdodgethis, DODGETHIS, "DODGETHIS", 1)
 
+
+
+
+
+
+
+// Get a 250 kill streak
+class CAchievementDApenguin : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("PENGUIN");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "PENGUIN") && C_BasePlayer::GetLocalPlayer())
+		{
+			
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			// if the userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define PENGUIN 12
+DECLARE_ACHIEVEMENT(CAchievementDApenguin, PENGUIN, "PENGUIN", 1)
+
+
+
+
+
+
+
+// Get 1 million total style points
+class CAchievementDAdiscostu : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1000000);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("da_intermissionstarted");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "da_intermissionstarted") && C_BasePlayer::GetLocalPlayer())
+		{
+		//	DevMsg("INCREMENTING DISCOSTU");
+			IncrementCount(C_DAPlayer::GetLocalDAPlayer()->GetStylePoints()); // providing a parameter because we want to increment by more than 1
+		}
+	}
+};
+#define DISCOSTU 12
+DECLARE_ACHIEVEMENT(CAchievementDAdiscostu, DISCOSTU, "DISCOSTU", 1)
+
+
+
+
+
+
+
+// get a brawl kill while superfalling - UNTESTED
+class CAchievementDAskypunch : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("SKYPUNCH");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SKYPUNCH") && C_BasePlayer::GetLocalPlayer())
+		{
+
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			// if the userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define SKYPUNCH 14
+DECLARE_ACHIEVEMENT(CAchievementDAskypunch, SKYPUNCH, "SKYPUNCH", 1)
+
+
+
+
+
+
+
+// get 3 kills in a single slowmo
+class CAchievementDAslowpro : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("SLOWPRO");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SLOWPRO") && C_BasePlayer::GetLocalPlayer())
+		{
+
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			// if the userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define SLOWPRO 15
+DECLARE_ACHIEVEMENT(CAchievementDAslowpro, SLOWPRO, "SLOWPRO", 1)
+
+
+
+
+
+
+
+// cap a briefcase without killing anyone
+class CAchievementDAspecialdelivery : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		steamapicontext->SteamUserStats()->ResetAllStats(true);
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("SPECIALDELIVERY");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SPECIALDELIVERY") && C_BasePlayer::GetLocalPlayer())
+		{
+
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			// if the userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define SPECIALDELIVERY 16
+DECLARE_ACHIEVEMENT(CAchievementDAspecialdelivery, SPECIALDELIVERY, "SPECIALDELIVERY", 1)
 
 
 

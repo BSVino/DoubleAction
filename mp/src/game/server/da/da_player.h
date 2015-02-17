@@ -531,6 +531,10 @@ public:
 	int    m_iKills;
 	int    m_iDeaths;
 
+	// variables a'la -stormy
+	int    m_iKillsDuringCurSlowmo; // kinda self explanatory, for achievements
+	int	   m_iKillsWithBriefcase; // checking if the player has killed anyone while holding the briefcase
+
 	CNetworkHandle(CDAPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	CNetworkVar(bool, m_bWasKilledByExplosion);
