@@ -1621,10 +1621,7 @@ void CDAPlayer::ActivateSlowMo()
 {
 	if (!m_flSlowMoSeconds)
 		return;
-
-	// reset this variable when slowmo is activated so we don't track kills outside of slowmo -stormy
-	m_iKillsDuringCurSlowmo = 0;
-
+	// STORMY grind achievement - slowmo till you get rsi
 #ifdef GAME_DLL
 	if (m_bHasSuperSlowMo || m_flSlowMoSeconds >= 3)
 		CDove::SpawnDoves(this);
@@ -1659,9 +1656,6 @@ void CDAPlayer::DeactivateSlowMo()
 {
 	if (m_flSlowMoTime == 0)
 		return;
-
-	// clear this variable when slowmo is deactivated, for achievements -stormy
-	m_iKillsDuringCurSlowmo = 0;
 
 	if (m_iSlowMoType != SLOWMO_SUPERFALL)
 	{

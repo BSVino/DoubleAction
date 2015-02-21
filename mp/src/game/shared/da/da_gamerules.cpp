@@ -680,14 +680,6 @@ void CDAGameRules::GoToIntermission( void )
 			pPlayer->AddFlag( FL_FROZEN );
 		}
 	}
-
-	// give a da_intermissionstarted event for achievements that trigger at the end of the round -stormy
-	IGameEvent * event_intermission = gameeventmanager->CreateEvent("da_intermissionstarted");
-	if (event_intermission)
-	{
-		// it's an empty event so just send it
-		gameeventmanager->FireEvent(event_intermission);
-	}
 }
 
 void CDAGameRules::CheckLevelInitialized()
@@ -2353,9 +2345,6 @@ bool CDAGameRules::SetupMiniObjective_Briefcase()
 			CDAPlayer* pPlayer = ToDAPlayer(UTIL_PlayerByIndex(i));
 			if (!pPlayer)
 				continue;
-			
-			// clear this variable for achievements
-			pPlayer->m_iKillsWithBriefcase = 0;
 
 			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
 
