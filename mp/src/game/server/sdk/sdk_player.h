@@ -530,10 +530,6 @@ public:
 	int    m_iDeaths;
 	float  m_flStuckTime;
 
-	// variables a'la -stormy
-	int    m_iKillsDuringCurSlowmo; // kinda self explanatory, for achievements
-	int	   m_iKillsWithBriefcase; // checking if the player has killed anyone while holding the briefcase
-
 	CNetworkHandle(CSDKPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
 	CNetworkVar(bool, m_bWasKilledByExplosion);

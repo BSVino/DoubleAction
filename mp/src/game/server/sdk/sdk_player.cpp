@@ -402,10 +402,6 @@ CSDKPlayer::CSDKPlayer()
 
 	m_iKills = m_iDeaths = 0;
 
-	// variables a'la -stormy
-	m_iKillsDuringCurSlowmo = 0;
-	m_iKillsWithBriefcase = 0;
-
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iszCharacter = NULL_STRING;
@@ -1779,6 +1775,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
+
 	m_hKiller = ToSDKPlayer(info.GetAttacker());
 	m_hInflictor = info.GetInflictor();
 	if (m_hInflictor.Get() != m_hKiller && info.GetDamageType() == DMG_BLAST)
@@ -1843,22 +1840,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		CSDKPlayer* pSDKAttacker = ToSDKPlayer(pAttacker);
 
 		pSDKAttacker->m_iCurrentStreak++;
-		
-		if (m_iCurrentStreak == 250)
-		{
-			// killstreak achievement
-			IGameEvent * event_PENGUIN = gameeventmanager->CreateEvent("PENGUIN");
-			if (event_PENGUIN)
-			{
-				// typecast the attacker so we can get a player ID
-				CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-				// set our event attacker userID to send to the client
-				event_PENGUIN->SetInt("userid", pPlayer->GetUserID());
-				// send that bitch
-				gameeventmanager->FireEvent(event_PENGUIN);
-			}
-		}
-
 		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
 
 		if (info.GetDamageType() == DMG_BLAST)
@@ -1946,10 +1927,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Turn off slow motion.
 	if (m_flSlowMoTime)
 		DeactivateSlowMo();
-
-	// reset this variable when slowmo is deactivated
-	m_iKillsDuringCurSlowmo = 0;
-
 
 	m_flSlowMoSeconds -= 2;
 
@@ -2042,33 +2019,8 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		if (m_iStyleKillStreak%3 == 0)
 		{
 			TakeHealth(50, DMG_GENERIC);
-			// as I understand it, this code means that if the player is on a killstreak
-			// divisible by 3, damage them by 50 points...
-			// whut? -stormy
 
 			SendNotice(NOTICE_STYLESTREAK);
-		}
-	}
-
-	// if we killed him, without a nade, and we are within our own slowmo activation
-	if (bKilledVictim && info.GetDamageType() != DMG_BLAST && (m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL))
-	{
-		// increment our kills during current slowmo variable
-		m_iKillsDuringCurSlowmo++;
-
-		if (m_iKillsDuringCurSlowmo == 3)
-		{
-			// 3 kills in a slowmo
-			IGameEvent * event_SLOWPRO = gameeventmanager->CreateEvent("SLOWPRO");
-			if (event_SLOWPRO)
-			{
-				// typecast the attacker so we can get a player ID
-				CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-				// set our event attacker userID to send to the client
-				event_SLOWPRO->SetInt("userid", pPlayer->GetUserID());
-				// send that bitch
-				gameeventmanager->FireEvent(event_SLOWPRO);
-			}
 		}
 	}
 	
@@ -2078,9 +2030,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	{
 		// Give me a quarter of the activation cost. I'll get another quarter from damaging.
 		flPoints = da_stylemeteractivationcost.GetFloat()/4;
-		
-		// I don't care wether or not we have the briefcase because we clear this variable whenever the briefcase is picked up or dropped -stormy
-		this->m_iKillsWithBriefcase += 1;
 	}
 	else
 	{
@@ -2288,29 +2237,13 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		// Brawl
 
 		bool bExecution = false;
-		if (bKilledVictim) // we killed a dude by punching all their blood out of their body
+		if (bKilledVictim)
 		{
 			Vector vecForward;
 			AngleVectors(pVictim->EyeAngles(), &vecForward, NULL, NULL);
 
 			if (vecKillerToVictim.Dot(vecForward) < -0.7f)
 				bExecution = true;
-
-			if (m_Shared.IsSuperFalling())
-			{
-				// skypunch achievement
-				IGameEvent * event_SKYPUNCH = gameeventmanager->CreateEvent("SKYPUNCH");
-				if (event_SKYPUNCH)
-				{
-					// typecast the attacker so we can get a player ID
-					CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-					// set our event attacker userID to send to the client
-					event_SKYPUNCH->SetInt("userid", pPlayer->GetUserID());
-					// send that bitch
-					gameeventmanager->FireEvent(event_SKYPUNCH);
-				}
-			}
-
 		}
 
 		float flBrawlPoints = flPoints*0.5f;
@@ -4299,8 +4232,6 @@ void CSDKPlayer::GiveSlowMo(float flSeconds)
 
 void CSDKPlayer::PickUpBriefcase(CBriefcase* pBriefcase)
 {
-	this->m_iKillsWithBriefcase = 0;
-
 	DropBriefcase();
 
 	pBriefcase->FollowEntity(this);
@@ -4339,8 +4270,6 @@ void CSDKPlayer::DropBriefcase()
 	m_hBriefcase->Dropped(this);
 
 	m_hBriefcase = NULL;
-
-	this->m_iKillsWithBriefcase = 0;
 
 	SendBroadcastSound("MiniObjective.BriefcaseDrop");
 }
