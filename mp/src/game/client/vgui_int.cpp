@@ -24,7 +24,7 @@
 #include "filesystem.h"
 #include "matsys_controls/matsyscontrols.h"
 
-#include "IDARadioPanel.h" // -stormy
+//#include "IDARadioPanel.h" // -stormy
 
 #ifdef SIXENSE
 #include "sixense/in_sixense.h"
@@ -197,7 +197,7 @@ bool VGui_Startup( CreateInterfaceFn appSystemFactory )
 //-----------------------------------------------------------------------------
 void VGui_CreateGlobalPanels( void )
 {
-	VPANEL gameParent = enginevgui->GetPanel(PANEL_INGAMESCREENS); // -stormy
+//	VPANEL gameParent = enginevgui->GetPanel(PANEL_INGAMESCREENS); // -stormy
 	VPANEL gameToolParent = enginevgui->GetPanel( PANEL_CLIENTDLL_TOOLS );
 	VPANEL toolParent = enginevgui->GetPanel( PANEL_TOOLS );
 #if defined( TRACK_BLOCKING_IO )
@@ -208,11 +208,11 @@ void VGui_CreateGlobalPanels( void )
 	loadingdisc->Create( gameToolParent );
 	messagechars->Create( gameToolParent );
 
-
+	/* stormy's bulldust
 	VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL);
 	mypanel->Create(GameUiDll);
 	mypanel->Create(gameParent); // -stormy
-
+	*/
 
 
 	// Debugging or related tool
@@ -235,7 +235,7 @@ void VGui_CreateGlobalPanels( void )
 void VGui_Shutdown()
 {
 	VGUI_DestroyClientDLLRootPanel();
-	mypanel->Destroy(); // -stormy
+//	mypanel->Destroy(); // -stormy
 
 #ifndef _X360
 	MP3Player_Destroy();

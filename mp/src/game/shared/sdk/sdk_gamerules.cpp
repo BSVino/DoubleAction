@@ -2883,7 +2883,9 @@ void CC_MiniObjective(const CCommand &args)
 		SDKGameRules()->StartMiniObjective();
 }
 
-static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
+
+
+static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL | FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT);
 #endif
 
 CBriefcase* CSDKGameRules::GetBriefcase() const
