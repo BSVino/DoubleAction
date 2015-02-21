@@ -11,8 +11,8 @@
 #include "tier0/memdbgon.h"
 
 ConVar bot_mimic( "bot_mimic", "0", FCVAR_CHEAT );
-ConVar bot_freeze( "bot_freeze", "0", FCVAR_CHEAT );
-ConVar bot_crouch( "bot_crouch", "0", FCVAR_CHEAT );
+ConVar bot_crouch("bot_crouch", "0", FCVAR_CHEAT);
+ConVar bot_freeze("bot_freeze", "0", FCVAR_CHEAT);
 ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "180", FCVAR_CHEAT );
 ConVar bot_attack( "bot_attack", "0", FCVAR_CHEAT );
 ConVar bot_mimic_flip_pitch( "bot_mimic_flip_pitch", "0", FCVAR_CHEAT );
