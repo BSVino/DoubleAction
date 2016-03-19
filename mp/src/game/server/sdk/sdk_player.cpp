@@ -4472,14 +4472,14 @@ void CC_ActivateSlowmo_f (void)
 	if ( !pPlayer )
 		return;
 
-	if (pPlayer->m_flSlowMoSeconds > 0)
+	if (pPlayer->m_flSlowMoTime > 0)
+	{
+		pPlayer->DeactivateSlowMo();
+	}
+	else if (pPlayer->m_flSlowMoSeconds > 0)
 	{
 		pPlayer->Instructor_LessonLearned("slowmo");
 		pPlayer->ActivateSlowMo();
-	}
-	else if (pPlayer->m_flSlowMoTime > 0)
-	{
-		pPlayer->DeactivateSlowMo();
 	}
 	else
 	{

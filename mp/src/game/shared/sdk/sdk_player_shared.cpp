@@ -1610,7 +1610,7 @@ void CSDKPlayer::DeactivateSlowMo()
 
 	if (m_iSlowMoType != SLOWMO_SUPERFALL)
 	{
-		m_flSlowMoSeconds = (int)(m_flSlowMoTime - gpGlobals->curtime - 0.5f);
+		m_flSlowMoSeconds += (int)(m_flSlowMoTime - gpGlobals->curtime - 0.5f);
 		if (m_flSlowMoSeconds < 0)
 			m_flSlowMoSeconds = 0;
 	}
