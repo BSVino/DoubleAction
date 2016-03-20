@@ -526,6 +526,7 @@ public:
 
 	int    m_iKills;
 	int    m_iDeaths;
+	float  m_flStuckTime;
 
 	CNetworkHandle(CDAPlayer, m_hKiller);
 	CNetworkHandle(CBaseEntity, m_hInflictor);
