@@ -134,8 +134,6 @@ public:
 
 	void AddBotTag(const char* tag);
 #endif
-
-	float m_flStuckTime;
 };
 
 #define ROLL_TIME 0.65f
@@ -160,7 +158,6 @@ CSDKGameMovement::CSDKGameMovement()
 #ifdef STUCK_DEBUG
 	m_flStuckCheck = 0;
 #endif
-	m_flStuckTime = -1;
 }
 
 CSDKGameMovement::~CSDKGameMovement()
@@ -611,19 +608,19 @@ void CSDKGameMovement::PlayerMove (void)
 #ifndef CLIENT_DLL
 	if (da_auto_unstick.GetBool() && m_pSDKPlayer->IsAlive() && PlayerIsStuck() && m_pSDKPlayer->GetMoveType() != MOVETYPE_NOCLIP)
 	{
-		if (m_flStuckTime < 0)
-			m_flStuckTime = gpGlobals->curtime;
-		else if (gpGlobals->curtime - m_flStuckTime > 3)
+		if (m_pSDKPlayer->m_flStuckTime < 0)
+			m_pSDKPlayer->m_flStuckTime = gpGlobals->curtime;
+		else if (gpGlobals->curtime - m_pSDKPlayer->m_flStuckTime > 3)
 		{
 			// Im hopelessly stuck. Respawn me.
 			CBaseEntity* spawn = SDKGameRules()->GetPlayerSpawnSpot(m_pSDKPlayer);
 			mv->SetAbsOrigin(spawn->GetAbsOrigin());
 			mv->m_vecVelocity = Vector(0, 0, 0);
-			m_flStuckTime = -1;
+			m_pSDKPlayer->m_flStuckTime = -1;
 		}
 	}
 	else
-		m_flStuckTime = -1;
+		m_pSDKPlayer->m_flStuckTime = -1;
 #endif
 
 #ifdef STUCK_DEBUG
