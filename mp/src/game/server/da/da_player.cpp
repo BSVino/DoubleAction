@@ -2496,33 +2496,21 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 
 	if (pWeapon->IsAkimbo())
 	{
-		// This is an akimbo weapon. Toss two singles instead.
-
-		CAkimboBase *pAkimbos = (CAkimboBase*)pWeapon;
+		// This is an akimbo weapon. Toss a single instead.
+		CAkimboBase *pAkimbos = static_cast<CAkimboBase *>(pWeapon);
 		const char *pszSingle = pWeapon->GetSDKWpnData().m_szSingle;
 		char name[32];
-		int i;
 
-		Q_snprintf (name, sizeof (name), "weapon_%s", pszSingle);
-		for (i = 0; i < 2; i++)
-		{
-			CWeaponDABase *pThrow = (CWeaponDABase*)Weapon_Create(name);
-			pThrow->VPhysicsDestroyObject(); 
-			pThrow->VPhysicsInitShadow(true, true);
-			if (i == 0)
-				pThrow->m_iClip1 = pAkimbos->m_iRightClip;
-			else
-				pThrow->m_iClip1 = pAkimbos->m_iLeftClip;
+		Q_snprintf(name, sizeof(name), "weapon_%s", pszSingle);
+		CWeaponDABase *pThrow = static_cast<CWeaponDABase *>(Weapon_Create(name));
+		pThrow->VPhysicsDestroyObject();
+		pThrow->VPhysicsInitShadow(true, true);
+		// Take ammo from the left clip. The right clip stays with the single variant
+		pThrow->m_iClip1 = pAkimbos->m_iLeftClip;
 
-			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
-		}
-		RemovePlayerItem (pAkimbos);
+		SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
 
-		// Remove the single version also.
-		CWeaponDABase *pSingle = pAkimbos->FindSingleWeapon();
-		AssertMsg (pSingle, "How do you have akimbos without a single?");
-		if (pSingle) 
-			RemovePlayerItem (pSingle);
+		RemovePlayerItem(pAkimbos);
 
 		return;
 	}
