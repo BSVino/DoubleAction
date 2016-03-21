@@ -153,7 +153,8 @@ BEGIN_RECV_TABLE_NOBASE( CDAPlayerShared, DT_DAPlayerShared )
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
 	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
-	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RecvProxy_Skill ),
+	RecvPropInt( RECVINFO( m_iStyleSkill ) ),
+	RecvPropInt( RECVINFO( m_iStyleSkillAfterRespawn ), 0, RecvProxy_Skill ),
 	RecvPropBool( RECVINFO( m_bSuperSkill ) ),
 	RecvPropDataTable( "dasharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_DASharedLocalPlayerExclusive) ),
 

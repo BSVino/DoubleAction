@@ -799,7 +799,7 @@ bool CFolderMenu::IsLoadoutComplete()
 	if (!pPlayer->HasCharacterBeenChosen())
 		return false;
 
-	if (pPlayer->m_Shared.m_iStyleSkill == SKILL_NONE)
+	if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn == SKILL_NONE)
 		return false;
 
 	return true;
