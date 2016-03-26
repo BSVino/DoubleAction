@@ -1454,7 +1454,7 @@ void CClientVirtualReality::Activate()
 		}
 	}
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	engine->ServerCmd("vr on");
 #endif
 }
@@ -1508,7 +1508,7 @@ void CClientVirtualReality::Deactivate()
 	Q_snprintf( szCmd, sizeof( szCmd ), "mat_setvideomode %i %i %i\n", m_nNonVRWidth, m_nNonVRHeight, m_bNonVRWindowed ? 1 : 0 );
 	engine->ClientCmd_Unrestricted( szCmd );
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	engine->ServerCmd("vr off");
 #endif
 }
