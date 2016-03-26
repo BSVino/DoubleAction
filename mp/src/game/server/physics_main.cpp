@@ -787,7 +787,7 @@ void CPhysicsPushedEntities::RotateRootEntity( CBaseEntity *pRoot, float movetim
 	QAngle angles = pRoot->GetLocalAngles();
 	angles += pRoot->GetLocalAngularVelocity() * movetime;
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	if (angles.y > 36000 || angles.y < -36000)
 		angles.y = fmod(angles.y, 360);
 #endif

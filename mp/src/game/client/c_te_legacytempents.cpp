@@ -36,8 +36,8 @@
 #include "c_props.h"
 #include "c_basedoor.h"
 
-#ifdef SDK_DLL
-#include "c_sdk_player.h"
+#ifdef DA_DLL
+#include "c_da_player.h"
 #endif
 
 // NOTE: Always include this last!
@@ -100,7 +100,7 @@ C_LocalTempEntity::C_LocalTempEntity()
 }
 
 
-#if defined( CSTRIKE_DLL ) || defined (SDK_DLL )
+#if defined( CSTRIKE_DLL ) || defined (DA_DLL )
 
 #define TE_RIFLE_SHELL 1024
 #define TE_PISTOL_SHELL 2048
@@ -2341,8 +2341,8 @@ void CTempEnts::Update(void)
 
 	frametime = gpGlobals->frametime;
 
-#ifdef SDK_DLL
-	C_SDKPlayer* pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+#ifdef DA_DLL
+	C_DAPlayer* pPlayer = C_DAPlayer::GetLocalDAPlayer();
 	if (pPlayer)
 		frametime *= pPlayer->GetSlowMoMultiplier();
 #endif
@@ -2431,7 +2431,7 @@ void CTempEnts::LevelInit()
 	m_pCS_338MAGShell	= (model_t *)engine->LoadModel( "models/Shells/shell_338mag.mdl" );
 #endif
 
-#if defined ( SDK_DLL )
+#if defined ( DA_DLL )
 	m_pCS_9MMShell		= (model_t *)engine->LoadModel( "models/Shells/shell_9mm.mdl" );
 	m_pCS_12GaugeShell	= (model_t *)engine->LoadModel( "models/Shells/shell_12gauge.mdl" );
 	m_pCS_762NATOShell	= (model_t *)engine->LoadModel( "models/Shells/shell_762nato.mdl" );
@@ -2465,7 +2465,7 @@ void CTempEnts::Init (void)
 	m_pHL1ShotgunShell	= NULL;
 #endif
 
-#if defined( CSTRIKE_DLL ) || defined ( SDK_DLL )
+#if defined( CSTRIKE_DLL ) || defined ( DA_DLL )
 	m_pCS_9MMShell		= NULL;
 	m_pCS_57Shell		= NULL;
 	m_pCS_12GaugeShell	= NULL;
@@ -3348,7 +3348,7 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 	const model_t *pModel = NULL;
 	int hitsound = TE_BOUNCE_SHELL;
 
-#if defined ( CSTRIKE_DLL ) || defined ( SDK_DLL )
+#if defined ( CSTRIKE_DLL ) || defined ( DA_DLL )
 
 	switch( shellType )
 	{
