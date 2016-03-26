@@ -169,8 +169,8 @@ extern vgui::IInputInternal *g_InputInternal;
 #include "sixense/in_sixense.h"
 #endif
 
-#ifdef SDK_DLL
-#include "c_sdk_player.h"
+#ifdef DA_DLL
+#include "c_da_player.h"
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1159,7 +1159,7 @@ void CHLClient::PostInit()
 	}
 #endif
 
-#ifdef SDK_DLL
+#ifdef DA_DLL
 	//SwapDisconnectCommand();
 #endif
 }
@@ -2203,8 +2203,8 @@ void OnRenderStart()
 		VPROF_BUDGET( "ParticleMgr()->Simulate", VPROF_BUDGETGROUP_PARTICLE_SIMULATION );
 
 		float flFrameTime = gpGlobals->frametime;
-#ifdef SDK_DLL
-		C_SDKPlayer* pLocal = C_SDKPlayer::GetLocalOrSpectatedPlayer();
+#ifdef DA_DLL
+		C_DAPlayer* pLocal = C_DAPlayer::GetLocalOrSpectatedPlayer();
 		if (pLocal)
 			flFrameTime *= pLocal->GetSlowMoMultiplier();
 #endif
