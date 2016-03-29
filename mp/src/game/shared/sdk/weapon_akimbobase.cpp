@@ -56,10 +56,10 @@ Activity CAkimboBase::ActivityOverride(Activity baseAct, bool *pRequired)
 	if (ACT_DA_PRIMARYATTACK <= act && act <= ACT_DA_PRIMARYATTACK_ROLL)
 	{
 		unsigned ndx = act - ACT_DA_PRIMARYATTACK;
-		if (!shootright)
-			act = (Activity)(ACT_DA_AKIMBO_LEFT + ndx);
-		else
+		if (shootright)
 			act = (Activity)(ACT_DA_AKIMBO_RIGHT + ndx);
+		else
+			act = (Activity)(ACT_DA_AKIMBO_LEFT + ndx);
 	}
 	return BaseClass::ActivityOverride(act, pRequired);
 }
@@ -134,25 +134,19 @@ void CAkimboBase::PrimaryAttack(void)
 
 	if (shootright)
 	{
-#if 0
-		if (rightclip != 1)
-			act = ACT_VM_SECONDARYATTACK;
-		else
-			act = ACT_VM_DRYFIRE;
-#else
 		act = ACT_VM_SECONDARYATTACK;
+#if 0
+		if (rightclip == 1)
+			act = ACT_VM_DRYFIRE;
 #endif
 		rightclip--;
 	}
 	else
 	{
-#if 0
-		if (leftclip != 1)
-			act = ACT_VM_PRIMARYATTACK;
-		else
-			act = ACT_VM_DRYFIRE_LEFT;
-#else
 		act = ACT_VM_PRIMARYATTACK;
+#if 0
+		if (leftclip == 1)
+			act = ACT_VM_DRYFIRE_LEFT;
 #endif
 		leftclip--;
 	}
@@ -162,7 +156,7 @@ void CAkimboBase::PrimaryAttack(void)
 	FinishAttack(pPlayer);
 
 	if (rightclip > 0 && leftclip > 0)
-		shootright = (bool)(shootright^1);
+		shootright = !shootright;
 	else if (rightclip > 0)
 		shootright = true;
 	else
@@ -178,7 +172,7 @@ void CAkimboBase::FinishReload(void)
 	{
 		return;
 	}
-	int take = min((clipsize << 1) - (rightclip + leftclip), total);
+	int take = min(clipsize * 2 - (rightclip + leftclip), total);
 	if (!owner->IsStyleSkillActive(SKILL_MARKSMAN))
 	{
 		owner->RemoveAmmo(take, m_iPrimaryAmmoType);
@@ -200,8 +194,7 @@ void CAkimboBase::FinishReload(void)
 
 void CAkimboBase::GiveDefaultAmmo(void)
 {
-	rightclip = GetMaxClip1() / 2;
-	leftclip = GetMaxClip1() / 2;
+	leftclip = rightclip = GetMaxClip1() / 2;
 	m_iClip1 = rightclip + leftclip;
 }
 
