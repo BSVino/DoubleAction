@@ -124,16 +124,16 @@ void CAkimboBase::PrimaryAttack (void)
 
 	if (shootright)
 	{
-		//if (rightclip != 1) act = ACT_VM_PRIMARYATTACK;
-		//else act = ACT_VM_DRYFIRE_LEFT;
-		act = ACT_VM_PRIMARYATTACK;
+		//if (rightclip != 1) act = ACT_VM_SECONDARYATTACK;
+		//else act = ACT_VM_DRYFIRE;
+		act = ACT_VM_SECONDARYATTACK;
 		rightclip--;
 	}
 	else
 	{
-		//if (leftclip != 1) act = ACT_VM_SECONDARYATTACK;
-		//else act = ACT_VM_DRYFIRE;
-		act = ACT_VM_SECONDARYATTACK;
+		//if (leftclip != 1) act = ACT_VM_PRIMARYATTACK;
+		//else act = ACT_VM_DRYFIRE_LEFT;
+		act = ACT_VM_PRIMARYATTACK;
 		leftclip--;
 	}
 
