@@ -127,6 +127,9 @@ protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
 public:
+	// A reference to the player whose movement is currently being considered.
+	// If additional per-player data is needed, put it into CDAPlayer and refer to it via m_pDAPlayer.
+	// Do not put it directly into CDAGameMovement, because there isn't an instance of that per player.
 	CDAPlayer *m_pDAPlayer;
 
 #ifdef STUCK_DEBUG
