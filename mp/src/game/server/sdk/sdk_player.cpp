@@ -146,6 +146,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropFloat( SENDINFO( m_flAimIn ) ),
 	SendPropFloat( SENDINFO( m_flSlowAimIn ) ),
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
+	SendPropInt( SENDINFO( m_iStyleSkillAfterRespawn ) ),
 	SendPropBool( SENDINFO( m_bSuperSkill ) ),
 	
 	SendPropInt (SENDINFO (m_iWallFlipCount)),
@@ -1110,6 +1111,8 @@ void CSDKPlayer::Spawn()
 	}
 
 	m_hRagdoll = NULL;
+
+	UpdateStyleSkill();
 	
 	BaseClass::Spawn();
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
@@ -3260,28 +3263,17 @@ void CSDKPlayer::SetStyleSkill(SkillID eSkill)
 	if (eSkill <= SKILL_NONE || eSkill >= SKILL_MAX)
 		eSkill = SKILL_MARKSMAN;
 
-	m_Shared.m_iStyleSkill = eSkill;
+	m_Shared.m_iStyleSkillAfterRespawn = eSkill;
+}
+
+void CSDKPlayer::UpdateStyleSkill()
+{
+	m_Shared.m_iStyleSkill = m_Shared.m_iStyleSkillAfterRespawn;
+
 	SetStylePoints(0);
 	m_flStyleSkillCharge = 0;
 
 	m_bHasSuperSlowMo = false;
-
-	if (m_Shared.m_iStyleSkill != SKILL_TROLL)
-	{
-		ConVarRef da_max_grenades("da_max_grenades");
-		while (GetAmmoCount("grenades") > da_max_grenades.GetInt())
-		{
-			QAngle gunAngles;
-			VectorAngles( BodyDirection2D(), gunAngles );
-
-			Vector vecForward;
-			AngleVectors( gunAngles, &vecForward, NULL, NULL );
-
-			float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
-
-			SDKThrowWeapon(FindWeapon(SDK_WEAPON_GRENADE), vecForward, gunAngles, flDiameter);
-		}
-	}
 }
 
 #if defined ( SDK_USE_PRONE )

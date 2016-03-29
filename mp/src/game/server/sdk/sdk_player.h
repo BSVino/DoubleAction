@@ -207,6 +207,7 @@ public:
 	void ShowSkillMenu();
 
 	void SetStyleSkill(SkillID eSkill);
+	void UpdateStyleSkill();
 
 	/*These 3 were made virtual for Double Action.
 	They enable us to have new shadow hulls.*/
