@@ -127,6 +127,9 @@ protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
 public:
+	// A reference to the player whose movement is currently being considered.
+	// If additional per-player data is needed, put it into CSDKPlayer and refer to it via m_pSDKPlayer.
+	// Do not put it directly into CSDKGameMovement, because there isn't an instance of that per player.
 	CSDKPlayer *m_pSDKPlayer;
 
 #ifdef STUCK_DEBUG
