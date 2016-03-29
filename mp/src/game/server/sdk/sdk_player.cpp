@@ -1115,6 +1115,9 @@ void CSDKPlayer::Spawn()
 	UpdateStyleSkill();
 	
 	BaseClass::Spawn();
+
+	SetGroundEntity(NULL);
+
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	m_Shared.SetStamina( 100 );
 #endif
