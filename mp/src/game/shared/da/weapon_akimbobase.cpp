@@ -1,7 +1,7 @@
 #include "cbase.h"
 #include "weapon_akimbobase.h"
 
-#if defined (CLIENT_DLL)
+#if defined(CLIENT_DLL)
 	#include "c_da_player.h"
 	#include "prediction.h"
 #else
@@ -26,42 +26,45 @@ END_NETWORK_TABLE()
 #endif
 LINK_ENTITY_TO_CLASS(weapon_akimbobase, CAkimboBase);
 
-static bool 
-akimbo_reload (CAkimboBase *self)
+static bool akimbo_reload(CAkimboBase *self)
 {
-	CBaseCombatCharacter *owner = self->GetOwner ();
+	CBaseCombatCharacter *owner = self->GetOwner();
 	if (!owner)
 	{
 		return false;
 	}
-	int sum = (self->rightclip + self->leftclip);
-	int total = owner->GetAmmoCount (self->m_iPrimaryAmmoType);
-	int delta = min (self->GetMaxClip1() - sum, total);
+	int sum = self->rightclip + self->leftclip;
+	int total = owner->GetAmmoCount(self->m_iPrimaryAmmoType);
+	int delta = min(self->GetMaxClip1() - sum, total);
 	if (delta != 0)
 	{
 		return true;
 	}
 	return false;
 }
-CAkimboBase::CAkimboBase ()
+
+CAkimboBase::CAkimboBase()
 {
 	reload_delegate = (delegate_t)akimbo_reload;
 	shootright = false;
 }
 
-Activity CAkimboBase::ActivityOverride (Activity baseAct, bool *pRequired)
-{/*Remap baseAct to the approrpiate left/right akimbo firing animation.*/
+Activity CAkimboBase::ActivityOverride(Activity baseAct, bool *pRequired)
+{
+	// Remap baseAct to the approrpiate left/right akimbo firing animation.
 	Activity act = baseAct;
 	if (ACT_DA_PRIMARYATTACK <= act && act <= ACT_DA_PRIMARYATTACK_ROLL)
 	{
 		unsigned ndx = act - ACT_DA_PRIMARYATTACK;
-		if (!shootright) act = (Activity)(ACT_DA_AKIMBO_LEFT + ndx);
-		else act = (Activity)(ACT_DA_AKIMBO_RIGHT + ndx);
+		if (!shootright)
+			act = (Activity)(ACT_DA_AKIMBO_LEFT + ndx);
+		else
+			act = (Activity)(ACT_DA_AKIMBO_RIGHT + ndx);
 	}
-	return BaseClass::ActivityOverride (act, pRequired);
+	return BaseClass::ActivityOverride(act, pRequired);
 }
 
-int CAkimboBase::GetTracerAttachment (void)
+int CAkimboBase::GetTracerAttachment(void)
 {
 	if (shootright)
 		return 2;
@@ -69,47 +72,54 @@ int CAkimboBase::GetTracerAttachment (void)
 	return 1;
 }
 
-Activity CAkimboBase::GetIdleActivity (void)
+Activity CAkimboBase::GetIdleActivity(void)
 {
-	//if (rightclip > 0 && leftclip > 0) return ACT_VM_IDLE;
-	//if (rightclip > 0 && leftclip == 0) return ACT_VM_IDLE_EMPTY_LEFT;
+#if 0
+	if (rightclip > 0 && leftclip > 0)
+		return ACT_VM_IDLE;
+	if (rightclip > 0 && leftclip == 0)
+		return ACT_VM_IDLE_EMPTY_LEFT;
+#endif
 	return ACT_VM_IDLE_EMPTY;
 }
 
-bool CAkimboBase::Deploy ()
+bool CAkimboBase::Deploy()
 {
-	/*Transfer iClip1 of single pistol to rightclip*/
-	CWeaponDABase *from = GetPlayerOwner ()->m_hSwitchFrom;
+	// Transfer iClip1 of single pistol to rightclip
+	CWeaponDABase *from = GetPlayerOwner()->m_hSwitchFrom;
 	DAWeaponID id1 = DA_WEAPON_NONE;
-	DAWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
-	if (from) id1 = from->GetWeaponID ();
+	DAWeaponID id2 = AliasToWeaponID(GetSDKWpnData().m_szSingle);
+	if (from)
+		id1 = from->GetWeaponID();
 	if (id1 == id2)
 	{
 		rightclip = from->m_iClip1;
 		m_iClip1 = leftclip + rightclip;
 	}
-	return BaseClass::Deploy ();
+	return BaseClass::Deploy();
 }
 
-bool CAkimboBase::Holster (CBaseCombatWeapon *pSwitchingTo)
-{/*Transfer rightclip into iClip1 of single pistol*/
+bool CAkimboBase::Holster(CBaseCombatWeapon *pSwitchingTo)
+{
+	// Transfer rightclip into iClip1 of single pistol
 	CWeaponDABase *to = (CWeaponDABase *)pSwitchingTo;
 	DAWeaponID id1 = DA_WEAPON_NONE;
-	DAWeaponID id2 = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
-	if (to) id1 = to->GetWeaponID ();
+	DAWeaponID id2 = AliasToWeaponID(GetSDKWpnData().m_szSingle);
+	if (to)
+		id1 = to->GetWeaponID();
 	if (id1 == id2)
 	{
 		to->m_iClip1 = rightclip;
 	}
-	return BaseClass::Holster (pSwitchingTo);
+	return BaseClass::Holster(pSwitchingTo);
 }
 
-void CAkimboBase::PrimaryAttack (void)
+void CAkimboBase::PrimaryAttack(void)
 {
 	Activity act;
 	if (rightclip <= 0 && leftclip <= 0) 
 	{
-		Reload ();
+		Reload();
 		return;
 	}
 	CDAPlayer *pPlayer = GetPlayerOwner();
@@ -124,49 +134,62 @@ void CAkimboBase::PrimaryAttack (void)
 
 	if (shootright)
 	{
-		//if (rightclip != 1) act = ACT_VM_SECONDARYATTACK;
-		//else act = ACT_VM_DRYFIRE;
+#if 0
+		if (rightclip != 1)
+			act = ACT_VM_SECONDARYATTACK;
+		else
+			act = ACT_VM_DRYFIRE;
+#else
 		act = ACT_VM_SECONDARYATTACK;
+#endif
 		rightclip--;
 	}
 	else
 	{
-		//if (leftclip != 1) act = ACT_VM_PRIMARYATTACK;
-		//else act = ACT_VM_DRYFIRE_LEFT;
+#if 0
+		if (leftclip != 1)
+			act = ACT_VM_PRIMARYATTACK;
+		else
+			act = ACT_VM_DRYFIRE_LEFT;
+#else
 		act = ACT_VM_PRIMARYATTACK;
+#endif
 		leftclip--;
 	}
 
-	SendWeaponAnim (act);
+	SendWeaponAnim(act);
 	m_iClip1 = leftclip + rightclip;
-	FinishAttack (pPlayer);
+	FinishAttack(pPlayer);
 
-	if (rightclip > 0 && leftclip > 0) shootright = (bool)(shootright^1);
-	else if (rightclip > 0) shootright = true;
-	else shootright = false;
+	if (rightclip > 0 && leftclip > 0)
+		shootright = (bool)(shootright^1);
+	else if (rightclip > 0)
+		shootright = true;
+	else
+		shootright = false;
 }
 
-void CAkimboBase::FinishReload (void)
+void CAkimboBase::FinishReload(void)
 {
 	CDAPlayer *owner = GetPlayerOwner();
-	int clipsize = GetMaxClip1()/2;
-	int total = owner->GetAmmoCount (m_iPrimaryAmmoType);
+	int clipsize = GetMaxClip1() / 2;
+	int total = owner->GetAmmoCount(m_iPrimaryAmmoType);
 	if (!owner)
 	{
 		return;
 	}
-	int take = min ((clipsize<<1) - (rightclip + leftclip), total);
-	if (!owner->IsStyleSkillActive (SKILL_MARKSMAN))
+	int take = min((clipsize << 1) - (rightclip + leftclip), total);
+	if (!owner->IsStyleSkillActive(SKILL_MARKSMAN))
 	{
-		owner->RemoveAmmo (take, m_iPrimaryAmmoType);
+		owner->RemoveAmmo(take, m_iPrimaryAmmoType);
 	}
-	int r = min (clipsize - rightclip, take);
+	int r = min(clipsize - rightclip, take);
 	if (r != 0)
 	{
 		rightclip += r;
 		take -= r;
 	}
-	int l = min (clipsize - leftclip, take);
+	int l = min(clipsize - leftclip, take);
 	if (l != 0)
 	{
 		leftclip += l;
@@ -175,46 +198,44 @@ void CAkimboBase::FinishReload (void)
 	m_iClip1 = rightclip + leftclip;
 }
 
-void CAkimboBase::GiveDefaultAmmo (void)
+void CAkimboBase::GiveDefaultAmmo(void)
 {
-	rightclip = GetMaxClip1 ()/2;
-	leftclip = GetMaxClip1 ()/2;
+	rightclip = GetMaxClip1() / 2;
+	leftclip = GetMaxClip1() / 2;
 	m_iClip1 = rightclip + leftclip;
 }
 
-void CAkimboBase::OnPickedUp (CBaseCombatCharacter *pNewOwner)
+void CAkimboBase::OnPickedUp(CBaseCombatCharacter *pNewOwner)
 {
 #ifdef GAME_DLL
-	CDAPlayer *pl;
-	CWeaponDABase *single;
-	char name[32];
-
-	pl = ToDAPlayer (pNewOwner);
-	Assert (pl != NULL);
+	CDAPlayer *pl = ToDAPlayer(pNewOwner);
+	Assert(pl != NULL);
 	if (!pl)
 	{
 		return;
 	}
-	/*Ensure player has a single with their akimbos*/
-	Q_snprintf (name, sizeof (name), "weapon_%s", GetSDKWpnData ().m_szSingle);
-	single = pl->FindWeapon (AliasToWeaponID (name));
+	// Ensure player has a single with their akimbos
+	char name[32];
+	Q_snprintf(name, sizeof(name), "weapon_%s", GetSDKWpnData().m_szSingle);
+	CWeaponDABase *single = pl->FindWeapon(AliasToWeaponID(name));
 	if (!single)
-	{/*Give them a single too*/
-		pl->GiveNamedItem (name);
+	{
+		// Give them a single too
+		pl->GiveNamedItem(name);
 	}
-	GiveDefaultAmmo ();
-	BaseClass::OnPickedUp (pNewOwner);
+	GiveDefaultAmmo();
+	BaseClass::OnPickedUp(pNewOwner);
 #endif
 }
 
-void CAkimboBase::CheckReload (void)
+void CAkimboBase::CheckReload(void)
 {
-	BaseClass::CheckReload ();
+	BaseClass::CheckReload();
 }
 
 int CAkimboBase::GetMaxClip1() const
 {
-	DAWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
+	DAWeaponID eSingleID = AliasToWeaponID(GetSDKWpnData().m_szSingle);
 
 	CSDKWeaponInfo* pSingleInfo = CSDKWeaponInfo::GetWeaponInfo(eSingleID);
 
@@ -222,14 +243,14 @@ int CAkimboBase::GetMaxClip1() const
 	if (!pSingleInfo)
 		return BaseClass::GetMaxClip1();
 
-	return pSingleInfo->iMaxClip1*2;
+	return pSingleInfo->iMaxClip1 * 2;
 }
 
 // For weight purposes an akimbo weighs the same as a single.
 // This is so that the second entity in the player's inventory just adds another single's worth of weight.
 int CAkimboBase::GetWeight() const
 {
-	DAWeaponID eSingleID = AliasToWeaponID (GetSDKWpnData ().m_szSingle);
+	DAWeaponID eSingleID = AliasToWeaponID(GetSDKWpnData().m_szSingle);
 
 	CSDKWeaponInfo* pSingleInfo = CSDKWeaponInfo::GetWeaponInfo(eSingleID);
 
@@ -249,5 +270,5 @@ const Vector CAkimboBase::GetShootPosition(CDAPlayer* pShooter)
 	Vector vecPosition, vecRight;
 	pShooter->EyePositionAndVectors(&vecPosition, NULL, &vecRight, NULL);
 
-	return vecPosition + vecRight * (shootright?4:-4);
+	return vecPosition + vecRight * (shootright ? 4 : -4);
 }

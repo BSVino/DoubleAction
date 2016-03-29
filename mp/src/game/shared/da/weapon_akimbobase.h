@@ -31,7 +31,8 @@ supplants this baseclass entirely.*/
 #include "ai_activity.h"
 
 enum
-{/*ActivityOverride expects these in this order*/
+{
+	// ActivityOverride expects these in this order
 	ACT_DA_AKIMBO_RIGHT = LAST_SHARED_ACTIVITY,
 	ACT_DA_AKIMBO_CROUCH_RIGHT,
 	ACT_DA_AKIMBO_PRONE_RIGHT,
@@ -44,7 +45,8 @@ enum
 	ACT_DA_AKIMBO_SLIDE_LEFT,
 	ACT_DA_AKIMBO_DIVE_LEFT,
 	ACT_DA_AKIMBO_ROLL_LEFT,
-	/*Anything after this is private*/
+
+	// Anything after this is private
 	LAST_SHARED_AKIMBO_ACTIVITY
 };
 
@@ -62,21 +64,21 @@ public:
 #ifdef GAME_DLL
 	DECLARE_DATADESC();
 #endif
-	CAkimboBase ();
+	CAkimboBase();
 	virtual bool IsPredicted() const { return true; }
-	virtual Activity ActivityOverride (Activity baseAct, bool *pRequired);
-	virtual int GetTracerAttachment (void);
-	virtual Activity GetIdleActivity (void);
-	virtual bool Deploy ();
-	virtual bool Holster (CBaseCombatWeapon *pSwitchingTo);
-	virtual void PrimaryAttack (void);
-	virtual void FinishReload (void);
-	virtual void GiveDefaultAmmo (void);
-	virtual void OnPickedUp (CBaseCombatCharacter *pNewOwner);
-	virtual	void CheckReload (void);
+	virtual Activity ActivityOverride(Activity baseAct, bool *pRequired);
+	virtual int GetTracerAttachment(void);
+	virtual Activity GetIdleActivity(void);
+	virtual bool Deploy();
+	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual void PrimaryAttack(void);
+	virtual void FinishReload(void);
+	virtual void GiveDefaultAmmo(void);
+	virtual void OnPickedUp(CBaseCombatCharacter *pNewOwner);
+	virtual	void CheckReload(void);
 
-	virtual int GetMaxClip1( void ) const;
-	virtual int GetWeight( void ) const;
+	virtual int GetMaxClip1(void) const;
+	virtual int GetWeight(void) const;
 
 	const Vector GetShootPosition(CDAPlayer* pShooter);
 public:
