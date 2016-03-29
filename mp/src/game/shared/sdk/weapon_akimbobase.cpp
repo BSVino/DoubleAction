@@ -87,11 +87,11 @@ bool CAkimboBase::Deploy()
 {
 	// Transfer iClip1 of single pistol to rightclip
 	CWeaponSDKBase *from = GetPlayerOwner()->m_hSwitchFrom;
-	SDKWeaponID id1 = SDK_WEAPON_NONE;
-	SDKWeaponID id2 = AliasToWeaponID(GetSDKWpnData().m_szSingle);
+	SDKWeaponID eFromId = SDK_WEAPON_NONE;
+	SDKWeaponID eSingleId = AliasToWeaponID(GetSDKWpnData().m_szSingle);
 	if (from)
-		id1 = from->GetWeaponID();
-	if (id1 == id2)
+		eFromId = from->GetWeaponID();
+	if (eFromId == eSingleId)
 	{
 		rightclip = from->m_iClip1;
 		m_iClip1 = leftclip + rightclip;
@@ -103,11 +103,11 @@ bool CAkimboBase::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	// Transfer rightclip into iClip1 of single pistol
 	CWeaponSDKBase *to = (CWeaponSDKBase *)pSwitchingTo;
-	SDKWeaponID id1 = SDK_WEAPON_NONE;
-	SDKWeaponID id2 = AliasToWeaponID(GetSDKWpnData().m_szSingle);
+	SDKWeaponID eToId = SDK_WEAPON_NONE;
+	SDKWeaponID eSingleId = AliasToWeaponID(GetSDKWpnData().m_szSingle);
 	if (to)
-		id1 = to->GetWeaponID();
-	if (id1 == id2)
+		eToId = to->GetWeaponID();
+	if (eToId == eSingleId)
 	{
 		to->m_iClip1 = rightclip;
 	}
