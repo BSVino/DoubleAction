@@ -127,6 +127,9 @@ protected:
 	bool ResolveStanding( void );
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
 public:
+	// A reference to the player whose movement is currently being considered.
+	// If additional per-player data is needed, put it into CDAPlayer and refer to it via m_pDAPlayer.
+	// Do not put it directly into CDAGameMovement, because there isn't an instance of that per player.
 	CDAPlayer *m_pDAPlayer;
 
 #ifdef STUCK_DEBUG
@@ -134,8 +137,6 @@ public:
 
 	void AddBotTag(const char* tag);
 #endif
-
-	float m_flStuckTime;
 };
 
 #define ROLL_TIME 0.65f
@@ -160,7 +161,6 @@ CDAGameMovement::CDAGameMovement()
 #ifdef STUCK_DEBUG
 	m_flStuckCheck = 0;
 #endif
-	m_flStuckTime = -1;
 }
 
 CDAGameMovement::~CDAGameMovement()
@@ -611,19 +611,19 @@ void CDAGameMovement::PlayerMove (void)
 #ifndef CLIENT_DLL
 	if (da_auto_unstick.GetBool() && m_pDAPlayer->IsAlive() && PlayerIsStuck() && m_pDAPlayer->GetMoveType() != MOVETYPE_NOCLIP)
 	{
-		if (m_flStuckTime < 0)
-			m_flStuckTime = gpGlobals->curtime;
-		else if (gpGlobals->curtime - m_flStuckTime > 3)
+		if (m_pDAPlayer->m_flStuckTime < 0)
+			m_pDAPlayer->m_flStuckTime = gpGlobals->curtime;
+		else if (gpGlobals->curtime - m_pDAPlayer->m_flStuckTime > 3)
 		{
 			// Im hopelessly stuck. Respawn me.
 			CBaseEntity* spawn = DAGameRules()->GetPlayerSpawnSpot(m_pDAPlayer);
 			mv->SetAbsOrigin(spawn->GetAbsOrigin());
 			mv->m_vecVelocity = Vector(0, 0, 0);
-			m_flStuckTime = -1;
+			m_pDAPlayer->m_flStuckTime = -1;
 		}
 	}
 	else
-		m_flStuckTime = -1;
+		m_pDAPlayer->m_flStuckTime = -1;
 #endif
 
 #ifdef STUCK_DEBUG
