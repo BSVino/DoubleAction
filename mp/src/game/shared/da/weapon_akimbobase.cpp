@@ -26,16 +26,17 @@ END_NETWORK_TABLE()
 #endif
 LINK_ENTITY_TO_CLASS(weapon_akimbobase, CAkimboBase);
 
-static bool akimbo_reload(CAkimboBase *self)
+bool CAkimboBase::NeedsReload( int iClipSize1, int iClipSize2 )
 {
-	CBaseCombatCharacter *owner = self->GetOwner();
+	CBaseCombatCharacter *owner = GetOwner();
 	if (!owner)
 	{
 		return false;
 	}
-	int sum = self->m_iRightClip + self->m_iLeftClip;
-	int total = owner->GetAmmoCount(self->m_iPrimaryAmmoType);
-	int delta = min(self->GetMaxClip1() - sum, total);
+
+	int sum = m_iRightClip + m_iLeftClip;
+	int total = owner->GetAmmoCount(m_iPrimaryAmmoType);
+	int delta = min(GetMaxClip1() - sum, total);
 	if (delta != 0)
 	{
 		return true;
@@ -45,7 +46,6 @@ static bool akimbo_reload(CAkimboBase *self)
 
 CAkimboBase::CAkimboBase()
 {
-	reload_delegate = (delegate_t)akimbo_reload;
 	m_bShootRight = false;
 }
 

@@ -81,6 +81,7 @@ public:
 	virtual int GetWeight(void) const;
 
 	const Vector GetShootPosition(CDAPlayer* pShooter);
-public:
+protected:
+	virtual bool NeedsReload( int iClipSize1, int iClipSize2 );
 };
 #endif

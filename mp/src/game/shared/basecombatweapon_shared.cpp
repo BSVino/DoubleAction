@@ -102,8 +102,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_nCritChecks = 1;
 	m_nCritSeedRequests = 0;
 #endif // TF
-
-	reload_delegate = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1958,7 +1956,7 @@ void CBaseCombatWeapon::StopWeaponSound( WeaponSound_t sound_type )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActivity )
+bool CBaseCombatWeapon::NeedsReload( int iClipSize1, int iClipSize2 )
 {
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if (!pOwner)
@@ -1966,38 +1964,47 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 		return false;
 	}
 	bool bReload = false;
-	if (NULL != reload_delegate)
-	{
-		bReload = reload_delegate (this);
-	}
-	else
-	{
-		// If I don't have any spare ammo, I can't reload
-		if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-			return false;
 
-		// If you don't have clips, then don't try to reload them.
-		if ( UsesClipsForAmmo1() )
-		{
-			// need to reload primary clip?
-			int primary	= MIN(iClipSize1 - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
-			if ( primary != 0 )
-			{
-				bReload = true;
-			}
-		}
+	// If I don't have any spare ammo, I can't reload
+	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
+		return false;
 
-		if ( UsesClipsForAmmo2() )
+	// If you don't have clips, then don't try to reload them.
+	if ( UsesClipsForAmmo1() )
+	{
+		// need to reload primary clip?
+		int primary	= MIN(iClipSize1 - m_iClip1, pOwner->GetAmmoCount(m_iPrimaryAmmoType));
+		if ( primary != 0 )
 		{
-			// need to reload secondary clip?
-			int secondary = MIN(iClipSize2 - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
-			if ( secondary != 0 )
-			{
-				bReload = true;
-			}
+			bReload = true;
 		}
 	}
 
+	if ( UsesClipsForAmmo2() )
+	{
+		// need to reload secondary clip?
+		int secondary = MIN(iClipSize2 - m_iClip2, pOwner->GetAmmoCount(m_iSecondaryAmmoType));
+		if ( secondary != 0 )
+		{
+			bReload = true;
+		}
+	}
+
+	return bReload;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActivity )
+{
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+	{
+		return false;
+	}
+
+	bool bReload = NeedsReload(iClipSize1, iClipSize2);
 	if ( !bReload )
 		return false;
 
