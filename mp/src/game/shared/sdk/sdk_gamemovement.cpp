@@ -749,11 +749,7 @@ void CSDKGameMovement::RealPlayerMove (void)
 	{
 		if ( CheckInterval( STUCK ) )
 		{
-			if ( CheckStuck() )
-			{
-				// Can't move, we're stuck
-				return;  
-			}
+			CheckStuck();
 		}
 	}
 
@@ -1918,14 +1914,29 @@ void CSDKGameMovement::Duck( void )
 			m_pSDKPlayer->m_Shared.EndRoll();
 			SetRollEyeOffset( 0.0 );
 
-			if (!CanUnduck())
+			if ( !CanUnprone() )
+			{
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset(1.0);
+			}
+			else if ( !CanUnduck() )
+			{
 				FinishDuck();
+			}
 		}
 		// before we begin to stand up from the roll, let's make sure we don't want to go prone instead
 		else if ( m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetRollTime() + ROLL_TIME )
 		{
+			// force transition to prone if there won't be room to stand/duck
+			if ( !CanUnprone() )
+			{
+				m_pSDKPlayer->m_Shared.EndRoll();
+				SetRollEyeOffset( 0.0 );
+				m_pSDKPlayer->m_Shared.SetProne(true, true);
+				SetProneEyeOffset(1.0);
+			}
 			// force transition to duck if there won't be room to stand
-			if ( !CanUnduck() )
+			else if ( !CanUnduck() )
 			{
 				SetRollEyeOffset( 0.0 );
 				m_pSDKPlayer->m_Shared.EndRoll();
