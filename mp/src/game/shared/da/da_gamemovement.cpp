@@ -2105,7 +2105,7 @@ void CDAGameMovement::Duck( void )
 		{
 			bSlide = (m_pDAPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
 				(m_pDAPlayer->GetFlags() & FL_ONGROUND) && (mv->m_nButtons & IN_DUCK) &&
-				(m_pDAPlayer->m_Shared.GetSlideTime() < (m_pDAPlayer->GetCurrentTime() - TIME_TO_RESLIDE));
+				(m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideTime() > TIME_TO_RESLIDE);
 
 			bDive = (m_pDAPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
