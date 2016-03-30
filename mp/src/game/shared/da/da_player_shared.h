@@ -232,7 +232,7 @@ public:
 #endif
 
 	// > 0 apparently means getting up from slide (?)
-	CNetworkVar( float, m_flUnSlideTime );
+	CNetworkVar( float, m_flLastUnSlideTime );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );
 

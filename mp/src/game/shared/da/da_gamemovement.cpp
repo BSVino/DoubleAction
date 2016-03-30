@@ -1460,7 +1460,7 @@ void CDAGameMovement::FinishProne( void )
 
 void CDAGameMovement::FinishUnSlide( void )
 {
-	m_pDAPlayer->m_Shared.m_flUnSlideTime = 0.0f;
+	m_pDAPlayer->m_Shared.m_flLastUnSlideTime = 0.0f;
 
 	SetUnSlideEyeOffset( 1.0 );
 	m_pDAPlayer->m_Shared.EndSlide();
@@ -1833,7 +1833,7 @@ void CDAGameMovement::Duck( void )
 	}
 	if( m_pDAPlayer->m_Shared.IsGettingUpFromSlide() == true )
 	{
-		float slidetime = m_pDAPlayer->m_Shared.m_flUnSlideTime - m_pDAPlayer->GetCurrentTime();
+		float slidetime = m_pDAPlayer->m_Shared.m_flLastUnSlideTime - m_pDAPlayer->GetCurrentTime();
 
 		if( slidetime < 0 )
 		{
