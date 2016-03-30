@@ -1460,7 +1460,7 @@ void CSDKGameMovement::FinishProne( void )
 
 void CSDKGameMovement::FinishUnSlide( void )
 {
-	m_pSDKPlayer->m_Shared.m_flUnSlideTime = 0.0f;
+	m_pSDKPlayer->m_Shared.m_flLastUnSlideTime = 0.0f;
 
 	SetUnSlideEyeOffset( 1.0 );
 	m_pSDKPlayer->m_Shared.EndSlide();
@@ -1833,7 +1833,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	if( m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() == true )
 	{
-		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - m_pSDKPlayer->GetCurrentTime();
+		float slidetime = m_pSDKPlayer->m_Shared.m_flLastUnSlideTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( slidetime < 0 )
 		{

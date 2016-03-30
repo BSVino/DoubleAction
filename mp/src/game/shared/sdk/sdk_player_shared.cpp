@@ -719,7 +719,7 @@ bool CSDKPlayerShared::CanChangePosition( void ) const
 
 bool CSDKPlayerShared::IsGettingUpFromSlide() const
 {
-	return ( m_flUnSlideTime > 0 );
+	return ( m_flLastUnSlideTime > 0 );
 }
 
 bool CSDKPlayerShared::IsSliding() const
@@ -793,7 +793,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	m_vecSlideDirection.GetForModify().NormalizeInPlace();
 
 	m_flSlideTime = m_pOuter->GetCurrentTime();
-	m_flUnSlideTime = 0;
+	m_flLastUnSlideTime = 0;
 }
 
 void CSDKPlayerShared::EndSlide()
@@ -846,7 +846,7 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 		SetAirSliding(false);
 	}
 
-	m_flUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
+	m_flLastUnSlideTime = m_pOuter->GetCurrentTime() + TIME_TO_UNSLIDE;
 
 	m_vecUnSlideEyeStartOffset = m_pOuter->GetViewOffset();
 }
