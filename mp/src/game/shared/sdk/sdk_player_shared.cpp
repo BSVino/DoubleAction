@@ -858,8 +858,9 @@ float CSDKPlayerShared::GetSlideFriction() const
 
 	ConVarRef sdk_slidetime("sdk_slidetime");
 
+	// While there are more than 0.2 seconds until the slide automatically ends...
 	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat() - 0.2f)
-		return 0.05f;
+		return 0.05f; // ...Use a low friction coefficient
 
 	return 1;
 }
