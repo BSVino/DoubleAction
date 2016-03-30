@@ -127,7 +127,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bInAirSlide ) ),
 	SendPropVector( SENDINFO(m_vecSlideDirection) ),
 	SendPropTime( SENDINFO( m_flSlideTime ) ),
-	SendPropTime( SENDINFO( m_flUnSlideTime ) ),
+	SendPropTime( SENDINFO( m_flLastUnSlideTime ) ),
 	SendPropVector( SENDINFO(m_vecUnSlideEyeStartOffset) ),
 	SendPropBool( SENDINFO( m_bDiveSliding ) ),
 	SendPropTime( SENDINFO( m_flLastDuckPress ) ),
