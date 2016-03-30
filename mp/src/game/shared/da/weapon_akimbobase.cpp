@@ -86,31 +86,27 @@ Activity CAkimboBase::GetIdleActivity(void)
 bool CAkimboBase::Deploy()
 {
 	// Transfer iClip1 of single pistol to m_iRightClip
-	CWeaponDABase *from = GetPlayerOwner()->m_hSwitchFrom;
-	DAWeaponID eFromId = DA_WEAPON_NONE;
 	DAWeaponID eSingleId = AliasToWeaponID(GetSDKWpnData().m_szSingle);
-	if (from)
-		eFromId = from->GetWeaponID();
-	if (eFromId == eSingleId)
-	{
-		m_iRightClip = from->m_iClip1;
-		m_iClip1 = m_iLeftClip + m_iRightClip;
-	}
+
+	CWeaponDABase *pSingle = GetPlayerOwner()->FindWeapon(eSingleId);
+	Assert(pSingle);
+
+	m_iRightClip = pSingle->m_iClip1;
+	m_iClip1 = m_iLeftClip + m_iRightClip;
+
 	return BaseClass::Deploy();
 }
 
 bool CAkimboBase::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	// Transfer m_iRightClip into iClip1 of single pistol
-	CWeaponDABase *to = (CWeaponDABase *)pSwitchingTo;
-	DAWeaponID eToId = DA_WEAPON_NONE;
 	DAWeaponID eSingleId = AliasToWeaponID(GetSDKWpnData().m_szSingle);
-	if (to)
-		eToId = to->GetWeaponID();
-	if (eToId == eSingleId)
-	{
-		to->m_iClip1 = m_iRightClip;
-	}
+
+	CWeaponDABase *pSingle = GetPlayerOwner()->FindWeapon(eSingleId);
+	Assert(pSingle);
+
+	pSingle->m_iClip1 = m_iRightClip;
+
 	return BaseClass::Holster(pSwitchingTo);
 }
 
