@@ -404,6 +404,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flCurrentTime = gpGlobals->curtime;
 
 	m_iszCharacter = NULL_STRING;
+
+	m_flStuckTime = -1;
 }
 
 
