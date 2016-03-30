@@ -141,7 +141,9 @@ public:
 
 #define ROLL_TIME 0.65f
 #define ROLLFINISH_TIME 0.2f
+// Time it takes for the eye offset to go from stand to slide
 #define TIME_TO_SLIDE 0.2f
+// Time between slide starts
 #define TIME_TO_RESLIDE 0.75f
 #define SLIDE_TIME 6.0f
 #define DIVE_RISE_TIME 0.4f
