@@ -79,8 +79,9 @@ public:
 	void	StartSliding(bool bDiveSliding = false);
 	void	EndSlide();
 	void	StandUpFromSlide(bool bJumpUp = false);
-	float	GetSlideTime() const { return m_flSlideTime; };
-	void    AddSlideTime(float flAdd) { m_flSlideTime += flAdd; }
+	float	GetSlideStartTime() const { return m_flSlideStartTime; };
+	float	GetSlideAutoEndTime() const { return m_flSlideAutoEndTime; };
+	void    AddSlideTime(float flAdd) { m_flSlideAutoEndTime += flAdd; }
 	Vector	GetSlideDirection() const { return m_vecSlideDirection; };
 	float	GetSlideFriction() const;
 
@@ -181,7 +182,8 @@ private:
 	CNetworkVar( bool, m_bSliding );
 	CNetworkVar( bool, m_bInAirSlide );
 	CNetworkVar( Vector, m_vecSlideDirection );
-	CNetworkVar( float, m_flSlideTime );
+	CNetworkVar( float, m_flSlideStartTime );
+	CNetworkVar( float, m_flSlideAutoEndTime );
 	CNetworkVar( bool, m_bDiveSliding );
 
 	CNetworkVar( float, m_flLastDuckPress );

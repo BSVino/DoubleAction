@@ -623,7 +623,8 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bSliding = false;
 	m_bDiveSliding = false;
 	m_bRolling = false;
-	m_flSlideTime = 0;
+	m_flSlideStartTime = 0;
+	m_flSlideAutoEndTime = 0;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -792,14 +793,17 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	m_vecSlideDirection = m_pOuter->GetAbsVelocity();
 	m_vecSlideDirection.GetForModify().NormalizeInPlace();
 
-	m_flSlideTime = m_pOuter->GetCurrentTime();
+	ConVarRef sdk_slidetime("sdk_slidetime");
+
+	m_flSlideStartTime = m_pOuter->GetCurrentTime();
+	m_flSlideAutoEndTime = m_flSlideStartTime + sdk_slidetime.GetFloat();
 	m_flLastUnSlideTime = 0;
 }
 
 void CSDKPlayerShared::EndSlide()
 {
 	// If it was long enough to notice what it was, then train the slide.
-	if (m_pOuter->GetCurrentTime() - m_flSlideTime > 1)
+	if (m_pOuter->GetCurrentTime() - m_flSlideStartTime > 1)
 	{
 		if (m_bDiveSliding)
 			m_pOuter->Instructor_LessonLearned("slideafterdive");
@@ -816,7 +820,7 @@ void CSDKPlayerShared::EndSlide()
 void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 {	
 	// If it was long enough to notice what it was, then train the slide.
-	if (m_pOuter->GetCurrentTime() - m_flSlideTime > 1)
+	if (m_pOuter->GetCurrentTime() - m_flSlideStartTime > 1)
 	{
 		if (m_bDiveSliding)
 			m_pOuter->Instructor_LessonLearned("slideafterdive");
@@ -834,7 +838,7 @@ void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 		{
 			m_bSliding = false;
 			// and trigger brief slide cooldown
-			m_flSlideTime = m_pOuter->GetCurrentTime();
+			m_flSlideStartTime = m_pOuter->GetCurrentTime();
 		}
 		else
 			m_pOuter->FreezePlayer(0.4f, 0.3f);
@@ -856,10 +860,8 @@ float CSDKPlayerShared::GetSlideFriction() const
 	if (!m_bSliding)
 		return 1;
 
-	ConVarRef sdk_slidetime("sdk_slidetime");
-
 	// While there are more than 0.2 seconds until the slide automatically ends...
-	if (m_pOuter->GetCurrentTime() - m_flSlideTime < sdk_slidetime.GetFloat() - 0.2f)
+	if (m_flSlideAutoEndTime - m_pOuter->GetCurrentTime() > 0.2f)
 		return 0.05f; // ...Use a low friction coefficient
 
 	return 1;
