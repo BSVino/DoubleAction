@@ -194,7 +194,7 @@ void FX_FireBullets(
 			CAkimboBase* pAkimbo = dynamic_cast<CAkimboBase*>(pWeapon);
 			Assert(pAkimbo);
 			if (pAkimbo)
-				pPlayer->DoMuzzleFlash(pAkimbo->shootright?2:1);
+				pPlayer->DoMuzzleFlash(pAkimbo->m_bShootRight?2:1);
 		}
 	}
 	else
