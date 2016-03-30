@@ -799,7 +799,7 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 void CSDKPlayerShared::EndSlide()
 {
 	// If it was long enough to notice what it was, then train the slide.
-	if (gpGlobals->curtime > m_flSlideTime + 1)
+	if (gpGlobals->curtime - m_flSlideTime > 1)
 	{
 		if (m_bDiveSliding)
 			m_pOuter->Instructor_LessonLearned("slideafterdive");
@@ -816,7 +816,7 @@ void CSDKPlayerShared::EndSlide()
 void CSDKPlayerShared::StandUpFromSlide( bool bJumpUp )
 {	
 	// If it was long enough to notice what it was, then train the slide.
-	if (gpGlobals->curtime > m_flSlideTime + 1)
+	if (gpGlobals->curtime - m_flSlideTime > 1)
 	{
 		if (m_bDiveSliding)
 			m_pOuter->Instructor_LessonLearned("slideafterdive");
