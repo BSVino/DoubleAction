@@ -231,6 +231,7 @@ public:
 	CNetworkVar( bool, m_bIsTryingUnprone );
 #endif
 
+	// > 0 apparently means getting up from slide (?)
 	CNetworkVar( float, m_flUnSlideTime );
 	CNetworkVar( Vector, m_vecUnSlideEyeStartOffset );
 	CNetworkVar( bool, m_bIsTryingUnduck );
