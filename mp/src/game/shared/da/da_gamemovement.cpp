@@ -1879,7 +1879,7 @@ void CDAGameMovement::Duck( void )
 				m_pDAPlayer->m_Shared.SetAirSliding( true );
 			}
 		}
-		else */if (m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideTime() > da_slidetime.GetFloat() && !m_pDAPlayer->m_Shared.IsGettingUpFromSlide())
+		else */if (m_pDAPlayer->GetCurrentTime() > m_pDAPlayer->m_Shared.GetSlideAutoEndTime() && !m_pDAPlayer->m_Shared.IsGettingUpFromSlide())
 		{
 			// if there's no room to crouch indicate transition to prone
 			if( !CanUnprone() )
@@ -1900,7 +1900,7 @@ void CDAGameMovement::Duck( void )
 		}
 		else
 		{
-			float fraction = (m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideTime()) / TIME_TO_SLIDE;
+			float fraction = (m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideStartTime()) / TIME_TO_SLIDE;
 			SetSlideEyeOffset( fraction );
 		}
 	}
@@ -2078,7 +2078,7 @@ void CDAGameMovement::Duck( void )
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
 		bool bGetUpFromProne = (m_pDAPlayer->GetCurrentTime() > m_pDAPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
 
-		if (m_pDAPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideTime() > m_pDAPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
+		if (m_pDAPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideStartTime() > m_pDAPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
 			bGetUp = true;
 
 		bool bSlide = false;
@@ -2107,7 +2107,7 @@ void CDAGameMovement::Duck( void )
 		{
 			bSlide = (m_pDAPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
 				(m_pDAPlayer->GetFlags() & FL_ONGROUND) && (mv->m_nButtons & IN_DUCK) &&
-				(m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideTime() > TIME_TO_RESLIDE);
+				(m_pDAPlayer->GetCurrentTime() - m_pDAPlayer->m_Shared.GetSlideStartTime() > TIME_TO_RESLIDE);
 
 			bDive = (m_pDAPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
