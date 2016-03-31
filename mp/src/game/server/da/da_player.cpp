@@ -2229,7 +2229,7 @@ int CDAPlayer::GetMaxHealth() const
 
 bool CDAPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
-	return ThrowWeapon(GetActiveDAWeapon());
+	return ThrowWeapon(GetActiveDAWeapon(), bAutoSwitch);
 }
 
 bool CDAPlayer::ThrowWeapon( CWeaponDABase* pWeapon, bool bAutoSwitch )
