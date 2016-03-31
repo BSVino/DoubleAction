@@ -81,6 +81,10 @@ public:
 	virtual int GetWeight(void) const;
 
 	const Vector GetShootPosition(CSDKPlayer* pShooter);
+
+	// Finds the single variant of this akimbo weapon
+	CWeaponSDKBase *FindSingleWeapon();
+
 protected:
 	virtual bool NeedsReload( int iClipSize1, int iClipSize2 );
 };
