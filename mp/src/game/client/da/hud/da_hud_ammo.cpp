@@ -228,7 +228,7 @@ void CHudAmmo::ShotFired(C_WeaponDABase* pWeapon, bool bAkimbo, bool bRight)
 	if (ConVarRef("da_vr_hud").GetBool() || UseVR())
 	{
 		if (bAkimbo)
-			CWeaponDABase::VRBulletFired(bRight?pWeapon->rightclip.Get():pWeapon->leftclip.Get(), bRight);
+			CWeaponDABase::VRBulletFired(bRight?pWeapon->m_iRightClip.Get():pWeapon->m_iLeftClip.Get(), bRight);
 		else
 			CWeaponDABase::VRBulletFired(m_iAmmo, true);
 	}

@@ -59,9 +59,9 @@ BEGIN_NETWORK_TABLE( CWeaponDABase, DT_WeaponDABase )
 	RecvPropFloat( RECVINFO( m_flSpread ) ),
   	RecvPropBool( RECVINFO( m_bSwingSecondary ) ),
 
-	RecvPropInt(RECVINFO(leftclip)),
-	RecvPropInt(RECVINFO(rightclip)),
-	RecvPropBool(RECVINFO(shootright)),
+	RecvPropInt(RECVINFO(m_iLeftClip)),
+	RecvPropInt(RECVINFO(m_iRightClip)),
+	RecvPropBool(RECVINFO(m_bShootRight)),
 
 	RecvPropFloat( RECVINFO( m_flGrenadeThrowStart ) ),
 #else
@@ -79,9 +79,9 @@ BEGIN_NETWORK_TABLE( CWeaponDABase, DT_WeaponDABase )
 	SendPropFloat( SENDINFO( m_flNextBrawlTime ) ),
 	SendPropBool( SENDINFO( m_bSwingSecondary ) ),
 
-	SendPropInt(SENDINFO(leftclip)),
-	SendPropInt(SENDINFO(rightclip)),
-	SendPropBool(SENDINFO(shootright)),
+	SendPropInt(SENDINFO(m_iLeftClip)),
+	SendPropInt(SENDINFO(m_iRightClip)),
+	SendPropBool(SENDINFO(m_bShootRight)),
 
 	SendPropFloat( SENDINFO( m_flGrenadeThrowStart ) ),
 #endif
@@ -98,9 +98,9 @@ BEGIN_PREDICTION_DATA( CWeaponDABase )
 	DEFINE_PRED_FIELD( m_flNextBrawlTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bSwingSecondary, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_FIELD(leftclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),			
-	DEFINE_PRED_FIELD(rightclip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-	DEFINE_PRED_FIELD(shootright, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),	
+	DEFINE_PRED_FIELD(m_iLeftClip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),			
+	DEFINE_PRED_FIELD(m_iRightClip, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_bShootRight, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),	
 END_PREDICTION_DATA()
 #endif
 
@@ -112,9 +112,9 @@ LINK_ENTITY_TO_CLASS( weapon_da_base, CWeaponDABase );
 	BEGIN_DATADESC( CWeaponDABase )
 
 		// New weapon Think and Touch Functions go here..
-		DEFINE_FIELD(leftclip, FIELD_INTEGER),
-		DEFINE_FIELD(rightclip, FIELD_INTEGER),
-		DEFINE_FIELD(shootright, FIELD_BOOLEAN),
+		DEFINE_FIELD(m_iLeftClip, FIELD_INTEGER),
+		DEFINE_FIELD(m_iRightClip, FIELD_INTEGER),
+		DEFINE_FIELD(m_bShootRight, FIELD_BOOLEAN),
 	END_DATADESC()
 
 #endif
@@ -369,7 +369,7 @@ void CWeaponDABase::FinishAttack (CDAPlayer *pPlayer)
 			if (pHudAmmo)
 			{
 				if (dynamic_cast<CAkimboBase*>(this))
-					pHudAmmo->ShotFired(this, true, shootright);
+					pHudAmmo->ShotFired(this, true, m_bShootRight);
 				else
 					pHudAmmo->ShotFired(this, false, true);
 			}
@@ -1093,10 +1093,10 @@ int CWeaponDABase::DrawModel(int flags)
 			DrawVRBullets(vecAmmo1, vecAmmo2, m_iClip1, GetMaxClip1(), true);
 
 		if (GetAttachment("ammo_1_r", vecAmmo1) && GetAttachment("ammo_2_r", vecAmmo2))
-			DrawVRBullets(vecAmmo1, vecAmmo2, rightclip, GetMaxClip1()/2, true);
+			DrawVRBullets(vecAmmo1, vecAmmo2, m_iRightClip, GetMaxClip1()/2, true);
 
 		if (GetAttachment("ammo_1_l", vecAmmo1) && GetAttachment("ammo_2_l", vecAmmo2))
-			DrawVRBullets(vecAmmo1, vecAmmo2, leftclip, GetMaxClip1()/2, false);
+			DrawVRBullets(vecAmmo1, vecAmmo2, m_iLeftClip, GetMaxClip1()/2, false);
 	}
 	else
 		s_iMaxClip = GetMaxClip1();
@@ -1598,7 +1598,7 @@ void CWeaponDABase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 				if (pAkimbo)
 				{
 					// Second pistol is always the left one
-					pAkimbo->leftclip = m_iClip1;
+					pAkimbo->m_iLeftClip = m_iClip1;
 					pAkimbo->SetOwner(pPlayer);
 
 					// Player already has a weapon like this one, so just remove this one.

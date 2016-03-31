@@ -239,9 +239,9 @@ private:
 public:
 	/*TODO: These should be moved into the akimbo class, but for some reason
 	I can't get them to synch properly there.*/
-	CNetworkVar (int, leftclip);
-	CNetworkVar (int, rightclip);
-	CNetworkVar (bool, shootright);
+	CNetworkVar(int, m_iLeftClip);
+	CNetworkVar(int, m_iRightClip);
+	CNetworkVar(bool, m_bShootRight);
 };
 
 
