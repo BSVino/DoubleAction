@@ -633,10 +633,9 @@ protected:
 	int						m_iOldState;
 
 #endif // End Client .dll only
-public:
+protected:
 	/*Called in DefaultReload for sane akimbo implementation*/
-	typedef bool (*delegate_t) (CBaseCombatWeapon *self);
-	delegate_t reload_delegate;
+	virtual bool NeedsReload( int iClipSize1, int iClipSize2 );
 };
 
 #endif // COMBATWEAPON_SHARED_H

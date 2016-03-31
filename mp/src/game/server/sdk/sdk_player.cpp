@@ -2509,9 +2509,9 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 			pThrow->VPhysicsDestroyObject(); 
 			pThrow->VPhysicsInitShadow(true, true);
 			if (i == 0)
-				pThrow->m_iClip1 = pAkimbos->rightclip;
+				pThrow->m_iClip1 = pAkimbos->m_iRightClip;
 			else
-				pThrow->m_iClip1 = pAkimbos->leftclip;
+				pThrow->m_iClip1 = pAkimbos->m_iLeftClip;
 
 			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
 		}
@@ -2540,7 +2540,7 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 
 			// Whatever's in our mag right now, consider that to be the left one and toss it.
 			pThrow->m_iClip1 = pWeapon->m_iClip1;
-			pWeapon->m_iClip1 = pAkimbo->rightclip;
+			pWeapon->m_iClip1 = pAkimbo->m_iRightClip;
 
 			SDKThrowWeaponInternal(pThrow, vecForward, vecAngles, flDiameter);
 
