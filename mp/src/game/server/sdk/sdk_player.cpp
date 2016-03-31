@@ -2229,7 +2229,7 @@ int CSDKPlayer::GetMaxHealth() const
 
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
-	return ThrowWeapon(GetActiveSDKWeapon());
+	return ThrowWeapon(GetActiveSDKWeapon(), bAutoSwitch);
 }
 
 bool CSDKPlayer::ThrowWeapon( CWeaponSDKBase* pWeapon, bool bAutoSwitch )
