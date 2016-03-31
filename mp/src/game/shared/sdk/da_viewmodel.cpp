@@ -107,7 +107,7 @@ void CDAViewModel::DoMuzzleFlash()
 		id = GetDAWeapon ()->GetWeaponID ();
 		if (SDK_WEAPON_AKIMBO_BERETTA == id || SDK_WEAPON_AKIMBO_M1911 == id)
 		{/*HACK: Alternate attachment for akimbos, where else to put this?*/
-			if (((CAkimboBase *)GetDAWeapon ())->shootright)
+			if (((CAkimboBase *)GetDAWeapon ())->m_bShootRight)
 				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "2");
 			else
 				ParticleProp()->Create ("muzzleflash_pistol", PATTACH_POINT_FOLLOW, "1");
@@ -154,14 +154,14 @@ int CDAViewModel::DrawModel(int flags)
 		{
 			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon());
 			if (pWeapon)
-				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->rightclip, pWeapon->GetMaxClip1()/2, true);
+				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->m_iRightClip, pWeapon->GetMaxClip1()/2, true);
 		}
 
 		if (GetAttachment(iAmmoL1, vecAmmo1) && GetAttachment(iAmmoL2, vecAmmo2))
 		{
 			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetActiveWeapon());
 			if (pWeapon)
-				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->leftclip, pWeapon->GetMaxClip1()/2, false);
+				CWeaponSDKBase::DrawVRBullets(vecAmmo1, vecAmmo2, pWeapon->m_iLeftClip, pWeapon->GetMaxClip1()/2, false);
 		}
 	}
 
