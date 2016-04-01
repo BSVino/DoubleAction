@@ -868,19 +868,19 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 				bHit = true;
 		}
 
+		// If we didn't find him, no damage.
+		if (!bHit)
+			continue;
+
 		vecToTarget = ( vecEndPos - vecSrc );
 
 		float flDamage = info.GetDamage();
-
-		// If we didn't find him, no damage.
-		if (!bHit)
-			flDamage = 0;
 
 		// decrease damage for an ent that's farther from the bomb.
 		flAdjustedDamage = vecToTarget.Length() * falloff;
 		flAdjustedDamage = flDamage - flAdjustedDamage;
 
-		if ( flAdjustedDamage < 0 )
+		if ( flAdjustedDamage <= 0 )
 			continue;
 
 		CTakeDamageInfo adjustedInfo = info;
