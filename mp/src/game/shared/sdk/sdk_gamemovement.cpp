@@ -141,7 +141,9 @@ public:
 
 #define ROLL_TIME 0.65f
 #define ROLLFINISH_TIME 0.2f
+// Time it takes for the eye offset to go from stand to slide
 #define TIME_TO_SLIDE 0.2f
+// Time between slide starts
 #define TIME_TO_RESLIDE 0.75f
 #define SLIDE_TIME 6.0f
 #define DIVE_RISE_TIME 0.4f
@@ -1458,7 +1460,7 @@ void CSDKGameMovement::FinishProne( void )
 
 void CSDKGameMovement::FinishUnSlide( void )
 {
-	m_pSDKPlayer->m_Shared.m_flUnSlideTime = 0.0f;
+	m_pSDKPlayer->m_Shared.m_flLastUnSlideTime = 0.0f;
 
 	SetUnSlideEyeOffset( 1.0 );
 	m_pSDKPlayer->m_Shared.EndSlide();
@@ -1831,7 +1833,7 @@ void CSDKGameMovement::Duck( void )
 	}
 	if( m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() == true )
 	{
-		float slidetime = m_pSDKPlayer->m_Shared.m_flUnSlideTime - m_pSDKPlayer->GetCurrentTime();
+		float slidetime = m_pSDKPlayer->m_Shared.m_flLastUnSlideTime - m_pSDKPlayer->GetCurrentTime();
 
 		if( slidetime < 0 )
 		{
@@ -1877,7 +1879,7 @@ void CSDKGameMovement::Duck( void )
 				m_pSDKPlayer->m_Shared.SetAirSliding( true );
 			}
 		}
-		else */if (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime() > sdk_slidetime.GetFloat() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
+		else */if (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetSlideAutoEndTime() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 		{
 			// if there's no room to crouch indicate transition to prone
 			if( !CanUnprone() )
@@ -1898,7 +1900,7 @@ void CSDKGameMovement::Duck( void )
 		}
 		else
 		{
-			float fraction = (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime()) / TIME_TO_SLIDE;
+			float fraction = (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideStartTime()) / TIME_TO_SLIDE;
 			SetSlideEyeOffset( fraction );
 		}
 	}
@@ -2076,7 +2078,7 @@ void CSDKGameMovement::Duck( void )
 		bool bGetUp = !!(buttonsPressed & (IN_ALT1|IN_JUMP));
 		bool bGetUpFromProne = (m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.m_flDisallowUnProneTime) && (bGetUp || !!(mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)));
 
-		if (m_pSDKPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideTime() > m_pSDKPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
+		if (m_pSDKPlayer->m_Shared.IsSliding() && (buttonsReleased & IN_ALT1) && m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideStartTime() > m_pSDKPlayer->GetUserInfoFloat("da_slide_unclick_time", 0.25f))
 			bGetUp = true;
 
 		bool bSlide = false;
@@ -2105,7 +2107,7 @@ void CSDKGameMovement::Duck( void )
 		{
 			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
 				(m_pSDKPlayer->GetFlags() & FL_ONGROUND) && (mv->m_nButtons & IN_DUCK) &&
-				(m_pSDKPlayer->m_Shared.GetSlideTime() < (m_pSDKPlayer->GetCurrentTime() - TIME_TO_RESLIDE));
+				(m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideStartTime() > TIME_TO_RESLIDE);
 
 			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
 		}
