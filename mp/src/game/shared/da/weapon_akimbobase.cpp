@@ -87,9 +87,12 @@ bool CAkimboBase::Deploy()
 {
 	CWeaponDABase *pSingle = FindSingleWeapon();
 
-	// Transfer iClip1 of single pistol to m_iRightClip
-	m_iRightClip = pSingle->m_iClip1;
-	m_iClip1 = m_iLeftClip + m_iRightClip;
+	if (pSingle)
+	{
+		// Transfer iClip1 of single pistol to m_iRightClip
+		m_iRightClip = pSingle->m_iClip1;
+		m_iClip1 = m_iLeftClip + m_iRightClip;
+	}
 
 	return BaseClass::Deploy();
 }
@@ -98,8 +101,11 @@ bool CAkimboBase::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	CWeaponDABase *pSingle = FindSingleWeapon();
 
-	// Transfer m_iRightClip into iClip1 of single pistol
-	pSingle->m_iClip1 = m_iRightClip;
+	if (pSingle)
+	{
+		// Transfer m_iRightClip into iClip1 of single pistol
+		pSingle->m_iClip1 = m_iRightClip;
+	}
 
 	return BaseClass::Holster(pSwitchingTo);
 }
