@@ -171,25 +171,19 @@ void CHudHealth::OnThink()
 //-----------------------------------------------------------------------------
 void CHudHealth::MsgFunc_Damage( bf_read &msg )
 {
-	int armor = msg.ReadByte();	// armor
 	int damageTaken = msg.ReadByte();	// health
-	long bitsDamage = msg.ReadLong(); // damage bits
-	bitsDamage; // variable still sent but not used
 
 	Vector vecFrom;
 
-	vecFrom.x = msg.ReadBitCoord();
-	vecFrom.y = msg.ReadBitCoord();
-	vecFrom.z = msg.ReadBitCoord();
+	msg.ReadBitVec3Coord(vecFrom);
+
+	Assert(msg.GetNumBytesLeft() == 0);
 
 	// Actually took damage?
-	if ( damageTaken > 0 || armor > 0 )
+	if ( damageTaken > 0 )
 	{
-		if ( damageTaken > 0 )
-		{
-			// start the animation
-			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
-		}
+		// start the animation
+		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("HealthDamageTaken");
 	}
 }
 
