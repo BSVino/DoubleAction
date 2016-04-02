@@ -163,6 +163,9 @@ public:
 
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 
+	bool HasStyleSkillAfterRespawn() const { return m_iStyleSkillAfterRespawn != SKILL_NONE; }
+
+
 private:
 
 #if defined ( SDK_USE_PRONE )
