@@ -786,7 +786,7 @@ void CDAPlayer::PreThink(void)
 		// we need to start from a higher offset if we're not diving (18 works!)
 		int iOffset = 13*!m_Shared.IsDiving();
 
-		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5+iOffset), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 10), Vector(-16, -16, -16), Vector(16, 16, 16), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+		UTIL_TraceHull(GetAbsOrigin() + Vector(0, 0, 5+iOffset), GetAbsOrigin() + vecNormalizedVelocity*40 + Vector(0, 0, 10), Vector(-16, -16, -15), Vector(16, 16, 14), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
 
 		CBaseEntity* pHit = NULL;
 
