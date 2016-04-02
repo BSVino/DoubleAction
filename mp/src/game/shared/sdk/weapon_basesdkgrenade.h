@@ -40,6 +40,8 @@ public:
 
 	bool			Reload();
 
+	virtual bool	AllowsAutoSwitchTo( void ) const;
+
 	virtual void	ItemPostFrame();
 	
 	void			DecrementAmmo( CBaseCombatCharacter *pOwner );

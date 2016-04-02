@@ -166,6 +166,17 @@ bool CBaseSDKGrenade::Reload()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: Whether this weapon can be autoswitched to when the player runs out
+//			of ammo in their current weapon or they pick this weapon up.
+//			In DA, this is also used to determine whether this weapon can be
+//			autoswitched to when the player drops the current weapon
+//-----------------------------------------------------------------------------
+bool CBaseSDKGrenade::AllowsAutoSwitchTo( void ) const
+{
+	return false;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CBaseSDKGrenade::ItemPostFrame()
