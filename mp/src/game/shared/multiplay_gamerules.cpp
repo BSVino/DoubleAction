@@ -528,7 +528,7 @@ ConVarRef suitcharger( "sk_suitcharger" );
 
 			// If we have an active weapon and this weapon doesn't allow autoswitching away
 			// from another weapon, skip it.
-			if ( pCurrentWeapon && !pCheck->AllowsAutoSwitchTo() )
+			if ( !pCheck->AllowsAutoSwitchTo() )
 				continue;
 
 			if ( pCheck->GetWeight() > -1 && pCheck->GetWeight() == iCurrentWeight && pCheck != pCurrentWeapon )
