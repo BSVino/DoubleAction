@@ -887,6 +887,8 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 		adjustedInfo.SetDamage( flAdjustedDamage );
 
 		Vector dir = vecToTarget;
+		if (tr.startsolid)
+			dir = vecSpot - vecSrc;
 		VectorNormalize( dir );
 
 		// If we don't have a damage force, manufacture one
