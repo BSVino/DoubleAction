@@ -206,9 +206,9 @@ void CFolderMenu::Update()
 			if (pszLocalized)
 				sLocalized += pszLocalized;
 
-			if (pPlayer->m_Shared.m_iStyleSkill)
+			if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn)
 			{
-				std::string sSkill = std::string("#DA_Skill_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()) + "_Adjective";
+				std::string sSkill = std::string("#DA_Skill_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkillAfterRespawn.Get()) + "_Adjective";
 
 				pszLocalized = g_pVGuiLocalize->Find( sSkill.c_str() );
 
@@ -562,10 +562,10 @@ void CFolderMenu::Update()
 
 		if (pSkillInfo && pSkillIcon)
 		{
-			if (pPlayer->m_Shared.m_iStyleSkill)
+			if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn)
 			{
-				pSkillInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get())).c_str());
-				pSkillIcon->SetImage(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkill.Get()));
+				pSkillInfo->SetText((std::string("#DA_SkillInfo_") + SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkillAfterRespawn.Get())).c_str());
+				pSkillIcon->SetImage(SkillIDToAlias((SkillID)pPlayer->m_Shared.m_iStyleSkillAfterRespawn.Get()));
 			}
 			else
 			{
@@ -745,7 +745,7 @@ bool CFolderMenu::ShouldShowCharacterOnly()
 	if (pPlayer->GetLoadoutWeight())
 		return false;
 
-	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
+	if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn != SKILL_NONE)
 		return false;
 
 	if (m_pPage)
@@ -764,7 +764,7 @@ bool CFolderMenu::ShouldShowCharacterAndWeapons()
 	if (!pPlayer)
 		return true;
 
-	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE)
+	if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn != SKILL_NONE)
 		return false;
 
 	if (m_pPage)
@@ -783,7 +783,7 @@ bool CFolderMenu::ShouldShowEverything()
 	if (!pPlayer)
 		return true;
 
-	if (pPlayer->m_Shared.m_iStyleSkill != SKILL_NONE || m_pPage && FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
+	if (pPlayer->m_Shared.m_iStyleSkillAfterRespawn != SKILL_NONE || m_pPage && FStrEq(m_pPage->GetName(), PANEL_BUY_EQUIP_CT))
 		return true;
 
 	return false;
