@@ -625,6 +625,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bRolling = false;
 	m_flSlideStartTime = 0;
 	m_flSlideAutoEndTime = 0;
+	m_iStyleSkill = m_iStyleSkillAfterRespawn = SKILL_NONE;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
