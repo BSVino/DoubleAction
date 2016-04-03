@@ -2252,7 +2252,10 @@ bool CDAPlayer::ThrowWeapon( CWeaponDABase* pWeapon, bool bAutoSwitch )
 
 		SDKThrowWeapon(pWeapon, vecForward, gunAngles, flDiameter);
 
-		if (bAutoSwitch) SwitchToNextBestWeapon( NULL );
+		if (!bAutoSwitch)
+			return true;
+
+		SwitchToNextBestWeapon( NULL );
 		return true;
 	}
 
