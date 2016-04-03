@@ -1652,9 +1652,14 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			Holster(NULL);
 		else
 		{
-			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon() && pPlayer->GetActiveSDKWeapon()->GetWeaponID() != SDK_WEAPON_BRAWL)
+			if (GetWeaponID() == SDK_WEAPON_GRENADE)
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
+				if (!pPlayer->GetActiveSDKWeapon() || pPlayer->GetActiveSDKWeapon()->GetWeaponID() == SDK_WEAPON_BRAWL || pPlayer->GetActiveSDKWeapon() == this)
+				{
+					// SwitchToNextBestWeapon will disregard grenades and pick another weapon
+					pPlayer->SwitchToNextBestWeapon( NULL );
+				}
 			}
 			else
 				pPlayer->Weapon_Switch( this );
