@@ -2250,10 +2250,21 @@ bool CSDKPlayer::ThrowWeapon( CWeaponSDKBase* pWeapon, bool bAutoSwitch )
 
 		float flDiameter = sqrt( CollisionProp()->OBBSize().x * CollisionProp()->OBBSize().x + CollisionProp()->OBBSize().y * CollisionProp()->OBBSize().y );
 
+		SDKWeaponID eFallbackId = pWeapon->GetFallbackWeaponID();
 		SDKThrowWeapon(pWeapon, vecForward, gunAngles, flDiameter);
 
 		if (!bAutoSwitch)
 			return true;
+
+		if (eFallbackId != WEAPON_NONE)
+		{
+			CWeaponSDKBase *pFallbackWeapon = FindWeapon(eFallbackId);
+			if (pFallbackWeapon)
+			{
+				Weapon_Switch(pFallbackWeapon);
+				return true;
+			}
+		}
 
 		SwitchToNextBestWeapon( NULL );
 		return true;

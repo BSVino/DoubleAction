@@ -65,6 +65,7 @@ public:
 #endif
 	CAkimboBase();
 	virtual bool IsPredicted() const { return true; }
+	virtual SDKWeaponID GetFallbackWeaponID( void ) const { return AliasToWeaponID(GetSDKWpnData().m_szSingle); }
 	virtual Activity ActivityOverride(Activity baseAct, bool *pRequired);
 	virtual int GetTracerAttachment(void);
 	virtual Activity GetIdleActivity(void);
