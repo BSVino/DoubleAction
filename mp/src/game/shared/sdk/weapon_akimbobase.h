@@ -9,10 +9,9 @@ Each pistol has its own ammo counter, and when one becomes empty before the
 other then only the one with ammo will be fired. The right pistol has its 
 ammo synched with the single pistol, and because of this akimbos should 
 always give the player an equivalent single pistol. When players throw
-akimbos two unique single variants are created, each one has its ammo
-set to the left/right counters of the akimbos. When in use, the combined 
-total of the left and right counters are packed into m_iClip1 for display
-purposes.
+akimbos, the right pistol is kept and the left pistol is dropped as a single
+variant. When in use, the combined total of the left and right counters are
+packed into m_iClip1 for display purposes.
 
 The current implementation is not optimal and is implemented in several 
 different places. It would be better to have a single weapon that functions
@@ -66,6 +65,7 @@ public:
 #endif
 	CAkimboBase();
 	virtual bool IsPredicted() const { return true; }
+	virtual SDKWeaponID GetFallbackWeaponID( void ) const { return AliasToWeaponID(GetSDKWpnData().m_szSingle); }
 	virtual Activity ActivityOverride(Activity baseAct, bool *pRequired);
 	virtual int GetTracerAttachment(void);
 	virtual Activity GetIdleActivity(void);
