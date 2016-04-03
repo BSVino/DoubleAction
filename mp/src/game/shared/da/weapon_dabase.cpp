@@ -1652,9 +1652,14 @@ void CWeaponDABase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 			Holster(NULL);
 		else
 		{
-			if (GetWeaponID() == DA_WEAPON_GRENADE && pPlayer->GetActiveDAWeapon() && pPlayer->GetActiveDAWeapon()->GetWeaponID() != DA_WEAPON_BRAWL)
+			if (GetWeaponID() == DA_WEAPON_GRENADE)
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
+				if (!pPlayer->GetActiveDAWeapon() || pPlayer->GetActiveDAWeapon()->GetWeaponID() == DA_WEAPON_BRAWL || pPlayer->GetActiveDAWeapon() == this)
+				{
+					// SwitchToNextBestWeapon will disregard grenades and pick another weapon
+					pPlayer->SwitchToNextBestWeapon( NULL );
+				}
 			}
 			else
 				pPlayer->Weapon_Switch( this );
