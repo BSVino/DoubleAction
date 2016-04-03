@@ -80,7 +80,7 @@ public:
 	virtual int GetMaxClip1(void) const;
 	virtual int GetWeight(void) const;
 
-	const Vector GetShootPosition(CSDKPlayer* pShooter);
+	virtual const Vector GetShootPosition(CSDKPlayer* pShooter);
 
 	// Finds the single variant of this akimbo weapon
 	CWeaponSDKBase *FindSingleWeapon();

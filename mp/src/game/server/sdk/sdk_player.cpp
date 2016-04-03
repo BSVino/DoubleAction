@@ -2229,7 +2229,7 @@ int CSDKPlayer::GetMaxHealth() const
 
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
-	return ThrowWeapon(GetActiveSDKWeapon());
+	return ThrowWeapon(GetActiveSDKWeapon(), bAutoSwitch);
 }
 
 bool CSDKPlayer::ThrowWeapon( CWeaponSDKBase* pWeapon, bool bAutoSwitch )
@@ -2494,7 +2494,7 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	if (!pWeapon)
 		return;
 
-	if (!FStrEq(pWeapon->GetSDKWpnData().m_szSingle, ""))
+	if (pWeapon->IsAkimbo())
 	{
 		// This is an akimbo weapon. Toss two singles instead.
 
@@ -2519,7 +2519,7 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 		RemovePlayerItem (pAkimbos);
 
 		// Remove the single version also.
-		CWeaponSDKBase *pSingle = FindWeapon(AliasToWeaponID(pszSingle));
+		CWeaponSDKBase *pSingle = pAkimbos->FindSingleWeapon();
 		AssertMsg (pSingle, "How do you have akimbos without a single?");
 		if (pSingle) 
 			RemovePlayerItem (pSingle);
@@ -2527,7 +2527,7 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 		return;
 	}
 
-	if (!FStrEq(pWeapon->GetSDKWpnData().m_szAkimbo, ""))
+	if (pWeapon->HasAkimbo())
 	{
 		// This is a single weapon that has an akimbo counterpart.
 		// Check to see if we have the akimbo, and if we do, remove it before tossing.
