@@ -2494,7 +2494,7 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 	if (!pWeapon)
 		return;
 
-	if (!FStrEq(pWeapon->GetSDKWpnData().m_szSingle, ""))
+	if (pWeapon->IsAkimbo())
 	{
 		// This is an akimbo weapon. Toss two singles instead.
 
@@ -2519,7 +2519,7 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 		RemovePlayerItem (pAkimbos);
 
 		// Remove the single version also.
-		CWeaponDABase *pSingle = FindWeapon(AliasToWeaponID(pszSingle));
+		CWeaponDABase *pSingle = pAkimbos->FindSingleWeapon();
 		AssertMsg (pSingle, "How do you have akimbos without a single?");
 		if (pSingle) 
 			RemovePlayerItem (pSingle);
@@ -2527,7 +2527,7 @@ void CDAPlayer::SDKThrowWeapon( CWeaponDABase *pWeapon, const Vector &vecForward
 		return;
 	}
 
-	if (!FStrEq(pWeapon->GetSDKWpnData().m_szAkimbo, ""))
+	if (pWeapon->HasAkimbo())
 	{
 		// This is a single weapon that has an akimbo counterpart.
 		// Check to see if we have the akimbo, and if we do, remove it before tossing.
