@@ -41,6 +41,7 @@ public:
 	// All predicted weapons need to implement and return true
 	virtual bool	IsPredicted() const { return true; }
 	virtual SDKWeaponID GetWeaponID( void ) const { return WEAPON_NONE; }
+	virtual SDKWeaponID GetFallbackWeaponID( void ) const { return WEAPON_NONE; }
 	virtual void	Precache( void );
 	
 	// Get SDK weapon specific weapon data.
