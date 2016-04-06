@@ -3365,7 +3365,7 @@ CDAPlayerStateInfo* CDAPlayer::State_LookupInfo( DAPlayerState state )
 	// This table MUST match the 
 	static CDAPlayerStateInfo playerStateInfos[] =
 	{
-		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CDAPlayer::State_Enter_ACTIVE, NULL, &CDAPlayer::State_PreThink_ACTIVE },
+		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CDAPlayer::State_Enter_ACTIVE, &CDAPlayer::State_Leave_ACTIVE, &CDAPlayer::State_PreThink_ACTIVE },
 		{ STATE_WELCOME,		"STATE_WELCOME",		&CDAPlayer::State_Enter_WELCOME, NULL, &CDAPlayer::State_PreThink_WELCOME },
 		{ STATE_MAPINFO,        "STATE_MAPINFO",        &CDAPlayer::State_Enter_MAPINFO, NULL, &CDAPlayer::State_PreThink_MAPINFO },
 #if defined ( SDK_USE_TEAMS )
@@ -3738,6 +3738,11 @@ void CDAPlayer::State_Enter_ACTIVE()
 
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
 	Spawn();
+}
+
+void CDAPlayer::State_Leave_ACTIVE()
+{
+	DropBriefcase();
 }
 
 void CDAPlayer::State_PreThink_ACTIVE()
