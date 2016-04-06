@@ -366,6 +366,7 @@ public: //Tony; I had this private but I need it public for initial spawns.
 private:
 
 	void State_Enter_ACTIVE();
+	void State_Leave_ACTIVE();
 	void State_PreThink_ACTIVE();
 
 	void State_Enter_OBSERVER_MODE();
