@@ -115,7 +115,8 @@ public:
 
 	void    AccumulateWallFlipTime();
 
-	inline void TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
+	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
+	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask);
 	virtual void FullWalkMove ();
 	virtual void StepMove (Vector &vecDestination, trace_t &trace);
 
@@ -2483,11 +2484,16 @@ Vector CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 	return BaseClass::GetPlayerViewOffset(ducked);
 }
 
-inline void CSDKGameMovement::TraceBBox (const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask)
 {
 	Ray_t ray;
 	ray.Init (start, end, mins, maxs);
-	UTIL_TraceRay (ray, PlayerSolidMask (), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+	UTIL_TraceRay(ray, mask, mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+}
+
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+{
+	TraceBBox(start, end, mins, maxs, pm, PlayerSolidMask());
 }
 
 bool CSDKGameMovement::CheckMantel()
@@ -2669,22 +2675,29 @@ void CSDKGameMovement::FullWalkMove ()
 			if (m_pSDKPlayer->IsStyleSkillActive(SKILL_ATHLETIC))
 				iWallflips = 9999;
 
-			if (!player->m_Local.m_bDucked && !m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips)
+			if (!player->m_Local.m_bDucked && !m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips
+				// Don't flip if the player is sliding or getting up from sliding.
+				&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
 			{
 				trace_t tr;
 				Vector org, mins, maxs;
 				Vector dir;
 				float dist;
 
-				dist = da_acro_wallflip_dist.GetFloat ();
-				VectorCopy (mv->GetAbsOrigin (), org);
-				VectorCopy (GetPlayerMins (), mins);
-				VectorCopy (GetPlayerMaxs (), maxs);
+				dist = da_acro_wallflip_dist.GetFloat();
+				VectorCopy(mv->GetAbsOrigin(), org);
+				VectorCopy(GetPlayerMins(), mins);
+				VectorCopy(GetPlayerMaxs(), maxs);
 				mins[2] += player->m_Local.m_flStepSize + 1e-3;
 				dir[0] = m_vecForward[0];
 				dir[1] = m_vecForward[1];
 				dir[2] = 0;
-				TraceBBox (org, org + dist*dir, mins, maxs, tr);
+				TraceBBox(org, org + dist*dir, mins, maxs, tr);
+				if (tr.fraction < 1 && (tr.surface.flags & SURF_NODRAW))
+				{
+					// If the surface isn't a wall, see if there is a wall behind it
+					TraceBBox(org, org + 3*dist*dir, mins, maxs, tr, PlayerSolidMask() & ~CONTENTS_PLAYERCLIP);
+				}
 
 				Vector vecForward;
 				AngleVectors(mv->m_vecAbsViewAngles, &vecForward);
@@ -2692,26 +2705,24 @@ void CSDKGameMovement::FullWalkMove ()
 				// Don't flip if the surface is skybox.
 				// Don't flip if the surface isn't a wall.
 				// Don't flip if the player isn't at least sorta facing the wall.
-				// Don't flip if the player is sliding or getting up from sliding.
-				if (tr.fraction < 1 && !(tr.surface.flags&(SURF_SKY|SURF_NODRAW)) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f
-					&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() )
+				if (tr.fraction < 1 && !(tr.surface.flags & (SURF_SKY | SURF_NODRAW)) && fabs(tr.plane.normal[2]) < 0.7 && vecForward.Dot(tr.plane.normal) < -0.7f)
 				{
 					m_pSDKPlayer->m_Shared.EndDive();
 					m_pSDKPlayer->m_Shared.EndRoll();
 					m_pSDKPlayer->m_Shared.EndSlide();
 
-					float speed = da_acro_wallflip_speed.GetFloat ();
+					float speed = da_acro_wallflip_speed.GetFloat();
 					mv->m_vecVelocity[0] = speed*tr.plane.normal[0];
 					mv->m_vecVelocity[1] = speed*tr.plane.normal[1];
-					mv->m_vecVelocity[2] = da_acro_wallflip_gain.GetFloat ();
-					SetGroundEntity (NULL);
-					FinishGravity ();
+					mv->m_vecVelocity[2] = da_acro_wallflip_gain.GetFloat();
+					SetGroundEntity(NULL);
+					FinishGravity();
 
-					CPASFilter filter (org);
-					filter.UsePredictionRules ();
-					m_pSDKPlayer->EmitSound (filter, m_pSDKPlayer->entindex (), "Player.GoDive");
+					CPASFilter filter(org);
+					filter.UsePredictionRules();
+					m_pSDKPlayer->EmitSound(filter, m_pSDKPlayer->entindex(), "Player.GoDive");
 
-					m_pSDKPlayer->DoAnimationEvent (PLAYERANIMEVENT_WALLFLIP);
+					m_pSDKPlayer->DoAnimationEvent(PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.StartWallFlip(tr.plane.normal);
 				}
 			}
