@@ -2693,6 +2693,11 @@ void CSDKGameMovement::FullWalkMove ()
 				dir[1] = m_vecForward[1];
 				dir[2] = 0;
 				TraceBBox(org, org + dist*dir, mins, maxs, tr);
+				if (tr.fraction < 1 && (tr.surface.flags & SURF_NODRAW))
+				{
+					// If the surface isn't a wall, see if there is a wall behind it
+					TraceBBox(org, org + 3*dist*dir, mins, maxs, tr, PlayerSolidMask() & ~CONTENTS_PLAYERCLIP);
+				}
 
 				Vector vecForward;
 				AngleVectors(mv->m_vecAbsViewAngles, &vecForward);
