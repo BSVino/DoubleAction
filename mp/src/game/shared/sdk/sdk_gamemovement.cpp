@@ -116,6 +116,7 @@ public:
 	void    AccumulateWallFlipTime();
 
 	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
+	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask);
 	virtual void FullWalkMove ();
 	virtual void StepMove (Vector &vecDestination, trace_t &trace);
 
@@ -2483,11 +2484,16 @@ Vector CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 	return BaseClass::GetPlayerViewOffset(ducked);
 }
 
-inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask)
 {
 	Ray_t ray;
 	ray.Init (start, end, mins, maxs);
-	UTIL_TraceRay(ray, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+	UTIL_TraceRay(ray, mask, mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+}
+
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+{
+	TraceBBox(start, end, mins, maxs, pm, PlayerSolidMask());
 }
 
 bool CSDKGameMovement::CheckMantel()
