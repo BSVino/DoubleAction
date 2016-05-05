@@ -10,6 +10,7 @@
 
 **Fixed bugs:**
 
+- Remove particles involving view model when deploying a new weapon [\#53](https://github.com/BSVino/DoubleAction/pull/53) ([TomyLobo](https://github.com/TomyLobo))
 - Fix not being able to wallflip in some places [\#52](https://github.com/BSVino/DoubleAction/pull/52) ([TomyLobo](https://github.com/TomyLobo))
 - Drop briefcase when leaving active state [\#50](https://github.com/BSVino/DoubleAction/pull/50) ([TomyLobo](https://github.com/TomyLobo))
 - Prevent switching to grenades while picking them up [\#47](https://github.com/BSVino/DoubleAction/pull/47) ([TomyLobo](https://github.com/TomyLobo))
