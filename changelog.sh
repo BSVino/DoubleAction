@@ -16,3 +16,4 @@ github_changelog_generator \
     --no-pr-wo-labels --no-issues-wo-labels \
     --include-labels 'Server issue,Client issue' \
     --exclude-labels 'duplicate,question,invalid,wontfix,Unreleased bug,PR attached' \
+    "$@"
