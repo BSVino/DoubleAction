@@ -381,11 +381,11 @@ void CHudStyleBar::Paint()
 
 	surface()->DrawSetColor( clrBar );
 
-	float flPercent;
+	float flFraction;
 	if (pPlayer->IsStyleSkillActive())
-		flPercent = min(pPlayer->GetStyleSkillCharge() / 100, 1);
+		flFraction = min(pPlayer->GetStyleSkillCharge() / 100, 1);
 	else
-		flPercent = m_flCurrentStyle / da_stylemeteractivationcost.GetFloat();
+		flFraction = m_flCurrentStyle / da_stylemeteractivationcost.GetFloat();
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 
@@ -395,17 +395,17 @@ void CHudStyleBar::Paint()
 
 	int iBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - flBarWidth/2;
 	int iBarRight = m_flElementXPos + iWidth - flStyleTextureWidth/2 + flBarWidth/2;
-	surface()->DrawFilledRect( iBarLeft, m_flElementYPos + m_flGap + flBarHeight*(1-flPercent), iBarRight, m_flElementYPos + flBarHeight );
+	surface()->DrawFilledRect( iBarLeft, m_flElementYPos + m_flGap + flBarHeight*(1-flFraction), iBarRight, m_flElementYPos + flBarHeight );
 
 	//int iFullBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
 
 	wchar_t wszStarsLabel[100];
-	V_swprintf_safe(wszStarsLabel, L"%i/100", (int)(flPercent*100));
+	V_swprintf_safe(wszStarsLabel, L"%i/100", (int)(flFraction*100));
 
 	int iStarsTextWide, iStarsTextTall;
 	surface()->GetTextSize(m_hTextFont, wszStarsLabel, iStarsTextWide, iStarsTextTall);
 	float flStarsX = flBarLeft - iStarsTextWide - m_flGap;
-	float flStarsY = m_flElementYPos + m_flGap + flBarHeight*(1-flPercent) - iStarsTextTall/2;
+	float flStarsY = m_flElementYPos + m_flGap + flBarHeight*(1-flFraction) - iStarsTextTall/2;
 
 	surface()->DrawSetTextPos( flStarsX, flStarsY );
 	surface()->DrawSetTextColor( Color(255, 255, 255, 255) );
