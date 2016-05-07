@@ -120,10 +120,17 @@ void CHudStyleBar::MsgFunc_StyleAnnouncement( bf_read &msg )
 
 void CHudStyleBar::Notice(notice_t eNotice)
 {
-	if (eNotice == NOTICE_MARKSMAN || eNotice == NOTICE_TROLL || eNotice == NOTICE_BOUNCER
-		|| eNotice == NOTICE_ATHLETIC || eNotice == NOTICE_SUPERSLO || eNotice == NOTICE_RESILIENT)
+	switch (eNotice)
 	{
+	case NOTICE_MARKSMAN:
+	case NOTICE_TROLL:
+	case NOTICE_BOUNCER:
+	case NOTICE_ATHLETIC:
+	case NOTICE_SUPERSLO:
+	case NOTICE_RESILIENT:
 		m_flStyleIconLerpStart = gpGlobals->curtime;
+
+		break;
 	}
 }
 
