@@ -1,0 +1,24 @@
+LightmappedGeneric
+{
+$basetexture "Metal/metalwall001a"
+$surfaceprop metalvent
+$detail "detail\dt_metal2"
+$detailscale 8
+$detailblendfactor .7
+$detailblendmode 0
+$bumpmap "Metal/metalwall001a_normal"
+$normalmapalphaenvmapmask 1
+$envmap env_cubemap
+$envmaptint "[ .56 .56 .56 ]"
+$envmapcontrast 1
+$envmapsaturation 1
+LightmappedGeneric_HDR_dx9
+{
+$envmaptint "[.25 .25 .25]"
+$normalmapalphaenvmapmask 1
+}
+LightmappedGeneric_DX9
+{
+$envmaptint "[.25 .25 .25]"
+}
+}

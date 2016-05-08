@@ -1,0 +1,8 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props/powerboard"
+	"$bumpmap" "models/props/powerboard_nor"
+	$phong 1
+	$phongboost 1.5
+	$phongfresnelranges "[.5 .5 10]"
+}

@@ -1,0 +1,7 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "Concrete/concretewall011h"
+	"$detail" "detail/detailconcrete001a"
+	"$detailscale" 4
+	"%keywords" "airexchange,c17industrial"
+}

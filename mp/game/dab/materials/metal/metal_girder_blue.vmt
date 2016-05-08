@@ -1,0 +1,8 @@
+lightmappedgeneric
+{
+$basetexture metal\metal_girder_01_blue
+$envmap env_cubemap
+$bumpmap "metal\metal_girder_nor"
+$normalmapalphaenvmapmask 1
+$surfaceprop solidmetal
+}

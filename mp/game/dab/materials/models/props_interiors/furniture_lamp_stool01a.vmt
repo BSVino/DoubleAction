@@ -1,0 +1,15 @@
+VertexLitGeneric
+{
+$basetexture "models\props_interiors\furniture_lamp_stool01a"
+$envmap env_cubemap
+$envmapmask "models\props_interiors\furniture_lamp_stool01a_ref"
+$envmaptint "[1 .9 .5]"
+$envmapcontrast ".7"
+$envmapsaturation ".7"
+VertexLitGeneric_HDR_dx9
+{
+$envmaptint "[8 8 .5]"
+$envmapcontrast ".9"
+$envmapsaturation ".8"
+}
+}

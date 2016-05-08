@@ -1,0 +1,15 @@
+LightmappedGeneric
+{
+$basetexture "metal/metalwall076a"
+$basealphaenvmapmask 1
+$surfaceprop metal
+$detail "detail\metal_detail_01"
+$detailscale "4.283"
+$detailblendfactor .8
+$detailblendmode 0
+"%keywords" combine
+$envmaptint "[ 0.55 0.55 0.75 ]"
+$envmap env_cubemap
+$envmapcontrast 1
+$envmapsaturation 1
+}

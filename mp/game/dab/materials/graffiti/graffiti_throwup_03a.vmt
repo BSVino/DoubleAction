@@ -1,0 +1,8 @@
+decalmodulate
+{
+$baseTexture "graffiti/graffiti_throwup_03a"
+
+$Decal 1
+$vertexcolor 1
+$vertexalpha 1
+}

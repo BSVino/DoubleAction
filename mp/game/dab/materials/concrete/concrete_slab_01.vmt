@@ -1,0 +1,9 @@
+Lightmappedgeneric
+{
+	$basetexture concrete/concrete_slab_01
+	$bumpmap concrete/concrete_slab_01_nor
+	$surfaceprop concrete
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.2 .2 .2]"
+}

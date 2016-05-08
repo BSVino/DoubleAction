@@ -1,0 +1,5 @@
+The file cuebmapdefault.hdr.vtf has been generated with source engine ingame tools( buildcubemap) and extract from the bsp file that use skyday02_01_hdr skybox
+This file hasn't been create with HDRshop software.
+
+credit : Nicolas Kirsch 
+email : fuzzzzzz@gmail.com

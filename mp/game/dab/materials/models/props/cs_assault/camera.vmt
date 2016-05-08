@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+$basetexture "models\props\cs_assault\camera"
+$envmap env_cubemap
+$envmapmask "models\props\cs_assault\camera_ref"
+}

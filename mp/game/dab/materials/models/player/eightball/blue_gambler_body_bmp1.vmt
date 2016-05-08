@@ -1,0 +1,16 @@
+vertexlitgeneric
+{
+$baseTexture models\player\Eightball\blue_gambler_body
+$bumpmap "models\player\Eightball\gambler_body_normal"
+$phong 1
+$phongboost 2
+$phongexponent 2
+$phongtint "[1 1 1]"
+$halflambert 0
+$phongfresnelranges "[.4 .8 30]"
+$ambientocclusion 1
+
+
+
+$diffuseexp "1.5"
+}

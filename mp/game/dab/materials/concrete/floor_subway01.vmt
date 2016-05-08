@@ -1,0 +1,10 @@
+LightmappedGeneric
+{
+$baseTexture "concrete/floor_subway01"
+$envmap env_cubemap
+$envmaptint "[.5 .7 1]"
+$envmapsaturation "0.25"
+$bumpmap "concrete\floor_subway01_normal"
+$normalmapalphaenvmapmask 1
+$surfaceprop concrete
+}

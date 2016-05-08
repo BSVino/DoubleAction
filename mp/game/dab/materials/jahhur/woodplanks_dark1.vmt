@@ -1,0 +1,13 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/woodplanks_dark1"
+	"$bumpmap" "jahhur/woodplanks_light1_normal"
+	"$surfaceprop" "wood"
+	//"$envmap" "env_cubemap"
+	//"$envmaptint" "[.5 .4 .3]"
+	//"$envmapcontrast" ".9"
+	//"$envmapsaturation" "1"
+	//"$normalmapalphaenvmapmask" 1
+
+
+}

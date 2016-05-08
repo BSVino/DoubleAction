@@ -1,0 +1,7 @@
+"LightmappedGeneric"
+{
+	"$translucent" 1
+	"$decal" 1
+	"$decalscale" .125
+	"$baseTexture" "rubber/decal_combine_poster1"
+}

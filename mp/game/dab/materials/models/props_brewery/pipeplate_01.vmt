@@ -1,0 +1,9 @@
+vertexlitgeneric
+{
+	$basetexture models/props_brewery/pipeplate_01
+	$bumpmap models/props_brewery/pipeplate_01_nor
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[1 .75 .1]"
+}

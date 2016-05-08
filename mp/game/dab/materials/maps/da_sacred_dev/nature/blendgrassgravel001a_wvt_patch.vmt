@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	"$basetexture"		"nature/dirtfloor006a"
+	"$detail"		"overlays/macro01a"
+	"$detailscale"		"0.100000"
+	"%detailtype"		"coastline_redgrass02"
+	"%tooltexture"		"nature/blendgrassgravel001a_tooltexture"
+	"%keywords"		"wasteland"
+	"$surfaceprop"		"dirt"
+}

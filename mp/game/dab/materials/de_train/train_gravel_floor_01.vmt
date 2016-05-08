@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+$basetexture "de_train\train_gravel_floor_01"
+$surfaceprop concrete
+}

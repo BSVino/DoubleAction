@@ -1,0 +1,13 @@
+vertexlitgeneric
+{
+$basetexture models\player/wishmodel/headdif
+$bumpmap models\player/wishmodel/headnor
+$phong 1
+$phongexponent		5		
+$phongexponenttexture	models\player/wishmodel\headphongexp
+$phongboost 1
+$phongfresnelranges "[.1.1.2]"	
+$rimlight               1
+$rimmask 1
+$rimlightboost          5
+}

@@ -1,0 +1,13 @@
+Vertexlitgeneric
+{
+	$basetexture models/props_trainstation/trainstation_pillar_b
+	$bumpmap models/props_trainstation/trainstation_pillar_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[2 1 3]"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.1 .1 .1]"
+}

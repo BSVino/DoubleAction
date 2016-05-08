@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "stormy/brick_001"
+	"$surfaceprop" "Brick"
+        "$envmapmask" "stormy/brick_001_spec"
+        "$bumpmap" "stormy/brick_001_nor"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[ .3 .3 .45 ]"
+
+}

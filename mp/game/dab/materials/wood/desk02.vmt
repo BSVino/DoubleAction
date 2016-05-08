@@ -1,0 +1,12 @@
+LightmappedGeneric
+{
+$baseTexture "wood/desk02"
+$envmap env_cubemap
+$envmapmask "wood\desk02_ref"
+$surfaceprop Wood
+$envmaptint "[1 1 1]"
+lightmappedgeneric_HDR_dx9
+{
+$envmaptint "[.5 .5 .5]"
+}
+}

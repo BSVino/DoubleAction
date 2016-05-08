@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models\props_vehicles/tireimp"
+	"$nocull" 1
+}

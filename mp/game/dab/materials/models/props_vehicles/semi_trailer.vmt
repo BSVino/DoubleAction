@@ -1,0 +1,9 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_vehicles/Semi_trailer"
+$envmap env_cubemap
+$envmapmask "models\props_vehicles\Semi_trailer_ref"
+
+
+$envmaptint "[.2 .2 .2]"
+}

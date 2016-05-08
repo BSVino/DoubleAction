@@ -1,0 +1,789 @@
+"sprites/640_hud"
+{
+	TextureData
+	{
+		"crosshair_obstruction"
+		{
+				"file"   "HUD/crosshairs"
+				"x"      "0"
+				"y"      "99"
+				"width"  "29"
+				"height" "29"
+		}
+
+		//Tony; death icons; using TF's icons so they won't all match - didn't feel like re-writing hud_basedeathnotice to support fonts again ;)
+		"d_skull"
+		{
+				"file"	"HUD/killcons"
+				"x"		"0"
+				"y"		"0"
+				"width"		"21"
+				"height"	"30"
+		}
+		"d_mp5"
+		{
+				"file"	"HUD/d_images"
+				"x"		"0"
+				"y"		"128"
+				"width"		"96"
+				"height"	"32"
+		}
+		"d_shotgun"
+		{
+				"file"	"HUD/d_images"		
+				"x"		"0"
+				"y"		"256"
+				"width"		"96"
+				"height"	"32"
+		}
+		"d_grenade"
+		{
+				"file"	"HUD/d_images"		
+				"x"		"0"
+				"y"		"288"
+				"width"		"96"
+				"height"	"32"
+		}
+		"d_pistol"
+		{
+				"file"	"HUD/d_images"
+				"x"		"0"
+				"y"		"32"
+				"width"		"96"
+				"height"	"32"
+		}
+		"d_crowbar"
+		{
+				"file"	"HUD/d_images"		
+				"x"		"0"
+				"y"		"192"
+				"width"		"96"
+				"height"	"32"
+		}
+		"dneg_skull"
+		{
+				"file"	"HUD/killcons"
+				"x"		"0"
+				"y"		"0"
+				"width"		"21"
+				"height"	"30"
+		}
+		"dneg_pistol"
+		{
+				"file"	"HUD/dneg_images"
+				"x"		"0"
+				"y"		"32"
+				"width"		"96"
+				"height"	"32"
+		}
+		"dneg_mp5"
+		{
+				"file"	"HUD/dneg_images"
+				"x"		"0"
+				"y"		"128"
+				"width"		"96"
+				"height"	"32"
+		}
+		"dneg_crowbar"
+		{
+				"file"	"HUD/dneg_images"
+				"x"		"0"
+				"y"		"192"
+				"width"		"96"
+				"height"	"32"
+		}
+		"dneg_shotgun"
+		{
+				"file"	"HUD/dneg_images"
+				"x"		"0"
+				"y"		"256"
+				"width"		"96"
+				"height"	"32"
+		}
+		"dneg_grenade"
+		{
+				"file"	"HUD/dneg_images"
+				"x"		"0"
+				"y"		"288"
+				"width"		"96"
+				"height"	"32"
+		}
+		"voice_player"
+		{
+				"file"		"voice/icntlk_sv"
+				"x"		"0"
+				"y"		"0"
+				"width"		"32"
+				"height"	"32"
+		}
+		"voice_self"
+		{
+				"file"		"voice/icntlk_local"
+				"x"		"0"
+				"y"		"0"
+				"width"		"32"
+				"height"	"32"
+		}
+		"pain_up"
+		{
+				"file"		"sprites/640_pain_up"
+				"x"			"0"
+				"y"			"0"
+				"width"		"128"
+				"height"	"48"
+		}
+
+		"pain_down"
+		{
+				"file"		"sprites/640_pain_down"
+				"x"			"0"
+				"y"			"0"
+				"width"		"128"
+				"height"	"48"
+		}
+
+		"pain_left"
+		{
+				"file"		"sprites/640_pain_left"
+				"x"			"0"
+				"y"			"0"
+				"width"		"48"
+				"height"	"128"
+		}
+
+		"pain_right"
+		{
+				"file"		"sprites/640_pain_right"
+				"x"			"0"
+				"y"			"0"
+				"width"		"48"
+				"height"	"128"
+		}
+
+		"health_background"
+		{
+				"file"		"HUD/health"
+				"x"			"0"
+				"y"			"0"
+				"width"		"93"
+				"height"	"55"
+		}
+
+		"health_fill"
+		{
+				"file"		"HUD/health"
+				"x"			"94"
+				"y"			"0"
+				"width"		"93"
+				"height"	"55"
+		}
+
+		"health_splat1"
+		{
+				"file"		"HUD/health"
+				"x"			"0"
+				"y"			"111"
+				"width"		"100"
+				"height"	"100"
+		}
+
+		"health_splat2"
+		{
+				"file"		"HUD/health"
+				"x"			"97"
+				"y"			"117"
+				"width"		"100"
+				"height"	"100"
+		}
+
+		"health_cap"
+		{
+				"file"		"HUD/health"
+				"x"			"214"
+				"y"			"0"
+				"width"		"7"
+				"height"	"55"
+		}
+
+		"health_armor"
+		{
+				"file"		"HUD/health"
+				"x"			"0"
+				"y"			"56"
+				"width"		"93"
+				"height"	"55"
+		}
+
+		"health_armor_glow"
+		{
+				"file"		"HUD/health_glow"
+				"x"			"104"
+				"y"			"56"
+				"width"		"73"
+				"height"	"55"
+		}
+
+		"round_762"
+		{
+			"file"   "HUD/hud"
+			"x"      "0"
+			"y"      "92"
+			"width"  "46"
+			"height" "259"
+		}
+
+		"round_9mm"
+		{
+			"file"   "HUD/hud"
+			"x"      "53"
+			"y"      "102"
+			"width"  "30"
+			"height" "92"
+		}
+
+		"round_45acp"
+		{
+			"file"   "HUD/hud"
+			"x"      "47"
+			"y"      "244"
+			"width"  "43"
+			"height" "105"
+		}
+
+		"round_buckshot"
+		{
+			"file"   "HUD/hud"
+			"x"      "94"
+			"y"      "168"
+			"width"  "67"
+			"height" "174"
+		}
+
+		"slowmo_background"
+		{
+			"file"   "HUD/watch"
+			"x"      "0"
+			"y"      "0"
+			"width"  "186"
+			"height" "84"
+		}
+
+		"slowmo_super_background"
+		{
+			"file"   "HUD/watch-super"
+			"x"      "0"
+			"y"      "0"
+			"width"  "186"
+			"height" "84"
+		}
+
+		// Announcements
+		"announcement_cool"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "0"
+			"width"   "86"
+			"height"  "48"
+		}
+		"announcement_stylish"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "48"
+			"width"   "128"
+			"height"  "48"
+		}
+		"announcement_dive"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "96"
+			"width"   "80"
+			"height"  "48"
+		}
+		"announcement_dive_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "144"
+			"width"   "144"
+			"height"  "48"
+		}
+		"announcement_slide"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "192"
+			"width"   "91"
+			"height"  "48"
+		}
+		"announcement_slide_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "240"
+			"width"   "154"
+			"height"  "48"
+		}
+		"announcement_stunt"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "288"
+			"width"   "102"
+			"height"  "48"
+		}
+		"announcement_stunt_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "336"
+			"width"   "165"
+			"height"  "48"
+		}
+		"announcement_through_wall"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "384"
+			"width"   "236"
+			"height"  "48"
+		}
+		"announcement_last_bullet"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "432"
+			"width"   "186"
+			"height"  "48"
+		}
+		"announcement_long_range"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "480"
+			"width"   "176"
+			"height"  "48"
+		}
+		"announcement_long_range_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "528"
+			"width"   "238"
+			"height"  "48"
+		}
+		"announcement_double_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "576"
+			"width"   "179"
+			"height"  "48"
+		}
+		"announcement_grenade"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "624"
+			"width"   "134"
+			"height"  "48"
+		}
+		"announcement_grenade_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "672"
+			"width"   "197"
+			"height"  "48"
+		}
+		"announcement_slowmo_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "720"
+			"width"   "201"
+			"height"  "48"
+		}
+		"announcement_tacticool"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "768"
+			"width"   "154"
+			"height"  "48"
+		}
+		"announcement_brawl"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "816"
+			"width"   "111"
+			"height"  "48"
+		}
+		"announcement_brawl_kill"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "864"
+			"width"   "157"
+			"height"  "48"
+		}
+		"announcement_divepunch"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "912"
+			"width"   "164"
+			"height"  "48"
+		}
+		"announcement_slidepunch"
+		{
+			"file"    "HUD/announcements"
+			"x"       "0"
+			"y"       "960"
+			"width"   "175"
+			"height"  "48"
+		}
+		"announcement_headshot"
+		{
+			"file"    "HUD/announcements"
+			"x"       "256"
+			"y"       "0"
+			"width"   "152"
+			"height"  "48"
+		}
+		"announcement_point_blank"
+		{
+			"file"    "HUD/announcements"
+			"x"       "256"
+			"y"       "48"
+			"width"   "195"
+			"height"  "48"
+		}
+		"announcement_execution"
+		{
+			"file"    "HUD/announcements"
+			"x"       "256"
+			"y"       "96"
+			"width"   "168"
+			"height"  "48"
+		}
+
+		"marksman"
+		{
+			"file"		"HUD/symbols"
+			"x"			"0"
+			"y"			"0"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"super"
+		{
+			"file"		"HUD/symbols"
+			"x"			"128"
+			"y"			"0"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"athletic"
+		{
+			"file"		"HUD/symbols"
+			"x"			"256"
+			"y"			"0"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"reflexes"
+		{
+			"file"		"HUD/symbols"
+			"x"			"384"
+			"y"			"0"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"bouncer"
+		{
+			"file"		"HUD/symbols"
+			"x"			"0"
+			"y"			"128"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"troll"
+		{
+			"file"		"HUD/symbols"
+			"x"			"128"
+			"y"			"128"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"notice_slowmo"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"0"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_stylestreak"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"75"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_marksman"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"150"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_athletic"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"225"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_reflexes"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"300"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_resilient"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"375"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_bouncer"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"450"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_troll"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"525"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"notice_worthit"
+		{
+			"file"		"HUD/notices"
+			"x"			"0"
+			"y"			"600"
+			"width"		"512"
+			"height"	"75"
+		}
+
+		"folder_background"
+		{
+			"file"      "GUI/folder"
+			"x"         "0"
+			"y"         "0"
+			"width"     "1300"
+			"height"    "900"
+		}
+
+		"folder_header_small"
+		{
+			"file"      "GUI/folder"
+			"x"         "0"
+			"y"         "910"
+			"width"     "282"
+			"height"    "35"
+		}
+
+		"folder_header_large"
+		{
+			"file"      "GUI/folder"
+			"x"         "0"
+			"y"         "942"
+			"width"     "486"
+			"height"    "35"
+		}
+
+		"folder_tab_agents"
+		{
+			"file"      "GUI/folder"
+			"x"         "527"
+			"y"         "912"
+			"width"     "112"
+			"height"    "56"
+		}
+
+		"folder_tab_weapons"
+		{
+			"file"      "GUI/folder"
+			"x"         "655"
+			"y"         "912"
+			"width"     "112"
+			"height"    "56"
+		}
+
+		"folder_tab_skills"
+		{
+			"file"      "GUI/folder"
+			"x"         "527"
+			"y"         "968"
+			"width"     "112"
+			"height"    "56"
+		}
+
+		"folder_stain"
+		{
+			"file"      "GUI/folder"
+			"x"         "1325"
+			"y"         "0"
+			"width"     "315"
+			"height"    "257"
+		}
+
+		"folder_delete"
+		{
+			"file"      "GUI/folder"
+			"x"         "322"
+			"y"         "907"
+			"width"     "28"
+			"height"    "28"
+		}
+
+		"folder_nocheck"
+		{
+			"file"      "GUI/folder"
+			"x"         "360"
+			"y"         "896"
+			"width"     "40"
+			"height"    "40"
+		}
+
+		"folder_check"
+		{
+			"file"      "GUI/folder"
+			"x"         "408"
+			"y"         "896"
+			"width"     "40"
+			"height"    "40"
+		}
+
+		"grenade_icon"
+		{
+			"file"		"HUD/symbols"
+			"x"			"128"
+			"y"			"128"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"grenade_empty_icon"
+		{
+			"file"		"HUD/symbols"
+			"x"			"256"
+			"y"			"128"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"star_gold"
+		{
+			"file"   "HUD/stars"
+			"x"      "20"
+			"y"      "0"
+			"width"  "87"
+			"height" "84"
+		}
+
+		"star_silver"
+		{
+			"file"   "HUD/stars"
+			"x"      "20"
+			"y"      "84"
+			"width"  "87"
+			"height" "84"
+		}
+
+		"star_bronze"
+		{
+			"file"   "HUD/stars"
+			"x"      "20"
+			"y"      "168"
+			"width"  "87"
+			"height" "84"
+		}
+
+		"briefcase"
+		{
+			"file"   "da/briefcase_hud"
+			"x"      "0"
+			"y"      "0"
+			"width"  "128"
+			"height" "128"
+		}
+
+		"capturezone"
+		{
+			"file"   "da/capturepoint_hud"
+			"x"      "0"
+			"y"      "0"
+			"width"  "128"
+			"height" "128"
+		}
+
+		"bounty"
+		{
+			"file"		"HUD/symbols"
+			"x"			"0"
+			"y"			"0"
+			"width"		"128"
+			"height"	"128"
+		}
+
+		"hud_clock"
+		{
+				"file"		"HUD/hud"
+				"x"			"0"
+				"y"			"0"
+				"width"		"73"
+				"height"	"92"
+		}
+
+		"hud_heart"
+		{
+				"file"		"HUD/hud"
+				"x"			"75"
+				"y"			"8"
+				"width"		"92"
+				"height"	"88"
+		}
+	}
+}

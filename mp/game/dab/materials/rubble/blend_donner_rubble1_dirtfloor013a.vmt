@@ -1,0 +1,7 @@
+WorldVertexTransition
+{
+$basetexture "rubble/donner_rubble1"
+$basetexture2 "nature/dirtfloor013a"
+$surfaceprop dirt
+$keywords "dod,donner"
+}

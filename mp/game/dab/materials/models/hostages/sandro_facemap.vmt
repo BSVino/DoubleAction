@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	// Original shader: VertexLitTexture
+	"$basetexture" "models/hostages/sandro_facemap"
+	"$halflambert" 1
+}

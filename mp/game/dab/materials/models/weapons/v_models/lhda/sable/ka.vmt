@@ -1,0 +1,28 @@
+VertexLitGeneric
+{
+	"$basetexture" 				"models/weapons/V_models/lhda/sable/diff"
+	"$bumpmap" 					"models/weapons/V_models/lhda/sable/normal"
+	"$halflambert" 				"1"
+
+	"$phong" 					"1"
+	"$phongboost"				"0.8"
+	"$normalmapalphaphongmask"	"1"
+	"$phongexponenttexture" 	"models/weapons/V_models/lhda/sable/gloss"
+	"$phongfresnelranges" 		"[1 3 6]"
+	"$phongalbedotint"			"1"
+
+	"$normalmapalphaenvmapmask" "1"
+	"$envmap" 					"env_cubemap"
+	"$envmaptint" 				"[.07 .07 .07]"
+   	
+	"$detail"            "models/weapons/V_models/lhda/sable/gowld"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

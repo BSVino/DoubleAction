@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_interiors/table_cafeteria"
+$envmap env_cubemap
+$envmapmask "models\props_interiors\table_cafeteria_ref"
+$envmaptint "[1 1 1]"
+vertexlitgeneric_HDR_dx9
+{
+$envmaptint "[.5 .5 .5]"
+}
+}

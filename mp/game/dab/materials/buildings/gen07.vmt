@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+$basetexture "buildings\gen07"
+$surfaceprop glass
+$envmap env_cubemap
+$envmapmask "buildings\gen07_ref"
+}

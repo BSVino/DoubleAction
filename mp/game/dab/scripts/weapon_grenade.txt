@@ -1,0 +1,69 @@
+WeaponData
+{
+	//The default radius of the explosion is damage * 3.5
+	"Damage"				"120"
+
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_Grenade"
+	"viewmodel"				"models/weapons/v_eq_fraggrenade.mdl"
+	"playermodel"			"models/weapons/w_eq_fraggrenade.mdl"
+	"PlayerAnimationExtension"	"gren"
+
+	"BuiltRightHanded"		"0"
+
+	"bucket"				"0"
+	"bucket_position"		"1"
+
+	"clip_size"				"-1"
+	"default_clip"			"1"
+	"NumClips"				"1"
+
+	"WeaponType"			"grenade"
+
+	"primary_ammo"			"grenades"
+	"secondary_ammo"		"None"
+
+	"weight"				"10"
+	"item_flags"			"18"	// ITEM_FLAG_NOAUTORELOAD | ITEM_FLAG_EXHAUSTIBLE
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		"special1"			"WeaponFrag.Roll"
+		"double_shot"		"common/null.wav"
+		"single_shot"		"common/null.wav"
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"k"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"k"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"v"
+		}
+		"crosshair"
+		{
+		}
+		"autoaim"
+		{
+				"file"		"sprites/crosshairs"
+				"x"			"48"
+				"y"			"72"
+				"width"		"24"
+				"height"	"24"
+		}
+	}
+}

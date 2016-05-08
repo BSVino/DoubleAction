@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+$baseTexture "tile/grey03"
+$envmap env_cubemap
+$bumpmap "tile\yellow03_height-ssbump"
+$normalmapalphaenvmapmask 1
+$ssbump 1
+$surfaceprop tile
+}

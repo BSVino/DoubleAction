@@ -1,0 +1,9 @@
+lightmappedGeneric
+{
+$baseTexture "cs_italy/pwood1"
+$surfaceprop wood
+$detail "detail\dt_wood1"
+$detailscale 8
+$detailblendfactor .7
+$detailblendmode 0
+}

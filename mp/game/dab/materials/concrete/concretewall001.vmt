@@ -1,0 +1,6 @@
+LightmappedGeneric
+{
+$baseTexture "concrete/concretewall001"
+$surfaceprop concrete
+"%keywords" dod
+}

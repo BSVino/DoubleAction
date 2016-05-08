@@ -1,0 +1,7 @@
+Unlitgeneric
+{
+	$basetexture "particle/briefcase"
+	$translucent 1
+	$additive    1
+	$nocull      1
+}

@@ -1,0 +1,7 @@
+Unlitgeneric
+{
+	$basetexture "particle/grenadearrow"
+	$translucent 1
+	$additive    1
+	$nocull      1
+}

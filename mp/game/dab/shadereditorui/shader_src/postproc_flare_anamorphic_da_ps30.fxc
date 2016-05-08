@@ -1,0 +1,81 @@
+// ********************************
+// ** auto generated pixelshader **
+// ********************************
+
+#define SHADER_EDITOR_2013_COMPILE
+
+
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+#include "common_parallax.h"
+
+
+// Samplers
+sampler _Sampler_00		: register( s0 );
+sampler _Sampler_01		: register( s1 );
+sampler _Sampler_02		: register( s2 );
+
+// User code - globals
+
+
+// Unused vars are globals that need to be passed in or they will be optimized out.
+
+// User code - function bodies
+void Random( in float2 uv, out float random )
+{
+	random = frac(fmod(123456789.0, 1e-7 + 256.0 * dot(uv.xy + float2(.1, .1), float2(2.6651441426902251, 23.1406926327792690))));
+}
+
+// Semantic structures
+struct PS_INPUT
+{
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	float3 _var0 = float3( 0.000000, 0.000000, 0.000000 );
+	float3 _var1 = tex2D( _Sampler_00, In.vTexCoord_0 ).rgb;
+	float _var2 = tex2D( _Sampler_01, In.vTexCoord_0 ).a;
+	for ( int _var3 = -25; _var3 <= 25; _var3++ )
+	{
+		float2 _var4 = float2( float( 0.005000 ), float( 0.000000 ) );
+		float _var5 = float( 0.005000 ) * float( 0.500000 );
+		float _var6 = (float)0;
+		Random( In.vTexCoord_0, _var6 );
+		float _var7 = abs( _var3 );
+		_var5 = _var5 * _var6;
+		_var7 = _var7 / float( 25.000000 );
+		_var5 = _var5 * float( 0.500000 );
+		_var7 = 1.0f - _var7;
+		float2 _var8 = float2( _var5, float( 0.000000 ) );
+		_var7 = pow( _var7, float( 2.000000 ) );
+		_var4 = _var4 + _var8;
+		_var4 = _var4 * _var3;
+		_var4 = _var4 + In.vTexCoord_0;
+		float3 _var9 = tex2D( _Sampler_02, _var4 ).rgb;
+		float _var10 = _var4.x;
+		_var9 = smoothstep( float( 0.350000 ), float( 0.450000 ), _var9 );
+		_var10 = _var10 - float( 0.500000 );
+		_var10 = abs( _var10 );
+		_var10 = smoothstep( float( 0.500000 ), float( 0.400000 ), _var10 );
+		_var10 = _var10 * _var7;
+		_var9 = _var9 * _var10;
+		_var0 = _var0 + _var9;
+	}
+	_var0 = _var0 * float3( 0.010000, 0.020000, 0.030000 );
+	_var0 = _var0 + _var1;
+	float4 _var11 = float4( _var0, _var2 );
+	Out.vColor_0 = _var11;
+	return Out;
+}

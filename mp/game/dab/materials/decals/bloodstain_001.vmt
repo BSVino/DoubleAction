@@ -1,0 +1,9 @@
+DecalModulate
+{
+$decal 1
+
+$basetexture "Decals/bloodstain_001"
+$decalscale 0.25
+$vertexcolor 1
+$vertexalpha 1
+}

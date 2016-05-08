@@ -1,0 +1,19 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\Jarheads m16a2\556"
+	"$bumpmap" "models\weapons\v_models\Jarheads m16a2\556 norm"
+    	"$envmap" "env_cubemap"
+    	"$normalmapalphaenvmapmask" 1
+
+	"$detail"            "models/weapons/v_models/Jarheads m16a2/556-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

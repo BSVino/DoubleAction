@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+	"$basetexture"	"buildings\gen20"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "buildings\gen20_ref"
+
+}

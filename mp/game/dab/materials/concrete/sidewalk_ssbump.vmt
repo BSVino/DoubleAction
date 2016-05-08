@@ -1,0 +1,12 @@
+LightmappedGeneric
+{
+$basetexture "Concrete/sidewalk"
+$color "[ .8 .8 .8 ]"
+$surfaceprop concrete
+$detail "detail\dt_sidewalk"
+$detailscale 4
+$detailblendfactor 1
+$detailblendmode 0
+$bumpmap "Concrete/sidewalk_height-ssbump"
+$ssbump 1
+}

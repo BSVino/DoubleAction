@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_doubletrouble/big_fan_dif
+	$bumpmap models/stormy/da_doubletrouble/big_fan_nor
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.75 .75 1]"
+}	

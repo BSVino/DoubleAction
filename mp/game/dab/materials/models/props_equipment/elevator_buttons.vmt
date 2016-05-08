@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/elevator_buttons"
+$envmap env_cubemap
+$envmapmask "models\props_equipment\elevator_buttons_ref"
+$envmapsaturation ".5"
+$envmapcontrast ".7"
+}

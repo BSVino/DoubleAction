@@ -1,0 +1,14 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_interiors/furniture_chair03a"
+$surfaceprop metal
+$envmap env_cubemap
+$envmapmask "models\props_interiors\furniture_chair03a"
+$envmaptint "[.9 .9 .9]"
+$envmapcontrast ".7"
+$envmapsaturation ".2"
+vertexlitgeneric_HDR_dx9
+{
+$envmaptint "[.7 .7 .7]"
+}
+}

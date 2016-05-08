@@ -1,0 +1,25 @@
+"LightmappedGeneric"
+{
+	// Original shader: BaseTimesLightmap
+	"$basetexture" "wizard\concretefloor032a"
+	"$surfaceprop" "concrete"
+	"$bumpmap" "wizard\concretefloor032a_SSBump"
+	"$ssbump" "1"
+	"$SSBumpMathFix"	 "1"
+
+	"Proxies"
+	{
+		"TextureScroll"
+		{
+			"texturescrollvar" "$baseTexturetransform"
+			"texturescrollrate" 0.58575
+			"texturescrollangle" 270
+		}
+		"TextureScroll"
+		{
+			"texturescrollvar"   "$bumptransform"
+			"texturescrollrate" 0.58575
+			"texturescrollangle" 270
+		}
+	}
+}

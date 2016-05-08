@@ -1,0 +1,4 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_interiors/chair_office2"
+}

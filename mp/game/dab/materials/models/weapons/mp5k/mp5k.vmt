@@ -1,0 +1,16 @@
+"vertexlitgeneric"
+{
+	"$baseTexture" "models/weapons/mp5k/mp5k"
+
+	"$detail"            "models/weapons/mac10/mac10_gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

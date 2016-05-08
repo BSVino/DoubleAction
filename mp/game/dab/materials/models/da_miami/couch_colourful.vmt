@@ -1,0 +1,9 @@
+VertexlitGeneric
+{
+	$basetexture models/da_miami/couch_colourful_dif
+	$bumpmap models/da_miami/couch_colourful_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint [ 0.5 0.5 0.5 ]
+	$surfaceprop plastic
+}

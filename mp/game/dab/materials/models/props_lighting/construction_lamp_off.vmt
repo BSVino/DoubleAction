@@ -1,0 +1,16 @@
+VertexLitGeneric
+{
+$baseTexture "models\Props_Lighting/construction_lamp"
+$bumpmap "models\Props_Lighting/construction_lamp_nor"
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[1 1 1]"
+
+//$selfillum 1
+
+
+vertexlitgeneric_HDR_dx9
+{
+$envmaptint "[.1 .1 .1]"
+}
+}

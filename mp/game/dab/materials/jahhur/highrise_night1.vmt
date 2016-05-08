@@ -1,0 +1,15 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/highrise_night1"
+	//"$bumpmap" "jahhur/carpet1_normal"
+	"$surfaceprop" "concrete"
+	"$selfillum" 1
+	//"$envmap" "env_cubemap"
+	//"$envmapmask" "jahhur/highrise1_spec"
+	//"$envmaptint" "[.5 .4 .3]"
+	//"$envmapcontrast" ".9"
+	//"$envmapsaturation" "1"
+	//"$normalmapalphaenvmapmask" 1
+
+
+}

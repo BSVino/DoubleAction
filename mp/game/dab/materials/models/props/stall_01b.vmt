@@ -1,0 +1,13 @@
+Vertexlitgeneric
+{
+	$basetexture models/props/stall_01_red
+	$bumpmap models/props/stall_01_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[2 1 3]"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.01 .01 .01]"
+}

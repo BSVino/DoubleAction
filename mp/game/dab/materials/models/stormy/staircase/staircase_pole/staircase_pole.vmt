@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+$basetexture models/stormy/staircase/staircase_pole/dif
+$bumpmap models/stormy/staircase/staircase_pole/nor
+$phong 1
+$phongboost 1
+$phongfresnelranges "[.5 .75 1]"
+}

@@ -1,0 +1,10 @@
+VertexLitGeneric
+{
+$baseTexture "models\player\Eightball/gambler_hair"
+$halflambert 1
+$translucent 1
+
+
+
+$nocull 1
+}

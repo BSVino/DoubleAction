@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_junk/milkshake_dif"
+$bumpmap "models\props_junk/milkshake_nor"
+
+$phong 1
+$phongboost .5
+$phongfresnelranges [2 .5 .75]
+$phongexponent 100
+
+}

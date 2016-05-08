@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "plaster/rooffloor_tar01"
+$surfaceprop default
+}

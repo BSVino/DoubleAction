@@ -1,0 +1,14 @@
+vertexlitgeneric
+{
+$basetexture models/props/masses/skeeball_dif
+$bumpmap models/props/masses/skeeball_nor
+
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[.5 .5 .5]"
+
+$phong 1
+$phongboost 1.5
+$phongfresnelranges "[.75 .75 2]"
+$phongexponent 18
+}

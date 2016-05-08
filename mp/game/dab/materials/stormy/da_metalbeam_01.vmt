@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "stormy/da_metalbeam_01"
+	"$bumpmap" "stormy/da_metalbeam_02_nor"
+	"$surfaceprop" "Metal"
+}

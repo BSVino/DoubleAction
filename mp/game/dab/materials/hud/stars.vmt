@@ -1,0 +1,8 @@
+"UnlitGeneric"
+{
+	"$baseTexture" "HUD/stars"
+	"$translucent"		"1"
+	"$vertexalpha"		"1"
+	"$ignorez"			"1"
+	"$no_fullbright"	1
+}

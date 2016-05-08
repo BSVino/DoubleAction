@@ -1,0 +1,23 @@
+VertexLitGeneric
+{
+"$basetexture" "models\weapons\v_models\FN-FAL\carry-notched"
+"$bumpmap" "models\weapons\v_models\FN-FAL\carry-notched-norm"
+"$phong" "1"
+"$phongexponent" "10"
+"$phongboost" "1"
+"$phongfresnelranges" "[1 3 8]"
+
+	"$detail"            "models\weapons\v_models\FN-FAL\carry-notched-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}
+
+

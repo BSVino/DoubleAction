@@ -1,0 +1,13 @@
+VertexLitGeneric
+{
+$basetexture "models\props\de_nuke\electricalbox02"
+$envmap env_cubemap
+$envmapmask "models\props\de_nuke\electricalbox02_ref"
+$envmapcontrast ".9"
+$envmapsaturation ".4"
+$envmaptint "[1 1 1]"
+vertexlitgeneric_HDR_dx9
+{
+$envmaptint "[.7 .7 .7]"
+}
+}

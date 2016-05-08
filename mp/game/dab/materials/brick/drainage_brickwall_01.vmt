@@ -1,0 +1,15 @@
+LightmappedGeneric
+{
+$basetexture "brick/drainage_brickwall_01"
+$ssbump 1
+$bumpmap "brick/drainage_brickwall_01_height-ssbump"
+
+
+
+
+$surfaceprop concrete
+$detail "detail\dt_brick"
+$detailscale 10
+$detailblendfactor .6
+$detailblendmode 0
+}

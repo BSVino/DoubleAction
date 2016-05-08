@@ -1,0 +1,12 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props/stair_rail_01"
+	"$bumpmap" "models/props/stair_rail_01_nor"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmapcontrast -2.5
+	$envmapsaturation .2
+	
+	
+}

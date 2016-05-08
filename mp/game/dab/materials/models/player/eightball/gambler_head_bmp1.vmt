@@ -1,0 +1,21 @@
+vertexlitgeneric
+{
+$baseTexture "models\player\Eightball\gambler_head_color"
+$compress "models\player\Eightball\gambler_head_compress"
+
+$bumpmap "models\player\Eightball\gambler_head_normal"
+$phong 1
+$phongboost "1.4"
+$phongexponent 7
+$phongtint "[.85 .85 1]"
+$phongfresnelranges "[.2 .5 5]"
+$nodecal 1
+$ambientocclusion 1
+$halflambert 0
+$diffuseexp "1.5"
+$lightwarptexture "models\player\Eightball\gambler_head_wrp"
+$rimlight 1
+$rimlightboost 1
+$rimlightexponent 10
+$rimmask 1
+}

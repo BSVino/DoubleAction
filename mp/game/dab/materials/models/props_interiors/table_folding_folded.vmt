@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_interiors/table_folding_folded"
+$envmap env_cubemap
+$envmapmask "models\props_interiors\table_folding_ref"
+}

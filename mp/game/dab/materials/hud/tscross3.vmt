@@ -1,0 +1,12 @@
+"UnlitGeneric"
+{
+	"$basetexture" "HUD/tscross3"
+	"$translucent"		"1"
+	"$vertexcolor"		"1"
+	"$vertexalpha"		"1"
+	"$ignorez"			"1"
+//	"$additive"			1
+	"$no_fullbright"	1
+}
+
+	

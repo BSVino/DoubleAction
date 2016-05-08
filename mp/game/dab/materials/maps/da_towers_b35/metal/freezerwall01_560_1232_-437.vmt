@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/METAL/FREEZERWALL01.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_towers_b35/c560_1232_-437"
+	}
+}

@@ -1,0 +1,12 @@
+LightmappedGeneric
+{
+$baseTexture "plaster/false_ceiling_01"
+$surfaceprop plaster
+$color "[ .75 .75 .75]"
+
+$envmap env_cubemap
+$basemapalphaenvmapmask 1
+$envmaptint "[ .03 .03 .03 ]"
+
+
+}

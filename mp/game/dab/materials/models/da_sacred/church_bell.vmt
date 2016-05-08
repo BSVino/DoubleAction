@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture models/da_sacred/church_bell
+	$bumpmap models/da_sacred/church_bell_nor
+	
+	$phong 1
+	$phongboost .35
+	$phongexponent 5
+	$phongfresnelranges "[ 1 1 1 ]"
+}

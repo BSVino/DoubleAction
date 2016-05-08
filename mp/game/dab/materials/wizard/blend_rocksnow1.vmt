@@ -1,0 +1,18 @@
+"WorldVertexTransition"
+{
+	"$basetexture" 	"wizard/rockwall012a"
+	"$surfaceprop" 	"rock"
+	"$bumpmap"	"wizard/rockwall012a_SSBump"
+
+	"$basetexture2" "wizard/snowfloor001a"
+	"$surfaceprop2" "snow"
+	"$bumpmap2"	"wizard/snowfloor001a_SSbump"
+
+	"$ssbump"		"1"
+	"$ssbump2"		"1"
+	"$seamless_scale" "0.001"
+
+	"$blendmodulatetexture" "wizard/r2s1_modulate"
+
+	"%keywords" "pvk"
+}

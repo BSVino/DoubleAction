@@ -1,0 +1,9 @@
+Vertexlitgeneric
+{
+	$basetexture models/stormy/poolhall/pool_cue_dif
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.2 .5 1]"
+	$basemapalphaphongmask 1
+	$phongexponent 50
+}

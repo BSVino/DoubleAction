@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+$basetexture "concrete\prodwlld"
+$surfaceprop concrete
+}

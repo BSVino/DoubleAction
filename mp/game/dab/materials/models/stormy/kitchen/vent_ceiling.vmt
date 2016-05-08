@@ -1,0 +1,5 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/kitchen/vent_ceiling_dif
+	$nocull 1
+}

@@ -1,0 +1,29 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "wizard/concretefloor037a"
+//	"$envmap" "env_cubemap"
+//	"$envmap" "Environment Maps/rg"
+//	"$envmapmask" "concrete/concretefloor037a_mask"
+//	"$basealphaenvmapmask" "1"
+//	"$fresnelreflection" ".40"
+	"$surfaceprop" "concrete"
+	"$bumpmap" "wizard\concretefloor037a_SSBump"
+	"$ssbump" "1"
+	"$SSBumpMathFix"	 "1"
+	
+	"Proxies"
+	{
+		"TextureScroll"
+		{
+			"texturescrollvar" "$baseTexturetransform"
+			"texturescrollrate" 0.58575
+			"texturescrollangle" 270
+		}
+		"TextureScroll"
+		{
+			"texturescrollvar"   "$bumptransform"
+			"texturescrollrate" 0.58575
+			"texturescrollangle" 270
+		}
+	}
+}

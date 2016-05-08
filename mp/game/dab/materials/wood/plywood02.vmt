@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+$baseTexture "wood/plywood02"
+$Surfaceprop wood
+$detail "detail\dt_wood1"
+$detailscale "[ 8 10 ]"
+$detailblendfactor".3"
+$detailblendmode 0
+}

@@ -1,0 +1,9 @@
+"Cable"
+{
+	"$basetexture"		"cable\black"
+	"$bumpmap"			"cable\cablenormalmap"
+	"$vertexcolor"		1
+	"$nocull"			1
+	"$MinLight"			0.0
+	"$MaxLight"			0.0
+}

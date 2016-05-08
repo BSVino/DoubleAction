@@ -1,0 +1,10 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props_construction/chain_grey"
+	"$surfaceprop" "Chain"
+	$phong 1
+	$basemapalphaphongmask 1
+	$phongboost 1.2
+	$phongfresnelranges "[1 .4 2]"
+	$phongexponent 10
+}

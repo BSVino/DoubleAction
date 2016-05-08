@@ -1,0 +1,7 @@
+DecalModulate
+{
+$baseTexture "graffiti/graffiti_large_06a"
+$Decal 1
+vertexcolor 1
+vertexalpha 1
+}

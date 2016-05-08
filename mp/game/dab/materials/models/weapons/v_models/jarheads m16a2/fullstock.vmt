@@ -1,0 +1,16 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\Jarheads m16a2\stock"
+
+	"$detail"            "models/weapons/v_models/Jarheads m16a2/stock-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

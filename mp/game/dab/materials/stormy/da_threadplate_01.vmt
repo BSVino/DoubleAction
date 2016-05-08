@@ -1,0 +1,9 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "stormy/da_threadplate_01_dif"
+	"$bumpmap" "stormy/da_threadplate_01_nor"
+	"$surfaceprop" "Metal"
+	
+	$envmap env_cubemap
+	$envmaptint "[.1 .1 .1]"
+}
