@@ -278,6 +278,12 @@ void CSDKBot::BotThink()
 
 		Navigation(cmd);
 
+		if (this->m_Shared.IsManteling())
+		{
+			cmd.buttons |= IN_JUMP;
+			cmd.forwardmove = cmd.sidemove = 0;
+		}
+
 		CheckNavMeshAttrib(&tr_front, cmd);
 	}
 
