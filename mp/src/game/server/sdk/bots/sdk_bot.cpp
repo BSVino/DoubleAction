@@ -281,11 +281,34 @@ void CSDKBot::BotThink()
 		CheckNavMeshAttrib(&tr_front, cmd);
 	}
 
-	// debug waypoint related position
-	/*for( int i=0; i<m_Waypoints.Count(); i++ )
+#if 0 // debug waypoint related position
+	int green = 200;
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
-	NDebugOverlay::Cross3DOriented( m_Waypoints[i].Center, QAngle(0,0,0), 5*i+1, 200, 0, 0, false, -1 );
-	}*/
+		CSDKPlayer* pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsObserver())
+			continue;
+
+		if (pPlayer->GetObserverTarget() != this)
+			continue;
+
+		green = 0;
+		break;
+	}
+
+	Vector previous = GetAbsOrigin();
+	for( int i=0; i<m_Waypoints.Count(); i++ )
+	{
+		Vector current = m_Waypoints[i].Center;
+
+		NDebugOverlay::Line(previous, current, 100, green, 0, false, -1);
+		NDebugOverlay::Cross3DOriented(current, QAngle(0,0,0), 5*(m_Waypoints.Count()-i)+1, 200, 0, 0, false, -1);
+		previous = current;
+	}
+#endif
 
 	RunPlayerMove( cmd, gpGlobals->frametime );
 }
