@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+	"$basetexture" "models/da_sacred/candleflame_01"
+	"$translucent" "1"
+	"$nocull" "1"
+	$additive 1
+}

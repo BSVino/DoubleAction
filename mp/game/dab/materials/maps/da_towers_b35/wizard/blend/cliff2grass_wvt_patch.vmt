@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$basetexture"		"wizard/blend/cliffface002a"
+	"$surfaceprop"		"dirt"
+	"$bumpmap"		"wizard/blend/cliffface002a_normal"
+}

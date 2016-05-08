@@ -1,0 +1,134 @@
+// NOTE:  THIS FILE IS AUTOMATICALLY REGENERATED, 
+//DO NOT EDIT THIS HEADER, YOUR COMMENTS WILL BE LOST IF YOU DO
+// User options script
+//
+// Format:
+//  Version [float]
+//  Options description followed by 
+//  Options defaults
+//
+// Option description syntax:
+//
+//  "cvar" { "Prompt" { type [ type info ] } { default } }
+//
+//  type = 
+//   BOOL   (a yes/no toggle)
+//   STRING
+//   NUMBER
+//   LIST
+//
+// type info:
+// BOOL                 no type info
+// NUMBER       min max range, use -1 -1 for no limits
+// STRING       no type info
+// LIST          delimited list of options value pairs
+//
+//
+// default depends on type
+// BOOL is "0" or "1"
+// NUMBER is "value"
+// STRING is "value"
+// LIST is "index", where index "0" is the first element of the list
+
+
+// Half-Life User Info Configuration Layout Script (stores last settings chosen, too)
+// File generated:  Tue May 26 04:33:22 AM
+//
+//
+// Cvar	-	Setting
+
+VERSION 1.0
+
+DESCRIPTION INFO_OPTIONS
+{
+	"cl_thirdperson"
+	{
+		"Third-person camera"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"da_cam_back"
+	{
+		"Third-person camera back"
+		{ SLIDER 5 150 }
+		{ "80" }
+	}
+
+	"da_cam_right"
+	{
+		"Third-person camera right"
+		{ SLIDER -30 30 }
+		{ "7" }
+	}
+
+	"da_cam_up"
+	{
+		"Third-person camera up"
+		{ SLIDER -10 30 }
+		{ "20" }
+	}
+
+	"da_cam_back_aim"
+	{
+		"Third-person aim-in back"
+		{ SLIDER 5 150 }
+		{ "50" }
+	}
+
+	"da_cam_right_aim"
+	{
+		"Third-person aim-in right"
+		{ SLIDER -30 30 }
+		{ "35" }
+	}
+
+	"da_cam_up_aim"
+	{
+		"Third-person aim-in up"
+		{ SLIDER -10 30 }
+		{ "5" }
+	}
+
+	"lesson_enable"
+	{
+		"Show ingame tutorials"
+		{ BOOL }
+		{ "1" }
+	}
+
+	"m_verticaldamping"
+	{
+		"Dampen vertical mouse input"
+		{ SLIDER 0.3 1 }
+		{ "0.85" }
+	}
+
+	"m_slowmodamping"
+	{
+		"Slow mo mouse dampening"
+		{ SLIDER 0.2 1 }
+		{ "0.7" }
+	}
+
+	"m_aimindamping"
+	{
+		"Aim-in mouse dampening for rifles"
+		{ SLIDER 0.1 1 }
+		{ "0.5" }
+	}
+
+	"m_partialaimindamping"
+	{
+		"Aim-in mouse dampening for non-rifles"
+		{ SLIDER 0.1 1 }
+		{ "0.8" }
+	}
+
+	"da_postprocess_shaders"
+	{
+		"Use fullscreen shaders"
+		{ BOOL }
+		{ "1" }
+	}
+}

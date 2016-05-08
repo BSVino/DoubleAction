@@ -1,0 +1,15 @@
+vertexlitgeneric
+{
+$baseTexture models\player\Eightball\gambler_body
+$bumpmap "models\player\Eightball\gambler_body_normal"
+$phong 1
+$phongboost 1
+$phongexponenttexture	models/player\Eightball\gambler_body_exponent
+$phongalbedotint 1
+$phongfresnelranges "[.5 .75 .85]"
+
+$rimlight 1
+$rimlightboost 3.5
+$rimlightexponent 1
+$rimmask 1
+}

@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/CONCRETE/SEWER_CONCRETEWALL01B.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c0_-2108_352"
+	}
+}

@@ -1,0 +1,5 @@
+lightmappedgeneric
+{
+	$basetexture pavement/pavement_02_dif
+	$bumpmap pavement/pavement_02_nor
+}

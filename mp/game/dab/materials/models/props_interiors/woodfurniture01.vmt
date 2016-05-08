@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_interiors\woodfurniture01"
+$surfaceprop wood
+}

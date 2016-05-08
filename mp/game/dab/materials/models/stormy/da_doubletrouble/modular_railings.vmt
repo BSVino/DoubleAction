@@ -1,0 +1,13 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_doubletrouble/modular_railings_dif
+	$bumpmap models/stormy/da_doubletrouble/modular_railings_nor
+	$phongexponenttexture models/stormy/da_doubletrouble/modular_railings_exp
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.75 .75 1]"
+	$phongalbedotint 1
+	$rimlight 1
+	$rimlightboost 2
+	$rimmask 1
+}	

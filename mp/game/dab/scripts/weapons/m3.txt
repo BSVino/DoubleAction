@@ -1,0 +1,53 @@
+"Weapon_Mossberg.Single"
+{
+	"channel"		"CHAN_WEAPON"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+	"volume"		"1.0"
+	"pitch"		"90,110"
+	"wave"			")weapons/m3/m3-1.wav"
+}
+
+"Weapon_Mossberg.Insertshell"
+{
+	"channel"		"CHAN_ITEM"
+	"soundlevel"	"SNDLVL_IDLE" //SNDLVL_IDLE
+	"volume"		"1.0"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"80,120"
+	"wave"			"weapons/m3/insertshell.wav"
+}
+
+"Weapon_Mossberg.Bullet"
+{
+	"channel"		"CHAN_ITEM"
+	"soundlevel"	"SNDLVL_IDLE"
+	"volume"		"1.0"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"90,110"
+	"rndwave"
+	{
+		"wave"			"weapons/common/shellshtgn1.wav"
+		"wave"			"weapons/common/shellshtgn2.wav"
+		"wave"			"weapons/common/shellshtgn3.wav"
+	}
+}
+
+"Weapon_Mossberg.Pump"
+{
+	"channel"		"CHAN_USER_BASE+1"
+	"soundlevel"	"SNDLVL_IDLE"	
+	"volume"		"1.0"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"PITCH_NORM"
+	"wave"			"weapons/m3/m3_pump.wav"
+}
+
+"Weapon_Mossberg.Draw"
+{
+	"channel"		"CHAN_ITEM"
+	"soundlevel"	"SNDLVL_IDLE"	
+	"volume"		"1.0"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"PITCH_NORM"
+	"wave"			"weapons/m3/m3_draw.wav"
+}

@@ -1,0 +1,13 @@
+Vertexlitgeneric
+{
+	$basetexture models/props_doors/cellar_door_01
+	$bumpmap models/props_doors/cellar_door_01_nor
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 .5 .75]"
+	$phongexponent 25
+}

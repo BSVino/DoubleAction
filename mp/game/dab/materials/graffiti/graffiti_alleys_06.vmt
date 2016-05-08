@@ -1,0 +1,8 @@
+DecalModulate
+{
+$baseTexture "graffiti/Graffiti_ALLEYS_06"
+$surfaceprop default
+$decal 1
+$vertexcolor 1
+$vertexalpha 1
+}

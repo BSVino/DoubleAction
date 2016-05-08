@@ -1,0 +1,13 @@
+VertexlitGeneric
+{
+$surfaceprop metal_barrel
+$basetexture models/stormy/da_doubletrouble/bunker_door_01_dif
+$phong 1
+$basemapalphaphongmask 1
+$phongboost 3
+$phongexponent 75
+$phongfresnelranges "[1 1 1]"
+$rimlight               1
+$rimlightexponent       1
+$rimlightboost          .7
+}

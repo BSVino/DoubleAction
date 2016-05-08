@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+	$basetexture construction/drywall_01_dif
+	$bumpmap construction/drywall_01_nor
+}

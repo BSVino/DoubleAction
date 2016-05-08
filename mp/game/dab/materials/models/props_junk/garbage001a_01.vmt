@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+
+$basetexture "Models/props_junk/garbage001a_01"
+$surfaceprop plastic
+}

@@ -1,0 +1,12 @@
+vertexlitgeneric
+{
+	$baseTexture models/da_miami/barstool_01a_dif
+	$bumpmap models/da_miami/barstool_01_nor
+	$surfaceprop metal
+	$model 1
+
+	$envmap  env_cubemap
+	$envmaptint [0.6 0.6 0.6]
+	$halflambert 1
+	$normalmapalphaenvmapmask 1
+}

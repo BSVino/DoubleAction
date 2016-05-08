@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/maps/da_towers_b35/jahhur/water_sea1_1541_1131_-810.vmt"
+	"insert"
+	{
+		"$waterdepth"		"48"
+	}
+}

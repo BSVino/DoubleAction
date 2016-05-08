@@ -1,0 +1,11 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props_construction/sawhorse_01_dif"
+	"$bumpmap" "models/props_construction/sawhorse_01_nor"
+	"$surfaceprop" "Wood_Plank"
+	$phong 1
+	$normalmapalphaphongmask 1
+	$phongboost 1.2
+	$phongfresnelranges "[2 .4 5]"
+	$phongexponent 20
+}

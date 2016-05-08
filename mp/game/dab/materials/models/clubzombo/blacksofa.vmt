@@ -1,0 +1,18 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\clubzombo/blacksofa"
+	"$surfaceprop" "cloth"
+ 	"$bumpmap" "models\clubzombo/blacksofa_normal" 
+
+	//phong parameters
+	"$phong"     "1"
+	//"$phongexponenttexture" 	"non"
+	"$phongexponent"   "25"
+	"$phongboost"   "1"
+	"$phongfresnelranges"   "[1 2 6]"
+	
+	//rimlight parameters
+	"$rimlight" "1"
+	"$rimlightexponent" "8"
+	"$rimlightboost" "6"
+}

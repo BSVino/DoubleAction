@@ -1,0 +1,19 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\weapons\v_models\enin_mac\thanezskin"
+	"$bumpmap" "models\weapons\v_models\enin_mac\thaneznormal"
+	"$envmap" "env_cubemap"
+	"$normalmapalphaenvmapmask" 1
+
+	"$detail"            "models\weapons\v_models\enin_mac/thanezskin-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

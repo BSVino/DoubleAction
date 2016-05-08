@@ -1,0 +1,11 @@
+vertexlitgeneric
+{
+$basetexture models/props_crates/wpncrate_large_02/dif
+$bumpmap models/props_crates/wpncrate_large_02/nor
+$phong 1
+$phongboost 2
+$phongfresnelranges [.3 .7 1]
+$phongexponent 50
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+}

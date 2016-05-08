@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/CONCRETE/FLOOR_SUBWAY01.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c0_-3064_416"
+	}
+}

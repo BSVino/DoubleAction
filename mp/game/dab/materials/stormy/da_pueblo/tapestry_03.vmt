@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+	$basetexture stormy/da_pueblo/tapestry_03
+	$translucent 1
+	$surfaceprop cloth
+	$reflectivity "[1 1 1]"
+}

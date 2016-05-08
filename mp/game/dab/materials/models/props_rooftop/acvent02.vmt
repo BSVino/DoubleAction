@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_rooftop/ACVent02"
+$detail "detail\dt_metalgalv"
+$detailscale "[ 10 5 ]"
+$detailblendfactor 1
+$detailblendmode 0
+}

@@ -1,0 +1,35 @@
+"vertexlitgeneric"
+{
+	"$baseTexture"  "models/weapons/beretta/beretta"
+	"$bumpmap" 		"models/weapons/beretta/beretta_n"
+	"$halflambert" 					"1"
+	"$phong" 						"1"
+	"$phongboost" 					"0.1"
+	"$phongalbedoboost" 			"15"
+	"$normalmapalphaphongmask"		"1"
+	"$phongexponenttexture" 		"models/weapons/beretta/beretta_m"
+	"$phongfresnelranges" 			"[1 0.1 1]"
+	"$phongalbedotint"				"1"
+
+	"$envmap" 				"env_cubemap"
+	"$envmaptint" 				"[ 0.01 0.01 0.01 ]"
+	"$envmapfresnel"			"1"
+	"$envmapFresnelMinMaxExp"		"[0 5 .4]"
+
+	"$rimlight" 				"1"
+	"$rimlightexponent" 			"25"	
+	"$rimlightboost"			"0.5"
+	"$rimmask" 				"1"
+
+	"$detail"            "models/weapons/beretta/beretta_gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

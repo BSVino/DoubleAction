@@ -1,0 +1,13 @@
+Vertexlitgeneric
+{
+	$basetexture models/props/postbox_01
+	$bumpmap models/props/postbox_01_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[2 1 3]"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.5 .5 .5]"
+}

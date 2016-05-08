@@ -1,0 +1,10 @@
+lightmappedgeneric
+{
+$baseTexture "concrete/concretefloor_construct01"
+$surfaceprop concrete
+$bumpmap "concrete/conc_map-ssbump"
+$ssbump 1
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[ .09 .09 .09 ]"
+}

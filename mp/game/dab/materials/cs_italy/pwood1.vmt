@@ -1,0 +1,6 @@
+"lightmappedGeneric"
+{
+	"$baseTexture" "cs_italy/pwood1"
+	"$surfaceprop" "wood"
+	"$bumpmap" "cs_italy/pwood1_normal"
+}

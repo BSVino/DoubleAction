@@ -1,0 +1,18 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\pist_elite\frame"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\weapons\v_models\pist_elite\frame_ref"
+
+	"$detail"            "models\weapons\v_models\pist_elite\frame-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

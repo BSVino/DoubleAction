@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\de_train\de_train_doorhandle_01"
+	"$surfaceprop" "metal"
+
+}

@@ -1,0 +1,6 @@
+"vertexlitgeneric"
+{
+	"$baseTexture" "models/de_dust/crates/crate_64x64a"
+	"$surfaceprop" "wood"
+//	"$bumpmap" "models/de_dust/crates/crate_64x64a_normal"
+}

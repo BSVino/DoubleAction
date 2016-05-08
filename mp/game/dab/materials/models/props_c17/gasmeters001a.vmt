@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_c17/GasMeters001a"
+$envmap env_cubemap
+$basealphaenvmapmask 1
+}

@@ -1,0 +1,12 @@
+"SpriteCard"
+{
+	"$basetexture" "particle\jahhur\bloodspraydab1"
+	$vertexcolor 1
+	$vertexalpha 1
+	$translucent 1
+	$minsize .03
+	//$blendframes 0
+	//$STARTFADESIZE .7
+	//$ENDFADESIZE .75
+	$depthblendscale 8
+}

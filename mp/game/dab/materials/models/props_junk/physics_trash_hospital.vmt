@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_junk/physics_trash_hospital"
+$surfaceprop default
+}

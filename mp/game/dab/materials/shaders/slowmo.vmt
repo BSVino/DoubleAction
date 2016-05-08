@@ -1,0 +1,25 @@
+"slowmo"
+{
+	"$basetexture"   "_rt_fullscreen"
+	
+	// Red is the texture overlay. Green is the film grain. Blue is the
+	// vignette, which should be interpreted as an alpha channel for a solid
+	// black input. Alpha is the blur alpha.
+	"$combined"      "shaders/slowmo-combined"
+
+	"$blur"          "_rt_SmallFB1"
+
+	Proxies
+	{
+		SlowIntensity
+		{
+			resultVar $slowmoamount
+		}
+		UniformNoise
+		{
+			resultVar $grainoffset
+			minval    0
+			maxval    100
+		}
+	}
+}

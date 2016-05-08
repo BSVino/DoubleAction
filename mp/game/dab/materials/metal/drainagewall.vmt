@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$baseTexture "metal/drainagewall"
+$envmap env_cubemap
+$bumpmap "metal\drainagewall_normal"
+$normalmapalphaenvmapmask 1
+$surfaceprop metalvent
+}

@@ -1,0 +1,16 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/vent_ducting_01
+	$bumpmap models/props_construction/vent_ducting_01_nor
+	$surfaceprop Metal
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 .5 2]"
+	$phongexponent 12
+	
+	//$envmap env_cubemap
+	//$normalmapalphaenvmapmask
+	//$envmaptint "[0 0 0]"
+	//$envmapsaturation 0
+}

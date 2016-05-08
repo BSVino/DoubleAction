@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$basetexture "metal/drainage_beam_01"
+$ssbump 1
+$bumpmap "metal/drainage_beam_01_height-ssbump"
+$normalmapalphaenvmapmask 1
+$envmap env_cubemap
+$envmaptint "[0.1 0.1 0.1]"
+$envmapcontrast 0.9
+$surfaceprop metal
+}

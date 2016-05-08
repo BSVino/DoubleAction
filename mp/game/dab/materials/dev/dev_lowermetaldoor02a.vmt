@@ -1,0 +1,6 @@
+LightmappedGeneric
+{
+
+$basetexture "Dev/dev_lowermetaldoor02a"
+$surfaceprop metal
+}

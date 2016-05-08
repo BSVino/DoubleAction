@@ -1,0 +1,15 @@
+VertexLitGeneric
+{
+$baseTexture models\Props_Lighting/lightfixture06
+$bumpmap models\Props_Lighting/lightfixture06_nor
+
+$phong 1
+$phongboost 2
+$phongfresnelranges "[1 .5 .5]"
+$phongexponent 15
+
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[.5 .5 .5]"
+
+}

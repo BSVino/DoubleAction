@@ -1,0 +1,4 @@
+VertexLitGeneric
+{
+$baseTexture "models\Props_Lighting/AirportLight01"
+}

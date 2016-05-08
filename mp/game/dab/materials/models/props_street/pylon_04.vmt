@@ -1,0 +1,12 @@
+vertexlitgeneric
+{
+	$basetexture models/props_street/pylon_04_dif
+	$bumpmap models/props_street/pylon_04_nor
+	
+	$phong 1
+	$phongboost .75
+	$phongexponent 7.5
+	$phongfresnelranges "[.5 .75 1]"
+	
+	
+}

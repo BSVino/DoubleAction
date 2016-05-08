@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+	$basetexture signs/subway_map_01
+	$surfaceprop plastic
+}

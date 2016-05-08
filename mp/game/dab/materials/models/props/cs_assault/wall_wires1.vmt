@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\cs_assault\wall_wires1"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\cs_assault\wall_wires1_ref"
+
+}

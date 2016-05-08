@@ -1,0 +1,10 @@
+refract
+{
+	//$model 1
+	$normalmap stormy/da_pueblo/vidrieras_nor
+	$dudvmap stormy/da_pueblo/vidrieras_dudv
+	$refractamount .075
+	$refracttinttexture stormy/da_pueblo/vidrieras_tint
+	//$basetexture stormy/da_pueblo/vidrieras_tint
+	//$tooltexture stormy/da_pueblo/vidrieras_tint
+}

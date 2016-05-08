@@ -1,0 +1,6 @@
+vertexlitgeneric
+{
+$basetexture models/stormy/kitchen/sink_dif
+$envmap env_cubemap
+$basealphaenvmapmask 1
+}

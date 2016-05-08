@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+	$basetexture buildings/door_metal_02
+	$envmap env_cubemap
+	$basemapalphaenvmapmask 1
+	$surfaceprop metal
+	$envmaptint "[.7 .7 .7]"
+}

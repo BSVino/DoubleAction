@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+	$basetexture models/da_penthouse/window_slats_dif
+	$bumpmap models/da_penthouse/window_slats_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+}

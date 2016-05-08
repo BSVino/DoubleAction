@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+	$basetexture cs_assault/assault_skybox_building04
+	$bumpmap cs_assault/assault_skybox_building04_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$surfaceprop glass
+	$envmaptint "[ .60 .60 .75 ]"
+}

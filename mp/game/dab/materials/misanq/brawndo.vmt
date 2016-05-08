@@ -1,0 +1,9 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "misanq/brawndo"
+	"$surfaceprop" "Metal"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.7 .7.7]"
+	"$envmapmask" "misanq/brawndo"
+	"$envmapcontrast" 1  	
+}

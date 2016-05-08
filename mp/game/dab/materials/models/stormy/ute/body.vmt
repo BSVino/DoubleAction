@@ -1,0 +1,17 @@
+vertexlitgeneric
+{
+$basetexture models\stormy\ute\body_dif
+$bumpmap models/stormy/ute/body_nor
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$nocull 1
+$envmapsaturation 25
+$envmaptint "[5 5 5]"
+$phong 1
+$phongboost 2
+$phongfresnelranges "[5 .5 .5]"
+
+$rimlight 1
+$rimlightboost 1
+$rimelightxponent 100
+}

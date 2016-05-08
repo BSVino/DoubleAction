@@ -1,0 +1,276 @@
+"Lesson"
+{
+	"Name"           "dive"
+	"Text"           "#DA_Hint_Dive"
+	"SideHint"       "#DA_SideHint_Dive"
+	"Priority"       "0"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "3"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "reload"
+	"Text"           "#DA_Hint_Reload"
+	"Priority"       "1"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerCanReload"
+}
+
+"Lesson"
+{
+	"Name"           "outofammo"
+	"Text"           "#DA_Hint_SwitchWeapons"
+	"Priority"       "1"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerOutOfAmmoAndMultipleWeapons"
+}
+
+"Lesson"
+{
+	"Name"           "slowmo"
+	"Text"           "#DA_Hint_Slowmo"
+	"Priority"       "2"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "3"
+	"Conditions"     "PlayerHasSlowMo"
+}
+
+"Lesson"
+{
+	"Name"           "be_stylish"
+	"Text"           "#DA_Hint_Be_Stylish"
+	"Priority"       "3"
+	"LessonType"     "info"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "3"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "5"
+}
+
+"Lesson"
+{
+	"Name"           "earn_slowmo"
+	"Text"           "#DA_Hint_Earn_Slowmo"
+	"Priority"       "3"
+	"LessonType"     "info"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "3"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "5"
+}
+
+"Lesson"
+{
+	"Name"           "aimin"
+	"Text"           "#DA_Hint_AimIn"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerActiveWeaponHasAimIn"
+}
+
+"Lesson"
+{
+	"Name"           "grenade"
+	"Text"           "#DA_Hint_Grenade"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerHasGrenades"
+}
+
+"Lesson"
+{
+	"Name"           "wallflip"
+	"Text"           "#DA_Hint_WallFlip"
+	"SideHint"       "#DA_SideHint_WallFlip"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "slide"
+	"Text"           "#DA_Hint_Slide"
+	"SideHint"       "#DA_SideHint_Slide"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "brawl"
+	"Text"           "#DA_Hint_Brawl"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "rollafterdive"
+	"Text"           "#DA_Hint_AfterDiveRoll"
+	"SideHint"       "#DA_SideHint_AfterDiveRoll"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "slideafterdive"
+	"Text"           "#DA_Hint_AfterDiveSlide"
+	"SideHint"       "#DA_SideHint_AfterDiveSlide"
+	"Priority"       "4"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "mantel"
+	"Text"           "#DA_Hint_Mantel"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "3"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "5"
+}
+
+"Lesson"
+{
+	"Name"           "switchweapons"
+	"Text"           "#DA_Hint_SwitchWeapons"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerHasMultipleWeapons"
+}
+
+"Lesson"
+{
+	"Name"           "pickupweapon"
+	"Text"           "#DA_Hint_PickupWeapons"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "buy"
+	"Text"           "#DA_Hint_Buy"
+	"Priority"       "5"
+	"LessonType"     "environment" // We have a special way to show it that behaves differently
+	"LearningMethod" "performing"
+	"TimesToLearn"   "2"
+	"Conditions"     "PlayerDead"
+}
+
+"Lesson"
+{
+	"Name"           "voicechat"
+	"Text"           "#DA_Hint_VoiceChat"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerAlive"
+}
+
+"Lesson"
+{
+	"Name"           "throw"
+	"Text"           "#DA_Hint_Throw"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerHasMultipleWeapons"
+	"MaxShows"       "3"
+}
+
+"Lesson"
+{
+	"Name"           "thirdperson"
+	"Text"           "#DA_Hint_ThirdPerson"
+	"Priority"       "5"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "3"
+}
+
+"Lesson"
+{
+	"Name"           "stuntfromexplo"
+	"Text"           "#DA_Hint_StuntFromExplo"
+	"Priority"       "5"
+	"LessonType"     "info"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "5"
+}
+
+"Lesson"
+{
+	"Name"           "thirdpersonswitch"
+	"Text"           "#DA_Hint_ThirdPersonSwitch"
+	"Priority"       "6"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerAlive"
+	"MaxShows"       "3"
+}
+
+"Lesson"
+{
+	"Name"           "callavote"
+	"Text"           "#DA_Hint_CallAVote"
+	"Priority"       "7"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"TimesToLearn"   "1"
+	"Conditions"     "PlayerDeadNoKillCam"
+	"MaxShows"       "1"
+}
+
+"Lesson"
+{
+	"Name"           "superfall_respawn"
+	"Text"           ""
+	"SideHint"       "#DA_SideHint_SuperFallRespawn"
+	"Priority"       "0"
+	"LessonType"     "button"
+	"LearningMethod" "performing"
+	"Conditions"     "PlayerSuperFalling"
+}

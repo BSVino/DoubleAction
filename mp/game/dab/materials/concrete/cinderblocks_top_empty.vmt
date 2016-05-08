@@ -1,0 +1,6 @@
+lightmappedgeneric
+{
+$baseTexture "concrete/cinderblocks_top_empty"
+$surfaceprop concrete
+$bumpmap "concrete/cinderblocks_top_empty_nor"
+}

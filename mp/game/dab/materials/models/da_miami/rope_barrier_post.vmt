@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$baseTexture models/da_miami/rope_barrier_post_dif
+	$bumpmap models/da_miami/rope_barrier_post_nor
+	$envmap  env_cubemap
+	$normalmapalphaenvmapmask 1
+	$surfaceprop Metal
+	$model 1
+
+}

@@ -1,0 +1,8 @@
+"vertexLitGeneric"
+{
+        $basetexture "rig/tex3"
+	$envmap env_cubemap
+	$envmapmask "rig/rig1c"
+	$envmapcontrast 1
+        $model 1
+}

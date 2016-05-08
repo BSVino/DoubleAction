@@ -1,0 +1,14 @@
+VertexlitGeneric
+{
+$surfaceprop metal_barrel
+$basetexture models/stormy/da_doubletrouble/racking_dif
+$alphatest 1
+$bumpmap models/stormy/da_doubletrouble/racking_nor
+$phong 1
+$phongboost 3
+$phongexponent 30
+$phongfresnelranges "[1 1 1]"
+$rimlight               1
+$rimlightexponent       1
+$rimlightboost          .7
+}

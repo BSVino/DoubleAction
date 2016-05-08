@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_penthouse/gutter_dif_1
+	$bumpmap models/stormy/da_penthouse/gutter_nor
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.5 .75 1]"
+}

@@ -1,0 +1,17 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/weapons/v_models/Jarheads m16a2/stoke_silencer"
+	"$normalmap" "models/weapons/v_models/Jarheads m16a2/stoke_silencer_norm"
+
+	"$detail"            "models/weapons/v_models/Jarheads m16a2/stoke_silencer-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

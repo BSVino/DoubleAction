@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+
+$basetexture "Models/props_debris/composite_debris"
+$surfaceprop concrete
+}

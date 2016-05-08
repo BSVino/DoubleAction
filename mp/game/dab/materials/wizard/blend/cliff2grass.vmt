@@ -1,0 +1,9 @@
+"WorldVertexTransition"
+{
+	"$basetexture" "wizard/blend/cliffface002a"
+	"$surfaceprop" "dirt"
+	"$bumpmap" "wizard/blend/cliffface002a_normal"
+	"$basetexture2" "wizard/dirtfloor006a"
+
+	"$blendmodulatetexture" "wizard/blend/cliff2grass_modulate"	
+}

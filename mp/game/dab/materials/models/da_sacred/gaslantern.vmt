@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture models/da_sacred/gaslantern_dif
+	$bumpmap models/da_sacred/gaslantern_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongexponent 10
+	$phongfresnelranges "[ .8 1 .5 ]"
+}

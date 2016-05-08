@@ -1,0 +1,16 @@
+VertexLitGeneric
+{
+
+$basetexture "Models/props_wasteland/controlroom_tables001"
+$envmap env_cubemap
+$basealphaenvmapmask 1
+$surfaceprop metal
+vertexlitgeneric_HDR_dx9
+{
+$envmaptint "[.15 .15 .15]"
+}
+vertexlitgeneric_DX9
+{
+$envmaptint "[.15 .15 .15]"
+}
+}

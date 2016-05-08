@@ -1,0 +1,9 @@
+"lightmappedgeneric"
+{
+    "$basetexture" "jahhur/road_crossing1"
+    "$decal" 1
+    "$decalscale" .5
+    "$translucent" 1
+    //"$selfillum" "1"
+
+}

@@ -1,0 +1,9 @@
+"WorldVertexTransition"
+{
+	"$basetexture" "stormy/dirt_001"
+	"$basetexture2" "stormy/dirt_002"
+                "%tooltexture"  "stormy/TT--dirt_001-dirt_002"
+	"$surfaceprop" "Dirt"
+	"$surfaceprop2" "Dirt"
+
+}

@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$basetexture "concrete/vertigo_concretefloora"
+
+
+
+$surfaceprop Concrete
+
+
+
+}

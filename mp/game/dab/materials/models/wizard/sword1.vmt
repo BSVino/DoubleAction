@@ -1,0 +1,15 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/Wizard/sword1"
+	"$bumpmap" "models/wizard/sword1_normal"
+	"$bumpscale" "0.5"
+	"$envmap" "env_cubemap"
+	"$normalmapalphaenvmapmask" "1"
+	"$phong" "1"
+	"$phongexponent" "5"
+	"$phongboost" "1.0"
+	"$phongfresnelranges" "[0 0.5 1]"
+	"$rimlight"               "1"
+	"$rimlightexponent"       "2"
+	"$rimlightboost"          ".2"
+}

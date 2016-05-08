@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_junk/PlasticCrate01a"
+$alphatest 1
+}

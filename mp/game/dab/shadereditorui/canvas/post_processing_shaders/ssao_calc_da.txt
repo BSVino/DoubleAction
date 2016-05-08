@@ -1,0 +1,316 @@
+"canvas"
+{
+	"cfmt_version"		"canvasver#003"
+	"flowgraph_type"		"1"
+	"config"
+	{
+		"shadermodel"		"1"
+		"cull_mode"		"0"
+		"alpha_blending"		"0"
+		"depth_test"		"0"
+		"depth_write"		"0"
+		"srgb_write"		"0"
+	}
+	"Nodes"
+	{
+		"Node_000"
+		{
+			"iType"		"1"
+			"pos_x"		"-371.235718"
+			"pos_y"		"-0.644386"
+			"size_x"		"55.000000"
+			"size_y"		"-28.000000"
+			"iPreview"		"0"
+			"enable_flex"		"0"
+			"enable_normal"		"0"
+			"enable_normal_compression"		"0"
+			"enable_blendweights"		"0"
+			"enable_tangentspace"		"0"
+			"enable_tangentspace_skinning"		"0"
+			"numTexcoords"		"1"
+			"numColor"		"0"
+			"dTFlag_Texcoords_0"		"2"
+			"dTFlag_Texcoords_1"		"2"
+			"dTFlag_Texcoords_2"		"2"
+			"dTFlag_Color_0"		"8"
+			"dTFlag_Color_1"		"8"
+		}
+		"Node_001"
+		{
+			"iType"		"27"
+			"pos_x"		"-95.762390"
+			"pos_y"		"15.564491"
+			"size_x"		"80.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"1"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"0"
+					"iTarget_jack"		"0"
+				}
+			}
+			"swizzleString"		"x y z 1"
+		}
+		"Node_002"
+		{
+			"iType"		"3"
+			"pos_x"		"-341.681305"
+			"pos_y"		"-176.407501"
+			"size_x"		"55.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"numTexcoords"		"1"
+			"numColor"		"0"
+			"numTexcoord_Flag_0"		"2"
+			"numTexcoord_Flag_1"		"2"
+			"numTexcoord_Flag_2"		"2"
+			"numTexcoord_Flag_3"		"2"
+			"numTexcoord_Flag_4"		"2"
+			"numTexcoord_Flag_5"		"2"
+			"numTexcoord_Flag_6"		"2"
+			"numTexcoord_Flag_7"		"2"
+			"numColor_Flag_0"		"8"
+			"numColor_Flag_1"		"8"
+		}
+		"Node_003"
+		{
+			"iType"		"8"
+			"pos_x"		"-334.609528"
+			"pos_y"		"-385.141388"
+			"size_x"		"69.000000"
+			"size_y"		"-50.000000"
+			"iPreview"		"1"
+			"flSmartVal0"		"0.000000"
+		}
+		"Node_004"
+		{
+			"iType"		"90"
+			"pos_x"		"-342.944031"
+			"pos_y"		"-583.019836"
+			"size_x"		"80.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"i_c_matrix"		"0"
+		}
+		"Node_005"
+		{
+			"iType"		"90"
+			"pos_x"		"-343.272003"
+			"pos_y"		"-540.977478"
+			"size_x"		"80.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"i_c_matrix"		"4"
+		}
+		"Node_006"
+		{
+			"iType"		"11"
+			"pos_x"		"-340.962555"
+			"pos_y"		"-461.106140"
+			"size_x"		"85.000000"
+			"size_y"		"-50.000000"
+			"iPreview"		"1"
+			"flSmartVal0"		"0.000000"
+		}
+		"Node_007"
+		{
+			"iType"		"65"
+			"pos_x"		"-337.432617"
+			"pos_y"		"-227.739059"
+			"size_x"		"70.000000"
+			"size_y"		"-50.000000"
+			"iPreview"		"1"
+			"flSmartVal0"		"1.000000"
+		}
+		"Node_008"
+		{
+			"iType"		"94"
+			"pos_x"		"-340.763672"
+			"pos_y"		"-308.494965"
+			"size_x"		"84.000000"
+			"size_y"		"-50.000000"
+			"iPreview"		"1"
+			"szParamname"		"_rt_ResolvedFullFrameDepth_DA"
+			"iTextureType"		"0"
+			"IsCubemap"		"0"
+			"szDemoTexturePath"		"_rt_ResolvedFullFrameDepth_DA"
+			"szFallbackTexturePath"		"_rt_ResolvedFullFrameDepth_DA"
+			"iFallbackMode"		"4"
+		}
+		"Node_009"
+		{
+			"iType"		"2"
+			"pos_x"		"213.764282"
+			"pos_y"		"-0.644386"
+			"size_x"		"55.000000"
+			"size_y"		"-28.000000"
+			"iPreview"		"0"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"1"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_01"
+				{
+					"iTarget_node"		"0"
+					"iTarget_jack"		"1"
+				}
+			}
+			"numTexcoords"		"1"
+			"numColor"		"0"
+			"numTexcoord_Flag_0"		"2"
+			"numTexcoord_Flag_1"		"2"
+			"numTexcoord_Flag_2"		"2"
+			"numTexcoord_Flag_3"		"2"
+			"numTexcoord_Flag_4"		"2"
+			"numTexcoord_Flag_5"		"2"
+			"numTexcoord_Flag_6"		"2"
+			"numTexcoord_Flag_7"		"2"
+			"numColor_Flag_0"		"8"
+			"numColor_Flag_1"		"8"
+		}
+		"Node_010"
+		{
+			"iType"		"19"
+			"pos_x"		"180.249084"
+			"pos_y"		"-253.525757"
+			"size_x"		"91.000000"
+			"size_y"		"-80.000000"
+			"iPreview"		"1"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"13"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_01"
+				{
+					"iTarget_node"		"12"
+					"iTarget_jack"		"0"
+				}
+			}
+			"i_mat_rotation"		"0"
+		}
+		"Node_011"
+		{
+			"iType"		"4"
+			"pos_x"		"405.651794"
+			"pos_y"		"-211.347427"
+			"size_x"		"55.000000"
+			"size_y"		"-17.000000"
+			"iPreview"		"0"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"13"
+					"iTarget_jack"		"0"
+				}
+			}
+			"numColors"		"1"
+			"enable_Depth"		"0"
+		}
+		"Node_012"
+		{
+			"iType"		"29"
+			"pos_x"		"-63.387169"
+			"pos_y"		"-321.895111"
+			"size_x"		"122.000000"
+			"size_y"		"-80.000000"
+			"iPreview"		"1"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"2"
+					"iTarget_jack"		"0"
+				}
+			}
+			"iSRGB"		"0"
+			"iTextureType"		"5"
+			"IsCubemap"		"0"
+			"iLookupoverride"		"0"
+			"szDemoTexturePath"		"_rt_FullFrameFB"
+			"szFallbackTexturePath"		"white"
+			"iFallbackMode"		"0"
+		}
+		"Node_013"
+		{
+			"iType"		"99"
+			"pos_x"		"-74.125977"
+			"pos_y"		"-208.327652"
+			"size_x"		"156.000000"
+			"size_y"		"-83.000000"
+			"iPreview"		"1"
+			"bridges"
+			{
+				"jackIn_00"
+				{
+					"iTarget_node"		"2"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_01"
+				{
+					"iTarget_node"		"8"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_02"
+				{
+					"iTarget_node"		"3"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_03"
+				{
+					"iTarget_node"		"5"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_04"
+				{
+					"iTarget_node"		"4"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_05"
+				{
+					"iTarget_node"		"6"
+					"iTarget_jack"		"0"
+				}
+				"jackIn_06"
+				{
+					"iTarget_node"		"7"
+					"iTarget_jack"		"0"
+				}
+			}
+			"varName_In_0"		"vecUV"
+			"varType_In_0"		"2"
+			"varName_In_1"		"iDepth"
+			"varType_In_1"		"128"
+			"varName_In_2"		"unused1"
+			"varType_In_2"		"4"
+			"varName_In_3"		"unused2"
+			"varType_In_3"		"64"
+			"varName_In_4"		"unused3"
+			"varType_In_4"		"32"
+			"varName_In_5"		"unused4"
+			"varType_In_5"		"1"
+			"varName_In_6"		"unused5"
+			"varType_In_6"		"2"
+			"varName_Out_0"		"vecAOOut"
+			"varType_Out_0"		"8"
+			"szFunctionName"		"AngleSSAO"
+			"iInline"		"1"
+			"szcode_global_num_strings"		"4"
+			"szcode_global_partial_00"		"// tau = 2pi\r\n#define TAU 6.2831853072\r\n\r\nfloat random(float2 uv)\r\n{\r\n	return frac(fmod(123456789.0, 1e-7 + 256.0 * dot(uv.xy + float2(.1, .1), float2(2.6651441426902251, 23.1406926327792690))));\r\n}\r\n\r\nfloat3 EstimatePosition( float flDepth, float2 uv )\r\n{\r\n	return float3(uv.x, uv.y, flDepth);\r\n}\r\n\r\n#define KERNEL_PAIRS 8\r\n\r\n#if KERNEL_PAIRS == 8\r\n// Each kernel gets a \'random\' scale.\r\nstatic float2 avecKernel[KERNEL_PAIRS] = {\r\n/*	float2(1.0,    0.0)   * 8/8,\r\n	float2(0.924,  0.383) * 8/8,\r\n	float2(0.707,  0.707) * 8/8,\r\n	float2(0.383,  0.924) * 8/8,\r\n	float2(0,      1)     * 8/8,\r\n	float2(-0.383, 0.924) * 8/8,\r\n	float2(-0.707, 0.707) * 8/8,\r\n	float2(-0.924, 0.383) * 8/8,*/\r\n	float2(1.0,    0.0)   * 4/8,\r\n	float2(0.924,  0.383) * 8/8,\r\n	float2(0.707,  0.707) * 3/8,\r\n	float2(0.383,  0.924) * 1/8,\r\n	float2(0,      1)     * 6/8,\r\n	float2(-0.383, 0.924) * 2/8,\r\n	float2(-0.707, 0.707) * 5/8,\r\n	float2(-0.924, 0.383) * 7/8,\r\n};\r\n#elif KERNEL_P"
+			"szcode_global_partial_01"		"AIRS == 6\r\n\r\nstatic float2 avecKernel[KERNEL_PAIRS] = {\r\n	float2(1.0,    0.0),\r\n	float2(0.866,  0.5),\r\n	float2(0.5,    0.866),\r\n	float2(0,      1),\r\n	float2(-0.5,   0.866),\r\n	float2(-0.866, 0.5 ),\r\n};\r\n#endif\r\n\r\nstatic float flScale = 30000.0;\r\nstatic float flMinRangeFalloff = 50.0;\r\nstatic float flMaxRangeFalloff = 150.0;\r\nstatic float flStrength = 10.0;\r\n\r\nfloat SampleKernel(in int i, in float2 vecUV, in float3 vecPosition, in float3 vecViewDir, in sampler iDepth, in float flDepth, out float flSamples)\r\n{\r\n	float flRandomRotation = random(vecUV + float2(i, i)) * TAU / 8;\r\n	float flRandomScaling = 1;//random(vecUV + float2(i, i)) * 0.5 + 0.5; // Instead of this, scale the kernels. There's less noise that way.\r\n\r\n	float2 vecDistanceToCamera = _g_TexelSize * (flRandomScaling * flScale / (flDepth * _g_WorldDepth));\r\n	\r\n	float flCos = cos(flRandomRotation);\r\n	float flSin = sin(flRandomRotation);\r\n\r\n	float2x2 mRotate = { flCos, flSin, -flSin, flCos };\r\n\r\n"
+			"szcode_global_partial_02"		"	float2 vecKernel = mul(avecKernel[i], mRotate) * vecDistanceToCamera;\r\n\r\n	float2 vecUV1 = vecUV + vecKernel;\r\n	float3 vecKernel1 = EstimatePosition(tex2D(iDepth, vecUV1), vecUV1);\r\n\r\n	float2 vecUV2 = vecUV - vecKernel;\r\n	float3 vecKernel2 = EstimatePosition(tex2D(iDepth, vecUV2), vecUV2);\r\n\r\n	float3 vecToKernel1 = vecKernel1 - vecPosition;\r\n	float3 vecToKernel2 = vecKernel2 - vecPosition;\r\n\r\n	float flResult = 0;\r\n\r\n	float3 vecToKernel1Normalized = normalize(vecToKernel1);\r\n	float3 vecToKernel2Normalized = normalize(vecToKernel2);\r\n\r\n	float flAngle1 = dot(vecToKernel1Normalized, vecViewDir);\r\n	float flAngle2 = dot(vecToKernel2Normalized, vecViewDir);\r\n\r\n	float flAngle = (flAngle1 + flAngle2)/2.0;\r\n\r\n	// Reduce contributions of small angles.\r\n	float flAngleLarge = flAngle * RemapValClamped(flAngle, -0.2, -0.25, 0.5, 1.0);\r\n\r\n	float flKernel1Distance = abs(vecKernel1.z - vecPosition.z);\r\n	float flKernel2Distance = abs(vecKernel2.z - vecPosition.z);\r\n\r\n	floa"
+			"szcode_global_partial_03"		"t flMaxDistance = max(flKernel1Distance, flKernel2Distance) * _g_WorldDepth;\r\n\r\n	// Contribute less AO if one of our kernels is very far from the central position.\r\n	flSamples = RemapValClamped(flMaxDistance, flMinRangeFalloff, flMaxRangeFalloff, 1, 0);\r\n\r\n	float flRangeFactor = flDepth * 0.5; // To get rid of moire patterns on distant surfaces.\r\n	return pow(saturate(flAngleLarge+1.0 + flRangeFactor), flStrength) * flSamples;\r\n}\r\n\r\n// Unused vars are globals that need to be passed in or they will be optimized out.\n"
+			"szcode_body_num_strings"		"1"
+			"szcode_body_partial_00"		"	float flDepth = tex2D(iDepth, vecUV);\r\n\r\n	float3 vecPosition = EstimatePosition(flDepth, vecUV);\r\n	float3 vecViewDir = float3(0, 0, 1);\r\n	\r\n	float flTotalSamples = 0;\r\n	float flAO = 0;\r\n\r\n	for (int i = 0; i < KERNEL_PAIRS; i++)\r\n	{\r\n		float flSamples = 0;\r\n		flAO += SampleKernel(i, vecUV, vecPosition, vecViewDir, iDepth, flDepth, flSamples);\r\n		flTotalSamples += flSamples;\r\n	}\r\n\r\n	if (flTotalSamples > 0.0)\r\n	{\r\n		float flFinal = flAO / flTotalSamples;\r\n\r\n		vecAOOut = float4(flFinal, flFinal, flFinal, 1.0);\r\n	}\r\n	else\r\n		vecAOOut = float4(1.0, 1.0, 1.0, 1.0);"
+			"iEnvFlags"		"0"
+		}
+	}
+}

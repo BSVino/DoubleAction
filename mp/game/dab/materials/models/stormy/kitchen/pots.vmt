@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+$basetexture models/stormy/kitchen/pots_dif
+$bumpmap models/stormy/kitchen/pots_nor
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+}

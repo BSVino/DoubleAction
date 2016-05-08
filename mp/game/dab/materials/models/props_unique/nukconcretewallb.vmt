@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "de_nuke/nukconcretewallb"
+$surfaceprop default
+}

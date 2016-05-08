@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models\props_vehicles/silber"
+	"$envmap" "env_cubemap"
+}

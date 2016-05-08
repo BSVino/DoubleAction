@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+	$basetexture signs/emdbrewer
+	$bumpmap signs/emdbrewer_nor
+	$surfaceprop wood
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask
+	
+	"%keywords" "eat,my,diction,sign"
+}

@@ -1,0 +1,81 @@
+"GameInfo"
+{
+	game	"Double Action: Boogaloo"
+	title	""
+	title2	""
+	type 	multiplayer_only
+//	type 	singleplayer_only
+	icon	"dab"
+
+	supportsvr	 1
+	nomodels     1
+	nohimodel    1
+	nocrosshair  1
+	nodegraph    0
+	GameData     "da.fgd"
+
+	developer "Double Action"
+	developer_url http://doubleactiongame.com/
+
+	hidden_maps
+	{
+		// Hide maps from the start server dialog
+		"test_speakers"		1
+		"test_hardware"		1
+		"dablogomenu"       1
+	}
+
+	FileSystem
+	{
+		SteamAppId 317360
+
+		SearchPaths
+		{
+			// First, mount all user customizations.  This will search for VPKs and subfolders
+			// and mount them in alphabetical order.  The easiest way to distribute a mod is to
+			// pack up the custom content into a VPK.  To "install" a mod, just drop it in this
+			// folder.
+			//
+			// Note that this folder is scanned only when the game is booted.
+			game+mod			hl2mp/custom/*
+			game+mod			hl2/custom/*
+
+			gamebin				|gameinfo_path|debug_bin
+
+			// Now search loose files.  We'll set the directory containing the gameinfo.txt file
+			// as the first "mod" search path (after any user customizations).  This is also the one
+			// that's used when writing to the "mod" path.
+			game+mod			|gameinfo_path|.
+			game+mod			|gameinfo_path|../da_info/.
+			mod_write+default_write_path		|gameinfo_path|../da_info/.
+			gamebin				|gameinfo_path|bin
+
+			// We search VPK files before ordinary folders, because most files will be found in
+			// VPK and we can avoid making thousands of file system calls to attempt to open files
+			// in folders where they don't exist.  (Searching a VPK is much faster than making an operating
+			// system call.)
+			game_lv				hl2/hl2_lv.vpk
+			game+mod			hl2mp/hl2mp_english.vpk
+			game+mod			hl2mp/hl2mp_pak.vpk
+			game				|all_source_engine_paths|hl2/hl2_english.vpk
+			game				|all_source_engine_paths|hl2/hl2_pak.vpk
+			game				|all_source_engine_paths|hl2/hl2_textures.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
+			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
+			game				|all_source_engine_paths|hl2/hl2_misc.vpk
+			platform			|all_source_engine_paths|platform/platform_misc.vpk
+
+			// Add the HL2 directory as a game search path.  This is also where where writes
+			// to the "game" path go.
+			game+game_write		hl2mp
+
+			// Where the game's binaries are
+			gamebin				hl2mp/bin
+
+			// Last, mount in shared HL2 loose files
+			game				|all_source_engine_paths|hl2mp
+			game				|all_source_engine_paths|hl2
+			platform			|all_source_engine_paths|platform
+		}
+	}
+}

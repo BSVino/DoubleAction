@@ -1,0 +1,5 @@
+"vertexLitGeneric"
+{
+        $basetexture "rig/rig1c"
+        $model 1
+}

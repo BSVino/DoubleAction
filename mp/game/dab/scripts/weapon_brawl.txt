@@ -1,0 +1,52 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"45"	// Punch
+	"SecondaryDamage"		"85"	// Kick
+	"Bullets"				"1"		// bullets per shoot
+	"CycleTime"				"0.35"		// time between shoots
+	"SecondaryCycleTime"	"0.6"
+
+	"WeaponType"            "melee"
+
+	"BuiltRightHanded"		"0"
+
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_Brawl"
+	"viewmodel"				"models/weapons/v_brawl.mdl"
+//	"playermodel"			"models/weapons/p99.mdl"
+
+	"bucket"				"0"
+	"bucket_position"		"0"
+
+	"clip_size"				"-1"
+	"primary_ammo"			"None"
+	"secondary_ammo"		"None"
+
+	"ViewPunchMultiplier"	"0.4"
+	"Recoil"				"0"
+
+	"weight"			"0"
+	"item_flags"			"0"
+
+	"MeleeWeapon"			"1"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	TextureData
+	{
+		"crosshair"
+		{
+			"file"		"HUD/brawlcross"
+			"x"		"0"
+			"y"		"0"
+			"width"		"64"
+			"height"	"64"
+		}
+	}
+}

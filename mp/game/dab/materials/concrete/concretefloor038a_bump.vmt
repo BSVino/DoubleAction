@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$basetexture "concrete\concretefloor038a"
+$bumpmap "concrete\pavement_height-ssbump"
+$ssbump 1
+$surfaceprop concrete
+$detail "detail\dt_asphalt"
+$detailscale 5
+$detailblendfactor .8
+$detailblendmode 0
+}

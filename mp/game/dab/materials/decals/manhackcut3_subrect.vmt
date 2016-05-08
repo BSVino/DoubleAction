@@ -1,0 +1,8 @@
+"Subrect"
+{
+	"$Material"	"decals/decals_mod2x"
+	"$Pos"		"512 320"
+	"$Size"		"128 32"
+	"$decalscale" 	0.10
+	"$modelmaterial" "decals/manhackcut3"
+}

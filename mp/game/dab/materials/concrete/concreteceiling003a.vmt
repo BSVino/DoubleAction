@@ -1,0 +1,10 @@
+LightmappedGeneric
+{
+
+$basetexture "Concrete/concreteceiling003a"
+$surfaceprop concrete
+$detail "detail\dt_plaster1"
+$detailscale 4
+$detailblendfactor .7
+$detailblendmode 0
+}

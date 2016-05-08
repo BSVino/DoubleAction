@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+	$basetexture models/da_penthouse/downpipe_dif
+	$bumpmap models/da_penthouse/downpipe_nor
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.5 .75 1]"
+}

@@ -1,0 +1,11 @@
+vertexlitgeneric
+{
+	$basetexture models/props_brewery/metal_keg_01c
+	$bumpmap models/props_brewery/metal_keg_01_nor
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.75 .75 .75]"
+	$envmapsaturation 0
+	
+}

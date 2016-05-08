@@ -1,0 +1,15 @@
+Vertexlitgeneric
+{
+	$basetexture models/props/store_shutters_01
+	$bumpmap models/props/store_shutters_01_nor
+	
+	$translucent 1
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[2 1 3]"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.1 .1 .1]"
+}

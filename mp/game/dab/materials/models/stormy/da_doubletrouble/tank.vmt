@@ -1,0 +1,14 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_doubletrouble/tank_dif
+	$bumpmap models/stormy/da_doubletrouble/tank_nor
+	$phongexponenttexture models/stormy/da_doubletrouble/tank_exp
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.75 .75 1]"
+	$phongalbedotint 1
+	$rimlight 1
+	$rimlightboost 10
+	$rimlightexponent 1
+	$rimmask 1
+}	

@@ -1,0 +1,13 @@
+vertexlitgeneric
+{
+$basetexture models\player/wishmodel/red_bodydif
+$bumpmap models\player/wishmodel/red_bodynor
+$phong 1	
+$phongexponenttexture	models\player/wishmodel\phongexp
+$phongboost 2
+$phongfresnelranges "[.1.1.2]"	
+$rimlight               1
+$rimmask 1
+$rimlightexponent       .5
+$rimlightboost          .75
+}

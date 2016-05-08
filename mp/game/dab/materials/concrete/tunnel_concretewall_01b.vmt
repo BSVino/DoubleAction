@@ -1,0 +1,15 @@
+LightmappedGeneric
+{
+$basetexture "Concrete/tunnel_concretewall_01b"
+$surfaceprop concrete
+$ssbump 1
+$bumpmap "Concrete/tunnel_concretewall_01a_height-ssbump"
+$detail "detail\dt_conc"
+$detailscale 10
+$detailblendfactor ".7"
+$detailblendmode 0
+$envmap env_cubemap
+
+$envmaptint "[ .05 .05.05 ]"
+"%keywords" "c17sewers,wasteland"
+}

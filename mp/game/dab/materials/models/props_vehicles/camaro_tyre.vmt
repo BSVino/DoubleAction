@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture models/props_vehicles/camaro_tyre
+	$bumpmap models/props_vehicles/camaro_tyre_nor
+	
+	$phong 1
+	$phongboost .5
+	$phongfresnelranges "[1 .5 .5]"
+	$phongexponent 10
+}

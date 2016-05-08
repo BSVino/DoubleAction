@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\de_prodigy\fan"
+                "$bumpmap" "models/props/de_prodigy/fan_normal"
+
+                "$phong" "1"
+	"$phongexponent" "20"
+	"$phongboost" ".5"	
+	"$phongfresnelranges"	"[.9 .9 .9]"
+
+}

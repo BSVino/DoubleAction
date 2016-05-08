@@ -1,0 +1,15 @@
+"LightmappedGeneric"
+{
+	"%compilepassbullets" 1
+	"$basetexture" "jahhur/metal_crane2_beams"
+	//"$bumpmap" "jahhur/metal_crane1_normal"
+	"$surfaceprop" "metal"
+	//"$envmap" "env_cubemap"
+	//"$envmaptint" "[.5 .4 .3]"
+	//"$envmapcontrast" ".9"
+	//"$envmapsaturation" "1"
+	//"$normalmapalphaenvmapmask" 1
+	"$nocull" 1
+	"$alphatest" 1
+
+}

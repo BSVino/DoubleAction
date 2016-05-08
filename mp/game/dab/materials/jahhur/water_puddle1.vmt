@@ -1,0 +1,13 @@
+"UnlitGeneric"
+{
+	"$basetexture" "jahhur/water_puddle1"
+	// Original shader: DecalDarkeningSpecularCubicEnvMap
+	"%tooltexture" "Decals/decalwastelandpuddle001a"
+	"$envmap" "environment maps/envmap009a"
+	"$envmapmask" "jahhur/water_puddle1_spec"
+	"$decal" 1
+	"$decalscale" 0.25
+	"$translucent" 1
+	"$additive" 1
+	"$envmaptint" "[0.5 0.4 0.3]"
+}

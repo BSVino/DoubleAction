@@ -1,0 +1,10 @@
+lightmappedgeneric
+{
+
+	$basetexture stormy/tile_and_brick_01_a_dif
+	$bumpmap stormy/tile_and_brick_01_a_nor
+
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.05 .05 .05]"
+}

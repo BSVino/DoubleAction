@@ -1,0 +1,7 @@
+DecalModulate
+{
+$basetexture "graffiti/graffiti_lighthouse_09"
+$decal 1
+$vertexcolor 1
+$vertexalpha 1
+}

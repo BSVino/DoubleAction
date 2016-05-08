@@ -1,0 +1,8 @@
+WorldVertexTransition
+{
+$basetexture2 "nature/ground_grass02"
+$basetexture "nature/ground_grass01"
+$surfaceprop2 dirt
+$surfaceprop dirt
+"%keywords" l4d2
+}

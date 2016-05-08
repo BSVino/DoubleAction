@@ -1,0 +1,8 @@
+"unlitgeneric"
+
+{
+"$basetexture" "jahhur\lightshaft1_orange"
+//"$translucent" 1
+"$additive" 1
+"$nocull" 1
+}

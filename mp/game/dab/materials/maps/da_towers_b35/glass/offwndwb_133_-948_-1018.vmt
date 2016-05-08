@@ -1,0 +1,13 @@
+"patch"
+{
+	"include"		"materials/GLASS/OFFWNDWB.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_towers_b35/c133_-948_-1018"
+		"$crackmaterial"		"maps/da_towers_b35/glass/offwndwb_break_133_-948_-1018"
+		"lightmappedgeneric_HDR_dx9"
+		{
+			"$crackmaterial"		"maps/da_towers_b35/glass/offwndwb_break_133_-948_-1018"
+		}
+	}
+}

@@ -1,0 +1,12 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_doubletrouble/power_cable_dif
+	$phong 1
+	$basemapalphaphongmask 1
+	$phongboost 2
+	$phongfresnelranges [.75 .75 1]
+	$phongexponent 10
+	$phongalbedotint 1
+	$rimlight 1
+	$rimlightexponent 20
+}	

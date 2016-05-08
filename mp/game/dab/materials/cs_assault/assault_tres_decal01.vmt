@@ -1,0 +1,7 @@
+"LightmappedGeneric"
+{
+	"$baseTexture" "cs_assault/assault_tres_decal01"
+	"$translucent" "1"
+	"$decal" "1"
+	"$decalscale" "0.250"
+}

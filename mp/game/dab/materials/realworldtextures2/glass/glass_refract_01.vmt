@@ -1,0 +1,15 @@
+"refract"
+{
+ 	"$refractamount" ".065"
+ 	"$bluramount" "5"
+	"$REFRACTTINT" "[.7 .8 .8]"
+	"$scale" "[1 1]"
+	"$dudvmap" "RealWorldTextures2\Glass\glass_refract_01"
+	"$normalmap" "RealWorldTextures2\Glass\glass_refract_01"
+	"$surfaceprop" "glass"
+	//"$envmap" "env_cubemap"
+	"$envmapcontrast" "1"
+	"$envmapsaturation" ".8"
+	"$envmaptint" "[.7 .8 .8]"
+	"%tooltexture" "RealWorldTextures2\Glass\glass_refract_01"
+} //Realworld Textures Version 2 - Made by TopHATTwaffle - Please credit me if used! - Contact: www.tophattwaffle.com

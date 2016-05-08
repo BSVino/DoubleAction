@@ -1,0 +1,17 @@
+
+LightmappedGeneric
+{
+$basetexture "Metal/metaldoor018a"
+$surfaceprop metal
+$detail "detail\metal_detail_01"
+$detailscale "4.283"
+$detailblendfactor .65
+$detailblendmode 0
+"%keywords" c17industrial
+$envmap env_cubemap
+$bumpmap "Metal/metaldoor018a_normal"
+$normalmapalphaenvmapmask 1
+$envmapcontrast 1
+$envmapsaturation 1
+$envmaptint "[ .25 .25 .25 ]"
+}
