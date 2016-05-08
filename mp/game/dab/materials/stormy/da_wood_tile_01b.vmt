@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+	$basetexture stormy/da_wood_tile_01b
+	$bumpmap stormy/da_wood_tile_01_nor
+	$surfaceprop wood
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.1 .1 .1]"	
+}

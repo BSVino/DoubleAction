@@ -1,0 +1,9 @@
+"lightmappedgeneric"
+{
+    "$basetexture" "jahhur/manholecover1"
+    "$decal" 1
+    "$decalscale" .5
+    "$translucent" 1
+    //"$selfillum" "1"
+
+}

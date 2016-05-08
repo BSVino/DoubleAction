@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	// Original shader: AddTexture
+	"$basetexture" "models/hostages/glint"
+	"$additive" 1
+	"$model" 1
+}

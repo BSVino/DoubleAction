@@ -1,0 +1,8 @@
+"LightmappedGeneric"
+{
+	$basetexture stormy/da_metalgrill_01
+	$bumpmap stormy/da_metalgrill_01_nor
+	$surfaceprop Metal
+	$nocull 1
+	$alphatest 1
+}

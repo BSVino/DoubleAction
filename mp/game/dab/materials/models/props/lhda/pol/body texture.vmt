@@ -1,0 +1,15 @@
+VertexLitGeneric
+{
+	"$basetexture" "models\props\lhda\pol\Body texture"
+	"$bumpmap" "models\props\lhda\pol\Body normal"
+	"$phong" 		"1"
+	"$phongexponent" 	"50"
+	"$phongboost" "1"
+	"$phongfresnelranges"	"[0.05 0.5 1]"
+	"$normalmapalphaenvmapmask"	"1"
+	"$envmap"			"env_cubemap"
+	"$envmapcontrast" 		"1"
+	"$envmapsaturation" 		"0"
+	"$envmaptint" 			"[ 0 0 0 ]"
+
+}

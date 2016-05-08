@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/snack_machine"
+$alphatest 1
+$nocull 1
+$envmap env_cubemap
+$envmapmask "models\props_equipment\snack_machine_ref"
+}

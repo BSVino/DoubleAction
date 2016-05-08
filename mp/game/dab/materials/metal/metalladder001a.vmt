@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$basetexture "Metal/metalladder001a"
+$surfaceprop metalgrate
+"%compileladder" 1
+$alphatest 1
+"%compilepassbullets" 1
+}

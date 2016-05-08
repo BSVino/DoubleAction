@@ -1,0 +1,9 @@
+"lightmappedGeneric"
+{
+	"$baseTexture" "de_cbble/trim06"
+	"$surfaceprop" "wood"
+	//"$bumpmap" "de_cbble/trim06_normal"
+ 	//"$envmap" "env_cubemap"
+	"%keywords" "cstrike"
+	//"$normalmapalphaenvmapmask" 1
+}

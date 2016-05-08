@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+$baseTexture "buildings/gen20c"
+$Surfaceprop concrete
+$Bumpmap "buildings/gen20c_height-ssbump"
+$ssbump 1
+}

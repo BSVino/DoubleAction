@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$baseTexture "buildings/gen20d"
+$Envmap env_cubemap
+$EnvmapMask "buildings\gen20d_ref"
+$Surfaceprop concrete
+lightmappedgeneric_HDR_dx9
+{
+$envmaptint "[.7 .7 .7]"
+}
+}

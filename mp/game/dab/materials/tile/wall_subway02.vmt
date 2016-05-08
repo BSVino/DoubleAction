@@ -1,0 +1,14 @@
+LightmappedGeneric
+{
+$baseTexture "tile/wall_subway02"
+$surfaceprop tile
+$envmap env_cubemap
+$envmapmask "tile/wall_subway02_ref"
+$envmaptint "[1 1 1]"
+$envmapcontrast ".7"
+$envmapsaturation ".3"
+
+
+
+
+}

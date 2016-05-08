@@ -1,0 +1,9 @@
+"spritecard"
+{
+	"$basetexture" "particle/jahhur/tiles_debris"
+	//"$additive" "1"
+	"$vertexcolor" "1"
+	"$vertexalpha" "1"
+	//"$translucent" "1"
+	"$depthblend" "0"
+}

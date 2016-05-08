@@ -1,0 +1,9 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/barrier_dif
+	$bumpmap models/stormy/barrier_nor
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.75 .75 1]"
+	$phongexponent 20
+}	

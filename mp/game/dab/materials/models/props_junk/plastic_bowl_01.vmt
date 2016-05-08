@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_junk/plastic_bowl_01"
+$bumpmap "models\props_junk/plastic_bowl_01_nor"
+
+$phong 1
+$phongboost .1
+$phongfresnelranges [1 .5 .75]
+$phongexponent 10
+
+}

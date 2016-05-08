@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\weapons\v_models\eq_fraggrenade\fraggrenade"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\weapons\v_models\eq_fraggrenade\fraggrenade_ref"
+
+}

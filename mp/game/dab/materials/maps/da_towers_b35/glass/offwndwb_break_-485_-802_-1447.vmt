@@ -1,0 +1,11 @@
+"patch"
+{
+	"include"		"materials/glass\offwndwb_break.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_towers_b35/c-485_-802_-1447"
+		"Proxies"
+		{
+		}
+	}
+}

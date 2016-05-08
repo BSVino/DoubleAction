@@ -1,0 +1,15 @@
+"VertexLitGeneric"
+{
+	$basetexture models\player\male\body
+	$bumpmap models\player\male\body_nor
+	$phongexponenttexture models\player\male\body_exp
+	
+	$phong 1
+	$phongboost 1.25
+	$phongfresnelranges "[.5 .75 1]"
+	$phongalbedotint 1
+	
+	$rimlight 1
+	$rimlightboost 3
+	$rimmask 1
+}

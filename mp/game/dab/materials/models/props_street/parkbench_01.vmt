@@ -1,0 +1,15 @@
+vertexlitgeneric
+{
+	$basetexture models/props_street/parkbench_01
+	$bumpmap models/props_street/parkbench_01_nor
+	
+	$phong 1
+	$phongboost .75
+	$phongexponent 25
+	$phongfresnelranges "[.5 .5 2]"
+	
+	$rimlight 1
+	$rimlightboost .2
+	$rimlightexponent 500
+	
+}

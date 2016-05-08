@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$basetexture "Concrete/concretewall011c"
+$detail "detail/detailconcrete001a"
+$detailscale 4
+$surfaceprop concrete
+"%keywords" "airexchange,c17industrial"
+}

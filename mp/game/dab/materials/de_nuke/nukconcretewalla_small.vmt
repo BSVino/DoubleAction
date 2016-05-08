@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+$baseTexture "de_nuke/nukconcretewalla_small"
+$Surfaceprop concrete
+}

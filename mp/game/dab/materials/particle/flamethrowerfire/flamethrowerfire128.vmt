@@ -1,0 +1,8 @@
+"Spritecard"
+{
+	"srgb?$overbrightfactor" "5"
+	"$basetexture" "particle\flameThrowerFire\flamethrowerfire128"
+	$translucent 1
+//	"$overbrightfactor" "31"
+	"$addself" "0.5"
+}

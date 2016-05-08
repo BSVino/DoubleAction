@@ -1,0 +1,9 @@
+"unlitgeneric"
+{
+	"$basetexture" "skybox\sky_cloudy009bk"
+	"$hdrcompressedtexture"	"skybox\sky_cloudy009_hdrbk"
+	//"$basetexturetransform" "center 0 0 scale 1 1 rotate 0 translate 0 0"
+
+	"$nofog" "1"
+	"$ignorez" "1"
+}

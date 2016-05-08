@@ -1,0 +1,9 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/phone_booth"
+$envmap env_cubemap
+$envmapmask "models\props_equipment\phone_booth_ref"
+$envmaptint "[.4 .4 .4]"
+$envmapcontrast ".5"
+$envmapsaturation ".7"
+}

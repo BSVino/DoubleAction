@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+$basetexture models/da_miami/discoball_dif
+$bumpmap models/da_miami/discoball_nor
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmapcontrast -20
+}

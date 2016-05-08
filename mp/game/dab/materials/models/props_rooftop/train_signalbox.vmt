@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_rooftop/train_signalbox"
+$surfaceprop default
+}

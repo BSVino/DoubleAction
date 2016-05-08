@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\de_prodigy\transformer"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\de_prodigy\transformer_ref"
+
+}

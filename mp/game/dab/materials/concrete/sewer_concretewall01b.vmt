@@ -1,0 +1,10 @@
+lightmappedgeneric
+{
+$baseTexture "concrete/sewer_concretewall01b"
+$surfaceprop concrete
+$bumpmap "concrete/cinder-ssbump"
+$ssbump 1
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[ .5 .5 .5 ]"
+}

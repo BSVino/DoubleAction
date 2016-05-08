@@ -1,0 +1,6 @@
+vertexlitgeneric
+{
+$basetexture models/props/masses/skeeball_glass
+$translucent 1
+$envmap env_cubemap
+}

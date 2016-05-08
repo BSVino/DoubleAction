@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture construction/blue_tarp_dif
+	$bumpmap construction/blue_tarp_nor
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmapcontrast -2
+	
+}

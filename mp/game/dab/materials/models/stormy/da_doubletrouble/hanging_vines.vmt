@@ -1,0 +1,11 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_doubletrouble/hanging_vines_dif
+	$bumpmap models/stormy/da_doubletrouble/hanging_vines_nor
+	$alphatest 1
+	$nocull 1
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.75 .75 1]"
+	$phongexponent 20
+}	

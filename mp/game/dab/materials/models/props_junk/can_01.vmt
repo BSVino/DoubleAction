@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_junk/can_01"
+
+$envmap env_cubemap
+$envmaptint [.75 .75 .75]
+$envmapsaturation .25
+}

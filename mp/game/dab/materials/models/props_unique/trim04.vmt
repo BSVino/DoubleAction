@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "buildings/trim04"
+$surfaceprop default
+}

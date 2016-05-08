@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\Props_Lighting/fluro_light_01"
+$bumpmap "models\Props_Lighting/fluro_light_01_nor"
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$selfillum 1
+}

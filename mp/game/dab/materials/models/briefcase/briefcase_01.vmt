@@ -1,0 +1,11 @@
+Vertexlitgeneric
+{
+	$basetexture models/briefcase/briefcase_01_dif
+	$bumpmap models/briefcase/briefcase_01_nor
+	$phong 1
+	$phongboost 1
+	$phonexponent 10
+	$phongfresnelranges "[.5 .75 1]"
+	$rimlight 1
+	$rimexponent 10
+}

@@ -1,0 +1,11 @@
+lightmappedgeneric
+{
+$baseTexture "plaster/rooffloor_tar01"
+
+$bumpmap "plaster/roofbump-ssbump"
+$ssbump 1
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[ .25 .25 .25 ]"
+$surfaceprop wet
+}

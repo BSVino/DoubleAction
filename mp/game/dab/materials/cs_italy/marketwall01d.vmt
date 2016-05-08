@@ -1,0 +1,7 @@
+"lightmappedGeneric"
+{
+	"$baseTexture" "cs_italy/marketwall01d"
+	"%keywords" "cstrike"
+	"$surfaceprop" "concrete"
+	"$bumpmap" "cs_italy/marketwall01d_normal"
+}

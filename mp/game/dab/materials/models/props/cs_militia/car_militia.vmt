@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\props\cs_militia/car_militia"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\cs_militia\car_militia_ref"
+}

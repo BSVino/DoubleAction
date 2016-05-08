@@ -1,0 +1,13 @@
+LightmappedGeneric
+{
+$baseTexture "buildings/brick08"
+
+$envmap env_cubemap
+$envmapmask "buildings\brick08_ref"
+$surfaceprop brick
+lightmappedgeneric_HDR_dx9
+{
+$envmaptint "[1 1 1]"
+
+}
+}

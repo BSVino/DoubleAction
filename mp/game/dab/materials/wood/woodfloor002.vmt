@@ -1,0 +1,10 @@
+LightmappedGeneric
+{
+$baseTexture "wood/woodfloor002"
+$bumpmap wood/woodfloor002_nor
+$surfaceprop wood
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.8 .55 .17]"
+"%keywords" stormy
+}

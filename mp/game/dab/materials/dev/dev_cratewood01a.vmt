@@ -1,0 +1,6 @@
+LightmappedGeneric
+{
+
+$basetexture "Dev/dev_cratewood01a"
+$surfaceprop wood_panel
+}

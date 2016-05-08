@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\cs_assault\billboard"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\cs_assault\billboard_ref"
+
+}

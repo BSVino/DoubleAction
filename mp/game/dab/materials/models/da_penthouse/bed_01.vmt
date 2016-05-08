@@ -1,0 +1,19 @@
+vertexlitgeneric
+{
+	$baseTexture models/da_penthouse/bed_01_dif
+	$bumpmap models/da_penthouse/bed_01_nor
+	$surfaceprop wood
+	
+	$model 1
+
+	$phong 1
+	$phongexponent 9
+	$phongboost	1
+	$phongfresnelranges	[0.05 0.5 1]
+
+	$rimlight               0
+	$rimlightexponent       700
+	$rimlightboost          1	
+
+
+}

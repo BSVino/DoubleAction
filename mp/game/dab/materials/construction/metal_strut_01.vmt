@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+	$basetexture construction/metal_strut_01_dif
+	$bumpmap construction/metal_strut_01_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+}

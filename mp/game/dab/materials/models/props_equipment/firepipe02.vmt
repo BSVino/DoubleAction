@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/FirePipe02"
+$envmap env_cubemap
+$envmaptint "[.3 .2 .2]"
+$envmapcontrast ".7"
+$envmapsaturation ".5"
+}

@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	// Original shader: BaseTimesLightmap
+	"$basetexture" "boat/toolsinvisiblewood"
+	"$surfaceprop" "wood"
+	"$translucent" "1"
+	"%compilenodraw" 1
+	"%compilepassbullets" 1
+	"%keywords" "boatrace"
+}

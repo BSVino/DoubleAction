@@ -1,0 +1,11 @@
+"LightmappedGeneric"
+{
+	$basetexture stormy/da_glass_03
+	$surfaceprop Glass
+	
+	$translucent 1
+	
+	$envmap env_cubemap
+	$envmapmask stormy/da_glass_03_env
+	$envmaptint "[0.01 .35 .35]"
+}

@@ -1,0 +1,31 @@
+ShatteredGlass
+{
+
+
+$basetexture "glass\offwndwb_break"
+$detail "Glass/offwndwb_break"
+$envmap env_cubemap
+$envmapmask "glass\offwndwb_ref"
+$envmaptint "[0.5 .5 .5]"
+$surfaceprop glass
+$translucent 1
+ShatteredGlass_HDR_dx9
+{
+$basetexture "glass\offwndwb_break_hdr"
+$detail "Glass/offwndwb_break_hdr"
+$envmaptint "[1 1 1]"
+}
+
+ShatteredGlass_DX7
+{
+$lightmaptint "0.1"
+$envmaptint "[.1 .1 .1]"
+}
+$nocull 1
+Proxies
+{
+BreakableSurface
+{
+}
+}
+}

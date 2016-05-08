@@ -1,0 +1,11 @@
+vertexlitgeneric
+{
+	$basetexture models/props_street/cover_01_dif
+	$bumpmap models/props_street/cover_01_nor
+	
+	$phong 1
+	$phongboost .75
+	$phongfresnelranges "[1 1 1]"
+	
+	
+}

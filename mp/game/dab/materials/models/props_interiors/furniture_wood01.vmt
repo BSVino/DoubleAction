@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_interiors/furniture_wood01"
+$envmap env_cubemap
+$basealphaenvmapmask 1
+$envmaptint "[.15 .15 .15]"
+}

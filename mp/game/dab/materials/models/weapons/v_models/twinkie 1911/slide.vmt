@@ -1,0 +1,17 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\Twinkie 1911\slide"
+	"$bumpmap" "models\weapons\v_models\Twinkie 1911\slide norm"
+
+	"$detail"            "models\weapons\v_models\Twinkie 1911\slide-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

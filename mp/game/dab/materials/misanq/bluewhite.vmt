@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "misanq/bluewhite"
+	"$bumpmap" "misanq/bluewhite_nor"
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	
+	$envmaptint "[.1 .1 .1]"
+}

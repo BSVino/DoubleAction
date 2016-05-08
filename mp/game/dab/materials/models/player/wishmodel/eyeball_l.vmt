@@ -1,0 +1,6 @@
+vertexlitgeneric
+{
+	"$basetexture" "models/player/wishmodel/eyeball_ldif"
+	"$halflambert" 0
+	"$nodecal" "1"
+}

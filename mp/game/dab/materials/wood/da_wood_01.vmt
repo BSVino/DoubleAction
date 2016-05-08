@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+$baseTexture "wood/da_wood_01_dif"
+$bumpmap wood/da_wood_01_nor
+$surfaceprop wood
+"%keywords" stormy
+}

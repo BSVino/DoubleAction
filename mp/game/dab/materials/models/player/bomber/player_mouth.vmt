@@ -1,0 +1,4 @@
+vertexlitgeneric
+{
+	$basetexture models/player/player_mouth_dif
+}

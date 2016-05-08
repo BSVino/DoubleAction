@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "models\props\cs_office\exit_ceiling"
+$selfillum 1
+}

@@ -1,0 +1,96 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"22"		// damage per bullet
+	"Bullets"				"1"			// bullets per shoot
+	"CycleTime"				"0.135"		// time between shoots
+	"ReloadTimeMultiplier"	"1"
+
+	"BuiltRightHanded"		"1"
+
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_FAL"
+	"viewmodel"				"models/weapons/v_fal.mdl"
+	"playermodel"			"models/weapons/fal.mdl"
+	"PlayerAnimationExtension"	"fal"
+
+	"bucket"				"3"
+	"bucket_position"		"0"
+
+	"clip_size"				"20"
+	"NumClips"				"6"
+
+	"WeaponType"			"rifle"
+
+	"ViewPunchMultiplier"	"0.85"
+	"Recoil"				"13.5"
+	"Spread"				"0.05"
+	"AimInSpeedPenalty"		"1"
+	"AimInRecoilBonus"		"1"
+	"AimInSpreadBonus"		"1"
+
+	"primary_ammo"			"762x51mm"
+	"secondary_ammo"		"None"
+
+	"weight"				"20"
+	"item_flags"			"0"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		//"reload"			"Default.Reload"
+		"empty"			"Default.ClipEmpty_Rifle"
+		"single_shot"		"Weapon_FAL.Single"
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"a"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"a"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"r"
+		}
+		"crosshair"
+		{
+				"file"   "HUD/tscross3"
+				"x"      "0"
+				"y"      "0"
+				"width"  "64"
+				"height" "64"
+		}
+		"zoom"
+		{
+				"file"   "HUD/tscross2"
+				"x"      "0"
+				"y"      "0"
+				"width"  "64"
+				"height" "64"
+		}
+	}
+	ModelBounds
+	{
+		Viewmodel
+		{
+			Mins	"-10 -4 -13"
+			Maxs	"21 9 -1"
+		}
+		World
+		{
+			Mins	"-10 -7 -6"
+			Maxs	"22 8 9"
+		}
+	}
+}

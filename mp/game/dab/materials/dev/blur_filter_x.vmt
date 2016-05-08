@@ -1,0 +1,8 @@
+"BlurFilterX"
+{
+	"$kernel" "1"
+
+	"$basetexture" "_rt_smallfb1"
+	"$ignorez" 1
+	"%noToolTexture" 1
+}

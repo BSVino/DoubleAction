@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models\props_vehicles/plexi_weiss"
+	"$envmap" "env_cubemap"
+	$envmapmask  "models\props_vehicles/liner_env"
+}

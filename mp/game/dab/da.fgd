@@ -1,0 +1,32 @@
+//-------------------------------------------------------------------------
+//
+// Game data for Half-Life 2 Multiplayer.
+//
+//-------------------------------------------------------------------------
+
+@include "base.fgd"
+
+@PointClass base(PlayerClass, Angles) studio("models/editor/playerstart.mdl") = info_player_deathmatch :
+	"This entity indicates the position and facing direction at which the player will spawn during a deathmatch map. Any number of "+
+	"info_player_deathmatch entities may be placed in a map."
+[
+]
+
+@SolidClass base(Trigger, Targetname) = trigger_kill :
+	"A trigger volume that kills players that touch it."
+[
+	damagetype(choices) : "Damage Type" : 0 =
+	[
+		0 : "GENERIC"
+		1 : "CRUSH"
+		2 : "BULLET"
+		4 : "SLASH"
+		8 : "BURN"
+		32 : "FALL"
+		64 : "BLAST"
+		128 : "CLUB"
+		16384: "DROWN"
+	]
+
+	killerstring(string) : "Killer string" : "#DA_Trigger_Kill_Default" : "Name of the killer for the freezecam screenshot."
+]

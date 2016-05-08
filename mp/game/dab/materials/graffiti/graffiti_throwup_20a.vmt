@@ -1,0 +1,9 @@
+DecalModulate
+{
+$baseTexture "graffiti/graffiti_throwup_20a"
+
+$Decal 1
+
+$vertexcolor 1
+$vertexalpha 1
+}

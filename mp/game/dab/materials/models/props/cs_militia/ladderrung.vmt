@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+$basetexture "models\props\cs_militia\ladderrung"
+$envmap env_cubemap
+$envmapmask "models\props\cs_militia\ladderrung_ref"
+}

@@ -1,0 +1,8 @@
+DecalModulate
+{
+$basetexture "graffiti/graffiti_bub_throw_256"
+$surfaceprop default
+$decal 1
+$vertexcolor 1
+$vertexalpha 1
+}

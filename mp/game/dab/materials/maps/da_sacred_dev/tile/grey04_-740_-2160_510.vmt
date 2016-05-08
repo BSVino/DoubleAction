@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/TILE/GREY04.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c-740_-2160_510"
+	}
+}

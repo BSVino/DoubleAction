@@ -1,0 +1,10 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props_construction/scaffolding_clamp"
+	"$bumpmap" "models/props_construction/scaffolding_clamp_nor"
+	"$surfaceprop" "Metal_Small"
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[2 .5 1]"
+	
+}

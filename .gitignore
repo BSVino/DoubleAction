@@ -102,7 +102,7 @@ mp/src/thirdparty/curl-7.31.0/*
 /mp/src/materialsystem/stdshaders/Release_dx9_dab
 /mp/game/bin
 /mp/game/da_info
-/mp/game/dab/materials
+#/mp/game/dab/materials
 /mp/game/dab/bin/*.dll
 /mp/game/dab/bin/*.so
 mp/src/public/togl/osx/glmgrbasics.h

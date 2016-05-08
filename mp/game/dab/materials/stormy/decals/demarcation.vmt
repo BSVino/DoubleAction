@@ -1,0 +1,8 @@
+lightmappedgeneric
+{
+$translucent 1
+$basetexture stormy/decals/demarcation_dif
+$bumpmap stormy/decals/demarcation_nor
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+}

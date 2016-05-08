@@ -1,0 +1,8 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props/fire_alarm"
+	"$bumpmap" "models/props/fire_alarm_nor"
+	$phong 1
+	$phongboost 1.5
+	$phongfresnelranges "[.5 .5 10]"
+}

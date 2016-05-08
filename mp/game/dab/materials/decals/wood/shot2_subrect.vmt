@@ -1,0 +1,9 @@
+"Subrect"
+{
+	"$Material"	"decals/decals_lit"
+	"$Pos"		"320  512"
+	"$Size"		"64 64"
+	"$decalscale" 	0.10
+	"$modelmaterial" "decals/wood/shot2"
+	"$decalDynamicScale" 1
+}

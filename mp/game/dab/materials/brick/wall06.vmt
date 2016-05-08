@@ -1,0 +1,5 @@
+LightmappedGeneric
+{
+$baseTexture "brick/wall06"
+$surfaceprop brick
+}

@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/BUILDINGS/GEN07.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_towers_b35/c937_251_-1450"
+	}
+}

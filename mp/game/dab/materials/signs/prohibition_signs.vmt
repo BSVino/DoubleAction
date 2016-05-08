@@ -1,0 +1,6 @@
+LightmappedGeneric
+{
+	$basetexture signs/prohibition_signs
+	$surfaceprop metal
+	$translucent 1
+}

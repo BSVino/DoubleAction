@@ -1,0 +1,6 @@
+lightmappedGeneric
+{
+$baseTexture "concrete/concretefloor011a"
+$surfaceprop concrete
+"%keywords" cstrike
+}

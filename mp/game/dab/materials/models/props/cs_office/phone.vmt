@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\cs_office\phone"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\cs_office\phone_ref"
+
+}

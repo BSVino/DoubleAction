@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+	$basetexture construction/shipping_container_MID_red
+	$bumpmap construction/shipping_container_MID_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$enmaptint "[.5 .5 .5]"
+	$surfaceprop metal
+}

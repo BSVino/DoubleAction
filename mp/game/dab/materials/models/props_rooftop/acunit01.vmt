@@ -1,0 +1,5 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_rooftop/ACUnit01"
+$surfaceprop default
+}

@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+	$baseTexture models/da_miami/rope_barrier_rope_dif
+	$surfaceprop carpet
+	$model 1
+
+}

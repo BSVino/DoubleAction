@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture models/props_brewery/boiler_01
+	$bumpmap models/props_brewery/boiler_01_nor
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[1 .75 .1]"
+	$envmapcontrast -.05
+}

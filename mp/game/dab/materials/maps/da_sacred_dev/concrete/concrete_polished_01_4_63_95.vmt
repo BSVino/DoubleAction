@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/CONCRETE/CONCRETE_POLISHED_01.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c4_63_95"
+	}
+}
