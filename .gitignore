@@ -100,7 +100,11 @@ mp/src/thirdparty/curl-7.31.0/*
 /mp/src/materialsystem/stdshaders/shaders
 /mp/src/datatool/Release
 /mp/src/materialsystem/stdshaders/Release_dx9_dab
-/mp/game
+/mp/game/bin
+/mp/game/da_info
+/mp/game/dab/materials
+/mp/game/dab/bin/*.dll
+/mp/game/dab/bin/*.so
 mp/src/public/togl/osx/glmgrbasics.h
 mp/src/thirdparty/curl-7.31.0/src/macos/MACINSTALL.TXT
 
