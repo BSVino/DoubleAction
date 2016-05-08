@@ -4018,11 +4018,14 @@ void CSDKPlayer::ActivateMeter()
 			CWeaponSDKBase* pSDKWeapon = static_cast<CWeaponSDKBase*>(pWeapon);
 			CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)pSDKWeapon->GetWeaponID());
 
-			if (pInfo)
-			{
-				if (!FStrEq(pInfo->szAmmo1, "grenades"))
-					CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
-			}
+			if (!pInfo)
+				continue;
+			if (FStrEq(pInfo->szAmmo1, "grenades"))
+				continue;
+			if (FStrEq(pInfo->szAmmo1, ""))
+				continue;
+
+			CBasePlayer::GiveAmmo( pInfo->iMaxClip1*pInfo->m_iDefaultAmmoClips, pInfo->szAmmo1);
 		}
 
 		SendNotice(NOTICE_MARKSMAN);
