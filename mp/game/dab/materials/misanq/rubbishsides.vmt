@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "misanq/rubbishsides"
+	"$surfaceprop" "Metal"
+	"$envmap" "env_cubemap"
+}

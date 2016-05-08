@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+	"$basetexture"	"de_nuke\nukfloora"
+	"$envmap" "env_cubemap"
+	"$bumpmap" "de_nuke\nukfloora_normal"
+	"$normalmapalphaenvmapmask" "1"
+	"$surfaceprop" "concrete"
+
+}

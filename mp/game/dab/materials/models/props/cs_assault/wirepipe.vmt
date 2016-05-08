@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+$basetexture "models\props\cs_assault\wirepipe"
+$surfaceprop metal
+
+
+}

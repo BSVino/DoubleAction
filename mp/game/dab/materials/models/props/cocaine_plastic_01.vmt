@@ -1,0 +1,14 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/props/cocaine_plastic_01"
+	"$bumpmap" "models/props/cocaine_plastic_01_nor"
+	
+	$phong 1
+	$phongboost 1.5
+	$phongfresnelranges "[.5 .75 1]"
+	$phongexponent 15
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[2 2 2]"
+}

@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$basetexture "concrete/drainage_concretefloor_01"
+$ssbump 1
+$bumpmap "concrete/drainage_concretefloor_01_height-ssbump"
+
+$envmap env_cubemap
+$envmaptint "[0.01 0.01 0.01]"
+
+$surfaceprop concrete
+}

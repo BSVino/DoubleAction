@@ -1,0 +1,14 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/window2"
+	//"$bumpmap" "jahhur/carpet1_normal"
+	"$surfaceprop" "glass"
+	"$envmap" "env_cubemap"
+	//"$envmapmask" "jahhur/highrise2_spec"
+	//"$envmaptint" "[.5 .4 .3]"
+	"$envmapcontrast" ".1"
+	//"$envmapsaturation" "1"
+	"$translucent" 1
+
+
+}

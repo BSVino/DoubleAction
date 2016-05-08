@@ -1,0 +1,12 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/tiles_beige2"
+	"$bumpmap" "jahhur/tiles_beige2_normal"
+	"$surfaceprop" "tile"
+	"$envmap" "env_cubemap"
+	//"$envmaptint" "[.5 .4 .3]"
+	//"$envmapcontrast" ".9"
+	//"$envmapsaturation" "1"
+	"$normalmapalphaenvmapmask" 1
+	//"$reflectivity" [0.001 0.001 0.001]
+}

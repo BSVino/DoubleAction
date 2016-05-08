@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_junk/pizzabox_dif"
+
+$phong 1
+$phongboost .5
+$phongfresnelranges [2 .5 .75]
+$phongexponent 100
+
+$basemapalphaphongmask 1
+}

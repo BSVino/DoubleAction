@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+$baseTexture "tile/grey01"
+$surfaceprop tile
+$envmap env_cubemap
+$envmapmask "tile\grey01_ref"
+$envmapsaturation ".7"
+$envmapcontrast ".7"
+}

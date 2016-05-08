@@ -1,0 +1,9 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_c17/Oil_Drum001a"
+$surfaceprop metal
+$detail "detail\dt_metal2"
+$detailscale 8
+$detailblendfactor 1
+$detailblendmode 0
+}

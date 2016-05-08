@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/aura/props/broom_01/broom_01"
+	"$alphatest" 1
+        "$nocull" 1
+}

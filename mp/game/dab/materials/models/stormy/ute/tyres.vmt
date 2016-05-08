@@ -1,0 +1,7 @@
+vertexlitgeneric
+{
+$basetexture models\stormy\ute\tyre_dif
+$envmap env_cubemap
+$envmapmask models/stormy/ute/tyre_env
+$envmaptint "[.5 .5 .5]"
+}

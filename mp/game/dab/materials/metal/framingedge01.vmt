@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+$baseTexture "metal/framingedge01"
+$envmap env_cubemap
+$envmapmask "metal\framingedge01_ref"
+$surfaceprop metalvent
+}

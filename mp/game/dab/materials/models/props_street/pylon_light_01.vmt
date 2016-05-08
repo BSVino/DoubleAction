@@ -1,0 +1,15 @@
+vertexlitgeneric
+{
+	$basetexture models/props_street/pylon_light_01_dif
+	$bumpmap models/props_street/pylon_light_01_nor
+	$phongexponenttexture models/props_street/pylon_light_01_exp
+	
+	$phong 1
+	$phongboost .75
+	$phongfresnelranges "[1 1 1]"
+	
+	$rimlight 1
+	$rimlightboost .5
+	$rimlightexponent 10
+	
+}

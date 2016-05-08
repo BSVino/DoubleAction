@@ -1,0 +1,13 @@
+
+LightmappedGeneric
+{
+$basetexture "Metal/metalroof005a"
+$surfaceprop metal
+"%keywords" c17industrial
+$envmap env_cubemap
+$bumpmap "Metal/metalroof005a_normal"
+$normalmapalphaenvmapmask 1
+$envmapcontrast 1
+$envmapsaturation 1
+$envmaptint "[ .4 .4 .4 ]"
+}

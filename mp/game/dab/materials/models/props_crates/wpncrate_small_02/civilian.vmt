@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+$basetexture models/props_crates/wpncrate_small_02/dif2
+$bumpmap models/props_crates/wpncrate_small_02/nor2
+$phong 1
+$phongboost 1
+$phongfresnelranges [.2 .5 .8]
+}

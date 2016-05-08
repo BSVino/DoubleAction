@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+	$basetexture models/da_penthouse/deckchair_01_dif
+	$bumpmap models/da_penthouse/deckchair_01_nor
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.5 .75 1]"
+}

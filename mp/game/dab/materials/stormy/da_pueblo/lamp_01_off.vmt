@@ -1,0 +1,7 @@
+VertexlitGeneric
+{
+	$basetexture models/M4M/Morgoth/lamp_01_dif_off
+	$bumpmap models/M4M/Morgoth/lamp_01_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+}

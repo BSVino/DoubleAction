@@ -1,0 +1,7 @@
+lightmappedGeneric
+{
+$baseTexture "decals/drainage_stain_04"
+$translucent 1
+$decal 1
+$decalscale 0.25
+}

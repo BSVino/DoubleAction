@@ -1,0 +1,9 @@
+"lightmappedgeneric"
+{
+    "$basetexture" "jahhur/decal_leak3"
+    "$decal" 1
+    "$decalscale" .5
+    "$translucent" 1
+    //"$selfillum" "1"
+
+}

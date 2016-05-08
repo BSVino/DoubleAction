@@ -1,0 +1,10 @@
+DecalModulate
+{
+$baseTexture "decals/checkpointarrow01_black"
+
+$decal 1
+$fogscale "1.3"
+$decalscale "0.20"
+$vertexcolor 1
+$vertexalpha 1
+}

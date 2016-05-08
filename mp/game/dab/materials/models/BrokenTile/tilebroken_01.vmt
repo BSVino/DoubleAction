@@ -1,0 +1,8 @@
+"VertexLitGeneric"
+{
+	// Original shader: VertexLitTexture
+	"$basetexture" "models/brokentile/tilebroken_01"
+	"$translucent" 1
+	"$vertexcolor" 1
+	"$vertexalpha" 1
+}

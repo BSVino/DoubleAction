@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$baseTexture "buildings/brick41"
+$envmap env_cubemap
+$envmapmask "buildings\brick41_ref"
+$surfaceprop brick
+$envmaptint "[.8 .8 .8]"
+}

@@ -1,0 +1,44 @@
+"Weapon.MagDropPistol"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.6"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"PITCH_NORM"
+	
+	"rndwave"
+	{
+		"wave"			"weapons/common/magdrop_pistol1.wav"
+		"wave"			"weapons/common/magdrop_pistol2.wav"
+		"wave"			"weapons/common/magdrop_pistol3.wav"
+	}
+}
+
+"Weapon.MagDropRifle"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.6"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"PITCH_NORM"
+	
+	"rndwave"
+	{
+		"wave"			"weapons/common/magdrop_rifle1.wav"
+		"wave"			"weapons/common/magdrop_rifle2.wav"
+		"wave"			"weapons/common/magdrop_rifle3.wav"
+	}
+}
+
+"Weapon.MagDropHeavy"
+{
+	"channel"		"CHAN_ITEM"
+	"volume"		"0.6"
+	"CompatibilityAttenuation"	"1.0"
+	"pitch"		"PITCH_NORM"
+	
+	"rndwave"
+	{
+		"wave"			"weapons/common/magdrop_heavy1.wav"
+		"wave"			"weapons/common/magdrop_heavy2.wav"
+		"wave"			"weapons/common/magdrop_heavy3.wav"
+	}
+}

@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+	$basetexture stormy/pavement_01_dif
+	$bumpmap stormy/pavement_01_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$surfaceprop stone
+	$reflectivity "[1 1 1]"
+}

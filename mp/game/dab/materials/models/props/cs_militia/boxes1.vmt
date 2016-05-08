@@ -1,0 +1,4 @@
+VertexLitGeneric
+{
+$baseTexture "models\props\cs_militia/boxes1"
+}

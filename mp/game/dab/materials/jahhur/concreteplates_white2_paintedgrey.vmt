@@ -1,0 +1,11 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/concreteplates_white2_paintedgrey"
+	"$bumpmap" "jahhur/concreteplates_white2_normal"
+	"$surfaceprop" "concrete"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.5 .4 .3]"
+	"$basemapalphaenvmapmask" 1
+
+
+}

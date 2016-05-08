@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$baseTexture "metal/brass_01"
+$envmap env_cubemap
+$basemapalphaenvmapmask 1
+$envmaptint "[.5 .375 .05]"
+$surfaceprop metal
+}

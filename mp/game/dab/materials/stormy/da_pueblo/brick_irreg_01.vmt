@@ -1,0 +1,6 @@
+lightmappedgeneric
+{
+	$basetexture stormy/da_pueblo/brick_irreg_01_dif
+	$bumpmap stormy/da_pueblo/brick_irreg_01_nor
+	$reflectivity "[ .75 .75 .75 ]"
+}

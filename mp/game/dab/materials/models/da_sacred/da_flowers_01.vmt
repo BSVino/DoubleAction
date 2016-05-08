@@ -1,0 +1,5 @@
+vertexlitgeneric
+{
+	$basetexture models/da_sacred/da_flowers_dif
+	$alphatest 1
+}

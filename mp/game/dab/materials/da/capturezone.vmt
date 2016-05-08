@@ -1,0 +1,25 @@
+Unlitgeneric
+{
+	$basetexture "da/capturezone"
+	$translucent 1
+	$additive    1
+	$nocull      1
+
+	$scroll_rate 0
+
+	Proxies
+	{
+		"SlowMoMultiplier"
+		{
+			"input"     "-0.3"
+			"resultVar" "$scroll_rate"
+		}
+
+		"TextureScroll"
+		{
+			"Texturescrollvar" "$Basetexturetransform"
+			"Texturescrollrate" "$scroll_rate"
+			"texturescrollangle" "0"
+		}
+	}
+}

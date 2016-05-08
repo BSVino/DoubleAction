@@ -1,0 +1,95 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"26"		// damage per bullet
+	"Bullets"				"1"		// bullets per shoot
+	"CycleTime"				"0.11"		// time between shoots
+
+	"BuiltRightHanded"		"0"
+
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_AKIMBO_M1911"
+	"viewmodel"				"models/weapons/v_akimbo_m1911.mdl"
+	"playermodel"			"models/weapons/dualm1911.mdl"
+	"PlayerAnimationExtension"	"akimbo_m1911"
+	"single"				"m1911"
+
+	"bucket"				"4"
+	"bucket_position"		"1"
+
+	"clip_size"				"7"
+	"NumClips"				"10"
+
+	"ViewPunchMultiplier"	"0.23"
+	"Recoil"				"12"
+	"Spread"				"0.08"
+
+	"StyleMultiplier" "1"
+
+	"WeaponType"			"pistol"
+
+	"primary_ammo"			"45acp"
+	"secondary_ammo"		"None"
+
+	"weight"				"14"
+	"item_flags"			"0"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		//"reload"			"Default.Reload"
+		"empty"			"Default.ClipEmpty_Rifle"
+		"single_shot"		"Weapon_M1911.Single"
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"a"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"a"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"r"
+		}
+		"crosshair"
+		{
+				"file"		"HUD/tscross3"
+				"x"		"0"
+				"y"		"0"
+				"width"		"64"
+				"height"	"64"
+		}
+		"autoaim"
+		{
+				"file"		"sprites/crosshairs"
+				"x"			"0"
+				"y"			"48"
+				"width"		"24"
+				"height"	"24"
+		}
+	}
+	ModelBounds
+	{
+		Viewmodel
+		{
+			Mins	"-10 -4 -13"
+			Maxs	"21 9 -1"
+		}
+		World
+		{
+			Mins	"-10 -7 -6"
+			Maxs	"22 8 9"
+		}
+	}
+}

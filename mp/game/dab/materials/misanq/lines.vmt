@@ -1,0 +1,6 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "misanq/lines"
+	"$surfaceprop" "Metal"
+	"$translucent" 1
+}

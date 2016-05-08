@@ -1,0 +1,16 @@
+LightmappedGeneric
+{
+
+$baseTexture "concrete/urban_sidewalk_01a"
+$bumpmap "concrete/urban_concretefloor_01_ssbump"
+$ssbump 1
+
+
+
+$bumptransform "center 0 0 scale .5 .5 rotate 0 translate 0 0"
+$detail "detail\detail_concrete_02_ssbump"
+$detailscale "2.5"
+$detailblendfactor .5
+$detailblendmode 0
+$surfaceprop wet
+}

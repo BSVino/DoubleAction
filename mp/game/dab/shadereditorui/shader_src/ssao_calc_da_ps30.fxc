@@ -1,0 +1,179 @@
+// ********************************
+// ** auto generated pixelshader **
+// ********************************
+
+#define SHADER_EDITOR_2013_COMPILE
+
+
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+#include "common_parallax.h"
+
+
+// Samplers
+sampler _Sampler_00		: register( s0 );
+sampler _Sampler_01		: register( s1 );
+
+// Constants
+const float3 _g_VecForward		: register( c16 );
+const float4x4 g_cCMatrix_ProjInv		: register( c17 );
+const float4x3 g_cCMatrix_View		: register( c21 );
+const float _g_WorldDepth		: register( c24 );
+const float2 _g_TexelSize		: register( c25 );
+
+// User code - globals
+// tau = 2pi
+#define TAU 6.2831853072
+
+float random(float2 uv)
+{
+	return frac(fmod(123456789.0, 1e-7 + 256.0 * dot(uv.xy + float2(.1, .1), float2(2.6651441426902251, 23.1406926327792690))));
+}
+
+float3 EstimatePosition( float flDepth, float2 uv )
+{
+	return float3(uv.x, uv.y, flDepth);
+}
+
+#define KERNEL_PAIRS 8
+
+#if KERNEL_PAIRS == 8
+// Each kernel gets a "random" scale.
+static float2 avecKernel[KERNEL_PAIRS] = {
+/*	float2(1.0,    0.0)   * 8/8,
+	float2(0.924,  0.383) * 8/8,
+	float2(0.707,  0.707) * 8/8,
+	float2(0.383,  0.924) * 8/8,
+	float2(0,      1)     * 8/8,
+	float2(-0.383, 0.924) * 8/8,
+	float2(-0.707, 0.707) * 8/8,
+	float2(-0.924, 0.383) * 8/8,*/
+	float2(1.0,    0.0)   * 4/8,
+	float2(0.924,  0.383) * 8/8,
+	float2(0.707,  0.707) * 3/8,
+	float2(0.383,  0.924) * 1/8,
+	float2(0,      1)     * 6/8,
+	float2(-0.383, 0.924) * 2/8,
+	float2(-0.707, 0.707) * 5/8,
+	float2(-0.924, 0.383) * 7/8,
+};
+#elif KERNEL_PAIRS == 6
+
+static float2 avecKernel[KERNEL_PAIRS] = {
+	float2(1.0,    0.0),
+	float2(0.866,  0.5),
+	float2(0.5,    0.866),
+	float2(0,      1),
+	float2(-0.5,   0.866),
+	float2(-0.866, 0.5 ),
+};
+#endif
+
+static float flScale = 30000.0;
+static float flMinRangeFalloff = 50.0;
+static float flMaxRangeFalloff = 150.0;
+static float flStrength = 10.0;
+
+float SampleKernel(in int i, in float2 vecUV, in float3 vecPosition, in float3 vecViewDir, in sampler iDepth, in float flDepth, out float flSamples)
+{
+	float flRandomRotation = random(vecUV + float2(i, i)) * TAU / 8;
+	float flRandomScaling = 1;//random(vecUV + float2(i, i)) * 0.5 + 0.5; // Instead of this, scale the kernels. There's less noise that way.
+
+	float2 vecDistanceToCamera = _g_TexelSize * (flRandomScaling * flScale / (flDepth * _g_WorldDepth));
+	
+	float flCos = cos(flRandomRotation);
+	float flSin = sin(flRandomRotation);
+
+	float2x2 mRotate = { flCos, flSin, -flSin, flCos };
+
+	float2 vecKernel = mul(avecKernel[i], mRotate) * vecDistanceToCamera;
+
+	float2 vecUV1 = vecUV + vecKernel;
+	float3 vecKernel1 = EstimatePosition(tex2D(iDepth, vecUV1), vecUV1);
+
+	float2 vecUV2 = vecUV - vecKernel;
+	float3 vecKernel2 = EstimatePosition(tex2D(iDepth, vecUV2), vecUV2);
+
+	float3 vecToKernel1 = vecKernel1 - vecPosition;
+	float3 vecToKernel2 = vecKernel2 - vecPosition;
+
+	float flResult = 0;
+
+	float3 vecToKernel1Normalized = normalize(vecToKernel1);
+	float3 vecToKernel2Normalized = normalize(vecToKernel2);
+
+	float flAngle1 = dot(vecToKernel1Normalized, vecViewDir);
+	float flAngle2 = dot(vecToKernel2Normalized, vecViewDir);
+
+	float flAngle = (flAngle1 + flAngle2)/2.0;
+
+	// Reduce contributions of small angles.
+	float flAngleLarge = flAngle * RemapValClamped(flAngle, -0.2, -0.25, 0.5, 1.0);
+
+	float flKernel1Distance = abs(vecKernel1.z - vecPosition.z);
+	float flKernel2Distance = abs(vecKernel2.z - vecPosition.z);
+
+	float flMaxDistance = max(flKernel1Distance, flKernel2Distance) * _g_WorldDepth;
+
+	// Contribute less AO if one of our kernels is very far from the central position.
+	flSamples = RemapValClamped(flMaxDistance, flMinRangeFalloff, flMaxRangeFalloff, 1, 0);
+
+	float flRangeFactor = flDepth * 0.5; // To get rid of moire patterns on distant surfaces.
+	return pow(saturate(flAngleLarge+1.0 + flRangeFactor), flStrength) * flSamples;
+}
+
+// Unused vars are globals that need to be passed in or they will be optimized out.
+
+// User code - function bodies
+void AngleSSAO( in float2 vecUV, in sampler iDepth, in float3 unused1, in float4x4 unused2, in float4x3 unused3, in float unused4, in float2 unused5, out float4 vecAOOut )
+{
+	float flDepth = tex2D(iDepth, vecUV);
+
+	float3 vecPosition = EstimatePosition(flDepth, vecUV);
+	float3 vecViewDir = float3(0, 0, 1);
+	
+	float flTotalSamples = 0;
+	float flAO = 0;
+
+	for (int i = 0; i < KERNEL_PAIRS; i++)
+	{
+		float flSamples = 0;
+		flAO += SampleKernel(i, vecUV, vecPosition, vecViewDir, iDepth, flDepth, flSamples);
+		flTotalSamples += flSamples;
+	}
+
+	if (flTotalSamples > 0.0)
+	{
+		float flFinal = flAO / flTotalSamples;
+
+		vecAOOut = float4(flFinal, flFinal, flFinal, 1.0);
+	}
+	else
+		vecAOOut = float4(1.0, 1.0, 1.0, 1.0);
+}
+
+// Semantic structures
+struct PS_INPUT
+{
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	float4 _var0 = (float4)0;
+	AngleSSAO( In.vTexCoord_0, _Sampler_00, _g_VecForward, g_cCMatrix_ProjInv, g_cCMatrix_View, _g_WorldDepth, _g_TexelSize, _var0 );
+	float4 _var1 = tex2D( _Sampler_01, In.vTexCoord_0 ).rgba;
+	_var1 = _var0 * _var1;
+	Out.vColor_0 = _var0;
+	return Out;
+}

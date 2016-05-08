@@ -1,0 +1,13 @@
+Vertexlitgeneric
+{
+	$basetexture models/da_sacred/coffin
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 5 5]"
+	
+	$BasemapAlphaPhongMask 1
+	
+	$phongexponent 75
+	
+	}

@@ -1,0 +1,8 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "RealWorldTextures2\Concrete\ground\concrete_03"
+	"$bumpmap" "RealWorldTextures2\Concrete\ground\concrete_03_04_nrm"
+	"$surfaceprop" "concrete"
+	"$detail" "RealWorldTextures2\detail\noise_detail_01"
+	"$detailblendfactor" ".3"
+} //Realworld Textures Version 2 - Made by TopHATTwaffle - Please credit me if used! - Contact: www.tophattwaffle.com

@@ -1,0 +1,11 @@
+Vertexlitgeneric
+{
+	$basetexture models/da_sacred/coffin_open_dif
+	$bumpmap models/da_sacred/coffin_open_nor
+	$phongexponenttexture models/da_sacred/coffin_open_exp
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 5 5]"
+		
+	}

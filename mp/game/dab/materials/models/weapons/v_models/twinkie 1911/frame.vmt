@@ -1,0 +1,19 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\Twinkie 1911\frame"
+	"$bumpmap" "models\weapons\v_models\Twinkie 1911\frame norm"
+
+	"$detail"            "models\weapons\v_models\Twinkie 1911\frame-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}
+
+

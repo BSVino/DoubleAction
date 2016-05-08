@@ -1,0 +1,8 @@
+VertexLitGeneric
+{
+$basetexture "models\props\cs_assault\duct"
+$envmap env_cubemap
+$envmapcontrast ".6"
+$envmapsaturation ".2"
+$envmaptint "[1 1 1]"
+}

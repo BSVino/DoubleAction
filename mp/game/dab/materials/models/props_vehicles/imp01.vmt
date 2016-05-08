@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "\models\props_vehicles\imp01"
+	"$envmap" "env_cubemap"
+	 $envmapmask  "models/props_vehicles/imp_env"
+}

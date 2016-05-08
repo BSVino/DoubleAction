@@ -1,0 +1,10 @@
+VertexlitGeneric
+{
+$basetexture "models/Fibbs/TorchMount"
+$bumpmap "models/Fibbs/TorchMount_n"
+$normalmapalphaenvmapmask 1
+$envmap "env_cubemap"
+$envmaptint "[.4 .4 .4]"
+$model 1
+$nocull 1
+}

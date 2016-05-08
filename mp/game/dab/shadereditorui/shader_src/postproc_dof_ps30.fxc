@@ -1,0 +1,67 @@
+// ********************************
+// ** auto generated pixelshader **
+// ********************************
+
+#define SHADER_EDITOR_2013_COMPILE
+
+
+// Includes
+#include "common_ps_fxc.h"
+#include "common_vertexlitgeneric_dx9.h"
+#include "common_lightmappedgeneric_fxc.h"
+#include "common_flashlight_fxc.h"
+#include "common_parallax.h"
+
+
+// Samplers
+sampler _Sampler_00		: register( s0 );
+sampler _Sampler_01		: register( s1 );
+
+// Constants
+const float2 _g_TexelSize		: register( c16 );
+
+// User code - globals
+
+static float flScale = 1.2;
+static float flDOFNear = 0.3;
+static float flDOFFar = 0.9;
+
+// User code - function bodies
+void DOF( in sampler iColor, in sampler iDepth, in float2 vecUV, in float2 vecTexelSize, out float4 vecOut )
+{
+	float flDepth = tex2D(iDepth, vecUV).x;
+
+	float3 vecColor = tex2D(iColor, vecUV).rgb;
+
+	float3 vecColor1 = tex2D(iColor, vecUV + float2(vecTexelSize.x,  vecTexelSize.y) * flScale).rgb;
+	float3 vecColor2 = tex2D(iColor, vecUV + float2(vecTexelSize.x,  -vecTexelSize.y) * flScale).rgb;
+	float3 vecColor3 = tex2D(iColor, vecUV + float2(-vecTexelSize.x, vecTexelSize.y) * flScale).rgb;
+	float3 vecColor4 = tex2D(iColor, vecUV + float2(-vecTexelSize.x, -vecTexelSize.y) * flScale).rgb;
+
+	float3 vecMixed = (vecColor + vecColor1 + vecColor2 + vecColor3 + vecColor4) / 5;
+
+	float flLerp = RemapValClamped(flDepth, flDOFNear, flDOFFar, 0.0, 1.0);
+
+	vecOut = float4(lerp(vecColor, vecMixed, flLerp), flDepth);
+}
+
+// Semantic structures
+struct PS_INPUT
+{
+	float2 vTexCoord_0			:	TEXCOORD0;
+};
+
+struct PS_OUTPUT
+{
+	float4 vColor_0				:	COLOR0;
+};
+
+// Entry point
+PS_OUTPUT main( const PS_INPUT In )
+{
+	PS_OUTPUT Out;
+	float4 _var0 = (float4)0;
+	DOF( _Sampler_00, _Sampler_01, In.vTexCoord_0, _g_TexelSize, _var0 );
+	Out.vColor_0 = _var0;
+	return Out;
+}

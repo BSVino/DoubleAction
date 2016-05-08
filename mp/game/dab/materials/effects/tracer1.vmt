@@ -1,0 +1,9 @@
+"Unlitgeneric"
+{
+	"$basetexture"	"Effects/tracer1"
+	"$surfaceprop"	"no_decal"
+	"$additive"	1
+	"$vertexcolor"	1
+	"$vertexalpha"	1
+	"$nocull" 1
+}

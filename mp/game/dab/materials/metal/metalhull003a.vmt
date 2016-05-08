@@ -1,0 +1,9 @@
+LightmappedGeneric
+{
+$basetexture "Metal/metalhull003a"
+$surfaceprop metalvent
+$detail "detail\dt_metal2"
+$detailscale 6
+$detailblendfactor .8
+$detailblendmode 0
+}

@@ -1,0 +1,23 @@
+VertexLitGeneric
+{
+"$basetexture" "models\weapons\v_models\FN-FAL\rec"
+"$bumpmap" "models\weapons\v_models\FN-FAL\rec-norm"
+"$phong" "1"
+"$phongexponent" "66"
+"$phongboost" "3"
+"$phongfresnelranges" "[1 3 8]"
+
+	"$detail"            "models\weapons\v_models\FN-FAL\rec-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}
+
+

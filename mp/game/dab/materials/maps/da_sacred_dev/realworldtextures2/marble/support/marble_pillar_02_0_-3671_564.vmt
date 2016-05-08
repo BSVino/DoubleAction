@@ -1,0 +1,8 @@
+"patch"
+{
+	"include"		"materials/REALWORLDTEXTURES2/MARBLE/SUPPORT/MARBLE_PILLAR_02.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c0_-3671_564"
+	}
+}

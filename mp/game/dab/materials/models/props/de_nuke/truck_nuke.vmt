@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+	"$basetexture"	"models\props\de_nuke\truck_nuke"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\props\de_nuke\truck_nuke_ref"
+
+}

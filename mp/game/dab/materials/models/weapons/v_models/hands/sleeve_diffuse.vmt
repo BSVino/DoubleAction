@@ -1,0 +1,6 @@
+VertexLitGeneric
+{
+	"$baseTexture" "models\weapons\v_models\hands\sleeve_diffuse"
+	"$bumpmap"     "models\weapons\v_models\hands\sleeve_normal"
+	"$nocull" "1"
+}

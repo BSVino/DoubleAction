@@ -1,0 +1,5 @@
+Spritecard
+{
+	$basetexture particle/dinero
+	$translucent 1
+}

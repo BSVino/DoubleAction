@@ -1,0 +1,8 @@
+DecalModulate
+{
+$basetexture "graffiti/graffiti_wonder_256"
+$vertexcolor 1
+$vertexalpha 1
+
+$decal 1
+}

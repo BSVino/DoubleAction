@@ -1,0 +1,18 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models\weapons\v_models\smg_mp5k\rec"
+	"$envmap" "env_cubemap"
+	"$envmapmask" "models\weapons\v_models\smg_mp5k\rec_ref"
+
+	"$detail"            "models\weapons\v_models\smg_mp5k\rec-gold"
+	"$detailscale"       "1"
+	"$detailblendmode"   "3"
+	"$detailblendfactor" "0"
+
+	Proxies
+	{
+		GoldSkin
+		{
+		}
+	}
+}

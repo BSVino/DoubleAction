@@ -1,0 +1,4 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_unique\spawn_apartment/boxes_rooftop"
+}

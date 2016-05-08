@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/aura/props/chest_01/chest_01_dif"
+	"$bumpmap" "models/aura/props/chest_01/chest_01_nor"
+}

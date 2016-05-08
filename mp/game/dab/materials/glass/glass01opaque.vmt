@@ -1,0 +1,10 @@
+LightmappedGeneric
+{
+$baseTexture "models\props_windows/window_uban_apt_glass"
+$envmap env_cubemap
+$envmapmask "models\props_windows\window_uban_apt_glass_ref"
+$envmaptint "[1 1 1]"
+$surfaceprop glass
+$envmapcontrast ".7"
+
+}

@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+    "$nofog" "1"
+    "$ignorez" "1"
+    "$basetexture" "skybox/island_dn"
+}

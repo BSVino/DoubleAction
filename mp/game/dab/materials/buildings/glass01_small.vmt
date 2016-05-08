@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+$baseTexture "buildings/glass01_small"
+$Envmap env_cubemap
+$EnvmapMask "buildings\glass01_small_ref"
+$EnvmapTint "[.1 .1 .1]"
+$Surfaceprop glass
+}

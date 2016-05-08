@@ -1,0 +1,9 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "misanq/oceanic"
+	"$surfaceprop" "Metal"
+	"$envmap" "env_cubemap"
+	"$envmaptint" "[.7 .7.7]"
+	"$envmapmask" "misanq/oceanic"
+	"$envmapcontrast" 1  	
+}

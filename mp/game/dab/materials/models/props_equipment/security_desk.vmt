@@ -1,0 +1,7 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/security_desk"
+$envmap env_cubemap
+$envmapmask "models\props_equipment\security_desk_ref"
+$envmaptint "[1 1 1]"
+}

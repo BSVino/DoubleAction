@@ -1,0 +1,14 @@
+"UnlitGeneric"
+{
+	// Original shader: TranslucentSpecularSphericalEnvMap
+	"$additive" 1
+
+	"$basetexture" "models/hostages/glasslens"
+	"$translucent" 1
+	"$envmap" "env_cubemap"
+	"$envmapcontrast" "1"
+//	"$envmaptint" "[.5 .5 .5]"
+//	"$envmapsaturation" "[.6 .6 .6]"
+	"$model" 1
+	"$halflambert" 1
+}

@@ -1,0 +1,13 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "jahhur/road1"
+	"$bumpmap" "jahhur/road1_normal"
+	"$surfaceprop" "concrete"
+	//"$envmap" "env_cubemap"
+	//"$envmaptint" "[.5 .4 .3]"
+	//"$envmapcontrast" ".9"
+	//"$envmapsaturation" "1"
+	//"$normalmapalphaenvmapmask" 1
+
+
+}

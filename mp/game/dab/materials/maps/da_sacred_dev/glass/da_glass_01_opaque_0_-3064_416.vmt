@@ -1,0 +1,13 @@
+"patch"
+{
+	"include"		"materials/GLASS/DA_GLASS_01_OPAQUE.vmt"
+	"replace"
+	{
+		"$envmap"		"maps/da_sacred_dev/c0_-3064_416"
+		"$crackmaterial"		"maps/da_sacred_dev/glass/offwndwb_break_0_-3064_416"
+		"lightmappedgeneric_HDR_dx9"
+		{
+			"$crackmaterial"		"maps/da_sacred_dev/glass/offwndwb_break_0_-3064_416"
+		}
+	}
+}

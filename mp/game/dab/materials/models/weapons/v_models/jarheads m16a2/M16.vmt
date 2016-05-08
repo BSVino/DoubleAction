@@ -1,0 +1,6 @@
+$Include "556.vmt"
+$Include "fullstock.vmt"
+$Include "upper.vmt"
+$include "lower.vmt"
+$include "fore.vmt"
+

@@ -1,0 +1,9 @@
+VertexLitGeneric
+{
+$baseTexture "models\props_equipment/cooler"
+$envmap env_cubemap
+$envmapmask "models\props_equipment\cooler_ref"
+$envmapcontrast ".7"
+$envmapsaturation ".7"
+$envmaptint "[.5 .7 .8]"
+}

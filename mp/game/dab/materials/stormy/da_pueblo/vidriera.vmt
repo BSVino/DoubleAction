@@ -1,0 +1,6 @@
+Lightmappedgeneric
+{
+	$normalmap stormy/da_pueblo/vidrieras_nor
+	$basetexture stormy/da_pueblo/vidrieras_tint
+	$reflectivity "[ .75 .75 .75 ]"
+}

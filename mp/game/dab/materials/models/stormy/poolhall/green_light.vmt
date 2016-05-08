@@ -1,0 +1,8 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/poolhall/green_light_dif
+	$bumpmap models/stormy/poolhall/green_light_nor
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.75 .75 .75]"
+}

@@ -1,0 +1,9 @@
+
+"VertexLitGeneric"
+{
+	// Original shader: VertexLitTexture
+	"$basetexture" "Models/props_junk/TrashDumpster01a"
+	"$surfaceprop" "metal"
+	
+}
+

@@ -1,0 +1,15 @@
+LightmappedGeneric
+{
+$baseTexture "concrete/roadparkinglot"
+$surfaceprop asphalt
+$ssbump 1
+$bumpmap "Concrete/road05b_height-ssbump"
+$bumptransform "center .75 .75 scale 2 2 rotate 0 translate 0 0"
+$detail "detail\dt_conc"
+$detailscale 10
+$detailblendfactor ".7"
+$detailblendmode 0
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[ .05 .05 .055 ]"
+}

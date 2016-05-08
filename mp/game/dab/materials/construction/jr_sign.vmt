@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+	$basetexture construction/JR
+	$envmap env_cubemap
+	$basemapalphaenvmapmask 1
+	$enmaptint "[.3 .3 .3]"
+	$surfaceprop metal
+}

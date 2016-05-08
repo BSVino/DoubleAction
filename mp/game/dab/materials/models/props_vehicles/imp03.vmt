@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models\props_vehicles/imp03"
+	"$nocull" 1
+}

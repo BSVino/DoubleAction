@@ -1,0 +1,8 @@
+"lightmappedGeneric"
+{
+	"$baseTexture" "de_cbble/woodceiling01"
+	"$surfaceprop" "wood"
+	"$bumpmap" "de_cbble/woodceiling01_normal"
+// 	"$envmap" "env_cubemap"
+	"%keywords" "cstrike"
+}

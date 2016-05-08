@@ -1,0 +1,10 @@
+dof
+{
+	$EFFECT 2
+	$basetexture "_rt_ResolvedFullFrameDepth"
+	$BASETEXTURE2 "_rt_smallfb0"
+
+	$DOF_START_DISTANCE 0.1
+	$DOF_POWER 0.4
+	$DOF_MAX 0.7
+}

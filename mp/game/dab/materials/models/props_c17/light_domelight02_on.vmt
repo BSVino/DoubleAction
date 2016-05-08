@@ -1,0 +1,11 @@
+VertexLitGeneric
+{
+$basetexture "Models/props_c17/light_domelight02_on"
+$surfaceprop glass
+$selfillum 1
+$selfillumtint "[1 1 1]"
+
+
+
+
+}

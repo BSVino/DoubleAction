@@ -1,0 +1,5 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "stormy/rock_001"
+	"$bumpmap" "stormy/rock_001_nor"
+}

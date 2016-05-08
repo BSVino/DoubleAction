@@ -1,0 +1,18 @@
+"ShatteredGlass"
+{
+	// base texture is a dummy; we need something here to indicate to the shader
+	// that we've got one though
+	"$basetexture" "Tile/tilebreak001b"
+	"$detail" "Tile/tilebreak001b"
+	"$surfaceprop" "tile"
+	"%keywords" "c17downtown"
+	"$translucent" 1
+	"$decal" 1
+
+	"Proxies"
+	{
+		"BreakableSurface"
+		{
+		}
+	}
+}
