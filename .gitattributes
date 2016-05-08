@@ -52,3 +52,23 @@ mod_*_english.txt binary
 
 mp/game/** -text
 mp/game/dab/resource/dab_*.txt encoding=UTF-16LE
+mp/game/**/*.bsp filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.nav filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.vtf filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.mdl filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.vvd filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.wav filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.ttf filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.TTF filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.tga filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.pcf filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.vtx filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.phy filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.ico filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.raw filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.dll filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.vcs filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.exe filter=lfs diff=lfs merge=lfs -text
+mp/game/**/*.cache filter=lfs diff=lfs merge=lfs -text
