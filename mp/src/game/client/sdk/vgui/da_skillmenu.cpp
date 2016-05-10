@@ -150,7 +150,7 @@ void CDASkillMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ServerCmd("setskill random");
+		engine->ServerCmd("setskill random_if_unset");
 		engine->ServerCmd("respawn");
 		GetFolderMenu()->Close();
 	}

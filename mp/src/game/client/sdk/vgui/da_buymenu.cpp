@@ -190,7 +190,6 @@ void CDABuyMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
-		engine->ServerCmd("buy random");
 
 		GetFolderMenu()->ShowPage( PANEL_BUY_EQUIP_CT );
 	}

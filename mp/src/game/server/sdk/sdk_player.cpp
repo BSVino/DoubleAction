@@ -4652,6 +4652,15 @@ void CC_Skill(const CCommand& args)
 		return;
 	}
 
+	if (FStrEq(args[1], "random_if_unset"))
+	{
+		if (pPlayer->m_Shared.HasStyleSkillAfterRespawn())
+			return;
+
+		pPlayer->PickRandomSkill();
+
+		return;
+	}
 	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
 
 #ifdef WITH_DATA_COLLECTION
