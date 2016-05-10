@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.1...HEAD)
+
+**Fixed bugs:**
+
+- Don't give superskilled players unlimited grenades [\#54](https://github.com/BSVino/DoubleAction/pull/54) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.2.1](https://github.com/BSVino/DoubleAction/tree/v1.2.1) (2016-05-05)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2...v1.2.1)
 
