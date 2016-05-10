@@ -198,8 +198,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 //		else
 			ThrowGrenade();
 
-		if (!pPlayer->IsStyleSkillActive(SKILL_TROLL))
-			DecrementAmmo( pPlayer );
+		DecrementAmmo( pPlayer );
 
 		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
