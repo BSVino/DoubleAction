@@ -4,6 +4,10 @@
 
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.1...HEAD)
 
+**Implemented enhancements:**
+
+- Allow bots to climb in some places [\#56](https://github.com/BSVino/DoubleAction/pull/56) ([TomyLobo](https://github.com/TomyLobo))
+
 **Fixed bugs:**
 
 - Don't give superskilled players unlimited grenades [\#54](https://github.com/BSVino/DoubleAction/pull/54) ([TomyLobo](https://github.com/TomyLobo))
