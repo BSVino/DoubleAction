@@ -103,4 +103,75 @@
 		"option4" "string"
 		"option5" "string"
 	}
+	
+	// stormy does dallas (achievement events)
+	"DIVEPUNCHKILL"
+	{
+		"userid"	"short"
+	}
+	"DIVEPUNCHKILL_250"
+	{
+		"userid"	"short"
+	}
+	"DIVEPUNCHKILL_BAJILLION"
+	{
+		"userid"	"short"
+	}
+	"DIVEAWAYFROMEXPLOSION"
+	{
+		"userid"	"short"
+	}
+	"DIVEAWAYFROMEXPLOSION_250"
+	{
+		"userid"	"short"
+	}
+	"DODGETHIS"
+	{
+		"userid"	"short"
+	}
+	"PENGUIN"
+	{
+		"userid"	"short"
+	}
+	"da_intermissionstarted"
+	{
+	}
+	"da_deactivateslowmo"
+	{
+	}
+	"SKYPUNCH"
+	{
+		"userid"	"short"
+	}
+	"SLOWPRO"
+	{
+		"userid"	"short"
+	}
+	"SPECIALDELIVERY"
+	{
+		"userid"	"short"
+	}
+	"event_ldb"
+	{
+		"userid"	"short"
+	}
+	"event_DA_LEADERBOARD"
+	{
+		"userid"	"short"
+		"ldb_lifetimeKills" "short"
+		"ldb_brawlKills" "short"
+		"ldb_diveshots" "short"
+		"ldb_diveKills" "short"
+		"ldb_divepunchKills" "short"
+		"ldb_divepunches" "short"
+		"ldb_slideshots" "short"
+		"ldb_slideKills" "short"
+		"ldb_slidepunchKills" "short"
+		"ldb_slidepunches" "short"
+		"ldb_headshotKills" "short"
+		"ldb_headshots" "short"
+		"lbd_punchesThrown" "short"
+		"ldb_punchesLanded" "short"
+		"ldb_totalStyle" "short"
+	}
 }
