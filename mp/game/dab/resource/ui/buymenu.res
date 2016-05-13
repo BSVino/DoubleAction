@@ -223,12 +223,28 @@
 		"info_model"    "models/weapons/w_rif_m4a1.mdl"
 	}
 
+	"weapon_plan_d"
+	{
+		"ControlName"	"WeaponButton"
+		"fieldName"		"weapon_plan_d"
+		"xpos"			"c-210"
+		"ypos"			"240"
+		"wide"			"170"
+		"tall"			"15"
+		"labelText"		"#DA_BuyMenu_Button_Plan_D"
+		"textAlignment"	"west"
+		"Command"		"buy plan_d"
+		"font"			"FolderSmall"
+		"weaponid"      "plan_d"
+		"info_model"    "models/weapons/w_pland.mdl"
+	}
+
 	"weapon_grenade"
 	{
 		"ControlName"	"WeaponButton"
 		"fieldName"		"weapon_grenade"
 		"xpos"			"c-210"
-		"ypos"			"240"
+		"ypos"			"255"
 		"wide"			"170"
 		"tall"			"15"
 		"labelText"		"#DA_BuyMenu_Button_Grenade"

@@ -1,0 +1,96 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"48"    // damage per bullet
+	"Bullets"				"1"     // bullets per shoot
+	"CycleTime"				"0.105" // time between shoots
+
+	"BuiltRightHanded"		"0"
+
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_Plan_D"
+	"viewmodel"				"models/weapons/v_pland.mdl"
+	"playermodel"			"models/weapons/w_pland.mdl"
+	"PlayerAnimationExtension"	"mp5"
+	"akimbo"				""
+
+	"bucket"				"1"
+	"bucket_position"		"2"
+
+	"clip_size"				"2"
+	"NumClips"				"6"
+
+	"ViewPunchMultiplier"	"1.3"
+	"Recoil"				"3"
+	"Spread"				"0.014"
+
+	"StyleMultiplier" "1"
+	"KillStyleBonus" "50"
+
+	"WeaponType"			"pistol"
+
+	"primary_ammo"			"9x19mm"
+	"secondary_ammo"		"None"
+
+	"weight"				"4"
+	"item_flags"			"0"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		//"reload"			"Default.Reload"
+		"empty"			"Default.ClipEmpty_Rifle"
+		"single_shot"		"Weapon_beretta.Single"
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"a"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"a"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"r"
+		}
+		"crosshair"
+		{
+				"file"		"HUD/tscross2"
+				"x"		"0"
+				"y"		"0"
+				"width"		"64"
+				"height"	"64"
+		}
+		"autoaim"
+		{
+				"file"		"sprites/crosshairs"
+				"x"			"0"
+				"y"			"48"
+				"width"		"24"
+				"height"	"24"
+		}
+	}
+	ModelBounds
+	{
+		Viewmodel
+		{
+			Mins	"-10 -4 -13"
+			Maxs	"21 9 -1"
+		}
+		World
+		{
+			Mins	"-10 -7 -6"
+			Maxs	"22 8 9"
+		}
+	}
+}
