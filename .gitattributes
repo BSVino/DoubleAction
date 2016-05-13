@@ -1,3 +1,6 @@
+# If UTF-8 files still show up as binary, run "git config --global diff.utf16diff.textconv 'iconv -f utf-16 -t utf-8 --'"
+[attr]utf16 diff merge diff=utf16diff
+
 creategameprojects text
 createallprojects text
 xcode_ccache_wrapper text
@@ -51,7 +54,7 @@ gtest_output_test_golden_lin.txt binary
 mod_*_english.txt binary
 
 mp/game/** -text
-mp/game/dab/resource/dab_*.txt encoding=UTF-16LE
+mp/game/dab/resource/dab_*.txt utf16
 mp/game/**/*.bsp filter=lfs diff=lfs merge=lfs -text
 mp/game/**/*.nav filter=lfs diff=lfs merge=lfs -text
 mp/game/**/*.vtf filter=lfs diff=lfs merge=lfs -text
