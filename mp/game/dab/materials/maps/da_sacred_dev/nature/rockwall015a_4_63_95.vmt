@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/NATURE/ROCKWALL015A.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_sacred_dev/c4_63_95"
-	}
-}

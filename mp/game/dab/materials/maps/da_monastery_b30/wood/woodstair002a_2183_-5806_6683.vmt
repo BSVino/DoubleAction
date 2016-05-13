@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/WOOD/WOODSTAIR002A.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_monastery_b30/c2183_-5806_6683"
-	}
-}

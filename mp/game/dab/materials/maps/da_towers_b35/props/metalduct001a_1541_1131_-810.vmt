@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/PROPS/METALDUCT001A.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_towers_b35/c1541_1131_-810"
-	}
-}

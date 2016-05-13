@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/TILE/TILEFLOOR020A.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_monastery_b30/c2051_-5918_6327"
-	}
-}
