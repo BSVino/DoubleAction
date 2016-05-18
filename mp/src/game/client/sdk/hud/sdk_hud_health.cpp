@@ -226,8 +226,10 @@ void CHudHealth::Paint()
 
 	if (flHurtAlpha && flHealthPercent < flHurtPercent)
 	{
+		float flHurtBarHeight = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, GetTall(), flBarHeight);
+
 		surface()->DrawSetColor( Color(255, 0, 0, flHurtAlpha*255) );
-		surface()->DrawFilledRect( flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2-flBarHeight/2, flMargin*2 + flHeartHeight + flHurtPercent * flBarWidth, GetTall()/2+flBarHeight/2 );
+		surface()->DrawFilledRect( flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2-flHurtBarHeight/2, flMargin*2 + flHeartHeight + flHurtPercent * flBarWidth, GetTall()/2+flHurtBarHeight/2 );
 	}
 
 	surface()->DrawSetColor( Color(255, 255, 255, 255) );
