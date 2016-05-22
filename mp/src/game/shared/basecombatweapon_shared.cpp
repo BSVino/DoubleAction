@@ -1170,6 +1170,9 @@ void CBaseCombatWeapon::SetViewModel()
 	if ( vm == NULL )
 		return;
 	Assert( vm->ViewModelIndex() == m_nViewModelIndex );
+#ifdef CLIENT_DLL
+	vm->ParticleProp()->StopParticlesInvolving(vm);
+#endif
 	vm->SetWeaponModel( GetViewModel( m_nViewModelIndex ), this );
 }
 

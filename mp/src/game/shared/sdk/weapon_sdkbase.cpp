@@ -1965,11 +1965,6 @@ bool CWeaponSDKBase::Deploy( )
 
 		if (GetPlayerOwner()->GetCurrentTime() < GetPlayerOwner()->m_flDisarmRedraw)
 			return false;
-
-#ifdef CLIENT_DLL
-		CBaseViewModel* vm = GetPlayerOwner()->GetViewModel( m_nViewModelIndex );
-		vm->ParticleProp()->StopParticlesInvolving(vm);
-#endif
 	}
 
 	bool bDeploy = DefaultDeploy( (char*)GetViewModel(), (char*)GetWorldModel(), GetDeployActivity(), (char*)GetAnimPrefix() );
