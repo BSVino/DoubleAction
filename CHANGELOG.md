@@ -6,10 +6,13 @@
 
 **Implemented enhancements:**
 
+- Make bot\_add optionally take a name for the bot [\#61](https://github.com/BSVino/DoubleAction/pull/61) ([TomyLobo](https://github.com/TomyLobo))
 - Allow bots to climb in some places [\#56](https://github.com/BSVino/DoubleAction/pull/56) ([TomyLobo](https://github.com/TomyLobo))
 
 **Fixed bugs:**
 
+- Move cursor to the actual center of the chat box [\#60](https://github.com/BSVino/DoubleAction/pull/60) ([TomyLobo](https://github.com/TomyLobo))
+- Move particle fix to CBaseCombatWeapon::SetViewModel [\#59](https://github.com/BSVino/DoubleAction/pull/59) ([TomyLobo](https://github.com/TomyLobo))
 - Don't give superskilled players unlimited grenades [\#54](https://github.com/BSVino/DoubleAction/pull/54) ([TomyLobo](https://github.com/TomyLobo))
 
 ## [v1.2.1](https://github.com/BSVino/DoubleAction/tree/v1.2.1) (2016-05-05)
