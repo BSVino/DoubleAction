@@ -76,7 +76,7 @@ struct NavAreaData_t
 // intermediate sized hull used when we want to test something smaller than the full bot hull, and bigger than a simple trace line
 static Vector BotTestHull = Vector(5,5,5);
 
-CBasePlayer *BotPutInServer( bool bFrozen );
+CBasePlayer *BotPutInServer( bool bFrozen, const char *name = NULL );
 
 void Bot_RunAll();
 
