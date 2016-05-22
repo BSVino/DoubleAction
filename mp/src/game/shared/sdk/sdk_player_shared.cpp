@@ -566,15 +566,15 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER || m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
+	if (IsStyleSkillActive(SKILL_BOUNCER))
 		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
-		m_flFreezeUntil = m_flCurrentTime;
+		m_flFreezeUntil = GetCurrentTime();
 	else if (flTime < 0)
 		m_flFreezeUntil = 0;
 	else
-		m_flFreezeUntil = m_flCurrentTime + flTime;
+		m_flFreezeUntil = GetCurrentTime() + flTime;
 }
 
 void CSDKPlayer::ReadyWeapon()
