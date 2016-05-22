@@ -181,7 +181,7 @@ void CHudDamageIndicator::Paint()
 		vecPlayerLocalDamageDirection.NormalizeInPlace();
 
 		Color clrIndicator = m_clrIndicator;
-		float alphaIndicator = RemapVal(pPlayer->GetCurrentTime(), m_aDamageEvents[i].flTimeDamaged, m_aDamageEvents[i].flTimeDamaged + hud_damage_time.GetFloat(), 255, 0);
+		float alphaIndicator = RemapVal(pPlayer->GetCurrentTime() - m_aDamageEvents[i].flTimeDamaged, 0, hud_damage_time.GetFloat(), 255, 0);
 		clrIndicator.SetColor(clrIndicator.r(), clrIndicator.g(), clrIndicator.b(), alphaIndicator);
 
 		float flSize = RemapVal(m_aDamageEvents[i].flDamage, 10, 60, m_flDamageSize, m_flDamageSize*3);
