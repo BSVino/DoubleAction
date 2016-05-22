@@ -36,6 +36,10 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 
 	ConVarRef bot_quota("bot_quota");
 	bot_quota.SetValue(bot_quota.GetInt() + 1);
+
+	if (args.ArgC() > 0) {
+		BotPutInServer( false, args.ArgS() );
+	}
 }
 
 CON_COMMAND_F( bot_kick, "Kick all bots.", FCVAR_GAMEDLL )
@@ -148,14 +152,18 @@ const char* g_aszBotNames[] =
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
 //-----------------------------------------------------------------------------
-CBasePlayer *BotPutInServer( bool  bFrozen )
+CBasePlayer *BotPutInServer( bool  bFrozen, const char *name )
 {
 	int iNumBotNames = ARRAYSIZE(g_aszBotNames);
 
 	// This trick lets us create a CSDKBot for this client instead of the CSDKPlayer
 	// that we would normally get when ClientPutInServer is called.
 	ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
-	edict_t *pEdict = engine->CreateFakeClient(g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)]);
+	if (!name)
+	{
+		name = g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)];
+	}
+	edict_t *pEdict = engine->CreateFakeClient(name);
 	ClientPutInServerOverride( NULL );
 
 	if (!pEdict)
