@@ -200,7 +200,7 @@ bool CHudLeaderboard::ShouldDraw()
 	if ( !pPlayer )
 		return false;
 
-	if (!pPlayer->IsAlive())
+	if (!pPlayer->IsAlive() && !pPlayer->IsObserver())
 		return false;
 
 	return true;
