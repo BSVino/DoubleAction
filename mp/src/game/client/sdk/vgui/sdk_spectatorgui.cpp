@@ -257,6 +257,59 @@ void CSDKSpectatorGUI::Paint()
 		surface()->DrawSetTextFont( vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme( "ClientScheme" ))->GetFont( "Default" ) );	//reset the font, draw icon can change it
 		surface()->DrawUnicodeString( sButtons.c_str(), vgui::FONT_DRAW_NONADDITIVE );
 	}
+
+	int spec = pLocalPlayer->GetObserverMode();
+	if (ShouldShowPlayerLabel(spec) || spec == OBS_MODE_ROAMING)
+	{
+		// The color to be used
+		surface()->DrawSetTextColor(Color(255, 255, 255, 128));
+
+		// The font to be used
+		vgui::HFont font = vgui::scheme()->GetIScheme(vgui::scheme()->GetScheme("ClientScheme"))->GetFont("SpectatorNames");
+		surface()->DrawSetTextFont(font);
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPlayer)
+				continue;
+
+			if (pPlayer == pLocalPlayer)
+				continue;
+
+			if (spec != OBS_MODE_ROAMING && pPlayer == pObserved)
+				continue;
+
+			if (!pPlayer->IsVisible())
+				continue;
+
+			// retrieve base position
+			Vector basePosition = pPlayer->EyePosition() + Vector(0, 0, 16);
+
+			trace_t tr;
+			UTIL_TraceLine(pLocalPlayer->EyePosition(), basePosition, MASK_OPAQUE, NULL, COLLISION_GROUP_NONE, &tr);
+
+			if ((tr.endpos - basePosition).Length() > 10)
+				continue;
+
+			// Retrieve name and convert to unicode
+			wchar_t wszName[MAX_PLAYER_NAME_LENGTH];
+			const char *pszName = pPlayer->GetPlayerName();
+			g_pVGuiLocalize->ConvertANSIToUnicode(pszName, wszName, sizeof(wszName));
+
+			// transform base position
+			int iX, iY;
+			GetVectorInHudSpace(basePosition, iX, iY);
+
+			// Calculate text size
+			int wide, tall;
+			surface()->GetTextSize(font, wszName, wide, tall);
+
+			// Draw name label, with its bottom center at the basePosition
+			surface()->DrawSetTextPos(iX - wide/2, iY - tall);
+			surface()->DrawUnicodeString(wszName, vgui::FONT_DRAW_NONADDITIVE);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
