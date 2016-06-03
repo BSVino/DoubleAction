@@ -149,6 +149,9 @@ bool CSDKSpectatorGUI::NeedsUpdate( void )
 	if ( m_nLastSpecTarget != player->GetObserverTarget() )
 		return true;
 
+	if ( ShouldShowPlayerLabel(player->GetObserverMode()) )
+		return true;
+
 	return BaseClass::NeedsUpdate();
 }
 
