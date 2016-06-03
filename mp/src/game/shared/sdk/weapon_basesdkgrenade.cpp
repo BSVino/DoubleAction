@@ -193,19 +193,14 @@ void CBaseSDKGrenade::ItemPostFrame()
 	if ( m_bPinPulled && !(pPlayer->m_nButtons & IN_ATTACK) ) 
 	{
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-//		if (m_bSecondary)
-//			DropGrenade();
-//		else
-			ThrowGrenade();
+		ThrowGrenade();
 
 		DecrementAmmo( pPlayer );
 
-		m_bPinPulled = false;
 		SendWeaponAnim( ACT_VM_THROW );	
 		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
 
 		m_bPinPulled = false;
-//		m_bSecondary = false;
 	}
 	else if( m_bRedraw )
 	{
