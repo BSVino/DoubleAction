@@ -1621,7 +1621,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 			if ( HasPrimaryAmmo() )
 				return;
 
-			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon() && pPlayer->GetActiveSDKWeapon()->GetWeaponID() != SDK_WEAPON_BRAWL)
+			if (GetWeaponID() == SDK_WEAPON_GRENADE && pPlayer->GetActiveSDKWeapon())
 			{
 				// We can throw it without switching to it and it'll appear on the HUD. Don't switch.
 			}

@@ -985,10 +985,12 @@ void CSDKPlayer::GiveDefaultItems()
 				Q_snprintf( szName, sizeof( szName ), "weapon_%s", WeaponIDToAlias(eBuyWeapon) );
 				CWeaponSDKBase* pWeapon = static_cast<CWeaponSDKBase*>(GiveNamedItem( szName ));
 
-				if (!pHeaviestWeapon)
-					pHeaviestWeapon = pWeapon;
-				else if (pWeapon && pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE && pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
-					pHeaviestWeapon = pWeapon;
+				if (pWeapon && pWeapon->GetWeaponID() != SDK_WEAPON_GRENADE) {
+					if (!pHeaviestWeapon)
+						pHeaviestWeapon = pWeapon;
+					else if (pWeapon->GetSDKWpnData().iWeight > pHeaviestWeapon->GetSDKWpnData().iWeight)
+						pHeaviestWeapon = pWeapon;
+				}
 
 				CSDKWeaponInfo* pInfo = CSDKWeaponInfo::GetWeaponInfo((SDKWeaponID)i);
 				if (pInfo)
