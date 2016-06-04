@@ -26,7 +26,7 @@ void Bot_Think( CSDKBot *pBot );
 
 
 // Handler for the "bot" command.
-CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
+CON_COMMAND_F( bot_add, "Add a bot. Optionally takes a name for the bot, otherwise a random name will be chosen.", FCVAR_GAMEDLL )
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
 		return;
@@ -37,8 +37,8 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 	ConVarRef bot_quota("bot_quota");
 	bot_quota.SetValue(bot_quota.GetInt() + 1);
 
-	if (args.ArgC() > 0) {
-		BotPutInServer( false, args.ArgS() );
+	if (!FStrEq("", args.ArgS())) {
+		BotPutInServer(false, args.ArgS());
 	}
 }
 
