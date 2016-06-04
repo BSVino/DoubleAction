@@ -7,13 +7,14 @@
 **Implemented enhancements:**
 
 - Make leaderboard visible to spectators [\#65](https://github.com/BSVino/DoubleAction/pull/65) ([TomyLobo](https://github.com/TomyLobo))
-- Always update Spectator GUI while the player health label is being shown [\#62](https://github.com/BSVino/DoubleAction/pull/62) ([TomyLobo](https://github.com/TomyLobo))
 - Make bot\_add optionally take a name for the bot [\#61](https://github.com/BSVino/DoubleAction/pull/61) ([TomyLobo](https://github.com/TomyLobo))
 - Allow bots to climb in some places [\#56](https://github.com/BSVino/DoubleAction/pull/56) ([TomyLobo](https://github.com/TomyLobo))
 
 **Fixed bugs:**
 
+- Fix grenade double-throw [\#66](https://github.com/BSVino/DoubleAction/pull/66) ([TomyLobo](https://github.com/TomyLobo))
 - Prevent switching to grenades in a few more places [\#63](https://github.com/BSVino/DoubleAction/pull/63) ([TomyLobo](https://github.com/TomyLobo))
+- Always update Spectator GUI while the player health label is being shown [\#62](https://github.com/BSVino/DoubleAction/pull/62) ([TomyLobo](https://github.com/TomyLobo))
 - Move cursor to the actual center of the chat box [\#60](https://github.com/BSVino/DoubleAction/pull/60) ([TomyLobo](https://github.com/TomyLobo))
 - Move particle fix to CBaseCombatWeapon::SetViewModel [\#59](https://github.com/BSVino/DoubleAction/pull/59) ([TomyLobo](https://github.com/TomyLobo))
 - Don't give superskilled players unlimited grenades [\#54](https://github.com/BSVino/DoubleAction/pull/54) ([TomyLobo](https://github.com/TomyLobo))
