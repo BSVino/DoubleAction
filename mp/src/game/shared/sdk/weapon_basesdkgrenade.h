@@ -44,6 +44,7 @@ public:
 
 	virtual void	ItemPostFrame();
 	
+	bool			CanDecrementAmmo( CBaseCombatCharacter *pOwner );
 	void			DecrementAmmo( CBaseCombatCharacter *pOwner );
 	virtual void	StartGrenadeThrow();
 	virtual void	ThrowGrenade();

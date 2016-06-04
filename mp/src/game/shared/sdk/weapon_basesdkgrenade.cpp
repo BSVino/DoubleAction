@@ -193,19 +193,17 @@ void CBaseSDKGrenade::ItemPostFrame()
 	if ( m_bPinPulled && !(pPlayer->m_nButtons & IN_ATTACK) ) 
 	{
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-//		if (m_bSecondary)
-//			DropGrenade();
-//		else
+		if (CanDecrementAmmo(pPlayer))
+		{
 			ThrowGrenade();
 
-		DecrementAmmo( pPlayer );
+			DecrementAmmo(pPlayer);
+
+			SendWeaponAnim(ACT_VM_THROW);
+			SetWeaponIdleTime(GetCurrentTime() + SequenceDuration());
+		}
 
 		m_bPinPulled = false;
-		SendWeaponAnim( ACT_VM_THROW );	
-		SetWeaponIdleTime( GetCurrentTime() + SequenceDuration() );
-
-		m_bPinPulled = false;
-//		m_bSecondary = false;
 	}
 	else if( m_bRedraw )
 	{
@@ -261,6 +259,10 @@ void CBaseSDKGrenade::ItemPostFrame()
 
 #ifdef CLIENT_DLL
 
+	bool CBaseSDKGrenade::CanDecrementAmmo( CBaseCombatCharacter *pOwner )
+	{
+		return true;
+	}
 	void CBaseSDKGrenade::DecrementAmmo( CBaseCombatCharacter *pOwner )
 	{
 	}
@@ -297,6 +299,14 @@ void CBaseSDKGrenade::ItemPostFrame()
 	int CBaseSDKGrenade::CapabilitiesGet()
 	{
 		return bits_CAP_WEAPON_RANGE_ATTACK1; 
+	}
+
+	bool CBaseSDKGrenade::CanDecrementAmmo( CBaseCombatCharacter *pOwner )
+	{
+		if (!pOwner)
+			return false;
+
+		return pOwner->GetAmmoCount(m_iPrimaryAmmoType) >= 1;
 	}
 
 	//-----------------------------------------------------------------------------
