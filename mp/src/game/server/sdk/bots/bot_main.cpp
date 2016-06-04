@@ -38,7 +38,7 @@ CON_COMMAND_F( bot_add, "Add a bot. Optionally takes a name for the bot, otherwi
 	bot_quota.SetValue(bot_quota.GetInt() + 1);
 
 	if (!FStrEq("", args.ArgS())) {
-		BotPutInServer( false, args.ArgS() );
+		BotPutInServer(false, args.ArgS());
 	}
 }
 
