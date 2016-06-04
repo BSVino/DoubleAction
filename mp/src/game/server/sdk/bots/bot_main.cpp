@@ -26,7 +26,7 @@ void Bot_Think( CSDKBot *pBot );
 
 
 // Handler for the "bot" command.
-CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
+CON_COMMAND_F( bot_add, "Add a bot. Optionally takes a name for the bot, otherwise a random name will be chosen.", FCVAR_GAMEDLL )
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
 		return;
