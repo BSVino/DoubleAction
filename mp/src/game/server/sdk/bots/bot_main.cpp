@@ -37,7 +37,7 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_GAMEDLL )
 	ConVarRef bot_quota("bot_quota");
 	bot_quota.SetValue(bot_quota.GetInt() + 1);
 
-	if (args.ArgC() > 0) {
+	if (!FStrEq("", args.ArgS())) {
 		BotPutInServer( false, args.ArgS() );
 	}
 }
