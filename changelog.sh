@@ -15,5 +15,5 @@ github_changelog_generator \
     -t "$github_api_key" \
     --no-pr-wo-labels --no-issues-wo-labels \
     --include-labels 'Server issue,Client issue' \
-    --exclude-labels 'duplicate,question,invalid,wontfix,Unreleased bug,PR attached' \
+    --exclude-labels 'duplicate,question,invalid,wontfix,Hide from changelog,PR attached' \
     "$@"
