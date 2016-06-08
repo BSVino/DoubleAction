@@ -1200,7 +1200,9 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	m_pChatInput->SetMouseInputEnabled( true );
 
 	// Pick a target panel to place the mouse cursor on so people notice it.
-	Panel *pTargetPanel = this;
+	Panel *pTargetPanel = GetChatHistory()->FindChildByName("ScrollBar");
+	if (!pTargetPanel) pTargetPanel = GetChatHistory();
+	if (!pTargetPanel) pTargetPanel = GetChatInput();
 
 	// Retrieve its size
 	int w, h;
