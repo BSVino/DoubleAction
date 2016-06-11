@@ -427,119 +427,77 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		m_pPlayerList->SetSelectedItem(selectedRow);
 	}
 
-	Label *pMostLabel;
-	Label *pMostLabelPlayer;
+	UpdateMostLabel(
+		"MostStyle",
+		"MostStylePlayer",
+		"#DA_ScoreBoard_MostStyle",
+		sdkPR->GetHighestStylePlayer(),
+		-1//sdkPR->GetHighestStyle()
+	);
 
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStyle"));
-	if (pMostLabel)
-		pMostLabel->SetText("#DA_ScoreBoard_MostStyle");
+	UpdateMostLabel(
+		"MostStunts",
+		"MostStuntsPlayer",
+		"#DA_ScoreBoard_StuntKills",
+		sdkPR->GetHighestStuntKillPlayer(),
+		sdkPR->GetHighestStuntKills()
+	);
 
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStylePlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStylePlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
+	UpdateMostLabel(
+		"MostBrawl",
+		"MostBrawlPlayer",
+		"#DA_ScoreBoard_BrawlKills",
+		sdkPR->GetHighestBrawlKillPlayer(),
+		sdkPR->GetHighestBrawlKills()
+	);
 
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStunts"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_StuntKills");
+	UpdateMostLabel(
+		"MostStreak",
+		"MostStreakPlayer",
+		"#DA_ScoreBoard_KillStreak",
+		sdkPR->GetHighestKillStreakPlayer(),
+		sdkPR->GetHighestKillStreak()
+	);
 
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+	UpdateMostLabel(
+		"MostGrenade",
+		"MostGrenadePlayer",
+		"#DA_ScoreBoard_GrenadeKills",
+		sdkPR->GetHighestGrenadeKillPlayer(),
+		sdkPR->GetHighestGrenadeKills()
+	);
+}
 
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestStuntKills());
-
-		pMostLabel->SetText(wszNewLabel);
-	}
-
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStuntsPlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStuntKillPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostBrawl"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_BrawlKills");
-
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
-
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestBrawlKills());
-
-		pMostLabel->SetText(wszNewLabel);
-	}
-
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostBrawlPlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestBrawlKillPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStreak"));
+void CSDKScoreboard::UpdateMostLabel(const char * pszMostLabelName, const char * pszMostLabelPlayerName, const char * pszMostLabelText, int iHighestPlayerIndex, int iHighestValue)
+{
+	Label *pMostLabel = dynamic_cast<Label *>(FindChildByName(pszMostLabelName));
 	if (pMostLabel)
 	{
-		pMostLabel->SetText("#DA_ScoreBoard_KillStreak");
+		pMostLabel->SetText(pszMostLabelText);
 
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+		if (iHighestValue != -1)
+		{
+			wchar_t wszLabel[100];
+			pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestKillStreak());
+			wchar_t wszNewLabel[100];
+			V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, iHighestValue);
 
-		pMostLabel->SetText(wszNewLabel);
+			pMostLabel->SetText(wszNewLabel);
+		}
 	}
 
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStreakPlayer"));
+	Label *pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName(pszMostLabelPlayerName));
 	if (pMostLabelPlayer)
 	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestKillStreakPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostGrenade"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_GrenadeKills");
-
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
-
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestGrenadeKills());
-
-		pMostLabel->SetText(wszNewLabel);
-	}
-
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostGrenadePlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestGrenadeKillPlayer()));
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(iHighestPlayerIndex));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
 		else
 			pMostLabelPlayer->SetText("");
 	}
 }
+
 
 Panel *CSDKScoreboard::CreateControlByName( const char *controlName )
 {

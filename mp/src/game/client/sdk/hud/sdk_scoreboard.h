@@ -32,6 +32,7 @@ protected:
 	virtual void InitScoreboardSections();
 	virtual void UpdateTeamInfo();
 	virtual void UpdatePlayerInfo();
+	virtual void UpdateMostLabel(const char * pszMostLabelName, const char * pszMostLabelPlayerName, const char * pszMostLabelText, int iHighestPlayerIndex, int iHighestValue);
 
 	// vgui overrides for rounded corner background
 	virtual void PaintBackground();
