@@ -1199,10 +1199,24 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	m_pChatInput->SetPaintBorderEnabled( true );
 	m_pChatInput->SetMouseInputEnabled( true );
 
-	//Place the mouse cursor near the text so people notice it.
-	int x, y, w, h;
-	GetBounds( x, y, w, h );
-	vgui::input()->SetCursorPos( x + ( w/2), y + (h/2) );
+	// Pick a target panel to place the mouse cursor on so people notice it.
+	Panel *pTargetPanel = GetChatHistory()->FindChildByName("ScrollBar");
+	if (!pTargetPanel) pTargetPanel = GetChatHistory();
+	if (!pTargetPanel) pTargetPanel = GetChatInput();
+
+	// Retrieve its size
+	int w, h;
+	pTargetPanel->GetSize(w, h);
+
+	// Center the cursor onto it
+	int cx = w / 2;
+	int cy = h / 2;
+
+	// Translate to screen coordinates
+	pTargetPanel->LocalToScreen(cx, cy);
+
+	// Set cursor position
+	vgui::input()->SetCursorPos(cx, cy);
 
 	m_flHistoryFadeTime = gpGlobals->curtime + CHAT_HISTORY_FADE_TIME;
 
