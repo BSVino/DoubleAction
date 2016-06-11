@@ -377,16 +377,13 @@ void CSDKScoreboard::UpdatePlayerInfo()
 
 		UpdatePlayerAvatar( i, kv );
 
-		if (sdkPR->GetPing( i ) < 1)
+		if ( sdkPR->IsFakePlayer( i ) )
 		{
-			if ( sdkPR->IsFakePlayer( i ) )
-			{
-				kv->SetString("ping", "BOT");
-			}
-			else
-			{
-				kv->SetString("ping", "");
-			}
+			kv->SetString("ping", "BOT");
+		}
+		else if (sdkPR->GetPing( i ) < 1)
+		{
+			kv->SetString("ping", "");
 		}
 		else
 		{
