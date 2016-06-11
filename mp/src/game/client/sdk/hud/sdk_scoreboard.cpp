@@ -342,7 +342,16 @@ void CSDKScoreboard::UpdatePlayerInfo()
 	for ( i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		bool shouldShow = sdkPR->IsConnected( i );
-		if ( shouldShow )
+		if (!shouldShow)
+		{
+			// remove the player
+			int itemID = FindItemIDForPlayerIndex( i );
+			if (itemID != -1)
+			{
+				m_pPlayerList->RemoveItem(itemID);
+			}
+		}
+		else
 		{
 			// add the player to the list
 			KeyValues *kv = new KeyValues("data");
@@ -410,15 +419,6 @@ void CSDKScoreboard::UpdatePlayerInfo()
 			m_pPlayerList->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
 
 			kv->deleteThis();
-		}
-		else
-		{
-			// remove the player
-			int itemID = FindItemIDForPlayerIndex( i );
-			if (itemID != -1)
-			{
-				m_pPlayerList->RemoveItem(itemID);
-			}
 		}
 	}
 
