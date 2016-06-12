@@ -466,6 +466,30 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		sdkPR->GetHighestGrenadeKillPlayer(),
 		sdkPR->GetHighestGrenadeKills()
 	);
+
+	Label *pTimeLimitLabel = dynamic_cast<Label *>(FindChildByName("TimeLimit"));
+	if (pTimeLimitLabel)
+	{
+		int iTimeElapsed = SDKGameRules()->GetMapElapsedTime() / 60;
+		int iTimeLimit = mp_timelimit.GetInt();
+
+		const char *printFormatString;
+		if (iTimeLimit > 0)
+			printFormatString = "#DA_ScoreBoard_TimeElapsedLimited";
+		else
+			printFormatString = "#DA_ScoreBoard_TimeElapsed";
+
+		wchar_t wszTimeElapsed[20];
+		V_swprintf_safe(wszTimeElapsed, L"%i", iTimeElapsed);
+
+		wchar_t wszTimeLimit[20];
+		V_swprintf_safe(wszTimeLimit, L"%i", iTimeLimit);
+
+		wchar_t wszNewLabel[100];
+		g_pVGuiLocalize->ConstructString(wszNewLabel, sizeof(wszNewLabel), g_pVGuiLocalize->Find(printFormatString), 2, wszTimeElapsed, wszTimeLimit);
+
+		pTimeLimitLabel->SetText(wszNewLabel);
+	}
 }
 
 void CSDKScoreboard::UpdateMostLabel(const char * pszMostLabelName, const char * pszMostLabelPlayerName, const char * pszMostLabelText, int iHighestPlayerIndex, int iHighestValue)
