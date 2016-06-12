@@ -185,6 +185,7 @@ void CHudDamageIndicator::Paint()
 			RemapVal(pPlayer->GetCurrentTime(), m_aDamageEvents[i].flTimeDamaged, m_aDamageEvents[i].flTimeDamaged + hud_damage_time.GetFloat(), 255, 0));
 
 		float flSize = RemapVal(m_aDamageEvents[i].flDamage, 10, 60, m_flDamageSize, m_flDamageSize*3);
+		flSize = RemapVal(flSize, 0, 768, 0, iTall);
 
 		SDKViewport::DrawPolygon(icon_up,
 			iWide/2 + vecPlayerScreenDamageDirection.x * flRadius - flSize/2, iTall/2 + vecPlayerScreenDamageDirection.y * flRadius - flSize/2,
