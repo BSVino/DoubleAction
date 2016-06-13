@@ -101,6 +101,7 @@ public:
 	void			TrackVoteCaller( CBasePlayer *pPlayer );
 	bool			CanEntityCallVote( CBasePlayer *pPlayer, int &nCooldown );
 	bool			IsVoteActive( void ) { return m_iActiveIssueIndex != INVALID_ISSUE; }
+	const char *	GetVoteOption( int iIndex ) { return m_VoteOptions[iIndex]; }
 
 protected:
 	void			ResetData( void );

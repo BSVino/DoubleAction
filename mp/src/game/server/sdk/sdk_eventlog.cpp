@@ -11,6 +11,7 @@
 
 #include "sdk_player.h"
 #include "sdk_team.h"
+#include "vote_controller.h"
 
 class CSDKEventLog : public CEventLog
 {
@@ -43,6 +44,7 @@ public:
 #if defined ( SDK_USE_PLAYERCLASSES )
 		ListenForGameEvent( "player_changeclass" );
 #endif // SDK_USE_PLAYERCLASSES
+		ListenForGameEvent( "vote_cast" );
 
 		return true;
 	}
@@ -104,6 +106,22 @@ protected:
 			return true;
 		}
 #endif // SDK_USE_PLAYERCLASSES
+		if ( FStrEq( eventName, "vote_cast" ) )
+		{
+			CSDKPlayer *pVoter = ToSDKPlayer(UTIL_EntityByIndex(event->GetInt("entityid")));
+			if (!pVoter)
+				return false;
+
+			CTeam *team = pVoter->GetTeam();
+
+			UTIL_LogPrintf("Vote cast: \"%s<%i><%s><%s>\" voted for option \"%s\"\n",
+				pVoter->GetPlayerName(),
+				pVoter->GetUserID(),
+				pVoter->GetNetworkIDString(),
+				team ? team->GetName() : "",
+				g_voteController->GetVoteOption(event->GetInt("vote_option"))
+			);
+		}
 		return false;
 	}
 
