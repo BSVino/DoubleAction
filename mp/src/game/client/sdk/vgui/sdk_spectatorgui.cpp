@@ -106,7 +106,7 @@ void CSDKSpectatorGUI::UpdateSpectatorPlayerList()
 	if ( blue )
 	{
 		wchar_t frags[ 10 ];
-		_snwprintf( frags, sizeof( frags ), L"%i",  blue->Get_Score()  );
+		_snwprintf( frags, sizeof( frags ) / sizeof( wchar_t ), L"%i",  blue->Get_Score()  );
 
 		SetLabelText( "BlueScoreValue", frags );
 	}
@@ -115,7 +115,7 @@ void CSDKSpectatorGUI::UpdateSpectatorPlayerList()
 	if ( red )
 	{
 		wchar_t frags[ 10 ];
-		_snwprintf( frags, sizeof( frags ), L"%i", red->Get_Score()  );
+		_snwprintf( frags, sizeof( frags ) / sizeof( wchar_t ), L"%i", red->Get_Score()  );
 		
 		SetLabelText( "RedScoreValue", frags );
 	}
@@ -165,7 +165,7 @@ void CSDKSpectatorGUI::UpdateTimer()
 	if ( m_nLastTime < 0 )
 		 m_nLastTime  = 0;
 
-	_snwprintf ( szText, sizeof( szText ), L"%d:%02d", (m_nLastTime / 60), (m_nLastTime % 60) );
+	_snwprintf ( szText, sizeof( szText ) / sizeof( wchar_t ), L"%d:%02d", (m_nLastTime / 60), (m_nLastTime % 60) );
 	szText[62] = 0;
 
 	SetLabelText("timerlabel", szText );
