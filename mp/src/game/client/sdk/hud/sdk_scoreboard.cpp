@@ -427,119 +427,101 @@ void CSDKScoreboard::UpdatePlayerInfo()
 		m_pPlayerList->SetSelectedItem(selectedRow);
 	}
 
-	Label *pMostLabel;
-	Label *pMostLabelPlayer;
+	UpdateMostLabel(
+		"MostStyle",
+		"MostStylePlayer",
+		"#DA_ScoreBoard_MostStyle",
+		sdkPR->GetHighestStylePlayer(),
+		-1//sdkPR->GetHighestStyle()
+	);
 
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStyle"));
-	if (pMostLabel)
-		pMostLabel->SetText("#DA_ScoreBoard_MostStyle");
+	UpdateMostLabel(
+		"MostStunts",
+		"MostStuntsPlayer",
+		"#DA_ScoreBoard_StuntKills",
+		sdkPR->GetHighestStuntKillPlayer(),
+		sdkPR->GetHighestStuntKills()
+	);
 
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStylePlayer"));
-	if (pMostLabelPlayer)
+	UpdateMostLabel(
+		"MostBrawl",
+		"MostBrawlPlayer",
+		"#DA_ScoreBoard_BrawlKills",
+		sdkPR->GetHighestBrawlKillPlayer(),
+		sdkPR->GetHighestBrawlKills()
+	);
+
+	UpdateMostLabel(
+		"MostStreak",
+		"MostStreakPlayer",
+		"#DA_ScoreBoard_KillStreak",
+		sdkPR->GetHighestKillStreakPlayer(),
+		sdkPR->GetHighestKillStreak()
+	);
+
+	UpdateMostLabel(
+		"MostGrenade",
+		"MostGrenadePlayer",
+		"#DA_ScoreBoard_GrenadeKills",
+		sdkPR->GetHighestGrenadeKillPlayer(),
+		sdkPR->GetHighestGrenadeKills()
+	);
+
+	Label *pTimeLimitLabel = dynamic_cast<Label *>(FindChildByName("TimeLimit"));
+	if (pTimeLimitLabel)
 	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStylePlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
+		int iTimeElapsed = SDKGameRules()->GetMapElapsedTime() / 60;
+		int iTimeLimit = mp_timelimit.GetInt();
+
+		const char *printFormatString;
+		if (iTimeLimit > 0)
+			printFormatString = "#DA_ScoreBoard_TimeElapsedLimited";
 		else
-			pMostLabelPlayer->SetText("");
-	}
+			printFormatString = "#DA_ScoreBoard_TimeElapsed";
 
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStunts"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_StuntKills");
+		wchar_t wszTimeElapsed[20];
+		V_swprintf_safe(wszTimeElapsed, L"%i", iTimeElapsed);
 
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+		wchar_t wszTimeLimit[20];
+		V_swprintf_safe(wszTimeLimit, L"%i", iTimeLimit);
 
 		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestStuntKills());
+		g_pVGuiLocalize->ConstructString(wszNewLabel, sizeof(wszNewLabel), g_pVGuiLocalize->Find(printFormatString), 2, wszTimeElapsed, wszTimeLimit);
 
-		pMostLabel->SetText(wszNewLabel);
+		pTimeLimitLabel->SetText(wszNewLabel);
 	}
+}
 
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStuntsPlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestStuntKillPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostBrawl"));
+void CSDKScoreboard::UpdateMostLabel(const char * pszMostLabelName, const char * pszMostLabelPlayerName, const char * pszMostLabelText, int iHighestPlayerIndex, int iHighestValue)
+{
+	Label *pMostLabel = dynamic_cast<Label *>(FindChildByName(pszMostLabelName));
 	if (pMostLabel)
 	{
-		pMostLabel->SetText("#DA_ScoreBoard_BrawlKills");
+		pMostLabel->SetText(pszMostLabelText);
 
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
+		if (iHighestValue != -1)
+		{
+			wchar_t wszLabel[100];
+			pMostLabel->GetText(wszLabel, sizeof(wszLabel));
 
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestBrawlKills());
+			wchar_t wszNewLabel[100];
+			V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, iHighestValue);
 
-		pMostLabel->SetText(wszNewLabel);
+			pMostLabel->SetText(wszNewLabel);
+		}
 	}
 
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostBrawlPlayer"));
+	Label *pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName(pszMostLabelPlayerName));
 	if (pMostLabelPlayer)
 	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestBrawlKillPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostStreak"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_KillStreak");
-
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
-
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestKillStreak());
-
-		pMostLabel->SetText(wszNewLabel);
-	}
-
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostStreakPlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestKillStreakPlayer()));
-		if (pPlayer)
-			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
-		else
-			pMostLabelPlayer->SetText("");
-	}
-
-	pMostLabel = dynamic_cast<Label *>(FindChildByName("MostGrenade"));
-	if (pMostLabel)
-	{
-		pMostLabel->SetText("#DA_ScoreBoard_GrenadeKills");
-
-		wchar_t wszLabel[100];
-		pMostLabel->GetText(wszLabel, sizeof(wszLabel));
-
-		wchar_t wszNewLabel[100];
-		V_swprintf_safe(wszNewLabel, L"%s %i", wszLabel, sdkPR->GetHighestGrenadeKills());
-
-		pMostLabel->SetText(wszNewLabel);
-	}
-
-	pMostLabelPlayer = dynamic_cast<Label *>(FindChildByName("MostGrenadePlayer"));
-	if (pMostLabelPlayer)
-	{
-		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(sdkPR->GetHighestGrenadeKillPlayer()));
+		C_SDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(iHighestPlayerIndex));
 		if (pPlayer)
 			pMostLabelPlayer->SetText(pPlayer->GetPlayerName());
 		else
 			pMostLabelPlayer->SetText("");
 	}
 }
+
 
 Panel *CSDKScoreboard::CreateControlByName( const char *controlName )
 {

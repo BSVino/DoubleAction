@@ -176,4 +176,17 @@
 		"textAlignment"	"center"
 		//"bgcolor_override" "0 0 0 100"
 	}
+
+	"TimeLimit"
+	{
+		"ControlName"	"Label"
+		"fieldName"		"TimeLimit"
+		"xpos"			"300"
+		"ypos"			"275"
+		"wide"			"200"
+		"tall"			"15"
+		"font"			"Default"
+		"textAlignment"	"center"
+		//"bgcolor_override" "0 0 0 100"
+	}
 }
