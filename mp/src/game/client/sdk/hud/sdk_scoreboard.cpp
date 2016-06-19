@@ -342,76 +342,7 @@ void CSDKScoreboard::UpdatePlayerInfo()
 	for ( i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		bool shouldShow = sdkPR->IsConnected( i );
-		if ( shouldShow )
-		{
-			// add the player to the list
-			KeyValues *kv = new KeyValues("data");
-			kv->SetInt("playerIndex", i);
-			kv->SetInt("team", sdkPR->GetTeam( i ) );
-			kv->SetString("name", sdkPR->GetPlayerName(i) );
-			kv->SetInt("frags", sdkPR->GetStyle( i ));
-
-#if defined ( SDK_USE_PLAYERCLASSES )
-			//Tony; for player classname, just look up directly from the player.
-			pOther = UTIL_PlayerByIndex(i);
-			if (pOther )
-			{
-				int ot = pOther->GetTeamNumber();
-				if ( ot == localteam || localteam == TEAM_UNASSIGNED)
-					kv->SetString("class", SDKGameRules()->GetPlayerClassName( SDKGameResources()->GetPlayerClass(i), ot ) );
-				else
-					kv->SetString("class", "");
-			}
-			else
-				kv->SetString("class","");
-#endif
-
-			UpdatePlayerAvatar( i, kv );
-
-			if (sdkPR->GetPing( i ) < 1)
-			{
-				if ( sdkPR->IsFakePlayer( i ) )
-				{
-					kv->SetString("ping", "BOT");
-				}
-				else
-				{
-					kv->SetString("ping", "");
-				}
-			}
-			else
-			{
-				kv->SetInt("ping", sdkPR->GetPing( i ));
-			}
-
-			int itemID = FindItemIDForPlayerIndex( i );
-  			int sectionID = GetSectionFromTeamNumber( sdkPR->GetTeam( i ) );
-						
-			if (itemID == -1)
-			{
-				// add a new row
-				itemID = m_pPlayerList->AddItem( sectionID, kv );
-
-				HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardSmall", false );
-				m_pPlayerList->SetItemFont(itemID, hItemFont);
-			}
-			else
-			{
-				// modify the current row
-				m_pPlayerList->ModifyItem( itemID, sectionID, kv );
-			}
-
-			if ( i == pPlayer->entindex() )
-			{
-				selectedRow = itemID;	// this is the local player, hilight this row
-			}
-
-			// set the row color based on the players team
-			m_pPlayerList->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
-
-			kv->deleteThis();
-		}
-		else
+		if (!shouldShow)
 		{
 			// remove the player
 			int itemID = FindItemIDForPlayerIndex( i );
@@ -419,7 +350,72 @@ void CSDKScoreboard::UpdatePlayerInfo()
 			{
 				m_pPlayerList->RemoveItem(itemID);
 			}
+
+			continue;
 		}
+		// add the player to the list
+		KeyValues *kv = new KeyValues("data");
+		kv->SetInt("playerIndex", i);
+		kv->SetInt("team", sdkPR->GetTeam( i ) );
+		kv->SetString("name", sdkPR->GetPlayerName(i) );
+		kv->SetInt("frags", sdkPR->GetStyle( i ));
+
+#if defined ( SDK_USE_PLAYERCLASSES )
+		//Tony; for player classname, just look up directly from the player.
+		pOther = UTIL_PlayerByIndex(i);
+		if (pOther )
+		{
+			int ot = pOther->GetTeamNumber();
+			if ( ot == localteam || localteam == TEAM_UNASSIGNED)
+				kv->SetString("class", SDKGameRules()->GetPlayerClassName( SDKGameResources()->GetPlayerClass(i), ot ) );
+			else
+				kv->SetString("class", "");
+		}
+		else
+			kv->SetString("class","");
+#endif
+
+		UpdatePlayerAvatar( i, kv );
+
+		if ( sdkPR->IsFakePlayer( i ) )
+		{
+			kv->SetString("ping", "BOT");
+		}
+		else if (sdkPR->GetPing( i ) < 1)
+		{
+			kv->SetString("ping", "");
+		}
+		else
+		{
+			kv->SetInt("ping", sdkPR->GetPing( i ));
+		}
+
+		int itemID = FindItemIDForPlayerIndex( i );
+  		int sectionID = GetSectionFromTeamNumber( sdkPR->GetTeam( i ) );
+						
+		if (itemID == -1)
+		{
+			// add a new row
+			itemID = m_pPlayerList->AddItem( sectionID, kv );
+
+			HFont hItemFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ScoreboardSmall", false );
+			m_pPlayerList->SetItemFont(itemID, hItemFont);
+		}
+		else
+		{
+			// modify the current row
+			m_pPlayerList->ModifyItem( itemID, sectionID, kv );
+		}
+
+		if ( i == pPlayer->entindex() )
+		{
+			selectedRow = itemID;	// this is the local player, hilight this row
+		}
+
+		// set the row color based on the players team
+		m_pPlayerList->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
+
+		kv->deleteThis();
 	}
 
 	if ( selectedRow != -1 )
