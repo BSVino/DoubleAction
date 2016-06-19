@@ -1778,7 +1778,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	else if (info.GetInflictor() && (FStrEq(info.GetInflictor()->GetClassname(), "trigger_kill") || FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt")))
 		bEligible = true;
 
-	if (bEligible && (m_bKilledEnemyDuringFall || m_bDamagedEnemyDuringSuperFall || (m_hKiller.Get() && m_hKiller->IsPlayer() && m_hKiller.Get() != this)))
+	if (bEligible && (m_bKilledEnemyDuringFall || m_bDamagedEnemyDuringSuperFall))
 	{
 		AddStylePoints(10, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
