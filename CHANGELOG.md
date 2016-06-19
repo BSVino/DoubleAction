@@ -16,6 +16,7 @@
 
 **Fixed bugs:**
 
+- Don't give out "Worth it!" if it wasn't worth it [\#73](https://github.com/BSVino/DoubleAction/pull/73) ([TomyLobo](https://github.com/TomyLobo))
 - Fix Linux crashing after death \(hotfixed 2016-06-18\) [\#72](https://github.com/BSVino/DoubleAction/pull/72) ([TomyLobo](https://github.com/TomyLobo))
 - Move cursor to the center of the chat box scroll bar [\#68](https://github.com/BSVino/DoubleAction/pull/68) ([TomyLobo](https://github.com/TomyLobo))
 - Fix grenade double-throw [\#66](https://github.com/BSVino/DoubleAction/pull/66) ([TomyLobo](https://github.com/TomyLobo))
