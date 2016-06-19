@@ -1708,7 +1708,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
 		if ( SDKGameRules()->PlayerRelationship(this, pAttackerSDK) != GR_TEAMMATE )
-			pAttackerSDK->m_bDamagedEnemyDuringFall = true;
+			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
 	}
 
 	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
@@ -1755,6 +1755,15 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_vecKillingExplosionPosition = m_hInflictor->GetAbsOrigin();
 	}
 
+	if( m_hKiller && m_hKiller->IsPlayer() )
+	{
+		CSDKPlayer* pAttackerSDK = ToSDKPlayer(m_hKiller);
+
+		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
+		if ( SDKGameRules()->PlayerRelationship(this, pAttackerSDK) != GR_TEAMMATE )
+			pAttackerSDK->m_bKilledEnemyDuringFall = true;
+	}
+
 	if (dynamic_cast<CBaseGrenadeProjectile*>(m_hInflictor.Get()))
 		m_bWasKilledByGrenade = true;
 
@@ -1769,7 +1778,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	else if (info.GetInflictor() && (FStrEq(info.GetInflictor()->GetClassname(), "trigger_kill") || FStrEq(info.GetInflictor()->GetClassname(), "trigger_hurt")))
 		bEligible = true;
 
-	if (bEligible && (m_bDamagedEnemyDuringFall || (m_hKiller.Get() && m_hKiller->IsPlayer() && m_hKiller.Get() != this)))
+	if (bEligible && (m_bKilledEnemyDuringFall || m_bDamagedEnemyDuringSuperFall || (m_hKiller.Get() && m_hKiller->IsPlayer() && m_hKiller.Get() != this)))
 	{
 		AddStylePoints(10, STYLE_SOUND_LARGE, ANNOUNCEMENT_STYLISH, STYLE_POINT_LARGE);
 		// Send "Worth it!" after the style points so that if the player gets their skill activated because of it, that message won't override the "Worth it!" message.
@@ -3756,8 +3765,13 @@ void CSDKPlayer::State_PreThink_ACTIVE()
 		SwitchToNextBestWeapon( NULL );
 	}
 
-	if (IsAlive() && !m_Shared.m_bSuperFalling && (GetFlags() & FL_ONGROUND))
-		m_bDamagedEnemyDuringFall = false;
+	if (IsAlive() && !m_Shared.m_bSuperFalling)
+	{
+		if (GetFlags() & FL_ONGROUND)
+			m_bKilledEnemyDuringFall = false;
+
+		m_bDamagedEnemyDuringSuperFall = false;
+	}
 }
 
 void CSDKPlayer::NoteWeaponFired( void )
