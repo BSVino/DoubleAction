@@ -76,6 +76,9 @@ Vagrant.configure(2) do |config|
     # Add the Git key and repo
     add-apt-repository ppa:git-core/ppa
 
+    # Add the Git LFS key and repo
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+
     # Refresh package repos
     apt-get update
 
@@ -83,7 +86,7 @@ Vagrant.configure(2) do |config|
     apt-get install -y htop strace mc
 
     # Install some build requirements
-    apt-get install git
+    apt-get install git git-lfs
 
     # Install Jenkins
     apt-get install -y openjdk-7-jre-headless jenkins
