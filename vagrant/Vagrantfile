@@ -96,5 +96,10 @@ Vagrant.configure(2) do |config|
     cd steam-runtime/
     chmod +x setup_chroot.sh
     ./setup-chroot.sh --i386
+
+    # Install SteamCMD
+    mkdir -p ~jenkins/steamcmd
+    wget -O - http://media.steampowered.com/installer/steamcmd_linux.tar.gz | tar xvz -C ~jenkins/steamcmd
+    chown -R --reference ~jenkins ~jenkins/steamcmd
   SHELL
 end
