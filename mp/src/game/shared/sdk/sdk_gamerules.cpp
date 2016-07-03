@@ -3164,8 +3164,7 @@ public:
 			return;
 		}
 
-		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s\n", GetDetailsString() ));
-		engine->ServerCommand(UTIL_VarArgs( "kickid %s\n", GetDetailsString() ));
+		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s kick\n", GetDetailsString() ));
 		engine->ServerCommand("writeip\n");
 		engine->ServerCommand("writeid\n");
 	}
