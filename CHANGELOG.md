@@ -16,6 +16,7 @@
 
 **Fixed bugs:**
 
+- Ban and kick with a single command [\#74](https://github.com/BSVino/DoubleAction/pull/74) ([TomyLobo](https://github.com/TomyLobo))
 - Don't give out "Worth it!" if it wasn't worth it [\#73](https://github.com/BSVino/DoubleAction/pull/73) ([TomyLobo](https://github.com/TomyLobo))
 - Fix Linux crashing after death \(hotfixed 2016-06-18\) [\#72](https://github.com/BSVino/DoubleAction/pull/72) ([TomyLobo](https://github.com/TomyLobo))
 - If a bot somehow gets a ping value, still display it as a bot [\#71](https://github.com/BSVino/DoubleAction/pull/71) ([TomyLobo](https://github.com/TomyLobo))
