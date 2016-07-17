@@ -1751,7 +1751,7 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 
 	// Trace to see where the camera is pointing
 	trace_t tr;
-	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SHOT & ~(CONTENTS_WINDOW), this, COLLISION_GROUP_NONE, &tr );
 
 	m_vecThirdTarget = tr.endpos;
 }
