@@ -16,6 +16,7 @@
 
 **Fixed bugs:**
 
+- Change Deisel to Diesel in the English version [\#83](https://github.com/BSVino/DoubleAction/pull/83) ([TomyLobo](https://github.com/TomyLobo))
 - Issue temporary ban by network id instead of user id [\#82](https://github.com/BSVino/DoubleAction/pull/82) ([TomyLobo](https://github.com/TomyLobo))
 - Ban and kick with a single command [\#74](https://github.com/BSVino/DoubleAction/pull/74) ([TomyLobo](https://github.com/TomyLobo))
 - Don't give out "Worth it!" if it wasn't worth it [\#73](https://github.com/BSVino/DoubleAction/pull/73) ([TomyLobo](https://github.com/TomyLobo))
