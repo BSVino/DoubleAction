@@ -3129,6 +3129,9 @@ ConVar da_vote_kick_plurality("da_vote_kick_plurality", "0.7", FCVAR_GAMEDLL, "W
 
 class CKickPlayerVoteIssue : public CDAIssue
 {
+private:
+	CUtlString networkIDString;
+
 public:
 	CKickPlayerVoteIssue()
 		: CDAIssue("kick")
@@ -3164,7 +3167,7 @@ public:
 			return;
 		}
 
-		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s kick\n", GetDetailsString() ));
+		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s kick\n", networkIDString ));
 		engine->ServerCommand("writeip\n");
 		engine->ServerCommand("writeid\n");
 	}
@@ -3173,6 +3176,15 @@ public:
 	{
 		AssertMsg(false, "Unimplemented");
 		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+
+	virtual void SetIssueDetails(const char *pszDetails)
+	{
+		CDAIssue::SetIssueDetails(pszDetails);
+
+		int iUserID = atoi(pszDetails);
+		CBasePlayer* pPlayer = UTIL_PlayerByUserId(iUserID);
+		networkIDString = pPlayer->GetNetworkIDString();
 	}
 };
 
