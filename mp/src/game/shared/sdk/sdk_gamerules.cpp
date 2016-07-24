@@ -3167,7 +3167,7 @@ public:
 			return;
 		}
 
-		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s kick\n", networkIDString ));
+		engine->ServerCommand(UTIL_VarArgs( "banid 30 %s kick\n", networkIDString.String() ));
 		engine->ServerCommand("writeip\n");
 		engine->ServerCommand("writeid\n");
 	}
