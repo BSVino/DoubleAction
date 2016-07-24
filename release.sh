@@ -10,6 +10,8 @@ fi
 
 tag=v"$version"
 
+git checkout develop
+git pull -r origin develop
 ./changelog.sh --future-release "$tag"
 git commit -m "Release $version" CHANGELOG.md
 git tag "$tag"
