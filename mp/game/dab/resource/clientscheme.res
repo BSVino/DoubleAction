@@ -190,9 +190,9 @@ Scheme
 		SectionedListPanel.TextColor		"White"
 		SectionedListPanel.BrightTextColor	"White"
 		SectionedListPanel.BgColor			"TransparentLightBlack"
-		SectionedListPanel.SelectedTextColor			"Black"
+		SectionedListPanel.SelectedTextColor			"White"
 		SectionedListPanel.SelectedBgColor				"Red"
-		SectionedListPanel.OutOfFocusSelectedTextColor	"Black"
+		SectionedListPanel.OutOfFocusSelectedTextColor	"White"
 		SectionedListPanel.OutOfFocusSelectedBgColor	"255 255 255 32"
 
 		Slider.NobColor				"108 108 108 255"
