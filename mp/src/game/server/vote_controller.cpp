@@ -773,7 +773,11 @@ int CVoteController::GetWinningVoteOption( void )
 		int nHighest = m_nVoteOptionCount[0];
 		for ( int iIndex = 0; iIndex < m_nVoteOptionCount.Count(); iIndex ++ )
 		{
-			nHighest = ( ( nHighest < m_nVoteOptionCount[iIndex] ) ? m_nVoteOptionCount[iIndex] : nHighest );
+			if (nHighest < m_nVoteOptionCount[iIndex])
+			{
+				// We have a new highest element => remember it
+				nHighest = m_nVoteOptionCount[iIndex];
+			}
 		}
 		
 		m_nHighestCountIndex = -1;
