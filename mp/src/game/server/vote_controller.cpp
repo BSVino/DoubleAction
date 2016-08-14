@@ -768,15 +768,12 @@ int CVoteController::GetWinningVoteOption( void )
 	}
 	else
 	{
-		CUtlVector <int> pVoteCounts;
-
 		// Which option had the most votes?
 		// driller:  Need to handle ties
 		int nHighest = m_nVoteOptionCount[0];
 		for ( int iIndex = 0; iIndex < m_nVoteOptionCount.Count(); iIndex ++ )
 		{
 			nHighest = ( ( nHighest < m_nVoteOptionCount[iIndex] ) ? m_nVoteOptionCount[iIndex] : nHighest );
-			pVoteCounts.AddToTail( m_nVoteOptionCount[iIndex] );
 		}
 		
 		m_nHighestCountIndex = -1;
