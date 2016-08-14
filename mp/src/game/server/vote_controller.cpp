@@ -795,8 +795,6 @@ int CVoteController::GetWinningVoteOption( void )
 
 		return m_nHighestCountIndex;
 	}
-
-	return -1;
 }
 
 //-----------------------------------------------------------------------------
