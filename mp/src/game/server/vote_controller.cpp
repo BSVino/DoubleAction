@@ -771,26 +771,14 @@ int CVoteController::GetWinningVoteOption( void )
 		// Which option had the most votes?
 		// driller:  Need to handle ties
 		int nHighest = m_nVoteOptionCount[0];
+		m_nHighestCountIndex = 0;
 		for ( int iIndex = 0; iIndex < m_nVoteOptionCount.Count(); iIndex ++ )
 		{
 			if (nHighest < m_nVoteOptionCount[iIndex])
 			{
 				// We have a new highest element => remember it
 				nHighest = m_nVoteOptionCount[iIndex];
-			}
-		}
-		
-		m_nHighestCountIndex = -1;
-		for ( int iIndex = 0; iIndex < m_nVoteOptionCount.Count(); iIndex++ )
-		{
-			if ( m_nVoteOptionCount[iIndex] == nHighest )
-			{
 				m_nHighestCountIndex = iIndex;
-				// henryg: break on first match, not last. this avoids a crash
-				// if we are all tied at zero and we pick something beyond the
-				// last vote option. this code really ought to ignore attempts
-				// to tally votes for options beyond the last valid one!
-				break;
 			}
 		}
 
