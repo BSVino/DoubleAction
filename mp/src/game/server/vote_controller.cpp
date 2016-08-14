@@ -769,7 +769,6 @@ int CVoteController::GetWinningVoteOption( void )
 	else
 	{
 		// Which option had the most votes?
-		// driller:  Need to handle ties
 		int nHighest = m_nVoteOptionCount[0];
 		m_nHighestCountIndex = 0;
 		for ( int iIndex = 0; iIndex < m_nVoteOptionCount.Count(); iIndex ++ )
@@ -779,6 +778,11 @@ int CVoteController::GetWinningVoteOption( void )
 				// We have a new highest element => remember it
 				nHighest = m_nVoteOptionCount[iIndex];
 				m_nHighestCountIndex = iIndex;
+			}
+			else if (nHighest == m_nVoteOptionCount[iIndex])
+			{
+				// We have a tie => reset index
+				m_nHighestCountIndex = -1;
 			}
 		}
 
