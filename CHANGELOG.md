@@ -1,5 +1,15 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.2...HEAD)
+
+**Fixed bugs:**
+
+- Reset "already voted" flag on map change [\#95](https://github.com/BSVino/DoubleAction/pull/95) ([TomyLobo](https://github.com/TomyLobo))
+- Properly handle tied vote results [\#90](https://github.com/BSVino/DoubleAction/pull/90) ([TomyLobo](https://github.com/TomyLobo))
+- Fix invisible selected entries in the vote setup dialog [\#89](https://github.com/BSVino/DoubleAction/pull/89) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.2.2](https://github.com/BSVino/DoubleAction/tree/v1.2.2) (2016-07-30)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.1...v1.2.2)
 
