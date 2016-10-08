@@ -896,6 +896,7 @@ void CHudVote::LevelInit( void )
 	SetVoteActive( false );
 	m_flVoteResultCycleTime = -1;
 	m_flHideTime = -1;
+	m_bPlayerVoted = false;
 	m_flPostVotedHideTime = -1;
 }
 
