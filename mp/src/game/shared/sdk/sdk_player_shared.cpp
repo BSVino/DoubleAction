@@ -566,15 +566,15 @@ void CSDKPlayer::FreezePlayer(float flAmount, float flTime)
 {
 	m_flFreezeAmount = flAmount;
 
-	if (m_Shared.m_iStyleSkill == SKILL_BOUNCER || m_Shared.m_bSuperSkill || SDKGameRules()->GetBountyPlayer() == this)
+	if (IsStyleSkillActive(SKILL_BOUNCER))
 		m_flFreezeAmount = RemapVal(m_flFreezeAmount, 0, 1, m_Shared.ModifySkillValue(1, -0.25f, SKILL_BOUNCER), 1);
 
 	if (flAmount == 1.0f)
-		m_flFreezeUntil = m_flCurrentTime;
+		m_flFreezeUntil = GetCurrentTime();
 	else if (flTime < 0)
 		m_flFreezeUntil = 0;
 	else
-		m_flFreezeUntil = m_flCurrentTime + flTime;
+		m_flFreezeUntil = GetCurrentTime() + flTime;
 }
 
 void CSDKPlayer::ReadyWeapon()
@@ -625,6 +625,7 @@ CSDKPlayerShared::CSDKPlayerShared()
 	m_bRolling = false;
 	m_flSlideStartTime = 0;
 	m_flSlideAutoEndTime = 0;
+	m_iStyleSkill = m_iStyleSkillAfterRespawn = SKILL_NONE;
 }
 
 CSDKPlayerShared::~CSDKPlayerShared()
@@ -1751,7 +1752,7 @@ void CSDKPlayer::UpdateThirdCamera(const Vector& vecEye, const QAngle& angEye)
 
 	// Trace to see where the camera is pointing
 	trace_t tr;
-	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_VISIBLE|CONTENTS_DEBRIS|CONTENTS_HITBOX, this, COLLISION_GROUP_NONE, &tr );
+	UTIL_TraceLine( m_vecThirdCamera, m_vecThirdCamera + vecShoot * 99999, MASK_SHOT & ~(CONTENTS_WINDOW), this, COLLISION_GROUP_NONE, &tr );
 
 	m_vecThirdTarget = tr.endpos;
 }

@@ -178,7 +178,7 @@ void CDAHudCrosshair::Paint( void )
 
 		// Now trace to see where the player will hit
 		trace_t tr2;
-		UTIL_TraceLine( vecShootPosition, vecShootPosition + vecForward * 1000, MASK_SOLID|CONTENTS_DEBRIS|CONTENTS_HITBOX, pPlayer, COLLISION_GROUP_NONE, &tr2 );
+		UTIL_TraceLine( vecShootPosition, vecShootPosition + vecForward * 1000, MASK_SHOT|CONTENTS_GRATE, pPlayer, COLLISION_GROUP_NONE, &tr2 );
 
 		//DebugDrawLine(vecCamera, tr.endpos, 255, 0, 0, true, 0.1f);
 		//DebugDrawLine(vecShootPosition, tr2.endpos, 0, 0, 255, true, 0.1f);

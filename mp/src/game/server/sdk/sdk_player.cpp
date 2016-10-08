@@ -1826,7 +1826,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling() || pSDKAttacker->m_Shared.IsWallFlipping(true))
 				pSDKAttacker->m_iStuntKills++;
-			else if (info.GetDamageType() == DMG_CLUB)
+
+			if (info.GetDamageType() == DMG_CLUB)
 				pSDKAttacker->m_iBrawlKills++;
 		}
 
@@ -4671,6 +4672,15 @@ void CC_Skill(const CCommand& args)
 		return;
 	}
 
+	if (FStrEq(args[1], "random_if_unset"))
+	{
+		if (pPlayer->m_Shared.HasStyleSkillAfterRespawn())
+			return;
+
+		pPlayer->PickRandomSkill();
+
+		return;
+	}
 	pPlayer->SetStyleSkill(AliasToSkillID(args[1]));
 
 #ifdef WITH_DATA_COLLECTION
