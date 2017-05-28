@@ -763,7 +763,7 @@ int CVoteController::GetWinningVoteOption( void )
 {
 	if ( m_potentialIssues[m_iActiveIssueIndex]->IsYesNoVote() )
 	{
-		float plurality = m_nVoteOptionCount[VOTE_OPTION1] / (m_nVoteOptionCount[VOTE_OPTION1] + m_nVoteOptionCount[VOTE_OPTION2]);
+		float plurality = m_nVoteOptionCount[VOTE_OPTION1] / (float)(m_nVoteOptionCount[VOTE_OPTION1] + m_nVoteOptionCount[VOTE_OPTION2]);
 		return (plurality > m_potentialIssues[m_iActiveIssueIndex]->GetRequiredPlurality()) ? VOTE_OPTION1 : VOTE_OPTION2;
 	}
 	else
