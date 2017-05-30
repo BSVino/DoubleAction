@@ -40,9 +40,14 @@ CDataManager& DataManager()
 	return g_DataManager;
 }
 
+ConVar da_telemetry_enable("da_telemetry_enable", "1", 0, "Send telemetry to master server");
+
 extern bool DASendData(const da::protobuf::GameData& pbGameData, std::string& sError);
 static void SendData( CFunctor **pData, unsigned int nCount )
 {
+	if (!da_telemetry_enable.GetBool())
+		return;
+
 	da::protobuf::GameData pbGameData;
 
 	g_DataManager.FillProtoBuffer(&pbGameData);
