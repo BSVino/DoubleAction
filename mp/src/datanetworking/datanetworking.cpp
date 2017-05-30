@@ -58,9 +58,14 @@ int CurlDebugCallback(CURL *pCurl, curl_infotype eInfo, char* psz, size_t i, voi
 	return 0;
 }
 
+ConVar da_telemetry_enable("da_telemetry_enable", "1", 0, "How often to query player positions");
+
 bool DASendData(const da::protobuf::GameData& pbGameData, string& sError)
 {
 	bool bSuccess = false;
+
+	if (!da_telemetry_enable.GetBool())
+		return bSuccess;
 
 	curl_global_init(CURL_GLOBAL_ALL);
 
