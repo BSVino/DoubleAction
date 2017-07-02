@@ -1,0 +1,7 @@
+UnlitGeneric
+{
+	$basetexture models/props_greebleport/hdd_lights_solid
+	$surfaceprop plastic
+}
+
+

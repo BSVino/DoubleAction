@@ -1,0 +1,12 @@
+Lightmappedgeneric
+{
+	$basetexture concrete/concrete_smooth_01
+	$bumpmap concrete/concrete_smooth_01_nor
+	$surfaceprop concrete
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.1 .1 .1]"
+	$reflectivity "[.31 .37 .61]"
+	//$detail detail/dt_concrete
+	//$detailblendmode 0
+}

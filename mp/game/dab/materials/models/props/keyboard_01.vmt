@@ -1,0 +1,9 @@
+VertexlitGeneric
+{
+	$basetexture models/props/keyboard_01_dif
+	$bumpmap models/props/keyboard_01_nor
+	$phong 1
+	$phongboost .5
+	$phongfresnelranges "[.5 .5 1]"
+	$phongexponent 50
+}

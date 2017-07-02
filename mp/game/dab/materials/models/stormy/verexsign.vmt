@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/verexsign_dif
+	$bumpmap models/stormy/verexsign_nor
+	
+	
+	$envmap env_cubemap
+	$envmaptint "[.5 .5 .5]"
+	$normalmapalphaenvmapmask 1
+	
+}

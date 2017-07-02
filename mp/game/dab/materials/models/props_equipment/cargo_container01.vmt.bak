@@ -1,0 +1,10 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models\props_equipment/Cargo_container01"
+	"$Envmap" "env_cubemap"
+	"$EnvmapMask" "models\props_equipment\Cargo_container01_ref"
+	"$BlendTintByBaseAlpha" "1"
+	"$envmapfresnel" "1"
+	"$envmapFresnelMinMaxExp" "[1 3 4]"	
+	//"$envmapFresnelMinMaxExp" "[0.03 0.03 2]"	
+}

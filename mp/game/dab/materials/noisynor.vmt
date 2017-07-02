@@ -1,0 +1,6 @@
+lightmappedgeneric
+{
+$basetexture noisydif
+$bumpmap noisynor1
+$envmap env_cubemap
+}

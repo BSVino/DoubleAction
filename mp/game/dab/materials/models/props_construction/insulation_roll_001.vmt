@@ -1,0 +1,8 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/insulation_roll_001
+	$bumpmap models/props_construction/insulation_roll_001_normal
+	$surfaceprop carpet
+}
+
+

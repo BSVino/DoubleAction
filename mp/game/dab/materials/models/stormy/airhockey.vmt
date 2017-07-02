@@ -1,0 +1,14 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/airhockey_dif
+	$bumpmap models/stormy/airhockey_nor
+	
+	$phong 1
+	$phongboost 1.5
+	$phongfresnelranges "[.5 .5 .75]"
+	$phongexponent 10
+	
+	$envmap env_cubemap
+	$envmaptint "[.5 .5 .5]"
+	$normalmapalphaenvmapmask 1
+}

@@ -1,0 +1,17 @@
+UnlitGeneric
+{
+	$basetexture models/props_greebleport/hdd_lights_001
+	$surfaceprop plastic
+
+Proxies
+	{
+	AnimatedTexture
+		{
+		animatedTextureVar 		$basetexture
+		animatedTextureFrameNumVar 	$frame
+		animatedTextureFrameRate 	20
+		}
+	}
+}
+
+

@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+	$basetexture models/weapons/drugs/v_drugs_dif
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.5 .5 2]"
+	$basemapalphaphongmask 1
+	
+	}

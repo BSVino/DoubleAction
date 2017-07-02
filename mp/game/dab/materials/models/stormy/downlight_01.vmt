@@ -1,0 +1,10 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/downlight_01_dif
+	$bumpmap models/stormy/downlight_01_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 2 4]"
+	
+}

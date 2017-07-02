@@ -1,0 +1,14 @@
+VertexlitGeneric
+{
+	$basetexture models/props/office_chair_01d_dif
+	$bumpmap models/props/office_chair_01_nor
+	
+	$phong 1
+	$phongboost .5
+	$phongfresnelranges "[.5 .5 1]"
+	$phongexponent 5
+	
+	$envmap env_cubemap
+	$envmaptint "[.1 .1 .1]"
+	$normalmapalphaenvmapmask 1
+}

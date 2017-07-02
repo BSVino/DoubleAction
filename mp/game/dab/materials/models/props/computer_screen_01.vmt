@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+$basetexture models/props/computer_screen_01_dif
+$bumpmap models/props/computer_screen_01_nor
+
+$phong 1
+$phongboost 1
+$phongfresnelranges "[.25 .25 2]"
+$phongexponent 50
+}

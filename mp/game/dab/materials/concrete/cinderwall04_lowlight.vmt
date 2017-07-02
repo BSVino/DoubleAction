@@ -1,0 +1,11 @@
+LightmappedGeneric
+{
+$baseTexture "concrete/cinderwall04"
+$Surfaceprop concrete
+$bumpmap "concrete/cindmap02-ssbump"
+$ssbump 1
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[ .05 .05 .05 ]"
+$reflectivity "[.31 .37 .61]"
+}

@@ -1,0 +1,10 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/powerpoint_01_dif
+	$bumpmap models/stormy/powerpoint_01_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 2 4]"
+	
+}

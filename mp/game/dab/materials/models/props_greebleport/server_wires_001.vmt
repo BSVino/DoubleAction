@@ -1,0 +1,14 @@
+VertexlitGeneric
+{
+	$basetexture models/props_greebleport/server_wires_001
+	$bumpmap models/props_greebleport/server_wires_001_norm
+	$surfaceprop plastic
+	$nocull 1
+	$alphatest 1
+	
+	$phong 1
+	$phongboost 0.5
+	$phongfresnelranges "[.2 .2 .2]"
+	$phongexponent 10
+}
+

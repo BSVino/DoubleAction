@@ -1,0 +1,12 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/torn_drywall
+	$bumpmap models/props_construction/torn_drywall_normal
+	$surfaceprop drywall
+	$alphatest 1
+	\\$nocull 1
+	$phong 1
+	$phongboost 1
+	$phongexponent 2
+
+}

@@ -1,0 +1,16 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/compressor_hose_001
+	$bumpmap models/props_construction/compressor_hose_001_normal
+	$surfaceprop metal_barrel
+
+	$phong 1
+	$phongboost 0.5
+	$phongfresnelranges "[5 5 5]"
+	$phongexponent 20
+
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+}
+
+

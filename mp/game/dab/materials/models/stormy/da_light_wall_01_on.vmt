@@ -1,0 +1,19 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_light_wall_01_on
+	$bumpmap models/stormy/da_light_wall_01_nor
+	
+	$selfillum 1
+	
+	$phong 1
+	$phongboost 2
+	$phongfresnelranges "[.5 .5 1]"
+	$phongexponent 25
+	
+	$alphatest 1
+	$nocull 1
+	
+	$envmap env_cubemap
+	$envmaptint "[.1 .1 .1]"
+	//$normalmapalphaenvmapmask 1
+}

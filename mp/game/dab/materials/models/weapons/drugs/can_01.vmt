@@ -1,0 +1,13 @@
+vertexlitgeneric
+{
+	$basetexture models/weapons/drugs/v_drugs_dif
+	
+	$envmap env_cubemap
+	$basealphaenvmapmask 1
+	
+	$phong 1
+	//$phongboost 1
+	//$phongfresnelranges "[.5 .5 2]"
+	$basemapalphaphongmask 1
+	
+	}

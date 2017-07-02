@@ -1,0 +1,14 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/gas_can_01_dif_b
+	$bumpmap models/stormy/gas_can_01_nor_b
+	
+	$phong 1
+	$phongboost 5
+	$phongfresnelranges "[.5 .5 1]"
+	$phongexponent 15
+	
+	$envmap env_cubemap
+	$envmaptint "[.1 .1 .1]"
+	//$normalmapalphaenvmapmask 1
+}

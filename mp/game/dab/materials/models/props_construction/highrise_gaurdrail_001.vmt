@@ -1,0 +1,13 @@
+"VertexlitGeneric"
+{
+	$basetexture 	models\props_construction\highrise_gaurdrail_001
+	$bumpmap 	models\props_construction\highrise_gaurdrail_001_normal
+
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 1 1]"
+	$phongexponent 30
+
+	\\$envmap env_cubemap
+	\\$normalmapalphaenvmapmask 1
+}

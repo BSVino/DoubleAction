@@ -1,0 +1,10 @@
+vertexlitgeneric 
+{
+	$basetexture models/stormy/da_metalbench_dif
+	$bumpmap models/stormy/da_metalbench_nor
+	
+	$phong 1
+	$phongboost 5
+	$phongfresnelranges "[1 2 3]"
+	$phongexponent 100
+	}

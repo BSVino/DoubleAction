@@ -1,0 +1,15 @@
+VertexLitGeneric
+{
+$basetexture models/props_interiors/elevator_buttons_01
+$bumpmap models/props_interiors/elevator_buttons_01_nor
+
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$envmaptint "[.25 .25 .25]"
+
+
+$phong 1
+$phongboost 1
+$phongfresnelranges "[1 .56 .75]"
+$phongexponent 10
+}

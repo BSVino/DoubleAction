@@ -1,0 +1,10 @@
+vertexlitgeneric
+{
+ $basetexture models/burbs/streetsigns_01_dif
+ $bumpmap models/burbs/streetsigns_01_nor
+ 
+ $phong 1
+ $phongboost 1
+ $phongfresnelranges "[ 1 1 1]"
+ $phongexponent 110
+}

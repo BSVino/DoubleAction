@@ -1,0 +1,10 @@
+"LightmappedGeneric"
+{
+	$basetexture glass/da_glass_03_backlit
+	$surfaceprop Glass
+	
+	$selfillum 1
+	$selfillummask glass/da_glass_03_env
+	$selfillummaskscale -1.0
+	$translucent 1
+}
