@@ -1,6 +1,0 @@
-VertexlitGeneric
-{
-	$basetexture models/aura/props/metalpiece/metalpiece_diffuse
-	$surfaceprop Metal
-	$selfillum 1
-}
