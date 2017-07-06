@@ -1,0 +1,7 @@
+"LightmappedGeneric"
+{
+	"$basetexture" "stormy/invis_stuntable"
+	$alpha 0.5
+	"%compilenodraw" 1
+	"%compilepassbullets" 1
+}

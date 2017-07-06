@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/METAL/METALFLOOR001B.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_towers_b35/c133_-439_-1024"
-	}
-}

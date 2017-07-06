@@ -1,9 +1,0 @@
-"LightmappedGeneric"
-{
-	"$basetexture"		"wizard/blend/groundsand03"
-	"%tooltexture"		"nature/blendsandgrass008a_tooltexture"
-	"$basetexturetransform"		"center .5 .5 scale 1 1 rotate 0 translate 0 0"
-	"$basetexturetransform2"		"center .5 .5 scale 1 1 rotate 10 translate 0 0"
-	"$surfaceprop"		"antlionsand"
-	"$seamless_scale"		"0.050000"
-}

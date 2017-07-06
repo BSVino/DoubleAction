@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/BUILDINGS/SKYSCRAPER25.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_towers_b35/c1306_-500_-695"
-	}
-}

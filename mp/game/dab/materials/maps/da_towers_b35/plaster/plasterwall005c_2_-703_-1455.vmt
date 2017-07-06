@@ -1,8 +1,0 @@
-"patch"
-{
-	"include"		"materials/PLASTER/PLASTERWALL005C.vmt"
-	"replace"
-	{
-		"$envmap"		"maps/da_towers_b35/c2_-703_-1455"
-	}
-}
