@@ -1,7 +1,7 @@
 "VertexlitGeneric"
 {
-	"$basetexture" "models/props/cocaine_plastic_01"
-	"$bumpmap" "models/props/cocaine_plastic_01_nor"
+	"$basetexture" "models/stormy/cocaine_plastic_01"
+	"$bumpmap" "models/stormy/cocaine_plastic_01_nor"
 	
 	$phong 1
 	$phongboost 1.5
