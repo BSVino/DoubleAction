@@ -6,3 +6,4 @@ da_sacred
 da_rooftops
 da_megachat
 da_trainingday
+da_holdingcell
