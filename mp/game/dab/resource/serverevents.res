@@ -68,7 +68,7 @@
 		"index"		"byte"		// player slot (entity index-1)
 		"userid"	"short"		// user ID on server (unique on server)
 		"networkid" "string" // player network (i.e steam) id
-		"address"	"string"	// ip:port
+		"notaddress"	"string"	// ip:port
 		"bot"		"short"		// is a bot
 	}
 	
