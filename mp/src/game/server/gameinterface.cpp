@@ -576,8 +576,7 @@ class C_VMT //vtable hooking class
 public:
 	C_VMT(void *Interface)
 	{
-		unsigned long dwInterface = (unsigned long)Interface;
-		ppInterface = (*(unsigned long***)&dwInterface);
+		ppInterface = (unsigned long**)Interface);// Windows UNSIGNED LONG cause it compiles in 32bit
 		pOldVMT = *ppInterface;
 		VMTSize = 0;
 		while (pOldVMT[VMTSize])VMTSize++;
@@ -608,7 +607,7 @@ class C_VMT //vtable hooking class
 public:
 	C_VMT(void *Interface)
 	{
-		ppInterface = (unsigned int**)Interface;
+		ppInterface = (unsigned int**)Interface;// unsigned int in Linux cause Unsigned long will be 64bit and the game actually is 32bit so you need unsigned int which is 32bit in Linux
 		pOldVMT = *ppInterface;
 		VMTSize = 0;
 		while (pOldVMT[VMTSize])VMTSize++;
