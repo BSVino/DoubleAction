@@ -565,6 +565,113 @@ EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL, INTERFACEVERSI
 // When bumping the version to this interface, check that our assumption is still valid and expose the older version in the same way
 COMPILE_TIME_ASSERT( INTERFACEVERSION_SERVERGAMEDLL_INT == 9 );
 
+/////////////// HACK! Hook FireEvent to make sure player's IP addresses don't get published! //////////////////
+/////////////// MAKE SURE TO DEFINE WINDOWS_BUILD WHEN YOU'RE COMPILING FOR WINDOWS AND LINUX_BUILD WHEN YOU'RE COMPILING FOR LINUX /////////////////
+
+#ifdef WINDOWS_BUILD
+class C_VMT //vtable hooking class
+{
+	C_VMT( const C_VMT &other );
+	C_VMT &operator = ( const C_VMT &other );
+public:
+	C_VMT(void *Interface)
+	{
+		unsigned long dwInterface = (unsigned long)Interface;
+		ppInterface = (*(unsigned long***)&dwInterface);
+		pOldVMT = *ppInterface;
+		VMTSize = 0;
+		while (pOldVMT[VMTSize])VMTSize++;
+		if (VMTSize == 0) return;
+		pNewVMT = new unsigned long[VMTSize];
+		memcpy(pNewVMT, pOldVMT, sizeof(unsigned long) * VMTSize);
+		*ppInterface = pNewVMT;
+		Interface = pNewVMT;
+	}
+	void Hook( unsigned long Function, int Index )
+	{
+		if(!this)return;
+		pNewVMT[Index] = Function;
+	}
+	template<typename T> T Function( int Index )
+	{
+		return (T)( pOldVMT[Index] );
+	}
+	unsigned long** ppInterface;
+	unsigned long*  pNewVMT,*pOldVMT;
+	unsigned long   VMTSize;
+};
+#elif LINUX_BUILD
+class C_VMT //vtable hooking class
+{
+	C_VMT( const C_VMT &other );
+	C_VMT &operator = ( const C_VMT &other );
+public:
+	C_VMT(void *Interface)
+	{
+		ppInterface = (unsigned int**)Interface;
+		pOldVMT = *ppInterface;
+		VMTSize = 0;
+		while (pOldVMT[VMTSize])VMTSize++;
+		if (VMTSize == 0) return;
+		pNewVMT = new unsigned int[VMTSize];
+		memcpy(pNewVMT, pOldVMT, sizeof(unsigned int) * VMTSize);
+		*ppInterface = pNewVMT;
+		Interface = pNewVMT;
+	}
+	void Hook( unsigned int Function, int Index )
+	{
+		if(!this)return;
+		pNewVMT[Index] = Function;
+	}
+	template<typename T> T Function( int Index )
+	{
+		return (T)( pOldVMT[Index] );
+	}
+	unsigned int** ppInterface;
+	unsigned int*  pNewVMT,*pOldVMT;
+	unsigned int   VMTSize;
+};
+#endif
+
+C_VMT *g_gameeventhook;
+
+#ifdef WINDOWS_BUILD
+bool __fastcall FireEvent_HK(void* ptr, int unused, IGameEvent* ev) // windows = fastcall/thiscall, but you need fastcall since you can't define thiscall out of a class!
+{
+	if (!ev)
+		return false;
+	
+	if (strcmp(ev->GetName(), "player_connect") == 0)
+		ev->SetString("address", "none"); //Set the ip string to none
+	
+	return g_gameeventhook->Function<decltype(FireEvent_HK)*>(7)(ptr, unused, ev);
+}
+#elif LINUX_BUILD
+bool __cdecl FireEvent_HK(void* ptr, IGameEvent* ev) // linux = cdecl
+{
+	if (!ev)
+		return false;
+	
+	if (strcmp(ev->GetName(), "player_connect") == 0)
+		ev->SetString("address", "none"); //Set the ip string to none
+	
+	return g_gameeventhook->Function<decltype(FireEvent_HK)*>(8)(ptr, ev);
+}
+#endif
+
+void InstallGameEventManagerHook() //Hook GameEventManager
+{
+	g_gameeventhook = new C_VMT(gameeventmanager);
+	if(g_gameeventhook)
+	{
+#ifdef WINDOWS_BUILD
+		g_gameeventhook->Hook((unsigned long)FireEvent_HK, 7);// windows = index 7
+#elif LINUX_BUILD
+		g_gameeventhook->Hook((unsigned int)FireEvent_HK, 8);// linux = index 8
+#endif
+	}
+}
+
 bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory, 
 		CreateInterfaceFn physicsFactory, CreateInterfaceFn fileSystemFactory, 
 		CGlobalVars *pGlobals)
@@ -609,6 +716,9 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	if ( (gameeventmanager = (IGameEventManager2 *)appSystemFactory(INTERFACEVERSION_GAMEEVENTSMANAGER2,NULL)) == NULL )
 		return false;
+		
+	InstallGameEventManagerHook(); ///// HOOK IT! and you're fine
+		
 	if ( (datacache = (IDataCache*)appSystemFactory(DATACACHE_INTERFACE_VERSION, NULL )) == NULL )
 		return false;
 	if ( (soundemitterbase = (ISoundEmitterSystemBase *)appSystemFactory(SOUNDEMITTERSYSTEM_INTERFACE_VERSION, NULL)) == NULL )
@@ -2389,7 +2499,6 @@ inline void CServerNetworkProperty::CheckTransmit( CCheckTransmitInfo *pInfo )
 	{
 		nShouldTransmit = m_pTransmitProxy->ShouldTransmit( pInfo, nShouldTransmit );
 	}
-
 	if ( m_pOuter->ShouldTransmit( pInfo ) )
 	{
 		m_pOuter->SetTransmit( pInfo );
