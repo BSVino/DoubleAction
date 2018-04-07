@@ -1,5 +1,19 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.2.2...HEAD)
+
+**Implemented enhancements:**
+
+- Add chinese translation by IZUMI WING [\#115](https://github.com/BSVino/DoubleAction/pull/115) ([TomyLobo](https://github.com/TomyLobo))
+- Add da\_holdingcell by Doum [\#114](https://github.com/BSVino/DoubleAction/pull/114) ([TomyLobo](https://github.com/TomyLobo))
+- Add da\_telemetry\_enable cvar [\#101](https://github.com/BSVino/DoubleAction/pull/101) ([TomyLobo](https://github.com/TomyLobo))
+
+**Fixed bugs:**
+
+- Prevent clients from receiving client IP addresses in the player\_connect event [\#116](https://github.com/BSVino/DoubleAction/pull/116) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.2.2.2](https://github.com/BSVino/DoubleAction/tree/v1.2.2.2) (2017-05-30)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.2.1...v1.2.2.2)
 
