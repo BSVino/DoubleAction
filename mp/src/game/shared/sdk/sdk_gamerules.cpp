@@ -947,29 +947,30 @@ void CSDKGameRules::Think()
 		if ( m_flIntermissionEndTime >= gpGlobals->curtime )
 			return;
 
-		if ( !m_bChangelevelDone )
+		// Did we already change the level?
+		if ( m_bChangelevelDone )
+			return;
+
+		// Count up connected players
+		int iConnected = 0;
+		for (int i = 1; i < gpGlobals->maxClients; i++)
 		{
-			// Count up connected players
-			int iConnected = 0;
-			for (int i = 1; i < gpGlobals->maxClients; i++)
-			{
-				CBasePlayer* pPlayer = UTIL_PlayerByIndex( i );
-				if (!pPlayer)
-					continue;
+			CBasePlayer* pPlayer = UTIL_PlayerByIndex( i );
+			if (!pPlayer)
+				continue;
 
-				iConnected++;
-			}
-
-			// If we don't have a lot of players active, reset teamplay. It's no fun without enough players.
-			if (iConnected < 6)
-			{
-				ConVarRef mp_teamplay("mp_teamplay");
-				mp_teamplay.SetValue(false);
-			}
-
-			ChangeLevel(); // intermission is over
-			m_bChangelevelDone = true;
+			iConnected++;
 		}
+
+		// If we don't have a lot of players active, reset teamplay. It's no fun without enough players.
+		if (iConnected < 6)
+		{
+			ConVarRef mp_teamplay("mp_teamplay");
+			mp_teamplay.SetValue(false);
+		}
+
+		ChangeLevel(); // intermission is over
+		m_bChangelevelDone = true;
 
 		return;
 	}
