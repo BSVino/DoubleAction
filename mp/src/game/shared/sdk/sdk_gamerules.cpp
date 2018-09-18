@@ -943,8 +943,12 @@ void CSDKGameRules::Think()
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
-		// check to see if we should change levels now
+		// Check to see if the intermission time is over
 		if ( m_flIntermissionEndTime >= gpGlobals->curtime )
+			return;
+
+		// Check to see if there is still a vote running
+		if (g_voteController->IsVoteActive())
 			return;
 
 		// Did we already change the level?
