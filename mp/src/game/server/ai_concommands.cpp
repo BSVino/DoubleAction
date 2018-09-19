@@ -395,6 +395,11 @@ ConVar npc_create_equipment("npc_create_equipment", "");
 //------------------------------------------------------------------------------
 void CC_NPC_Create( const CCommand &args )
 {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if (!pPlayer)
+		return;
+
 	MDLCACHE_CRITICAL_SECTION();
 
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
@@ -414,7 +419,6 @@ void CC_NPC_Create( const CCommand &args )
 
 		DispatchSpawn(baseNPC);
 		// Now attempt to drop into the world
-		CBasePlayer* pPlayer = UTIL_GetCommandClient();
 		trace_t tr;
 		Vector forward;
 		pPlayer->EyeVectors( &forward );
@@ -462,6 +466,11 @@ static ConCommand npc_create("npc_create", CC_NPC_Create, "Creates an NPC of the
 //------------------------------------------------------------------------------
 void CC_NPC_Create_Aimed( const CCommand &args )
 {
+	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if (!pPlayer)
+		return;
+
 	MDLCACHE_CRITICAL_SECTION();
 
 	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
@@ -477,7 +486,6 @@ void CC_NPC_Create_Aimed( const CCommand &args )
 
 		// Now attempt to drop into the world
 		QAngle angles;
-		CBasePlayer* pPlayer = UTIL_GetCommandClient();
 		trace_t tr;
 		Vector forward;
 		pPlayer->EyeVectors( &forward );
@@ -632,6 +640,10 @@ CON_COMMAND(npc_thinknow, "Trigger NPC to think")
 void CC_NPC_Teleport( void )
 {
 	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if (!pPlayer)
+		return;
+
 	trace_t tr;
 	Vector forward;
 	pPlayer->EyeVectors( &forward );
@@ -664,6 +676,10 @@ static ConVar npc_go_do_run( "npc_go_do_run", "1", 0, "Set whether should run on
 void CC_NPC_Go( void )
 {
 	CBasePlayer* pPlayer = UTIL_GetCommandClient();
+
+	if (!pPlayer)
+		return;
+
 	trace_t tr;
 	Vector forward;
 	pPlayer->EyeVectors( &forward );

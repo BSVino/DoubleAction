@@ -323,6 +323,9 @@ CON_COMMAND_F( bot_teleport, "Teleports the first bot to the player.", FCVAR_CHE
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
 
+	if (!pPlayer)
+		return;
+
 	Vector vecEye = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset();
 
 	Vector vecForward;

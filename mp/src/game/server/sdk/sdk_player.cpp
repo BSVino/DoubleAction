@@ -4891,6 +4891,10 @@ CON_COMMAND( vr, "Turn VR mode on/off" )
 		return;
 
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() );
+
+	if (!pPlayer)
+		return;
+
 	pPlayer->m_bUsingVR = V_strcmp(args[1], "on") == 0;
 }
 
@@ -4900,6 +4904,9 @@ CON_COMMAND( platform, "Indicate client platform" )
 		return;
 
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() );
+
+	if (!pPlayer)
+		return;
 
 	pPlayer->m_iPlatform = 0;
 

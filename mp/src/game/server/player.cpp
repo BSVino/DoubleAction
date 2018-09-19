@@ -5811,6 +5811,9 @@ CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 CAI_Node *FindPickerAINode( CBasePlayer *pPlayer, NodeType_e nNodeType )
 {
+	if (!pPlayer)
+		return NULL;
+
 	Vector forward;
 	Vector origin;
 
