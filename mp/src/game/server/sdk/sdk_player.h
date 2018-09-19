@@ -324,6 +324,7 @@ public:
 	void ActivateSlowMo();
 	void ActivateSuperfallSlowMo();
 	void DeactivateSlowMo();
+	void DeactivateSuperfall();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	int GetSlowMoType() const { return m_iSlowMoType; }
