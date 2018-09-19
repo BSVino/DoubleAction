@@ -1220,10 +1220,10 @@ bool CSDKPlayerShared::CanSuperFallRespawn()
 	if (!m_pOuter->IsAlive())
 		return false;
 
+#ifndef CLIENT_DLL
 	if (gpGlobals->curtime < m_flSuperFallOthersNextCheck)
 		return !m_bSuperFallOthersVisible;
 
-#ifndef CLIENT_DLL
 	m_bSuperFallOthersVisible = false;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
