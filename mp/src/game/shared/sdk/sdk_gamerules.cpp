@@ -3226,3 +3226,17 @@ void RegisterVoteIssues()
 	new CAddBotVoteIssue();
 }
 #endif
+
+#ifndef DA_GIT_VERSION
+#define DA_GIT_VERSION "<unknown>"
+#endif
+
+CON_COMMAND(da_version, "Display client and server version.")
+{
+#ifdef CLIENT_DLL
+	Msg("Client Git revision is %s.\n", DA_GIT_VERSION);
+	engine->ServerCmd("da_version");
+#else
+	Msg("Server Git revision is %s.\n", DA_GIT_VERSION);
+#endif
+}
