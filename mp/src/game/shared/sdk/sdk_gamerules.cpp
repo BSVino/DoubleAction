@@ -3231,3 +3231,30 @@ void RegisterVoteIssues()
 	new CAddBotVoteIssue();
 }
 #endif
+
+#ifdef DA_GIT_VERSION
+#define DA_GIT_VERSION_STRING __HACK_LINE_AS_STRING__(DA_GIT_VERSION)
+#else 
+#define DA_GIT_VERSION_STRING "<unknown>"
+#endif
+
+#ifdef CLIENT_DLL
+
+CON_COMMAND(da_version, "Display client and server version.")
+{
+	Msg("Client Git revision is %s.\n", DA_GIT_VERSION_STRING);
+	engine->ServerCmd("da_version_server");
+}
+
+#else
+
+CON_COMMAND(da_version_server, "Display server version.")
+{
+	CBasePlayer *player = UTIL_GetCommandClient();
+	if (player)
+		ClientPrint(player, HUD_PRINTCONSOLE, "Server Git revision is " DA_GIT_VERSION_STRING ".\n");
+	else
+		Msg("Server Git revision is %s.\n", DA_GIT_VERSION_STRING);
+}
+
+#endif
