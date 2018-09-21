@@ -196,6 +196,7 @@ public:
 	void ActivateSlowMo();
 	void ActivateSuperfallSlowMo();
 	void DeactivateSlowMo();
+	void DeactivateSuperfall();
 	float GetSlowMoMultiplier() const;
 	float GetSlowMoGoal() const;
 	float GetSlowMoSeconds() const { return m_flSlowMoSeconds; }

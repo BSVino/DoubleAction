@@ -1220,10 +1220,10 @@ bool CSDKPlayerShared::CanSuperFallRespawn()
 	if (!m_pOuter->IsAlive())
 		return false;
 
+#ifndef CLIENT_DLL
 	if (gpGlobals->curtime < m_flSuperFallOthersNextCheck)
 		return !m_bSuperFallOthersVisible;
 
-#ifndef CLIENT_DLL
 	m_bSuperFallOthersVisible = false;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -1315,6 +1315,7 @@ void CSDKPlayerShared::PlayerOnGround( void )
 	m_flTimeLeftGround = m_pOuter->GetCurrentTime();
 	m_iWallFlipCount = 0;
 	m_flSuperFallOthersNextCheck = 0;
+	m_pOuter->DeactivateSuperfall();
 }
 
 void CSDKPlayerShared::ForceUnzoom( void )
@@ -1627,6 +1628,15 @@ void CSDKPlayer::DeactivateSlowMo()
 #ifdef GAME_DLL
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
+}
+
+void CSDKPlayer::DeactivateSuperfall()
+{
+	m_Shared.m_bSuperFalling = false;
+
+	if (GetSlowMoType() == SLOWMO_SUPERFALL) {
+		DeactivateSlowMo();
+	}
 }
 
 float CSDKPlayer::GetSlowMoMultiplier() const
