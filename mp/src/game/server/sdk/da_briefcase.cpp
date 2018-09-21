@@ -192,7 +192,7 @@ void CBriefcaseCaptureZone::Spawn( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
-	UTIL_DropToFloor(this, MASK_SOLID, this);
+	UTIL_DropToFloor(this, MASK_SOLID_BRUSHONLY, this);
 }
 
 int CBriefcaseCaptureZone::UpdateTransmitState()
@@ -256,7 +256,7 @@ void CRatRaceWaypoint::Spawn( void )
 	SetNextThink( gpGlobals->curtime + 0.1f );
 
 	SetAbsOrigin(GetAbsOrigin() + Vector(0, 0, 20));
-	UTIL_DropToFloor(this, MASK_SOLID, this);
+	UTIL_DropToFloor(this, MASK_SOLID_BRUSHONLY, this);
 }
 
 int CRatRaceWaypoint::UpdateTransmitState()
