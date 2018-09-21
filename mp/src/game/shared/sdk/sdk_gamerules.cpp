@@ -2878,8 +2878,6 @@ void CSDKGameRules::DebugCheckLeaders(T& ahWaypointLeaders)
 	}
 }
 
-extern ConVar *sv_cheats;
-
 void CC_MiniObjective(const CCommand &args)
 {
 	if (args.ArgC() > 1)
