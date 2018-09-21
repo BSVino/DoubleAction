@@ -587,16 +587,16 @@ void CHudWeaponSelection::SelectWeaponSlot( int iSlot )
 	if ( pPlayer->IsAllowedToSwitchWeapons() == false )
 		return;
 
-	if ( !IsInSelectionMode() )
-		// open the weapon selection
-		OpenSelection();
-
 	// do a fast switch if set
 	if ( hud_fastswitch.GetBool() )
 	{
 		FastWeaponSwitch( iSlot );
 		return;
 	}
+
+	if ( !IsInSelectionMode() )
+		// open the weapon selection
+		OpenSelection();
 
 	C_BaseCombatWeapon *pActiveWeapon = m_ahWeaponSlots[iSlot];
 	if (!pActiveWeapon)
