@@ -3227,16 +3227,18 @@ void RegisterVoteIssues()
 }
 #endif
 
-#ifndef DA_GIT_VERSION
-#define DA_GIT_VERSION "<unknown>"
+#ifdef DA_GIT_VERSION
+#define DA_GIT_VERSION_STRING __HACK_LINE_AS_STRING__(DA_GIT_VERSION)
+#else 
+#define DA_GIT_VERSION_STRING "<unknown>"
 #endif
 
 CON_COMMAND(da_version, "Display client and server version.")
 {
 #ifdef CLIENT_DLL
-	Msg("Client Git revision is %s.\n", DA_GIT_VERSION);
+	Msg("Client Git revision is %s.\n", DA_GIT_VERSION_STRING);
 	engine->ServerCmd("da_version");
 #else
-	Msg("Server Git revision is %s.\n", DA_GIT_VERSION);
+	Msg("Server Git revision is %s.\n", DA_GIT_VERSION_STRING);
 #endif
 }
