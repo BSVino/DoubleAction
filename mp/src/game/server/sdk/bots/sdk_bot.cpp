@@ -319,9 +319,12 @@ void CSDKBot::BotThink()
 	RunPlayerMove( cmd, gpGlobals->frametime );
 }
 
-CON_COMMAND_F( bot_teleport, "Give weapon to player.\n\tArguments: <weapon_name>", FCVAR_CHEAT )
+CON_COMMAND_F( bot_teleport, "Teleports the first bot to the player.", FCVAR_CHEAT )
 {
 	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+
+	if (!pPlayer)
+		return;
 
 	Vector vecEye = pPlayer->GetAbsOrigin() + pPlayer->GetViewOffset();
 
