@@ -943,33 +943,38 @@ void CSDKGameRules::Think()
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
-		// check to see if we should change levels now
-		if ( m_flIntermissionEndTime < gpGlobals->curtime )
+		// Check to see if the intermission time is over
+		if ( m_flIntermissionEndTime >= gpGlobals->curtime )
+			return;
+
+		// Check to see if there is still a vote running
+		if (g_voteController->IsVoteActive())
+			return;
+
+		// Did we already change the level?
+		if ( m_bChangelevelDone )
+			return;
+
+		// Count up connected players
+		int iConnected = 0;
+		for (int i = 1; i < gpGlobals->maxClients; i++)
 		{
-			if ( !m_bChangelevelDone )
-			{
-				// Count up connected players
-				int iConnected = 0;
-				for (int i = 1; i < gpGlobals->maxClients; i++)
-				{
-					CBasePlayer* pPlayer = UTIL_PlayerByIndex( i );
-					if (!pPlayer)
-						continue;
+			CBasePlayer* pPlayer = UTIL_PlayerByIndex( i );
+			if (!pPlayer)
+				continue;
 
-					iConnected++;
-				}
-
-				// If we don't have a lot of players active, reset teamplay. It's no fun without enough players.
-				if (iConnected < 6)
-				{
-					ConVarRef mp_teamplay("mp_teamplay");
-					mp_teamplay.SetValue(false);
-				}
-
-				ChangeLevel(); // intermission is over
-				m_bChangelevelDone = true;
-			}
+			iConnected++;
 		}
+
+		// If we don't have a lot of players active, reset teamplay. It's no fun without enough players.
+		if (iConnected < 6)
+		{
+			ConVarRef mp_teamplay("mp_teamplay");
+			mp_teamplay.SetValue(false);
+		}
+
+		ChangeLevel(); // intermission is over
+		m_bChangelevelDone = true;
 
 		return;
 	}
