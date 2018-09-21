@@ -24,6 +24,7 @@ $Configuration
 		$PreprocessorDefinitions			"$BASE;SDK_DLL;USE_MONITORS;SOURCE_2013"
 		$PreprocessorDefinitions            "$BASE;WITH_VIEWBACK;VIEWBACK_TIME_DOUBLE" [$VIEWBACK]
 		$PreprocessorDefinitions            "$BASE;WITH_SHADEREDITOR" [$WIN32]
+		//PLACEHOLDER_COMPILER_ARGS
 	}
 }
 
