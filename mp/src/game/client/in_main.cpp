@@ -537,7 +537,8 @@ void IN_ScoreDown( const CCommand &args )
 void IN_ScoreUp( const CCommand &args )
 {
 	KeyUp( &in_score, args[1] );
-	if ( gViewPortInterface )
+	CBasePlayer *player = CBasePlayer::GetLocalPlayer();
+	if ( gViewPortInterface && (!player || (player->GetFlags() & FL_FROZEN) == 0) )
 	{
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
 		GetClientVoiceMgr()->StopSquelchMode();
