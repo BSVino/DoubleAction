@@ -1315,7 +1315,9 @@ void CSDKPlayerShared::PlayerOnGround( void )
 	m_flTimeLeftGround = m_pOuter->GetCurrentTime();
 	m_iWallFlipCount = 0;
 	m_flSuperFallOthersNextCheck = 0;
-	m_pOuter->DeactivateSuperfall();
+	if (!m_pOuter->GetGroundEntity() || !m_pOuter->GetGroundEntity()->IsPlayer()) {
+		m_pOuter->DeactivateSuperfall();
+	}
 }
 
 void CSDKPlayerShared::ForceUnzoom( void )
