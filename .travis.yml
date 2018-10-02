@@ -33,6 +33,27 @@ script:
   - if [[ "$KSB_TARGET" == "OSX"      ]]; then tail -n 100 xcodebuild.log; fi
   - popd
 
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "Travis build"
+  - git config --local user.email "tomylobo@nurfuerspam.de"
+  - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: IDCGw85l+HwNpqSQYg+2R9e9zeTxjnF52nBiiHCliGd7O499bJIY+o5cAcYvzj6w0jY+L63i+rQfo/w+FdPwOEOLpGcdoAs1I7bKPXx3o6HakxYYVD1MIhtOJH6o5MdQO+8DrFHRCWU0ysApIu0cqk6PVgvbIuth2+IT6SyrYu4=
+  file_glob: true
+  file: mp/game/dab/bin/*.dylib
+  skip_cleanup: true
+  # This makes travis tag the current commit, instead of the current commit on the default branch
+  target_commitish: $TRAVIS_COMMIT
+  prerelease: true
+  on:
+    repo: BSVino/DoubleAction
+    branch: travis
+    #tags: true
+
 notifications:
   email:
     recipients:
