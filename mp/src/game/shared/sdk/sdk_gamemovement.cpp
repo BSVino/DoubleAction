@@ -2557,7 +2557,7 @@ bool CSDKGameMovement::CheckMantel()
 	if (tr.plane.normal.z > 0.3)
 		return false;
 
-	if (tr.plane.normal.z < 0)
+	if (tr.plane.normal.z < -0.01)
 		return false;
 
 	m_pSDKPlayer->m_Shared.StartManteling(tr.plane.normal);
