@@ -500,6 +500,9 @@ void CSDKGameRules::CalculateSlowMoForPlayer(CSDKPlayer* pPlayer)
 		return;
 	}
 
+	if (enginetrace->PointOutsideWorld(pPlayer->EyePosition()))
+		return;
+
 	slowmo_type eOtherInSlow = SLOWMO_NONE;
 
 	CUtlVector<CSDKPlayer*> apOthersInPVS;
