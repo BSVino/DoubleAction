@@ -1906,11 +1906,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if (m_flSlowMoTime)
 		DeactivateSlowMo();
 
-	m_flSlowMoSeconds -= 2;
-
-	if (m_flSlowMoSeconds < 0)
-		m_flSlowMoSeconds = 0;
-
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
 
@@ -3754,6 +3749,11 @@ void CSDKPlayer::State_Enter_ACTIVE()
 void CSDKPlayer::State_Leave_ACTIVE()
 {
 	DropBriefcase();
+	m_flSlowMoSeconds -= 2;
+
+	if (m_flSlowMoSeconds < 0)
+		m_flSlowMoSeconds = 0;
+
 }
 
 void CSDKPlayer::State_PreThink_ACTIVE()
