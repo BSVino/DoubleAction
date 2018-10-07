@@ -376,3 +376,20 @@ CON_COMMAND_F( bot_giveslowmo, "Give all bots one second of slow motion", FCVAR_
 			pPlayer->GiveSlowMo(1);
 	}
 }
+
+CON_COMMAND_F(giveslowmo, "Give all players one second of slow motion", FCVAR_CHEAT)
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+			continue;
+
+		if (!pPlayer->IsAlive())
+			continue;
+
+		if (!pPlayer->IsBot())
+			pPlayer->GiveSlowMo(1);
+	}
+}
