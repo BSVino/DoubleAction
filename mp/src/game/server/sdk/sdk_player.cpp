@@ -1870,6 +1870,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// because we still want to transmit to the clients in our PVS.
 	CreateRagdollEntity();
 
+	// Turn off slow motion.
+	if (m_flSlowMoTime)
+		DeactivateSlowMo();
+
 	State_Transition( STATE_DEATH_ANIM );	// Transition into the dying state.
 
 	//Tony; after transition, remove remaining items
@@ -1901,15 +1905,6 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		flLostPoints /= 2;
 
 	SetStylePoints(m_flStylePoints - flLostPoints);
-
-	// Turn off slow motion.
-	if (m_flSlowMoTime)
-		DeactivateSlowMo();
-
-	m_flSlowMoSeconds -= 2;
-
-	if (m_flSlowMoSeconds < 0)
-		m_flSlowMoSeconds = 0;
 
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
@@ -3754,6 +3749,11 @@ void CSDKPlayer::State_Enter_ACTIVE()
 void CSDKPlayer::State_Leave_ACTIVE()
 {
 	DropBriefcase();
+	m_flSlowMoSeconds -= 2;
+
+	if (m_flSlowMoSeconds < 0)
+		m_flSlowMoSeconds = 0;
+
 }
 
 void CSDKPlayer::State_PreThink_ACTIVE()
