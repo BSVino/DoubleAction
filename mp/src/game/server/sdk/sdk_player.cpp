@@ -4536,18 +4536,13 @@ void CC_Character(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		if (pPlayer->IsAlive())
-			pPlayer->ShowCharacterMenu();
-		else
-			pPlayer->State_Transition( STATE_PICKINGCHARACTER );
+		pPlayer->ShowCharacterMenu();
 
 		return;
 	}
 
 	if (args.ArgC() == 2)
 	{
-		pPlayer->StopObserverMode();
-
 		if (pPlayer->SetCharacter(args[1]))
 		{
 #ifdef WITH_DATA_COLLECTION
@@ -4585,24 +4580,19 @@ void CC_Buy(const CCommand& args)
 	{
 		pPlayer->Instructor_LessonLearned("buy");
 
-		if (pPlayer->IsAlive())
-			pPlayer->ShowBuyMenu();
-		else
-			pPlayer->State_Transition( STATE_BUYINGWEAPONS );
+		pPlayer->ShowBuyMenu();
 
 		return;
 	}
 
 	if (Q_strncmp(args[1], "clear", 5) == 0)
 	{
-		pPlayer->StopObserverMode();
 		pPlayer->ClearLoadout();
 		return;
 	}
 
 	if (Q_strncmp(args[1], "random", 6) == 0)
 	{
-		pPlayer->StopObserverMode();
 		pPlayer->BuyRandom();
 		return;
 	}
@@ -4612,7 +4602,6 @@ void CC_Buy(const CCommand& args)
 		eWeapon = AliasToWeaponID(args[2]);
 		if (eWeapon == WEAPON_NONE)
 			eWeapon = (SDKWeaponID)atoi(args[2]);
-		pPlayer->StopObserverMode();
 		pPlayer->RemoveFromLoadout(eWeapon);
 		return;
 	}
@@ -4620,8 +4609,6 @@ void CC_Buy(const CCommand& args)
 	eWeapon = AliasToWeaponID(args[1]);
 	if (eWeapon)
 	{
-		pPlayer->StopObserverMode();
-
 #ifdef WITH_DATA_COLLECTION
 		if (!pPlayer->IsBot())
 		{
@@ -4656,10 +4643,7 @@ void CC_Skill(const CCommand& args)
 
 	if (args.ArgC() == 1)
 	{
-		if (pPlayer->IsAlive())
-			pPlayer->ShowSkillMenu();
-		else
-			pPlayer->State_Transition( STATE_PICKINGSKILL );
+		pPlayer->ShowSkillMenu();
 
 		return;
 	}
