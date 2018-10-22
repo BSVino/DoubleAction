@@ -109,8 +109,12 @@ ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "100", FCVAR_
 static bool ShouldFireRealisticBullets(CSDKPlayer* pSDKAttacker) {
 	if (!pSDKAttacker)
 		return false;
+	
+	// Not in slow motion => no realistic bullets
+	if (pSDKAttacker->GetSlowMoMultiplier() >= 1)
+		return false;
 
-	return pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling();
+	return pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling();
 }
 
 void CSDKPlayer::FireBullet( 
