@@ -114,7 +114,11 @@ static bool ShouldFireRealisticBullets(CSDKPlayer* pSDKAttacker) {
 	if (pSDKAttacker->GetSlowMoMultiplier() >= 1)
 		return false;
 
-	return pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling();
+	// Affected by superfall slow motion => no realistic bullets
+	if (pSDKAttacker->GetSlowMoType() == SLOWMO_SUPERFALL)
+		return false;
+
+	return !pSDKAttacker->m_Shared.IsSuperFalling();
 }
 
 void CSDKPlayer::FireBullet( 
