@@ -107,7 +107,10 @@ void CSDKPlayer::ItemPostFrame()
 ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 
 static bool ShouldFireRealisticBullets(CSDKPlayer* pSDKAttacker) {
-	return pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling();
+	if (!pSDKAttacker)
+		return false;
+
+	return pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling();
 }
 
 void CSDKPlayer::FireBullet( 
