@@ -2106,11 +2106,16 @@ void CSDKGameMovement::Duck( void )
 
 		if (bStunt)
 		{
-			bSlide = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f) && (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)) &&
-				(m_pSDKPlayer->GetFlags() & FL_ONGROUND) && (mv->m_nButtons & IN_DUCK) &&
-				(m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideStartTime() > TIME_TO_RESLIDE);
-
-			bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
+			bSlide = bDive = (m_pSDKPlayer->GetAbsVelocity().Length() > 10.0f);
+			
+			if (0 == (mv->m_nButtons & (IN_BACK|IN_FORWARD|IN_MOVELEFT|IN_MOVERIGHT)))
+				bSlide = false;
+			else if (0 == (m_pSDKPlayer->GetFlags() & FL_ONGROUND))
+				bSlide = false;
+			else if (0 == (mv->m_nButtons & IN_DUCK))
+				bSlide = false;
+			else if (0 == (m_pSDKPlayer->GetCurrentTime() - m_pSDKPlayer->m_Shared.GetSlideStartTime() > TIME_TO_RESLIDE))
+				bSlide = false;
 		}
 
 		if (!bRoll && m_pSDKPlayer->m_Shared.IsProne())
@@ -2150,6 +2155,7 @@ void CSDKGameMovement::Duck( void )
 		if( bGoProne && m_pSDKPlayer->m_Shared.IsProne() == false && m_pSDKPlayer->m_Shared.IsGettingUpFromProne() == false &&
 			!m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsRolling() )
 		{
+			// This is dead code, since bGoProne is hardwired to false above.
 			m_pSDKPlayer->m_Shared.StartGoingProne();
 
 			//Tony; here is where you'd want to do an animation for first person to give the effect of going prone.

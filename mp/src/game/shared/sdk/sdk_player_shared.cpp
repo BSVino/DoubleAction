@@ -106,6 +106,25 @@ void CSDKPlayer::ItemPostFrame()
 
 ConVar da_stylemeteractivationcost( "da_stylemeteractivationcost", "100", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much (out of 100) does it cost to activate your style meter?" );
 
+static bool ShouldFireRealisticBullets(CSDKPlayer* pSDKAttacker) {
+	if (!pSDKAttacker)
+		return false;
+	
+	// Not in slow motion => no realistic bullets
+	if (pSDKAttacker->GetSlowMoMultiplier() >= 1)
+		return false;
+
+	// Affected by superfall slow motion => no realistic bullets
+	if (pSDKAttacker->GetSlowMoType() == SLOWMO_SUPERFALL)
+		return false;
+
+	// Superfalling => no realistic bullets
+	if (pSDKAttacker->m_Shared.IsSuperFalling())
+		return false;
+
+	return true;
+}
+
 void CSDKPlayer::FireBullet( 
 						   Vector vecSrc,	// shooting postion
 						   const QAngle &shootAngles,  //shooting angle
@@ -138,7 +157,7 @@ void CSDKPlayer::FireBullet(
 
 	CBulletManager::CBullet oBullet = BulletManager().MakeBullet(pSDKAttacker, vecSrc, vecDir, eWeaponID, GetActiveSDKWeapon(), iDamage, iBulletType, bDoEffects);
 
-	if (pSDKAttacker && pSDKAttacker->GetSlowMoMultiplier() < 1 && pSDKAttacker->GetSlowMoType() != SLOWMO_SUPERFALL && !pSDKAttacker->m_Shared.IsSuperFalling())
+	if (ShouldFireRealisticBullets(pSDKAttacker))
 	{
 		BulletManager().AddBullet(oBullet);
 		return;
