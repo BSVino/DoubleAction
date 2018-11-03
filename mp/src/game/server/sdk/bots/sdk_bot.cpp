@@ -242,7 +242,9 @@ void CSDKBot::BotThink()
 	{
 		if (bot_attack.GetBool())
 		{
-			if (RandomFloat(0.0,1.0) > 0.5)
+			if (GetActiveSDKWeapon()->Clip1() == 0)
+				cmd.buttons |= IN_RELOAD;
+			else if (RandomFloat(0.0,1.0) > 0.5 && gpGlobals->curtime >= GetNextAttack())
 				cmd.buttons |= IN_ATTACK;
 		}
 	}
