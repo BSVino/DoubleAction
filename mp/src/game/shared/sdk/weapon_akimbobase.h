@@ -82,7 +82,7 @@ public:
 
 	virtual const Vector GetShootPosition(CSDKPlayer* pShooter);
 
-	// Finds the single variant of this akimbo weapon
+	// Finds the single variant of this akimbo weapon - returns NULL if it wasn't found
 	CWeaponSDKBase *FindSingleWeapon();
 
 protected:

@@ -267,7 +267,9 @@ CWeaponSDKBase *CAkimboBase::FindSingleWeapon()
 	SDKWeaponID eSingleId = AliasToWeaponID(GetSDKWpnData().m_szSingle);
 
 	CWeaponSDKBase *pSingle = GetPlayerOwner()->FindWeapon(eSingleId);
+#ifdef GAME_DLL
 	Assert(pSingle);
+#endif
 
 	return pSingle;
 }
