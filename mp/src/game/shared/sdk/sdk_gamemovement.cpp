@@ -2555,6 +2555,15 @@ bool CSDKGameMovement::CheckMantel()
 	if (tr.m_pEnt && tr.m_pEnt->IsPlayer())
 		return false;
 
+	/*Then check whether we have enough vertical space to stand on the ledge*/
+	pr1 = pr2 = tr.endpos;
+	pr2.z += 4;
+	TraceBBox(pr1, pr2, VEC_HULL_MIN, VEC_HULL_MAX, tr);
+
+	if (tr.fraction < 1 || tr.allsolid || tr.startsolid)
+		/*Blocked by ceiling*/
+		return false;
+
 	pr1 = mv->GetAbsOrigin();
 	pr2 = pr1 + dir*4;
 	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
@@ -2563,7 +2572,7 @@ bool CSDKGameMovement::CheckMantel()
 	if (tr.plane.normal.z > 0.3)
 		return false;
 
-	if (tr.plane.normal.z < 0)
+	if (tr.plane.normal.z < -0.01)
 		return false;
 
 	m_pSDKPlayer->m_Shared.StartManteling(tr.plane.normal);
