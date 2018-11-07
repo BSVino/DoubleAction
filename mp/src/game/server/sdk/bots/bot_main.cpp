@@ -161,7 +161,11 @@ CBasePlayer *BotPutInServer( bool  bFrozen, const char *name )
 	ClientPutInServerOverride( &CBotManager::ClientPutInServerOverride_Bot );
 	if (!name)
 	{
-		name = g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)];
+		for (int i = 0; i < 5; ++i) {
+			name = g_aszBotNames[random->RandomInt(0, iNumBotNames - 1)];
+			if (!UTIL_PlayerByName(name))
+				break;
+		}
 	}
 	edict_t *pEdict = engine->CreateFakeClient(name);
 	ClientPutInServerOverride( NULL );
