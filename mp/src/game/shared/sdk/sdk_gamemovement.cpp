@@ -2863,29 +2863,31 @@ void CSDKGameMovement::FullWalkMove ()
 		pr2[2] += gpGlobals->frametime*a;
 
 		TraceBBox (pr1, pr2, mins, maxs, tr);
-		if (tr.fraction == 1 && !tr.startsolid && !tr.allsolid)
-		{
-			mv->SetAbsOrigin (tr.endpos);
-			if (m_pSDKPlayer->m_Shared.IsManteling())
-			{
-				// Try to push the player onto the ledge.
-				Vector vecOrigin = mv->GetAbsOrigin();
-				Vector vecTarget = vecOrigin + Vector(m_vecForward.x, m_vecForward.y, 0).Normalized();
-
-				TraceBBox(vecOrigin, vecTarget, mins, maxs, tr);
-
-				if (!tr.DidHit ())
-				{
-					mv->SetAbsOrigin (tr.endpos);
-					m_pSDKPlayer->m_Shared.ResetManteling();
-					m_pSDKPlayer->Instructor_LessonLearned("mantel");
-				}
-				else
-					SetGroundEntity(&tr);
-			}
-		}
-		else
+		if (tr.fraction != 1 || tr.startsolid || tr.allsolid) {
 			m_pSDKPlayer->m_Shared.ResetManteling();
+			return;
+		}
+
+		mv->SetAbsOrigin (tr.endpos);
+		if (m_pSDKPlayer->m_Shared.IsManteling())
+		{
+			// Try to push the player onto the ledge.
+			Vector vecOrigin = mv->GetAbsOrigin();
+			Vector vecTarget = vecOrigin + Vector(m_vecForward.x, m_vecForward.y, 0).Normalized();
+
+			TraceBBox(vecOrigin, vecTarget, mins, maxs, tr);
+
+			if (!tr.DidHit ())
+			{
+				mv->SetAbsOrigin (tr.endpos);
+				m_pSDKPlayer->m_Shared.ResetManteling();
+				m_pSDKPlayer->Instructor_LessonLearned("mantel");
+			}
+			else
+				SetGroundEntity(&tr);
+		}
+
+
 
 		return;
 	}
