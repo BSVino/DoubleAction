@@ -2869,8 +2869,6 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 
 		mv->SetAbsOrigin (tr.endpos);
-		if (!m_pSDKPlayer->m_Shared.IsManteling())
-			return;
 
 		// Try to push the player onto the ledge.
 		Vector vecOrigin = mv->GetAbsOrigin();
