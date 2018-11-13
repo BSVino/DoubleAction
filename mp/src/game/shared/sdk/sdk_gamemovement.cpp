@@ -115,8 +115,8 @@ public:
 
 	void    AccumulateWallFlipTime();
 
-	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm);
-	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask);
+	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, ShouldHitFunc_t pExtraShouldHitCheckFn = NULL);
+	inline void TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask, ShouldHitFunc_t pExtraShouldHitCheckFn = NULL);
 	virtual void FullWalkMove ();
 	virtual void StepMove (Vector &vecDestination, trace_t &trace);
 
@@ -2490,16 +2490,27 @@ Vector CSDKGameMovement::GetPlayerViewOffset( bool ducked ) const
 	return BaseClass::GetPlayerViewOffset(ducked);
 }
 
-inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask)
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, unsigned int mask, ShouldHitFunc_t pExtraShouldHitCheckFn)
 {
 	Ray_t ray;
 	ray.Init (start, end, mins, maxs);
-	UTIL_TraceRay(ray, mask, mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm);
+	UTIL_TraceRay(ray, mask, mv->m_nPlayerHandle.Get(), COLLISION_GROUP_PLAYER_MOVEMENT, &pm, pExtraShouldHitCheckFn);
 }
 
-inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm)
+inline void CSDKGameMovement::TraceBBox(const Vector& start, const Vector& end, const Vector &mins, const Vector &maxs, trace_t &pm, ShouldHitFunc_t pExtraShouldHitCheckFn)
 {
-	TraceBBox(start, end, mins, maxs, pm, PlayerSolidMask());
+	TraceBBox(start, end, mins, maxs, pm, PlayerSolidMask(), pExtraShouldHitCheckFn);
+}
+
+static bool ShouldHitFuncIgnoreBreakables(IHandleEntity *pHandleEntity, int contentsMask) {
+	CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+	if (!pEntity)
+		return true;
+
+	if (pEntity->GetHealth() == 0)
+		return true;
+
+	return false;
 }
 
 bool CSDKGameMovement::CheckMantel()
@@ -2537,7 +2548,7 @@ bool CSDKGameMovement::CheckMantel()
 	/*Then probe forward for free space*/
 	pr1 = pr2;
 	pr2 = pr1 + dir*4;
-	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
+	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr, &ShouldHitFuncIgnoreBreakables);
 	if (tr.fraction < 1)
 		/*Not enough space to stand on for potential ledge, or too far down wall*/
 		return false;
@@ -2545,7 +2556,7 @@ bool CSDKGameMovement::CheckMantel()
 	/*Find ground to stand on*/
 	pr1 = pr2;
 	pr2[2] -= da_acro_mantel_height.GetFloat ();
-	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
+	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr, &ShouldHitFuncIgnoreBreakables);
 	if (tr.fraction == 1)
 		return false;
 
@@ -2558,7 +2569,7 @@ bool CSDKGameMovement::CheckMantel()
 	/*Then check whether we have enough vertical space to stand on the ledge*/
 	pr1 = pr2 = tr.endpos;
 	pr2.z += 4;
-	TraceBBox(pr1, pr2, VEC_HULL_MIN, VEC_HULL_MAX, tr);
+	TraceBBox(pr1, pr2, VEC_HULL_MIN, VEC_HULL_MAX, tr, &ShouldHitFuncIgnoreBreakables);
 
 	if (tr.fraction < 1 || tr.allsolid || tr.startsolid)
 		/*Blocked by ceiling*/
@@ -2566,7 +2577,7 @@ bool CSDKGameMovement::CheckMantel()
 
 	pr1 = mv->GetAbsOrigin();
 	pr2 = pr1 + dir*4;
-	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr);
+	TraceBBox (pr1, pr2, vecMins, vecMaxs, tr, &ShouldHitFuncIgnoreBreakables);
 
 	// Only mantel with steep planes.
 	if (tr.plane.normal.z > 0.3)
