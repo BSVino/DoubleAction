@@ -453,6 +453,10 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if (pOwner->GetCurrentTime() < m_flNextBrawlTime)
 		return;
 
+#ifndef CLIENT_DLL
+	pOwner->NoteWeaponFired();
+#endif
+
 	bool bNeedsUnpause = false;
 	if (m_bInReload)
 	{

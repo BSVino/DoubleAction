@@ -112,12 +112,6 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 
 void CWeaponSDKMelee::PrimaryAttack()
 {
-	
-#ifndef CLIENT_DLL
-	CSDKPlayer *pPlayer = ToSDKPlayer( GetPlayerOwner() );
-	pPlayer->NoteWeaponFired();
-#endif
-
 	StartSwing( false );
 }
 

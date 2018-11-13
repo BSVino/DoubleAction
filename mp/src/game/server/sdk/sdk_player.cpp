@@ -3787,7 +3787,7 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 {
 	// No need to lag compensate at all if we're not attacking in this command and
 	// we haven't attacked recently.
-	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
+	if ( !( pCmd->buttons & (IN_ATTACK | IN_ATTACK2)) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
 		return false;
 
 	if (!pPlayer->IsAlive())
