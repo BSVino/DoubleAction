@@ -2847,7 +2847,21 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 	}
 #endif
-	if (CheckMantel())
+
+	// Check if we're manteling
+	bool canMantel = CheckMantel();
+
+	// Calculate planarized wall normal
+	Vector vecWallNormal = m_pSDKPlayer->m_Shared.GetMantelWallNormal();
+	vecWallNormal.z = 0;
+	VectorNormalize(vecWallNormal);
+
+	if (canMantel && vecWallNormal.Dot(Vector(m_vecForward.x, m_vecForward.y, 0).Normalized()) > -0.05) {
+		m_pSDKPlayer->m_Shared.ResetManteling();
+		canMantel = false;
+	}
+
+	if (canMantel)
 	{
 		/*Move up the height of the bbox over the time of the animation
 		TODO: How get animation duration? Make this use the crouch bbox.*/
@@ -2874,29 +2888,27 @@ void CSDKGameMovement::FullWalkMove ()
 		pr2[2] += gpGlobals->frametime*a;
 
 		TraceBBox (pr1, pr2, mins, maxs, tr);
-		if (tr.fraction == 1 && !tr.startsolid && !tr.allsolid)
+		if (tr.fraction != 1 || tr.startsolid || tr.allsolid) {
+			m_pSDKPlayer->m_Shared.ResetManteling();
+			return;
+		}
+
+		mv->SetAbsOrigin (tr.endpos);
+
+		// Try to push the player onto the ledge.
+		Vector vecOrigin = mv->GetAbsOrigin();
+		Vector vecTarget = vecOrigin - vecWallNormal;
+
+		TraceBBox(vecOrigin, vecTarget, mins, maxs, tr);
+
+		if (!tr.DidHit ())
 		{
 			mv->SetAbsOrigin (tr.endpos);
-			if (m_pSDKPlayer->m_Shared.IsManteling())
-			{
-				// Try to push the player onto the ledge.
-				Vector vecOrigin = mv->GetAbsOrigin();
-				Vector vecTarget = vecOrigin + Vector(m_vecForward.x, m_vecForward.y, 0).Normalized();
-
-				TraceBBox(vecOrigin, vecTarget, mins, maxs, tr);
-
-				if (!tr.DidHit ())
-				{
-					mv->SetAbsOrigin (tr.endpos);
-					m_pSDKPlayer->m_Shared.ResetManteling();
-					m_pSDKPlayer->Instructor_LessonLearned("mantel");
-				}
-				else
-					SetGroundEntity(&tr);
-			}
+			m_pSDKPlayer->m_Shared.ResetManteling();
+			m_pSDKPlayer->Instructor_LessonLearned("mantel");
 		}
 		else
-			m_pSDKPlayer->m_Shared.ResetManteling();
+			SetGroundEntity(&tr);
 
 		return;
 	}
