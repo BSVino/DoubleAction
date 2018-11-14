@@ -77,7 +77,7 @@ public:
 	void	PlayStartSlideSound();
 	void	PlayEndSlideSound();
 	void	StartSliding(bool bDiveSliding = false);
-	void	EndSlide();
+	void	EndSlide(bool abort = false);
 	void	StandUpFromSlide(bool bJumpUp = false);
 	float	GetSlideStartTime() const { return m_flSlideStartTime; };
 	float	GetSlideAutoEndTime() const { return m_flSlideAutoEndTime; };
