@@ -1164,6 +1164,10 @@ void CSDKPlayer::Spawn()
 	m_flNextSuicideTime = 0;
 	m_iRaceWaypoint = 0;
 
+	m_Shared.EndDive();
+	m_Shared.EndRoll();
+	m_Shared.EndSlide(true);
+
 	if (m_bGotWorthIt)
 	{
 		m_flTotalStyle += da_stylemeteractivationcost.GetFloat() - m_flStylePoints;
