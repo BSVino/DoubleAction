@@ -12,6 +12,7 @@
 #include "ammodef.h"
 #include "weapon_akimbobase.h"
 #include "datacache/imdlcache.h"
+#include "hintmessage.h"
 
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"
@@ -1587,8 +1588,10 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	if (da_drop_overflow_on_pickup.GetBool() && iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
 		pPlayer->DropWeaponsToPickUp(this);
 
-	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
+	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT) {
+		CHintMessage("Inventory full", NULL, 6.0f).Send(pPlayer);
 		return;
+	}
 
 	// ----------------------------------------
 	// If I already have it just take the ammo
