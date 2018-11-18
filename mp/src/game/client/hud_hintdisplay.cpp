@@ -105,7 +105,7 @@ void CHudHintDisplay::ApplySchemeSettings( vgui::IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	SetFgColor( GetSchemeColor("HintMessageFg", pScheme) );
-	m_hFont = pScheme->GetFont( "HudHintText", true );
+	m_hFont = pScheme->GetFont( "HudHintTextLarge", true );
 	m_pLabel->SetBgColor( GetSchemeColor("HintMessageBg", pScheme) );
 	m_pLabel->SetPaintBackgroundType( 2 );
 	m_pLabel->SetSize( 0, GetTall() );		// Start tiny, it'll grow.
