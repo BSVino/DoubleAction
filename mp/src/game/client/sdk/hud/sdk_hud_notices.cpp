@@ -298,13 +298,18 @@ void CHudNotices::ShowTopNotice()
 
 	pszObjectiveGoal = g_pVGuiLocalize->Find(VarArgs("#DA_MiniObjective_%s", NoticeToString(m_eTopNotice)));
 
-	if (m_eTopNotice == NOTICE_BOUNTY_ON_PLAYER || m_eTopNotice == NOTICE_BOUNTY_PROTECT_PLAYER || m_eTopNotice == NOTICE_BOUNTY_COLLECTED ||
-		m_eTopNotice == NOTICE_PLAYER_HAS_BRIEFCASE || m_eTopNotice == NOTICE_PLAYER_CAPTURED_BRIEFCASE ||
-		m_eTopNotice == NOTICE_RATRACE_PLAYER_LEAD || m_eTopNotice == NOTICE_RATRACE_OVER ||
-		m_eTopNotice == NOTICE_RATRACE_PLAYER_POINT_2)
-	{
-		g_pVGuiLocalize->ConstructString( sNoticeString, sizeof(sNoticeString), pszObjectiveGoal, 1, m_wszPlayerSubject );
-		pszObjectiveGoal = sNoticeString;
+	switch (m_eTopNotice) {
+		case NOTICE_BOUNTY_ON_PLAYER:
+		case NOTICE_BOUNTY_PROTECT_PLAYER:
+		case NOTICE_BOUNTY_COLLECTED:
+		case NOTICE_PLAYER_HAS_BRIEFCASE:
+		case NOTICE_PLAYER_CAPTURED_BRIEFCASE:
+		case NOTICE_RATRACE_PLAYER_LEAD:
+		case NOTICE_RATRACE_OVER:
+		case NOTICE_RATRACE_PLAYER_POINT_2:
+			g_pVGuiLocalize->ConstructString(sNoticeString, sizeof(sNoticeString), pszObjectiveGoal, 1, m_wszPlayerSubject);
+			pszObjectiveGoal = sNoticeString;
+			break;
 	}
 
 	if (!pszObjectiveGoal)
