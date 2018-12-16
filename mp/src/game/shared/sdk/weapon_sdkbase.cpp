@@ -141,6 +141,7 @@ CWeaponSDKBase::CWeaponSDKBase()
 	m_flSwingTime = 0;
 	m_flNextBrawlTime = 0;
 	m_flUnpauseFromSwingTime = 0;
+	m_bAltFiresUnderwater = true;
 
 #ifdef CLIENT_DLL
 	m_flArrowGoalSize = 0;
