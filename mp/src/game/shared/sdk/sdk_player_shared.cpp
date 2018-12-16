@@ -819,10 +819,10 @@ void CSDKPlayerShared::StartSliding(bool bDiveSliding)
 	m_flLastUnSlideTime = 0;
 }
 
-void CSDKPlayerShared::EndSlide()
+void CSDKPlayerShared::EndSlide(bool abort)
 {
 	// If it was long enough to notice what it was, then train the slide.
-	if (m_pOuter->GetCurrentTime() - m_flSlideStartTime > 1)
+	if (!abort && m_pOuter->GetCurrentTime() - m_flSlideStartTime > 1)
 	{
 		if (m_bDiveSliding)
 			m_pOuter->Instructor_LessonLearned("slideafterdive");
