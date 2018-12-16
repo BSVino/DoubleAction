@@ -1540,7 +1540,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				Vector vecFacing;
 				AngleVectors(EyeAngles(), &vecFacing);
 
-				float flDamageMultiplier = RemapValClamped((GetAbsOrigin() - pGrenade->GetAbsOrigin()).Normalized().Dot(vecFacing), -0.7, 0.7, 1.0, 0.5);
+				float flDamageMultiplier = RemapValClamped((GetAbsOrigin() - pInflictor->GetAbsOrigin()).Normalized().Dot(vecFacing), -0.7, 0.7, 1.0, 0.5);
 				flDamage *= flDamageMultiplier;
 
 				// award style points
