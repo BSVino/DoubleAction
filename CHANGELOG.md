@@ -1,5 +1,42 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.0.0...HEAD)
+
+**Implemented enhancements:**
+
+- Allow climbing through windows and other breakables [\#141](https://github.com/BSVino/DoubleAction/pull/141) ([TomyLobo](https://github.com/TomyLobo))
+- Improve bot behaviour when bot\_attack and bot\_freeze are active [\#138](https://github.com/BSVino/DoubleAction/pull/138) ([TomyLobo](https://github.com/TomyLobo))
+- Add da\_version command [\#129](https://github.com/BSVino/DoubleAction/pull/129) ([TomyLobo](https://github.com/TomyLobo))
+- Add Korean translation by 스팀유저 [\#119](https://github.com/BSVino/DoubleAction/pull/119) ([TomyLobo](https://github.com/TomyLobo))
+
+**Fixed bugs:**
+
+- Climbing back out of superfall causes glitches [\#124](https://github.com/BSVino/DoubleAction/issues/124)
+- Map ends before the last vote concludes [\#121](https://github.com/BSVino/DoubleAction/issues/121)
+- Fast Weapon Switch doesn't work as intended when using slot hotkeys [\#113](https://github.com/BSVino/DoubleAction/issues/113)
+- Server crash when rconning certain player-only commands [\#92](https://github.com/BSVino/DoubleAction/issues/92)
+- Allow pistolwhipping underwater [\#146](https://github.com/BSVino/DoubleAction/pull/146) ([TomyLobo](https://github.com/TomyLobo))
+- Reset all kinds of stunts on spawn [\#145](https://github.com/BSVino/DoubleAction/pull/145) ([TomyLobo](https://github.com/TomyLobo))
+- Fix another infinite climb bug [\#144](https://github.com/BSVino/DoubleAction/pull/144) ([TomyLobo](https://github.com/TomyLobo))
+- Try not to assign occupied names to bots [\#143](https://github.com/BSVino/DoubleAction/pull/143) ([TomyLobo](https://github.com/TomyLobo))
+- Lag-compensate all melee [\#142](https://github.com/BSVino/DoubleAction/pull/142) ([TomyLobo](https://github.com/TomyLobo))
+- Make spectate also reduce slowmo by the usual 2 seconds [\#136](https://github.com/BSVino/DoubleAction/pull/136) ([TomyLobo](https://github.com/TomyLobo))
+- Spectators are no longer frozen when using the buy menu [\#135](https://github.com/BSVino/DoubleAction/pull/135) ([TomyLobo](https://github.com/TomyLobo))
+- Fix infinite climb [\#133](https://github.com/BSVino/DoubleAction/pull/133) ([TomyLobo](https://github.com/TomyLobo))
+- Prevent the player from closing the scoreboard while they're frozen [\#131](https://github.com/BSVino/DoubleAction/pull/131) ([TomyLobo](https://github.com/TomyLobo))
+- Ignore props when looking for the floor below waypoints [\#127](https://github.com/BSVino/DoubleAction/pull/127) ([TomyLobo](https://github.com/TomyLobo))
+- Fix RCON crashes [\#126](https://github.com/BSVino/DoubleAction/pull/126) ([TomyLobo](https://github.com/TomyLobo))
+- Deactivate superfall when landing on solid ground [\#125](https://github.com/BSVino/DoubleAction/pull/125) ([TomyLobo](https://github.com/TomyLobo))
+- No longer require an additional click in hud\_fastswitch mode [\#123](https://github.com/BSVino/DoubleAction/pull/123) ([TomyLobo](https://github.com/TomyLobo))
+- Delay map change until the current vote concludes [\#122](https://github.com/BSVino/DoubleAction/pull/122) ([TomyLobo](https://github.com/TomyLobo))
+- Make primary 3rd person crosshair aim at everything a weapon can hit, except windows and grates [\#81](https://github.com/BSVino/DoubleAction/pull/81) ([TomyLobo](https://github.com/TomyLobo))
+
+**Merged pull requests:**
+
+- Fix a crash occurring when a prop explodes [\#147](https://github.com/BSVino/DoubleAction/pull/147) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.3.0.0](https://github.com/BSVino/DoubleAction/tree/v1.3.0.0) (2018-04-08)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.2.2...v1.3.0.0)
 
