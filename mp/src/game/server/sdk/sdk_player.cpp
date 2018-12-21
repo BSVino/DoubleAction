@@ -3996,6 +3996,11 @@ bool CSDKPlayer::UseStylePoints (void)
 	return false;
 }
 
+void CSDKPlayer::FillMeter()
+{
+	m_flStyleSkillCharge = da_stylemetertotalcharge.GetFloat();
+}
+
 void CSDKPlayer::ActivateMeter()
 {
 	if (!UseStylePoints())
@@ -4006,7 +4011,7 @@ void CSDKPlayer::ActivateMeter()
 
 	m_flStylePoints = 0;
 
-	m_flStyleSkillCharge = da_stylemetertotalcharge.GetFloat();
+	FillMeter();
 
 	m_iStyleKillStreak = 0;
 
