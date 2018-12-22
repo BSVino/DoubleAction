@@ -2324,6 +2324,8 @@ void CSDKGameRules::GiveMiniObjectiveRewardPlayer(CSDKPlayer* pPlayer)
 	if (!pPlayer->IsStyleSkillActive())
 		pPlayer->ActivateMeter();
 
+	pPlayer->FillMeter();
+
 	if ( pPlayer->Weapon_OwnsThisType("weapon_grenade") )
 		pPlayer->CBasePlayer::GiveAmmo(1, "grenades");
 	else

@@ -317,6 +317,7 @@ public:
 	static int GetStyleStars(float flPoints);
 	int GetStyleStars();
 
+	void FillMeter();
 	void ActivateMeter();
 
 	bool SetCharacter(const char* pszCharacter);
