@@ -294,6 +294,8 @@ public:
 
 	bool UseVRHUD() const;
 
+	void UpdateRichPresence();
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )

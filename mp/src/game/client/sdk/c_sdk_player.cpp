@@ -38,6 +38,7 @@
 #include "materialsystem/imaterial.h"
 #include "materialsystem/imaterialvar.h"
 #include "functionproxy.h"
+#include "clientsteamcontext.h"
 
 #include "da_buymenu.h"
 #include "sdk_teammenu.h"
@@ -2294,6 +2295,47 @@ ConVar da_vr_hud( "da_vr_hud", "0", FCVAR_DEVELOPMENTONLY );
 bool C_SDKPlayer::UseVRHUD() const
 {
 	return UseVR() || da_vr_hud.GetBool();
+}
+
+void C_SDKPlayer::UpdateRichPresence()
+{
+	Msg("Updating Rich Presence...\n");
+
+	steamapicontext->SteamFriends()->SetRichPresence("steam_display", "#Status");
+	steamapicontext->SteamFriends()->SetRichPresence("superfalling", m_Shared.IsSuperFalling() ? "true" : "false");
+	steamapicontext->SteamFriends()->SetRichPresence("mapname", SDKGameRules()->MapName());
+	steamapicontext->SteamFriends()->SetRichPresence("superskill", m_Shared.m_bSuperSkill ? "true" : "false");
+	steamapicontext->SteamFriends()->SetRichPresence("skill", SkillIDToAlias((SkillID)m_Shared.m_iStyleSkill.Get()));
+
+	const char * miniobjective;
+	switch (SDKGameRules()->GetCurrentMiniObjective())
+	{
+	case MINIOBJECTIVE_BRIEFCASE:
+		miniobjective = HasBriefcase() ? "Briefcase_Carrying" : "Briefcase_Hunting";
+		break;
+
+	case MINIOBJECTIVE_BOUNTY:
+		miniobjective = SDKGameRules()->GetBountyPlayer() == this ? "Bounty_Hunted" : "Bounty_Hunting";
+		break;
+
+	case MINIOBJECTIVE_RATRACE:
+		if (SDKGameRules()->GetLeader() == this)
+		{
+			miniobjective = "RatRace_Leading";
+		}
+		else
+		{
+			miniobjective = "RatRace_Racing";
+		}
+
+		break;
+
+	default:
+		miniobjective = "None";
+		break;
+	}
+
+	steamapicontext->SteamFriends()->SetRichPresence("miniobjective", miniobjective);
 }
 
 class CSlowIntensityProxy : public CResultProxy
