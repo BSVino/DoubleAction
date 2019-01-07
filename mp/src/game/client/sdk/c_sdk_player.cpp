@@ -57,6 +57,19 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
 	#undef CSDKPlayer
 #endif
 
+static void RecvCallback_UpdateRichPresence(const CRecvProxyData *pData) {
+	if (!pData)
+		return;
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
+	if (pData->m_ObjectID != pPlayer->entindex())
+		return;
+
+	pPlayer->UpdateRichPresence();
+}
 
 
 
@@ -155,9 +168,9 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bAimedIn ) ),
 	RecvPropFloat( RECVINFO( m_flAimIn ) ),
 	RecvPropFloat( RECVINFO( m_flSlowAimIn ) ),
-	RecvPropInt( RECVINFO( m_iStyleSkill ) ),
+	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RECVCALLBACKPROXY(RecvProxy_Int32ToInt8, RecvCallback_UpdateRichPresence) ),
 	RecvPropInt( RECVINFO( m_iStyleSkillAfterRespawn ), 0, RecvProxy_Skill ),
-	RecvPropBool( RECVINFO( m_bSuperSkill ) ),
+	RecvPropBool( RECVINFO( m_bSuperSkill ), RECVCALLBACKPROXY(RecvProxy_Int32ToInt32, RecvCallback_UpdateRichPresence) ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 
 	RecvPropInt (RECVINFO (m_iWallFlipCount)),
@@ -165,8 +178,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropFloat (RECVINFO (m_flWallFlipEndTime)),
 	RecvPropBool (RECVINFO (m_bIsManteling)),
 	RecvPropVector (RECVINFO (m_vecMantelWallNormal)),
-
-	RecvPropBool( RECVINFO( m_bSuperFalling ) ),
+	RecvPropBool( RECVINFO( m_bSuperFalling ), RECVCALLBACKPROXY(RecvProxy_Int32ToInt8, RecvCallback_UpdateRichPresence) ),
 	RecvPropBool( RECVINFO( m_bSuperFallOthersVisible ) ),
 	RecvPropTime( RECVINFO( m_flSuperFallOthersNextCheck ) ),
 END_RECV_TABLE()
@@ -241,7 +253,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropString( RECVINFO( m_iszCharacter ), 0, RecvProxy_Character ),
 
-	RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
+	RecvPropEHandle( RECVINFO( m_hBriefcase ), RECVCALLBACKPROXY(RecvProxy_IntToEHandle, RecvCallback_UpdateRichPresence) ),
 	RecvPropInt( RECVINFO( m_iRaceWaypoint ) ),
 
 	RecvPropBool( RECVINFO( m_bCoderHacks ) ),
@@ -947,6 +959,8 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 #else
 #error !
 #endif
+
+	UpdateRichPresence();
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

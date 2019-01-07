@@ -75,21 +75,34 @@ END_DATADESC();
 #endif
 
 
+#if defined ( CLIENT_DLL )
+static void RecvCallback_UpdateRichPresence(const CRecvProxyData *pData) {
+	if (!pData)
+		return;
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer)
+		return;
+
+	pPlayer->UpdateRichPresence();
+}
+#endif
+
 REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
-		RecvPropInt( RECVINFO( m_eCurrentMiniObjective ) ),
+		RecvPropInt( RECVINFO( m_eCurrentMiniObjective ), 0, RECVCALLBACKPROXY(RecvProxy_Int32ToInt32, RecvCallback_UpdateRichPresence) ),
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
 		RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 		RecvPropEHandle( RECVINFO( m_hBriefcase ) ),
 		RecvPropEHandle( RECVINFO( m_hCaptureZone ) ),
-		RecvPropEHandle( RECVINFO( m_hBountyPlayer ) ),
+		RecvPropEHandle( RECVINFO( m_hBountyPlayer ), RECVCALLBACKPROXY(RecvProxy_IntToEHandle, RecvCallback_UpdateRichPresence) ),
 		RecvPropVector( RECVINFO( m_vecLowestSpawnPoint ) ),
-		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint1RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint1RaceLeaders[0]))),
-		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint2RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint2RaceLeaders[0]))),
+		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint1RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint1RaceLeaders[0]), RECVCALLBACKPROXY(RecvProxy_IntToEHandle, RecvCallback_UpdateRichPresence))),
+		RecvPropArray3( RECVINFO_ARRAY(m_ahWaypoint2RaceLeaders), RecvPropEHandle( RECVINFO(m_ahWaypoint2RaceLeaders[0]), RECVCALLBACKPROXY(RecvProxy_IntToEHandle, RecvCallback_UpdateRichPresence))),
 		RecvPropEHandle( RECVINFO( m_hRaceWaypoint1 ) ),
 		RecvPropEHandle( RECVINFO( m_hRaceWaypoint2 ) ),
 		RecvPropEHandle( RECVINFO( m_hRaceWaypoint3 ) ),
