@@ -2512,8 +2512,10 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 		if (!pPlayer->IsAlive())
 			continue;
 
+#ifndef _DEBUG
 		if (pPlayer->m_iDeaths + pPlayer->m_iKills < 5)
 			continue;
+#endif
 
 		if (pPlayer->m_Shared.m_bSuperFalling)
 			continue;
