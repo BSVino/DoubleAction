@@ -107,10 +107,11 @@ RecvProp RecvPropEHandle(
 RecvProp RecvPropBool(
 	const char *pVarName, 
 	int offset, 
-	int sizeofVar )
+	int sizeofVar,
+	RecvVarProxyFn proxyFn )
 {
 	Assert( sizeofVar == sizeof( bool ) );
-	return RecvPropInt( pVarName, offset, sizeofVar );
+	return RecvPropInt( pVarName, offset, sizeofVar, 0, proxyFn );
 }
 
 
