@@ -27,6 +27,7 @@ public:
 	virtual			~ClientModeSDKNormal();
 
 	virtual void	InitViewport();
+	virtual void	LevelShutdown();
 
 	virtual float	GetViewModelFOV( void );
 
