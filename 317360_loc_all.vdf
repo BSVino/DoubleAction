@@ -1,0 +1,25 @@
+"lang" {
+    "english" {
+        "tokens" {
+            "#Status"                                   "{#Verb} on %mapname%"
+            "#Verb"                                     "{#Verb_SuperFall_%superfalling%}"
+              "#Verb_SuperFall_true"                    "Falling"
+              "#Verb_SuperFall_false"                   "{#Verb_Objective_%miniobjective%}"
+                "#Verb_Objective_Briefcase_Carrying"    "Carrying"
+                "#Verb_Objective_Briefcase_Hunting"     "Acquiring"
+                "#Verb_Objective_Bounty_Hunted"         "Wanted"
+                "#Verb_Objective_Bounty_Hunting"        "Hunting"
+                "#Verb_Objective_RatRace_Leading"       "Leading"
+                "#Verb_Objective_RatRace_Racing"        "Racing"
+                "#Verb_Objective_None"                  "{#Verb_SuperSkill_%superskill%}"
+                  "#Verb_SuperSkill_true"               "Styling"
+                  "#Verb_SuperSkill_false"              "{#Verb_Skill_%skill%}"
+                    "#Verb_Skill_bouncer"               "Brawling"
+                    "#Verb_Skill_athletic"              "Stunting"
+                    "#Verb_Skill_reflexes"              "Slowing time"
+                    "#Verb_Skill_marksman"              "Camping"
+                    "#Verb_Skill_troll"                 "Exploding"
+                    "#Verb_Skill_none"                  "Playing"
+        }
+    }
+}
