@@ -1929,6 +1929,61 @@ void CSDKPlayer::SetKilledByString( string_t sKilledBy )
 	m_szKillerString = sKilledBy;
 }
 
+/*
+
+// this is old achievement code donated by Sith_Lord that I'm going to leave here because I'm paranoid and I don't like deleting anything -stormy
+void TestStatIncrement(const CCommand &args)
+{
+	// Make sure the command was given a stat name.
+	if (args.ArgC() < 2)
+	{
+		DevMsg("You failed to supply a stat name.\n");
+		return;
+	}
+
+	// Try to get the current value of the stat.
+	int iCurrentStatValue;
+	if (!steamapicontext->SteamUserStats()->GetStat(args[1], &iCurrentStatValue))
+		DevMsg("Failed to get the current value for stat \"\"\n", args[1]);
+
+	// Try to set the stat to an incremented value.
+	if (!steamapicontext->SteamUserStats()->SetStat(args[1], iCurrentStatValue + 1))
+		DevMsg("Failed to set a new value for the stat \"\"\n", args[1]);
+
+	// Try to upload all of the player's stats to the Steam servers.
+	if (!steamapicontext->SteamUserStats()->StoreStats())
+		DevMsg("Failed to upload the stats to the Steam servers.\n");
+	else
+		DevMsg("Upload of stats to the Steam servers has begun, and will probably work.  You'd need to register a callback to be notified of actual results, but who cares? Stats get updated a lot.\n");
+}
+ConCommand teststatincrement("test_stat_increment", TestStatIncrement, "Usage: Pass it the NAME of the stat you want to increment.");
+
+void TestStats(const CCommand &args)
+{
+	//DevMsg("It works bra\n");
+
+	// Create a new variable to hold our current DEATHS in
+	int data;
+
+	// Make the SYNCHRONOUS call to the API to get our current value.
+	steamapicontext->SteamUserStats()->GetStat("DIVE_PUNCHES", &data);
+
+	//if (data < 1){
+	//	steamapicontext->SetAchievement("DIVE_PUNCHES_1");
+	//}
+	// Make the SYNCHRONOUS call to the API to tell it our new value.  (It doesn't get uploaded yet.)
+	steamapicontext->SteamUserStats()->SetStat("DIVE_PUNCHES", data + 1);
+
+	// Sometime later, we should save all our stats.  This uploads them to the server.
+	steamapicontext->SteamUserStats()->StoreStats();
+	//steamapicontext->SteamUserStats()->ResetStats();
+
+
+	
+}
+ConCommand teststats("teststats", TestStats, "Usage: None. Really.");
+*/
+
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
