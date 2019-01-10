@@ -2627,7 +2627,7 @@ void CSDKGameMovement::FullWalkMove ()
 		StartGravity();
 	}
 
-	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND)
+	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND) // what does the single & symbol do here? -stormy
 		m_pSDKPlayer->m_Shared.PlayerOnGround();
 
 #if 0
@@ -2688,7 +2688,7 @@ void CSDKGameMovement::FullWalkMove ()
 
 	UpdateDuckJumpEyeOffset();
 
-	Duck();
+	Duck(); // why? -stormy
 
 	if (m_pSDKPlayer->m_Shared.CanChangePosition ())
 	{
@@ -2746,7 +2746,7 @@ void CSDKGameMovement::FullWalkMove ()
 					SetGroundEntity(NULL);
 					FinishGravity();
 
-					CPASFilter filter(org);
+					CPASFilter filter(org); // what the hell does this mean? -stormy
 					filter.UsePredictionRules();
 					m_pSDKPlayer->EmitSound(filter, m_pSDKPlayer->entindex(), "Player.GoDive");
 
@@ -2778,7 +2778,7 @@ void CSDKGameMovement::FullWalkMove ()
 		}
 	}
 
-#if 0
+#if 0 // I assume this means that this code will never run? -stormy
 	if (checkrun ())
 	{/*Wallrunning*/
 		trace_t tr;
@@ -2991,7 +2991,7 @@ void CSDKGameMovement::FullWalkMove ()
 	/*The great door hack*/
 	{
 		trace_t tr;
-		float dt, slop;
+		float dt, slop; // what is "dt" -stormy
 		int msec, loss;
 		
 		UTIL_GetPlayerConnectionInfo (ENTINDEX (player), msec, loss);

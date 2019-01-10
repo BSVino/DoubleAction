@@ -2141,7 +2141,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				eAnnouncement = ANNOUNCEMENT_COOL;
 
 		if (pVictim->m_Shared.IsDiving() || pVictim->m_Shared.IsRolling() || pVictim->m_Shared.IsSliding())
-			// Damaging a stunting dude gives me slightly more bar than usual.
+			// Damaging a stunting dude gives me slightly more bar than usual. Is that innuendo?
 			AddStylePoints(flPoints*0.3f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
 		else
 			AddStylePoints(flPoints*0.2f, STYLE_SOUND_NONE, eAnnouncement, STYLE_POINT_LARGE);
@@ -4501,6 +4501,8 @@ float CSDKPlayer::GetDKRatio(float flMin, float flMax, bool bDampen) const
 
 void CC_ActivateSlowmo_f (void)
 {
+	// this typecast is getting called in a bunch of different functions here
+	// is it resource-draining? Should we consolidate these calls for performance? -stormy
 	CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_GetCommandClient() ); 
 	if ( !pPlayer )
 		return;
