@@ -2703,7 +2703,9 @@ void CSDKGameMovement::FullWalkMove ()
 
 			if (!player->m_Local.m_bDucked && !m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.GetWallFlipCount() < iWallflips
 				// Don't flip if the player is sliding or getting up from sliding.
-				&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide())
+				// I think you should be able to flip if you are stunting - it's frustrating to slide into a wall while being fired upon and having to wait until the stunt is finished before you can maneuvre out of it. but be wary of stuckbugs -stormy
+				// how do we check if the player is flipping off another player? -stormy
+				/*&& !m_pSDKPlayer->m_Shared.IsSliding() && !m_pSDKPlayer->m_Shared.IsGettingUpFromProne() && !m_pSDKPlayer->m_Shared.IsGettingUpFromSlide() -stormy*/)
 			{
 				trace_t tr;
 				Vector org, mins, maxs;
