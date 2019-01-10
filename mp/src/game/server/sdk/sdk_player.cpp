@@ -1526,7 +1526,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					flDamage *= 0.7f;//(1 - m_Shared.ModifySkillValue( 0.2f, 1.0f, SKILL_ATHLETIC ));
 
 					// since we're being cool anyway give us a little push
-					Vector vecPush = ( info.GetDamageForce() / 150.0f );
+					Vector vecPush = ( info.GetDamageForce() / 125.0f );
 					SetBaseVelocity( vecPush );
 
 					// award style points
