@@ -239,6 +239,7 @@ private:
 
 public:
 	void StartMiniObjective(const char* pszObjective = NULL);
+	miniobjective_t GetCurrentMiniObjective() { return m_eCurrentMiniObjective; }
 	notice_t GetNoticeForMiniObjective(miniobjective_t eObjective);
 	void MaintainMiniObjective();
 	void CleanupMiniObjective();

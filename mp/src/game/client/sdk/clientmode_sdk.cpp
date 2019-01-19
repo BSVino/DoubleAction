@@ -42,6 +42,7 @@
 #include "da_credits.h"
 #include "hud_macros.h"
 #include "sourcevr/isourcevirtualreality.h"
+#include "clientsteamcontext.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -160,6 +161,13 @@ void ClientModeSDKNormal::InitViewport()
 
 	m_pViewport = new SDKViewport();
 	m_pViewport->Start( gameuifuncs, gameeventmanager );
+}
+
+void ClientModeSDKNormal::LevelShutdown()
+{
+	BaseClass::LevelShutdown();
+
+	steamapicontext->SteamFriends()->ClearRichPresence();
 }
 
 ClientModeSDKNormal g_ClientModeNormal;
