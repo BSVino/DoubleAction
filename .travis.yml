@@ -19,7 +19,7 @@ matrix:
 
 branches:
   only:
-    - travis
+    - develop
 
 script:
   - pushd mp/src
@@ -51,7 +51,7 @@ deploy:
   prerelease: true
   on:
     repo: BSVino/DoubleAction
-    branch: travis
+    branch: develop
     #tags: true
 
 notifications:
