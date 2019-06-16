@@ -1253,7 +1253,7 @@ $Project
 		$Lib		vtf
 		$ImpLib		steam_api
 		
-		$Lib $LIBCOMMON/libcrypto [$POSIX]
+		$Lib $LIBCOMMON/libcrypto [$LINUXALL]
 
 		$ImpLib	"$LIBCOMMON\curl"	  [$OSXALL]
 

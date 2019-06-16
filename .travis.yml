@@ -1,0 +1,62 @@
+# Build Configuration for Travis
+# https://travis-ci.org
+
+# Adjusted from https://raw.githubusercontent.com/KhronosGroup/Vulkan-Samples/690fc0abf18d092bc21dbbad5b62f74612574771/.travis.yml
+# With openssl install code adjusted from https://github.com/aspnet/Security/raw/238f461488746608108d2358a2a3ad3a1117ee9f/.travis.yml
+
+language:
+  - cpp
+
+matrix:
+  # Show final status immediately if a test fails.
+  fast_finish: true
+  include:
+    # Mac OS X Clang release build.
+    - os: osx
+      compiler: clang
+      sudo: required
+      env: KSB_TARGET=OSX KSB_TYPE=Release
+
+branches:
+  only:
+    - develop
+
+script:
+  - pushd mp/src
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then rm -rf thirdparty/curl-7.31.0; fi
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then ./creategameprojects; fi
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then xcodebuild -list -project DoubleAction.xcodeproj; fi
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then set -o pipefail && xcodebuild -scheme All -configuration Release 2>&1 | tee xcodebuild.log | sed -E '/mp\/src\/.*(warning|note):/ { N;N; /\^[ ~]*\r*$/ d; }' | sed -E '/In file included from|mp\/src\/.*(warning|note):/ d; /([-a-zA-Z0-9_]+\.o).*$/ { s//§\1/; s/.*§//; }'; fi
+  #- if [[ "$KSB_TARGET" == "OSX"      ]]; then set -o pipefail && xcodebuild -scheme All -configuration Release 2>&1 | grep -Eo --line-buffered '[-a-zA-Z0-9_]+\.o'; fi
+  #- if [[ "$KSB_TARGET" == "OSX"      ]]; then set -o pipefail && xcodebuild -target All -xcconfig <your_configuration_file>.xcconfig | xcpretty; fi
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then find .. -name '*.dylib'; fi
+  - if [[ "$KSB_TARGET" == "OSX"      ]]; then tail -n 100 xcodebuild.log; fi
+  - popd
+
+before_deploy:
+  # Set up git user name and tag this commit
+  - git config --local user.name "Travis build"
+  - git config --local user.email "tomylobo@nurfuerspam.de"
+  - git tag "$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: IDCGw85l+HwNpqSQYg+2R9e9zeTxjnF52nBiiHCliGd7O499bJIY+o5cAcYvzj6w0jY+L63i+rQfo/w+FdPwOEOLpGcdoAs1I7bKPXx3o6HakxYYVD1MIhtOJH6o5MdQO+8DrFHRCWU0ysApIu0cqk6PVgvbIuth2+IT6SyrYu4=
+  file_glob: true
+  file: mp/game/dab/bin/*.dylib
+  skip_cleanup: true
+  # This makes travis tag the current commit, instead of the current commit on the default branch
+  target_commitish: $TRAVIS_COMMIT
+  prerelease: true
+  on:
+    repo: BSVino/DoubleAction
+    branch: develop
+    #tags: true
+
+notifications:
+  email:
+    recipients:
+      - tomylobo@nurfuerspam.de
+    on_success: change
+    on_failure: always
