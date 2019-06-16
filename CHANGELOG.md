@@ -13,10 +13,6 @@
 
 **Fixed bugs:**
 
-- Climbing back out of superfall causes glitches [\#124](https://github.com/BSVino/DoubleAction/issues/124)
-- Map ends before the last vote concludes [\#121](https://github.com/BSVino/DoubleAction/issues/121)
-- Fast Weapon Switch doesn't work as intended when using slot hotkeys [\#113](https://github.com/BSVino/DoubleAction/issues/113)
-- Server crash when rconning certain player-only commands [\#92](https://github.com/BSVino/DoubleAction/issues/92)
 - Always fill the style meter after a race [\#148](https://github.com/BSVino/DoubleAction/pull/148) ([TomyLobo](https://github.com/TomyLobo))
 - Fix a crash occurring when a prop explodes [\#147](https://github.com/BSVino/DoubleAction/pull/147) ([TomyLobo](https://github.com/TomyLobo))
 - Allow pistolwhipping underwater [\#146](https://github.com/BSVino/DoubleAction/pull/146) ([TomyLobo](https://github.com/TomyLobo))
