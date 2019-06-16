@@ -6,6 +6,7 @@
 
 **Implemented enhancements:**
 
+- Set Steam rich presence [\#149](https://github.com/BSVino/DoubleAction/pull/149) ([TomyLobo](https://github.com/TomyLobo))
 - Allow climbing through windows and other breakables [\#141](https://github.com/BSVino/DoubleAction/pull/141) ([TomyLobo](https://github.com/TomyLobo))
 - Improve bot behaviour when bot\_attack and bot\_freeze are active [\#138](https://github.com/BSVino/DoubleAction/pull/138) ([TomyLobo](https://github.com/TomyLobo))
 - Add da\_version command [\#129](https://github.com/BSVino/DoubleAction/pull/129) ([TomyLobo](https://github.com/TomyLobo))
@@ -17,6 +18,7 @@
 - Map ends before the last vote concludes [\#121](https://github.com/BSVino/DoubleAction/issues/121)
 - Fast Weapon Switch doesn't work as intended when using slot hotkeys [\#113](https://github.com/BSVino/DoubleAction/issues/113)
 - Server crash when rconning certain player-only commands [\#92](https://github.com/BSVino/DoubleAction/issues/92)
+- Always fill the style meter after a race [\#148](https://github.com/BSVino/DoubleAction/pull/148) ([TomyLobo](https://github.com/TomyLobo))
 - Allow pistolwhipping underwater [\#146](https://github.com/BSVino/DoubleAction/pull/146) ([TomyLobo](https://github.com/TomyLobo))
 - Reset all kinds of stunts on spawn [\#145](https://github.com/BSVino/DoubleAction/pull/145) ([TomyLobo](https://github.com/TomyLobo))
 - Fix another infinite climb bug [\#144](https://github.com/BSVino/DoubleAction/pull/144) ([TomyLobo](https://github.com/TomyLobo))
