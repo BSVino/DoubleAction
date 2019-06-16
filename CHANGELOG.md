@@ -19,6 +19,7 @@
 - Fast Weapon Switch doesn't work as intended when using slot hotkeys [\#113](https://github.com/BSVino/DoubleAction/issues/113)
 - Server crash when rconning certain player-only commands [\#92](https://github.com/BSVino/DoubleAction/issues/92)
 - Always fill the style meter after a race [\#148](https://github.com/BSVino/DoubleAction/pull/148) ([TomyLobo](https://github.com/TomyLobo))
+- Fix a crash occurring when a prop explodes [\#147](https://github.com/BSVino/DoubleAction/pull/147) ([TomyLobo](https://github.com/TomyLobo))
 - Allow pistolwhipping underwater [\#146](https://github.com/BSVino/DoubleAction/pull/146) ([TomyLobo](https://github.com/TomyLobo))
 - Reset all kinds of stunts on spawn [\#145](https://github.com/BSVino/DoubleAction/pull/145) ([TomyLobo](https://github.com/TomyLobo))
 - Fix another infinite climb bug [\#144](https://github.com/BSVino/DoubleAction/pull/144) ([TomyLobo](https://github.com/TomyLobo))
@@ -34,10 +35,6 @@
 - No longer require an additional click in hud\_fastswitch mode [\#123](https://github.com/BSVino/DoubleAction/pull/123) ([TomyLobo](https://github.com/TomyLobo))
 - Delay map change until the current vote concludes [\#122](https://github.com/BSVino/DoubleAction/pull/122) ([TomyLobo](https://github.com/TomyLobo))
 - Make primary 3rd person crosshair aim at everything a weapon can hit, except windows and grates [\#81](https://github.com/BSVino/DoubleAction/pull/81) ([TomyLobo](https://github.com/TomyLobo))
-
-**Merged pull requests:**
-
-- Fix a crash occurring when a prop explodes [\#147](https://github.com/BSVino/DoubleAction/pull/147) ([TomyLobo](https://github.com/TomyLobo))
 
 ## [v1.3.0.0](https://github.com/BSVino/DoubleAction/tree/v1.3.0.0) (2018-04-08)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.2.2.2...v1.3.0.0)
