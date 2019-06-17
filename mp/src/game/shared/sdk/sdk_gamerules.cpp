@@ -3201,12 +3201,27 @@ public:
 		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
 	}
 
+	virtual bool CanCallVote(int nEntIndex, const char *pszDetails, vote_create_failed_t &nFailCode, int &nTime)
+	{
+		int iUserID = atoi(pszDetails);
+		CBasePlayer* pPlayer = UTIL_PlayerByUserId(iUserID);
+		if (!pPlayer)
+			return false;
+
+		return CDAIssue::CanCallVote(nEntIndex, pszDetails, nFailCode, nTime);
+	}
+
 	virtual void SetIssueDetails(const char *pszDetails)
 	{
 		CDAIssue::SetIssueDetails(pszDetails);
 
 		int iUserID = atoi(pszDetails);
 		CBasePlayer* pPlayer = UTIL_PlayerByUserId(iUserID);
+
+		// We already check this in CanCallVote, but let's check it again, just to be safe...
+		if (!pPlayer)
+			return;
+
 		networkIDString = pPlayer->GetNetworkIDString();
 	}
 };
