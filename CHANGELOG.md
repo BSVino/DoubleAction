@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.1.0...HEAD)
+
+**Fixed bugs:**
+
+- Fix a crash issue [\#152](https://github.com/BSVino/DoubleAction/pull/152) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.3.1.0](https://github.com/BSVino/DoubleAction/tree/v1.3.1.0) (2019-06-16)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.0.0...v1.3.1.0)
 
