@@ -1875,8 +1875,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	CreateRagdollEntity();
 
 	// Turn off slow motion.
-	if (m_flSlowMoTime)
-		DeactivateSlowMo();
+	DeactivateSlowMo();
 
 	State_Transition( STATE_DEATH_ANIM );	// Transition into the dying state.
 
