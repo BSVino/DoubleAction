@@ -238,6 +238,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
+	SendPropFloat( SENDINFO( m_flStyleSkillActivationTime ), 32, SPROP_NOSCALE ),
 
 	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
@@ -3998,6 +3999,7 @@ bool CSDKPlayer::UseStylePoints (void)
 void CSDKPlayer::FillMeter()
 {
 	m_flStyleSkillCharge = da_stylemetertotalcharge.GetFloat();
+	m_flStyleSkillActivationTime = gpGlobals->curtime;
 }
 
 void CSDKPlayer::ActivateMeter()
