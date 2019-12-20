@@ -216,6 +216,7 @@ private:
 	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore );
 
 public:
+	void HealWanted( float flHealAmount );
 	void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID );
@@ -234,6 +235,7 @@ public:
 
 private:
 	float m_flNextMiniObjectiveStartTime;
+	CNetworkVar( float, m_flCurrentMiniObjectiveStartTime);
 	CNetworkVar( miniobjective_t, m_eCurrentMiniObjective );
 	miniobjective_t m_ePreviousMiniObjective;
 

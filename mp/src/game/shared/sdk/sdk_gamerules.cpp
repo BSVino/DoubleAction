@@ -93,6 +93,7 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
+		RecvPropFloat( RECVINFO( m_flCurrentMiniObjectiveStartTime )),
 		RecvPropInt( RECVINFO( m_eCurrentMiniObjective ), 0, RECVCALLBACKPROXY(RecvProxy_Int32ToInt32, RecvCallback_UpdateRichPresence) ),
 		RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 		RecvPropBool( RECVINFO( m_bIsTeamplay ) ),
@@ -107,6 +108,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 		RecvPropEHandle( RECVINFO( m_hRaceWaypoint2 ) ),
 		RecvPropEHandle( RECVINFO( m_hRaceWaypoint3 ) ),
 #else
+		SendPropFloat( SENDINFO( m_flCurrentMiniObjectiveStartTime ), 32, SPROP_NOSCALE ),
 		SendPropInt( SENDINFO( m_eCurrentMiniObjective ) ),
 		SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
 		SendPropBool( SENDINFO( m_bIsTeamplay ) ),
@@ -1836,6 +1838,16 @@ const char *CSDKGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CS
 	return killer_weapon_name;
 }
 
+static ConVar da_wanted_heal_diminish_after("da_wanted_heal_diminish_after", "60", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_wanted_heal_diminish_every("da_wanted_heal_diminish_every", "60", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
+void CSDKGameRules::HealWanted(float flHealAmount)
+{
+	flHealAmount /= FastPow2((gpGlobals->curtime - m_flCurrentMiniObjectiveStartTime - da_wanted_heal_diminish_after.GetFloat()) / da_wanted_heal_diminish_every.GetFloat());
+	GetBountyPlayer()->TakeHealth(flHealAmount, 0);
+}
+
+
 void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
 	if (pVictim && pVictim == GetBountyPlayer())
@@ -1863,7 +1875,7 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 	}
 	else if (GetBountyPlayer() && GetBountyPlayer() == ToSDKPlayer(info.GetAttacker()))
 	{
-		GetBountyPlayer()->TakeHealth(25, 0);
+		HealWanted(25);
 	}
 
 	CSDKPlayer* pLeader = GetLeader();
@@ -2214,6 +2226,7 @@ void CSDKGameRules::StartMiniObjective(const char* pszObjective)
 		return;
 
 	m_eCurrentMiniObjective = m_ePreviousMiniObjective = eObjective;
+	m_flCurrentMiniObjectiveStartTime = gpGlobals->curtime;
 
 	CSDKPlayer::SendBroadcastNotice(GetNoticeForMiniObjective(m_eCurrentMiniObjective));
 

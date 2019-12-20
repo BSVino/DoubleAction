@@ -3909,7 +3909,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement_t eAnnouncement, style_point_t ePointStyle)
 {
 	if (SDKGameRules()->GetBountyPlayer() == this)
-		TakeHealth(points, 0);
+		SDKGameRules()->HealWanted(points);
 
 	points *= GetDKRatio(0.7, 2, true);
 
