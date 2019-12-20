@@ -1589,7 +1589,7 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 		pPlayer->DropWeaponsToPickUp(this);
 
 	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT) {
-		CHintMessage("Inventory full", NULL, 6.0f).Send(pPlayer);
+		CHintMessage("Inventory full\nPress [%drop%] to drop weapon", NULL, 6.0f).Send(pPlayer);
 		return;
 	}
 
