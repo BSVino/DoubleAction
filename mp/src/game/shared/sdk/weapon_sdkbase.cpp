@@ -12,6 +12,7 @@
 #include "ammodef.h"
 #include "weapon_akimbobase.h"
 #include "datacache/imdlcache.h"
+#include "hintmessage.h"
 
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"
@@ -1559,6 +1560,8 @@ void CWeaponSDKBase::ItemPostFrame( void )
 	}
 }
 
+ConVar da_drop_overflow_on_pickup("da_drop_overflow_on_pickup", "0", FCVAR_ARCHIVE | FCVAR_USERINFO | FCVAR_CLIENTDLL, "Enable to drop weapons in order to make room for what you pick up.");
+
 extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
 
 void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
@@ -1582,11 +1585,13 @@ void CWeaponSDKBase::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 	int iWeight = GetWeight();
 
-	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
+	if (da_drop_overflow_on_pickup.GetBool() && iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
 		pPlayer->DropWeaponsToPickUp(this);
 
-	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT)
+	if (iWeight + pPlayer->FindCurrentWeaponsWeight() > MAX_LOADOUT_WEIGHT) {
+		CHintMessage("Inventory full\nPress [%drop%] to drop weapon", NULL, 6.0f).Send(pPlayer);
 		return;
+	}
 
 	// ----------------------------------------
 	// If I already have it just take the ammo

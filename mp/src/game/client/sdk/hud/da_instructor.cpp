@@ -882,7 +882,6 @@ void __MsgFunc_LessonLearned( bf_read &msg )
 }
 
 DECLARE_HUDELEMENT( CHudLessonPanel );
-DECLARE_HUD_MESSAGE( CHudLessonPanel, HintText );
 
 CHudLessonPanel::CHudLessonPanel( const char *pElementName ) : BaseClass(NULL, "HudLessonPanel"), CHudElement( pElementName )
 {
@@ -895,11 +894,7 @@ CHudLessonPanel::CHudLessonPanel( const char *pElementName ) : BaseClass(NULL, "
 
 void CHudLessonPanel::Init()
 {
-	HOOK_HUD_MESSAGE( CHudLessonPanel, HintText );
 	HOOK_MESSAGE( LessonLearned );
-
-	// listen for client side events
-	ListenForGameEvent( "player_hintmessage" );
 }
 
 inline std::string replace(std::string s, const std::string& f, const std::string& r)
@@ -1061,23 +1056,6 @@ void CHudLessonPanel::OnThink()
 		m_bLastLabelUpdateHack = (m_flLabelSizePercentage != 0.0 && m_flLabelSizePercentage != 1.0);
 		InvalidateLayout();
 	}
-}
-
-void CHudLessonPanel::MsgFunc_HintText( bf_read &msg )
-{
-	// Read the string(s)
-	char szString[255];
-	msg.ReadString( szString, sizeof(szString) );
-
-	char *tmpStr = hudtextmessage->LookupString( szString, NULL );
-	LocalizeAndDisplay( tmpStr, szString );
-}
-
-void CHudLessonPanel::FireGameEvent( IGameEvent * event)
-{
-	const char *hintmessage = event->GetString( "hintmessage" );
-	char *tmpStr = hudtextmessage->LookupString( hintmessage, NULL );
-	LocalizeAndDisplay( tmpStr, hintmessage );
 }
 
 //-----------------------------------------------------------------------------
