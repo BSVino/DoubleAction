@@ -238,6 +238,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
+	SendPropFloat( SENDINFO( m_flStyleSkillActivationTime ), 32, SPROP_NOSCALE ),
 
 	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
@@ -1875,8 +1876,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	CreateRagdollEntity();
 
 	// Turn off slow motion.
-	if (m_flSlowMoTime)
-		DeactivateSlowMo();
+	DeactivateSlowMo();
 
 	State_Transition( STATE_DEATH_ANIM );	// Transition into the dying state.
 
@@ -3909,7 +3909,7 @@ CBaseEntity	*CSDKPlayer::GiveNamedItem( const char *pszName, int iSubType )
 void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement_t eAnnouncement, style_point_t ePointStyle)
 {
 	if (SDKGameRules()->GetBountyPlayer() == this)
-		TakeHealth(points, 0);
+		SDKGameRules()->HealWanted(points);
 
 	points *= GetDKRatio(0.7, 2, true);
 
@@ -3999,6 +3999,7 @@ bool CSDKPlayer::UseStylePoints (void)
 void CSDKPlayer::FillMeter()
 {
 	m_flStyleSkillCharge = da_stylemetertotalcharge.GetFloat();
+	m_flStyleSkillActivationTime = gpGlobals->curtime;
 }
 
 void CSDKPlayer::ActivateMeter()

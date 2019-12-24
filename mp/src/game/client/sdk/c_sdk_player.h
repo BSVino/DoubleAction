@@ -350,6 +350,7 @@ private:
 
 	float m_flStylePoints;
 	float m_flStyleSkillCharge;
+	float m_flStyleSkillActivationTime;
 	float m_currentAlphaVal;
 
 	class CSDKSoundEvent

@@ -535,6 +535,9 @@ void CSDKPlayer::DecayStyle()
 	m_flStylePoints = Approach(0, m_flStylePoints, flDecayThisFrame);
 }
 
+static ConVar da_style_cost_increase_after("da_style_cost_increase_after", "60", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+static ConVar da_style_cost_increase_every("da_style_cost_increase_every", "60", FCVAR_REPLICATED|FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY);
+
 void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 {
 	if (SDKGameRules()->GetBountyPlayer() == this)
@@ -545,6 +548,8 @@ void CSDKPlayer::UseStyleCharge(SkillID eSkill, float flCharge)
 
 	if (m_Shared.m_bSuperSkill)
 		flCharge *= 0.5f; // They earned it, let them keep it a while longer.
+
+	flCharge *= FastPow2((gpGlobals->curtime - m_flStyleSkillActivationTime - da_style_cost_increase_after.GetFloat()) / da_style_cost_increase_every.GetFloat());
 
 	m_flStyleSkillCharge = max(m_flStyleSkillCharge - flCharge, 0);
 
