@@ -1959,12 +1959,6 @@ void CSDKGameMovement::Duck( void )
 	}
 	else if( m_pSDKPlayer->m_Shared.IsDiving() )
 	{
-		trace_t	tr;
-		Vector start, end;
-
-		VectorCopy (mv->GetAbsOrigin (), start);
-		VectorAdd (start, Vector (0, 0, -128), end);
-		TraceBBox (start, end, GetPlayerMins (), GetPlayerMaxs (), tr);
 		if (m_pSDKPlayer->GetGroundEntity() &&
 			m_pSDKPlayer->GetCurrentTime() > m_pSDKPlayer->m_Shared.GetDiveTime() + DIVE_RISE_TIME)
 		{
