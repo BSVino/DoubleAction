@@ -439,6 +439,8 @@ public:
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 	virtual bool		SuicideAllowed( void ) { return GetCurrentTime() > m_flNextSuicideTime; }
 
+	virtual bool ShouldBreakStuffOnCollision();
+
 private:
 	// Last usercmd we shot a bullet on.
 	int m_iLastWeaponFireUsercmd;

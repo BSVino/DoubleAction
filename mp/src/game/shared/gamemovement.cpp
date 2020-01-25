@@ -31,6 +31,7 @@
 extern IFileSystem *filesystem;
 
 #ifndef CLIENT_DLL
+	#include "func_break.h"
 	#include "env_player_surface_trigger.h"
 	static ConVar dispcoll_drawplane( "dispcoll_drawplane", "0" );
 #endif
@@ -1312,7 +1313,9 @@ void CGameMovement::CheckWaterJump( void )
 	VectorMA( vecStart, 24.0f, flatforward, vecEnd );
 	
 	trace_t tr;
+	blah = 101;
 	TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+	blah = 0;
 	if ( tr.fraction < 1.0 )		// solid at waist
 	{
 		IPhysicsObject *pPhysObj = tr.m_pEnt->VPhysicsGetObject();
@@ -1326,13 +1329,17 @@ void CGameMovement::CheckWaterJump( void )
 		VectorMA( vecStart, 24.0f, flatforward, vecEnd );
 		VectorMA( vec3_origin, -50.0f, tr.plane.normal, player->m_vecWaterJumpVel );
 
+		blah = 102;
 		TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+		blah = 0;
 		if ( tr.fraction == 1.0 )		// open at eye level
 		{
 			// Now trace down to see if we would actually land on a standable surface.
 			VectorCopy( vecEnd, vecStart );
 			vecEnd.z -= 1024.0f;
+			blah = 103;
 			TracePlayerBBox( vecStart, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, tr );
+			blah = 0;
 			if ( ( tr.fraction < 1.0f ) && ( tr.plane.normal.z >= 0.7 ) )
 			{
 				mv->m_vecVelocity[2] = 256.0f;			// Push up
@@ -1470,7 +1477,9 @@ void CGameMovement::WaterMove( void )
 	// assume it is a stair or a slope, so press down from stepheight above
 	VectorMA (mv->GetAbsOrigin(), gpGlobals->frametime, mv->m_vecVelocity, dest);
 	
+	blah = 104;
 	TracePlayerBBox( mv->GetAbsOrigin(), dest, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+	blah = 0;
 	if ( pm.fraction == 1.0f )
 	{
 		VectorCopy( dest, start );
@@ -1479,8 +1488,10 @@ void CGameMovement::WaterMove( void )
 			start[2] += player->m_Local.m_flStepSize + 1;
 		}
 		
+		blah = 105;
 		TracePlayerBBox( start, dest, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
-		
+		blah = 0;
+
 		if (!pm.startsolid && !pm.allsolid)
 		{	
 			float stepDist = pm.endpos.z - mv->GetAbsOrigin().z;
@@ -1544,7 +1555,9 @@ void CGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		vecEndPos.z += player->m_Local.m_flStepSize + DIST_EPSILON;
 	}
 	
+	blah = 106;
 	TracePlayerBBox( mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	if ( !trace.startsolid && !trace.allsolid )
 	{
 		mv->SetAbsOrigin( trace.endpos );
@@ -1560,8 +1573,10 @@ void CGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		vecEndPos.z -= player->m_Local.m_flStepSize + DIST_EPSILON;
 	}
 		
+	blah = 107;
 	TracePlayerBBox( mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
-	
+	blah = 0;
+
 	// If we are not on the ground any more then use the original movement attempt.
 	if ( trace.plane.normal[2] < 0.7 )
 	{
@@ -1866,14 +1881,18 @@ void CGameMovement::StayOnGround( void )
 
 	// See how far up we can go without getting stuck
 
+	blah = 108;
 	TracePlayerBBox( mv->GetAbsOrigin(), start, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	start = trace.endpos;
 
 	// using trace.startsolid is unreliable here, it doesn't get set when
 	// tracing bounding box vs. terrain
 
 	// Now trace down from a known safe position
+	blah = 109;
 	TracePlayerBBox( start, end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	if ( trace.fraction > 0.0f &&			// must go somewhere
 		trace.fraction < 1.0f &&			// must hit something
 		!trace.startsolid &&				// can't be embedded in a solid
@@ -1980,7 +1999,9 @@ void CGameMovement::WalkMove( void )
 	dest[2] = mv->GetAbsOrigin()[2];
 
 	// first try moving directly to the next spot
+	blah = 110;
 	TracePlayerBBox( mv->GetAbsOrigin(), dest, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+	blah = 0;
 
 	// If we made it all the way, then copy trace end as new player position.
 	mv->m_outWishVel += wishdir * wishspeed;
@@ -2552,6 +2573,8 @@ void CGameMovement::FullLadderMove()
 	TryPlayerMove();
 	VectorSubtract (mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity);
 }
+int blah = 0;
+ConVar da_test_break("da_test_break", "1", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -2610,12 +2633,16 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 					Msg( "bah\n" );
 				}
 #endif
+				blah = 111;
 				TracePlayerBBox( mv->GetAbsOrigin(), end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+				blah = 0;
 			}
 		}
 		else
 		{
+			blah = 112;
 			TracePlayerBBox( mv->GetAbsOrigin(), end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+			blah = 0;
 		}
 
 		allFraction += pm.fraction;
@@ -2642,7 +2669,9 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 				// case until the bug is fixed.
 				// If we detect getting stuck, don't allow the movement
 				trace_t stuck;
+				blah = 113;
 				TracePlayerBBox( pm.endpos, pm.endpos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, stuck );
+				blah = 0;
 				if ( stuck.startsolid || stuck.fraction != 1.0f )
 				{
 					//Msg( "Player will become stuck!!!\n" );
@@ -2670,6 +2699,48 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 		if (pm.fraction == 1)
 		{
 			 break;		// moved the entire distance
+		}
+
+		if (da_test_break.GetFloat() && player->ShouldBreakStuffOnCollision()) {
+			bool bIsBreakable = false;
+#ifdef GAME_DLL
+			bIsBreakable = bIsBreakable || FClassnameIs(pm.m_pEnt, "func_breakable");
+			bIsBreakable = bIsBreakable || FClassnameIs(pm.m_pEnt, "func_breakable_surf");
+#else
+			bIsBreakable = bIsBreakable || !strcmp(pm.m_pEnt->GetClientClass()->GetName(), "CBreakable");
+			bIsBreakable = bIsBreakable || !strcmp(pm.m_pEnt->GetClientClass()->GetName(), "CBreakableSurface");
+#endif
+			/*bIsBreakable = true;
+			bIsBreakable = bIsBreakable && pm.DidHitNonWorldEntity();
+			bIsBreakable = bIsBreakable && pm.m_pEnt->GetCollisionGroup() == COLLISION_GROUP_BREAKABLE_GLASS;
+			bIsBreakable = bIsBreakable && pm.m_pEnt->GetHealth() > 0;*/
+#ifdef GAME_DLL
+			//Msg("server: %s/%s\n", pm.m_pEnt->GetClassname(), pm.m_pEnt->GetServerClass()->GetName());
+			if (bIsBreakable && da_test_break.GetFloat() == 1) {
+				CDisablePredictionFiltering c;
+				pm.m_pEnt->TakeDamage(CTakeDamageInfo(player, player, 0, DMG_CRUSH));
+				static_cast<CBreakable*>(pm.m_pEnt)->Break(player);
+				pm.m_pEnt->Remove();
+
+				continue;
+			}
+#else
+			//Msg("client: %s/%s\n", pm.m_pEnt->GetClassname(), pm.m_pEnt->GetClientClass()->GetName());
+			if (bIsBreakable) {
+				//pm.m_pEnt->Remove();
+				//pm.m_pEnt->TakeDamage(CTakeDamageInfo(player, player, 50, DMG_CRUSH));
+				//pm.m_pEnt->SetCollisionGroup(COLLISION_GROUP_NONE);
+				//pm.m_pEnt->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
+				//pm.m_pEnt->SetSolid(SOLID_NONE);
+				//pm.m_pEnt->SetSolidFlags(FSOLID_NOT_SOLID);
+				//pm.m_pEnt->AddSolidFlags(FSOLID_NOT_SOLID);
+
+				//pm.m_pEnt->SetRenderColor(255, 0, 0);
+				//pm.m_pEnt->SetRenderMode()
+
+				//continue;
+			}
+#endif
 		}
 
 		// Save entity that blocked us (since fraction was < 1.0)
@@ -2768,6 +2839,9 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 				if (numplanes != 2)
 				{
 					VectorCopy (vec3_origin, mv->m_vecVelocity);
+					//SetGroundEntity(&pm);
+					//continue;
+
 					break;
 				}
 				CrossProduct (planes[0], planes[1], dir);
@@ -2889,7 +2963,9 @@ bool CGameMovement::LadderMove( void )
 
 	// wishdir points toward the ladder if any exists
 	VectorMA( mv->GetAbsOrigin(), LadderDistance(), wishdir, end );
+	blah = 114;
 	TracePlayerBBox( mv->GetAbsOrigin(), end, LadderMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+	blah = 0;
 
 	// no ladder in that direction, return
 	if ( pm.fraction == 1.0f || !OnLadder( pm ) )
@@ -3122,7 +3198,9 @@ void CGameMovement::PushEntity( Vector& push, trace_t *pTrace )
 	Vector	end;
 		
 	VectorAdd (mv->GetAbsOrigin(), push, end);
+	blah = 115;
 	TracePlayerBBox( mv->GetAbsOrigin(), end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, *pTrace );
+	blah = 0;
 	mv->SetAbsOrigin( pTrace->endpos );
 
 	// So we can run impact function afterwards.
@@ -4067,7 +4145,9 @@ bool CGameMovement::CanUnduck()
 
 	bool saveducked = player->m_Local.m_bDucked;
 	player->m_Local.m_bDucked = false;
+	blah = 116;
 	TracePlayerBBox( mv->GetAbsOrigin(), newOrigin, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	player->m_Local.m_bDucked = saveducked;
 	if ( trace.startsolid || ( trace.fraction != 1.0f ) )
 		return false;	
@@ -4309,7 +4389,9 @@ bool CGameMovement::CanUnDuckJump( trace_t &trace )
 	// Trace down to the stand position and see if we can stand.
 	Vector vecEnd( mv->GetAbsOrigin() );
 	vecEnd.z -= 36.0f;						// This will have to change if bounding hull change!
+	blah = 117;
 	TracePlayerBBox( mv->GetAbsOrigin(), vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	if ( trace.fraction < 1.0f )
 	{
 		// Find the endpoint.
@@ -4319,7 +4401,9 @@ bool CGameMovement::CanUnDuckJump( trace_t &trace )
 		trace_t traceUp;
 		bool bWasDucked = player->m_Local.m_bDucked;
 		player->m_Local.m_bDucked = false;
+		blah = 118;
 		TracePlayerBBox( vecEnd, vecEnd, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, traceUp );
+		blah = 0;
 		player->m_Local.m_bDucked = bWasDucked;
 		if ( !traceUp.startsolid  )
 			return true;	

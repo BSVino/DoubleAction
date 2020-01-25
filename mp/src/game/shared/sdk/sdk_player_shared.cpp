@@ -2112,3 +2112,19 @@ bool CSDKPlayer::HasBriefcase() const
 {
 	return !!m_hBriefcase;
 }
+
+bool CSDKPlayer::ShouldBreakStuffOnCollision() {
+	if (!IsAlive()) return false;
+
+	// stunting
+	if (m_Shared.IsDiving()) return true;
+	if (m_Shared.IsRolling()) return true;
+	if (m_Shared.IsSliding()) return true;
+
+	// jumping
+	if (GetGroundEntity()) return false;
+	if (GetAbsVelocity().z < -220.0f) return true;
+	if (GetAbsVelocity().Length2D() > 200) return true;
+
+	return false;
+}

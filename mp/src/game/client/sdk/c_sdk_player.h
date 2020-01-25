@@ -296,6 +296,8 @@ public:
 
 	void UpdateRichPresence();
 
+	virtual bool ShouldBreakStuffOnCollision();
+
 public: // Public Variables
 	CSDKPlayerAnimState *m_PlayerAnimState;
 #if defined ( SDK_USE_PRONE )
