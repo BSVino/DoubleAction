@@ -789,9 +789,16 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 
 	float flDamage;
 
-	//bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
-	// The heavier the damage the more it hurts.
-	flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
+	bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
+	if (bIsStockAttack)
+	{
+		// The heavier the damage the more it hurts.
+		flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
+	}
+	else {
+		// Get the damage from the weapon script.
+		flDamage = bIsSecondary ? GetSDKWpnData().m_iSecondaryDamage : GetSDKWpnData().m_iDamage;
+	}
 
 	if (pVictim)
 	{
