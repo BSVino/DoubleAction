@@ -167,6 +167,7 @@ public:
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
+	CNetworkVar( int, m_iPunchesThrown );	// number of punches thrown recently
 
 	// Tracks our ragdoll entity.
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
@@ -276,6 +277,11 @@ public:
 	void DecreaseShotsFired() { m_iShotsFired--; if (m_iShotsFired < 0) m_iShotsFired = 0; }
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
+
+	void IncreasePunchesThrown() { m_iPunchesThrown++; if (m_iPunchesThrown > 16) m_iPunchesThrown = 16; }
+	void DecreasePunchesThrown() { m_iPunchesThrown--; if (m_iPunchesThrown < 0) m_iPunchesThrown = 0; }
+	void ClearPunchesThrown() { m_iPunchesThrown = 0; }
+	int GetPunchesThrown() { return m_iPunchesThrown; }
 
 	virtual void	FreezePlayer(float flAmount = 0, float flTime = -1);
 	virtual bool	PlayerFrozen();
