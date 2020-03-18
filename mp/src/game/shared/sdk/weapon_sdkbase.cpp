@@ -603,6 +603,8 @@ void CWeaponSDKBase::Swing()
 	{
 		Hit( traceHit, m_bSwingSecondary );
 	}
+
+	pOwner->IncreasePunchesThrown();
 }
 
 Activity CWeaponSDKBase::ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner )
@@ -1557,6 +1559,11 @@ void CWeaponSDKBase::ItemPostFrame( void )
 			m_flDecreaseShotsFired = GetCurrentTime() + 0.05495;
 			pPlayer->DecreaseShotsFired();
 		}
+	}
+
+	if ( !( pPlayer->m_nButtons & IN_ATTACK2 ) )
+	{
+		pPlayer->ClearPunchesThrown();
 	}
 }
 

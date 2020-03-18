@@ -153,6 +153,11 @@ public:
 	void ClearShotsFired() { m_iShotsFired = 0; }
 	int GetShotsFired() { return m_iShotsFired; }
 
+	void IncreasePunchesThrown() { m_iPunchesThrown++; if (m_iPunchesThrown > 16) m_iPunchesThrown = 16; }
+	void DecreasePunchesThrown() { m_iPunchesThrown--; if (m_iPunchesThrown < 0) m_iPunchesThrown = 0; }
+	void ClearPunchesThrown() { m_iPunchesThrown = 0; }
+	int GetPunchesThrown() { return m_iPunchesThrown; }
+
 	virtual void DoMuzzleFlash(int iAkimbo = 0);
 	virtual void MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType, bool bUseTracerAttachment );
 
@@ -306,6 +311,7 @@ public: // Public Variables
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
+	CNetworkVar( int, m_iPunchesThrown );	// number of punches thrown recently
 
 	CNetworkVar( float, m_flFreezeUntil );
 	CNetworkVar( float, m_flFreezeAmount );
