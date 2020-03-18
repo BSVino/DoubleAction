@@ -449,6 +449,9 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if ( !pOwner )
 		return;
 
+	if (pOwner->GetPunchesThrown() > 5)
+		return;
+
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
