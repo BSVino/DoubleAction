@@ -584,10 +584,7 @@ void CWeaponSDKBase::Swing()
 		}
 	}
 
-	if (m_bSwingSecondary)
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
-	else
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 2.5f);
+	pOwner->UseStyleCharge(SKILL_BOUNCER, GetMeleeDamage(m_bSwingSecondary, NULL) / 10);
 
 	// -------------------------
 	//	Miss
