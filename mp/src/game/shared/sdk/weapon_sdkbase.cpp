@@ -793,7 +793,7 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 	if (bIsStockAttack)
 	{
 		// The heavier the damage the more it hurts.
-		flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
+		flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 25, 45);
 	}
 	else {
 		// Get the damage from the weapon script.
