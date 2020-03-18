@@ -108,6 +108,11 @@ void CWeaponSDKMelee::ItemPostFrame( void )
 	{
 		WeaponIdle();
 	}
+
+	if ( !( pPlayer->m_nButtons & (IN_ATTACK|IN_ATTACK2) ) && pPlayer->GetPunchesThrown() )
+	{
+		pPlayer->ClearPunchesThrown();
+	}
 }
 
 void CWeaponSDKMelee::PrimaryAttack()

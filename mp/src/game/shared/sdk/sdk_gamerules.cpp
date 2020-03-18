@@ -3302,7 +3302,7 @@ CON_COMMAND(da_version_server, "Display server version.")
 	if (player)
 		ClientPrint(player, HUD_PRINTCONSOLE, "Server Git revision is " DA_GIT_VERSION_STRING ".\n");
 	else
-		Msg("Server Git revision is %s.\n", DA_GIT_VERSION_STRING);
+		ConMsg("Server Git revision is %s.\n", DA_GIT_VERSION_STRING);
 }
 
 #endif

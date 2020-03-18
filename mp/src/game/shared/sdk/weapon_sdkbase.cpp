@@ -449,6 +449,9 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 	if ( !pOwner )
 		return;
 
+	if (pOwner->GetPunchesThrown() > 0)
+		return;
+
 	if (!bIsStockAttack && bIsSecondary && pOwner->m_Shared.IsDiving())
 		return;
 
@@ -581,10 +584,7 @@ void CWeaponSDKBase::Swing()
 		}
 	}
 
-	if (m_bSwingSecondary)
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 5);
-	else
-		pOwner->UseStyleCharge(SKILL_BOUNCER, 2.5f);
+	pOwner->UseStyleCharge(SKILL_BOUNCER, GetMeleeDamage(m_bSwingSecondary, NULL) / 10);
 
 	// -------------------------
 	//	Miss
@@ -603,6 +603,8 @@ void CWeaponSDKBase::Swing()
 	{
 		Hit( traceHit, m_bSwingSecondary );
 	}
+
+	pOwner->IncreasePunchesThrown();
 }
 
 Activity CWeaponSDKBase::ChooseIntersectionPointAndActivity( trace_t &hitTrace, const Vector &mins, const Vector &maxs, CSDKPlayer *pOwner )
@@ -782,10 +784,18 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
 
-	// The heavier the damage the more it hurts.
-	float flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 45, 80);
+	float flDamage;
 
-	//bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
+	bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
+	if (bIsStockAttack)
+	{
+		// The heavier the damage the more it hurts.
+		flDamage = RemapVal(GetSDKWpnData().iWeight, 7, 20, 25, 45);
+	}
+	else {
+		// Get the damage from the weapon script.
+		flDamage = bIsSecondary ? GetSDKWpnData().m_iSecondaryDamage : GetSDKWpnData().m_iDamage;
+	}
 
 	if (pVictim)
 	{
@@ -1557,6 +1567,11 @@ void CWeaponSDKBase::ItemPostFrame( void )
 			m_flDecreaseShotsFired = GetCurrentTime() + 0.05495;
 			pPlayer->DecreaseShotsFired();
 		}
+	}
+
+	if ( !( pPlayer->m_nButtons & IN_ATTACK2 ) )
+	{
+		pPlayer->ClearPunchesThrown();
 	}
 }
 
