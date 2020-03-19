@@ -26,6 +26,13 @@
 	#include "bots/sdk_bot.h"
 #endif
 
+#if defined( CLIENT_DLL )
+	#define CBreakable C_Breakable
+	#include "c_func_break.h"
+#else
+	#include "func_break.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -126,6 +133,7 @@ public:
 
 protected:
 	bool ResolveStanding( void );
+	void TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm);
 	void TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, unsigned int fMask, int collisionGroup, trace_t &trace );
 public:
 	// A reference to the player whose movement is currently being considered.
@@ -571,7 +579,9 @@ void CSDKGameMovement::WalkMove( void )
 
 	// Try moving to the destination.
 	trace_t trace;
+	blah = 201;
 	TracePlayerBBox( mv->GetAbsOrigin(), vecDestination, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = false;
 	if ( trace.fraction == 1.0f )
 	{
 		// Made it to the destination (remove the base velocity).
@@ -869,7 +879,9 @@ void CSDKGameMovement::CategorizePosition( void )
 	}
 
 	trace_t trace;
+	blah = 202;
 	TracePlayerBBox( vecStartPos, vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 
 	// Steep plane, not on ground.
 	if (trace.plane.normal.LengthSqr() > 0 && trace.plane.normal.z < 0.7f)
@@ -924,7 +936,89 @@ void CSDKGameMovement::CategorizePosition( void )
 		player->m_surfaceFriction *= da_acro_roll_friction.GetFloat ();
 }
 
-inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd, 
+//#ifdef CLIENT_DLL
+static bool ShouldHitFuncIgnoreFuncBreakables(IHandleEntity *pHandleEntity, int contentsMask) {
+	CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+	if (!pEntity)
+		return true;
+
+	bool bIsBreakable = false;
+#ifdef GAME_DLL
+	bIsBreakable = bIsBreakable || FClassnameIs(pEntity, "func_breakable");
+	bIsBreakable = bIsBreakable || FClassnameIs(pEntity, "func_breakable_surf");
+#else
+	bIsBreakable = bIsBreakable || !strcmp(pEntity->GetClientClass()->GetName(), "CBreakable");
+	bIsBreakable = bIsBreakable || !strcmp(pEntity->GetClientClass()->GetName(), "CBreakableSurface");
+#endif
+	if (bIsBreakable) {
+#ifdef GAME_DLL
+		if (ConVarRef("da_test_break").GetFloat() == 2) {
+			CBasePlayer *player = g_GameMovement.player;
+			CBreakable * pBreakable = static_cast<CBreakable*>(pEntity);
+			CDisablePredictionFiltering c;
+			if (pBreakable->GetHealth() < 50)
+			{
+				pBreakable->TakeDamage(CTakeDamageInfo(player, player, 0, DMG_CRUSH));
+				pBreakable->Break(player);
+				return false;
+			}
+			else
+			{
+				pBreakable->TakeDamage(CTakeDamageInfo(player, player, 50, DMG_CRUSH));
+				//pBreakable->SetHealth(pBreakable->GetHealth() - 50);
+			}
+		}
+#else
+		pEntity->SetRenderColor(255, 0, 0);
+		//trace_t tr;
+		//UTIL_TraceModel(player->GetAbsOrigin(), player->GetAbsOrigin(), player->GetPlayerMins(), player->GetPlayerMaxs(), pEntity, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
+		if (pEntity->GetHealth() < 50)
+		{
+			return false;
+		}
+		else
+		{
+			TODO: Den Fall da_test_break == 1 adden, nicht die neuen dateien vergessen!
+			I might be able to move that to TracePlayerBBox as well, but the naive approach of damaging it in the ShouldHit function resulted in more stuff breaking than I really touched.
+			Might work better if I evaluate the trace before returning it and then redo it until I no longer hit a(sufficiently damaged) func_breakable.
+			//pEntity->SetHealth(pBreakable->GetHealth() - 50);
+			//return false;
+		}
+#endif
+	}
+
+	return true;
+}
+//#endif
+
+void CSDKGameMovement::TracePlayerBBox(const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm)
+{
+	VPROF("CSDKGameMovement::TracePlayerBBox");
+
+	Ray_t ray;
+	ray.Init(start, end, GetPlayerMins(), GetPlayerMaxs());
+	if (!blah) {
+		Msg("not blah!\n");
+	}
+	if (ConVarRef("da_test_break").GetFloat() == 0) {
+		UTIL_TraceRay(ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm);
+		return;
+	}
+	
+	if (!player->ShouldBreakStuffOnCollision()) {
+		// Not stunting/jumping => do normal trace
+		UTIL_TraceRay(ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm);
+		if (!pm.startsolid) {
+			// We're not stuck => return the normal trace
+			return;
+		}
+	}
+
+	// At this point, we're either stunting/jumping or stuck in something => phase through sufficiently damaged func_breakables
+	UTIL_TraceRay(ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm, &ShouldHitFuncIgnoreFuncBreakables);
+}
+
+inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, const Vector &vEnd,
 							unsigned int fMask, int collisionGroup, trace_t &trace )
 {
 	VPROF( "CSDKGameMovement::TracePlayerBBoxWithStep" );
@@ -935,7 +1029,17 @@ inline void CSDKGameMovement::TracePlayerBBoxWithStep( const Vector &vStart, con
 
 	Ray_t ray;
 	ray.Init( vStart, vEnd, vHullMin, vHullMax );
-	UTIL_TraceRay( ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &trace );
+	if (!blah) {
+		Msg("not blah!\n");
+	}
+	if (ConVarRef("da_test_break").GetFloat() && player->ShouldBreakStuffOnCollision()) {
+		UTIL_TraceRay(ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &trace, &ShouldHitFuncIgnoreFuncBreakables);
+	}
+	else
+	{
+		UTIL_TraceRay(ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &trace);
+	}
+	blah = 0;
 }
 
 // Taken from TF2 to prevent bouncing down slopes
@@ -955,7 +1059,9 @@ bool CSDKGameMovement::ResolveStanding( void )
 	Vector vecStandPos( mv->GetAbsOrigin().x, mv->GetAbsOrigin().y, mv->GetAbsOrigin().z - ( flMaxStepDrop ) );
 
 	trace_t trace;
+	blah = 203;
 	TracePlayerBBoxWithStep( mv->GetAbsOrigin(), vecStandPos, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 
 	// Anything between 0.5 and 1.0 is a valid stand value
 	if ( fabs( trace.fraction - 0.5 ) < 0.0004f )
@@ -974,8 +1080,10 @@ bool CSDKGameMovement::ResolveStanding( void )
 
 	// Less than 0.5 mean we need to attempt to push up the difference.
 	vecStandPos.z = ( mv->GetAbsOrigin().z + ( ( 0.5f - trace.fraction ) * ( player->m_Local.m_flStepSize * 2.0f ) ) );
+	blah = 204;
 	TracePlayerBBoxWithStep( mv->GetAbsOrigin(), vecStandPos, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
-	
+	blah = 0;
+
 	// A fraction of 1.0 means we stood up fine - done.
 	if ( trace.fraction == 1.0f )
 	{
@@ -1233,7 +1341,9 @@ bool CSDKGameMovement::CanUnduck()
 	
 	//temporarily set player bounds to represent a standing position
 	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = true;
+	blah = 205;
 	TracePlayerBBox( mv->GetAbsOrigin(), newOrigin, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	m_pSDKPlayer->m_Shared.m_bIsTryingUnduck = false;
 	if ( trace.startsolid || ( trace.fraction != 1.0f ) )
 		return false;	
@@ -1292,7 +1402,9 @@ bool CSDKGameMovement::CanUnprone()
 	//temporarily set player bounds to represent a crouching position
 	m_pSDKPlayer->m_Shared.m_bIsTryingUnprone = true;
 
+	blah = 206;
 	TracePlayerBBox( mv->GetAbsOrigin(), newOrigin, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 
 	// revert to reality
 	m_pSDKPlayer->m_Shared.m_bIsTryingUnprone = false;
@@ -1528,7 +1640,9 @@ bool CSDKGameMovement::LadderMove()
 
 	// wishdir points toward the ladder if any exists
 	VectorMA( mv->GetAbsOrigin(), LadderDistance(), wishdir, end );
+	blah = 207;
 	TracePlayerBBox( mv->GetAbsOrigin(), end, LadderMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+	blah = 0;
 
 	// no ladder in that direction, return
 	if ( pm.fraction == 1.0f || !OnLadder( pm ) )
@@ -2931,7 +3045,9 @@ void CSDKGameMovement::FullWalkMove ()
 			float flHeightToMoveUp = flCurrentHeight - flLastTimeHeight;
 
 			Vector vecNewPosition = mv->GetAbsOrigin() + Vector(0, 0, flHeightToMoveUp);
+			blah = 208;
 			TracePlayerBBoxWithStep (mv->GetAbsOrigin(), vecNewPosition, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+			blah = 0;
 			mv->SetAbsOrigin (trace.endpos);
 
 			m_pSDKPlayer->m_Shared.IncreaseDiveLerped(flCurrentLerp - m_pSDKPlayer->m_Shared.GetDiveLerped());
@@ -3053,7 +3169,9 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		vecEndPos.z += player->m_Local.m_flStepSize + DIST_EPSILON;
 	}
 	
+	blah = 209;
 	TracePlayerBBox( mv->GetAbsOrigin(), vecEndPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
+	blah = 0;
 	if ( !trace.startsolid && !trace.allsolid )
 	{
 		mv->SetAbsOrigin( trace.endpos );
@@ -3069,7 +3187,9 @@ void CSDKGameMovement::StepMove( Vector &vecDestination, trace_t &trace )
 		vecEndPos.z -= player->m_Local.m_flStepSize + DIST_EPSILON;
 	}
 		
+	blah = 210;
 	TracePlayerBBox (mv->GetAbsOrigin (), vecEndPos, PlayerSolidMask (), COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+	blah = 0;
 	if (trace.plane.normal[2] < 0.7)
 	{
 		mv->SetAbsOrigin( vecDownPos );

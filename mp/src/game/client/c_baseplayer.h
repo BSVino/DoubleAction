@@ -639,6 +639,8 @@ public:
 	bool  ShouldGoSouth( Vector vNPCForward, Vector vNPCRight ); //Such a bad name.
 
 	void SetOldPlayerZ( float flOld ) { m_flOldPlayerZ = flOld;	}
+
+	virtual bool ShouldBreakStuffOnCollision() { return false; }
 };
 
 EXTERN_RECV_TABLE(DT_BasePlayer);

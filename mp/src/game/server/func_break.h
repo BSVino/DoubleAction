@@ -38,6 +38,15 @@ class CBreakable : public CBaseEntity, public IBreakableWithPropData, public CDe
 {
 public:
 	DECLARE_CLASS( CBreakable, CBaseEntity );
+	DECLARE_SERVERCLASS();
+
+	/*
+	int UpdateTransmitState()
+	{
+		// always send to all clients
+		return SetTransmitState(FL_EDICT_ALWAYS);
+	}
+	*/
 
 	// basic functions
 	virtual void Spawn( void );
