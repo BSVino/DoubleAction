@@ -1,5 +1,23 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.1.1...HEAD)
+
+**Implemented enhancements:**
+
+- Add a cvar to control pickup behaviour [\#93](https://github.com/BSVino/DoubleAction/issues/93)
+- Add Russian translation for the menus by Louie [\#160](https://github.com/BSVino/DoubleAction/pull/160) ([TomyLobo](https://github.com/TomyLobo))
+- Rebalance melee [\#156](https://github.com/BSVino/DoubleAction/pull/156) ([TomyLobo](https://github.com/TomyLobo))
+- Balance bonuses by diminishing returns after a while [\#155](https://github.com/BSVino/DoubleAction/pull/155) ([TomyLobo](https://github.com/TomyLobo))
+- Disable the overflow weapon drop mechanism by default [\#137](https://github.com/BSVino/DoubleAction/pull/137) ([TomyLobo](https://github.com/TomyLobo))
+
+**Fixed bugs:**
+
+- Fix a race condition in the vote kick system [\#161](https://github.com/BSVino/DoubleAction/pull/161) ([TomyLobo](https://github.com/TomyLobo))
+- Changed a few drums from prop\_physics to prop\_physics\_multiplayer [\#159](https://github.com/BSVino/DoubleAction/pull/159) ([TomyLobo](https://github.com/TomyLobo))
+- Make da\_version\_server respond in rcon properly [\#153](https://github.com/BSVino/DoubleAction/pull/153) ([TomyLobo](https://github.com/TomyLobo))
+
 ## [v1.3.1.1](https://github.com/BSVino/DoubleAction/tree/v1.3.1.1) (2019-06-17)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.1.0...v1.3.1.1)
 
