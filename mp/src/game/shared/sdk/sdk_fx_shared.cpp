@@ -100,7 +100,21 @@
 	void FX_WeaponSound ( int iPlayerIndex,
 		WeaponSound_t sound_type,
 		const Vector &vOrigin,
-		CSDKWeaponInfo *pWeaponInfo ) {};
+		CSDKWeaponInfo *pWeaponInfo )
+	{
+		// make sure we got something
+		if (iPlayerIndex == -1)
+			return;
+
+		// If we have some sounds from the weapon classname.txt file, play a random one of them
+		const char *shootsound = pWeaponInfo->aShootSounds[sound_type];
+		if (!shootsound || !shootsound[0])
+			return;
+
+		CBroadcastRecipientFilter filter;
+		filter.RemoveRecipient(UTIL_PlayerByIndex(iPlayerIndex));
+		CBaseEntity::EmitSound(filter, iPlayerIndex, shootsound, &vOrigin);
+	}
 
 #endif
 
@@ -168,17 +182,16 @@ void FX_FireBullets(
 
 	WeaponSound_t sound_type = SINGLE;
 
+#ifdef CLIENT_DLL
 	if ( bDoEffects)
 	{
-#ifdef CLIENT_DLL
 		if (pPlayer)
 			pPlayer->m_flMuzzleFlashYaw = random->RandomFloat(0, 360);
 		//ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
+	}
 #endif
 
-		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
-	}
-
+	FX_WeaponSound(iPlayerIndex, sound_type, vOrigin, pWeaponInfo);
 
 	// Fire bullets, calculate impacts & effects
 
