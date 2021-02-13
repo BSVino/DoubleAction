@@ -170,9 +170,7 @@ void FX_FireBullets(
 		iMode,
 		iSeed,
 		flSpread
-		);
-
-	bDoEffects = false; // no effects on server
+	);
 #endif
 
 	iSeed++;
@@ -182,19 +180,16 @@ void FX_FireBullets(
 
 	WeaponSound_t sound_type = SINGLE;
 
-#ifdef CLIENT_DLL
-	if ( bDoEffects)
+	if (bDoEffects)
 	{
+#ifdef CLIENT_DLL
 		if (pPlayer)
 			pPlayer->m_flMuzzleFlashYaw = random->RandomFloat(0, 360);
-		//ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
-	}
 #endif
-
-	FX_WeaponSound(iPlayerIndex, sound_type, vOrigin, pWeaponInfo);
+		FX_WeaponSound(iPlayerIndex, sound_type, vOrigin, pWeaponInfo);
+	}
 
 	// Fire bullets, calculate impacts & effects
-
 	if ( !pPlayer )
 		return;
 
