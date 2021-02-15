@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
-
-[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.2.0...HEAD)
+## [v1.3.2.1](https://github.com/BSVino/DoubleAction/tree/v1.3.2.1) (2021-02-15)
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.2.0...v1.3.2.1)
 
 **Fixed bugs:**
 
