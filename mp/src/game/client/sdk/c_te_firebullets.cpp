@@ -43,7 +43,9 @@ void C_TEFireBullets::PostDataUpdate( DataUpdateType_t updateType )
 		m_iWeaponID,
 		m_iMode,
 		m_iSeed,
-		m_flSpread );
+		m_flSpread,
+		false
+	);
 }
 
 

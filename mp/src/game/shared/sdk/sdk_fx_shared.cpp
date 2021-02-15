@@ -130,7 +130,8 @@ void FX_FireBullets(
 	int	iWeaponID,
 	int	iMode,
 	int iSeed,
-	float flSpread
+	float flSpread,
+	bool bShouldPlaySound
 	)
 {
 	Assert(vOrigin.IsValid());
@@ -188,7 +189,8 @@ void FX_FireBullets(
 		//ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
 #endif
 
-		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
+		if (bShouldPlaySound)
+			FX_WeaponSound(iPlayerIndex, sound_type, vOrigin, pWeaponInfo);
 	}
 
 
