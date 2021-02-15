@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/BSVino/DoubleAction/tree/HEAD)
+
+[Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.2.0...HEAD)
+
+**Fixed bugs:**
+
+- Weapon sounds now work on dedicated servers [\#162](https://github.com/BSVino/DoubleAction/pull/162) ([voxelizedworld](https://github.com/voxelizedworld))
+
 ## [v1.3.2.0](https://github.com/BSVino/DoubleAction/tree/v1.3.2.0) (2021-01-01)
 [Full Changelog](https://github.com/BSVino/DoubleAction/compare/v1.3.1.1...v1.3.2.0)
 
