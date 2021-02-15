@@ -20,7 +20,8 @@ void FX_FireBullets(
 	int	iWeaponID,
 	int	iMode,
 	int iSeed,
-	float flSpread
+	float flSpread,
+	bool bShouldPlaySound
 	);
 
 

@@ -326,7 +326,8 @@ void CWeaponSDKBase::FinishAttack (CSDKPlayer *pPlayer)
 		GetWeaponID(),
 		0, //Tony; fire mode - this is unused at the moment, left over from CSS when SDK* was created in the first place.
 		CBaseEntity::GetPredictionRandomSeed() & 255,
-		flSpread
+		flSpread,
+		true
 		);
 
 	//Add our view kick in

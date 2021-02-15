@@ -100,7 +100,21 @@
 	void FX_WeaponSound ( int iPlayerIndex,
 		WeaponSound_t sound_type,
 		const Vector &vOrigin,
-		CSDKWeaponInfo *pWeaponInfo ) {};
+		CSDKWeaponInfo *pWeaponInfo )
+	{
+		// make sure we got something
+		if (iPlayerIndex == -1)
+			return;
+
+		// If we have some sounds from the weapon classname.txt file, play a random one of them
+		const char *shootsound = pWeaponInfo->aShootSounds[sound_type];
+		if (!shootsound || !shootsound[0])
+			return;
+
+		CBroadcastRecipientFilter filter;
+		filter.RemoveRecipient(UTIL_PlayerByIndex(iPlayerIndex));
+		CBaseEntity::EmitSound(filter, iPlayerIndex, shootsound, &vOrigin);
+	}
 
 #endif
 
@@ -116,7 +130,8 @@ void FX_FireBullets(
 	int	iWeaponID,
 	int	iMode,
 	int iSeed,
-	float flSpread
+	float flSpread,
+	bool bShouldPlaySound
 	)
 {
 	Assert(vOrigin.IsValid());
@@ -157,8 +172,6 @@ void FX_FireBullets(
 		iSeed,
 		flSpread
 		);
-
-	bDoEffects = false; // no effects on server
 #endif
 
 	iSeed++;
@@ -176,7 +189,8 @@ void FX_FireBullets(
 		//ProjectedLightEffectManager( iPlayerIndex ).TriggerMuzzleFlash();
 #endif
 
-		FX_WeaponSound( iPlayerIndex, sound_type, vOrigin, pWeaponInfo );
+		if (bShouldPlaySound)
+			FX_WeaponSound(iPlayerIndex, sound_type, vOrigin, pWeaponInfo);
 	}
 
 
