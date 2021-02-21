@@ -114,6 +114,7 @@ $Project "Server (DA)"
 		$File "sdk/sdk_vehicle_jeep.cpp"
 		$File "sdk/te_firebullets.cpp"
 		$File "sdk/trigger_kill.cpp"
+		$File "$SRCDIR/game/shared/sdk/p2p.cpp"
 	}
 
 	$Folder	"Source Files"

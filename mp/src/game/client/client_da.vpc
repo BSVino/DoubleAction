@@ -143,6 +143,7 @@ $Project "Client (DA)"
 		$File "$SRCDIR/game/shared/sdk/sdk_shareddefs.cpp"
 		$File "$SRCDIR/game/shared/sdk/sdk_usermessages.cpp"
 		$File "sdk/da_viewback.cpp" [$VIEWBACK]
+		$File "$SRCDIR/game/shared/sdk/p2p.cpp"
 	}
 
 	$Folder	"Source Files"
