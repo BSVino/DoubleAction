@@ -55,6 +55,7 @@ mod_*_english.txt binary
 
 mp/game/** -text
 mp/game/dab/resource/dab_*.txt utf16
+mp/game/dab/resource/gameui_*.txt utf16
 mp/game/**/*.bsp filter=lfs diff=lfs merge=lfs -text
 mp/game/**/*.nav filter=lfs diff=lfs merge=lfs -text
 mp/game/**/*.vtf filter=lfs diff=lfs merge=lfs -text
