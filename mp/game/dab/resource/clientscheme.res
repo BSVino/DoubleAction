@@ -340,7 +340,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"18"
 				"weight"	"500"
 				"additive"	"0"
@@ -359,7 +359,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "50"
 				"weight"    "500"
 				"additive"  "0"
@@ -371,7 +371,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "32"
 				"weight"    "500"
 				"additive"  "0"
@@ -383,7 +383,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "24"
 				"weight"    "500"
 				"additive"  "0"
@@ -625,7 +625,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"18"
 				"weight"	"500"
 			}
@@ -737,7 +737,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"16"
 				"weight"	"0"
 				"antialias" "1"
@@ -748,7 +748,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"11"
 				"weight"	"0"
 				"antialias" "1"
@@ -917,7 +917,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"  "Franchise Bold"
+				"name"  "Franchise_da"
 				"tall"  "46"
 				"weight" "0"
 				"additive" "0"
@@ -1029,7 +1029,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"28"
 				"weight"	"400"
 				"range"		"0x0000 0x007F"	//	Basic Latin
@@ -1053,7 +1053,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "14"
 				"weight"    "500"
 				"antialias" "1"
@@ -1063,7 +1063,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "16"
 				"weight"    "500"
 				"antialias" "1"
@@ -1075,7 +1075,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "10"
 				"antialias" "1"
 				"outline"	"1"
@@ -1086,7 +1086,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "28"
 				"weight"    "500"
 				"antialias" "1"
@@ -1097,7 +1097,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "16"
 				"weight"    "500"
 				"antialias" "1"
@@ -1108,7 +1108,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "10"
 				"weight"    "500"
 				"antialias" "1"
@@ -1119,7 +1119,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "18"
 				"weight"    "500"
 				"antialias" "1"
@@ -1131,7 +1131,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "22"
 				"antialias" "1"
 			}
@@ -1141,7 +1141,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "20"
 				"antialias" "1"
 			}
@@ -1151,7 +1151,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"      "Franchise Bold"
+				"name"      "Franchise_da"
 				"tall"      "18"
 				"antialias" "1"
 			}
@@ -1219,7 +1219,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"8"
 				"antialias" "1"
 			}
@@ -1229,7 +1229,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"12"
 				"antialias" "1"
 				"outline"	"1"
@@ -1240,7 +1240,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Franchise Bold"
+				"name"		"Franchise_da"
 				"tall"		"24"
 				"antialias" "1"
 				"outline"	"1"
@@ -1903,7 +1903,15 @@ Scheme
 		"1"		"resource/HALFLIFE2.ttf"
 		"2"		"resource/HL2MP.ttf"
 		"3"		"resource/HL2crosshairs.ttf"
-		"4"		"resource/Franchise Bold-bold-hinted.ttf"
+		"4"
+		{
+		"font"	"resource/franchise_da.ttf"
+	        "name"	"Franchise_da"
+		"russian"
+		{
+			"range" "0x0000 0xFFFF"
+		}
+		}
 		"5"		"resource/digital-7-mono.ttf"
 		"6"		"resource/ds-digib.ttf" //OSX Font
 	}
