@@ -37,7 +37,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Veteran Typewriter"
+				"name"		"Veteran Typewriter DA"
 				"tall"		"20"
 				"weight"	"500"
 				"additive"	"0"
@@ -49,7 +49,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Veteran Typewriter"
+				"name"		"Veteran Typewriter DA"
 				"tall"		"16"
 				"weight"	"500"
 				"additive"	"0"
@@ -61,7 +61,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Veteran Typewriter"
+				"name"		"Veteran Typewriter DA"
 				"tall"		"12"
 				"weight"	"0"
 				"additive"	"0"
@@ -73,7 +73,7 @@ Scheme
 		{
 			"1"
 			{
-				"name"		"Veteran Typewriter"
+				"name"		"Veteran Typewriter DA"
 				"tall"		"10"
 				"weight"	"0"
 				"additive"	"0"
@@ -482,7 +482,15 @@ Scheme
 
 	CustomFontFiles
 	{
-		"1"  "resource/veteran-typewriter.ttf"
+		"1"
+		{
+		"font"	"resource/veteran-typewriter_da.ttf"
+		"name"	"Veteran Typewriter DA"
+		"russian"
+		{
+			"range" "0x0000 0xFFFF"
+		}
+		}
 		"2"  "resource/franchise-bold-hinted.ttf"
 	}
 

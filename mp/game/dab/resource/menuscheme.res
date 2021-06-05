@@ -33,6 +33,6 @@ Scheme
 
 	CustomFontFiles
 	{
-		"1"  "resource/franchise-bold-hinted.ttf"
+		"1"  "resource/franchise_da.ttf"
 	}
 }
