@@ -8,20 +8,20 @@ Scheme
 		{
 			"1"	[$POSIX]
 			{
-				"name"		"Franchise"
+				"name"		"Franchise_da"
 				"tall"		"28"
 				"antialias" "1"
 			}
 			"1"	[$WIN32]
 			{
-				"name"		"Franchise" 
+				"name"		"Franchise_da" 
 				"tall"		"28" 
 				"weight"	"600"
 				"antialias" "1"
 			}
 			"1"	[$X360]
 			{
-				"name"		"Franchise"
+				"name"		"Franchise_da"
 				"tall"			"14"
 				"tall_hidef"	"20"
 				"weight"	"1200"
