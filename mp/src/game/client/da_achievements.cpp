@@ -30,6 +30,7 @@ protected:
 		SetGoal(1);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		//steamapicontext->SteamUserStats()->ClearAchievement("DIVEPUNCHKILL");
 	}
 
 	// register our event listeners
