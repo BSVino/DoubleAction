@@ -1539,6 +1539,25 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
+
+					// achievement "Michael Bay" - DIVEAWAYFROMEXPLOSION
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION");
+					if (event_DIVEAWAYFROMEXPLOSION) {
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION->SetInt("userid", this->GetUserID());
+						// send off the event
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION);
+					}
+					
+					// achievement "Bad Boys II" - DIVEAWAYFROMEXPLOSION_250
+					IGameEvent * event_DIVEAWAYFROMEXPLOSION_250 = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION_250");
+					if (event_DIVEAWAYFROMEXPLOSION_250) {
+						// set our event attacker userID to send to the client
+						event_DIVEAWAYFROMEXPLOSION_250->SetInt("userid", this->GetUserID());
+						// send off the event
+						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION_250);
+					}
+
 				}
 			}
 			else if (bGrenadeNotMine && !m_Shared.IsAimedIn())
@@ -1981,6 +2000,58 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
+
+	if (pVictim->LastHitGroup() == HITGROUP_HEAD && bKilledVictim && flDistance < 100){
+		// achievement "Dodge this" - POINT BLANK HEADSHOT
+		IGameEvent * event_DODGETHIS = gameeventmanager->CreateEvent("DODGETHIS");
+		if (event_DODGETHIS)
+		{
+			// typecast the attacker so we can get a player ID
+			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DODGETHIS->SetInt("userid", pPlayer->GetUserID());
+			// send off the event
+			gameeventmanager->FireEvent(event_DODGETHIS);
+		}
+	}
+
+	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
+		// achievement "Divepunch is its Own Reward" - DIVEPUNCHKILL
+		IGameEvent * event_DIVEPUNCHKILL = gameeventmanager->CreateEvent("DIVEPUNCHKILL");
+		if (event_DIVEPUNCHKILL)
+		{
+			// typecast the attacker so we can get a player ID
+			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DIVEPUNCHKILL->SetInt("userid", pPlayer->GetUserID());
+			// send off the event
+			gameeventmanager->FireEvent(event_DIVEPUNCHKILL);
+		}
+
+		// achievement "rofldiver" - DIVEPUNCHKILL_250
+		IGameEvent * event_DIVEPUNCHKILL_250 = gameeventmanager->CreateEvent("DIVEPUNCHKILL_250");
+		if (event_DIVEPUNCHKILL_250)
+		{
+			// typecast the attacker so we can get a player ID
+			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DIVEPUNCHKILL_250->SetInt("userid", pPlayer->GetUserID());
+			// send off the event
+			gameeventmanager->FireEvent(event_DIVEPUNCHKILL_250);
+		}
+
+		// achievement "Rocky Balboa" - DIVEPUNCHKILL_BAJILLION
+		IGameEvent * event_DIVEPUNCHKILL_BAJILLION = gameeventmanager->CreateEvent("DIVEPUNCHKILL_BAJILLION");
+		if (event_DIVEPUNCHKILL_BAJILLION)
+		{
+			// typecast the attacker so we can get a player ID
+			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
+			// set our event attacker userID to send to the client
+			event_DIVEPUNCHKILL_BAJILLION->SetInt("userid", pPlayer->GetUserID());
+			// send off the event
+			gameeventmanager->FireEvent(event_DIVEPUNCHKILL_BAJILLION);
+		}
+	}
 
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
 	if (info.GetDamageType() == DMG_BLAST)
