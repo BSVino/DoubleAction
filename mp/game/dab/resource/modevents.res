@@ -103,4 +103,35 @@
 		"option4" "string"
 		"option5" "string"
 	}
+	
+	// achievements
+	"DIVEPUNCHKILL"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEPUNCHKILL_250"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEPUNCHKILL_BAJILLION"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEAWAYFROMEXPLOSION"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEAWAYFROMEXPLOSION_250"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DODGETHIS"
+	{
+		"userid"	"short"   	// user ID who died
+	}
 }
