@@ -11,11 +11,13 @@
 
 
 #include "cbase.h"
-
-#include "baseachievement.h"
 #include "achievementmgr.h"
+#include "baseachievement.h"
+
 #include "sdk_player_shared.h"
 #include "c_sdk_player.h"
+
+#ifndef GAME_DLL
 
 CAchievementMgr* g_pAchivementManager = new CAchievementMgr();
 
@@ -31,13 +33,9 @@ protected:
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
 		//steamapicontext->SteamUserStats()->ClearAchievement("DIVEPUNCHKILL");
-	}
-
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DIVEPUNCHKILL");
 	}
+
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
@@ -71,11 +69,6 @@ protected:
 		SetGoal(250);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-	}
-
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DIVEPUNCHKILL_250");
 	}
 
@@ -109,11 +102,6 @@ protected:
 		SetGoal(651438);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-	}
-
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DIVEPUNCHKILL_BAJILLION");
 	}
 
@@ -124,7 +112,7 @@ protected:
 		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL_BAJILLION") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
-			DevMsg("DIVEPUNCHKILL_BAJILLION activate");
+			DevMsg("DIVEPUNCHKILL_BAJILLION activate \n");
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
@@ -151,20 +139,19 @@ protected:
 		SetGoal(1);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-	}
 
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DIVEAWAYFROMEXPLOSION");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
+
+		DevMsg("DIVEAWAYFROMEXPLOSION listener triggered ");
 		// compare event names and check that we have a local player
 		if (0 == Q_strcmp(event->GetName(), "DIVEAWAYFROMEXPLOSION") && C_BasePlayer::GetLocalPlayer())
 		{
+			
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 			// if the userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
@@ -193,11 +180,6 @@ protected:
 		SetGoal(250);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-	}
-
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DIVEAWAYFROMEXPLOSION_250");
 	}
 
@@ -234,11 +216,6 @@ protected:
 		SetGoal(1);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-	}
-
-	// register our event listeners
-	virtual void ListenForEvents()
-	{
 		ListenForGameEvent("DODGETHIS");
 	}
 
@@ -265,4 +242,4 @@ DECLARE_ACHIEVEMENT(CAchievementDAdodgethis, DODGETHIS, "DODGETHIS", 1)
 
 
 
-//#endif // GAME_DLL
+#endif // GAME_DLL
