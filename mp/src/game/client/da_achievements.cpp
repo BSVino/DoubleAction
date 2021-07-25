@@ -297,5 +297,47 @@ DECLARE_ACHIEVEMENT(CAchievementDAdodgethis, DODGETHIS, "DODGETHIS", 1)
 
 
 
+// Kill a player with their own weapon
+class CAchievementDABetrayed : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		DevMsg("\n\nBETRAYED achievement class init\n\n\n");
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		DevMsg("\n\nBETRAYED ListenForGameEvent\n\n\n");
+		ListenForGameEvent("BETRAYED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		DevMsg("\n\nBETRAYED FireGameEvent_Internal\n\n\n");
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "BETRAYED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				DevMsg("\n\nBETRAYED IncrementCount\n\n\n");
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define BETRAYED 20 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDABetrayed, BETRAYED, "BETRAYED", 1)
+
 
 //#endif // GAME_DLL

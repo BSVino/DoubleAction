@@ -139,4 +139,9 @@
 	{
 		"userid"	"short"   	// user ID who died
 	}
+	
+	"BETRAYED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
 }

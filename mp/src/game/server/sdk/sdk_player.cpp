@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL1.
 //
@@ -1983,21 +1983,41 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
 	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
 
+	// the weapon that did the killing
 	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
 	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
 
 	if (pWeaponInfo)
 		flPoints *= pWeaponInfo->m_flStyleMultiplier;
-
 	Vector vecVictimForward;
 	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
 
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
 
-	if (pVictim->LastHitGroup() == HITGROUP_HEAD && bKilledVictim && flDistance < 100){
-		// achievement "Dodge this" - POINT BLANK HEADSHOT
-		DA_ApproachAchievement("DODGETHIS", this);
+	// most of our achievements are triggered when you kill someone
+	if (bKilledVictim){
+
+		// killed with a headshot
+		if (pVictim->LastHitGroup() == HITGROUP_HEAD){
+
+			// point blank
+			if (flDistance < 100){
+				// achievement "Dodge this" - POINT BLANK HEADSHOT
+				DA_ApproachAchievement("DODGETHIS", this);
+			}
+
+		}
+
+		// achievement "Betrayed" - Kill somebody with their own gun
+		CSDKPlayer* previousWeaponOwner = pWeapon->GetPrevOwner();
+		if (previousWeaponOwner){ // if the weapon hasn't been dropped, GetPrevOwner() returns null
+			int prevOwnerID = previousWeaponOwner->GetUserID();
+			int victimID = pVictim->GetUserID();
+			if (victimID == prevOwnerID){
+				DA_ApproachAchievement("BETRAYED", this);
+			}
+		}
 	}
 
 	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
@@ -2550,6 +2570,9 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	Assert(pWeapon);
 	if (!pWeapon)
 		return;
+
+	// required so we can detect the previous owner once the weapon has been dropped
+	pWeapon->SetPrevOwner(this);
 
 	if (pWeapon->IsAkimbo())
 	{
