@@ -105,17 +105,8 @@
 	}
 	
 	// achievements
+	
 	"DIVEPUNCHKILL"
-	{
-		"userid"	"short"   	// user ID who died
-	}
-	
-	"DIVEPUNCHKILL_250"
-	{
-		"userid"	"short"   	// user ID who died
-	}
-	
-	"DIVEPUNCHKILL_BAJILLION"
 	{
 		"userid"	"short"   	// user ID who died
 	}
@@ -125,17 +116,12 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
-	"DIVEAWAYFROMEXPLOSION_250"
-	{
-		"userid"	"short"   	// user ID who died
-	}
-	
 	"DODGETHIS"
 	{
 		"userid"	"short"   	// user ID who died
 	}
 	
-	"SKYPUNCH"
+	"HARDBOILED"
 	{
 		"userid"	"short"   	// user ID who died
 	}
@@ -144,4 +130,5 @@
 	{
 		"userid"	"short"   	// user ID who died
 	}
+	
 }

@@ -1127,6 +1127,14 @@ void CSDKPlayer::Spawn()
 	m_hRagdoll = NULL;
 
 	UpdateStyleSkill();
+
+	// set the PrevOwner on all of our weapons to us when we spawn
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
+		if (pWeapon)
+			pWeapon->SetPrevOwner(this);
+	}
 	
 	BaseClass::Spawn();
 
@@ -1943,6 +1951,8 @@ void CSDKPlayer::SetKilledByString( string_t sKilledBy )
 	m_szKillerString = sKilledBy;
 }
 
+
+
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
@@ -1997,25 +2007,28 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	// most of our achievements are triggered when you kill someone
 	if (bKilledVictim){
+		// shot with a gun
+		if (pWeapon && (info.GetDamageType() != DMG_CLUB) && (info.GetDamageType() != DMG_BLAST) && (info.GetDamageType() != DMG_DROWN) && (info.GetDamageType() != DMG_FALL)){
 
-		// killed with a headshot
-		if (pVictim->LastHitGroup() == HITGROUP_HEAD){
+			// killed with a headshot
+			if (pVictim->LastHitGroup() == HITGROUP_HEAD){
 
-			// point blank
-			if (flDistance < 100){
-				// achievement "Dodge this" - POINT BLANK HEADSHOT
-				DA_ApproachAchievement("DODGETHIS", this);
+				// point blank
+				if (flDistance < 100){
+					// achievement "Dodge this" - POINT BLANK HEADSHOT
+					DA_ApproachAchievement("DODGETHIS", this);
+				}
+
 			}
 
-		}
-
-		// achievement "Betrayed" - Kill somebody with their own gun
-		CSDKPlayer* previousWeaponOwner = pWeapon->GetPrevOwner();
-		if (previousWeaponOwner){ // if the weapon hasn't been dropped, GetPrevOwner() returns null
-			int prevOwnerID = previousWeaponOwner->GetUserID();
-			int victimID = pVictim->GetUserID();
-			if (victimID == prevOwnerID){
-				DA_ApproachAchievement("BETRAYED", this);
+			// achievement "Betrayed" - Kill somebody with their own gun
+			CSDKPlayer* previousWeaponOwner = pWeapon->GetPrevOwner();
+			if (previousWeaponOwner){
+				int prevOwnerID = previousWeaponOwner->entindex();
+				int victimID = pVictim->entindex();
+				if (victimID == prevOwnerID){
+					DA_ApproachAchievement("BETRAYED", this);
+				}
 			}
 		}
 	}
@@ -2023,10 +2036,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
 		// achievement "Divepunch is its own reward" - DIVEPUNCHKILL
 		DA_ApproachAchievement("DIVEPUNCHKILL", this);
-		// achievement "Rofldiver" - DIVEPUNCHKILL_250
-		DA_ApproachAchievement("DIVEPUNCHKILL_250", this);
-		// achievement "Rocky Balboa" - DIVEPUNCHKILL_BAJILLION
-		DA_ApproachAchievement("DIVEPUNCHKILL_BAJILLION", this);
 
 		if (m_Shared.IsSuperFalling()){
 			// achievement "SKYPUNCH!!" - SKYPUNCH

@@ -73,14 +73,14 @@ protected:
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent("DIVEPUNCHKILL_250");
+		ListenForGameEvent("DIVEPUNCHKILL");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
 		// compare event names and check that we have a local player
-		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL_250") && C_BasePlayer::GetLocalPlayer())
+		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 
@@ -94,6 +94,45 @@ protected:
 };
 #define DIVEPUNCHKILL_250 7
 DECLARE_ACHIEVEMENT(CAchievementDAdivepunch250, DIVEPUNCHKILL_250, "DIVEPUNCHKILL_250", 1)
+
+
+
+// GET 250 DIVEPUNCH KILLS
+class CAchievementDAdivepunch1000 : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("DIVEPUNCHKILL");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define DIVEPUNCHKILL_1000 22
+DECLARE_ACHIEVEMENT(CAchievementDAdivepunch1000, DIVEPUNCHKILL_1000, "DIVEPUNCHKILL_1000", 1)
+
 
 
 // GET like a bajillion DIVEPUNCH KILLS
@@ -110,14 +149,14 @@ protected:
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent("DIVEPUNCHKILL_BAJILLION");
+		ListenForGameEvent("DIVEPUNCHKILL");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
 		// compare event names and check that we have a local player
-		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL_BAJILLION") && C_BasePlayer::GetLocalPlayer())
+		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 			// if the atackers userID from the event matches the local player
@@ -232,14 +271,14 @@ protected:
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent("DIVEAWAYFROMEXPLOSION_250");
+		ListenForGameEvent("DIVEAWAYFROMEXPLOSION");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
 		// compare event names and check that we have a local player
-		if (0 == Q_strcmp(event->GetName(), "DIVEAWAYFROMEXPLOSION_250") && C_BasePlayer::GetLocalPlayer())
+		if (0 == Q_strcmp(event->GetName(), "DIVEAWAYFROMEXPLOSION") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 			// if the userID from the event matches the local player
@@ -306,21 +345,17 @@ protected:
 		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
 		SetGoal(1);
 		m_bStoreProgressInSteam = true;
-		//steamapicontext->SteamUserStats()->ResetAllStats(true);
-		DevMsg("\n\nBETRAYED achievement class init\n\n\n");
 	}
 
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		DevMsg("\n\nBETRAYED ListenForGameEvent\n\n\n");
 		ListenForGameEvent("BETRAYED");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
-		DevMsg("\n\nBETRAYED FireGameEvent_Internal\n\n\n");
 		// compare event names and check that we have a local player
 		if (0 == Q_strcmp(event->GetName(), "BETRAYED") && C_BasePlayer::GetLocalPlayer())
 		{
@@ -329,7 +364,6 @@ protected:
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
-				DevMsg("\n\nBETRAYED IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -338,6 +372,47 @@ protected:
 
 #define BETRAYED 20 // the stat ID and name from steamworks - not the achievement ID
 DECLARE_ACHIEVEMENT(CAchievementDABetrayed, BETRAYED, "BETRAYED", 1)
+
+
+
+
+
+// Kill a player with their own weapon
+class CAchievementDAHardboiled : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("HARDBOILED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "HARDBOILED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define HARDBOILED 21 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAHardboiled, HARDBOILED, "HARDBOILED", 1)
 
 
 //#endif // GAME_DLL

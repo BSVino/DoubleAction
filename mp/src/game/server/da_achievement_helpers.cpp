@@ -21,6 +21,7 @@
 // so we just want to fire off an event that the achievement on the client is listening to
 void DA_ApproachAchievement(const char* achievement_event_name, CSDKPlayer* pPlayer){
 
+	DevMsg("\n\nevent %s requested\n\n\n", achievement_event_name);
 	// create our achievement event
 	IGameEvent* event = gameeventmanager->CreateEvent(achievement_event_name);
 	if (event)
