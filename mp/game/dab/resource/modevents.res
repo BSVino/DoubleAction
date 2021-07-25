@@ -121,12 +121,17 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
-	"HARDBOILED"
+	"SKYPUNCH"
 	{
 		"userid"	"short"   	// user ID who died
 	}
 	
 	"BETRAYED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"HARDBOILED"
 	{
 		"userid"	"short"   	// user ID who died
 	}
