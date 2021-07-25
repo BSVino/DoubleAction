@@ -30,17 +30,20 @@ protected:
 		SetGoal(1);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		DevMsg("\n\nDIVEPUNCHKILL achievement class init\n\n\n");
 	}
 
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
+		DevMsg("\n\nDIVEPUNCHKILL ListenForGameEvent\n\n\n");
 		ListenForGameEvent("DIVEPUNCHKILL");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
+		DevMsg("\n\nDIVEPUNCHKILL FireGameEvent_Internal\n\n\n");
 		// compare event names and check that we have a local player
 		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL") && C_BasePlayer::GetLocalPlayer())
 		{
@@ -49,6 +52,7 @@ protected:
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDIVEPUNCHKILL IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -70,11 +74,13 @@ protected:
 		SetGoal(250);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		DevMsg("\n\nDIVEPUNCHKILL_250 achievement class init\n\n\n");
 	}
 
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
+		DevMsg("\n\nDIVEPUNCHKILL_250 ListenForGameEvent\n\n\n");
 		ListenForGameEvent("DIVEPUNCHKILL_250");
 	}
 
@@ -89,6 +95,7 @@ protected:
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDIVEPUNCHKILL_250 IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -108,11 +115,13 @@ protected:
 		SetGoal(651438);
 		m_bStoreProgressInSteam = true;
 		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		DevMsg("\n\nDIVEPUNCHKILL_BAJILLION achievement class init\n\n\n");
 	}
 
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
+		DevMsg("\n\nDIVEPUNCHKILL_BAJILLION ListenForGameEvent\n\n\n");
 		ListenForGameEvent("DIVEPUNCHKILL_BAJILLION");
 	}
 
@@ -123,10 +132,10 @@ protected:
 		if (0 == Q_strcmp(event->GetName(), "DIVEPUNCHKILL_BAJILLION") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
-			DevMsg("DIVEPUNCHKILL_BAJILLION activate");
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDIVEPUNCHKILL_BAJILLION IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -134,6 +143,51 @@ protected:
 };
 #define DIVEPUNCHKILL_BAJILLION 8
 DECLARE_ACHIEVEMENT(CAchievementDAdivepunchBajillion, DIVEPUNCHKILL_BAJILLION, "DIVEPUNCHKILL_BAJILLION", 1)
+
+
+
+
+
+
+
+// duvepunchkill while superfalling
+class CAchievementDASkypunch : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+		//steamapicontext->SteamUserStats()->ResetAllStats(true);
+		DevMsg("\n\nSKYPUNCH achievement class init\n\n\n");
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		DevMsg("\n\nSKYPUNCH ListenForGameEvent\n\n\n");
+		ListenForGameEvent("SKYPUNCH");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SKYPUNCH") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				DevMsg("\n\nSKYPUNCH IncrementCount\n\n\n");
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+#define SKYPUNCH 14
+DECLARE_ACHIEVEMENT(CAchievementDASkypunch, SKYPUNCH, "SKYPUNCH", 1)
 
 
 
@@ -168,6 +222,7 @@ protected:
 			// if the userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDIVEAWAYFROMEXPLOSION IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -210,6 +265,7 @@ protected:
 			// if the userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDIVEAWAYFROMEXPLOSION_250 IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}
@@ -251,6 +307,7 @@ protected:
 			// if the userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
+				DevMsg("\n\nDODGETHIS IncrementCount\n\n\n");
 				IncrementCount(); // WE ALL GOOD!
 			}
 		}

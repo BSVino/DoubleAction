@@ -134,4 +134,9 @@
 	{
 		"userid"	"short"   	// user ID who died
 	}
+	
+	"SKYPUNCH"
+	{
+		"userid"	"short"   	// user ID who died
+	}
 }

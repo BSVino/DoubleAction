@@ -381,7 +381,7 @@ void CSDKPlayer::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, 
 CSDKPlayer::CSDKPlayer()
 {
 	// fetch the users stats from steam
-	DA_InitStats();
+	//DA_InitStats();
 	//DA_ClearAllStats();
 
 	//Tony; create our player animation state.
@@ -1548,22 +1548,9 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					Instructor_LessonLearned("stuntfromexplo");
 
 					// achievement "Michael Bay" - DIVEAWAYFROMEXPLOSION
-					IGameEvent * event_DIVEAWAYFROMEXPLOSION = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION");
-					if (event_DIVEAWAYFROMEXPLOSION) {
-						// set our event attacker userID to send to the client
-						event_DIVEAWAYFROMEXPLOSION->SetInt("userid", this->GetUserID());
-						// send off the event
-						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION);
-					}
-					
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION", this);
 					// achievement "Bad Boys II" - DIVEAWAYFROMEXPLOSION_250
-					IGameEvent * event_DIVEAWAYFROMEXPLOSION_250 = gameeventmanager->CreateEvent("DIVEAWAYFROMEXPLOSION_250");
-					if (event_DIVEAWAYFROMEXPLOSION_250) {
-						// set our event attacker userID to send to the client
-						event_DIVEAWAYFROMEXPLOSION_250->SetInt("userid", this->GetUserID());
-						// send off the event
-						gameeventmanager->FireEvent(event_DIVEAWAYFROMEXPLOSION_250);
-					}
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION_250", this);
 
 				}
 			}
@@ -2010,31 +1997,21 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	if (pVictim->LastHitGroup() == HITGROUP_HEAD && bKilledVictim && flDistance < 100){
 		// achievement "Dodge this" - POINT BLANK HEADSHOT
-		IGameEvent * event_DODGETHIS = gameeventmanager->CreateEvent("DODGETHIS");
-		if (event_DODGETHIS)
-		{
-			// typecast the attacker so we can get a player ID
-			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-			// set our event attacker userID to send to the client
-			event_DODGETHIS->SetInt("userid", pPlayer->GetUserID());
-			// send off the event
-			gameeventmanager->FireEvent(event_DODGETHIS);
-		}
+		DA_ApproachAchievement("DODGETHIS", this);
 	}
 
 	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
-		// achievement "Divepunch is its Own Reward" - DIVEPUNCHKILL
-		DA_IncrementStat("DIVEPUNCHKILL_STAT");
-		DA_AwardAchievement("DIVEPUNCHKILL");
-		DA_PrintAchievementProgress("DIVEPUNCHKILL_250_STAT", 25, 250);
-
-		// achievement "rofldiver" - DIVEPUNCHKILL_250
-		DA_IncrementStat("DIVEPUNCHKILL_250_STAT");
-		DA_AwardAchievement("DIVEPUNCHKILL_250");
-
+		// achievement "Divepunch is its own reward" - DIVEPUNCHKILL
+		DA_ApproachAchievement("DIVEPUNCHKILL", this);
+		// achievement "Rofldiver" - DIVEPUNCHKILL_250
+		DA_ApproachAchievement("DIVEPUNCHKILL_250", this);
 		// achievement "Rocky Balboa" - DIVEPUNCHKILL_BAJILLION
-		DA_IncrementStat("DIVEPUNCHKILL_BAJILLION_STAT");
-		DA_AwardAchievement("DIVEPUNCHKILL_BAJILLION");
+		DA_ApproachAchievement("DIVEPUNCHKILL_BAJILLION", this);
+
+		if (m_Shared.IsSuperFalling()){
+			// achievement "SKYPUNCH!!" - SKYPUNCH
+			DA_ApproachAchievement("SKYPUNCH", this);
+		}
 	}
 
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
