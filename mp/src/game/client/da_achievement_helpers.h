@@ -2,6 +2,7 @@
 #ifndef DAHELPERS
 #define DAHELPERS
 bool DA_InitStats();
+bool DA_ClearAllStats();
 void DA_PrintStat(const char* name);
 bool DA_IncrementStat(const char* name, C_BasePlayer* pPlayer, const int num = 1, const bool clearAchievement = false);
 bool DA_AwardAchievement(const char* name, C_BasePlayer* pPlayer, const bool clearAchievement = false);

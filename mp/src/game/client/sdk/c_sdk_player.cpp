@@ -46,8 +46,6 @@
 #include "da_skillmenu.h"
 #include "da_viewmodel.h"
 #include "da_viewback.h"
-#include "achievementmgr.h"
-#include "da_achievement_helpers.h"
 
 #include "tier0/valve_minmax_on.h"
 
@@ -720,7 +718,7 @@ IRagdoll* C_SDKPlayer::GetRepresentativeRagdoll() const
 	}
 }
 
-
+// constructor
 
 C_SDKPlayer::C_SDKPlayer() : 
 	m_iv_angEyeAngles( "C_SDKPlayer::m_iv_angEyeAngles" )
@@ -741,7 +739,6 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_hLeftFootGlow = NULL;
 	m_hRightFootGlow = NULL;
 
-	DA_InitStats();
 }
 
 
@@ -970,10 +967,6 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 
 	UpdateRichPresence();
 
-	//DA_AwardAchievement("DIVEPUNCHKILL", this);
-	DA_IncrementStat("DIVEPUNCHKILL_STAT", this);
-	DA_PrintStat("DIVEPUNCHKILL_STAT");
-	DA_PrintAchievementStatus("DIVEPUNCHKILL");
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

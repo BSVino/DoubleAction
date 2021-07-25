@@ -33,6 +33,7 @@
 #include "dove.h"
 #include "da_datamanager.h"
 #include "da_briefcase.h"
+#include "da_achievement_helpers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -375,8 +376,14 @@ void CSDKPlayer::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, 
 	PointCameraSetupVisibility( this, area, pvs, pvssize );
 }
 
+// constructor
+
 CSDKPlayer::CSDKPlayer()
 {
+	// fetch the users stats from steam
+	DA_InitStats();
+	//DA_ClearAllStats();
+
 	//Tony; create our player animation state.
 	m_PlayerAnimState = CreateSDKPlayerAnimState( this );
 	m_iLastWeaponFireUsercmd = 0;
@@ -2017,40 +2024,17 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
 		// achievement "Divepunch is its Own Reward" - DIVEPUNCHKILL
-		IGameEvent * event_DIVEPUNCHKILL = gameeventmanager->CreateEvent("DIVEPUNCHKILL");
-		if (event_DIVEPUNCHKILL)
-		{
-			// typecast the attacker so we can get a player ID
-			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-			// set our event attacker userID to send to the client
-			event_DIVEPUNCHKILL->SetInt("userid", pPlayer->GetUserID());
-			// send off the event
-			gameeventmanager->FireEvent(event_DIVEPUNCHKILL);
-		}
+		DA_IncrementStat("DIVEPUNCHKILL_STAT");
+		DA_AwardAchievement("DIVEPUNCHKILL");
+		DA_PrintAchievementProgress("DIVEPUNCHKILL_250_STAT", 25, 250);
 
 		// achievement "rofldiver" - DIVEPUNCHKILL_250
-		IGameEvent * event_DIVEPUNCHKILL_250 = gameeventmanager->CreateEvent("DIVEPUNCHKILL_250");
-		if (event_DIVEPUNCHKILL_250)
-		{
-			// typecast the attacker so we can get a player ID
-			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-			// set our event attacker userID to send to the client
-			event_DIVEPUNCHKILL_250->SetInt("userid", pPlayer->GetUserID());
-			// send off the event
-			gameeventmanager->FireEvent(event_DIVEPUNCHKILL_250);
-		}
+		DA_IncrementStat("DIVEPUNCHKILL_250_STAT");
+		DA_AwardAchievement("DIVEPUNCHKILL_250");
 
 		// achievement "Rocky Balboa" - DIVEPUNCHKILL_BAJILLION
-		IGameEvent * event_DIVEPUNCHKILL_BAJILLION = gameeventmanager->CreateEvent("DIVEPUNCHKILL_BAJILLION");
-		if (event_DIVEPUNCHKILL_BAJILLION)
-		{
-			// typecast the attacker so we can get a player ID
-			CSDKPlayer* pPlayer = dynamic_cast<CSDKPlayer*>(info.GetAttacker());
-			// set our event attacker userID to send to the client
-			event_DIVEPUNCHKILL_BAJILLION->SetInt("userid", pPlayer->GetUserID());
-			// send off the event
-			gameeventmanager->FireEvent(event_DIVEPUNCHKILL_BAJILLION);
-		}
+		DA_IncrementStat("DIVEPUNCHKILL_BAJILLION_STAT");
+		DA_AwardAchievement("DIVEPUNCHKILL_BAJILLION");
 	}
 
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.

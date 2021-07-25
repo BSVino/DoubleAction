@@ -23,6 +23,10 @@ bool DA_InitStats(){
 	return steamapicontext->SteamUserStats()->RequestCurrentStats();
 }
 
+bool DA_ClearAllStats(){
+	return steamapicontext->SteamUserStats()->RequestCurrentStats();
+}
+
 bool DA_IncrementStat(const char* name, C_BasePlayer* pPlayer, const int num, const bool clearAchievement)
 {
 	if (pPlayer != C_BasePlayer::GetLocalPlayer()){
