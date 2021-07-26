@@ -2059,6 +2059,11 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 					DA_ApproachAchievement("BETRAYED", this->GetUserID());
 				}
 			}
+
+			if (m_Shared.IsSuperFalling()){
+				// the FALL_GUY event will trigger all of our superfall grinders
+				DA_ApproachAchievement("FALL_GUY", this->GetUserID());
+			}
 		}
 	}
 

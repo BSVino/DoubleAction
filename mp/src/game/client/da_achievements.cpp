@@ -458,6 +458,128 @@ DECLARE_ACHIEVEMENT(CAchievementDAPenguin, PENGUIN, "PENGUIN", 1)
 
 
 
+
+
+
+class CAchievementDAFallguy : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(50);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("FALL_GUY");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "FALL_GUY") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define FALL_GUY 24 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAFallguy, FALL_GUY, "FALL_GUY", 1)
+
+
+
+class CAchievementDAPlunger : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(250);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("FALL_GUY");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "FALL_GUY") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define PLUNGER 25 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAPlunger, PLUNGER, "PLUNGER", 1)
+
+
+
+class CAchievementDADeepImpact : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("FALL_GUY");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "FALL_GUY") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define DEEP_IMPACT 26 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDADeepImpact, DEEP_IMPACT, "DEEP_IMPACT", 1)
+
+
+
+
+
+
+
+
 /************************************************
 	Weapon grind achievements
 */

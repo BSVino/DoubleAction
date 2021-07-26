@@ -171,4 +171,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"FALL_GUY"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
