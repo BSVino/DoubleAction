@@ -456,4 +456,273 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDAPenguin, PENGUIN, "PENGUIN", 1)
 
 
+
+
+/************************************************
+	Weapon grind achievements
+*/
+
+class CAchievementDAUndertaken : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("UNDERTAKEN");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "UNDERTAKEN") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define UNDERTAKEN 30 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAUndertaken, UNDERTAKEN, "UNDERTAKEN", 1)
+
+
+class CAchievementDAVindicated : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("VINDICATED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "VINDICATED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define VINDICATED 31 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAVindicated, VINDICATED, "VINDICATED", 1)
+
+
+class CAchievementDAPersuaded : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("PERSUADED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "PERSUADED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define PERSUADED 32 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAPersuaded, PERSUADED, "PERSUADED", 1)
+
+
+class CAchievementDAMacDaddyd : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("MAC_DADDYD");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "MAC_DADDYD") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define MAC_DADDYD 33 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAMacDaddyd, MAC_DADDYD, "MAC_DADDYD", 1)
+
+
+class CAchievementDAHorseWhisperer : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("HORSE_WHISPERER");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "HORSE_WHISPERER") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define HORSE_WHISPERER 34 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAHorseWhisperer, HORSE_WHISPERER, "HORSE_WHISPERER", 1)
+
+
+class CAchievementDAVigilant : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("VIGILANT");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "VIGILANT") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define VIGILANT 35 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAVigilant, VIGILANT, "VIGILANT", 1)
+
+
+class CAchievementDABlackMagicked : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(10000);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("BLACK_MAGICKED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "BLACK_MAGICKED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define BLACK_MAGICKED 36 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDABlackMagicked, BLACK_MAGICKED, "BLACK_MAGICKED", 1)
+
+/*
+	end Weapon grind achievements
+************************************************/
+
+
 //#endif // GAME_DLL

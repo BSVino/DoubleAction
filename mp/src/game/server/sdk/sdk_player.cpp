@@ -2017,6 +2017,23 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		// shot with a gun
 		if (pWeapon && (info.GetDamageType() != DMG_CLUB) && (info.GetDamageType() != DMG_BLAST) && (info.GetDamageType() != DMG_DROWN) && (info.GetDamageType() != DMG_FALL)){
 
+			// weapon lifetime kills grind achievements
+			const char* weapon_name = pWeapon->GetPrintName();
+			if (strcmp(weapon_name, "#DA_Weapon_MAC10") == 0)
+				DA_ApproachAchievement("MAC_DADDYD", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0)
+				DA_ApproachAchievement("VINDICATED", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0)
+				DA_ApproachAchievement("HORSE_WHISPERER", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_Beretta") == 0)
+				DA_ApproachAchievement("VIGILANT", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_MP5K") == 0)
+				DA_ApproachAchievement("UNDERTAKEN", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_Mossberg") == 0)
+				DA_ApproachAchievement("PERSUADED", this->GetUserID());
+			if (strcmp(weapon_name, "#DA_Weapon_M16") == 0)
+				DA_ApproachAchievement("BLACK_MAGICKED", this->GetUserID());
+
 			// killed with a headshot
 			if (pVictim->LastHitGroup() == HITGROUP_HEAD){
 

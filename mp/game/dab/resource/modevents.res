@@ -136,4 +136,39 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"MAC_DADDYD"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"VINDICATED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"HORSE_WHISPERER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"VIGILANT"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"PERSUADED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"BLACK_MAGICKED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"UNDERTAKEN"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
