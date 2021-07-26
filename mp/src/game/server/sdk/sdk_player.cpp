@@ -1558,9 +1558,9 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 					Instructor_LessonLearned("stuntfromexplo");
 
 					// achievement "Michael Bay" - DIVEAWAYFROMEXPLOSION
-					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION", this);
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION", this->GetUserID());
 					// achievement "Bad Boys II" - DIVEAWAYFROMEXPLOSION_250
-					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION_250", this);
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION_250", this->GetUserID());
 
 				}
 			}
@@ -1849,11 +1849,10 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pSDKAttacker->m_iCurrentStreak++;
 		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
 
-
+		// achievement "Penguininnabox" 250 kill streak
 		if (pSDKAttacker->m_iCurrentStreak > 249){
-			DA_ApproachAchievement("PENGUIN", pSDKAttacker);
+			DA_ApproachAchievement("PENGUIN", pSDKAttacker->GetUserID());
 		}
-		DevMsg("\n current killstreak: %i", pSDKAttacker->m_iCurrentStreak);
 
 		if (info.GetDamageType() == DMG_BLAST)
 			pSDKAttacker->m_iGrenadeKills++;
@@ -2024,12 +2023,12 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				// point blank
 				if (flDistance < 100){
 					// achievement "Dodge this" - POINT BLANK HEADSHOT
-					DA_ApproachAchievement("DODGETHIS", this);
+					DA_ApproachAchievement("DODGETHIS", this->GetUserID());
 				}
 
 				// achievement "Hardboiled" - Kill someone with a headshot after flipping off them.
 				if (pVictim->entindex() == m_nLastPlayerIndexIBackflippedOff){
-					DA_ApproachAchievement("HARDBOILED", this);
+					DA_ApproachAchievement("HARDBOILED", this->GetUserID());
 				}
 
 			}
@@ -2040,7 +2039,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				int prevOwnerID = previousWeaponOwner->entindex();
 				int victimID = pVictim->entindex();
 				if (victimID == prevOwnerID){
-					DA_ApproachAchievement("BETRAYED", this);
+					DA_ApproachAchievement("BETRAYED", this->GetUserID());
 				}
 			}
 		}
@@ -2048,11 +2047,11 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
 		// achievement "Divepunch is its own reward" - DIVEPUNCHKILL
-		DA_ApproachAchievement("DIVEPUNCHKILL", this);
+		DA_ApproachAchievement("DIVEPUNCHKILL", this->GetUserID());
 
 		if (m_Shared.IsSuperFalling()){
 			// achievement "SKYPUNCH!!" - SKYPUNCH
-			DA_ApproachAchievement("SKYPUNCH", this);
+			DA_ApproachAchievement("SKYPUNCH", this->GetUserID());
 		}
 	}
 
