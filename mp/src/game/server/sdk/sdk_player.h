@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for SDK Game
 //
@@ -126,6 +126,9 @@ public:
 	static void  SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject = NULL);
 
 	static void  SendBroadcastSound(const char* pszName);
+
+	CNetworkVar(int, m_nLastPlayerIndexIBackflippedOff);
+	void SetLastPlayerIndexIBackflippedOff(int entindex){ m_nLastPlayerIndexIBackflippedOff = entindex; }
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

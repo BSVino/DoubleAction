@@ -272,6 +272,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bWasKilledByString ) ),
 	SendPropStringT( SENDINFO( m_szKillerString ) ),
 
+	SendPropInt(SENDINFO(m_nLastPlayerIndexIBackflippedOff)),
+
 	SendPropEHandle( SENDINFO( m_hSwitchFrom ) ),
 END_SEND_TABLE()
 
@@ -2017,6 +2019,11 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				if (flDistance < 100){
 					// achievement "Dodge this" - POINT BLANK HEADSHOT
 					DA_ApproachAchievement("DODGETHIS", this);
+				}
+
+				// achievement "Hardboiled" - Kill someone with a headshot after flipping off them.
+				if (pVictim->entindex() == m_nLastPlayerIndexIBackflippedOff){
+					DA_ApproachAchievement("HARDBOILED", this);
 				}
 
 			}

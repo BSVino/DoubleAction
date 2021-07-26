@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -269,6 +269,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bWasKilledByBrawl ) ),
 	RecvPropBool( RECVINFO( m_bWasKilledByString ) ),
 	RecvPropString( RECVINFO( m_szKillerString ) ),
+
+	RecvPropInt(RECVINFO(m_nLastPlayerIndexIBackflippedOff)),
 
 	RecvPropEHandle( RECVINFO( m_hSwitchFrom ) ),
 END_RECV_TABLE()
