@@ -1849,6 +1849,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pSDKAttacker->m_iCurrentStreak++;
 		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
 
+
+		if (pSDKAttacker->m_iCurrentStreak > 249){
+			DA_ApproachAchievement("PENGUIN", pSDKAttacker);
+		}
+		DevMsg("\n current killstreak: %i", pSDKAttacker->m_iCurrentStreak);
+
 		if (info.GetDamageType() == DMG_BLAST)
 			pSDKAttacker->m_iGrenadeKills++;
 		else
