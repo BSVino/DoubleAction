@@ -131,7 +131,7 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
-	"HARDBOILED"
+	"PENGUIN"
 	{
 		"userid"	"short"   	// user ID who died
 	}
