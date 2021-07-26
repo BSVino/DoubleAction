@@ -109,31 +109,43 @@
 	"DIVEPUNCHKILL"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 	"DIVEAWAYFROMEXPLOSION"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 	"DODGETHIS"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 	"SKYPUNCH"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 	"BETRAYED"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 	"PENGUIN"
 	{
 		"userid"	"short"   	// user ID who died
+		"amount"	"short"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
+	}
+	
+	"DISCOSTU"
+	{
+		"userid"	"short"   	// user ID who died
+		"amount"	"float"		// amount by which the stat shall be incremented (defaults to 1 if not specified)
 	}
 	
 }

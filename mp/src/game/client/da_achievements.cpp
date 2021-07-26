@@ -456,4 +456,48 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDAPenguin, PENGUIN, "PENGUIN", 1)
 
 
+
+
+
+// 250 KILLSTREAK
+class CAchievementDADicoStu : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(100);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("DISCOSTU");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "DISCOSTU") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+			float amount = event->GetInt("amount"); // the amount to add to the stat
+
+			DevMsg("\n increasing DISCOSTU by $f", amount);
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(amount); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define DISCOSTU 13 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDADicoStu, DISCOSTU, "DISCOSTU", 1)
+
+
 //#endif // GAME_DLL

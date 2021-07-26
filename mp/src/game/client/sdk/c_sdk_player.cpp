@@ -237,6 +237,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropInt( RECVINFO( m_flStylePoints ) ),
 	RecvPropFloat( RECVINFO(m_flStyleSkillCharge) ),
 	RecvPropFloat( RECVINFO(m_flStyleSkillActivationTime) ),
+	RecvPropFloat( RECVINFO( m_flStylePointsThisLife ) ),
 
 	RecvPropInt( RECVINFO( m_iSlowMoType ) ),
 	RecvPropBool( RECVINFO( m_bHasSuperSlowMo ) ),

@@ -241,6 +241,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropInt( SENDINFO( m_flStylePoints ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillCharge ) ),
 	SendPropFloat( SENDINFO( m_flStyleSkillActivationTime ), 32, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO( m_flStylePointsThisLife ) ),
 
 	SendPropInt( SENDINFO( m_iSlowMoType ), 4, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bHasSuperSlowMo ) ),
@@ -1190,6 +1191,7 @@ void CSDKPlayer::Spawn()
 	if (m_bGotWorthIt)
 	{
 		m_flTotalStyle += da_stylemeteractivationcost.GetFloat() - m_flStylePoints;
+		m_flStylePointsThisLife += da_stylemeteractivationcost.GetFloat() - m_flStylePoints;
 		SetStylePoints(da_stylemeteractivationcost.GetFloat());
 		ActivateMeter();
 	}
@@ -1219,6 +1221,11 @@ void CSDKPlayer::Spawn()
 	m_bWasKilledByGrenade = false;
 	m_bWasKilledByBrawl = false;
 	m_bWasKilledByString = false;
+
+
+	// send our style points to steam and then reset for next life
+	//DA_ApproachAchievement("DISCOSTU", this->GetUserID(), m_flStylePointsThisLife);
+	m_flStylePointsThisLife = 0;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -3991,6 +3998,7 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement
 	points *= GetDKRatio(0.7, 2, true);
 
 	m_flTotalStyle += points;
+	m_flStylePointsThisLife += points;
 
 #ifdef WITH_DATA_COLLECTION
 	DataManager().AddStyle(this, points);

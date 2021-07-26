@@ -398,6 +398,7 @@ private:
 	CNetworkVar(float, m_flStylePoints);
 	CNetworkVar(float, m_flStyleSkillCharge);
 	CNetworkVar(float, m_flStyleSkillActivationTime);
+	CNetworkVar(float, m_flStylePointsThisLife);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
