@@ -136,6 +136,8 @@ public:
 	// HINDU_COWS - 3 headshots while superfalling with a pistol
 	int m_nNumHinduCowsThisSuperfall = 0;
 
+	bool isUsingPistol(const char* weapon_name);
+	bool isUsingRifle(const char* weapon_name);
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

@@ -2364,6 +2364,37 @@ int CSDKPlayer::GetMaxHealth() const
 	return BaseClass::GetMaxHealth();
 }
 
+
+bool CSDKPlayer::isUsingPistol(const char* weapon_name){
+	if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
+	{
+		return true;
+	}
+
+	// else
+	return false;
+}
+
+bool CSDKPlayer::isUsingRifle(const char* weapon_name){
+	if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_M16") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_FAL_Golden") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_M16_Golden") == 0)
+	{
+		return true;
+	}
+
+	// else
+	return false;
+}
+
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
 {
 	return ThrowWeapon(GetActiveSDKWeapon(), bAutoSwitch);
