@@ -2041,7 +2041,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			if (pVictim->LastHitGroup() == HITGROUP_HEAD){
 
 				// point blank
-				if (flDistance < 100){
+				if (flDistance < 100 && isUsingPistol(weapon_name)){
 					// achievement "Dodge this" - POINT BLANK HEADSHOT
 					DA_ApproachAchievement("DODGETHIS", this->GetUserID());
 				}
