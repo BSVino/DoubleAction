@@ -97,7 +97,7 @@ DECLARE_ACHIEVEMENT(CAchievementDAdivepunch250, DIVEPUNCHKILL_250, "DIVEPUNCHKIL
 
 
 
-// GET 250 DIVEPUNCH KILLS
+// GET 1000 DIVEPUNCH KILLS
 class CAchievementDAdivepunch1000 : public CBaseAchievement
 {
 protected:
@@ -142,7 +142,7 @@ protected:
 	virtual void Init()
 	{
 		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
-		SetGoal(651438);
+		SetGoal(10000);
 		m_bStoreProgressInSteam = true;
 	}
 
