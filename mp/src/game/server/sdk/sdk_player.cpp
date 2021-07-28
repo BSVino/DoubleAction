@@ -1219,6 +1219,9 @@ void CSDKPlayer::Spawn()
 	m_bWasKilledByGrenade = false;
 	m_bWasKilledByBrawl = false;
 	m_bWasKilledByString = false;
+
+	// you always die after a superfall so this is a safe place to reset this number
+	m_nNumEnemiesKilledThisSuperfall = 0;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -2046,6 +2049,18 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				// achievement "Hardboiled" - Kill someone with a headshot after flipping off them.
 				if (pVictim->entindex() == m_nLastPlayerIndexIBackflippedOff){
 					DA_ApproachAchievement("HARDBOILED", this->GetUserID());
+				}
+
+				if (m_Shared.IsSuperFalling()){
+					m_nNumEnemiesKilledThisSuperfall++;
+
+					// achievement SUPERFALL_SHARPSHOOTER
+					if (m_nNumEnemiesKilledThisSuperfall > 2)
+						DA_ApproachAchievement("SUPERFALL_SHARPSHOOTER", this->GetUserID());
+
+					// achievement SUPERFALL_KING
+					if (m_nNumEnemiesKilledThisSuperfall > 4)
+						DA_ApproachAchievement("SUPERFALL_KING", this->GetUserID());
 				}
 
 			}

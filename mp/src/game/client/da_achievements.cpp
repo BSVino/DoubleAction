@@ -460,7 +460,10 @@ DECLARE_ACHIEVEMENT(CAchievementDAPenguin, PENGUIN, "PENGUIN", 1)
 
 
 
-
+/**************************************************************
+	Fall Guy, Plunger and Deep Impact all use the same game event - FALL_GUY
+*/
+// Fall Guy - 50 superfall kills
 class CAchievementDAFallguy : public CBaseAchievement
 {
 protected:
@@ -497,8 +500,7 @@ protected:
 #define FALL_GUY 24 // the stat ID and name from steamworks - not the achievement ID
 DECLARE_ACHIEVEMENT(CAchievementDAFallguy, FALL_GUY, "FALL_GUY", 1)
 
-
-
+// Plunger - 250 superfall kills
 class CAchievementDAPlunger : public CBaseAchievement
 {
 protected:
@@ -535,8 +537,7 @@ protected:
 #define PLUNGER 25 // the stat ID and name from steamworks - not the achievement ID
 DECLARE_ACHIEVEMENT(CAchievementDAPlunger, PLUNGER, "PLUNGER", 1)
 
-
-
+// Deep Impact - 1000 superfall kills
 class CAchievementDADeepImpact : public CBaseAchievement
 {
 protected:
@@ -572,6 +573,88 @@ protected:
 
 #define DEEP_IMPACT 26 // the stat ID and name from steamworks - not the achievement ID
 DECLARE_ACHIEVEMENT(CAchievementDADeepImpact, DEEP_IMPACT, "DEEP_IMPACT", 1)
+
+
+
+
+
+
+// SUPERFALL_SHARPSHOOTER - 3 kills in a single superfall
+class CAchievementDASuperfallSharpshooter : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("SUPERFALL_SHARPSHOOTER");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SUPERFALL_SHARPSHOOTER") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define SUPERFALL_SHARPSHOOTER 27 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDASuperfallSharpshooter, SUPERFALL_SHARPSHOOTER, "SUPERFALL_SHARPSHOOTER", 1)
+
+
+// SUPERFALL_KING - 5 kills in a single superfall
+class CAchievementDASuperfallKing : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("SUPERFALL_KING");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "SUPERFALL_KING") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define SUPERFALL_KING 28 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDASuperfallKing, SUPERFALL_KING, "SUPERFALL_KING", 1)
+
+
 
 
 

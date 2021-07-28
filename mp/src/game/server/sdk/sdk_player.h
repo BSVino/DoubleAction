@@ -127,8 +127,12 @@ public:
 
 	static void  SendBroadcastSound(const char* pszName);
 
+	// HARDBOILED Achievement
 	CNetworkVar(int, m_nLastPlayerIndexIBackflippedOff);
 	void SetLastPlayerIndexIBackflippedOff(int entindex){ m_nLastPlayerIndexIBackflippedOff = entindex; }
+
+	// SUPERFALL_KING Achievement
+	int m_nNumEnemiesKilledThisSuperfall = 0;
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

@@ -176,4 +176,14 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"SUPERFALL_SHARPSHOOTER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SUPERFALL_KING"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
