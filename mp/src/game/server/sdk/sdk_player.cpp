@@ -2010,8 +2010,6 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
 	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
 
-	const char* my_weapon_name = pWeapon->GetPrintName();
-
 	if (pWeaponInfo)
 		flPoints *= pWeaponInfo->m_flStyleMultiplier;
 	Vector vecVictimForward;
@@ -2022,8 +2020,19 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 	// most of our achievements are triggered when you kill someone
 	if (bKilledVictim){
+
+		// during your own slowmo
+		if (m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL){
+			m_nNumKillsThisSlowmo++;
+			DevMsg("\n\n m_nNumKillsThisSlowmo %i \n\n", m_nNumKillsThisSlowmo);
+			if (m_nNumKillsThisSlowmo > 2)
+				DA_ApproachAchievement("SLOWPRO", this->GetUserID());
+		}
+
 		// shot with a gun
 		if (pWeapon && (info.GetDamageType() != DMG_CLUB) && (info.GetDamageType() != DMG_BLAST) && (info.GetDamageType() != DMG_DROWN) && (info.GetDamageType() != DMG_FALL)){
+
+			const char* my_weapon_name = pWeapon->GetPrintName();
 
 			// weapon lifetime kills grind achievements
 			if (strcmp(my_weapon_name, "#DA_Weapon_MAC10") == 0)
@@ -2198,6 +2207,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
 
 			// achievement POTSHOTTER - get a long range kill using a pistol on a rifle wielding player
+			const char* my_weapon_name = pWeapon->GetPrintName();
 			bool usingPistol = isUsingPistol(my_weapon_name);
 			const char* their_weapon_name = pVictim->diedHoldingWeapon->GetPrintName();
 			bool usingRifle = isUsingRifle(their_weapon_name);
@@ -4254,6 +4264,8 @@ void CSDKPlayer::SetSlowMoType(int iType)
 {
 	if (iType != m_iSlowMoType)
 		m_iSlowMoType = iType;
+
+	m_nNumKillsThisSlowmo = 0;
 }
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)

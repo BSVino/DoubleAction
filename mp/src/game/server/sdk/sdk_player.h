@@ -135,6 +135,8 @@ public:
 	int m_nNumEnemiesKilledThisSuperfall = 0;
 	// HINDU_COWS - 3 headshots while superfalling with a pistol
 	int m_nNumHinduCowsThisSuperfall = 0;
+	// SLOWPRO - 3 kills in a single slowmo
+	int m_nNumKillsThisSlowmo = 0;
 
 	bool isUsingPistol(const char* weapon_name);
 	bool isUsingRifle(const char* weapon_name);

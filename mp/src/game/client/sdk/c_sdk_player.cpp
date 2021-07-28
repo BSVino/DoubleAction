@@ -270,7 +270,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bWasKilledByString ) ),
 	RecvPropString( RECVINFO( m_szKillerString ) ),
 
-	RecvPropInt(RECVINFO(m_nLastPlayerIndexIBackflippedOff)),
+	RecvPropInt(RECVINFO(m_nLastPlayerIndexIBackflippedOff)), 
 
 	RecvPropEHandle( RECVINFO( m_hSwitchFrom ) ),
 END_RECV_TABLE()

@@ -196,4 +196,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"SLOWPRO"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
