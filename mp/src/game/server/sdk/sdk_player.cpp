@@ -2054,14 +2054,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				// achievement "Calm as Hindu Cows" - three enemies, with headshots, using a pistol, in a single superfall
 				if (m_Shared.IsSuperFalling()){
 
-					if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0 ||
-						strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
+					if (isUsingPistol(weapon_name))
 					{
 						m_nNumHinduCowsThisSuperfall++;
 						if (m_nNumHinduCowsThisSuperfall > 2)
@@ -2197,8 +2190,16 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (flDistance > 1200)
 	{
 		// Long range.
-		if (bKilledVictim)
+		if (bKilledVictim){
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
+
+			// achievement POTSHOTTER - get a long range kill using a pistol on a rifle wielding player
+			const char* my_weapon_name = pWeapon->GetPrintName();
+			const char* their_weapon_name = pVictim->GetActiveWeapon()->GetPrintName();
+			if (isUsingPistol(my_weapon_name) && isUsingRifle(their_weapon_name)){
+				DA_ApproachAchievement("POTSHOTTER", this->GetUserID());
+			}
+		}
 		else
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_SMALL, ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
 	}

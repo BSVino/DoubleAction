@@ -191,4 +191,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"POTSHOTTER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
