@@ -2022,19 +2022,19 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 
 			// weapon lifetime kills grind achievements
 			const char* weapon_name = pWeapon->GetPrintName();
-			if (strcmp(weapon_name, "#DA_Weapon_MAC10") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_MAC10") == 0 || strcmp(weapon_name, "#DA_Weapon_MAC10_Golden") == 0)
 				DA_ApproachAchievement("MAC_DADDYD", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0 || strcmp(weapon_name, "#DA_Weapon_FAL_Golden") == 0)
 				DA_ApproachAchievement("VINDICATED", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 || strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0)
 				DA_ApproachAchievement("HORSE_WHISPERER", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_Beretta") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 || strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
 				DA_ApproachAchievement("VIGILANT", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_MP5K") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_MP5K") == 0 || strcmp(weapon_name, "#DA_Weapon_MP5K_Golden") == 0)
 				DA_ApproachAchievement("UNDERTAKEN", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_Mossberg") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_Mossberg") == 0 || strcmp(weapon_name, "#DA_Weapon_Mossberg_Golden") == 0)
 				DA_ApproachAchievement("PERSUADED", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_M16") == 0)
+			if (strcmp(weapon_name, "#DA_Weapon_M16") == 0 || strcmp(weapon_name, "#DA_Weapon_M16_Golden") == 0)
 				DA_ApproachAchievement("BLACK_MAGICKED", this->GetUserID());
 
 			// killed with a headshot
@@ -2084,6 +2084,16 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			if (m_Shared.IsSuperFalling()){
 				// the FALL_GUY event will trigger all of our superfall grinders
 				DA_ApproachAchievement("FALL_GUY", this->GetUserID());
+
+				m_nNumEnemiesKilledThisSuperfall++;
+
+				// achievement SUPERFALL_SHARPSHOOTER
+				if (m_nNumEnemiesKilledThisSuperfall > 2)
+					DA_ApproachAchievement("SUPERFALL_SHARPSHOOTER", this->GetUserID());
+
+				// achievement SUPERFALL_KING
+				if (m_nNumEnemiesKilledThisSuperfall > 4)
+					DA_ApproachAchievement("SUPERFALL_KING", this->GetUserID());
 			}
 		}
 	}
