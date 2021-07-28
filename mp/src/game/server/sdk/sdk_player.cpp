@@ -1899,6 +1899,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pAttackerSDK->GiveSlowMo(1);
 				pAttackerSDK->Instructor_LessonLearned("earn_slowmo");
 			}
+
+			if (pAttackerSDK->HasBriefcase())
+				pAttackerSDK->m_nNumKillsThisBriefcase++;
 		}
 	}
 	else
@@ -4323,6 +4326,8 @@ void CSDKPlayer::DropBriefcase()
 	m_hBriefcase = NULL;
 
 	SendBroadcastSound("MiniObjective.BriefcaseDrop");
+
+	m_nNumKillsThisBriefcase = 0;
 }
 
 bool CSDKPlayer::CanDoCoderHacks()

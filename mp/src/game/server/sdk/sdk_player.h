@@ -137,6 +137,8 @@ public:
 	int m_nNumHinduCowsThisSuperfall = 0;
 	// SLOWPRO - 3 kills in a single slowmo
 	int m_nNumKillsThisSlowmo = 0;
+	// SPECIAL_DELIVERY - capture a briefcase without killing anyone
+	int m_nNumKillsThisBriefcase = 0;
 
 	bool isUsingPistol(const char* weapon_name);
 	bool isUsingRifle(const char* weapon_name);

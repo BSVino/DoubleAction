@@ -33,6 +33,7 @@
 	#include "da_briefcase.h"
 	#include "vote_controller.h"
 	#include "da_datamanager.h"
+	#include "da_achievement_helpers.h"
 
 #endif
 
@@ -2497,6 +2498,10 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");
+
+		if (pPlayer->m_nNumKillsThisBriefcase == 0){
+			DA_ApproachAchievement("SPECIALDELIVERY", pPlayer->GetUserID());
+		}
 	}
 
 	CleanupMiniObjective();

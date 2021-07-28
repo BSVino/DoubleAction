@@ -201,4 +201,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"SPECIALDELIVERY"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
