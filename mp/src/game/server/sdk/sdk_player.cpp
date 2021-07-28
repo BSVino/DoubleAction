@@ -1855,8 +1855,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		pSDKAttacker->m_iCurrentStreak++;
 		pSDKAttacker->m_iStreakKills = max(pSDKAttacker->m_iCurrentStreak, pSDKAttacker->m_iStreakKills);
 
-		// achievement "Penguininnabox" 250 kill streak
-		if (pSDKAttacker->m_iCurrentStreak > 249){
+		// achievement "Penguininnabox" 50 kill streak
+		if (pSDKAttacker->m_iCurrentStreak > 49){
 			DA_ApproachAchievement("PENGUIN", pSDKAttacker->GetUserID());
 		}
 
