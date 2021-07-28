@@ -133,6 +133,9 @@ public:
 
 	// SUPERFALL_KING Achievement
 	int m_nNumEnemiesKilledThisSuperfall = 0;
+	// HINDU_COWS - 3 headshots while superfalling with a pistol
+	int m_nNumHinduCowsThisSuperfall = 0;
+
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

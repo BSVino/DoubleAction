@@ -655,6 +655,44 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDASuperfallKing, SUPERFALL_KING, "SUPERFALL_KING", 1)
 
 
+// HINDU_COWS - 3 kills in a single superfall, all headshots, with a pistol
+class CAchievementDAHinduCows : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("HINDU_COWS");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "HINDU_COWS") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define HINDU_COWS 29 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAHinduCows, HINDU_COWS, "HINDU_COWS", 1)
+
+
 
 
 

@@ -2051,16 +2051,22 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 					DA_ApproachAchievement("HARDBOILED", this->GetUserID());
 				}
 
+				// achievement "Calm as Hindu Cows" - three enemies, with headshots, using a pistol, in a single superfall
 				if (m_Shared.IsSuperFalling()){
-					m_nNumEnemiesKilledThisSuperfall++;
 
-					// achievement SUPERFALL_SHARPSHOOTER
-					if (m_nNumEnemiesKilledThisSuperfall > 2)
-						DA_ApproachAchievement("SUPERFALL_SHARPSHOOTER", this->GetUserID());
-
-					// achievement SUPERFALL_KING
-					if (m_nNumEnemiesKilledThisSuperfall > 4)
-						DA_ApproachAchievement("SUPERFALL_KING", this->GetUserID());
+					if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0 ||
+						strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
+					{
+						m_nNumHinduCowsThisSuperfall++;
+						if (m_nNumHinduCowsThisSuperfall > 2)
+							DA_ApproachAchievement("HINDU_COWS", this->GetUserID());
+					}
 				}
 
 			}

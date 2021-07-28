@@ -186,4 +186,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"HINDU_COWS"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
