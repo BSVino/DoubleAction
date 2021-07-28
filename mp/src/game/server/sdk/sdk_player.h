@@ -139,6 +139,8 @@ public:
 	bool isUsingPistol(const char* weapon_name);
 	bool isUsingRifle(const char* weapon_name);
 
+	CWeaponSDKBase* diedHoldingWeapon;
+
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;
 	

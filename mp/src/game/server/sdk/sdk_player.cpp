@@ -1222,6 +1222,7 @@ void CSDKPlayer::Spawn()
 
 	// you always die after a superfall so this is a safe place to reset this number
 	m_nNumEnemiesKilledThisSuperfall = 0;
+
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1777,6 +1778,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
 
+	diedHoldingWeapon = this->GetActiveSDKWeapon();
+
 	m_hKiller = ToSDKPlayer(info.GetAttacker());
 	m_hInflictor = info.GetInflictor();
 	if (m_hInflictor.Get() != m_hKiller && info.GetDamageType() == DMG_BLAST)
@@ -2007,6 +2010,8 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
 	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
 
+	const char* my_weapon_name = pWeapon->GetPrintName();
+
 	if (pWeaponInfo)
 		flPoints *= pWeaponInfo->m_flStyleMultiplier;
 	Vector vecVictimForward;
@@ -2021,27 +2026,26 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		if (pWeapon && (info.GetDamageType() != DMG_CLUB) && (info.GetDamageType() != DMG_BLAST) && (info.GetDamageType() != DMG_DROWN) && (info.GetDamageType() != DMG_FALL)){
 
 			// weapon lifetime kills grind achievements
-			const char* weapon_name = pWeapon->GetPrintName();
-			if (strcmp(weapon_name, "#DA_Weapon_MAC10") == 0 || strcmp(weapon_name, "#DA_Weapon_MAC10_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_MAC10") == 0)
 				DA_ApproachAchievement("MAC_DADDYD", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0 || strcmp(weapon_name, "#DA_Weapon_FAL_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_FAL") == 0)
 				DA_ApproachAchievement("VINDICATED", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 || strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_M1911") == 0 || strcmp(my_weapon_name, "#DA_Weapon_AKIMBO_M1911") == 0)
 				DA_ApproachAchievement("HORSE_WHISPERER", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 || strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 || strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_BERETTA") == 0 || strcmp(my_weapon_name, "#DA_Weapon_AKIMBO_beretta") == 0)
 				DA_ApproachAchievement("VIGILANT", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_MP5K") == 0 || strcmp(weapon_name, "#DA_Weapon_MP5K_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_MP5K") == 0)
 				DA_ApproachAchievement("UNDERTAKEN", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_Mossberg") == 0 || strcmp(weapon_name, "#DA_Weapon_Mossberg_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_Mossberg") == 0)
 				DA_ApproachAchievement("PERSUADED", this->GetUserID());
-			if (strcmp(weapon_name, "#DA_Weapon_M16") == 0 || strcmp(weapon_name, "#DA_Weapon_M16_Golden") == 0)
+			if (strcmp(my_weapon_name, "#DA_Weapon_M16") == 0)
 				DA_ApproachAchievement("BLACK_MAGICKED", this->GetUserID());
 
 			// killed with a headshot
 			if (pVictim->LastHitGroup() == HITGROUP_HEAD){
 
 				// point blank
-				if (flDistance < 100 && isUsingPistol(weapon_name)){
+				if (flDistance < 100 && isUsingPistol(my_weapon_name)){
 					// achievement "Dodge this" - POINT BLANK HEADSHOT
 					DA_ApproachAchievement("DODGETHIS", this->GetUserID());
 				}
@@ -2054,7 +2058,7 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 				// achievement "Calm as Hindu Cows" - three enemies, with headshots, using a pistol, in a single superfall
 				if (m_Shared.IsSuperFalling()){
 
-					if (isUsingPistol(weapon_name))
+					if (isUsingPistol(my_weapon_name))
 					{
 						m_nNumHinduCowsThisSuperfall++;
 						if (m_nNumHinduCowsThisSuperfall > 2)
@@ -2194,9 +2198,10 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
 
 			// achievement POTSHOTTER - get a long range kill using a pistol on a rifle wielding player
-			const char* my_weapon_name = pWeapon->GetPrintName();
-			const char* their_weapon_name = pVictim->GetActiveWeapon()->GetPrintName();
-			if (isUsingPistol(my_weapon_name) && isUsingRifle(their_weapon_name)){
+			bool usingPistol = isUsingPistol(my_weapon_name);
+			const char* their_weapon_name = pVictim->diedHoldingWeapon->GetPrintName();
+			bool usingRifle = isUsingRifle(their_weapon_name);
+			if (usingPistol && usingRifle){
 				DA_ApproachAchievement("POTSHOTTER", this->GetUserID());
 			}
 		}
@@ -2368,13 +2373,9 @@ int CSDKPlayer::GetMaxHealth() const
 
 bool CSDKPlayer::isUsingPistol(const char* weapon_name){
 	if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Beretta") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_M1911_Golden") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Beretta_Golden") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Akimbo_M1911_Golden") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_Akimbo_Beretta_Golden") == 0)
+		strcmp(weapon_name, "#DA_Weapon_AKIMBO_M1911") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_BERETTA") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_AKIMBO_beretta") == 0)
 	{
 		return true;
 	}
@@ -2385,9 +2386,7 @@ bool CSDKPlayer::isUsingPistol(const char* weapon_name){
 
 bool CSDKPlayer::isUsingRifle(const char* weapon_name){
 	if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_M16") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_FAL_Golden") == 0 ||
-		strcmp(weapon_name, "#DA_Weapon_M16_Golden") == 0)
+		strcmp(weapon_name, "#DA_Weapon_M16") == 0)
 	{
 		return true;
 	}
