@@ -734,8 +734,8 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDASuperfallKing, SUPERFALL_KING, "SUPERFALL_KING", 1)
 
 
-// HINDU_COWS - 3 kills in a single superfall, all headshots, with a pistol
-class CAchievementDAHinduCows : public CBaseAchievement
+// STEADY_EDDIE - headshot kill with pistol while superfalling
+class CAchievementDASteadyEddie : public CBaseAchievement
 {
 protected:
 	virtual void Init()
@@ -748,14 +748,14 @@ protected:
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent("HINDU_COWS");
+		ListenForGameEvent("STEADY_EDDIE");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
 		// compare event names and check that we have a local player
-		if (0 == Q_strcmp(event->GetName(), "HINDU_COWS") && C_BasePlayer::GetLocalPlayer())
+		if (0 == Q_strcmp(event->GetName(), "STEADY_EDDIE") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 
@@ -768,8 +768,8 @@ protected:
 	}
 };
 
-#define HINDU_COWS 29 // the stat ID and name from steamworks - not the achievement ID
-DECLARE_ACHIEVEMENT(CAchievementDAHinduCows, HINDU_COWS, "HINDU_COWS", 1)
+#define STEADY_EDDIE 29 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDASteadyEddie, STEADY_EDDIE, "STEADY_EDDIE", 1)
 
 
 

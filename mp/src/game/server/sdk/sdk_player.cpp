@@ -2078,14 +2078,12 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 					DA_ApproachAchievement("HARDBOILED", this->GetUserID());
 				}
 
-				// achievement "Calm as Hindu Cows" - three enemies, with headshots, using a pistol, in a single superfall
+				// achievement "Steady Eddie" - a headshot, using a pistol, in a superfall
 				if (m_Shared.IsSuperFalling()){
 
 					if (isUsingPistol(my_weapon_name))
 					{
-						m_nNumHinduCowsThisSuperfall++;
-						if (m_nNumHinduCowsThisSuperfall > 2)
-							DA_ApproachAchievement("HINDU_COWS", this->GetUserID());
+							DA_ApproachAchievement("STEADY_EDDIE", this->GetUserID());
 					}
 				}
 

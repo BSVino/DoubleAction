@@ -191,7 +191,7 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
-	"HINDU_COWS"
+	"STEADY_EDDIE"
 	{
 		"userid"	"short"   	// user ID who died
 	}
