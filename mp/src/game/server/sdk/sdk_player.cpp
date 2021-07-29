@@ -1872,8 +1872,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pSDKAttacker->m_iBrawlKills++;
 		}
 
-		// achievement "No you don't" - kill a player who has their slowmo active
-		if (m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL){
+		// achievement "No you don't" - kill a player who has their super slowmo active
+		if ( m_iSlowMoType == SLOWMO_STYLESKILL){
 			DA_ApproachAchievement("NO_YOU_DONT", pSDKAttacker->GetUserID());
 		}
 		
