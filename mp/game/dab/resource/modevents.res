@@ -226,4 +226,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"DISCOSTU"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
