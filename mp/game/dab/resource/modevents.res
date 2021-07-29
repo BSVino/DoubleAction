@@ -221,4 +221,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"SOMEBODY_STOP_ME"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }

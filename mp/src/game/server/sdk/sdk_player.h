@@ -141,6 +141,8 @@ public:
 	int m_nNumKillsThisBriefcase = 0;
 	// GET_BANNED - 30 grenade kills in one round
 	int m_nNumGrenadeKillsThisRound = 0;
+	// SOMEBODY_STOP_ME - 50 kills while wanted
+	int m_nNumKillsThisWanted = 0;
 
 	bool isUsingPistol(const char* weapon_name);
 	bool isUsingRifle(const char* weapon_name);
