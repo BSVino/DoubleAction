@@ -1128,4 +1128,44 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDANoYouDont, NO_YOU_DONT, "NO_YOU_DONT", 1)
 
 
+
+
+// NO_YOU_DONT - kill a player who has their slowmo activated
+class CAchievementDAHowToGetBanned : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("GET_BANNED");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "GET_BANNED") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define GET_BANNED 23 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDAHowToGetBanned, GET_BANNED, "GET_BANNED", 1)
+
+
 //#endif // GAME_DLL

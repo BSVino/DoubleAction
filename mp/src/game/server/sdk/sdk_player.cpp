@@ -1410,6 +1410,8 @@ void CSDKPlayer::InitialSpawn( void )
 		State_Enter( STATE_WELCOME );
 
 	ClearLoadout();
+
+	m_nNumGrenadeKillsThisRound = 0;
 }
 
 void CSDKPlayer::OnDive()
@@ -2036,6 +2038,14 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			DevMsg("\n\n m_nNumKillsThisSlowmo %i \n\n", m_nNumKillsThisSlowmo);
 			if (m_nNumKillsThisSlowmo > 2)
 				DA_ApproachAchievement("SLOWPRO", this->GetUserID());
+		}
+
+		// killed with a grenade
+		if (info.GetDamageType() == DMG_BLAST){
+			// GET_BANNED - 30 grenade kills in one round
+			m_nNumGrenadeKillsThisRound++;
+			if (m_nNumGrenadeKillsThisRound > 29)
+				DA_ApproachAchievement("GET_BANNED", this->GetUserID());
 		}
 
 		// shot with a gun

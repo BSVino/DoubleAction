@@ -216,4 +216,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"GET_BANNED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
