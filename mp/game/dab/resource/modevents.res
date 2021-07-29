@@ -211,4 +211,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"NO_YOU_DONT"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }

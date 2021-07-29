@@ -1088,4 +1088,44 @@ protected:
 DECLARE_ACHIEVEMENT(CAchievementDASpecialDelivery, SPECIALDELIVERY, "SPECIALDELIVERY", 1)
 
 
+
+
+// NO_YOU_DONT - kill a player who has their slowmo activated
+class CAchievementDANoYouDont : public CBaseAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		m_bStoreProgressInSteam = true;
+	}
+
+	// register our event listeners
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("NO_YOU_DONT");
+	}
+
+	// define what happens when we catch an event
+	void FireGameEvent_Internal(IGameEvent *event)
+	{
+		// compare event names and check that we have a local player
+		if (0 == Q_strcmp(event->GetName(), "NO_YOU_DONT") && C_BasePlayer::GetLocalPlayer())
+		{
+			int iUserID = event->GetInt("userid"); // the userID passed from the event data
+
+			// if the atackers userID from the event matches the local player
+			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
+			{
+				IncrementCount(); // WE ALL GOOD!
+			}
+		}
+	}
+};
+
+#define NO_YOU_DONT 18 // the stat ID and name from steamworks - not the achievement ID
+DECLARE_ACHIEVEMENT(CAchievementDANoYouDont, NO_YOU_DONT, "NO_YOU_DONT", 1)
+
+
 //#endif // GAME_DLL

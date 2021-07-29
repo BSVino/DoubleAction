@@ -1870,6 +1870,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pSDKAttacker->m_iBrawlKills++;
 		}
 
+		// achievement "No you don't" - kill a player who has their slowmo active
+		if (m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL){
+			DA_ApproachAchievement("NO_YOU_DONT", pSDKAttacker->GetUserID());
+		}
+		
+
 		// These are used to see how well the player is doing for the purposes
 		// of adjusting style accretion. So, only count it if it's a "skill-based"
 		// kill, ie one player shooting another, and not eg a suicide.
