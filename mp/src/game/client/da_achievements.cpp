@@ -271,14 +271,14 @@ protected:
 	// register our event listeners
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent("DIVEAWAYFROMEXPLOSION");
+		ListenForGameEvent("DIVEAWAYFROMEXPLOSION_250");
 	}
 
 	// define what happens when we catch an event
 	void FireGameEvent_Internal(IGameEvent *event)
 	{
 		// compare event names and check that we have a local player
-		if (0 == Q_strcmp(event->GetName(), "DIVEAWAYFROMEXPLOSION") && C_BasePlayer::GetLocalPlayer())
+		if (0 == Q_strcmp(event->GetName(), "DIVEAWAYFROMEXPLOSION_250") && C_BasePlayer::GetLocalPlayer())
 		{
 			int iUserID = event->GetInt("userid"); // the userID passed from the event data
 			// if the userID from the event matches the local player

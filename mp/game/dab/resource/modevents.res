@@ -116,6 +116,11 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"DIVEAWAYFROMEXPLOSION_250"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 	"DODGETHIS"
 	{
 		"userid"	"short"   	// user ID who died
