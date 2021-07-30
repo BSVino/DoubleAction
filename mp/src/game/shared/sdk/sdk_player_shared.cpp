@@ -1209,27 +1209,34 @@ void CSDKPlayerShared::EndWallFlip()
 
 ConVar da_superfall_time("da_superfall_time", "2.5", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
+// sets or checks boolean m_bSuperFalling - if you arren't supefalling, but you should be, and someone runs this function, you will start superfalling
 bool CSDKPlayerShared::IsSuperFalling()
 {
-	// Once he's determined in one life to be super-falling, he's super-falling until he super-falls to death.
+	// we're already superfalling
 	if (m_bSuperFalling)
 		return true;
 
+	// we're travilling down (z negative) at a velocity more than 100
 	if (m_pOuter->GetLocalVelocity().z > -100)
 		return false;
 
+	// we have been falling for a duration of time longer than our global setting da_superfall_time
 	if (m_pOuter->GetCurrentTime() - m_flTimeLeftGround < da_superfall_time.GetFloat())
 		return false;
 
+	// trace a line from current position, straight down for 10,000 units
 	trace_t tr;
 	UTIL_TraceLine(m_pOuter->GetAbsOrigin(), m_pOuter->GetAbsOrigin() + Vector(0, 0, -10000), MASK_PLAYERSOLID_BRUSHONLY, m_pOuter, COLLISION_GROUP_NONE, &tr);
 
+	// the distance between the player and the end of that line is less than the square root of what now?
 	if ((tr.endpos - m_pOuter->GetAbsOrigin()).LengthSqr() < 2000*2000)
 		return false;
 
+	// if we are greater than 400 units lower in the map than the lowest info_player_deathmatch entity - clever!
 	if (m_pOuter->GetAbsOrigin().z > SDKGameRules()->GetLowestSpawnPoint().z - 400)
 		return false;
 
+	// then we are superfalling!
 	m_bSuperFalling = true;
 	return true;
 }
