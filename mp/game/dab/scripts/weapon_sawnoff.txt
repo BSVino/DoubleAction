@@ -1,0 +1,96 @@
+WeaponData
+{
+	// Weapon characteristics:
+	"Damage"				"11"
+	"Bullets"				"9"
+	"CycleTime"				"0.85"
+	"ReloadTimeMultiplier"	"1"
+
+	"BuiltRightHanded"		"1"
+	
+	// Weapon data is loaded by both the Game and Client DLLs.
+	"printname"				"#DA_Weapon_Sawnoff"
+	"viewmodel"				"models/weapons/v_pland.mdl"
+	"playermodel"			"models/weapons/w_pland.mdl"
+
+	"bucket"				"3"
+	"bucket_position"		"1"
+
+	"clip_size"				"8"
+	"NumClips"				"6"
+
+	"ViewPunchMultiplier"	"1"
+	"Recoil"				"20"
+	"Spread"				"0.04362"
+	"AimInSpeedPenalty"		"1"
+	"AimInFireRateBonus"	"1"
+	"AimInRecoilBonus"		"1"
+	
+	"WeaponType"			"shotgun"
+
+	"primary_ammo"			"buckshot"
+	"secondary_ammo"		"None"
+
+	"weight"				"20"
+	"item_flags"			"0"
+
+	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
+	SoundData
+	{
+		//"reload"			"Default.Reload"
+		"empty"			"Default.ClipEmpty_Rifle"
+		"single_shot"		"Weapon_Mossberg.Single"
+		special3			Default.Zoom
+		"melee_miss"		"Weapon_Brawl.PunchMiss"
+		"melee_hit"			"common/null.wav"
+	}
+
+	// Weapon Sprite data is loaded by the Client DLL.
+	TextureData
+	{
+		"weapon"
+		{
+				"font"		"WeaponIcons"
+				"character"	"b"
+		}
+		"weapon_s"
+		{	
+				"font"		"WeaponIconsSelected"
+				"character"	"b"
+		}
+		"ammo"
+		{
+				"font"		"WeaponIcons"
+				"character"	"s"
+		}
+		"crosshair"
+		{
+				"file"   "HUD/shotguncross"
+				"x"      "0"
+				"y"      "0"
+				"width"  "64"
+				"height" "64"
+		}
+		"zoom"
+		{
+				"file"   "HUD/shotgunzoom"
+				"x"      "0"
+				"y"      "0"
+				"width"  "64"
+				"height" "64"
+		}
+	}
+	ModelBounds
+	{
+		Viewmodel
+		{
+			Mins	"-13 -3 -13"
+			Maxs	"26 10 -3"
+		}
+		World
+		{
+			Mins	"-9 -8 -5"
+			Maxs	"28 9 9"
+		}
+	}
+}
