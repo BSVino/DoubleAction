@@ -156,7 +156,7 @@
 		"Command"		"buy sawnoff"
 		"font"			"FolderSmall"
 		"weaponid"      "sawnoff"
-		"info_model"    "models/weapons/w_pland.mdl"
+		"info_model"    "models/weapons/w_stakeout.mdl"
 	}
 
 	"weapon_mossberg"
