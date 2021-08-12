@@ -1,10 +1,10 @@
 WeaponData
 {
 	// Weapon characteristics:
-	"Damage"				"11"
-	"Bullets"				"9"
-	"CycleTime"				"0.85"
-	"ReloadTimeMultiplier"	"1"
+	"Damage"				"12"
+	"Bullets"				"16"
+	"CycleTime"				"0.75"
+	"ReloadTimeMultiplier"	"0.95"
 
 	"BuiltRightHanded"		"1"
 	
@@ -19,9 +19,9 @@ WeaponData
 	"clip_size"				"8"
 	"NumClips"				"6"
 
-	"ViewPunchMultiplier"	"1"
-	"Recoil"				"20"
-	"Spread"				"0.04362"
+	"ViewPunchMultiplier"	"0.9"
+	"Recoil"				"18"
+	"Spread"				"0.1"
 	"AimInSpeedPenalty"		"1"
 	"AimInFireRateBonus"	"1"
 	"AimInRecoilBonus"		"1"
@@ -31,7 +31,7 @@ WeaponData
 	"primary_ammo"			"buckshot"
 	"secondary_ammo"		"None"
 
-	"weight"				"20"
+	"weight"				"14"
 	"item_flags"			"0"
 
 	// Sounds for the weapon. There is a max of 16 sounds per category (i.e. max 16 "single_shot" sounds)
