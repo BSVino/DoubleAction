@@ -9,9 +9,9 @@ WeaponData
 	"BuiltRightHanded"		"1"
 	
 	// Weapon data is loaded by both the Game and Client DLLs.
-	"printname"				"#DA_Weapon_Sawnoff"
-	"viewmodel"				"models/weapons/v_pland.mdl"
-	"playermodel"			"models/weapons/w_pland.mdl"
+	"printname"				"#DA_Weapon_Stakeout"
+	"viewmodel"				"models/weapons/v_stakeout.mdl"
+	"playermodel"			"models/weapons/w_stakeout.mdl"
 
 	"bucket"				"3"
 	"bucket_position"		"1"
