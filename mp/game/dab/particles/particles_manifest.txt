@@ -7,4 +7,5 @@ particles_manifest
 	"file"		"particles/fire_01.pcf"
 	"file"		"particles/dinero_trail.pcf"
 	"file"		"particles/dinero_splode.pcf"
+	"file"		"particles/jang_fx.pcf"
 }
