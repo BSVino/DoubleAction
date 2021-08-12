@@ -103,4 +103,132 @@
 		"option4" "string"
 		"option5" "string"
 	}
+	
+	// achievements
+	
+	"DIVEPUNCHKILL"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEAWAYFROMEXPLOSION"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DIVEAWAYFROMEXPLOSION_250"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DODGETHIS"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SKYPUNCH"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"BETRAYED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"PENGUIN"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"MAC_DADDYD"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"VINDICATED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"HORSE_WHISPERER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"VIGILANT"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"PERSUADED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"BLACK_MAGICKED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"UNDERTAKEN"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"FALL_GUY"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SUPERFALL_SHARPSHOOTER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SUPERFALL_KING"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"STEADY_EDDIE"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"POTSHOTTER"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SLOWPRO"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SPECIALDELIVERY"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"NO_YOU_DONT"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"GET_BANNED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"SOMEBODY_STOP_ME"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
+	"DISCOSTU"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }

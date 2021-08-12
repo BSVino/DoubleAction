@@ -1,11 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
-//========= Copyright © 1996-2001, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2001, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -2621,8 +2621,13 @@ void CSDKGameMovement::FullWalkMove ()
 		StartGravity();
 	}
 
-	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND)
+	if (m_pSDKPlayer->GetFlags() & FL_ONGROUND){
 		m_pSDKPlayer->m_Shared.PlayerOnGround();
+
+		// clear last backflipped player as soon as we land
+		m_pSDKPlayer->SetLastPlayerIndexIBackflippedOff(0);
+	}
+	
 
 #if 0
 	if (m_pSDKPlayer->m_Shared.runtime < 0)
@@ -2741,6 +2746,14 @@ void CSDKGameMovement::FullWalkMove ()
 					CPASFilter filter(org);
 					filter.UsePredictionRules();
 					m_pSDKPlayer->EmitSound(filter, m_pSDKPlayer->entindex(), "Player.GoDive");
+
+					// if we flipped of something that was not the world
+					if (tr.DidHitNonWorldEntity()){
+						// store the entindex for querying later (ie: hardboiled achievement)
+						int entityIndex = tr.GetEntityIndex();
+						if (entityIndex)
+							m_pSDKPlayer->SetLastPlayerIndexIBackflippedOff(tr.GetEntityIndex());
+					}
 
 					m_pSDKPlayer->DoAnimationEvent(PLAYERANIMEVENT_WALLFLIP);
 					m_pSDKPlayer->m_Shared.StartWallFlip(tr.plane.normal);

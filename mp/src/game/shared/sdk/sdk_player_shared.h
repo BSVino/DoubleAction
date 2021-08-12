@@ -1,4 +1,4 @@
-//============ Copyright © 1996-2008, Valve Corporation, All rights reserved. ===============//
+//============ Copyright ï¿½ 1996-2008, Valve Corporation, All rights reserved. ===============//
 //
 // Purpose: Shared Player Variables / Functions and variables that may or may not be networked
 //
@@ -207,6 +207,9 @@ private:
 	CNetworkVar( bool, m_bAimedIn );
 	CNetworkVar( float, m_flAimIn );
 	CNetworkVar( float, m_flSlowAimIn );
+
+	CNetworkVar(int, m_iLastPlayerIndexIBackflippedOff);
+	void SetLastPlayerIndexIBackflippedOff(int entindex){ m_iLastPlayerIndexIBackflippedOff = entindex; }
 
 	Vector	m_vecRecoilDirection;
 	float	m_flRecoilAccumulator;
