@@ -33,6 +33,7 @@
 #include "dove.h"
 #include "da_datamanager.h"
 #include "da_briefcase.h"
+#include "te_effect_dispatch.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -950,6 +951,7 @@ void CSDKPlayer::Precache()
 	PrecacheParticleSystem( "tracer_bullet" );
 	PrecacheParticleSystem( "style_active_bouncer" );
 	PrecacheParticleSystem( "style_active_athletic" );
+	PrecacheParticleSystem( "player_lvlup" );
 
 	BaseClass::Precache();
 }
@@ -4016,6 +4018,8 @@ void CSDKPlayer::ActivateMeter()
 	FillMeter();
 
 	m_iStyleKillStreak = 0;
+	
+	DispatchParticleEffect("player_lvlup", GetAbsOrigin(), GetAbsAngles());
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
