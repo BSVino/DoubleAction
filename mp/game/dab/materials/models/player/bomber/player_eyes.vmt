@@ -1,6 +1,4 @@
 vertexlitgeneric
 {
-	$basetexture models/player/player_eye_brown
-	$envmap env_cubemap
-	$envmapcontrast -.5
+	$basetexture models/player/bomber/bomber_eyes
 }

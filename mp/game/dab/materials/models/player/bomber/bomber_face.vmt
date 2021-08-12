@@ -1,14 +1,4 @@
 vertexlitgeneric
 {
-$basetexture models\player/bomber/bomber_face_dif
-$bumpmap models\player/bomber/bomber_face_nor
-$phong 1
-$phongexponent		5		
-//$phongexponenttexture	models\player/wishmodel\phongexp
-$phongboost 1
-$phongfresnelranges "[.1.1.2]"	
-//$rimlight               1
-//$rimmask 1
-//$rimlightexponent       .5
-//$rimlightboost          .75
+	$basetexture models\player/bomber/bomber_face_dif
 }
