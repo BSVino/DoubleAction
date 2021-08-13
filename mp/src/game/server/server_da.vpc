@@ -49,6 +49,11 @@ $Project "Server (DA)"
 {
 	$Folder "DA"
 	{
+		$Folder "Achievements"
+		{
+			$File "$SRCDIR/game/server/da_achievement_helpers.cpp"
+			$File "$SRCDIR/game/server/da_achievement_helpers.h"
+		}
 		$Folder "Player"
 		{
 			$Folder "Bots"
