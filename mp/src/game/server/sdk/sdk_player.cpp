@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL1.
 //
@@ -722,7 +722,7 @@ inline bool CSDKPlayer::IsReloading( void ) const
 	return false;
 }
 
-ConVar da_regenamount( "da_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar da_regenamount( "da_regenamount", "30", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar da_decayamount( "da_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar da_regenamount_secondwind( "da_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
@@ -750,22 +750,23 @@ void CSDKPlayer::PreThink(void)
 		}
 
 		if (m_flCurrentTime > m_flNextRegen)
-		{
+		{	// player has been out of battle for a while, regenerate their health
+
 			float flRatio = da_regenamount_secondwind.GetFloat()/da_regenamount.GetFloat();
 			float flModifier = (flRatio - 1)/2;
 			float flHealth = m_Shared.ModifySkillValue(da_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
 
 			m_flNextRegen = m_flCurrentTime + 1;
 
-			// Heal up to 50% of the player's health.
-			int iMaxHealth = GetMaxHealth()/2;
+			// Heal up to 100% of the player's health.
+			int iMaxHealth = GetMaxHealth();
 
-			if (IsStyleSkillActive(SKILL_RESILIENT))
-				// If Resilient is active, heal up to 100%, which is actually 200 health
-				iMaxHealth = GetMaxHealth();
-			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
-				// If it's passive heal to 100%
-				iMaxHealth = GetMaxHealth();
+			// if (IsStyleSkillActive(SKILL_RESILIENT))
+			// 	// If Resilient is active, heal up to 100%, which is actually 200 health
+			// 	iMaxHealth = GetMaxHealth();
+			// else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+			// 	// If it's passive heal to 100%
+			// 	iMaxHealth = GetMaxHealth();
 
 			int iHealthTaken = 0;
 			if (GetHealth() < iMaxHealth)
@@ -1717,12 +1718,14 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
 	}
 
-	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
-		m_flNextRegen = m_flCurrentTime + 10;
-	else if (!IsStyleSkillActive())
-		m_flNextRegen = m_flCurrentTime + 6;
-	else
-		m_flNextRegen = m_flCurrentTime + 4;
+	// no matter what, set our regen timer to 6 seconds
+	m_flNextRegen = m_flCurrentTime + 6;
+	// if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
+	// 	m_flNextRegen = m_flCurrentTime + 10;
+	// else if (!IsStyleSkillActive())
+	// 	m_flNextRegen = m_flCurrentTime + 6;
+	// else
+	// 	m_flNextRegen = m_flCurrentTime + 4;
 
 	return 1;
 }
