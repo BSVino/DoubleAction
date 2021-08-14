@@ -1718,8 +1718,8 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
 	}
 
-	// no matter what, set our regen timer to 6 seconds
-	m_flNextRegen = m_flCurrentTime + 6;
+	// no matter what, set our regen timer to 8 seconds
+	m_flNextRegen = m_flCurrentTime + 8;
 	// if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
 	// 	m_flNextRegen = m_flCurrentTime + 10;
 	// else if (!IsStyleSkillActive())
