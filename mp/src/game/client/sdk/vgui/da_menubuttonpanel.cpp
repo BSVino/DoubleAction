@@ -22,6 +22,7 @@
 #include <convar.h>
 
 #include "da.h"
+#include "da_mapbrowser.h"
 #include "da_leaderboard.h"
 #include "da_newsframe.h"
 #include "da_options.h"
@@ -50,6 +51,7 @@ CButtonPanel::CButtonPanel() : EditablePanel(NULL, "button_panel")
 	m_pNews = new ImageButton(this, "NewsButton", "news", NULL, NULL, "opennews");
 	m_pLeaderboard = new ImageButton(this, "LeaderboardButton", "leaderboard", NULL, NULL, "openleaderboard");
 	m_pOptions = new ImageButton(this, "OptionsButton", "options", NULL, NULL, "openoptions");
+	m_pMapBrowser = new ImageButton(this, "MapBrowserButton", "mapbrowser", NULL, NULL, "openmapbrowser");
 
 	MakeReadyForUse();
 
@@ -147,6 +149,14 @@ void CButtonPanel::OnCommand( const char *command)
 		CloseAll();
 
 		Options()->ShowPanel(true);
+		return;
+	}
+
+	if (!Q_strcmp(command, "openmapbrowser"))
+	{
+		CloseAll();
+
+		MapBrowser()->ShowPanel(true);
 		return;
 	}
 

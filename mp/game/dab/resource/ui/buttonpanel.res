@@ -6,7 +6,7 @@
 		"fieldName"		"button_panel"
 		"xpos"			"470"
 		"ypos"			"180"
-		"wide"			"105"
+		"wide"			"150"
 		"tall"			"30"
 		"autoResize"	"0"
 		"pinCorner"		"0"
@@ -28,6 +28,21 @@
 		"wrap"          "0"
 		"centerwrap"    "0"
 		"command"		"opennews"
+	}
+
+	"MapBrowserButton"
+	{
+		"ControlName"	"Button"
+		"fieldName"		"MapBrowserButton"
+		"xpos"			"105"
+		"ypos"			"0"
+		"wide"			"35"
+		"tall"			"30"
+		"labelText"		"Map Browser"
+		"textAlignment" "center"
+		"wrap"          "0"
+		"centerwrap"    "0"
+		"command"		"openmapbrowser"
 	}
 
 	"LeaderboardButton"

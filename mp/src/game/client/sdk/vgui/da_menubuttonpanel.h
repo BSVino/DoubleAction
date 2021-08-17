@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -46,6 +46,7 @@ protected:
 	vgui::ImageButton* m_pNews;
 	vgui::ImageButton* m_pLeaderboard;
 	vgui::ImageButton* m_pOptions;
+	vgui::ImageButton* m_pMapBrowser;
 
 	time_t m_iLatestNews;
 };

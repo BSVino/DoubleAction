@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//===== Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ======//
 //
 // Purpose: 
 //
@@ -36,6 +36,7 @@
 #include "sdk_in_main.h"
 #include "da_menubuttonpanel.h"
 #include "da_leaderboard.h"
+#include "da_mapbrowser.h"
 #include "da_newsframe.h"
 #include "da_options.h"
 #include "hud/da_hud_vote.h"
@@ -156,6 +157,7 @@ void ClientModeSDKNormal::InitViewport()
 	new CNewsFrame();
 	new CLeaderboard();
 	new COptions();
+	new CMapBrowser();
 	new CButtonPanel();
 	new CDACredits();
 
