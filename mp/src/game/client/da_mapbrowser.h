@@ -8,6 +8,7 @@
 #pragma once
 
 #include <vguitextwindow.h>
+#include "vgui_controls/ScrollableEditablePanel.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -38,6 +39,7 @@ public:
 	virtual void SetParent(vgui::VPANEL parent) { BaseClass::SetParent(parent); }
 
 	KeyValues* game_maps;
+	vgui::HFont m_hSmallFont;
 
 protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);

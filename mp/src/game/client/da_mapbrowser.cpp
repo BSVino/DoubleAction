@@ -22,6 +22,7 @@
 #include <vgui/IVGui.h>
 
 #include <vgui_controls/ImagePanel.h>
+#include <vgui_controls/Label.h>
 
 #include <filesystem.h>
 #include <convar.h>
@@ -99,6 +100,7 @@ void CMapBrowser::ApplySchemeSettings(IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	LoadControlSettings("Resource/UI/mapbrowser.res");
+	m_hSmallFont = pScheme->GetFont("HudHintTextSmall", true);
 
 	DisableFadeEffect(); //Tony; shut off the fade effect because we're using sourcesceheme.
 
@@ -124,14 +126,19 @@ void CMapBrowser::Update(void)
 		const char* mapName = map_data->GetString("map_name");
 		const char* mapImage = map_data->GetString("map_image");
 
-		int imageWidth = 96;
+		int imageWidth = 256;
 		int panelPaddingTop = 36;
 		int panelPaddingLeft = 18;
 		int imageMargin = 20;
-		int colNum = countMaps % 3;
-		int rowNum = (countMaps - colNum) / 3;
+		int titleHeight = 28;
+		int totalCols = 3;
+		int colNum = countMaps % totalCols;
+		int rowNum = (countMaps - colNum) / totalCols;
 		int xPos = (imageWidth + imageMargin) * colNum + panelPaddingLeft;
-		int yPos = (rowNum * imageWidth) + (rowNum * imageMargin) + panelPaddingTop;
+		int yPos = (rowNum * imageWidth) + (rowNum * imageMargin) + panelPaddingTop + titleHeight;
+
+		// set the size of the panel to wrap to three map blocks wide
+		this->SetSize(totalCols * (imageWidth + imageMargin) + (panelPaddingLeft * 2), (imageWidth + imageMargin) + (panelPaddingTop * 2));
 
 		// create an image panel for each map in map_data.res
 		ImagePanel* map_image = new ImagePanel(this, mapName);
@@ -139,6 +146,14 @@ void CMapBrowser::Update(void)
 		map_image->SetPos(xPos, yPos);
 		map_image->SetShouldScaleImage(true);
 		map_image->SetImage(scheme()->GetImage(mapImage, false));
+
+		// the name of the map, shown under the thumbnail image
+		Label* map_title = new Label(this, mapName, mapName);
+		map_title->SetSize(imageWidth, titleHeight);
+		map_title->SetPos(xPos, yPos - titleHeight);
+		map_title->SetContentAlignment(Label::Alignment::a_center);
+		map_title->SetTextColorState(Label::EColorState::CS_BRIGHT);
+		vgui::surface()->DrawSetTextFont(m_hSmallFont);
 
 		countMaps++;
 	}
