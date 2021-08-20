@@ -9,6 +9,7 @@
 
 #include <vguitextwindow.h>
 #include "vgui_controls/ScrollableEditablePanel.h"
+#include "vgui_controls/AnimationController.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -40,6 +41,7 @@ public:
 
 	KeyValues* game_maps;
 	vgui::HFont m_hSmallFont;
+	vgui::AnimationController* vgui_animation_controller;
 
 protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);

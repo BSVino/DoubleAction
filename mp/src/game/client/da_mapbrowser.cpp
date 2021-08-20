@@ -84,6 +84,7 @@ CMapBrowser::CMapBrowser() : Frame(NULL, "mapbrowser")
 		}
 	
 	*/
+	vgui_animation_controller = GetAnimationController();
 	
 	MakeReadyForUse();
 
@@ -150,7 +151,7 @@ void CMapBrowser::Update(void)
 		// the name of the map, shown under the thumbnail image
 		Label* map_title = new Label(this, mapName, mapName);
 		map_title->SetSize(imageWidth, titleHeight);
-		map_title->SetPos(xPos, yPos - titleHeight);
+		map_title->SetPos(xPos, yPos + imageWidth + imageMargin - titleHeight);
 		map_title->SetContentAlignment(Label::Alignment::a_center);
 		map_title->SetTextColorState(Label::EColorState::CS_BRIGHT);
 		vgui::surface()->DrawSetTextFont(m_hSmallFont);
@@ -168,6 +169,7 @@ void CMapBrowser::ShowPanel(bool bShow)
 	if (bShow)
 	{
 		Activate();
+		//vgui_animation_controller->StartAnimationSequence(this, "MapZoomToLarge");
 	}
 	else
 		SetVisible(false);
