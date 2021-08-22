@@ -1,0 +1,16 @@
+LightmappedGeneric
+{
+	$basetexture "glass\da_glass_01_lighta"
+	$envmap env_cubemap
+	$envmapmask "glass\da_glass_01_env"
+	$envmaptint "[1 1 1]"
+	$crackmaterial "glass\offwndwb_break"
+	$selfillum 1
+	$selfillumtint "[5 5 4.5]"
+	$surfaceprop glass
+	lightmappedgeneric_HDR_dx9
+	{
+		$envmaptint "[.35 .35 .35]"
+		$crackmaterial "glass\offwndwb_break_hdr"
+	}
+}
