@@ -325,6 +325,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	iDefaultClip1 = 0;
 	iDefaultClip2 = 0;
 	iWeight = 0;
+	flBrawltimeMultiplier = 1;
 	iRumbleEffect = -1;
 	bAutoSwitchTo = false;
 	bAutoSwitchFrom = false;
@@ -384,6 +385,7 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	iDefaultClip1 = pKeyValuesData->GetInt( "default_clip", iMaxClip1 );		// amount of primary ammo placed in the primary clip when it's picked up
 	iDefaultClip2 = pKeyValuesData->GetInt( "default_clip2", iMaxClip2 );		// amount of secondary ammo placed in the secondary clip when it's picked up
 	iWeight = pKeyValuesData->GetInt( "weight", 0 );
+	flBrawltimeMultiplier = pKeyValuesData->GetInt( "BrawlTimeMultiplier", 1 );
 
 	iRumbleEffect = pKeyValuesData->GetInt( "rumble", -1 );
 	
