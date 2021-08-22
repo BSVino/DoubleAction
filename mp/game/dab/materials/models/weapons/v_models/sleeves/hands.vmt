@@ -1,0 +1,30 @@
+VertexLitGeneric
+{
+	$basetexture "models/weapons/v_models/sleeves/hands_diffuse"
+	$bumpmap "models/weapons/v_models/sleeves/hands_normalspec"
+
+	$envmap "env_cubemap"
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[0.01 0.01 0.01]"
+	$envmapcontrast 0.98
+	$envmapsaturation 0.67
+	$envmapfresnel 0.96
+	$envmaplightscale 0.09
+	$envmaplightscaleminmax "[0 1.10]"
+	$envmapanisotropy 1
+	$envmapanisotropyscale 0.13
+
+	$phong 1
+	$phongexponenttexture "models/weapons/v_models/sleeves/hands_gloss"
+	$phongfresnelranges "[0.24 0.62 1]"
+	$phongtint "[1 0.60 0.60]"
+	$phongboost 0.14
+	$phongalbedoboost 0.51
+
+	$rimlight 1
+	$rimlightexponent 10
+	$rimlightboost 0.68
+	$rimlightmask 1
+
+	$normalmapalphaphongmask 1
+}
