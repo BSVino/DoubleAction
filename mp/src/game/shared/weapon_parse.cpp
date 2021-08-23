@@ -318,6 +318,7 @@ FileWeaponInfo_t::FileWeaponInfo_t()
 	szViewModel[0] = 0;
 	szWorldModel[0] = 0;
 	szAnimationPrefix[0] = 0;
+	szBuyMenuSequence[0] = 0;
 	iSlot = 0;
 	iPosition = 0;
 	iMaxClip1 = 0;
@@ -367,6 +368,8 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 	Q_strncpy( szViewModel, pKeyValuesData->GetString( "viewmodel" ), MAX_WEAPON_STRING );
 	Q_strncpy( szWorldModel, pKeyValuesData->GetString( "playermodel" ), MAX_WEAPON_STRING );
 	Q_strncpy( szAnimationPrefix, pKeyValuesData->GetString( "anim_prefix" ), MAX_WEAPON_PREFIX );
+	Q_strncpy( szBuyMenuSequence, pKeyValuesData->GetString("buy_menu_sequence", "m1911_run_idle"), MAX_WEAPON_STRING);
+	
 	iSlot = pKeyValuesData->GetInt( "bucket", 0 );
 	iPosition = pKeyValuesData->GetInt( "bucket_position", 0 );
 	
@@ -380,8 +383,8 @@ void FileWeaponInfo_t::Parse( KeyValues *pKeyValuesData, const char *szWeaponNam
 		iSlot = pKeyValuesData->GetInt( "bucket_360", iSlot );
 		iPosition = pKeyValuesData->GetInt( "bucket_position_360", iPosition );
 	}
-	iMaxClip1 = pKeyValuesData->GetInt( "clip_size", WEAPON_NOCLIP );					// Max primary clips gun can hold (assume they don't use clips by default)
-	iMaxClip2 = pKeyValuesData->GetInt( "clip2_size", WEAPON_NOCLIP );					// Max secondary clips gun can hold (assume they don't use clips by default)
+	iMaxClip1 = pKeyValuesData->GetInt( "clip_size", WEAPON_NOCLIP );			// Max primary clips gun can hold (assume they don't use clips by default)
+	iMaxClip2 = pKeyValuesData->GetInt( "clip2_size", WEAPON_NOCLIP );			// Max secondary clips gun can hold (assume they don't use clips by default)
 	iDefaultClip1 = pKeyValuesData->GetInt( "default_clip", iMaxClip1 );		// amount of primary ammo placed in the primary clip when it's picked up
 	iDefaultClip2 = pKeyValuesData->GetInt( "default_clip2", iMaxClip2 );		// amount of secondary ammo placed in the secondary clip when it's picked up
 	iWeight = pKeyValuesData->GetInt( "weight", 0 );

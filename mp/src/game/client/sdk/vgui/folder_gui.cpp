@@ -367,9 +367,10 @@ void CFolderMenu::Update()
 		}
 		else if (pWeaponInfo)
 		{
+			
 			KeyValues* pAnimation = pValues->FindKey("animation");
 			if (pAnimation)
-				pAnimation->SetString("sequence", VarArgs("%s_idle", WeaponIDToAlias(eFirst)));
+				pAnimation->SetString("sequence", pWeaponInfo->szBuyMenuSequence);
 
 			KeyValues* pWeapon = pValues->FindKey("attached_model");
 			if (pWeapon)
