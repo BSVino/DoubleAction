@@ -41,7 +41,7 @@ WeaponData
 	{
 		//"reload"			"Default.Reload"
 		"empty"			"Default.ClipEmpty_Rifle"
-		"single_shot"		"Weapon_Mossberg.Single"
+		"single_shot"		"Weapon_Sawnoff.Single"
 		special3			Default.Zoom
 		"melee_miss"		"Weapon_Brawl.PunchMiss"
 		"melee_hit"			"common/null.wav"
