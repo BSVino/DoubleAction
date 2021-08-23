@@ -1183,7 +1183,13 @@ void CSDKPlayer::Spawn()
 	m_iStyleKillStreak = 0;
 	m_iCurrentStreak = 0;
 	m_flNextSuicideTime = 0;
-	m_iRaceWaypoint = 0;
+
+	// instead of setting this to zero at spawn we'll just decrement it
+	// so that when a player dies in rat race they are only set back one
+	// ratrace waypoint, not the whole hog
+	m_iRaceWaypoint --;
+	if(m_iRaceWaypoint < 0)
+		m_iRaceWaypoint = 0;
 
 	m_Shared.EndDive();
 	m_Shared.EndRoll();
