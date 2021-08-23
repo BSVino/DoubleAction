@@ -6,6 +6,7 @@ WeaponData
 	"CycleTime"				"0.75"
 	"ReloadTimeMultiplier"	"0.95"
 	"BrawlTimeMultiplier"	"1"
+	"buy_menu_sequence"		"m1911_run_idle"
 
 	"BuiltRightHanded"		"1"
 	
