@@ -6,11 +6,12 @@ WeaponData
 	"CycleTime"				"0.75"
 	"ReloadTimeMultiplier"	"0.95"
 	"BrawlTimeMultiplier"	"1"
+	"buy_menu_sequence"		"m1911_run_idle"
 
 	"BuiltRightHanded"		"1"
 	
 	// Weapon data is loaded by both the Game and Client DLLs.
-	"printname"				"#DA_Weapon_Stakeout"
+	"printname"				"#DA_Weapon_Sawnoff"
 	"viewmodel"				"models/weapons/v_stakeout.mdl"
 	"playermodel"			"models/weapons/w_stakeout.mdl"
 
