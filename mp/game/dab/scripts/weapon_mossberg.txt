@@ -5,6 +5,7 @@ WeaponData
 	"Bullets"				"9"
 	"CycleTime"				"0.85"
 	"ReloadTimeMultiplier"	"1"
+	"BrawlTimeMultiplier"	"1.25"
 
 	"BuiltRightHanded"		"1"
 	

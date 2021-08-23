@@ -5,6 +5,7 @@ WeaponData
 	"Bullets"				"1"			// bullets per shoot
 	"CycleTime"				"0.06"		// time between shoots
 	"ReloadTimeMultiplier"	"0.7"
+	"BrawlTimeMultiplier"	"1"
 
 	"BuiltRightHanded"		"0"
 
