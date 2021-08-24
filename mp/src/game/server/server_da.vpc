@@ -96,6 +96,11 @@ $Project "Server (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_sawnoff.cpp"
 		}
+		
+		$Folder "Entities"
+		{
+			$File "$SRCDIR/game/server/sdk/da_superfalltrigger.cpp"
+		}
 
 		$File "sdk/da_briefcase.cpp"
 		$File "$SRCDIR/game/shared/sdk/da_bulletmanager.cpp"
