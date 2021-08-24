@@ -1,4 +1,4 @@
 "chapters"
 {
-	"1" "dablogomenu"
+	"1" "bg"
 }
