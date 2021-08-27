@@ -1,0 +1,16 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/Service_Platform_001
+	$bumpmap models/props_construction/Service_Platform_001_normal
+	$surfaceprop Metal
+
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[1 .5 2]"
+	$phongexponent 12
+
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+}
+
+

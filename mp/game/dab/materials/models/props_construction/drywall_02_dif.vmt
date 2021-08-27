@@ -1,0 +1,7 @@
+"VertexlitGeneric"
+{
+	$basetexture construction/drywall_02_dif
+	$bumpmap construction/drywall_01_nor
+}
+
+

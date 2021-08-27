@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_server_dif
+	$bumpmap models/stormy/da_server_nor
+	
+	$phong 1
+	$phongboost .5
+	$phongfresnelranges "[.5 .5 1]"
+	$phongexponent 50
+	
+}
