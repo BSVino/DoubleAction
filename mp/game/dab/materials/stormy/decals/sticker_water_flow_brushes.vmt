@@ -1,0 +1,10 @@
+Vertexlitgeneric
+{
+$vertexcolor 1
+$vertexalpha 1
+
+$translucent 1
+$basetexture stormy/decals/sticker_water_flow
+$decal 1
+$decalscale 0.3
+}

@@ -1,0 +1,12 @@
+"VertexlitGeneric"
+{
+	$basetexture models/props_construction/tarp_160_001
+	$bumpmap models/props_construction/tarp_160_001_normal
+	$surfaceprop carpet
+
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$phong 1
+	$phongboost 0.5
+	$envmaptint "[0.3 0.3 0.3]"
+}

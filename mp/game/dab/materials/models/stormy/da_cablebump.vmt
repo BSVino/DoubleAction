@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_cablebump_dif
+	$bumpmap models/stormy/da_cablebump_nor
+	
+	$phong 1
+	$phongboost 1.5
+	$phongfresnelranges "[.5 .5 .75]"
+	$phongexponent 10
+	
+}

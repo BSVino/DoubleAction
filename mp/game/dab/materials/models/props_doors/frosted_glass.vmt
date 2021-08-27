@@ -1,0 +1,10 @@
+Vertexlitgeneric
+{
+	$basetexture models/props_doors/frosted_glass
+	$surfaceprop glass
+	$nocull 1
+	
+	$alpha .15
+	$detail detail/metal_detail_01
+	$detailblendmode 0
+}

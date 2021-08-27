@@ -1,0 +1,5 @@
+"LightmappedGeneric"
+{
+	$basetexture carpet/carpet_tile_01
+	$surfaceprop carpet
+}

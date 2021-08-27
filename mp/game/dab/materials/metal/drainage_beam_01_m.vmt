@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	$basetexture "metal/drainage_beam_01"
+	$surfaceprop metal
+}

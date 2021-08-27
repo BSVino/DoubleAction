@@ -1,0 +1,8 @@
+LightmappedGeneric
+{
+	$basetexture stormy/da_building_01
+	$surfaceprop Metal
+	
+	$envmap env_cubemap
+	$basealphaenvmapmask 1
+}

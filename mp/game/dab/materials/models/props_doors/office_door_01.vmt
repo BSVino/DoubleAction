@@ -1,0 +1,17 @@
+vertexlitgeneric
+{
+	$basetexture models/props_doors/office_door_01
+	$bumpmap models/props_doors/office_door_01_nor
+	$phongexponenttexture models/props_doors/office_door_01_exp
+	
+	$phong 1
+	$phongboost 3
+	$phongfresnelranges "[.1 .5 1.5]"
+	$phongalbedotint 1
+	
+	$envmap env_cubemap
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[.1 .1 .1]"
+}
+	
+	
