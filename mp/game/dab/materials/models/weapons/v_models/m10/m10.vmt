@@ -1,0 +1,30 @@
+VertexLitGeneric
+{
+	$basetexture "models/weapons/v_models/m10/albedo"
+	$bumpmap "models/weapons/v_models/m10/normal"
+
+	$envmap "env_cubemap"
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[0.60 0.60 0.60]"
+	$envmapcontrast 0.17
+	$envmapsaturation 0.71
+	$envmapfresnel 0.82
+	$envmaplightscale 0.28
+	$envmaplightscaleminmax "[0 1]"
+	$envmapanisotropy 1
+	$envmapanisotropyscale 0.56
+
+	$phong 1
+	$phongexponenttexture "models/weapons/v_models/m10/gloss"
+	$phongfresnelranges "[0.82 0.56 6]"
+	$phongalbedotint 1
+	$phongboost 7.09
+	$phongalbedoboost 28.41
+
+	$rimlight 1
+	$rimlightexponent 105
+	$rimlightboost 2.87
+	$rimlightmask 1
+
+	$rimmask 1
+}
