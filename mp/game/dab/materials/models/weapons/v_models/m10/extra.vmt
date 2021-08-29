@@ -1,0 +1,24 @@
+VertexLitGeneric
+{
+	$basetexture "models/weapons/v_models/m10/albedo_extra"
+	$bumpmap "models/weapons/v_models/m10/normal_extra"
+
+	$envmap "env_cubemap"
+	$normalmapalphaenvmapmask 1
+	$envmaptint "[0.82 0.82 0.82]"
+	$envmapsaturation 0.97
+
+	$phong 1
+	$phongexponenttexture "models/weapons/v_models/m10/gloss_extra"
+	$phongfresnelranges "[0.76 0.52 6]"
+	$phongtint "[0.20 0.20 0.20]"
+	$phongalbedotint 1
+	$phongboost 1.96
+	$phongalbedoboost 50
+
+	$rimlight 1
+	$rimlightexponent 45
+	$rimlightboost 0.5
+
+	$rimmask 1
+}
