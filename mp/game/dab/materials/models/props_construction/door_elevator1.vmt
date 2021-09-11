@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	$basetexture jahhur/door_elevator1
+	$surfaceprop metal
+	$envmap env_cubemap
+}

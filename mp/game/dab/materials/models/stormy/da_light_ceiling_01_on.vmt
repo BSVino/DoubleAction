@@ -1,0 +1,12 @@
+vertexlitgeneric
+{
+$basetexture models/stormy/da_light_ceiling_01_on
+$bumpmap models/stormy/da_light_ceiling_01_nor
+
+$selfillum 1
+
+$phong 1
+$phongboost 1.5
+$phongfresnelranges "[.5 .5 2]"
+
+}

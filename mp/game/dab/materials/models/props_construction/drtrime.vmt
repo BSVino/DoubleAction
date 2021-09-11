@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+$baseTexture "metal/drtrime"
+$surfaceprop metalvent
+}
