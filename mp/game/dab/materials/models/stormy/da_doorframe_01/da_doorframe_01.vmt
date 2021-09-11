@@ -1,7 +1,7 @@
 VertexlitGeneric
 {
-	$basetexture models/stormy/da_doorframe_01
-	$bumpmap models/stormy/da_doorframe_01_nor
+	$basetexture models/stormy/da_doorframe_01/da_doorframe_01
+	$bumpmap models/stormy/da_doorframe_01/da_doorframe_01_nor
 	
 	$phong 1
 	$phongboost 2
