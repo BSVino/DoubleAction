@@ -40,6 +40,8 @@
 #include "functionproxy.h"
 #include "clientsteamcontext.h"
 
+#include "discord_sdk/discord.h"
+
 #include "da_buymenu.h"
 #include "sdk_teammenu.h"
 #include "da_charactermenu.h"
