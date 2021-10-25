@@ -23,7 +23,7 @@ WeaponData
 
 	"ViewPunchMultiplier"	"0.9"
 	"Recoil"				"18"
-	"Spread"				"0.1"
+	"Spread"				"0.085"
 	"AimInSpeedPenalty"		"1"
 	"AimInFireRateBonus"	"1"
 	"AimInRecoilBonus"		"1"
