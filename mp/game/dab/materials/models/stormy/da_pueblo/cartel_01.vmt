@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_pueblo/cartel_01_dif
+	$bumpmap models/stormy/da_pueblo/cartel_01_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.75 5 15]"
+	$phongexponenttexture models/stormy/da_pueblo/cartel_01_exp
+	
+}

@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_pueblo/puerta_del_iglesia_dif
+	$bumpmap models/stormy/da_pueblo/puerta_del_iglesia_nor
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.75 5 15]"
+	$phongexponent 75
+	
+}

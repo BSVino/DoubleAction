@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_pueblo/Echinopsis_huascha/echinopsis_huascha_dif
+	$bumpmap models/stormy/da_pueblo/Echinopsis_huascha/echinopsis_huascha_nor
+	
+	$normalmapalphaphongmapmask
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.75 5 15]"
+	
+}

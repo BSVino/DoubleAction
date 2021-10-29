@@ -1,0 +1,12 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/da_pueblo/asiento_01_dif_amarillo
+	$bumpmap models/stormy/da_pueblo/asiento_01_nor
+	
+	
+	$phong 1
+	$phongboost 1
+	$phongfresnelranges "[.75 5 15]"
+	$phongexponent 75
+	
+}
