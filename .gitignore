@@ -49,6 +49,8 @@ obj*/
 *.workspace
 *.session
 *.project
+*.vagrant
+*.vscode
 
 # Specific Source build products
 client.pdb
