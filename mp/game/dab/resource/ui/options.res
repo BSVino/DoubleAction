@@ -34,7 +34,7 @@
 		"ypos"			"30"
 		"wide"			"380"
 		"tall"			"20"
-		"labelText"     "Screen Space Ambient Occlusion"
+		"labelText"		"#DA_SSAO"
 		"fgcolor_override" "255 255 255 255"
 	}
 
@@ -57,7 +57,7 @@
 		"ypos"			"60"
 		"wide"			"380"
 		"tall"			"20"
-		"labelText"     "Pretty Pixels"
+		"labelText"		"#DA_PrettyPixels"
 		"fgcolor_override" "255 255 255 255"
 	}
 }
