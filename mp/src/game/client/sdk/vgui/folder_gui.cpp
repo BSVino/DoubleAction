@@ -19,7 +19,7 @@
 #include "sdk_gamerules.h"
 
 #include "da_buymenu.h"
-#include "da_charactermenu.h"
+#include "da_characternewmenu.h"
 #include "da_skillmenu.h"
 #include "sdk_teammenu.h"
 
@@ -718,7 +718,7 @@ void CFolderMenu::ShowPage(const char* pszPage)
 	delete m_pPage;
 
 	if (FStrEq(pszPage, PANEL_CLASS))
-		m_pPage = new CDACharacterMenu(this);
+		m_pPage = new CDACharacterNewMenu(this);
 	else if (FStrEq(pszPage, PANEL_BUY))
 		m_pPage = new CDABuyMenu(this);
 	else if (FStrEq(pszPage, PANEL_BUY_EQUIP_CT))

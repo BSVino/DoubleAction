@@ -70,6 +70,8 @@ $Project "Client (DA)"
 		{
 			$File "sdk/vgui/da_buymenu.cpp"
 			$File "sdk/vgui/da_charactermenu.cpp"
+			$File "sdk/vgui/da_characternewmenu.h"
+			$File "sdk/vgui/da_characternewmenu.cpp"
 			$File "sdk/hud/da_hud_crosshair.cpp"
 			$File "sdk/hud/da_instructor.cpp"
 			$File "sdk/vgui/da_skillmenu.cpp"

@@ -34,7 +34,10 @@
 #include "c_sdk_player.h"
 #include "c_sdk_team.h"
 
-#include "da_charactermenu.h"
+#include "iclientmode.h"
+#include "clientmode_shared.h"
+
+#include "da_characternewmenu.h"
 #include "da_buymenu.h"
 
 
@@ -50,14 +53,14 @@
 
 using namespace vgui;
 
-CCharacterButton::CCharacterButton(vgui::Panel *parent, const char *panelName)
-	: Button( parent, panelName, "CharacterButton")
+CCharacterNewButton::CCharacterNewButton(vgui::Panel *parent, const char *panelName)
+	: Button( parent, panelName, "CharacterNewButton")
 {
 	SetScheme(vgui::scheme()->LoadSchemeFromFile("resource/FolderScheme.res", "FolderScheme"));
 	InvalidateLayout(true, true);
 }
 
-void CCharacterButton::ApplySettings( KeyValues *resourceData )
+void CCharacterNewButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
@@ -73,35 +76,42 @@ void CCharacterButton::ApplySettings( KeyValues *resourceData )
 	m_flBodyPitch = resourceData->GetFloat("body_pitch");
 }
 
-void CCharacterButton::OnCursorEntered()
+void CCharacterNewButton::OnCursorEntered()
 {
 	BaseClass::OnCursorEntered();
 
-	CDACharacterMenu* pParent = dynamic_cast<CDACharacterMenu*>(GetParent());
+	CDACharacterNewMenu* pParent = dynamic_cast<CDACharacterNewMenu*>(GetParent());
 	if (!pParent)
 		return;
 
 	pParent->SetCharacterPreview(m_szCharacter, m_szSequence, m_szWeaponModel, m_flBodyYaw, m_flBodyPitch);
 }
 
-void CCharacterButton::OnCursorExited()
+void CCharacterNewButton::OnCursorExited()
 {
 	BaseClass::OnCursorExited();
 
-	CDACharacterMenu* pParent = dynamic_cast<CDACharacterMenu*>(GetParent());
+	CDACharacterNewMenu* pParent = dynamic_cast<CDACharacterNewMenu*>(GetParent());
 	if (!pParent)
 		return;
 
 	pParent->SetCharacterPreview(NULL, NULL, NULL, 0, 0);
 }
 
-CDACharacterMenu::CDACharacterMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_CLASS )
+CDACharacterNewMenu::CDACharacterNewMenu(Panel *parent) : CFolderMenuPanel( parent, PANEL_CLASS )
 {
 	m_pCharacterImage = new CModelPanel(this, "CharacterImage");
 
 	m_iCharacterMenuKey = BUTTON_CODE_INVALID;
 
-	m_pszControlSettingsFile = "Resource/UI/CharacterMenu.res";
+	m_pszControlSettingsFile = "Resource/UI/CharacterNewMenu.res";
+
+	
+	// print debug text
+	DevMsg( "\n\nPainting letterbox\n\n" );
+	letterbox_top = new vgui::Panel( g_pClientMode->GetViewport(), "letterbox_top" );
+	surface()->DrawSetColor(  255, 0, 0, 255 ); //RGBA
+	surface()->DrawFilledRect( 0, 0, GetWide(), 200 ); //x0,y0,x1,y1
 
 	SetVisible(true);
 
@@ -110,11 +120,11 @@ CDACharacterMenu::CDACharacterMenu(Panel *parent) : CFolderMenuPanel( parent, PA
 	Update();
 }
 
-void CDACharacterMenu::Reset()
+void CDACharacterNewMenu::Reset()
 {
 }
 
-void CDACharacterMenu::ShowPanel( bool bShow )
+void CDACharacterNewMenu::ShowPanel( bool bShow )
 {
 	if ( bShow )
 		m_iCharacterMenuKey = gameuifuncs->GetButtonCodeForBind( "character" );
@@ -133,7 +143,7 @@ void CDACharacterMenu::ShowPanel( bool bShow )
 	}
 }
 
-void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
+void CDACharacterNewMenu::OnKeyCodePressed( KeyCode code )
 {
 	if ( code == KEY_PAD_ENTER || code == KEY_ENTER )
 	{
@@ -149,7 +159,7 @@ void CDACharacterMenu::OnKeyCodePressed( KeyCode code )
 	}
 }
 
-void CDACharacterMenu::Update()
+void CDACharacterNewMenu::Update()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -160,10 +170,10 @@ void CDACharacterMenu::Update()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-Panel *CDACharacterMenu::CreateControlByName( const char *controlName )
+Panel *CDACharacterNewMenu::CreateControlByName( const char *controlName )
 {
-	if ( !Q_stricmp( "CharacterButton", controlName ) )
-		return new CCharacterButton( this, NULL );
+	if ( !Q_stricmp( "CharacterNewButton", controlName ) )
+		return new CCharacterNewButton( this, NULL );
 	else if ( !Q_stricmp( "CIconPanel", controlName ) )
 		return new CIconPanel(this, "icon_panel");
 	else
@@ -177,7 +187,7 @@ Panel *CDACharacterMenu::CreateControlByName( const char *controlName )
 	}
 }
 
-void CDACharacterMenu::OnCommand( const char *command )
+void CDACharacterNewMenu::OnCommand( const char *command )
 {
 	if ( Q_strncmp( command, "character ", 10 ) == 0 )
 	{
@@ -196,17 +206,18 @@ void CDACharacterMenu::OnCommand( const char *command )
 		BaseClass::OnCommand(command);
 }
 
-void CDACharacterMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
+void CDACharacterNewMenu::SetCharacterPreview(const char* pszPreview, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
 	GetFolderMenu()->SetCharacterPreview(pszPreview, pszSequence, pszWeaponModel, flYaw, flPitch);
 }
 
-void CDACharacterMenu::PaintBackground()
+void CDACharacterNewMenu::PaintBackground()
 {
-	// Don't
+
+
 }
 
-void CDACharacterMenu::PaintBorder()
+void CDACharacterNewMenu::PaintBorder()
 {
 	// Don't
 }
@@ -214,7 +225,7 @@ void CDACharacterMenu::PaintBorder()
 //-----------------------------------------------------------------------------
 // Purpose: Apply scheme settings
 //-----------------------------------------------------------------------------
-void CDACharacterMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
+void CDACharacterNewMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 }

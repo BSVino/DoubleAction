@@ -14,13 +14,13 @@
 #include <vgui_controls/CheckButton.h>
 #include "folder_gui.h"
 
-class CCharacterButton : public vgui::Button
+class CCharacterNewButton : public vgui::Button
 {
 private:
-	DECLARE_CLASS_SIMPLE( CCharacterButton, vgui::Button );
+	DECLARE_CLASS_SIMPLE( CCharacterNewButton, vgui::Button );
 	
 public:
-	CCharacterButton(vgui::Panel *parent, const char *panelName);
+	CCharacterNewButton(vgui::Panel *parent, const char *panelName);
 
 	virtual void ApplySettings( KeyValues *resourceData );
 
@@ -36,12 +36,12 @@ private:
 	float m_flBodyYaw;
 };
 
-class CDACharacterMenu : public CFolderMenuPanel
+class CDACharacterNewMenu : public CFolderMenuPanel
 {
-	DECLARE_CLASS_SIMPLE( CDACharacterMenu, CFolderMenuPanel );
+	DECLARE_CLASS_SIMPLE( CDACharacterNewMenu, CFolderMenuPanel );
 
 public:
-	CDACharacterMenu(Panel *parent);
+	CDACharacterNewMenu(Panel *parent);
 
 public:
 	virtual const char *GetName( void ) { return PANEL_CLASS; }
@@ -68,6 +68,8 @@ private:
 	class CModelPanel*  m_pCharacterImage;
 
 	ButtonCode_t m_iCharacterMenuKey;
+
+	vgui::Panel* letterbox_top;
 
 protected:
 	// vgui overrides for rounded corner background
