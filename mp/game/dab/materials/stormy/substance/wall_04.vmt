@@ -1,0 +1,9 @@
+lightmappedgeneric
+{
+	$basetexture stormy/substance/wall_04_dif
+	$bumpmap stormy/substance/wall_04_nor
+	$surfaceprop concrete
+	$color "{ 125 125 125 }"
+	$envmap env_cubemap
+	$envmaptint "[0.1 0.1 0.1]"
+}

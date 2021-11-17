@@ -1,0 +1,10 @@
+WorldVertexTransition
+{
+	$basetexture stormy/substance/wall_01_dif
+	$surfaceprop brick
+
+	$basetexture2 stormy/substance/wall_05_dif
+	$surfaceprop2 brick
+
+	%tooltexture stormy/substance/wall_05_dif
+}

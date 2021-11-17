@@ -1,0 +1,5 @@
+lightmappedgeneric
+{
+	$basetexture stormy/substance/wall_01_dif
+	$bumpmap stormy/substance/wall_01_nor
+}
