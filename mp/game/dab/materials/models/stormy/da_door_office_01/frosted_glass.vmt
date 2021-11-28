@@ -1,0 +1,10 @@
+Vertexlitgeneric
+{
+	$basetexture models/stormy/da_door_office_01/frosted_glass
+	$surfaceprop glass
+	$nocull 1
+	
+	$alpha .15
+	$detail detail/metal_detail_01
+	$detailblendmode 0
+}

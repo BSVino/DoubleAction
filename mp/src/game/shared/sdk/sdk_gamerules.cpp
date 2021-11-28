@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The TF Game rules 
 //
@@ -33,6 +33,7 @@
 	#include "da_briefcase.h"
 	#include "vote_controller.h"
 	#include "da_datamanager.h"
+	#include "da_achievement_helpers.h"
 
 #endif
 
@@ -1876,6 +1877,14 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 	else if (GetBountyPlayer() && GetBountyPlayer() == ToSDKPlayer(info.GetAttacker()))
 	{
 		HealWanted(25);
+
+		// achievement "Somebody Stop Me" - 25 kill streak as wanted
+		CSDKPlayer* attacker = ToSDKPlayer(info.GetAttacker());
+		attacker->m_nNumKillsThisWanted++;
+		if (attacker->m_nNumKillsThisWanted > 24)
+			DA_ApproachAchievement("SOMEBODY_STOP_ME", attacker->GetUserID());
+		if (attacker->m_nNumKillsThisWanted > 49)
+			DA_ApproachAchievement("PENGUIN", attacker->GetUserID());
 	}
 
 	CSDKPlayer* pLeader = GetLeader();
@@ -2497,6 +2506,10 @@ void CSDKGameRules::PlayerCapturedBriefcase(CSDKPlayer* pPlayer)
 
 		CSDKPlayer::SendBroadcastNotice(NOTICE_PLAYER_CAPTURED_BRIEFCASE, pPlayer);
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BriefcaseCapture");
+
+		if (pPlayer->m_nNumKillsThisBriefcase == 0){
+			DA_ApproachAchievement("SPECIALDELIVERY", pPlayer->GetUserID());
+		}
 	}
 
 	CleanupMiniObjective();
@@ -2631,6 +2644,9 @@ void CSDKGameRules::MaintainMiniObjective_Bounty()
 
 void CSDKGameRules::CleanupMiniObjective_Bounty()
 {
+	// reset achievement variables
+	m_hBountyPlayer->m_nNumKillsThisWanted = 0;
+	
 	m_hBountyPlayer = NULL;
 }
 

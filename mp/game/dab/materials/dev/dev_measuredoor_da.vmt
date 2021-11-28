@@ -1,0 +1,7 @@
+LightmappedGeneric
+{
+
+$basetexture "dev/dev_measuredoor_da"
+$surfaceprop concrete
+$keywords "stormy dev tools measure"
+}

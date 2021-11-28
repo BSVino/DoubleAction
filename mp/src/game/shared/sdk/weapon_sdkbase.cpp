@@ -503,7 +503,14 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 		flFireRate = GetBrawlFireRate();
 
 	flFireRate = pOwner->m_Shared.ModifySkillValue(flFireRate, -0.2f, SKILL_BOUNCER);
+	
+
+	// add our weapon script's BrawlTimeMultiplier into the mix
+	float flBrawlTimeMultiplier = GetSDKWpnData().flBrawltimeMultiplier;
+	flFireRate = flFireRate * flBrawlTimeMultiplier;
+
 	float flTimeToSwing = flFireRate * 0.3f;
+
 
 	if (m_bInReload)
 	{

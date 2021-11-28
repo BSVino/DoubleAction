@@ -5,6 +5,8 @@ WeaponData
 	"Bullets"				"9"
 	"CycleTime"				"0.85"
 	"ReloadTimeMultiplier"	"1"
+	"BrawlTimeMultiplier"	"1.25"
+	"buy_menu_sequence"		"mossberg_idle"
 
 	"BuiltRightHanded"		"1"
 	
@@ -21,7 +23,7 @@ WeaponData
 
 	"ViewPunchMultiplier"	"1"
 	"Recoil"				"20"
-	"Spread"				"0.04362"
+	"Spread"				"0.0658"
 	"AimInSpeedPenalty"		"1"
 	"AimInFireRateBonus"	"1"
 	"AimInRecoilBonus"		"1"

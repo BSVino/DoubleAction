@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL1.
 //
@@ -33,6 +33,8 @@
 #include "dove.h"
 #include "da_datamanager.h"
 #include "da_briefcase.h"
+#include "te_effect_dispatch.h"
+#include "da_achievement_helpers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -271,6 +273,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bWasKilledByString ) ),
 	SendPropStringT( SENDINFO( m_szKillerString ) ),
 
+	SendPropInt(SENDINFO(m_nLastPlayerIndexIBackflippedOff)),
+
 	SendPropEHandle( SENDINFO( m_hSwitchFrom ) ),
 END_SEND_TABLE()
 
@@ -375,8 +379,14 @@ void CSDKPlayer::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, 
 	PointCameraSetupVisibility( this, area, pvs, pvssize );
 }
 
+// constructor
+
 CSDKPlayer::CSDKPlayer()
 {
+	// fetch the users stats from steam
+	//DA_InitStats();
+	//DA_ClearAllStats();
+
 	//Tony; create our player animation state.
 	m_PlayerAnimState = CreateSDKPlayerAnimState( this );
 	m_iLastWeaponFireUsercmd = 0;
@@ -722,7 +732,7 @@ inline bool CSDKPlayer::IsReloading( void ) const
 	return false;
 }
 
-ConVar da_regenamount( "da_regenamount", "5", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar da_regenamount( "da_regenamount", "30", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar da_decayamount( "da_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar da_regenamount_secondwind( "da_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
 
@@ -750,22 +760,23 @@ void CSDKPlayer::PreThink(void)
 		}
 
 		if (m_flCurrentTime > m_flNextRegen)
-		{
+		{	// player has been out of battle for a while, regenerate their health
+
 			float flRatio = da_regenamount_secondwind.GetFloat()/da_regenamount.GetFloat();
 			float flModifier = (flRatio - 1)/2;
 			float flHealth = m_Shared.ModifySkillValue(da_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
 
 			m_flNextRegen = m_flCurrentTime + 1;
 
-			// Heal up to 50% of the player's health.
-			int iMaxHealth = GetMaxHealth()/2;
+			// Heal up to 100% of the player's health.
+			int iMaxHealth = GetMaxHealth();
 
-			if (IsStyleSkillActive(SKILL_RESILIENT))
-				// If Resilient is active, heal up to 100%, which is actually 200 health
-				iMaxHealth = GetMaxHealth();
-			else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
-				// If it's passive heal to 100%
-				iMaxHealth = GetMaxHealth();
+			// if (IsStyleSkillActive(SKILL_RESILIENT))
+			// 	// If Resilient is active, heal up to 100%, which is actually 200 health
+			// 	iMaxHealth = GetMaxHealth();
+			// else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
+			// 	// If it's passive heal to 100%
+			// 	iMaxHealth = GetMaxHealth();
 
 			int iHealthTaken = 0;
 			if (GetHealth() < iMaxHealth)
@@ -950,6 +961,7 @@ void CSDKPlayer::Precache()
 	PrecacheParticleSystem( "tracer_bullet" );
 	PrecacheParticleSystem( "style_active_bouncer" );
 	PrecacheParticleSystem( "style_active_athletic" );
+	PrecacheParticleSystem( "player_lvlup" );
 
 	BaseClass::Precache();
 }
@@ -1120,6 +1132,14 @@ void CSDKPlayer::Spawn()
 	m_hRagdoll = NULL;
 
 	UpdateStyleSkill();
+
+	// set the PrevOwner on all of our weapons to us when we spawn
+	for (int i = 0; i < WeaponCount(); i++)
+	{
+		CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(GetWeapon(i));
+		if (pWeapon)
+			pWeapon->SetPrevOwner(this);
+	}
 	
 	BaseClass::Spawn();
 
@@ -1164,7 +1184,13 @@ void CSDKPlayer::Spawn()
 	m_iStyleKillStreak = 0;
 	m_iCurrentStreak = 0;
 	m_flNextSuicideTime = 0;
-	m_iRaceWaypoint = 0;
+
+	// instead of setting this to zero at spawn we'll just decrement it
+	// so that when a player dies in rat race they are only set back one
+	// ratrace waypoint, not the whole hog
+	m_iRaceWaypoint --;
+	if(m_iRaceWaypoint < 0)
+		m_iRaceWaypoint = 0;
 
 	m_Shared.EndDive();
 	m_Shared.EndRoll();
@@ -1202,6 +1228,10 @@ void CSDKPlayer::Spawn()
 	m_bWasKilledByGrenade = false;
 	m_bWasKilledByBrawl = false;
 	m_bWasKilledByString = false;
+
+	// you always die after a superfall so this is a safe place to reset this number
+	m_nNumEnemiesKilledThisSuperfall = 0;
+
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -1389,6 +1419,8 @@ void CSDKPlayer::InitialSpawn( void )
 		State_Enter( STATE_WELCOME );
 
 	ClearLoadout();
+
+	m_nNumGrenadeKillsThisRound = 0;
 }
 
 void CSDKPlayer::OnDive()
@@ -1539,6 +1571,12 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_COOL, STYLE_POINT_SMALL);
 					Instructor_LessonLearned("stuntfromexplo");
+
+					// achievement "Michael Bay" - DIVEAWAYFROMEXPLOSION
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION", this->GetUserID());
+					// achievement "Bad Boys II" - DIVEAWAYFROMEXPLOSION_250
+					DA_ApproachAchievement("DIVEAWAYFROMEXPLOSION_250", this->GetUserID());
+
 				}
 			}
 			else if (bGrenadeNotMine && !m_Shared.IsAimedIn())
@@ -1717,12 +1755,14 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
 	}
 
-	if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
-		m_flNextRegen = m_flCurrentTime + 10;
-	else if (!IsStyleSkillActive())
-		m_flNextRegen = m_flCurrentTime + 6;
-	else
-		m_flNextRegen = m_flCurrentTime + 4;
+	// no matter what, set our regen timer to 8 seconds
+	m_flNextRegen = m_flCurrentTime + 8;
+	// if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
+	// 	m_flNextRegen = m_flCurrentTime + 10;
+	// else if (!IsStyleSkillActive())
+	// 	m_flNextRegen = m_flCurrentTime + 6;
+	// else
+	// 	m_flNextRegen = m_flCurrentTime + 4;
 
 	return 1;
 }
@@ -1750,6 +1790,8 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	CTakeDamageInfo subinfo = info;
 	subinfo.SetDamageForce( m_vecTotalBulletForce );
+
+	diedHoldingWeapon = this->GetActiveSDKWeapon();
 
 	m_hKiller = ToSDKPlayer(info.GetAttacker());
 	m_hInflictor = info.GetInflictor();
@@ -1836,6 +1878,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pSDKAttacker->m_iBrawlKills++;
 		}
 
+		// achievement "No you don't" - kill a player who has their super slowmo active
+		if ( m_iSlowMoType == SLOWMO_STYLESKILL){
+			DA_ApproachAchievement("NO_YOU_DONT", pSDKAttacker->GetUserID());
+		}
+		
+
 		// These are used to see how well the player is doing for the purposes
 		// of adjusting style accretion. So, only count it if it's a "skill-based"
 		// kill, ie one player shooting another, and not eg a suicide.
@@ -1865,6 +1913,9 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 				pAttackerSDK->GiveSlowMo(1);
 				pAttackerSDK->Instructor_LessonLearned("earn_slowmo");
 			}
+
+			if (pAttackerSDK->HasBriefcase())
+				pAttackerSDK->m_nNumKillsThisBriefcase++;
 		}
 	}
 	else
@@ -1930,6 +1981,8 @@ void CSDKPlayer::SetKilledByString( string_t sKilledBy )
 	m_szKillerString = sKilledBy;
 }
 
+
+
 void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const CTakeDamageInfo &info)
 {
 	if (pVictim == this)
@@ -1970,17 +2023,119 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
 	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
 
+	// the weapon that did the killing
 	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
 	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
 
 	if (pWeaponInfo)
 		flPoints *= pWeaponInfo->m_flStyleMultiplier;
-
 	Vector vecVictimForward;
 	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
 
 	Vector vecKillerToVictim = GetAbsOrigin()-pVictim->GetAbsOrigin();
 	vecKillerToVictim.NormalizeInPlace();
+
+	// most of our achievements are triggered when you kill someone
+	if (bKilledVictim){
+
+		// during your own slowmo
+		if (m_iSlowMoType == SLOWMO_ACTIVATED || m_iSlowMoType == SLOWMO_STYLESKILL){
+			m_nNumKillsThisSlowmo++;
+			DevMsg("\n\n m_nNumKillsThisSlowmo %i \n\n", m_nNumKillsThisSlowmo);
+			if (m_nNumKillsThisSlowmo > 2)
+				DA_ApproachAchievement("SLOWPRO", this->GetUserID());
+		}
+
+		// killed with a grenade
+		if (info.GetDamageType() == DMG_BLAST){
+			// GET_BANNED - 30 grenade kills in one round
+			m_nNumGrenadeKillsThisRound++;
+			if (m_nNumGrenadeKillsThisRound > 29)
+				DA_ApproachAchievement("GET_BANNED", this->GetUserID());
+		}
+
+		// shot with a gun
+		if (pWeapon && (info.GetDamageType() != DMG_CLUB) && (info.GetDamageType() != DMG_BLAST) && (info.GetDamageType() != DMG_DROWN) && (info.GetDamageType() != DMG_FALL)){
+
+			const char* my_weapon_name = pWeapon->GetPrintName();
+
+			// weapon lifetime kills grind achievements
+			if (strcmp(my_weapon_name, "#DA_Weapon_MAC10") == 0)
+				DA_ApproachAchievement("MAC_DADDYD", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_FAL") == 0)
+				DA_ApproachAchievement("VINDICATED", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_M1911") == 0 || strcmp(my_weapon_name, "#DA_Weapon_AKIMBO_M1911") == 0)
+				DA_ApproachAchievement("HORSE_WHISPERER", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_BERETTA") == 0 || strcmp(my_weapon_name, "#DA_Weapon_AKIMBO_beretta") == 0)
+				DA_ApproachAchievement("VIGILANT", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_MP5K") == 0)
+				DA_ApproachAchievement("UNDERTAKEN", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_Mossberg") == 0)
+				DA_ApproachAchievement("PERSUADED", this->GetUserID());
+			if (strcmp(my_weapon_name, "#DA_Weapon_M16") == 0)
+				DA_ApproachAchievement("BLACK_MAGICKED", this->GetUserID());
+
+			// killed with a headshot
+			if (pVictim->LastHitGroup() == HITGROUP_HEAD){
+
+				// point blank
+				if (flDistance < 100 && isUsingPistol(my_weapon_name)){
+					// achievement "Dodge this" - POINT BLANK HEADSHOT
+					DA_ApproachAchievement("DODGETHIS", this->GetUserID());
+				}
+
+				// achievement "Hardboiled" - Kill someone with a headshot after flipping off them.
+				if (pVictim->entindex() == m_nLastPlayerIndexIBackflippedOff){
+					DA_ApproachAchievement("HARDBOILED", this->GetUserID());
+				}
+
+				// achievement "Steady Eddie" - a headshot, using a pistol, in a superfall
+				if (m_Shared.IsSuperFalling()){
+
+					if (isUsingPistol(my_weapon_name))
+					{
+							DA_ApproachAchievement("STEADY_EDDIE", this->GetUserID());
+					}
+				}
+
+			}
+
+			// achievement "Betrayed" - Kill somebody with their own gun
+			CSDKPlayer* previousWeaponOwner = pWeapon->GetPrevOwner();
+			if (previousWeaponOwner){
+				int prevOwnerID = previousWeaponOwner->entindex();
+				int victimID = pVictim->entindex();
+				if (victimID == prevOwnerID){
+					DA_ApproachAchievement("BETRAYED", this->GetUserID());
+				}
+			}
+
+			if (m_Shared.IsSuperFalling()){
+				// the FALL_GUY event will trigger all of our superfall grinders
+				DA_ApproachAchievement("FALL_GUY", this->GetUserID());
+
+				m_nNumEnemiesKilledThisSuperfall++;
+
+				// achievement SUPERFALL_SHARPSHOOTER
+				if (m_nNumEnemiesKilledThisSuperfall > 2)
+					DA_ApproachAchievement("SUPERFALL_SHARPSHOOTER", this->GetUserID());
+
+				// achievement SUPERFALL_KING
+				if (m_nNumEnemiesKilledThisSuperfall > 4)
+					DA_ApproachAchievement("SUPERFALL_KING", this->GetUserID());
+			}
+		}
+	}
+
+	if (info.GetDamageType() == DMG_CLUB && bKilledVictim && m_Shared.IsDiving()){
+		// achievement "Divepunch is its own reward" - DIVEPUNCHKILL
+		DA_ApproachAchievement("DIVEPUNCHKILL", this->GetUserID());
+
+		if (m_Shared.IsSuperFalling()){
+			// achievement "SKYPUNCH!!" - SKYPUNCH
+			DA_ApproachAchievement("SKYPUNCH", this->GetUserID());
+		}
+	}
 
 	// Do grenades first so that something like diving while the grenade goes off doesn't give you a dive bonus.
 	if (info.GetDamageType() == DMG_BLAST)
@@ -2071,8 +2226,18 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 	else if (flDistance > 1200)
 	{
 		// Long range.
-		if (bKilledVictim)
+		if (bKilledVictim){
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_LARGE, ANNOUNCEMENT_LONG_RANGE_KILL, STYLE_POINT_LARGE);
+
+			// achievement POTSHOTTER - get a long range kill using a pistol on a rifle wielding player
+			const char* my_weapon_name = pWeapon->GetPrintName();
+			bool usingPistol = isUsingPistol(my_weapon_name);
+			const char* their_weapon_name = pVictim->diedHoldingWeapon->GetPrintName();
+			bool usingRifle = isUsingRifle(their_weapon_name);
+			if (usingPistol && usingRifle){
+				DA_ApproachAchievement("POTSHOTTER", this->GetUserID());
+			}
+		}
 		else
 			AddStylePoints(flPoints*0.6f, STYLE_SOUND_SMALL, ANNOUNCEMENT_LONG_RANGE, STYLE_POINT_SMALL);
 	}
@@ -2236,6 +2401,31 @@ int CSDKPlayer::GetMaxHealth() const
 		return BaseClass::GetMaxHealth() + da_resilient_health_bonus.GetInt();
 
 	return BaseClass::GetMaxHealth();
+}
+
+
+bool CSDKPlayer::isUsingPistol(const char* weapon_name){
+	if (strcmp(weapon_name, "#DA_Weapon_M1911") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_AKIMBO_M1911") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_BERETTA") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_AKIMBO_beretta") == 0)
+	{
+		return true;
+	}
+
+	// else
+	return false;
+}
+
+bool CSDKPlayer::isUsingRifle(const char* weapon_name){
+	if (strcmp(weapon_name, "#DA_Weapon_FAL") == 0 ||
+		strcmp(weapon_name, "#DA_Weapon_M16") == 0)
+	{
+		return true;
+	}
+
+	// else
+	return false;
 }
 
 bool CSDKPlayer::ThrowActiveWeapon( bool bAutoSwitch )
@@ -2518,6 +2708,9 @@ void CSDKPlayer::SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForwa
 	Assert(pWeapon);
 	if (!pWeapon)
 		return;
+
+	// required so we can detect the previous owner once the weapon has been dropped
+	pWeapon->SetPrevOwner(this);
 
 	if (pWeapon->IsAkimbo())
 	{
@@ -4016,6 +4209,8 @@ void CSDKPlayer::ActivateMeter()
 	FillMeter();
 
 	m_iStyleKillStreak = 0;
+	
+	DispatchParticleEffect("player_lvlup", GetAbsOrigin(), GetAbsAngles());
 
 	CSingleUserRecipientFilter filter( this );
 	EmitSound(filter, entindex(), "HudMeter.Activate");
@@ -4094,6 +4289,8 @@ void CSDKPlayer::SetSlowMoType(int iType)
 {
 	if (iType != m_iSlowMoType)
 		m_iSlowMoType = iType;
+
+	m_nNumKillsThisSlowmo = 0;
 }
 
 void CSDKPlayer::GiveSlowMo(float flSeconds)
@@ -4151,6 +4348,8 @@ void CSDKPlayer::DropBriefcase()
 	m_hBriefcase = NULL;
 
 	SendBroadcastSound("MiniObjective.BriefcaseDrop");
+
+	m_nNumKillsThisBriefcase = 0;
 }
 
 bool CSDKPlayer::CanDoCoderHacks()

@@ -1,0 +1,10 @@
+"VertexlitGeneric"
+{
+	"$basetexture"		"cable\metal_cable"
+	"$bumpmap"		"cable\metal_cable_normal"
+	"$MinLight"		"0.0"
+	"$MaxLight"		"0.0"
+}
+
+
+

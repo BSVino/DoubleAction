@@ -27,7 +27,7 @@
 		"textAlignment"	"center"
 		"underline"     "1"
 		"labelText"		"#DA_BuyMenu_Agents"
-		//"bgcolor_override" "0 0 0 100"
+		"bgcolor_override" "0 0 0 100"
 	}
 
 	"frank"
@@ -70,25 +70,25 @@
 		"weaponmodel"	"models/weapons/m1911.mdl"
 	}
 
-//	"bomber"
-//	{
-//		"ControlName"	"CharacterButton"
-//		"fieldName"		"Bomber"
-//		"xpos"			"c-250"
-//		"ypos"			"210"
-//		"wide"			"100"
-//		"tall"			"100"
-//		"labelText"		"#DA_CharacterMenu_Button_Bomber"
-//		"textAlignment"	"center"
-//		"Command"		"character bomber"
-//		"font"			"FolderSmall"
+	"bomber"
+	{
+		"ControlName"	"CharacterButton"
+		"fieldName"		"Bomber"
+		"xpos"			"c-140"
+		"ypos"			"210"
+		"wide"			"100"
+		"tall"			"100"
+		"labelText"		"#DA_CharacterMenu_Button_Bomber"
+		"textAlignment"	"center"
+		"Command"		"character bomber"
+		"font"			"FolderSmall"
 
-//		"character"     "bomber"
-//		"sequence"		"bomber_pose"
-//		"body_yaw"		"15"
-//		"body_pitch"	"-40"
-//		"weaponmodel"	"models/weapons/fal.mdl"
-//	}
+		"character"     "bomber"
+		"sequence"		"bomber_pose"
+		"body_yaw"		"15"
+		"body_pitch"	"-40"
+		"weaponmodel"	"models/weapons/fal.mdl"
+	}
 
 	"eightball"
 	{

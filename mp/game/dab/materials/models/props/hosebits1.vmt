@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" 		"models/props/hosebits1"
+	"$halflambert" 		"1"
+
+}

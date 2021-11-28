@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -269,6 +269,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bWasKilledByBrawl ) ),
 	RecvPropBool( RECVINFO( m_bWasKilledByString ) ),
 	RecvPropString( RECVINFO( m_szKillerString ) ),
+
+	RecvPropInt(RECVINFO(m_nLastPlayerIndexIBackflippedOff)), 
 
 	RecvPropEHandle( RECVINFO( m_hSwitchFrom ) ),
 END_RECV_TABLE()
@@ -718,7 +720,7 @@ IRagdoll* C_SDKPlayer::GetRepresentativeRagdoll() const
 	}
 }
 
-
+// constructor
 
 C_SDKPlayer::C_SDKPlayer() : 
 	m_iv_angEyeAngles( "C_SDKPlayer::m_iv_angEyeAngles" )
@@ -738,6 +740,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_hRightArmGlow = NULL;
 	m_hLeftFootGlow = NULL;
 	m_hRightFootGlow = NULL;
+
 }
 
 
@@ -965,6 +968,7 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 #endif
 
 	UpdateRichPresence();
+
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

@@ -85,6 +85,7 @@ public:
 	char					szViewModel[MAX_WEAPON_STRING];			// View model of this weapon
 	char					szWorldModel[MAX_WEAPON_STRING];		// Model of this weapon seen carried by the player
 	char					szAnimationPrefix[MAX_WEAPON_PREFIX];	// Prefix of the animations that should be used by the player carrying this weapon
+	char					szBuyMenuSequence[MAX_WEAPON_PREFIX];	// the animation sequence we want to show on the buy menu for this weapon
 	int						iSlot;									// inventory slot.
 	int						iPosition;								// position in the inventory slot.
 	int						iMaxClip1;								// max primary clip size (-1 if no clip)
@@ -92,6 +93,7 @@ public:
 	int						iDefaultClip1;							// amount of primary ammo in the gun when it's created
 	int						iDefaultClip2;							// amount of secondary ammo in the gun when it's created
 	int						iWeight;								// this value used to determine this weapon's importance in autoselection.
+	int						flBrawltimeMultiplier;					// used to multiply brawl duration - higher value longer brawl
 	int						iRumbleEffect;							// Which rumble effect to use when fired? (xbox)
 	bool					bAutoSwitchTo;							// whether this weapon should be considered for autoswitching to
 	bool					bAutoSwitchFrom;						// whether this weapon can be autoswitched away from when picking up another weapon or ammo

@@ -66,6 +66,7 @@ const char *pszPossiblePlayerModels[] =
 	"models/player/frank.mdl",
 	"models/player/wish.mdl",
 	"models/player/eightball.mdl",
+	"models/player/bomber.mdl",
 	NULL
 };
 
@@ -78,6 +79,7 @@ static const char * s_WeaponAliasInfo[] =
 {
 	"none",		// WEAPON_NONE
 	"fal",		// SDK_WEAPON_FAL
+	"sawnoff", // SDK_WEAPON_SAWNOFF
 	"mossberg", // SDK_WEAPON_MOSSBERG
 	"m16",
 	"mac10",    // SDK_WEAPON_MAC10

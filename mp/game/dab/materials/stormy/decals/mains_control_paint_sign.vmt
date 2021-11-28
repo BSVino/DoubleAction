@@ -1,0 +1,9 @@
+lightmappedgeneric
+{
+$translucent 1
+$basetexture stormy/decals/mains_control_paint_sign_dif
+$bumpmap stormy/decals/mains_control_paint_sign_nor
+$envmap env_cubemap
+$normalmapalphaenvmapmask 1
+$decalscale .5
+}

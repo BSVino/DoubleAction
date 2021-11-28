@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for SDK Game
 //
@@ -126,6 +126,26 @@ public:
 	static void  SendBroadcastNotice(notice_t eNotice, CSDKPlayer* pSubject = NULL);
 
 	static void  SendBroadcastSound(const char* pszName);
+
+	// HARDBOILED Achievement
+	CNetworkVar(int, m_nLastPlayerIndexIBackflippedOff);
+	void SetLastPlayerIndexIBackflippedOff(int entindex){ m_nLastPlayerIndexIBackflippedOff = entindex; }
+
+	// SUPERFALL_KING Achievement
+	int m_nNumEnemiesKilledThisSuperfall = 0;
+	// SLOWPRO - 3 kills in a single slowmo
+	int m_nNumKillsThisSlowmo = 0;
+	// SPECIAL_DELIVERY - capture a briefcase without killing anyone
+	int m_nNumKillsThisBriefcase = 0;
+	// GET_BANNED - 30 grenade kills in one round
+	int m_nNumGrenadeKillsThisRound = 0;
+	// SOMEBODY_STOP_ME - 50 kills while wanted
+	int m_nNumKillsThisWanted = 0;
+
+	bool isUsingPistol(const char* weapon_name);
+	bool isUsingRifle(const char* weapon_name);
+
+	CWeaponSDKBase* diedHoldingWeapon;
 
 	virtual int		TakeHealth( float flHealth, int bitsDamageType );
 	virtual int		GetMaxHealth()  const;

@@ -8,6 +8,7 @@ WeaponData
 	"viewmodel"				"models/weapons/v_eq_fraggrenade.mdl"
 	"playermodel"			"models/weapons/w_eq_fraggrenade.mdl"
 	"PlayerAnimationExtension"	"gren"
+	"buy_menu_sequence"		"grenade_crouch"
 
 	"BuiltRightHanded"		"0"
 

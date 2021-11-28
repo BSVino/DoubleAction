@@ -1,0 +1,11 @@
+VertexlitGeneric
+{
+	$basetexture models/stormy/wooden_door_01_dif
+	
+	$phong 1
+	$phongboost .5
+	$phongfresnelranges "[.5 .5 .75]"
+	$phongexponent 10
+	$halflambert 1
+	
+}

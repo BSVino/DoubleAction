@@ -6,6 +6,8 @@ WeaponData
 	"CycleTime"				"0.2"		// time between shoots
 	"DrawTimeMultiplier"	"0.8"
 	"ReloadTimeMultiplier"	"1.0"
+	"BrawlTimeMultiplier"	"1"
+	"buy_menu_sequence"		"m1911_ready"
 
 	"BuiltRightHanded"		"1"
 

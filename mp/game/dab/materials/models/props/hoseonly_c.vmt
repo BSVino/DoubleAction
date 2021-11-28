@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" 		"models/props/hoseonly_c"
+	"$halflambert" 		"1"
+
+}

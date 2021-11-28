@@ -56,6 +56,12 @@ $Project "Client (DA)"
 {
 	$Folder "DA"
 	{
+		$Folder "Achievements"
+		{
+			$File "$SRCDIR/game/client/da_achievement_helpers.cpp"
+			$File "$SRCDIR/game/client/da_achievement_helpers.h"
+			$File "$SRCDIR/game/client/da_achievements.cpp"
+		}
 		$Folder "Player"
 		{
 			$File "sdk/c_sdk_player.cpp"
@@ -124,6 +130,7 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_sdkbase.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_shotgun.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
+			$File "$SRCDIR/game/shared/sdk/weapon_sawnoff.cpp"
 		}
 
 		$File "$SRCDIR/game/shared/sdk/da_bulletmanager.cpp"

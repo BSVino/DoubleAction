@@ -184,6 +184,12 @@ public:
 	virtual float GetPlayerMaxSpeed() { return GetPlayerMaxSpeed(false); }
 	float GetMaxSlideSpeed();
 
+
+	int m_nLastPlayerIndexIBackflippedOff;
+	void SetLastPlayerIndexIBackflippedOff(int entindex){
+		m_nLastPlayerIndexIBackflippedOff = entindex;
+	}
+
 //Tony; pronetodo!
 //	void CheckProneMoveSound( int groundspeed, bool onground );
 

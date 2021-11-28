@@ -5,6 +5,8 @@ WeaponData
 	"Bullets"				"1"			// bullets per shoot
 	"CycleTime"				"0.065"		// time between shoots
 	"ReloadTimeMultiplier"	"0.8"
+	"BrawlTimeMultiplier"	"1"
+	"buy_menu_sequence"		"mp5k_idle"
 
 	"BuiltRightHanded"		"1"
 

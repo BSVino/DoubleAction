@@ -30,3 +30,8 @@
 
 	killerstring(string) : "Killer string" : "#DA_Trigger_Kill_Default" : "Name of the killer for the freezecam screenshot."
 ]
+
+@SolidClass base(Trigger, Targetname) = trigger_superfall :
+	"A trigger volume that causes players to enter superfall."
+[
+]

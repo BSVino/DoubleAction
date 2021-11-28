@@ -152,6 +152,7 @@ typedef enum
 	// "Long guns"
 	SDK_WEAPON_FAL,
 	SDK_WEAPON_MOSSBERG,
+	SDK_WEAPON_SAWNOFF,
 	SDK_WEAPON_M16,
 
 	// SMG's

@@ -1,0 +1,11 @@
+vertexlitgeneric
+{
+	$basetexture models/stormy/da_couch01_dif
+	$bumpmap models/stormy/da_couch01_nor
+	
+	$phong 1
+	$phongboost 0.25
+	$phongfresnelranges "[.5 .55 .61]"
+	$phongexponent 5
+	
+}	

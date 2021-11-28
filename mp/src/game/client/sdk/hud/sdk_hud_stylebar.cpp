@@ -31,6 +31,7 @@
 #include "c_sdk_player.h"
 #include "sdk_hud_ammo.h"
 #include "sdk_gamerules.h"
+#include "da_achievement_helpers.h"
 
 #include "convar.h"
 
@@ -149,6 +150,9 @@ float CHudStyleBar::GetIconH()
 
 void CHudStyleBar::Reset()
 {
+	// achievement Disco Stu - 1 million lifetime style points
+	DA_ApproachAchievement("DISCOSTU", m_flCurrentStyle);
+
 	m_flCurrentStyle = m_flGoalStyle = 0;
 	m_aAnnouncements.RemoveAll();
 	m_flStyleIconLerpStart = 0;

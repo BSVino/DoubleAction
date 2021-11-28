@@ -6,6 +6,8 @@ WeaponData
 	"Bullets"				"1"		// bullets per shoot
 	"CycleTime"				"0.35"		// time between shoots
 	"SecondaryCycleTime"	"0.6"
+	"BrawlTimeMultiplier"	"1"
+	"buy_menu_sequence"		"unarmed_idle"
 
 	"WeaponType"            "melee"
 
