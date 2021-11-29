@@ -2670,24 +2670,20 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	CUtlVector<CBaseEntity*> apWaypoints;
 
 	CBaseEntity* pSpot = NULL;
-	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" )) != NULL)
+	while ((pSpot = gEntList.FindEntityByClassname( pSpot, "ratrace_checkpoint" )) != NULL)
 	{
 		bool bUse = true;
+		// loop through all players
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
+			// cast to SDKPlayer (ignore bots)
 			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 			if (!pPlayer)
 				continue;
 
+			// if there is a player too close to the checkpoint, don't use it
 			float flDistance = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin()).Length();
-
 			if (flDistance < 200)
-			{
-				bUse = false;
-				break;
-			}
-
-			if (flDistance < 500 && pPlayer->IsVisible(pSpot->GetAbsOrigin(), true))
 			{
 				bUse = false;
 				break;
@@ -2700,15 +2696,20 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 		apWaypoints.AddToTail(pSpot);
 	}
 
-	if (apWaypoints.Count() < 3)
+	// if we have not been able to stack up enough checkpoints, don't do anything
+	if (apWaypoints.Count() < 3){
+		Warning("no ratrace checkpoints found, can't start a ratrace\n");
 		return false;
+	}
 
+	// loop through all players
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 		if (!pPlayer)
 			continue;
 
+		// set the player to be aiming for the first checkpoint
 		pPlayer->m_iRaceWaypoint = 0;
 	}
 

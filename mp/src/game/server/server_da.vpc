@@ -100,6 +100,7 @@ $Project "Server (DA)"
 		$Folder "Entities"
 		{
 			$File "$SRCDIR/game/server/sdk/da_superfalltrigger.cpp"
+			$File "$SRCDIR/game/server/ratrace_checkpoint.cpp"
 		}
 
 		$File "sdk/da_briefcase.cpp"

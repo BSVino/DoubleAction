@@ -12,6 +12,11 @@
 [
 ]
 
+@PointClass base(PlayerClass, Angles) studio("models/editor/ratrace_checkpoint_3dtext.mdl") = ratrace_checkpoint :
+	"This entity is used during the ratrace to place checkpoints around the map. Checkpoints are chosen randomly"
+[
+]
+
 @SolidClass base(Trigger, Targetname) = trigger_kill :
 	"A trigger volume that kills players that touch it."
 [
