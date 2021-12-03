@@ -1,7 +1,7 @@
 WeaponData
 {
 	// Weapon characteristics:
-	"Damage"				"10"
+	"Damage"				"11"
 	"Bullets"				"9"
 	"CycleTime"				"0.85"
 	"ReloadTimeMultiplier"	"1"
@@ -23,7 +23,7 @@ WeaponData
 
 	"ViewPunchMultiplier"	"1"
 	"Recoil"				"20"
-	"Spread"				"0.07"
+	"Spread"				"0.0658"
 	"AimInSpeedPenalty"		"1"
 	"AimInFireRateBonus"	"1"
 	"AimInRecoilBonus"		"1"
