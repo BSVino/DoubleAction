@@ -124,6 +124,7 @@
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
 #include "mumble.h"
+#include "da_discord_rpc.h"
 
 // NVNT includes
 #include "hud_macros.h"
@@ -1089,6 +1090,10 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	HookHapticMessages(); // Always hook the messages
 #endif
 
+	//discord rpc initialization
+	//-Nbc66
+	g_discordrpc.Init();
+
 	return true;
 }
 
@@ -1219,9 +1224,13 @@ void CHLClient::Shutdown( void )
 	DisconnectDataModel();
 	ShutdownFbx();
 #endif
+
+	//discord rpc shutdown 
+	//-Nbc66
+	g_discordrpc.Shutdown();
 	
 	// This call disconnects the VGui libraries which we rely on later in the shutdown path, so don't do it
-//	DisconnectTier3Libraries( );
+	// DisconnectTier3Libraries( );
 	DisconnectTier2Libraries( );
 	ConVar_Unregister();
 	DisconnectTier1Libraries( );
@@ -1290,6 +1299,10 @@ void CHLClient::HudUpdate( bool bActive )
 	// I don't think this is necessary any longer, but I will leave it until
 	// I can check into this further.
 	C_BaseTempEntity::CheckDynamicTempEnts();
+
+	//runs on the first frame discord rpc
+	//-Nbc66
+	g_discordrpc.RunFrame();
 
 #ifdef SIXENSE
 	// If we're not connected, update sixense so we can move the mouse cursor when in the menus
@@ -1637,6 +1650,10 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 	gHUD.LevelInit();
 
+	//discord rpc reset
+	//-Nbc66
+	g_discordrpc.Reset();
+
 #if defined( REPLAY_ENABLED )
 	// Initialize replay ragdoll recorder
 	if ( !engine->IsPlayingDemo() )
@@ -1726,6 +1743,10 @@ void CHLClient::LevelShutdown( void )
 	internalCenterPrint->Clear();
 
 	messagechars->Clear();
+
+	//discord rpc reset
+	//-Nbc66
+	g_discordrpc.Reset();
 
 #ifndef TF_CLIENT_DLL
 	// don't want to do this for TF2 because we have particle systems in our
