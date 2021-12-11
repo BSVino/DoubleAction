@@ -444,12 +444,13 @@ public:
 };
 
 
-inline C_SDKPlayer* ToSDKPlayer( CBaseEntity *pPlayer )
+inline C_SDKPlayer* ToSDKPlayer(C_BaseEntity* pEntity)
 {
-	if ( !pPlayer || !pPlayer->IsPlayer() )
+	if (!pEntity || !pEntity->IsPlayer())
 		return NULL;
 
-	return static_cast< C_SDKPlayer* >( pPlayer );
+	Assert(dynamic_cast<C_SDKPlayer*>(pEntity) != 0);
+	return static_cast<C_SDKPlayer*>(pEntity);
 }
 
 inline SDKPlayerState C_SDKPlayer::State_Get() const

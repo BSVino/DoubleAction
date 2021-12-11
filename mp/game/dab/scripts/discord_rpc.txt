@@ -1,0 +1,13 @@
+"Discord"
+{
+
+	//You should try and keep the image and map name constant
+	//since that is the best practice for this
+	//but you can name the image name what ever you want since it's
+	//the name of the image that discord uses to call the image from the app
+	"Maps"
+	{
+		//Map_name  		//Image_name
+		"da_rooftops"		"da_rooftops"
+	}
+}

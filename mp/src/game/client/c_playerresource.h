@@ -74,6 +74,17 @@ protected:
 
 };
 
+
+
 extern C_PlayerResource *g_PR;
+
+inline C_PlayerResource* GetPlayerResource(void)
+{
+	if (!g_PR)
+		return NULL;
+
+	return assert_cast<C_PlayerResource*>(g_PR);
+}
+
 
 #endif // C_PLAYERRESOURCE_H

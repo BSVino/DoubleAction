@@ -43,6 +43,7 @@
 #include "hud_macros.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "clientsteamcontext.h"
+#include "da_discord_rpc.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -94,6 +95,10 @@ void CSDKModeManager::Init()
 void CSDKModeManager::LevelInit( const char *newmap )
 {
 	g_pClientMode->LevelInit( newmap );
+	
+	//initialized when a map is loaded for discord rpc
+	//-Nbc66
+	g_discordrpc.LevelInit(newmap);
 
 	ConVarRef cl_detail_max_sway("cl_detail_max_sway");
 	ConVarRef cl_detail_avoid_radius("cl_detail_avoid_radius");
