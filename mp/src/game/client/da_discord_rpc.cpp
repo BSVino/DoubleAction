@@ -34,9 +34,9 @@
 
 
 // update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
-#define DISCORD_UPDATE_RATE 3.0f
+#define DISCORD_UPDATE_RATE 10.0f
 
-#define DISCORD_APP_ID "918273490849763418"
+#define DISCORD_APP_ID "919072804941475881"
 
 //using this instead of the old method for getting a timestamp so that the timestamp starts at 0
 //when we join a server
