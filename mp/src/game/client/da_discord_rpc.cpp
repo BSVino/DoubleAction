@@ -34,7 +34,7 @@
 
 
 // update once every 10 seconds. discord has an internal rate limiter of 15 seconds as well
-#define DISCORD_UPDATE_RATE 10.0f
+#define DISCORD_UPDATE_RATE 3.0f
 
 #define DISCORD_APP_ID "918273490849763418"
 
@@ -201,10 +201,21 @@ void CTFDiscordRPC::SetLogo(void)
 
 		if (pPlayer)
 		{
-			const char* currentchartater = pPlayer->GetCharacter();
-			DevMsg("current char is %s\n", currentchartater);
-			pszImageSmall = VarArgs("%s_playermodel", currentchartater);
-			pszImageText = currentchartater;
+			//show us a small image of the player character
+			//-Nbc66
+			const char* character = pPlayer->GetCharacter();
+			DevMsg("current char is %s\n", character);
+			//const char* smallimage = VarArgs("%s_playermodel", currentchartater);
+			char formatedtext[256];
+			//this is a formated string which will show us the name of the character and the total style
+			//that we have when you hover over the small image
+			//-Nbc66
+			V_snprintf(formatedtext,sizeof(formatedtext),"%s : %i %s ", LocalizeDiscordString(VarArgs("#DA_Character_%s", character)) , RoundFloatToInt(pPlayer->GetStyleStars()), LocalizeDiscordString("#DA_PlayerScore"));
+			pszImageText = formatedtext;
+			const char* lowername = character;
+			//used to set the small Image
+			//-Nbc66
+			pszImageSmall = lowername;
 		}
 
 		if (pszImageLarge != m_szLatchedMapname)
