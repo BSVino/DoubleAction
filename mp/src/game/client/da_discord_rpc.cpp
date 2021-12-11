@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include "igameevents.h"
 #include "c_sdk_player.h"
+#include "valve_minmax_on.h"
+#include "valve_minmax_off.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -315,7 +317,7 @@ void CTFDiscordRPC::LevelInit(const char* szMapname)
 	Q_strcpy(m_szLatchedMapname, szMapname);
 	//V_snprintf(szStateBuffer, sizeof(szStateBuffer), "MAP: %s", m_szLatchedMapname);
 	// important, clear last update time as well
-	m_flLastUpdatedTime = max(0, gpGlobals->realtime - DISCORD_UPDATE_RATE);
+	m_flLastUpdatedTime = MAX(0, gpGlobals->realtime - DISCORD_UPDATE_RATE);
 }
 
 
