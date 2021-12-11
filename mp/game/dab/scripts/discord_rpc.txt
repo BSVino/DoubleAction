@@ -8,6 +8,15 @@
 	"Maps"
 	{
 		//Map_name  		//Image_name
-		"da_rooftops"		"da_rooftops"
+		"da_cocaine"			"da_cocaine"
+		"da_doubletrouble"		"da_doubletrouble"
+		"da_holdingcell"		"da_holdingcell"
+		"da_megachat"			"da_megachat"
+		"da_morgendorffer"		"da_morgendorffer"
+		"da_official"			"da_official"
+		"da_rooftops"			"da_rooftops"
+		"da_sacred"				"da_sacred"
+		"da_streets"			"da_streets"
+		"da_trainingday"		"da_trainingday"
 	}
 }
