@@ -132,7 +132,9 @@ $Project "Client (DA)"
 			$File "$SRCDIR/game/shared/sdk/weapon_m16.cpp"
 			$File "$SRCDIR/game/shared/sdk/weapon_sawnoff.cpp"
 		}
-
+		
+		$File "$SRCDIR/game/client/da_discord_rpc.cpp"
+		$File "$SRCDIR/game/client/da_discord_rpc.h"
 		$File "$SRCDIR/game/shared/sdk/da_bulletmanager.cpp"
 		$File "sdk/c_da_briefcase.cpp"
 		$File "sdk/da_view_scene.cpp"

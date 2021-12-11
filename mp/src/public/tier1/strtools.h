@@ -220,6 +220,16 @@ template <size_t maxLenInChars> void V_strcpy_safe( OUT_Z_ARRAY char (&pDest)[ma
 	V_strncpy( pDest, pSrc, (int)maxLenInChars ); 
 }
 
+// A function which duplicates a string using new[] to allocate the new string.
+// -Nbc66
+inline char* V_strdup(const char* pSrc)
+{
+	int nLen = V_strlen(pSrc);
+	char* pResult = new char[nLen + 1];
+	V_memcpy(pResult, pSrc, nLen + 1);
+	return pResult;
+}
+
 void V_wcsncpy( OUT_Z_BYTECAP(maxLenInBytes) wchar_t *pDest, wchar_t const *pSrc, int maxLenInBytes );
 template <size_t maxLenInChars> void V_wcscpy_safe( OUT_Z_ARRAY wchar_t (&pDest)[maxLenInChars], wchar_t const *pSrc ) 
 { 
