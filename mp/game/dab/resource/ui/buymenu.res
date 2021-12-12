@@ -143,28 +143,12 @@
 		"info_model"    "models/weapons/m1911.mdl"
 	}
 
-	"weapon_sawnoff"
-	{
-		"ControlName"	"WeaponButton"
-		"fieldName"		"weapon_sawnoff"
-		"xpos"			"c-210"
-		"ypos"			"165"
-		"wide"			"170"
-		"tall"			"15"
-		"labelText"		"#DA_BuyMenu_Button_Sawnoff"
-		"textAlignment"	"west"
-		"Command"		"buy sawnoff"
-		"font"			"FolderSmall"
-		"weaponid"      "sawnoff"
-		"info_model"    "models/weapons/w_stakeout.mdl"
-	}
-
 	"weapon_mossberg"
 	{
 		"ControlName"	"WeaponButton"
 		"fieldName"		"weapon_mossberg"
 		"xpos"			"c-210"
-		"ypos"			"180"
+		"ypos"			"165"
 		"wide"			"170"
 		"tall"			"15"
 		"labelText"		"#DA_BuyMenu_Button_Mossberg"
@@ -173,6 +157,22 @@
 		"font"			"FolderSmall"
 		"weaponid"      "mossberg"
 		"info_model"    "models/weapons/mossberg590.mdl"
+	}
+
+	"weapon_sawnoff"
+	{
+		"ControlName"	"WeaponButton"
+		"fieldName"		"weapon_sawnoff"
+		"xpos"			"c-210"
+		"ypos"			"180"
+		"wide"			"170"
+		"tall"			"15"
+		"labelText"		"#DA_BuyMenu_Button_Sawnoff"
+		"textAlignment"	"west"
+		"Command"		"buy sawnoff"
+		"font"			"FolderSmall"
+		"weaponid"      "sawnoff"
+		"info_model"    "models/weapons/w_stakeout.mdl"
 	}
 
 	"weapon_mp5k"
