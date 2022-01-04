@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2008, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -151,8 +151,8 @@ typedef enum
 
 	// "Long guns"
 	SDK_WEAPON_FAL,
-	SDK_WEAPON_MOSSBERG,
 	SDK_WEAPON_SAWNOFF,
+	SDK_WEAPON_MOSSBERG,
 	SDK_WEAPON_M16,
 
 	// SMG's
