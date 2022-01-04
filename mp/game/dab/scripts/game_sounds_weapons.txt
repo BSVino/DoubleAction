@@ -268,7 +268,7 @@
 	"soundlevel"	"SNDLVL_GUNFIRE"
 	"volume"		"1.0"
 	"pitch"		"90,110"
-	"wave"			")weapons/stakeout/stakeout_shoot_1.wav"
+	"wave"			")weapons/m3/m3_fire_01.wav"
 }
 
 "Weapon_Mossberg.Insertshell"
@@ -497,5 +497,5 @@
 	"soundlevel"	"SNDLVL_GUNFIRE"
 	"volume"		"1.0"
 	"pitch"		"100,120"
-	"wave"			")weapons/m3/m3_fire_01.wav"
+	"wave"			")weapons/stakeout/stakeout_shoot_1.wav"
 }
