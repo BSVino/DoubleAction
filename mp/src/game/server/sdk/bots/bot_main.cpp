@@ -145,6 +145,7 @@ const char* g_aszBotNames[] =
 	"Kurt Brobain",
 	"Broald Dahl",
 	"Scarlett Brohansen",
+	"Patty Bro'brien",
 };
 
 
