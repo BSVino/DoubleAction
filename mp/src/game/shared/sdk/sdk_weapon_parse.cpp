@@ -34,6 +34,11 @@ void CSDKWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName 
 	m_flReloadTimeMultiplier = pKeyValuesData->GetFloat( "ReloadTimeMultiplier", 1 );
 	m_flDrawTimeMultiplier = pKeyValuesData->GetFloat( "DrawTimeMultiplier", 1 );
 
+	// falloff damage
+	m_flEffectiveRange	= pKeyValuesData->GetFloat( "EffectiveRange", 0 );
+	m_flFalloffRate		= pKeyValuesData->GetFloat( "FalloffRate", 0 );
+	m_flMinDamage		= pKeyValuesData->GetInt( "MinDamage", 0 );	
+
 	m_iDefaultAmmoClips = pKeyValuesData->GetInt( "NumClips", 2 );
 
 	const char *pAnimEx = pKeyValuesData->GetString( "PlayerAnimationExtension", "mp5" );

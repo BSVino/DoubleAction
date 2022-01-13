@@ -1523,6 +1523,47 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			}
 		}
 
+		if ( info.GetDamageType() & DMG_BULLET ){ // the player has been shot
+
+			// apply damage falloff
+			// the weapon that did the hurting
+			CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
+			CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
+			if( pWeaponInfo ){ // just in case
+				// get the distance from the attacker to self
+				Vector vecToAttacker = GetAbsOrigin() - info.GetAttacker()->GetAbsOrigin();
+				float flDistance = vecToAttacker.Length();
+				DevMsg("Distance to attacker: %f\n", flDistance);
+
+				DevMsg("Effective range: %f\n", pWeaponInfo->m_flEffectiveRange);
+
+				// calculate falloff distance = flDistance minus the weaponinfo's effective range
+				float flFalloffDistance = flDistance - pWeaponInfo->m_flEffectiveRange;
+
+				// if falloff distance is negative, set it to zero 
+				// because we are within effective range, there will be no falloff
+				if( flFalloffDistance < 0.0f ){
+					flFalloffDistance = 0.0f;
+				}
+
+				DevMsg("Falloff over: %f\n", flFalloffDistance);
+
+				// our falloff damage is that distance times the weaponinfo's falloff rate
+				float flFalloffDamage = flFalloffDistance * pWeaponInfo->m_flFalloffRate;
+				
+				DevMsg("Damage before falloff: %f\n", flDamage);
+
+				// final damage is flDamage less falloff damage
+				flDamage -= flFalloffDamage;
+
+				// clamp to weaponinfo minDamage
+				if ( flDamage < pWeaponInfo->m_flMinDamage )
+					flDamage = pWeaponInfo->m_flMinDamage;
+
+				DevMsg("Damage after falloff: %f\n", flDamage);
+			}
+		}
+
 		if ( info.GetDamageType() & DMG_BLAST )
 		{
 			// this timing only accounts for weapon_grenade (with fuse of 1.5s)

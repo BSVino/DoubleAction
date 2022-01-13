@@ -8,6 +8,13 @@ WeaponData
 	"BrawlTimeMultiplier"	"1.25"
 	"buy_menu_sequence"		"mossberg_idle"
 
+	// falloff variables
+	// our falloff calculation looks something like:
+	// distance less effective_range, multiplied by falloff_rate, removed from base damage, clamped to min_damage
+	"EffectiveRange"		"128" // the distance in units (inches) before any falloff is applied
+	"FalloffRate"			"0.008" // multiplied by the distance of the shot then removed from base damage
+	"MinDamage"				"6" // clamps the falloff
+
 	"BuiltRightHanded"		"1"
 	
 	// Weapon data is loaded by both the Game and Client DLLs.
