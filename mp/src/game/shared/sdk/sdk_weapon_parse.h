@@ -37,6 +37,11 @@ public:
 	float	m_flReloadTimeMultiplier;
 	float	m_flDrawTimeMultiplier;
 
+	// weapon damage falloff
+	float m_flEffectiveRange;
+	float m_flFalloffRate;
+	float m_flMinDamage;
+
 	float m_flWeaponFOV;		//Tony; added weapon fov, SDK uses models from a couple different games, so FOV is different.
 
 	float	m_flViewPunchMultiplier;
