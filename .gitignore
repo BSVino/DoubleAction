@@ -6,6 +6,8 @@
 /mp/src/lib/public/osx/*
 /mp/src/public/togl/osx/glmgrbasics.h
 /mp/src/thirdparty/curl-7.31.0/src/macos/MACINSTALL.txt
+/mp/game/dab
+/mp/game/dab/*
 
 
 # Visual Studio 
