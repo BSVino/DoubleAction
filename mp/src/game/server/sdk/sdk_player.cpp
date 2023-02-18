@@ -1915,7 +1915,7 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			if (pSDKAttacker->m_Shared.IsDiving() || pSDKAttacker->m_Shared.IsSliding() || pSDKAttacker->m_Shared.IsRolling() || pSDKAttacker->m_Shared.IsWallFlipping(true))
 				pSDKAttacker->m_iStuntKills++;
-			else if (info.GetDamageType() == DMG_CLUB)
+			if (info.GetDamageType() == DMG_CLUB)
 				pSDKAttacker->m_iBrawlKills++;
 		}
 
