@@ -2,3 +2,4 @@ ipch
 *.opensdf
 *.sdf
 *.suo
+.vs
