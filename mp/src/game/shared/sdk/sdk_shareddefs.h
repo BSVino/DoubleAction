@@ -166,7 +166,6 @@ typedef enum
 	// Single pistols
 	SDK_WEAPON_M1911,
 	SDK_WEAPON_BERETTA,
-	SDK_WEAPON_SNAKEBITE,
 
 	// Other
 	SDK_WEAPON_GRENADE,
