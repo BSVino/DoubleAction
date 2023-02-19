@@ -1562,6 +1562,18 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 				DevMsg("Damage after falloff: %f\n", flDamage);
 			}
+
+			// if the player has been shot in the back, reduce the damage by a heap
+			Vector vecDir = info.GetDamageForce();
+			VectorNormalize( vecDir );
+			Vector vecBack = -vecDir;
+			Vector vecForward;
+			AngleVectors( GetLocalAngles(), &vecForward );
+			float flDot = DotProduct( vecForward, vecBack );
+			if ( flDot < 0.0f )
+			{
+				flDamage *= 0.15f;
+			}
 		}
 
 		if ( info.GetDamageType() & DMG_BLAST )
