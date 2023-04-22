@@ -789,7 +789,9 @@ void CSDKPlayer::PreThink(void)
 			m_Shared.StartSuperfallDiving();
 	}
 
-	if (IsAlive() && ( m_Shared.IsDiving() || m_Shared.IsRolling() || m_Shared.IsSliding() || (!GetGroundEntity() && (GetAbsVelocity().z < -220.0f || GetAbsVelocity().Length2D() > 200)) ))
+	if (ConVarRef("da_test_break").GetFloat()); else
+
+	if (ShouldBreakStuffOnCollision())
 	{
 		Vector vecNormalizedVelocity = GetAbsVelocity();
 		vecNormalizedVelocity.NormalizeInPlace();
