@@ -231,4 +231,9 @@
 		"userid"	"short"   	// user ID who died
 	}
 	
+	"HARDBOILED"
+	{
+		"userid"	"short"   	// user ID who died
+	}
+	
 }
