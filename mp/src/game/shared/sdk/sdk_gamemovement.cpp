@@ -2752,7 +2752,7 @@ void CSDKGameMovement::FullWalkMove ()
 						// store the entindex for querying later (ie: hardboiled achievement)
 						int entityIndex = tr.GetEntityIndex();
 						if (entityIndex)
-							m_pSDKPlayer->SetLastPlayerIndexIBackflippedOff(tr.GetEntityIndex());
+							m_pSDKPlayer->SetLastPlayerIndexIBackflippedOff(entityIndex);
 					}
 
 					m_pSDKPlayer->DoAnimationEvent(PLAYERANIMEVENT_WALLFLIP);
