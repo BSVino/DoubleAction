@@ -518,6 +518,7 @@ $Project
 		// Files not using precompiled header cbase.h
 
 		$File	"$SRCDIR\public\bone_setup.cpp"						\
+				"$SRCDIR\public\blockingudpsocket.cpp"				\
 				"$SRCDIR\public\posedebugger.cpp"					\
 				"$SRCDIR\public\client_class.cpp"					\
 				"$SRCDIR\common\compiledcaptionswap.cpp"			\
@@ -887,6 +888,7 @@ $Project
 		$File	"$SRCDIR\public\bitvec.h"
 		$File	"$SRCDIR\public\bone_accessor.h"
 		$File	"$SRCDIR\public\bone_setup.h"
+		$File	"$SRCDIR\public\blockingudpsocket.h"
 		$File	"$SRCDIR\public\bspfile.h"
 		$File	"$SRCDIR\public\bspflags.h"
 		$File	"$SRCDIR\public\bsptreedata.h"
