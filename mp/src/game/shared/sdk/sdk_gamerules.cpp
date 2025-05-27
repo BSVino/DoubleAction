@@ -3292,7 +3292,7 @@ void RegisterVoteIssues()
 	//new CTeamplayModeVoteIssue();
 	new CNextMapVoteIssue();
 	new CChangelevelVoteIssue();
-	new CKickPlayerVoteIssue();
+	//new CKickPlayerVoteIssue();
 	new CAddBotVoteIssue();
 }
 #endif
