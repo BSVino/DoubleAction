@@ -732,9 +732,10 @@ inline bool CSDKPlayer::IsReloading( void ) const
 	return false;
 }
 
-ConVar da_regenamount( "da_regenamount", "30", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
+ConVar da_regenamount( "da_regenamount", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar da_decayamount( "da_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar da_regenamount_secondwind( "da_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
+ConVar da_regenrate("da_regenrate", "0.05", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Once health starts regen, how long between ticks?");
 
 void CSDKPlayer::PreThink(void)
 {
@@ -759,30 +760,13 @@ void CSDKPlayer::PreThink(void)
 			m_flNextHealthDecay = m_flCurrentTime + 1;
 		}
 
-		if (m_flCurrentTime > m_flNextRegen)
-		{	// player has been out of battle for a while, regenerate their health
+		if (m_flCurrentTime > m_flNextRegen && GetHealth() < GetMaxHealth())
+		{
+			float flHealth = da_regenamount.GetFloat() * da_regenrate.GetFloat();
 
-			float flRatio = da_regenamount_secondwind.GetFloat()/da_regenamount.GetFloat();
-			float flModifier = (flRatio - 1)/2;
-			float flHealth = m_Shared.ModifySkillValue(da_regenamount.GetFloat(), flModifier, SKILL_RESILIENT);
+			TakeHealth(min(flHealth, GetMaxHealth() - GetHealth()), 0);
 
-			m_flNextRegen = m_flCurrentTime + 1;
-
-			// Heal up to 100% of the player's health.
-			int iMaxHealth = GetMaxHealth();
-
-			// if (IsStyleSkillActive(SKILL_RESILIENT))
-			// 	// If Resilient is active, heal up to 100%, which is actually 200 health
-			// 	iMaxHealth = GetMaxHealth();
-			// else if (m_Shared.m_iStyleSkill == SKILL_RESILIENT)
-			// 	// If it's passive heal to 100%
-			// 	iMaxHealth = GetMaxHealth();
-
-			int iHealthTaken = 0;
-			if (GetHealth() < iMaxHealth)
-				iHealthTaken = TakeHealth(min(flHealth, iMaxHealth - GetHealth()), 0);
-
-			UseStyleCharge(SKILL_RESILIENT, iHealthTaken/2);
+			m_flNextRegen = m_flCurrentTime + da_regenrate.GetFloat();
 		}
 
 		if (m_Shared.IsSuperFalling() && !m_Shared.IsDiving())
@@ -1714,6 +1698,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 }
 
+ConVar da_regendelay("da_regendelay", "4", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long after taking damage before health starts regenerating?");
+
 int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	// set damage type sustained
@@ -1808,14 +1794,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
 	}
 
-	// no matter what, set our regen timer to 8 seconds
-	m_flNextRegen = m_flCurrentTime + 8;
-	// if (m_Shared.m_iStyleSkill != SKILL_RESILIENT)
-	// 	m_flNextRegen = m_flCurrentTime + 10;
-	// else if (!IsStyleSkillActive())
-	// 	m_flNextRegen = m_flCurrentTime + 6;
-	// else
-	// 	m_flNextRegen = m_flCurrentTime + 4;
+	m_flNextRegen = m_flCurrentTime + da_regendelay.GetFloat();
 
 	return 1;
 }
