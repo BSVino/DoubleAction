@@ -1851,6 +1851,8 @@ void CSDKGameRules::HealWanted(float flHealAmount)
 
 void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
+	CSDKPlayer* pSDKVictim = ToSDKPlayer(pVictim);
+
 	if (pVictim && pVictim == GetBountyPlayer())
 	{
 		CSDKPlayer::SendBroadcastSound("MiniObjective.BountyKilled");
@@ -1889,8 +1891,34 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 
 	CSDKPlayer* pLeader = GetLeader();
 
-	RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, ToSDKPlayer(pVictim));
-	RemovePlayerFromLeaders(m_ahWaypoint2RaceLeaders, ToSDKPlayer(pVictim));
+	if (pSDKVictim->m_iRaceWaypoint == 1)
+	{
+		RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, pSDKVictim);
+
+		if (pVictim == info.GetAttacker())
+		{
+			pSDKVictim->m_iRaceWaypoint = 0;
+		}
+		else
+		{
+			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pSDKVictim);
+		}
+	}
+
+	if (pSDKVictim->m_iRaceWaypoint == 2)
+	{
+		RemovePlayerFromLeaders(m_ahWaypoint2RaceLeaders, pSDKVictim);
+
+		if (pVictim == info.GetAttacker())
+		{
+			pSDKVictim->m_iRaceWaypoint = 1;
+			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pSDKVictim);
+		}
+		else
+		{
+			WaypointLeadersPush(m_ahWaypoint2RaceLeaders, pSDKVictim);
+		}
+	}
 
 	CSDKPlayer* pNewLeader = GetLeader();
 
