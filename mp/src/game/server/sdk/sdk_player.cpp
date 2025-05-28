@@ -1699,18 +1699,26 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 }
 
 ConVar da_regendelay("da_regendelay", "4", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long after taking damage before health starts regenerating?");
+ConVar da_reflexes_auto_activate_cooldown("da_reflexes_auto_activate_cooldown", "5", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Reflexes auto slomo activate cooldown");
 
 int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	// set damage type sustained
 	m_bitsDamageType |= info.GetDamageType();
 
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES && info.GetDamageType() & DMG_BULLET && GetHealth() >= 100 && m_flCurrentTime > m_flLastReflexesAutoActivate + da_reflexes_auto_activate_cooldown.GetFloat())
+	{
+		GiveSlowMo(1);
+		ActivateSlowMo();
+		m_flLastReflexesAutoActivate = m_flCurrentTime;
+	}
+
 	if ( !CBaseCombatCharacter::OnTakeDamage_Alive( info ) )
 		return 0;
 
 	// fire global game event
 
-	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetDamageType() == DMG_BULLET)
+	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetDamageType() & DMG_BULLET)
 		ReadyWeapon();
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
