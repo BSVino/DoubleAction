@@ -664,6 +664,9 @@ Activity CWeaponSDKBase::ChooseIntersectionPointAndActivity( trace_t &hitTrace, 
 	return ACT_VM_HITCENTER;
 }
 
+ConVar da_bouncer_health_boost_cooldown("da_bouncer_health_boost_cooldown", "20", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_bouncer_health_boost("da_bouncer_health_boost", "25", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+
 void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
@@ -674,11 +677,11 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 	CBaseEntity	*pHitEntity = traceHit.m_pEnt;
 
 	//Apply damage to a hit target
-	if ( pHitEntity != NULL )
+	if (pHitEntity != NULL)
 	{
 		Vector hitDirection;
-		pPlayer->EyeVectors( &hitDirection, NULL, NULL );
-		VectorNormalize( hitDirection );
+		pPlayer->EyeVectors(&hitDirection, NULL, NULL);
+		VectorNormalize(hitDirection);
 
 #ifndef CLIENT_DLL
 		float flDamage = GetMeleeDamage( bIsSecondary, ToSDKPlayer(pHitEntity) );
@@ -703,8 +706,15 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 		if (pSDKVictim && pPlayer->m_Shared.m_iStyleSkill == SKILL_BOUNCER)
 		{
 			pSDKVictim->FreezePlayer(0.5, 0.35f);
+
+			if (pSDKVictim->IsAlive() && pPlayer->m_flCurrentTime > pPlayer->m_flLastBouncerAutoActivate + da_bouncer_health_boost_cooldown.GetFloat())
+			{
+				pPlayer->TakeHealth(da_bouncer_health_boost.GetFloat(), 0);
+				pPlayer->m_flLastBouncerAutoActivate = pPlayer->m_flCurrentTime;
+			}
 		}
 #endif
+
 		CSoundParameters params;
 
 		if (traceHit.m_pEnt && traceHit.m_pEnt->IsPlayer() && GetParametersForSound( "Weapon_Brawl.PunchHit", params, NULL ) )

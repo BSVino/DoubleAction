@@ -574,6 +574,7 @@ public:
 
 	CNetworkVar(float, m_flWantedMeterRemaining);
 
+	float m_flLastBouncerAutoActivate = 0;
 	float m_flLastReflexesAutoActivate = 0;
 
 	bool m_bGotWorthIt;

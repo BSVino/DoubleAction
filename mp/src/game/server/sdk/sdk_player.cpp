@@ -1214,6 +1214,8 @@ void CSDKPlayer::Spawn()
 	// you always die after a superfall so this is a safe place to reset this number
 	m_nNumEnemiesKilledThisSuperfall = 0;
 
+	m_flLastReflexesAutoActivate = 0;
+	m_flLastBouncerAutoActivate = 0;
 }
 
 bool CSDKPlayer::SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot )
@@ -2006,6 +2008,12 @@ void CSDKPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_iSlowMoType = SLOWMO_NONE;
 
 	m_bHasPlayerDied = true;
+
+	if (pAttacker && pAttacker->IsPlayer() && pAttacker != this)
+	{
+		CSDKPlayer* pSDKAttacker = ToSDKPlayer(pAttacker);
+		pSDKAttacker->m_flLastBouncerAutoActivate = 0.0f;
+	}
 
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 }
