@@ -177,6 +177,8 @@ public:
 	static int GetStyleStars(float flPoints);
 	int GetStyleStars();
 
+	float GetWantedMeterRemaining() { return m_flWantedMeterRemaining; }
+
 	virtual void SharedSpawn();
 	
 	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
@@ -435,6 +437,8 @@ private:
 
 	CNetworkHandle(class C_Briefcase, m_hBriefcase);
 	int     m_iRaceWaypoint;
+
+	CNetworkVar(float, m_flWantedMeterRemaining);
 
 	bool    m_bCoderHacks;
 	int     m_nCoderHacksButtons;

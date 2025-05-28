@@ -176,6 +176,7 @@ const char* NoticeToString( notice_t id )
 		"bounty_protect_player",
 		"bounty_collected",
 		"bounty_lost",
+		"bounty_won",
 
 		"ratrace_start",
 		"ratrace_lead",

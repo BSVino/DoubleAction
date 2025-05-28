@@ -1848,6 +1848,7 @@ void CSDKGameRules::HealWanted(float flHealAmount)
 	GetBountyPlayer()->TakeHealth(flHealAmount, 0);
 }
 
+static ConVar da_wanted_meter_refund_on_kill("da_wanted_meter_refund_on_kill", "10", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
@@ -1880,13 +1881,16 @@ void CSDKGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &i
 	{
 		HealWanted(25);
 
+		CSDKPlayer* pAttacker = ToSDKPlayer(info.GetAttacker());
+
+		pAttacker->m_flWantedMeterRemaining += da_wanted_meter_refund_on_kill.GetFloat();
+
 		// achievement "Somebody Stop Me" - 25 kill streak as wanted
-		CSDKPlayer* attacker = ToSDKPlayer(info.GetAttacker());
-		attacker->m_nNumKillsThisWanted++;
-		if (attacker->m_nNumKillsThisWanted > 24)
-			DA_ApproachAchievement("SOMEBODY_STOP_ME", attacker->GetUserID());
-		if (attacker->m_nNumKillsThisWanted > 49)
-			DA_ApproachAchievement("PENGUIN", attacker->GetUserID());
+		pAttacker->m_nNumKillsThisWanted++;
+		if (pAttacker->m_nNumKillsThisWanted > 24)
+			DA_ApproachAchievement("SOMEBODY_STOP_ME", pAttacker->GetUserID());
+		if (pAttacker->m_nNumKillsThisWanted > 49)
+			DA_ApproachAchievement("PENGUIN", pAttacker->GetUserID());
 	}
 
 	CSDKPlayer* pLeader = GetLeader();
@@ -2617,6 +2621,8 @@ bool CSDKGameRules::SetupMiniObjective_Bounty()
 
 	m_hBountyPlayer = pChosen;
 
+	m_hBountyPlayer->m_flWantedMeterRemaining = 100;
+
 	GiveMiniObjectiveRewardPlayer(pChosen);
 
 	if (IsTeamplay())
@@ -2665,6 +2671,14 @@ void CSDKGameRules::MaintainMiniObjective_Bounty()
 
 	if (!m_hBountyPlayer->IsAlive())
 	{
+		CleanupMiniObjective();
+		return;
+	}
+
+	if (m_hBountyPlayer->m_flWantedMeterRemaining == 0)
+	{
+		CSDKPlayer::SendBroadcastNotice(NOTICE_BOUNTY_WON);
+		GiveMiniObjectiveRewardPlayer(m_hBountyPlayer);
 		CleanupMiniObjective();
 		return;
 	}

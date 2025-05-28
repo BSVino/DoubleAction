@@ -379,10 +379,24 @@ void CHudStyleBar::Paint()
 	surface()->DrawSetColor( clrBar );
 
 	float flPercent;
-	if (pPlayer->IsStyleSkillActive())
-		flPercent = min(pPlayer->GetStyleSkillCharge() / 100, 1);
+
+	if (pPlayer == SDKGameRules()->GetBountyPlayer())
+	{
+		flPercent = pPlayer->GetWantedMeterRemaining() / 100;
+	}
+	else if (pPlayer->IsStyleSkillActive())
+	{
+		flPercent = pPlayer->GetStyleSkillCharge() / 100;
+	}
 	else
+	{
 		flPercent = m_flCurrentStyle / da_stylemeteractivationcost.GetFloat();
+	}
+
+	wchar_t wszStarsLabel[100];
+	V_swprintf_safe(wszStarsLabel, L"%i/100", (int)(flPercent * 100));
+
+	flPercent = min(flPercent, 1);
 
 	float flBarHeight = iHeight - flStyleTextureHeight - m_flGap*2;
 
@@ -395,9 +409,6 @@ void CHudStyleBar::Paint()
 	surface()->DrawFilledRect( iBarLeft, m_flElementYPos + m_flGap + flBarHeight*(1-flPercent), iBarRight, m_flElementYPos + flBarHeight );
 
 	//int iFullBarLeft = m_flElementXPos + iWidth - flStyleTextureWidth/2 - m_flBarWidth/2 + m_flGap;
-
-	wchar_t wszStarsLabel[100];
-	V_swprintf_safe(wszStarsLabel, L"%i/100", (int)(flPercent*100));
 
 	int iStarsTextWide, iStarsTextTall;
 	surface()->GetTextSize(m_hTextFont, wszStarsLabel, iStarsTextWide, iStarsTextTall);

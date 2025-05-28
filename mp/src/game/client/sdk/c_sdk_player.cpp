@@ -258,6 +258,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropEHandle( RECVINFO( m_hBriefcase ), RECVCALLBACKPROXY(RecvProxy_IntToEHandle, RecvCallback_UpdateRichPresence) ),
 	RecvPropInt( RECVINFO( m_iRaceWaypoint ) ),
 
+	RecvPropFloat(RECVINFO(m_flWantedMeterRemaining)),
+
 	RecvPropBool( RECVINFO( m_bCoderHacks ) ),
 	RecvPropInt( RECVINFO( m_nCoderHacksButtons ) ),
 

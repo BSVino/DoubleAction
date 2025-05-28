@@ -493,7 +493,9 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 float CSDKPlayer::GetStylePoints()
 {
 	if (SDKGameRules()->GetBountyPlayer() == this)
-		return da_stylemeteractivationcost.GetFloat();
+	{
+		return m_flWantedMeterRemaining;
+	}
 
 	return m_flStylePoints;
 }

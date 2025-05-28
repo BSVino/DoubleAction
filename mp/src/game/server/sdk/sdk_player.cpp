@@ -261,6 +261,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropEHandle( SENDINFO( m_hBriefcase ) ),
 	SendPropInt( SENDINFO( m_iRaceWaypoint ) ),
 
+	SendPropFloat(SENDINFO(m_flWantedMeterRemaining)),
+
 	SendPropBool( SENDINFO( m_bCoderHacks ) ),
 	SendPropInt( SENDINFO( m_nCoderHacksButtons ), 32, SPROP_UNSIGNED ),
 
@@ -836,6 +838,7 @@ void CSDKPlayer::PreThink(void)
 }
 
 ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
+ConVar da_wanted_meter_decay("da_wanted_meter_decay", "3", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How fast does the wanted skill meter decay in meter per second?");
 
 void CSDKPlayer::PostThink()
 {
@@ -881,6 +884,8 @@ void CSDKPlayer::PostThink()
 
 	if ( sv_drawserverhitbox.GetBool() )
 		DrawServerHitboxes( 2*gpGlobals->frametime, true );
+
+	m_flWantedMeterRemaining = UTIL_Approach(0, m_flWantedMeterRemaining, da_wanted_meter_decay.GetFloat() * gpGlobals->frametime * GetSlowMoMultiplier());
 
 	if (SDKGameRules()->CoderHacks())
 		m_nCoderHacksButtons = m_nButtons;
