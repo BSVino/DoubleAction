@@ -698,6 +698,12 @@ void CWeaponSDKBase::Hit( trace_t &traceHit, bool bIsSecondary )
 
 		// Now hit all triggers along the ray that... 
 		TraceAttackToTriggers( info, traceHit.startpos, traceHit.endpos, hitDirection );
+
+		CSDKPlayer* pSDKVictim = ToSDKPlayer(pHitEntity);
+		if (pSDKVictim && pPlayer->m_Shared.m_iStyleSkill == SKILL_BOUNCER)
+		{
+			pSDKVictim->FreezePlayer(0.5, 0.35f);
+		}
 #endif
 		CSoundParameters params;
 
@@ -788,6 +794,12 @@ bool CWeaponSDKBase::ImpactWater( const Vector &start, const Vector &end )
 	return true;
 }
 
+float CWeaponSDKBase::GetMeleeRange()
+{
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+	return pPlayer->m_Shared.ModifySkillValue(80, 0.2f, SKILL_BOUNCER);
+}
+
 float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) const
 {
 	CSDKPlayer *pPlayer = ToSDKPlayer( GetOwner() );
@@ -797,19 +809,24 @@ float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) c
 	bool bIsStockAttack = pPlayer && pPlayer->GetActiveSDKWeapon() && !pPlayer->GetActiveSDKWeapon()->IsMeleeWeapon();
 	if (bIsStockAttack)
 	{
-		// The heavier the damage the more it hurts.
+		// The heavier the weapon the more it hurts.
 		flDamage = RemapVal(GetWeight(), 7, 20, 25, 45);
 	}
-	else {
+	else
+	{
 		// Get the damage from the weapon script.
 		flDamage = bIsSecondary ? GetSDKWpnData().m_iSecondaryDamage : GetSDKWpnData().m_iDamage;
 	}
 
+	flDamage = pPlayer->m_Shared.ModifySkillValue(flDamage, 0.3f, SKILL_BOUNCER);
+
+	if (pPlayer->IsStyleSkillActive(SKILL_BOUNCER))
+	{
+		flDamage += 20;
+	}
+
 	if (pVictim)
 	{
-		if (pPlayer->IsStyleSkillActive(SKILL_BOUNCER))
-			flDamage += 20;
-
 		Vector vecForward;
 		AngleVectors(pVictim->EyeAngles(), &vecForward, NULL, NULL);
 

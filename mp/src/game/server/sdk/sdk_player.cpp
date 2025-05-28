@@ -1489,6 +1489,8 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		pSDKAttacker->ActivateSuperfallSlowMo();
 	}
 
+	flDamage = m_Shared.ModifySkillValue(flDamage, -0.2f, SKILL_BOUNCER);
+
 /*	if (IsStyleSkillActive(SKILL_IMPERVIOUS))
 	{
 		UseStyleCharge(flDamage * 0.2f);
