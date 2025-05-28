@@ -1802,6 +1802,15 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		// we'll keep track of this in case the dive kills him, but not if we're on the same team! 
 		if ( SDKGameRules()->PlayerRelationship(this, pAttackerSDK) != GR_TEAMMATE )
 			pAttackerSDK->m_bDamagedEnemyDuringSuperFall = true;
+
+		if (LastHitGroup() == HITGROUP_HEAD && pAttackerSDK->m_Shared.m_iStyleSkill == SKILL_MARKSMAN)
+		{
+			CWeaponSDKBase* pWeaponSDKBase = pAttackerSDK->GetActiveSDKWeapon();
+			if (pWeaponSDKBase)
+			{
+				pWeaponSDKBase->m_iClip1 = min(pWeaponSDKBase->Clip1() + pWeaponSDKBase->GetMaxClip1() / 2, pWeaponSDKBase->GetMaxClip1());
+			}
+		}
 	}
 
 	m_flNextRegen = m_flCurrentTime + da_regendelay.GetFloat();
