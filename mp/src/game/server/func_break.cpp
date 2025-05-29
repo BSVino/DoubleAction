@@ -134,6 +134,11 @@ const char *pFGDPropData[] =
 };
 
 LINK_ENTITY_TO_CLASS( func_breakable, CBreakable );
+
+IMPLEMENT_SERVERCLASS_ST(CBreakable, DT_Breakable)
+	SendPropInt(SENDINFO(m_iHealth), -1, SPROP_VARINT | SPROP_CHANGES_OFTEN),
+END_SEND_TABLE()
+
 BEGIN_DATADESC( CBreakable )
 
 	DEFINE_FIELD( m_Material, FIELD_INTEGER ),

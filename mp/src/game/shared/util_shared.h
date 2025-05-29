@@ -304,16 +304,27 @@ inline void UTIL_TraceHull( const Vector &vecAbsStart, const Vector &vecAbsEnd, 
 	}
 }
 
-inline void UTIL_TraceRay( const Ray_t &ray, unsigned int mask, 
-						  const IHandleEntity *ignore, int collisionGroup, trace_t *ptr, ShouldHitFunc_t pExtraShouldHitCheckFn = NULL )
+inline void UTIL_TraceRay(const Ray_t &ray, unsigned int mask,
+	const IHandleEntity *ignore, int collisionGroup, trace_t *ptr, ShouldHitFunc_t pExtraShouldHitCheckFn = NULL)
 {
-	CTraceFilterSimple traceFilter( ignore, collisionGroup, pExtraShouldHitCheckFn );
+	CTraceFilterSimple traceFilter(ignore, collisionGroup, pExtraShouldHitCheckFn);
 
-	enginetrace->TraceRay( ray, mask, &traceFilter, ptr );
-	
-	if( r_visualizetraces.GetBool() )
+	enginetrace->TraceRay(ray, mask, &traceFilter, ptr);
+
+	if (r_visualizetraces.GetBool())
 	{
-		DebugDrawLine( ptr->startpos, ptr->endpos, 255, 0, 0, true, -1.0f );
+		DebugDrawLine(ptr->startpos, ptr->endpos, 255, 0, 0, true, -1.0f);
+	}
+}
+
+inline void UTIL_TraceRay(const Ray_t &ray, unsigned int mask,
+	ITraceFilter *pTraceFilter, trace_t *ptr)
+{
+	enginetrace->TraceRay(ray, mask, pTraceFilter, ptr);
+
+	if (r_visualizetraces.GetBool())
+	{
+		DebugDrawLine(ptr->startpos, ptr->endpos, 255, 0, 0, true, -1.0f);
 	}
 }
 

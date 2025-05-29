@@ -286,6 +286,6 @@ public:
 #endif
 };
 
-
+extern int blah;
 
 #endif // GAMEMOVEMENT_H
