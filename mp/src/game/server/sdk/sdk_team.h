@@ -45,6 +45,8 @@ public:
 	int GetNumPlayerClasses( void ) { return m_hPlayerClassInfoHandles.Count(); }
 #endif  // SDK_USE_PLAYERCLASSES
 
+	bool ShouldTransmitToPlayer(CBasePlayer* pRecipient, CBaseEntity* pEntity) override;
+
 	virtual const char *GetTeamName( void ) { return "#Teamname_Spectators"; }
 
 	void ResetScores( void );

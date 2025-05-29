@@ -102,12 +102,19 @@ PRECACHE_REGISTER(player);
 // CSDKPlayerShared Data Tables
 //=============================
 
+BEGIN_SEND_TABLE_NOBASE(CRevealedEnemy, DT_RevealedEnemy)
+	SendPropInt(SENDINFO(m_iEnemyClientIndex)),
+	SendPropTime(SENDINFO(m_flRevealTime)),
+	SendPropFloat(SENDINFO(m_flRevealDuration)),
+END_SEND_TABLE()
+
 // specific to the local player
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 #if defined ( SDK_USE_PLAYERCLASSES )
 	SendPropInt( SENDINFO( m_iPlayerClass), 4 ),
 	SendPropInt( SENDINFO( m_iDesiredPlayerClass ), 4 ),
 #endif
+	SendPropArray3(SENDINFO_ARRAY3(m_aRevealedEnemies), SendPropDataTable(SENDINFO_DT(m_aRevealedEnemies), &REFERENCE_SEND_TABLE(DT_RevealedEnemy))),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
@@ -1708,7 +1715,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// set damage type sustained
 	m_bitsDamageType |= info.GetDamageType();
 
-	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES && info.GetDamageType() & DMG_BULLET && GetHealth() >= 100 && m_flCurrentTime > m_flLastReflexesAutoActivate + da_reflexes_auto_activate_cooldown.GetFloat())
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES && (info.GetDamageType() & DMG_BULLET) && GetHealth() >= 100 && m_flCurrentTime > m_flLastReflexesAutoActivate + da_reflexes_auto_activate_cooldown.GetFloat())
 	{
 		GiveSlowMo(1);
 		ActivateSlowMo();
@@ -1720,7 +1727,7 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 
 	// fire global game event
 
-	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && info.GetDamageType() & DMG_BULLET)
+	if (info.GetAttacker() && info.GetAttacker()->IsPlayer() && (info.GetDamageType() & DMG_BULLET))
 		ReadyWeapon();
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_hurt" );
@@ -1810,6 +1817,12 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			{
 				pWeaponSDKBase->m_iClip1 = min(pWeaponSDKBase->Clip1() + pWeaponSDKBase->GetMaxClip1() / 2, pWeaponSDKBase->GetMaxClip1());
 			}
+		}
+
+		if (IsAlive() && (info.GetDamageType() & DMG_BLAST) && pAttackerSDK->m_Shared.m_iStyleSkill == SKILL_TROLL && pAttackerSDK != this)
+		{
+			FreezePlayer(0.3f, 0.5f);
+			pAttackerSDK->RevealEnemy(this);
 		}
 	}
 
@@ -4760,6 +4773,23 @@ float CSDKPlayer::GetDKRatio(float flMin, float flMax, bool bDampen) const
 	}
 	else
 		return flDeathRatio;
+}
+
+void CSDKPlayer::RevealEnemy(CSDKPlayer* pEnemy)
+{
+	for (int k = 0; k < m_Shared.m_aRevealedEnemies.Count(); k++)
+	{
+		const CRevealedEnemy& oRevealedEnemyConst = m_Shared.m_aRevealedEnemies.Get(k);
+		if (!oRevealedEnemyConst.IsActive(GetCurrentTime()))
+		{
+			CRevealedEnemy& oRevealedEnemy = m_Shared.m_aRevealedEnemies.GetForModify(k);
+			oRevealedEnemy.m_iEnemyClientIndex = pEnemy->GetClientIndex();
+			oRevealedEnemy.m_flRevealTime = GetCurrentTime();
+			oRevealedEnemy.m_flRevealDuration = 1;
+
+			break;
+		}
+	}
 }
 
 void CC_ActivateSlowmo_f (void)

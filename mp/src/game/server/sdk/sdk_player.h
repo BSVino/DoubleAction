@@ -182,6 +182,8 @@ public:
 
 	float GetDKRatio(float flMin = 0.7f, float flMax = 2, bool bDampen = true) const;
 
+	void RevealEnemy(CSDKPlayer* pEnemy);
+
 	CWeaponSDKBase *FindWeapon (SDKWeaponID id);
 	CWeaponSDKBase* FindAnyWeaponButBrawl();
 

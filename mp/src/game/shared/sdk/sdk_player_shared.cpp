@@ -56,6 +56,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+bool CRevealedEnemy::IsActive(float flCurrentTime) const
+{
+	return flCurrentTime != 0 && flCurrentTime >= m_flRevealTime && flCurrentTime <= m_flRevealTime + m_flRevealDuration;
+}
+
 // Have to override all of ItemPostFrame to s/gpGlobals->curtime/GetCurrentTime()/
 void CSDKPlayer::ItemPostFrame()
 {

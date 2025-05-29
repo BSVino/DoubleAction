@@ -120,12 +120,19 @@ USER_MESSAGE_REGISTER( ReloadEffect );
 // CSDKPlayerShared Data Tables
 //=============================
 
+BEGIN_RECV_TABLE_NOBASE(CRevealedEnemy, DT_RevealedEnemy)
+	RecvPropInt(RECVINFO(m_iEnemyClientIndex)),
+	RecvPropTime(RECVINFO(m_flRevealTime)),
+	RecvPropFloat(RECVINFO(m_flRevealDuration)),
+END_RECV_TABLE()
+
 // specific to the local player ( ideally should not be in CSDKPlayerShared! )
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 #if defined ( SDK_USE_PLAYERCLASSES )
 	RecvPropInt( RECVINFO( m_iPlayerClass ) ),
 	RecvPropInt( RECVINFO( m_iDesiredPlayerClass ) ),
 #endif
+	RecvPropArray3(RECVINFO_ARRAY(m_aRevealedEnemies), RecvPropDataTable(RECVINFO_DTNAME(m_aRevealedEnemies[0], m_aRevealedEnemies), 0, &REFERENCE_RECV_TABLE(DT_RevealedEnemy))),
 END_RECV_TABLE()
 
 void RecvProxy_Skill( const CRecvProxyData *pData, void *pStruct, void *pOut );

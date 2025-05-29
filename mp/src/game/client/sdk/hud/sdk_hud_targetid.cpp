@@ -15,6 +15,7 @@
 #include "sdk_gamerules.h"
 #include "../c_da_briefcase.h"
 #include "view.h"
+#include "sdk_hud_targetid.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -26,73 +27,6 @@ extern float Oscillate(float flTime, float flLength);
 
 static ConVar hud_centerid( "hud_centerid", "1" );
 static ConVar hud_showtargetid( "hud_showtargetid", "1" );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CSDKTargetId : public CHudElement, public vgui::Panel
-{
-	DECLARE_CLASS_SIMPLE( CSDKTargetId, vgui::Panel );
-
-public:
-	CSDKTargetId( const char *pElementName );
-	void Init( void );
-	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
-	virtual void	Paint( void );
-	void VidInit( void );
-
-private:
-	Color			GetColorForTargetTeam( int iTeamNumber );
-
-	CPanelAnimationVar( vgui::HFont, m_hFont, "TargetIDFont", "Default" );
-
-	int				m_iLastEntIndex;
-	float			m_flLastChangeTime;
-
-	CHudTexture*    m_pBriefcase;
-	CHudTexture*    m_pCapturePoint;
-	CHudTexture*    m_pBounty;
-
-	typedef enum
-	{
-		TARGET_BRIEFCASE = 0,
-		TARGET_CAPTURE,
-		TARGET_BOUNTY,
-		TARGET_WAYPOINT1,
-		TARGET_WAYPOINT2,
-		TARGET_WAYPOINT3,
-		TARGET_LEADER,
-		TARGET_FRONTRUNNER1,
-		TARGET_FRONTRUNNER2,
-		TARGET_TOTAL,
-	} target_type_t;
-
-	class CTarget
-	{
-	public:
-		CTarget()
-		{
-			m_bHideIfVisible = true;
-		}
-
-	public:
-		CHudTexture*    m_pTargetTexture;
-		wchar_t*        m_pwszHint;
-		float           m_flTargetAlpha;
-		float           m_flScale;
-		float           m_flMaxAlpha;
-		Vector          m_vecLastKnownTarget;
-		bool            m_bTargetOn;
-		EHANDLE         m_hEntity;
-		bool            m_bHideIfVisible;
-		vgui::HFont     m_hFont;
-	} m_Targets[TARGET_TOTAL];
-
-	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFont, "MiniObjectiveFont", "Default" );
-	CPanelAnimationVar( vgui::HFont, m_hMiniObjectiveFontSmall, "MiniObjectiveFontSmall", "Default" );
-};
-
-DECLARE_HUDELEMENT( CSDKTargetId );
 
 using namespace vgui;
 
@@ -113,14 +47,6 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	m_pBriefcase = NULL;
 	m_pCapturePoint = NULL;
 	m_pBounty = NULL;
-
-	for (int i = 0; i < TARGET_TOTAL; i++)
-	{
-		m_Targets[i].m_pTargetTexture = NULL;
-		m_Targets[i].m_pwszHint = NULL;
-		m_Targets[i].m_flTargetAlpha = 0;
-		m_Targets[i].m_bTargetOn = false;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -160,10 +86,12 @@ Color CSDKTargetId::GetColorForTargetTeam( int iTeamNumber )
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
-	if (!C_SDKPlayer::GetLocalSDKPlayer())
+	C_SDKPlayer* pSDKPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pSDKPlayer)
 		return;
 
-	if (C_SDKPlayer::GetLocalSDKPlayer()->GetObserverMode() == OBS_MODE_FREEZECAM)
+	if (pSDKPlayer->GetObserverMode() == OBS_MODE_FREEZECAM)
 		return;
 
 	if (!m_pBriefcase)
@@ -381,28 +309,59 @@ void CSDKTargetId::Paint()
 		m_Targets[TARGET_FRONTRUNNER2].m_bTargetOn = false;
 	}
 
+	PaintTargets(m_Targets, TARGET_TOTAL);
+
+	for (int k = 0; k < pSDKPlayer->m_Shared.m_aRevealedEnemies.Count(); k++)
+	{
+		const CRevealedEnemy& oRevealedEnemy = pSDKPlayer->m_Shared.m_aRevealedEnemies[k];
+		if (oRevealedEnemy.IsActive(pSDKPlayer->GetCurrentTime()))
+		{
+			m_RevealedEnemies[k].m_pTargetTexture = m_pBounty;
+			m_RevealedEnemies[k].m_flTargetAlpha = 1.0f;
+			m_RevealedEnemies[k].m_flScale = 0.4f;
+			m_RevealedEnemies[k].m_flMaxAlpha = 1.0f;
+			m_RevealedEnemies[k].m_bTargetOn = true;
+			m_RevealedEnemies[k].m_flMaxAlpha = RemapVal(pSDKPlayer->GetCurrentTime(), oRevealedEnemy.m_flRevealTime, oRevealedEnemy.m_flRevealTime + oRevealedEnemy.m_flRevealDuration, 1, 0);
+
+			if (C_SDKPlayer* pRevealedEnemy = ToSDKPlayer(ClientEntityList().GetBaseEntity(oRevealedEnemy.m_iEnemyClientIndex+1)))
+			{
+				m_RevealedEnemies[k].m_hEntity = pRevealedEnemy;
+				m_RevealedEnemies[k].m_vecLastKnownTarget = pRevealedEnemy->WorldSpaceCenter();
+			}
+		}
+		else
+		{
+			m_RevealedEnemies[k].m_bTargetOn = false;
+		}
+	}
+
+	PaintTargets(m_RevealedEnemies, pSDKPlayer->m_Shared.m_aRevealedEnemies.Count());
+}
+
+void CSDKTargetId::PaintTargets(CTarget* pTargets, int iCount)
+{
 	int iX, iY;
 
-	for (int i = 0; i < TARGET_TOTAL; i++)
+	for (int i = 0; i < iCount; i++)
 	{
-		if (!m_Targets[i].m_bTargetOn && m_Targets[i].m_flTargetAlpha == 0)
+		if (!pTargets[i].m_bTargetOn && pTargets[i].m_flTargetAlpha == 0)
 			continue;
 
 		float flAlphaGoal = 1;
 
-		if (GetVectorInHudSpace(m_Targets[i].m_vecLastKnownTarget, iX, iY))
+		if (GetVectorInHudSpace(pTargets[i].m_vecLastKnownTarget, iX, iY))
 		{
-			C_BaseEntity* pTarget = m_Targets[i].m_hEntity;
+			C_BaseEntity* pTarget = pTargets[i].m_hEntity;
 
 			bool bHide;
-			if (!m_Targets[i].m_bTargetOn)
+			if (!pTargets[i].m_bTargetOn)
 				bHide = true;
 			else if (pTarget)
 			{
-				if (m_Targets[i].m_bHideIfVisible)
+				if (pTargets[i].m_bHideIfVisible)
 				{
 					trace_t tr;
-					UTIL_TraceLine(CurrentViewOrigin(), m_Targets[i].m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
+					UTIL_TraceLine(CurrentViewOrigin(), pTargets[i].m_vecLastKnownTarget, MASK_BLOCKLOS, C_SDKPlayer::GetLocalSDKPlayer(), COLLISION_GROUP_NONE, &tr);
 
 					bHide = tr.fraction >= 0.99f || tr.m_pEnt == pTarget;
 					if ((CurrentViewOrigin() - pTarget->WorldSpaceCenter()).LengthSqr() > 1000*1000)
@@ -415,33 +374,33 @@ void CSDKTargetId::Paint()
 				bHide = true;
 
 			if (!bHide)
-				flAlphaGoal = m_Targets[i].m_flMaxAlpha;
+				flAlphaGoal = pTargets[i].m_flMaxAlpha;
 			else
 				flAlphaGoal = 0;
 		}
 		else
 		{
-			if (!m_Targets[i].m_bTargetOn)
+			if (!pTargets[i].m_bTargetOn)
 				flAlphaGoal = 0;
 		}
 
-		m_Targets[i].m_flTargetAlpha = Approach(flAlphaGoal, m_Targets[i].m_flTargetAlpha, gpGlobals->frametime * 2);
+		pTargets[i].m_flTargetAlpha = Approach(flAlphaGoal, pTargets[i].m_flTargetAlpha, gpGlobals->frametime * 2);
 
-		if (m_Targets[i].m_flTargetAlpha > 0)
+		if (pTargets[i].m_flTargetAlpha > 0)
 		{
-			int iWidth = m_Targets[i].m_pTargetTexture->EffectiveWidth(m_Targets[i].m_flScale);
-			int iHeight = m_Targets[i].m_pTargetTexture->EffectiveHeight(m_Targets[i].m_flScale);
-			m_Targets[i].m_pTargetTexture->DrawSelf(iX - iWidth/2, iY - iHeight/2, iWidth, iHeight, Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha));
+			int iWidth = pTargets[i].m_pTargetTexture->EffectiveWidth(pTargets[i].m_flScale);
+			int iHeight = pTargets[i].m_pTargetTexture->EffectiveHeight(pTargets[i].m_flScale);
+			pTargets[i].m_pTargetTexture->DrawSelf(iX - iWidth / 2, iY - iHeight / 2, iWidth, iHeight, Color(255, 255, 255, 255 * pTargets[i].m_flTargetAlpha));
 
-			if (m_Targets[i].m_pwszHint)
+			if (pTargets[i].m_pwszHint)
 			{
 				int iHintWide, iHintTall;
-				surface()->GetTextSize(m_Targets[i].m_hFont, m_Targets[i].m_pwszHint, iHintWide, iHintTall);
+				surface()->GetTextSize(pTargets[i].m_hFont, pTargets[i].m_pwszHint, iHintWide, iHintTall);
 
-				vgui::surface()->DrawSetTextFont( m_Targets[i].m_hFont );
+				vgui::surface()->DrawSetTextFont(pTargets[i].m_hFont);
 				vgui::surface()->DrawSetTextPos( iX - iHintWide/2, iY + iHeight/2 );
-				vgui::surface()->DrawSetTextColor( Color(255, 255, 255, 255 * m_Targets[i].m_flTargetAlpha) );
-				vgui::surface()->DrawPrintText( m_Targets[i].m_pwszHint, wcslen(m_Targets[i].m_pwszHint) );
+				vgui::surface()->DrawSetTextColor(Color(255, 255, 255, 255 * pTargets[i].m_flTargetAlpha));
+				vgui::surface()->DrawPrintText(pTargets[i].m_pwszHint, wcslen(pTargets[i].m_pwszHint));
 			}
 		}
 	}

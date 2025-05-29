@@ -19,6 +19,23 @@ class C_SDKPlayer;
 class CSDKPlayer;
 #endif
 
+class CRevealedEnemy
+{
+	DECLARE_EMBEDDED_NETWORKVAR()
+	DECLARE_CLASS_NOBASE(CRevealedEnemy);
+
+public:
+	bool IsActive(float flCurrentTime) const;
+
+public:
+	CNetworkVar(int, m_iEnemyClientIndex);
+	CNetworkVar(float, m_flRevealTime);
+	CNetworkVar(float, m_flRevealDuration);
+};
+
+template<>
+FORCEINLINE void NetworkVarConstruct<CRevealedEnemy>(CRevealedEnemy &x) { x = CRevealedEnemy(); }
+
 class CSDKPlayerShared
 {
 public:
@@ -260,6 +277,8 @@ public:
 	CNetworkVar( int, m_iStyleSkill );
 	CNetworkVar( int, m_iStyleSkillAfterRespawn );
 	CNetworkVar( bool, m_bSuperSkill );
+
+	CNetworkArray(CRevealedEnemy, m_aRevealedEnemies, 8);
 
 private:
 

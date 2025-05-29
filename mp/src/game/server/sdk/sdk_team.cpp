@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "sdk_team.h"
 #include "entitylist.h"
+#include "sdk_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -96,6 +97,28 @@ bool CSDKTeam::IsClassOnTeam( const char *pszClassName, int &iClassNum ) const
 	return false;
 }
 #endif // SDK_USE_PLAYERCLASSES
+
+bool CSDKTeam::ShouldTransmitToPlayer(CBasePlayer* pRecipient, CBaseEntity* pEntity)
+{
+	CSDKPlayer* pSDKRecipient = ToSDKPlayer(pRecipient);
+	CSDKPlayer* pSDKEntity = ToSDKPlayer(pEntity);
+	if (!pSDKEntity)
+	{
+		return BaseClass::ShouldTransmitToPlayer(pRecipient, pEntity);
+	}
+
+	for (int k = 0; k < pSDKRecipient->m_Shared.m_aRevealedEnemies.Count(); k++)
+	{
+		const CRevealedEnemy& oRevealedEnemy = pSDKRecipient->m_Shared.m_aRevealedEnemies[k];
+		if (oRevealedEnemy.m_iEnemyClientIndex == pSDKEntity->GetClientIndex() && oRevealedEnemy.IsActive(pSDKRecipient->GetCurrentTime()))
+		{
+			return true;
+		}
+	}
+
+	return BaseClass::ShouldTransmitToPlayer(pRecipient, pEntity);
+}
+
 void CSDKTeam::ResetScores( void )
 {
 	SetRoundsWon(0);
