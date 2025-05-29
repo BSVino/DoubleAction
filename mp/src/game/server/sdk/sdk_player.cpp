@@ -2084,21 +2084,32 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 		flPoints = RemapValClamped(info.GetDamage(), 0, 100, 0, da_stylemeteractivationcost.GetFloat()/4);
 	}
 
+	float flMultiplier = 0.0f;
+
 	if (m_Shared.IsAimedIn())
-		flPoints *= 1.2f;
+	{
+		flMultiplier += 0.1f;
+	}
 
 	if (m_iSlowMoType != SLOWMO_NONE)
-		flPoints *= 1.3f;
+	{
+		flMultiplier += 0.3f;
+	}
 
 	float flDistance = GetAbsOrigin().DistTo(pVictim->GetAbsOrigin());
-	flPoints *= RemapValClamped(flDistance, 800, 1200, 1, 1.5f);
+	flMultiplier += RemapValClamped(flDistance, 800, 1200, 0, 0.5f);
 
 	// the weapon that did the killing
 	CWeaponSDKBase* pWeapon = dynamic_cast<CWeaponSDKBase*>(info.GetWeapon());
 	CSDKWeaponInfo* pWeaponInfo = pWeapon?CSDKWeaponInfo::GetWeaponInfo(pWeapon->GetWeaponID()):NULL;
 
 	if (pWeaponInfo)
-		flPoints *= pWeaponInfo->m_flStyleMultiplier;
+	{
+		flMultiplier += 1 - pWeaponInfo->m_flStyleMultiplier;
+	}
+
+	flPoints *= 1 + flMultiplier;
+
 	Vector vecVictimForward;
 	pVictim->GetVectors(&vecVictimForward, NULL, NULL);
 
@@ -2266,16 +2277,16 @@ void CSDKPlayer::AwardStylePoints(CSDKPlayer* pVictim, bool bKilledVictim, const
 			if (info.GetDamageType() == DMG_CLUB)
 			{
 				if (bKilledVictim)
-					AddStylePoints(flPoints, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints*0.65f, STYLE_SOUND_KNOCKOUT, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_STYLISH);
 				else
-					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints*0.65f, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDEPUNCH, STYLE_POINT_LARGE);
 			}
 			else
 			{
 				if (bKilledVictim)
-					AddStylePoints(flPoints, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
+					AddStylePoints(flPoints*0.65f, STYLE_SOUND_LARGE, ANNOUNCEMENT_SLIDE_KILL, STYLE_POINT_STYLISH);
 				else
-					AddStylePoints(flPoints, STYLE_SOUND_SMALL, ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
+					AddStylePoints(flPoints*0.65f, STYLE_SOUND_SMALL, ANNOUNCEMENT_SLIDE, STYLE_POINT_LARGE);
 			}
 		}
 		else
