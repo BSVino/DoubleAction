@@ -40,6 +40,7 @@ public:
 	virtual bool Reload();
 	virtual void WeaponIdle();
 	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo );
+	virtual void CancelReload();
 
 	virtual bool WeaponSpreadFixed() const { return true; }
 	virtual bool FullAimIn() { return true; }

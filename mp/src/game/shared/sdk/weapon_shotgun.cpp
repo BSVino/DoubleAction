@@ -199,7 +199,12 @@ void CWeaponShotgun::WeaponIdle()
 bool CWeaponShotgun::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	//cancel reload loop
-	m_iInSpecialReload = 0;
+	CancelReload();
 
 	return BaseClass::Holster( pSwitchingTo );
+}
+
+void CWeaponShotgun::CancelReload()
+{
+	m_iInSpecialReload = 0;
 }

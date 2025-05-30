@@ -17,6 +17,7 @@
 #include "sdk_fx_shared.h"
 #include "sdk_gamerules.h"
 #include "da_viewmodel.h"
+#include "weapon_shotgun.h"
 
 #if defined( CLIENT_DLL )
 
@@ -520,6 +521,11 @@ void CWeaponSDKBase::StartSwing(bool bIsSecondary, bool bIsStockAttack)
 
 		if (bNeedsUnpause)
 			m_flUnpauseFromSwingTime = GetCurrentTime() + flFireRate * 0.7f;
+	}
+
+	if (CWeaponShotgun* pShotgun = dynamic_cast<CWeaponShotgun*>(this))
+	{
+		pShotgun->CancelReload();
 	}
 
 	//Setup our next attack times
