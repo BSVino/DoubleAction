@@ -153,13 +153,15 @@
 		"MiniObjectiveFontSmall" "MiniObjectivesTiny"
 	}
 	
-	EnemyHealthBars
+	HudEnemyHealth
 	{
-		"fieldName" "EnemyHealthBars"
+		"fieldName" "HudEnemyHealth"
 		"visible" "1"
 		"enabled" "1"
-		"wide"	 "f0"
-		"tall"	 "480"
+		"xpos"   "0"
+		"ypos"   "0"
+		"wide"   "f0"
+		"tall"   "480"
 	}
 
 	HudSuit
