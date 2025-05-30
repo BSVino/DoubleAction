@@ -1018,6 +1018,36 @@ void CSDKGameRules::Think()
 
 	if (m_eCurrentMiniObjective)
 		MaintainMiniObjective();
+
+	if (CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(m_iNextPlayerVisibilityCheck)))
+	{
+		for (int k = 1; k < gpGlobals->maxClients; k++)
+		{
+			if (m_iNextPlayerVisibilityCheck == k)
+			{
+				continue;
+			}
+
+			CSDKPlayer* pOther = ToSDKPlayer(UTIL_PlayerByIndex(k));
+			if (!pOther)
+			{
+				continue;
+			}
+
+			trace_t tr;
+			UTIL_TraceLine(pPlayer->EyePosition(), pOther->WorldSpaceCenter(), MASK_BLOCKLOS, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+			if (tr.fraction < 1.0f)
+			{
+				continue;
+			}
+
+			pPlayer->ResetRegenCooldown();
+			pOther->ResetRegenCooldown();
+		}
+	}
+
+	m_iNextPlayerVisibilityCheck = (m_iNextPlayerVisibilityCheck + 1) % MAX_PLAYERS;
 }
 
 // The bots do their processing after physics simulation etc so their visibility checks don't recompute

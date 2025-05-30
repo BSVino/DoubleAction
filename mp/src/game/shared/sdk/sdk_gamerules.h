@@ -307,6 +307,8 @@ private:
 #endif
 
 	CNetworkVar( Vector, m_vecLowestSpawnPoint );
+
+	int m_iNextPlayerVisibilityCheck = 0;
 };
 
 //-----------------------------------------------------------------------------

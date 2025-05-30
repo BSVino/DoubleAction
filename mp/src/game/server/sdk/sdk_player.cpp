@@ -1826,9 +1826,14 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		}
 	}
 
-	m_flNextRegen = m_flCurrentTime + da_regendelay.GetFloat();
+	ResetRegenCooldown();
 
 	return 1;
+}
+
+void CSDKPlayer::ResetRegenCooldown()
+{
+	m_flNextRegen = m_flCurrentTime + da_regendelay.GetFloat();
 }
 
 CWeaponSDKBase* CSDKPlayer::FindAnyWeaponButBrawl()
