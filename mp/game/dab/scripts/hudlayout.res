@@ -152,6 +152,15 @@
 		"MiniObjectiveFont" "MiniObjectivesSmall"
 		"MiniObjectiveFontSmall" "MiniObjectivesTiny"
 	}
+	
+	EnemyHealthBars
+	{
+		"fieldName" "EnemyHealthBars"
+		"visible" "1"
+		"enabled" "1"
+		"wide"	 "f0"
+		"tall"	 "480"
+	}
 
 	HudSuit
 	{

@@ -34,6 +34,8 @@ using namespace vgui;
 
 #include "convar.h"
 
+#include "sdk_hud_health.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -58,7 +60,7 @@ public:
 	virtual void Paint();
 	virtual void PaintBackground() {};
 
-	float GetLerpedHealth();
+	float GetLerpedHealth() const;
 
 	CPanelAnimationVarAliasType( float, m_flHealthLerpTime, "HealthLerpTime", "0.25", "float" );
 
@@ -70,6 +72,8 @@ private:
 	int		m_bitsDamage;
 
 	CHudTexture* m_pHeart;
+
+	CHealthWidget m_oHealthWidget;
 };
 
 DECLARE_HUDELEMENT( CHudHealth );
@@ -135,6 +139,9 @@ void CHudHealth::VidInit()
 //-----------------------------------------------------------------------------
 void CHudHealth::OnThink()
 {
+	m_oHealthWidget.SetPlayer(ToSDKPlayer(C_BasePlayer::GetLocalPlayer()));
+	m_oHealthWidget.Update();
+
 	int newHealth = 0;
 	C_BasePlayer *local = C_BasePlayer::GetLocalPlayer();
 	if ( local )
@@ -196,54 +203,89 @@ void CHudHealth::Paint()
 	if (!pPlayer->IsAlive())
 		return;
 
-	surface()->DrawSetColor( Color(0, 0, 0, 180) );
-	surface()->DrawFilledRect( 0, 0, 1000, 1000 );
-
-//	if (pPlayer->IsStyleSkillActive())
-//		clrBar.SetColor(clrBar.r(), clrBar.g(), clrBar.b(), Oscillate(gpGlobals->curtime, 1)*255);
-
-	int iElementBuffer = 12;	// The entire element gets a stencil crop, so leave some buffer room on the outsides so that the blood splatters can overflow.
 	int iWidth, iHeight;
 	GetSize(iWidth, iHeight);
-	iWidth -= iElementBuffer*2;
-	iHeight -= iElementBuffer*2;
+
+	float flMargin = 5;
+	float flHeartHeight = GetTall() - flMargin * 2;
+
+	m_oHealthWidget.Paint(m_pHeart, flHeartHeight, iWidth, iHeight);
+}
+
+float CHudHealth::GetLerpedHealth() const
+{
+	float flHealthLerp = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + m_flHealthLerpTime, 0, 1);
+	flHealthLerp = Bias(flHealthLerp, 0.8f);
+	return RemapValClamped(flHealthLerp, 0, 1, m_iOldHealth, m_iHealth);
+}
+
+void CHealthWidget::SetPlayer(CSDKPlayer* pPlayer)
+{
+	m_hPlayer = pPlayer;
+}
+
+void CHealthWidget::Update()
+{
+	int iNewHealth = 0;
+	CSDKPlayer* pPlayer = m_hPlayer;
+	if (pPlayer)
+	{
+		// Never below zero
+		iNewHealth = max(pPlayer->GetHealth(), 0);
+	}
+
+	// Only update the fade if we've changed health
+	if (iNewHealth == m_iHealth)
+	{
+		return;
+	}
+
+	m_iOldHealth = GetLerpedHealth();
+	m_iHealth = iNewHealth;
+	m_flLastHealthChange = gpGlobals->curtime;
+}
+
+void CHealthWidget::Paint(CHudTexture* pIconTexture, float flIconHeight, int iWidth, int iHeight)
+{
+	surface()->DrawSetColor(Color(0, 0, 0, 180));
+	surface()->DrawFilledRect(0, 0, 1000, 1000);
 
 	float flMargin = 5;
 
-	float flHeartHeight = GetTall() - flMargin*2;
+	if (pIconTexture)
+	{
+		pIconTexture->DrawSelf(flMargin, flMargin, flIconHeight, flIconHeight, Color(255, 255, 255, 255));
+	}
 
-	if (m_pHeart)
-		m_pHeart->DrawSelf(flMargin, flMargin, flHeartHeight, flHeartHeight, Color(255, 255, 255, 255));
-
-	float flBarWidth = GetWide() - flMargin*3 - flHeartHeight;
+	float flBarWidth = iWidth - flMargin * 3 - flIconHeight;
 	float flBarHeight = 4;
 
-	float flHurtLerpTime = RemapValClamped(m_iOldHealth - m_iHealth, 10, 50, m_flHealthLerpTime, m_flHealthLerpTime*3);
+	float flHurtLerpTime = RemapValClamped(m_iOldHealth - m_iHealth, 10, 50, m_flHealthLerpTime, m_flHealthLerpTime * 3);
 	float flHurtAlpha = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, 1, 0);
-	float flHurtPercent = Clamp((float)m_iOldHealth/100, 0.0f, 1.0f);
+	float flHurtPercent = Clamp((float)m_iOldHealth / 100, 0.0f, 1.0f);
 
-	float flHealthPercent = Clamp((float)GetLerpedHealth()/100, 0.0f, 1.0f);
+	float flHealthPercent = Clamp((float)GetLerpedHealth() / 100, 0.0f, 1.0f);
 
 	if (flHurtAlpha && flHealthPercent < flHurtPercent)
 	{
-		float flHurtBarHeight = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, GetTall(), flBarHeight);
+		float flHurtBarHeight = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, iHeight, flBarHeight);
 
-		surface()->DrawSetColor( Color(255, 0, 0, flHurtAlpha*255) );
-		surface()->DrawFilledRect( flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2-flHurtBarHeight/2, flMargin*2 + flHeartHeight + flHurtPercent * flBarWidth, GetTall()/2+flHurtBarHeight/2 );
+		surface()->DrawSetColor(Color(255, 0, 0, flHurtAlpha * 255));
+		surface()->DrawFilledRect(flMargin * 2 + flIconHeight + flHealthPercent * flBarWidth, iHeight / 2 - flHurtBarHeight / 2, flMargin * 2 + flIconHeight + flHurtPercent * flBarWidth, iHeight / 2 + flHurtBarHeight / 2);
 	}
 
-	surface()->DrawSetColor( Color(255, 255, 255, 255) );
-	surface()->DrawFilledRect( flMargin*2 + flHeartHeight, GetTall()/2-flBarHeight/2, flMargin*2 + flHeartHeight + flHealthPercent * flBarWidth, GetTall()/2+flBarHeight/2 );
+	surface()->DrawSetColor(Color(255, 255, 255, 255));
+	surface()->DrawFilledRect(flMargin * 2 + flIconHeight, iHeight / 2 - flBarHeight / 2, flMargin * 2 + flIconHeight + flHealthPercent * flBarWidth, iHeight / 2 + flBarHeight / 2);
 
 	float flOverhealPercent = RemapValClamped((float)GetLerpedHealth(), 100, 150, 0.0f, 1.0f);
 	if (flOverhealPercent)
 	{
-		surface()->DrawSetColor( Color(255, 190, 20, 128) );
-		surface()->DrawFilledRect( flMargin*2 + flHeartHeight, flMargin, flMargin*2 + flHeartHeight + flOverhealPercent * flBarWidth, GetTall() - flMargin );
+		surface()->DrawSetColor(Color(255, 190, 20, 128));
+		surface()->DrawFilledRect(flMargin * 2 + flIconHeight, flMargin, flMargin * 2 + flIconHeight + flOverhealPercent * flBarWidth, iHeight - flMargin);
 	}
 }
 
-float CHudHealth::GetLerpedHealth()
+float CHealthWidget::GetLerpedHealth() const
 {
 	float flHealthLerp = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + m_flHealthLerpTime, 0, 1);
 	flHealthLerp = Bias(flHealthLerp, 0.8f);
