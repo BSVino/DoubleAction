@@ -963,6 +963,11 @@ bool CWeaponSDKBase::MaintainGrenadeToss()
 	return true;
 }
 
+void CWeaponSDKBase::CancelGrenadeToss()
+{
+	m_flGrenadeThrowStart = 0;
+}
+
 float CWeaponSDKBase::GetGrenadeThrowWeaponHolsterTime() const
 {
 	Assert(IsThrowingGrenade());
@@ -2081,6 +2086,17 @@ bool CWeaponSDKBase::Holster( CBaseCombatWeapon *pSwitchingTo )
 
 	// kill any think functions
 	SetThink(NULL);
+
+	CancelGrenadeToss();
+
+	if (CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner()))
+	{
+		if (!pPlayer->IsInThirdPerson())
+		{
+			SetViewModel();
+			SetModel(GetViewModel());
+		}
+	}
 
 	// Send holster animation
 	SendWeaponAnim( ACT_VM_HOLSTER );

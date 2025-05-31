@@ -102,6 +102,7 @@ public:
 	virtual bool      IsThrowingGrenade() const { return m_flGrenadeThrowStart > 0; }
 	virtual void      StartGrenadeToss();
 	virtual bool      MaintainGrenadeToss();
+	virtual void      CancelGrenadeToss();
 	virtual float     GetGrenadeThrowStart() const { return m_flGrenadeThrowStart; }
 	virtual float     GetGrenadeThrowWeaponHolsterTime() const; // What time does the weapon finish holstering
 	virtual float     GetGrenadeThrowWeaponDeployTime() const;  // What time does the weapon start re-deploying
