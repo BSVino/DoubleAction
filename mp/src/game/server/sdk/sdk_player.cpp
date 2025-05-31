@@ -1565,7 +1565,7 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			float flDot = DotProduct( vecForward, vecBack );
 			if ( flDot < 0.0f )
 			{
-				flDamage *= 0.15f;
+				flDamage *= 0.85f;
 			}
 		}
 
