@@ -1687,9 +1687,9 @@ float CSDKPlayer::GetSlowMoMultiplier() const
 
 float CSDKPlayer::GetSlowMoGoal() const
 {
-	if (m_iSlowMoType == SLOWMO_ACTIVATED)
+	if (m_iSlowMoType == SLOWMO_STYLESKILL)
 		return 0.7f;
-	else if (m_iSlowMoType == SLOWMO_STYLESKILL)
+	else if (m_iSlowMoType == SLOWMO_ACTIVATED)
 		return 0.65f;
 	else if (m_iSlowMoType == SLOWMO_SUPERFALL)
 		return 0.65f;
