@@ -126,6 +126,7 @@ void CHudEnemyHealth::OnThink()
 
 static ConVar da_enemy_health_bar_width("da_enemy_health_bar_width", "100", 0, "Enemy health bar width");
 static ConVar da_enemy_health_bar_height("da_enemy_health_bar_height", "10", 0, "Enemy health bar height");
+static ConVar da_enemy_health_bar_max_distance("da_enemy_health_bar_max_distance", "1000", 0, "Enemy health bar max render distance");
 
 void CHudEnemyHealth::Paint()
 {
@@ -161,6 +162,11 @@ void CHudEnemyHealth::Paint()
 			bHide = tr.fraction < 0.99f && tr.m_pEnt != C_SDKPlayer::GetLocalSDKPlayer();
 
 			if (!pPlayer->IsAlive())
+			{
+				bHide = true;
+			}
+
+			if ((m_avecLastKnownLocations[iClient] - CSDKPlayer::GetLocalSDKPlayer()->WorldSpaceCenter()).Length() > da_enemy_health_bar_max_distance.GetFloat())
 			{
 				bHide = true;
 			}
