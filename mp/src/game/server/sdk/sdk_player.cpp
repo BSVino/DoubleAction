@@ -4193,7 +4193,7 @@ void CSDKPlayer::AddStylePoints(float points, style_sound_t eStyle, announcement
 
 	if (m_Shared.IsDiving() || m_Shared.IsSliding() || m_Shared.IsRolling() || m_Shared.IsSuperFalling() || m_Shared.IsWallFlipping() || m_Shared.IsManteling())
 	{
-		points = m_Shared.ModifySkillValue(points, 0.5, SKILL_ATHLETIC);
+		points = m_Shared.ModifySkillValue(points, 0.3, SKILL_ATHLETIC);
 	}
 
 	points *= GetDKRatio(0.7, 2, true);

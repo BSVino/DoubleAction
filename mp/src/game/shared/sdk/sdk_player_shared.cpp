@@ -1478,9 +1478,9 @@ float CSDKPlayer::GetPlayerMaxSpeed(bool bDucking)
 	if ( m_Shared.IsProne() && m_Shared.CanChangePosition() && GetGroundEntity() != NULL )
 	{
 		if (m_Shared.m_bProneSliding)
-			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flSlideSpeed, 0.5f, SKILL_ATHLETIC);
+			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flSlideSpeed, 0.35f, SKILL_ATHLETIC);
 		else
-			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flProneSpeed, 0.5f, SKILL_ATHLETIC);
+			flMaxSpeed = m_Shared.ModifySkillValue(m_Shared.m_flProneSpeed, 0.35f, SKILL_ATHLETIC);
 	}
 	//not prone - standing or crouching and possibly moving
 	else if ( (m_Shared.IsSliding() && !m_Shared.IsGettingUpFromSlide()) && GetGroundEntity() )
@@ -1510,13 +1510,13 @@ float CSDKPlayer::GetPlayerMaxSpeed(bool bDucking)
 				flMaxSpeed = m_Shared.m_flRunSpeed;
 		}
 
-		flMaxSpeed = m_Shared.ModifySkillValue(flMaxSpeed, 0.2f, SKILL_ATHLETIC);
+		flMaxSpeed = m_Shared.ModifySkillValue(flMaxSpeed, IsStyleSkillActive()?0.25f:0.15f, SKILL_ATHLETIC);
 	}
 
 	return flMaxSpeed;
 }
 
-ConVar da_athletic_slide_boost("da_athletic_slide_boost", ".25", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
+ConVar da_athletic_slide_boost("da_athletic_slide_boost", ".15", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY);
 
 float CSDKPlayer::GetMaxSlideSpeed()
 {
