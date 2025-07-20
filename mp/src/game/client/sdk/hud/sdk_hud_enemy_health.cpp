@@ -124,9 +124,9 @@ void CHudEnemyHealth::OnThink()
 {
 }
 
-static ConVar da_enemy_health_bar_width("da_enemy_health_bar_width", "100", 0, "Enemy health bar width");
-static ConVar da_enemy_health_bar_height("da_enemy_health_bar_height", "10", 0, "Enemy health bar height");
-static ConVar da_enemy_health_bar_max_distance("da_enemy_health_bar_max_distance", "1000", 0, "Enemy health bar max render distance");
+static ConVar da_enemy_health_bar_width("da_enemy_health_bar_width", "100", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Enemy health bar width");
+static ConVar da_enemy_health_bar_height("da_enemy_health_bar_height", "10", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Enemy health bar height");
+static ConVar da_enemy_health_bar_max_distance("da_enemy_health_bar_max_distance", "1000", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Enemy health bar max render distance");
 
 void CHudEnemyHealth::Paint()
 {
@@ -157,7 +157,7 @@ void CHudEnemyHealth::Paint()
 			m_avecLastKnownLocations[iClient] = vecWorldSpaceCenter;
 
 			trace_t tr;
-			UTIL_TraceLine(CurrentViewOrigin(), m_avecLastKnownLocations[iClient], MASK_BLOCKLOS, pPlayer, COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(CurrentViewOrigin(), m_avecLastKnownLocations[iClient], MASK_VISIBLE, pPlayer, COLLISION_GROUP_NONE, &tr);
 
 			bHide = tr.fraction < 0.99f && tr.m_pEnt != C_SDKPlayer::GetLocalSDKPlayer();
 

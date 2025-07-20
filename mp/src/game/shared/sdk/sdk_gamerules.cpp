@@ -932,6 +932,8 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 	}
 }
 
+static ConVar da_debug_player_visibility_check("da_debug_player_visibility_check", "0", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Show player visibility checks");
+
 void CSDKGameRules::Think()
 {
 	// Not terribly happy about this but also not terribly distraught.
@@ -1034,8 +1036,18 @@ void CSDKGameRules::Think()
 				continue;
 			}
 
+			if ((pOther->WorldSpaceCenter() - pPlayer->WorldSpaceCenter()).Length() > 1500)
+			{
+				continue;
+			}
+
 			trace_t tr;
-			UTIL_TraceLine(pPlayer->EyePosition(), pOther->WorldSpaceCenter(), MASK_BLOCKLOS, pPlayer, COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(pPlayer->EyePosition(), pOther->WorldSpaceCenter(), MASK_VISIBLE, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+			if (da_debug_player_visibility_check.GetBool())
+			{
+				DebugDrawLine(pPlayer->EyePosition(), pOther->WorldSpaceCenter(), (tr.fraction >= 1.0f)?255:0, 0, (tr.fraction >= 1.0f)?0:255, false, 0);
+			}
 
 			if (tr.fraction < 1.0f)
 			{
