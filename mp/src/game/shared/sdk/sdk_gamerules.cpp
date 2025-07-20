@@ -933,6 +933,7 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 }
 
 static ConVar da_debug_player_visibility_check("da_debug_player_visibility_check", "0", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Show player visibility checks");
+static ConVar da_regen_disable_enemy_distance("da_regen_disable_enemy_distance", "1000", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "The distance to the nearest visible enemy at which auto health regen is disabled");
 
 void CSDKGameRules::Think()
 {
@@ -1036,7 +1037,7 @@ void CSDKGameRules::Think()
 				continue;
 			}
 
-			if ((pOther->WorldSpaceCenter() - pPlayer->WorldSpaceCenter()).Length() > 1500)
+			if ((pOther->WorldSpaceCenter() - pPlayer->WorldSpaceCenter()).Length() > da_regen_disable_enemy_distance.GetFloat())
 			{
 				continue;
 			}
