@@ -209,7 +209,7 @@ void CHudHealth::Paint()
 	float flMargin = 5;
 	float flHeartHeight = GetTall() - flMargin * 2;
 
-	m_oHealthWidget.Paint(m_pHeart, flHeartHeight, 0, 0, iWidth, iHeight, 1.0f);
+	m_oHealthWidget.Paint(m_pHeart, flHeartHeight, 0, 0, iWidth, iHeight, 1.0f, Color(255, 255, 255, 255));
 }
 
 float CHudHealth::GetLerpedHealth() const
@@ -245,9 +245,9 @@ void CHealthWidget::Update()
 	m_flLastHealthChange = gpGlobals->curtime;
 }
 
-void CHealthWidget::Paint(CHudTexture* pIconTexture, float flIconHeight, int x, int y, int iWidth, int iHeight, float flAlpha)
+void CHealthWidget::Paint(CHudTexture* pIconTexture, float flIconHeight, int x, int y, int iWidth, int iHeight, float flAlpha, const Color& color)
 {
-	surface()->DrawSetColor(Color(0, 0, 0, 180 * flAlpha));
+	surface()->DrawSetColor(Color(0, 0, 0, color.a() * 0.7f * flAlpha));
 	surface()->DrawFilledRect(x, y, x + iWidth, y + iHeight);
 
 	float flMargin = 5;
@@ -255,7 +255,7 @@ void CHealthWidget::Paint(CHudTexture* pIconTexture, float flIconHeight, int x, 
 
 	if (pIconTexture)
 	{
-		pIconTexture->DrawSelf(x + flMargin, y + flMargin, flIconHeight, flIconHeight, Color(255, 255, 255, 255 * flAlpha));
+		pIconTexture->DrawSelf(x + flMargin, y + flMargin, flIconHeight, flIconHeight, Color(color.r(), color.g(), color.b(), color.a() * flAlpha));
 	}
 
 	float flBarWidth = iWidth - flMargin * 3 - flIconHeight;
@@ -271,11 +271,11 @@ void CHealthWidget::Paint(CHudTexture* pIconTexture, float flIconHeight, int x, 
 	{
 		float flHurtBarHeight = RemapValClamped(gpGlobals->curtime, m_flLastHealthChange, m_flLastHealthChange + flHurtLerpTime, iHeight, flBarHeight);
 
-		surface()->DrawSetColor(Color(255, 0, 0, flHurtAlpha * flAlpha * 255));
+		surface()->DrawSetColor(Color(color.r(), 0, 0, flHurtAlpha * flAlpha * color.a()));
 		surface()->DrawFilledRect(x + flLeftMargin + flIconHeight + flHealthPercent * flBarWidth, y + iHeight / 2 - flHurtBarHeight / 2, x + flLeftMargin + flIconHeight + flHurtPercent * flBarWidth, y + iHeight / 2 + flHurtBarHeight / 2);
 	}
 
-	surface()->DrawSetColor(Color(255, 255, 255, 255 * flAlpha));
+	surface()->DrawSetColor(Color(color.r(), color.g(), color.b(), color.a() * flAlpha));
 	surface()->DrawFilledRect(x + flLeftMargin + flIconHeight, y + iHeight / 2 - flBarHeight / 2, x + flLeftMargin + flIconHeight + flHealthPercent * flBarWidth, y + iHeight / 2 + flBarHeight / 2);
 
 	float flOverhealPercent = RemapValClamped((float)GetLerpedHealth(), 100, 150, 0.0f, 1.0f);

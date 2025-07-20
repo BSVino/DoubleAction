@@ -5,7 +5,7 @@ class CHealthWidget
 public:
 	void SetPlayer(CSDKPlayer* pPlayer);
 	void Update();
-	void Paint(CHudTexture* pIcon, float flIconHeight, int x, int y, int iWidth, int iHeight, float flAlpha);
+	void Paint(CHudTexture* pIcon, float flIconHeight, int x, int y, int iWidth, int iHeight, float flAlpha, const Color& color);
 
 	float GetLerpedHealth() const;
 

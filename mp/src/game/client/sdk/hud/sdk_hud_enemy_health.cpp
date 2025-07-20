@@ -161,6 +161,11 @@ void CHudEnemyHealth::Paint()
 
 			bHide = tr.fraction < 0.99f && tr.m_pEnt != C_SDKPlayer::GetLocalSDKPlayer();
 
+			if (pPlayer->IsDormant())
+			{
+				bHide = true;
+			}
+
 			if (!pPlayer->IsAlive())
 			{
 				bHide = true;
@@ -178,12 +183,17 @@ void CHudEnemyHealth::Paint()
 
 		m_aflWidgetAlphas[iClient] = Approach(bHide ? 0.0f : 1.0f, m_aflWidgetAlphas[iClient], gpGlobals->frametime * (bHide ? 5 : 2));
 
+		if (m_aflWidgetAlphas[iClient] == 0.0f)
+		{
+			continue;
+		}
+
 		Vector vecAnchorPoint = m_avecLastKnownLocations[iClient];
 		vecAnchorPoint.z += m_flPlayerMax;
 
 		int x, y;
 		GetVectorInHudSpace(vecAnchorPoint, x, y);
 
-		m_aHealthWidgets[iClient].Paint(nullptr, 0, x - da_enemy_health_bar_width.GetInt() / 2, y - da_enemy_health_bar_height.GetInt(), da_enemy_health_bar_width.GetInt(), da_enemy_health_bar_height.GetInt(), m_aflWidgetAlphas[iClient]);
+		m_aHealthWidgets[iClient].Paint(nullptr, 0, x - da_enemy_health_bar_width.GetInt() / 2, y - da_enemy_health_bar_height.GetInt(), da_enemy_health_bar_width.GetInt(), da_enemy_health_bar_height.GetInt(), m_aflWidgetAlphas[iClient], Color(255, 255, 255, 255));
 	}
 }
