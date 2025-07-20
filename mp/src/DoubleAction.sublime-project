@@ -1,4 +1,33 @@
 {
+	"build_systems":
+	[
+		{
+			"encoding": "cp850",
+			"file_regex": "([a-zA-Z]:[\\\\/a-zA-Z0-9_. ()]+)\\(([0-9]+)?,?([0-9]+)?\\): (.+)",
+			"name": "BuildDoubleActionRelease",
+			"windows":
+			{
+				"cmd":
+				[
+					"D:\\git\\DoubleAction\\mp\\src\\compilerelease.bat"
+				]
+			},
+			"working_dir": "D:\\git\\DoubleAction\\mp\\src\\"
+		},
+		{
+			"encoding": "cp850",
+			"file_regex": "([a-zA-Z]:[\\\\/a-zA-Z0-9_. ()]+)\\(([0-9]+)?,?([0-9]+)?\\): (.+)",
+			"name": "BuildDoubleActionDebug",
+			"windows":
+			{
+				"cmd":
+				[
+					"D:\\git\\DoubleAction\\mp\\src\\compiledebug.bat"
+				]
+			},
+			"working_dir": "D:\\git\\DoubleAction\\mp\\src\\"
+		}
+	],
 	"folders":
 	[
 		{
