@@ -2750,8 +2750,6 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	if (IsTeamplay())
 		return false;
 
-	// Find a spawn point to place the briefcase in.
-
 	CUtlVector<CBaseEntity*> apWaypoints;
 
 	CBaseEntity* pSpot = NULL;
@@ -2855,6 +2853,18 @@ void CSDKGameRules::CleanupMiniObjective_RatRace()
 	{
 		m_ahWaypoint1RaceLeaders.GetForModify(i).Set(NULL);
 		m_ahWaypoint2RaceLeaders.GetForModify(i).Set(NULL);
+	}
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPlayer)
+		{
+			continue;
+		}
+
+		pPlayer->m_iRaceWaypoint = 0;
 	}
 
 	UTIL_Remove(m_hRaceWaypoint1);
