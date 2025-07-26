@@ -1510,7 +1510,7 @@ float CSDKPlayer::GetPlayerMaxSpeed(bool bDucking)
 				flMaxSpeed = m_Shared.m_flRunSpeed;
 		}
 
-		flMaxSpeed = m_Shared.ModifySkillValue(flMaxSpeed, IsStyleSkillActive()?0.25f:0.15f, SKILL_ATHLETIC);
+		flMaxSpeed = m_Shared.ModifySkillValue(flMaxSpeed, 0.2f, SKILL_ATHLETIC);
 	}
 
 	return flMaxSpeed;
