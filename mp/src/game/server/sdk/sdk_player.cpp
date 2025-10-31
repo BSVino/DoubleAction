@@ -871,7 +871,7 @@ void CSDKPlayer::PreThink(void)
 }
 
 ConVar sv_drawserverhitbox("sv_drawserverhitbox", "0", FCVAR_CHEAT|FCVAR_REPLICATED, "Shows server's hitbox representation." );
-ConVar da_wanted_meter_decay("da_wanted_meter_decay", "3", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How fast does the wanted skill meter decay in meter per second?");
+ConVar da_wanted_meter_decay("da_wanted_meter_decay", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How fast does the wanted skill meter decay in meter per second?");
 
 void CSDKPlayer::PostThink()
 {
