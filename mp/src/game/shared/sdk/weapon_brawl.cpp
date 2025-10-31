@@ -38,6 +38,8 @@ public:
 	virtual float	GetRange( void )					{	return	64.0f;	}	//Tony; let the crowbar swing further.
 	virtual bool CanWeaponBeDropped() const				{	return false; }
 
+	float	GetMeleeRange(void) override;
+
 private:
 
 	CWeaponBrawl( const CWeaponBrawl & );
@@ -109,3 +111,8 @@ acttable_t CWeaponBrawl::m_acttable[] =
 
 IMPLEMENT_ACTTABLE( CWeaponBrawl );
 
+float CWeaponBrawl::GetMeleeRange()
+{
+	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
+	return pPlayer->m_Shared.ModifySkillValue(BaseClass::GetMeleeRange(), 0.2f, SKILL_BOUNCER);
+}

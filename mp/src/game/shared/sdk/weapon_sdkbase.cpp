@@ -814,8 +814,7 @@ bool CWeaponSDKBase::ImpactWater( const Vector &start, const Vector &end )
 
 float CWeaponSDKBase::GetMeleeRange()
 {
-	CSDKPlayer* pPlayer = ToSDKPlayer(GetOwner());
-	return pPlayer->m_Shared.ModifySkillValue(80, 0.2f, SKILL_BOUNCER);
+	return 80;
 }
 
 float CWeaponSDKBase::GetMeleeDamage( bool bIsSecondary, CSDKPlayer* pVictim ) const
