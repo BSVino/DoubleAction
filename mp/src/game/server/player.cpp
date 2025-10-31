@@ -6513,16 +6513,26 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 			 args.ArgC() == 6 )
 		{
 			Vector origin;
-			origin.x = atof( args[1] );
-			origin.y = atof( args[2] );
-			origin.z = atof( args[3] );
+ 			origin.x = clamp( atof( args[1] ), MIN_COORD_FLOAT, MAX_COORD_FLOAT );
+ 			origin.y = clamp( atof( args[2] ), MIN_COORD_FLOAT, MAX_COORD_FLOAT );
+ 			origin.z = clamp( atof( args[3] ), MIN_COORD_FLOAT, MAX_COORD_FLOAT );
 
 			QAngle angle;
 			angle.x = atof( args[4] );
 			angle.y = atof( args[5] );
 			angle.z = 0.0f;
 
-			JumptoPosition( origin, angle );
+			// If the player jumps outside world extents it will hangs the server
+			CWorld *world = GetWorldEntity();
+			if ( world )
+			{
+				Extent worldExtent;
+				world->GetWorldBounds( worldExtent.lo, worldExtent.hi );
+				VectorMax( origin, worldExtent.lo, origin );
+				VectorMin( origin, worldExtent.hi, origin );
+
+				JumptoPosition( origin, angle );
+			}
 		}
 		
 		return true;
