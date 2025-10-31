@@ -741,6 +741,8 @@ inline bool CSDKPlayer::IsReloading( void ) const
 	return false;
 }
 
+ConVar da_regendelay_damaged("da_regendelay_damaged", "4", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long after taking damage before health starts regenerating?");
+ConVar da_regendelay_visible("da_regendelay_visible", "8", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long after seeing an enemy before health starts regenerating?");
 ConVar da_regenamount( "da_regenamount", "100", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player regenerate each tick?" );
 ConVar da_decayamount( "da_decayamount", "1", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does the player decay each tick, when total health is greater than max?" );
 ConVar da_regenamount_secondwind( "da_regenamount_secondwind", "10", FCVAR_CHEAT|FCVAR_DEVELOPMENTONLY, "How much health does a player with the second wind style skill regenerate each tick?" );
@@ -765,17 +767,33 @@ void CSDKPlayer::PreThink(void)
 		if (!IsStyleSkillActive() && m_flCurrentTime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
 		{
 			m_iHealth -= da_decayamount.GetFloat();
-
 			m_flNextHealthDecay = m_flCurrentTime + 1;
 		}
 
-		if (m_flCurrentTime > m_flNextRegen && GetHealth() < GetMaxHealth())
+		float flRegenDelay = da_regendelay_damaged.GetFloat();
+		if (m_flCurrentTime < m_flLastTimeEnemyPlayerSeen + 0.5f)
+		{
+			flRegenDelay = da_regendelay_visible.GetFloat();
+		}
+
+		if (m_flNextRegen == 0.0f && m_flCurrentTime > m_flLastTimeDamaged + flRegenDelay && GetHealth() < GetMaxHealth())
+		{
+			m_flNextRegen = m_flCurrentTime;
+		}
+
+		if (m_flNextRegen > 0.0f && m_flCurrentTime >= m_flNextRegen)
 		{
 			float flHealth = da_regenamount.GetFloat() * da_regenrate.GetFloat();
-
 			TakeHealth(min(flHealth, GetMaxHealth() - GetHealth()), 0);
 
-			m_flNextRegen = m_flCurrentTime + da_regenrate.GetFloat();
+			if (GetHealth() >= GetMaxHealth())
+			{
+				m_flNextRegen = 0;
+			}
+			else
+			{
+				m_flNextRegen += da_regenrate.GetFloat();
+			}
 		}
 
 		if (m_Shared.IsSuperFalling() && !m_Shared.IsDiving())
@@ -1707,7 +1725,6 @@ int CSDKPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 }
 
-ConVar da_regendelay("da_regendelay", "4", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long after taking damage before health starts regenerating?");
 ConVar da_reflexes_auto_activate_cooldown("da_reflexes_auto_activate_cooldown", "5", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Reflexes auto slomo activate cooldown");
 
 int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
@@ -1826,14 +1843,20 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		}
 	}
 
-	ResetRegenCooldown();
+	RefreshDamageTaken();
+	m_flLastTimeDamaged = m_flCurrentTime;
 
 	return 1;
 }
 
-void CSDKPlayer::ResetRegenCooldown()
+void CSDKPlayer::RefreshEnemyPlayerSeen()
 {
-	m_flNextRegen = m_flCurrentTime + da_regendelay.GetFloat();
+	m_flLastTimeEnemyPlayerSeen = m_flCurrentTime;
+}
+
+void CSDKPlayer::RefreshDamageTaken()
+{
+	m_flLastTimeDamaged = m_flCurrentTime;
 }
 
 CWeaponSDKBase* CSDKPlayer::FindAnyWeaponButBrawl()

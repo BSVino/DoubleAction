@@ -1055,8 +1055,8 @@ void CSDKGameRules::Think()
 				continue;
 			}
 
-			pPlayer->ResetRegenCooldown();
-			pOther->ResetRegenCooldown();
+			pPlayer->RefreshEnemyPlayerSeen();
+			pOther->RefreshEnemyPlayerSeen();
 		}
 	}
 

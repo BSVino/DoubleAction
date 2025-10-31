@@ -467,7 +467,8 @@ public:
 	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 	virtual bool		SuicideAllowed( void ) { return GetCurrentTime() > m_flNextSuicideTime; }
 
-	void ResetRegenCooldown();
+	void RefreshEnemyPlayerSeen();
+	void RefreshDamageTaken();
 
 private:
 	// Last usercmd we shot a bullet on.
@@ -514,6 +515,9 @@ public:
 
 	float       m_flNextRegen;
 	float       m_flNextHealthDecay;
+
+	float       m_flLastTimeDamaged = 0.0f;
+	float       m_flLastTimeEnemyPlayerSeen = 0.0f;
 
 	float		m_flNextSuicideTime;
 
