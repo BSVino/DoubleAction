@@ -336,7 +336,7 @@ CON_COMMAND_F( bot_teleport, "Teleports the first bot to the player.", FCVAR_CHE
 	trace_t tr;
 	UTIL_TraceHull(vecEye, vecEye + vecForward * 100, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &tr);
 
-	NDebugOverlay::Line(vecEye, tr.endpos, 0, 0, 255, false, 10);
+	//NDebugOverlay::Line(vecEye, tr.endpos, 0, 0, 255, false, 10);
 
 	CSDKPlayer* pBot = NULL;
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
