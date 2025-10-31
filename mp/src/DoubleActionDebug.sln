@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "hl2", "C:\Program Files (x86)\Steam\steamapps\common\Double Action\hl2.exe", "{3699F1A3-DCBC-444F-A67F-ED18611F1DE4}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Program Files (x86)\Steam\steamapps\common\Double Action\hl2.exe
+		RemoteMachine = DESKTOP-FOTGG9B
+		StartingDirectory = D:\git\DoubleAction\mp\game
+		Arguments = -game "D:\git\DoubleAction\mp\game\dab" -dev -console +sv_cheats 1 +map da_megachat
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+		IORedirection = Auto
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3699F1A3-DCBC-444F-A67F-ED18611F1DE4}.Release|x86.ActiveCfg = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F5197CE5-049C-4C4F-92E7-42B6D9C0B1F2}
+	EndGlobalSection
+EndGlobal
