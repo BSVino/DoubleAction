@@ -298,6 +298,7 @@ private:
 	CNetworkHandle( CRatRaceWaypoint, m_hRaceWaypoint2 );
 	CNetworkHandle( CRatRaceWaypoint, m_hRaceWaypoint3 );
 	float m_flLastPlayerWaypointTouch;
+	bool m_bOneMinuteWarningSent = false;
 
 	float	m_flNextSlowMoUpdate;
 

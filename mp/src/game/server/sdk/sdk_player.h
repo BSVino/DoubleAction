@@ -580,6 +580,7 @@ public:
 
 	CNetworkHandle(CBriefcase, m_hBriefcase);
 	CNetworkVar( int, m_iRaceWaypoint ); // What's the highest waypoint I've gotten to?
+	int m_iWaypointsTouched = 0;
 
 	CNetworkVar(float, m_flWantedMeterRemaining);
 

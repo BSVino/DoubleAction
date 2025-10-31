@@ -184,6 +184,7 @@ const char* NoticeToString( notice_t id )
 		"ratrace_proceed_2",
 		"ratrace_proceed_3",
 		"ratrace_over",
+		"ratrace_one_minute_remaining",
 	};
 
 	return aszNotices[id];

@@ -37,6 +37,8 @@
 
 #endif
 
+#include <vector>
+#include <algorithm>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -2717,6 +2719,8 @@ int DistanceToPoint(CBaseEntity*const* l, CBaseEntity*const* r)
 	return flLDistanceSqr < flRDistanceSqr;
 }
 
+ConVar da_miniobjective_ratracelength("da_miniobjective_ratracelength", "600", FCVAR_GAMEDLL, "Rat Race maximum length");
+
 bool CSDKGameRules::SetupMiniObjective_RatRace()
 {
 	if (IsTeamplay())
@@ -2765,6 +2769,7 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 			continue;
 
 		pPlayer->m_iRaceWaypoint = 0;
+		pPlayer->m_iWaypointsTouched = 0;
 	}
 
 	RandomSeed((int)(gpGlobals->curtime*1000));
@@ -2808,6 +2813,7 @@ bool CSDKGameRules::SetupMiniObjective_RatRace()
 	m_hRaceWaypoint3->Spawn();
 
 	m_flLastPlayerWaypointTouch = gpGlobals->curtime;
+	m_bOneMinuteWarningSent = false;
 
 	return true;
 }
@@ -2816,6 +2822,44 @@ void CSDKGameRules::MaintainMiniObjective_RatRace()
 {
 	if (gpGlobals->curtime - m_flLastPlayerWaypointTouch > 120)
 		CleanupMiniObjective();
+
+	if (!m_bOneMinuteWarningSent && gpGlobals->curtime > m_flCurrentMiniObjectiveStartTime + da_miniobjective_ratracelength.GetFloat() - 60)
+	{
+		CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_ONE_MINUTE_REMAINING);
+		m_bOneMinuteWarningSent = true;
+	}
+
+	if (gpGlobals->curtime > m_flCurrentMiniObjectiveStartTime + da_miniobjective_ratracelength.GetFloat())
+	{
+		std::vector<CSDKPlayer*> vecPlayers;
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer* pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+			if (!pPlayer)
+			{
+				continue;
+			}
+
+			vecPlayers.push_back(pPlayer);
+		}
+
+		std::sort(std::begin(vecPlayers), std::end(vecPlayers), [](const CSDKPlayer* a, CSDKPlayer* b) -> bool {
+			return a->m_iWaypointsTouched > b->m_iWaypointsTouched;
+		});
+
+		while (vecPlayers.back()->m_iWaypointsTouched != vecPlayers.front()->m_iWaypointsTouched)
+		{
+			vecPlayers.pop_back();
+		}
+
+		CSDKPlayer* pWinningPlayer = vecPlayers[RandomInt(0, vecPlayers.size()-1)];
+
+		CSDKPlayer::SendBroadcastNotice(NOTICE_RATRACE_OVER, pWinningPlayer);
+		GiveMiniObjectiveRewardPlayer(pWinningPlayer);
+		CleanupMiniObjective();
+	}
 }
 
 void CSDKGameRules::CleanupMiniObjective_RatRace()
@@ -2876,7 +2920,10 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 			WaypointLeadersPush(m_ahWaypoint1RaceLeaders, pPlayer);
 
 			if (!pPlayer->IsBot())
+			{
+				pPlayer->m_iWaypointsTouched += 1;
 				m_flLastPlayerWaypointTouch = gpGlobals->curtime;
+			}
 		}
 		else if (pPlayer->m_iRaceWaypoint == 2)
 		{
@@ -2900,7 +2947,10 @@ void CSDKGameRules::PlayerReachedWaypoint(CSDKPlayer* pPlayer, CRatRaceWaypoint*
 			RemovePlayerFromLeaders(m_ahWaypoint1RaceLeaders, pPlayer);
 
 			if (!pPlayer->IsBot())
+			{
+				pPlayer->m_iWaypointsTouched += 1;
 				m_flLastPlayerWaypointTouch = gpGlobals->curtime;
+			}
 		}
 		else if (pPlayer->m_iRaceWaypoint == 3)
 		{
@@ -3002,7 +3052,7 @@ void CC_MiniObjective(const CCommand &args)
 		SDKGameRules()->StartMiniObjective();
 }
 
-static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT);
+static ConCommand da_miniobjective("da_miniobjective", CC_MiniObjective, "", FCVAR_GAMEDLL|FCVAR_CHEAT);
 #endif
 
 CBriefcase* CSDKGameRules::GetBriefcase() const
