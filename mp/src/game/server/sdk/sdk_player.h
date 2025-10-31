@@ -528,6 +528,7 @@ public:
 	CNetworkVar( float, m_flSlowMoSeconds );
 	CNetworkVar( float, m_flSlowMoTime );
 	CNetworkVar( float, m_flSlowMoMultiplier );
+	bool m_bSlowMoAutoActivate;
 
 	CNetworkVar( float, m_flCurrentTime );		// Accounts for slow motion
 

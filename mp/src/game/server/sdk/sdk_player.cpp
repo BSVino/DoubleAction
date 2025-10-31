@@ -764,6 +764,12 @@ void CSDKPlayer::PreThink(void)
 
 	UpdateCurrentTime();
 
+	if (m_flSlowMoTime != 0.0f && m_bSlowMoAutoActivate && GetCurrentTime() > m_flLastReflexesAutoActivate + 0.5f)
+	{
+		// Automatically deactivate the Reflexes passive after it uses up its free one second
+		DeactivateSlowMo();
+	}
+
 	if (IsAlive())
 	{
 		if (!IsStyleSkillActive() && m_flCurrentTime > m_flNextHealthDecay && GetHealth() > GetMaxHealth())
@@ -1196,6 +1202,7 @@ void CSDKPlayer::Spawn()
 	m_bHasSuperSlowMo = false;
 	m_flSlowMoTime = 0;
 	m_flSlowMoMultiplier = 1;
+	m_bSlowMoAutoActivate = false;
 	m_flDisarmRedraw = -1;
 	m_iStyleKillStreak = 0;
 	m_iCurrentStreak = 0;
@@ -1734,11 +1741,12 @@ int CSDKPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	// set damage type sustained
 	m_bitsDamageType |= info.GetDamageType();
 
-	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES && (info.GetDamageType() & DMG_BULLET) && GetHealth() >= 100 && m_flCurrentTime > m_flLastReflexesAutoActivate + da_reflexes_auto_activate_cooldown.GetFloat())
+	if (m_Shared.m_iStyleSkill == SKILL_REFLEXES && m_flSlowMoTime == 0.0f && (info.GetDamageType() & DMG_BULLET) && GetHealth() >= 100 && m_flCurrentTime > m_flLastReflexesAutoActivate + da_reflexes_auto_activate_cooldown.GetFloat())
 	{
 		GiveSlowMo(1);
 		ActivateSlowMo();
 		m_flLastReflexesAutoActivate = m_flCurrentTime;
+		m_bSlowMoAutoActivate = true;
 	}
 
 	if ( !CBaseCombatCharacter::OnTakeDamage_Alive( info ) )
