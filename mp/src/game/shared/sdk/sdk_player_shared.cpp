@@ -1665,9 +1665,10 @@ void CSDKPlayer::DeactivateSlowMo()
 
 	m_flSlowMoTime = 0;
 	m_iSlowMoType = SLOWMO_NONE;
-	
 
 #ifdef GAME_DLL
+	m_bSlowMoAutoActivate = false;
+
 	SDKGameRules()->PlayerSlowMoUpdate(this);
 #endif
 }
