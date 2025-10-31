@@ -227,15 +227,17 @@ void CHealthWidget::SetPlayer(CSDKPlayer* pPlayer)
 void CHealthWidget::Update()
 {
 	int iNewHealth = 0;
+	bool bRecentlySpawned = false;
 	CSDKPlayer* pPlayer = m_hPlayer;
 	if (pPlayer)
 	{
 		// Never below zero
 		iNewHealth = max(pPlayer->GetHealth(), 0);
+		bRecentlySpawned = gpGlobals->curtime < pPlayer->GetLastSpawnTime() + 1.0f;
 	}
 
 	// Only update the fade if we've changed health
-	if (iNewHealth == m_iHealth)
+	if (iNewHealth == m_iHealth && !bRecentlySpawned)
 	{
 		return;
 	}
