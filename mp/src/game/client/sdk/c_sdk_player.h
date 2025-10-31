@@ -326,6 +326,8 @@ public: // Public Variables
 
 	CNetworkVar( float, m_flReadyWeaponUntil );
 
+	CNetworkVar( float, m_flLastTimeDamaged );
+
 	CNetworkVar( float, m_flDisarmRedraw );
 	
 	EHANDLE	m_hRagdoll;

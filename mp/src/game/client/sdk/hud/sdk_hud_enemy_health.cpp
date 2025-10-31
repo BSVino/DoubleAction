@@ -175,6 +175,11 @@ void CHudEnemyHealth::Paint()
 			{
 				bHide = true;
 			}
+
+			if (gpGlobals->curtime > pPlayer->m_Shared.m_flLastFireTime + 8.0f && pPlayer->GetCurrentTime() > pPlayer->m_flLastTimeDamaged + 4.0f && pPlayer->m_Shared.IsProne() && pPlayer->GetAbsVelocity().Length() < 1.0f)
+			{
+				bHide = true;
+			}
 		}
 		else
 		{

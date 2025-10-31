@@ -158,6 +158,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropInt( SENDINFO( m_iStyleSkill ) ),
 	SendPropInt( SENDINFO( m_iStyleSkillAfterRespawn ) ),
 	SendPropBool( SENDINFO( m_bSuperSkill ) ),
+	SendPropTime( SENDINFO( m_flLastFireTime ) ),
 	
 	SendPropInt (SENDINFO (m_iWallFlipCount)),
 	SendPropBool (SENDINFO (m_bIsWallFlipping)),
@@ -258,6 +259,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropFloat( SENDINFO( m_flCurrentTime ), -1, SPROP_CHANGES_OFTEN ),
 	SendPropFloat( SENDINFO( m_flLastSpawnTime ) ),
 	SendPropTime		( SENDINFO( m_flReadyWeaponUntil ) ),
+	SendPropTime( SENDINFO( m_flLastTimeDamaged ) ),
 
 	SendPropBool( SENDINFO( m_bHasPlayerDied ) ),
 	SendPropBool( SENDINFO( m_bThirdPerson ) ),

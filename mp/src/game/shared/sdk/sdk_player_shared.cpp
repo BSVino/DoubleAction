@@ -264,6 +264,7 @@ void CSDKPlayer::SharedSpawn()
 	m_flCurrentAlphaVal = 255.0f;
 #endif
 	m_flReadyWeaponUntil = -1;
+	m_flLastTimeDamaged = -1.0f;
 	m_bThirdPersonCamSide = true;
 	m_flSideLerp = m_bThirdPersonCamSide?1:-1;
 

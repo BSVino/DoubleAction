@@ -178,6 +178,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropInt( RECVINFO( m_iStyleSkill ), 0, RECVCALLBACKPROXY(RecvProxy_Int32ToInt8, RecvCallback_UpdateRichPresence) ),
 	RecvPropInt( RECVINFO( m_iStyleSkillAfterRespawn ), 0, RecvProxy_Skill ),
 	RecvPropBool( RECVINFO( m_bSuperSkill ), RECVCALLBACKPROXY(RecvProxy_Int32ToInt32, RecvCallback_UpdateRichPresence) ),
+	RecvPropTime( RECVINFO( m_flLastFireTime ) ),
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 
 	RecvPropInt (RECVINFO (m_iWallFlipCount)),
@@ -253,6 +254,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropFloat		( RECVINFO( m_flCurrentTime ) ),
 	RecvPropFloat		( RECVINFO( m_flLastSpawnTime ) ),
 	RecvPropTime		( RECVINFO( m_flReadyWeaponUntil ) ),
+	RecvPropTime		( RECVINFO( m_flLastTimeDamaged ) ),
 
 	RecvPropBool( RECVINFO( m_bHasPlayerDied ) ),
 	RecvPropBool( RECVINFO( m_bThirdPerson ) ),
@@ -330,6 +332,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flRecoilAccumulator, FIELD_FLOAT, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iStyleSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bSuperSkill, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flLastFireTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD (m_iWallFlipCount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD (m_bIsWallFlipping, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
@@ -347,6 +350,7 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	DEFINE_PRED_FIELD( m_flFreezeUntil, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flFreezeAmount, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flReadyWeaponUntil, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
+	DEFINE_PRED_FIELD( m_flLastTimeDamaged, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flDisarmRedraw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),   
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),   

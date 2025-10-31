@@ -516,7 +516,7 @@ public:
 	float       m_flNextRegen;
 	float       m_flNextHealthDecay;
 
-	float       m_flLastTimeDamaged = 0.0f;
+	CNetworkVar( float, m_flLastTimeDamaged );
 	float       m_flLastTimeEnemyPlayerSeen = 0.0f;
 
 	float		m_flNextSuicideTime;

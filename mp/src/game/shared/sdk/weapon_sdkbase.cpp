@@ -430,6 +430,8 @@ void CWeaponSDKBase::PrimaryAttack( void )
 			pPlayer->RemoveAmmo(1, m_iPrimaryAmmoType );
 	}
 
+	pPlayer->m_Shared.m_flLastFireTime = gpGlobals->curtime;
+
 	/*Chopped this in half here for akimbos*/
 	FinishAttack (pPlayer);
 }

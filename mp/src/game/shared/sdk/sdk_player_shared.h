@@ -278,6 +278,8 @@ public:
 	CNetworkVar( int, m_iStyleSkillAfterRespawn );
 	CNetworkVar( bool, m_bSuperSkill );
 
+	CNetworkVar( float, m_flLastFireTime );
+
 	CNetworkArray(CRevealedEnemy, m_aRevealedEnemies, 8);
 
 private:
