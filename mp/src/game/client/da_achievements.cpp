@@ -525,7 +525,8 @@ protected:
 			// if the atackers userID from the event matches the local player
 			if (iUserID == C_BasePlayer::GetLocalPlayer()->GetUserID())
 			{
-				IncrementCount(); // WE ALL GOOD!
+				int iAmount = event->GetInt("amount", 1);
+				SetCount(GetCount() + iAmount);
 			}
 		}
 	}

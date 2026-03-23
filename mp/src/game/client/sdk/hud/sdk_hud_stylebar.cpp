@@ -151,7 +151,9 @@ float CHudStyleBar::GetIconH()
 void CHudStyleBar::Reset()
 {
 	// achievement Disco Stu - 1 million lifetime style points
-	DA_ApproachAchievement("DISCOSTU", m_flCurrentStyle);
+	C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
+	if (pLocal)
+		DA_ApproachAchievement("DISCOSTU", pLocal->GetUserID(), (int)m_flCurrentStyle);
 
 	m_flCurrentStyle = m_flGoalStyle = 0;
 	m_aAnnouncements.RemoveAll();
