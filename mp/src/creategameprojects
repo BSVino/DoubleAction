@@ -3,4 +3,55 @@
 pushd `dirname $0`
 sed -ri '/PLACEHOLDER_COMPILER_ARGS/ s/^.*$/git rev-parse HEAD/e; T; s/^.*$/$PreprocessorDefinitions "$BASE;DA_GIT_VERSION=\0"/' game/client/client_da.vpc game/server/server_da.vpc
 devtools/bin/vpc /da +game /mksln DoubleAction
+
+# VPC with /2013 omits the Global section; append it if missing
+SLN=DoubleAction.sln
+if ! grep -q "GlobalSection" "$SLN"; then
+cat >> "$SLN" << 'EOF'
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D7D97049-1C31-93A3-06DC-BD9899FAC989}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7D97049-1C31-93A3-06DC-BD9899FAC989}.Debug|Win32.Build.0 = Debug|Win32
+		{D7D97049-1C31-93A3-06DC-BD9899FAC989}.Release|Win32.ActiveCfg = Release|Win32
+		{D7D97049-1C31-93A3-06DC-BD9899FAC989}.Release|Win32.Build.0 = Release|Win32
+		{97110F3D-F33B-B887-FFEF-A4F9CCC0ED9D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{97110F3D-F33B-B887-FFEF-A4F9CCC0ED9D}.Debug|Win32.Build.0 = Debug|Win32
+		{97110F3D-F33B-B887-FFEF-A4F9CCC0ED9D}.Release|Win32.ActiveCfg = Release|Win32
+		{97110F3D-F33B-B887-FFEF-A4F9CCC0ED9D}.Release|Win32.Build.0 = Release|Win32
+		{01BCD5C5-3BBB-7F2F-4185-9ADBF4AD8C0C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{01BCD5C5-3BBB-7F2F-4185-9ADBF4AD8C0C}.Debug|Win32.Build.0 = Debug|Win32
+		{01BCD5C5-3BBB-7F2F-4185-9ADBF4AD8C0C}.Release|Win32.ActiveCfg = Release|Win32
+		{01BCD5C5-3BBB-7F2F-4185-9ADBF4AD8C0C}.Release|Win32.Build.0 = Release|Win32
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F}.Debug|Win32.Build.0 = Debug|Win32
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F}.Release|Win32.ActiveCfg = Release|Win32
+		{BAB92FF0-D72A-D7E5-1988-74628D39B94F}.Release|Win32.Build.0 = Release|Win32
+		{95D67225-8415-236F-9128-DCB171B7DEC6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{95D67225-8415-236F-9128-DCB171B7DEC6}.Debug|Win32.Build.0 = Debug|Win32
+		{95D67225-8415-236F-9128-DCB171B7DEC6}.Release|Win32.ActiveCfg = Release|Win32
+		{95D67225-8415-236F-9128-DCB171B7DEC6}.Release|Win32.Build.0 = Release|Win32
+		{1F48B55A-3BBB-9D49-9B29-6A461ED483CE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1F48B55A-3BBB-9D49-9B29-6A461ED483CE}.Debug|Win32.Build.0 = Debug|Win32
+		{1F48B55A-3BBB-9D49-9B29-6A461ED483CE}.Release|Win32.ActiveCfg = Release|Win32
+		{1F48B55A-3BBB-9D49-9B29-6A461ED483CE}.Release|Win32.Build.0 = Release|Win32
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}.Debug|Win32.Build.0 = Debug|Win32
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}.Release|Win32.ActiveCfg = Release|Win32
+		{EC1C516D-E1D9-BC0A-F79D-E91E954ED8EC}.Release|Win32.Build.0 = Release|Win32
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939}.Debug|Win32.Build.0 = Debug|Win32
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939}.Release|Win32.ActiveCfg = Release|Win32
+		{F69B3672-C5E8-CD1A-257F-253A25B5B939}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
+EOF
+fi
+
 popd
