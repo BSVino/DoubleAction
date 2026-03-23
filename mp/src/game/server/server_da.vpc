@@ -17,7 +17,7 @@ $Configuration
 		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\sdk,.\sdk,$SRCDIR\game\shared\sdk;.\sdk\bot"
 		$PreprocessorDefinitions		"$BASE;SDK_DLL;USE_MONITORS"
 		$PreprocessorDefinitions		"$BASE;WITH_DATA_COLLECTION" [$WIN32 || $LINUX]
-		//PLACEHOLDER_COMPILER_ARGS
+$PreprocessorDefinitions "$BASE;DA_GIT_VERSION=b40ad92e5ac79754b538306e7378d3714060e2c6"
 	}
 }
 
