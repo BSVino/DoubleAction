@@ -112,3 +112,4 @@ mp/src/thirdparty/curl-7.31.0/src/macos/MACINSTALL.TXT
 
 github_api_key.txt
 *.sublime-workspace
+.claude/
