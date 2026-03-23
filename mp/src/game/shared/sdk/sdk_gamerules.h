@@ -308,6 +308,7 @@ private:
 	bool m_bExtendMapVoteDone;
 	int  m_iMapExtensionCount;
 
+public:
 	int  GetMapExtensionCount() const     { return m_iMapExtensionCount; }
 	void IncrementMapExtensionCount()     { m_iMapExtensionCount++; }
 	void ResetExtendMapVoteDone()         { m_bExtendMapVoteDone = false; m_bNextMapVoteDone = false; }

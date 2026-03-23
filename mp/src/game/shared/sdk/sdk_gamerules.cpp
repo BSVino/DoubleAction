@@ -939,6 +939,10 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 static ConVar da_debug_player_visibility_check("da_debug_player_visibility_check", "0", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "Show player visibility checks");
 static ConVar da_regen_disable_enemy_distance("da_regen_disable_enemy_distance", "1000", FCVAR_DEVELOPMENTONLY|FCVAR_CHEAT, "The distance to the nearest visible enemy at which auto health regen is disabled");
 
+#ifndef CLIENT_DLL
+extern ConVar da_vote_extend_max_extensions;
+#endif
+
 void CSDKGameRules::Think()
 {
 	// Not terribly happy about this but also not terribly distraught.
