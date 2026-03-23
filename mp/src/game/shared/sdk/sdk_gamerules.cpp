@@ -332,6 +332,8 @@ CSDKGameRules::CSDKGameRules()
 
 	m_bChangelevelDone = false;
 	m_bNextMapVoteDone = false;
+	m_bExtendMapVoteDone = false;
+	m_iMapExtensionCount = 0;
 }
 
 void RegisterVoteIssues();
@@ -1001,6 +1003,20 @@ void CSDKGameRules::Think()
 		m_bChangelevelDone = true;
 
 		return;
+	}
+
+	if ( !m_bExtendMapVoteDone && GetMapRemainingTime() && GetMapRemainingTime() < 5 * 60 )
+	{
+		int iMax = da_vote_extend_max_extensions.GetInt();
+		if (mp_timelimit.GetInt() > 0 && iMax != 0 && (iMax == -1 || m_iMapExtensionCount < iMax))
+		{
+			if (g_voteController->CreateVote(DEDICATED_SERVER, "extendmap", ""))
+				m_bExtendMapVoteDone = true;
+		}
+		else
+		{
+			m_bExtendMapVoteDone = true; // disabled, cap reached, or no timelimit — don't check again
+		}
 	}
 
 	if ( !m_bNextMapVoteDone && GetMapRemainingTime() && GetMapRemainingTime() < 2 * 60 )
@@ -3294,6 +3310,51 @@ public:
 	}
 };
 
+ConVar da_vote_extend_time("da_vote_extend_time", "10", FCVAR_GAMEDLL,
+	"Minutes added to mp_timelimit when an extend map vote passes.");
+ConVar da_vote_extend_max_extensions("da_vote_extend_max_extensions", "-1", FCVAR_GAMEDLL,
+	"Max times the map can be extended per session. -1 = unlimited, 0 = disabled.");
+
+class CExtendMapVoteIssue : public CDAIssue
+{
+public:
+	CExtendMapVoteIssue()
+		: CDAIssue("extendmap")
+	{
+	}
+
+	virtual bool IsEnabled( void )
+	{
+		if (mp_timelimit.GetInt() <= 0)
+			return false;
+		int iMax = da_vote_extend_max_extensions.GetInt();
+		if (iMax == 0)
+			return false;
+		if (iMax > 0 && SDKGameRules()->GetMapExtensionCount() >= iMax)
+			return false;
+		return true;
+	}
+
+	virtual bool        IsYesNoVote( void )         { return true; }
+	virtual const char *GetDisplayString( void )    { return "#DA_VoteIssue_ExtendMap_Display"; }
+	virtual const char *GetVotePassedString( void ) { return "#DA_VoteIssue_ExtendMap_Passed"; }
+
+	virtual void ExecuteCommand( void )
+	{
+		CDAIssue::ExecuteCommand();
+		ConVarRef mp_timelimit_ref("mp_timelimit");
+		mp_timelimit_ref.SetValue(mp_timelimit_ref.GetInt() + da_vote_extend_time.GetInt());
+		SDKGameRules()->IncrementMapExtensionCount();
+		SDKGameRules()->ResetExtendMapVoteDone(); // lets auto-triggers re-fire against new limit
+	}
+
+	virtual void ListIssueDetails( CBasePlayer *pForWhom )
+	{
+		AssertMsg(false, "Unimplemented");
+		ClientPrint( pForWhom, HUD_PRINTCONSOLE, "Nothing here.\n" );
+	}
+};
+
 ConVar da_vote_kick_plurality("da_vote_kick_plurality", "0.7", FCVAR_GAMEDLL, "What percentage of players is required to vote yes for a kick vote to pass?");
 
 class CKickPlayerVoteIssue : public CDAIssue
@@ -3409,6 +3470,7 @@ void RegisterVoteIssues()
 	//new CTeamplayModeVoteIssue();
 	new CNextMapVoteIssue();
 	new CChangelevelVoteIssue();
+	new CExtendMapVoteIssue();
 	//new CKickPlayerVoteIssue();
 	new CAddBotVoteIssue();
 }

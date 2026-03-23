@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The TF Game rules object
 //
@@ -305,6 +305,12 @@ private:
 #ifndef CLIENT_DLL
 	bool m_bChangelevelDone;
 	bool m_bNextMapVoteDone;
+	bool m_bExtendMapVoteDone;
+	int  m_iMapExtensionCount;
+
+	int  GetMapExtensionCount() const     { return m_iMapExtensionCount; }
+	void IncrementMapExtensionCount()     { m_iMapExtensionCount++; }
+	void ResetExtendMapVoteDone()         { m_bExtendMapVoteDone = false; m_bNextMapVoteDone = false; }
 #endif
 
 	CNetworkVar( Vector, m_vecLowestSpawnPoint );
