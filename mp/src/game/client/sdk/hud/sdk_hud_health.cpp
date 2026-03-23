@@ -112,6 +112,7 @@ void CHudHealth::Reset()
 	m_iOldHealth = INIT_HEALTH;
 	m_flLastHealthChange = -1;
 	m_bitsDamage = 0;
+	m_oHealthWidget.Reset();
 
 	wchar_t *tempString = g_pVGuiLocalize->Find("#Valve_Hud_HEALTH");
 
@@ -224,20 +225,25 @@ void CHealthWidget::SetPlayer(CSDKPlayer* pPlayer)
 	m_hPlayer = pPlayer;
 }
 
+void CHealthWidget::Reset()
+{
+	m_iOldHealth = 0;
+	m_iHealth = 0;
+	m_flLastHealthChange = 0.0f;
+}
+
 void CHealthWidget::Update()
 {
 	int iNewHealth = 0;
-	bool bRecentlySpawned = false;
 	CSDKPlayer* pPlayer = m_hPlayer;
 	if (pPlayer)
 	{
 		// Never below zero
 		iNewHealth = max(pPlayer->GetHealth(), 0);
-		bRecentlySpawned = gpGlobals->curtime < pPlayer->GetLastSpawnTime() + 1.0f;
 	}
 
 	// Only update the fade if we've changed health
-	if (iNewHealth == m_iHealth && !bRecentlySpawned)
+	if (iNewHealth == m_iHealth)
 	{
 		return;
 	}

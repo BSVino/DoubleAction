@@ -4,6 +4,7 @@ class CHealthWidget
 {
 public:
 	void SetPlayer(CSDKPlayer* pPlayer);
+	void Reset();
 	void Update();
 	void Paint(CHudTexture* pIcon, float flIconHeight, int x, int y, int iWidth, int iHeight, float flAlpha, const Color& color);
 
