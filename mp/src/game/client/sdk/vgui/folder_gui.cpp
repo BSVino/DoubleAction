@@ -838,17 +838,17 @@ void CFolderMenu::ReloadControlSettings(bool bUpdate, bool bReloadPage)
 void CFolderMenu::SetCharacterPreview(const char* pszCharacter, const char* pszSequence, const char* pszWeaponModel, float flYaw, float flPitch)
 {
 	if (pszCharacter)
-		strcpy(m_szPreviewCharacter, pszCharacter);
+		Q_strncpy(m_szPreviewCharacter, pszCharacter, sizeof(m_szPreviewCharacter));
 	else
 		m_szPreviewCharacter[0] = '\0';
 
 	if (pszSequence)
-		strcpy(m_szPreviewSequence, pszSequence);
+		Q_strncpy(m_szPreviewSequence, pszSequence, sizeof(m_szPreviewSequence));
 	else
 		m_szPreviewSequence[0] = '\0';
 
 	if (pszWeaponModel)
-		strcpy(m_szPreviewWeaponModel, pszWeaponModel);
+		Q_strncpy(m_szPreviewWeaponModel, pszWeaponModel, sizeof(m_szPreviewWeaponModel));
 	else
 		m_szPreviewWeaponModel[0] = '\0';
 

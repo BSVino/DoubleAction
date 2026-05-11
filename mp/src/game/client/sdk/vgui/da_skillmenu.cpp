@@ -62,7 +62,7 @@ void CSkillButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
-	strcpy(m_szSkillName, resourceData->GetString("skill"));
+	Q_strncpy(m_szSkillName, resourceData->GetString("skill"), sizeof(m_szSkillName));
 }
 
 void CSkillButton::OnCursorEntered()

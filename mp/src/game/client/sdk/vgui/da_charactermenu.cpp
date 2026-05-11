@@ -61,13 +61,13 @@ void CCharacterButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
-	strcpy(m_szCharacter, resourceData->GetString("character"));
+	Q_strncpy(m_szCharacter, resourceData->GetString("character"), sizeof(m_szCharacter));
 
 	const char* pszSequence = resourceData->GetString("sequence", "");
-	strcpy(m_szSequence, pszSequence);
+	Q_strncpy(m_szSequence, pszSequence, sizeof(m_szSequence));
 
 	const char* pszWeaponModel = resourceData->GetString("weaponmodel", "");
-	strcpy(m_szWeaponModel, pszWeaponModel);
+	Q_strncpy(m_szWeaponModel, pszWeaponModel, sizeof(m_szWeaponModel));
 
 	m_flBodyYaw = resourceData->GetFloat("body_yaw");
 	m_flBodyPitch = resourceData->GetFloat("body_pitch");
