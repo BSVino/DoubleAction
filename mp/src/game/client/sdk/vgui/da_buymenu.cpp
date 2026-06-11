@@ -67,9 +67,9 @@ void CWeaponButton::ApplySettings( KeyValues *resourceData )
 {
 	BaseClass::ApplySettings( resourceData );
 
-	strcpy(m_szInfoString, resourceData->GetString("info_string"));
-	strcpy(m_szInfoModel, resourceData->GetString("info_model"));
-	strcpy(m_szWeaponID, resourceData->GetString("weaponid"));
+	Q_strncpy(m_szInfoString, resourceData->GetString("info_string"), sizeof(m_szInfoString));
+	Q_strncpy(m_szInfoModel, resourceData->GetString("info_model"), sizeof(m_szInfoModel));
+	Q_strncpy(m_szWeaponID, resourceData->GetString("weaponid"), sizeof(m_szWeaponID));
 }
 
 void CWeaponButton::ApplySchemeSettings( vgui::IScheme *pScheme )
