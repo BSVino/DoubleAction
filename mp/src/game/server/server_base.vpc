@@ -259,6 +259,7 @@ $Project
 		$File	"bitstring.h"
 		$File	"bmodels.cpp"
 		$File	"$SRCDIR\public\bone_setup.h"
+		$File	"$SRCDIR\public\blockingudpsocket.h"
 		$File	"buttons.cpp"
 		$File	"buttons.h"
 		$File	"cbase.cpp"
@@ -668,6 +669,7 @@ $Project
 		// Not using precompiled header cbase.h
 
 		$File	"$SRCDIR\public\bone_setup.cpp"					\
+				"$SRCDIR\public\blockingudpsocket.cpp"				\
 				"$SRCDIR\public\collisionutils.cpp"					\
 				"$SRCDIR\public\dt_send.cpp"						\
 				"$SRCDIR\public\dt_utlvector_common.cpp"			\
